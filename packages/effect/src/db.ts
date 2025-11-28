@@ -1,10 +1,8 @@
-import { Context, Effect, Layer, Schema } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 import type { DatabaseInstance } from '@repo/db/client';
+import { DbError } from './errors';
 
-export class DbError extends Schema.TaggedError<DbError>()('DbError', {
-  cause: Schema.Unknown,
-  message: Schema.String,
-}) {}
+export { DbError };
 
 export interface DbService {
   readonly db: DatabaseInstance;

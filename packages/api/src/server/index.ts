@@ -11,6 +11,15 @@ import type { DatabaseInstance } from '@repo/db/client';
 import { createORPCContext } from './orpc';
 import { appRouter } from './router';
 
+// Export effect handler utilities
+export {
+  handleEffect,
+  createCommonErrorHandlers,
+  type ErrorMapper,
+  type EffectErrors,
+  type EffectSuccess,
+} from './effect-handler';
+
 export type AppRouter = typeof appRouter;
 
 export const createApi = ({
