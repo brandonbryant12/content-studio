@@ -1,0 +1,19 @@
+{
+    "extends": "@repo/typescript-config/internal-package.json",
+    "include": [
+        "src/__tests__/**/*",
+        "jest.config.js"
+    ],
+    "compilerOptions": {
+        "types": [
+            "jest",
+            "node"
+        ],
+        "noEmit": true
+    },
+    "references": [
+        {
+            "path": "./tsconfig.package.json"
+        }
+    ]
+}
