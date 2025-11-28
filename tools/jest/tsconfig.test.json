@@ -15,6 +15,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
+    "types": ["jest", "node"],
     "baseUrl": ".",
     "paths": {
       "@repo/db": ["../../packages/db/src/index.ts"],
@@ -28,7 +29,9 @@
       "@repo/effect/telemetry": ["../../packages/effect/src/telemetry.ts"],
       "@repo/storage": ["../../packages/storage/src/index.ts"],
       "@repo/storage/providers/*": ["../../packages/storage/src/providers/*.ts"],
-      "@repo/queue": ["../../packages/queue/src/index.ts"]
+      "@repo/queue": ["../../packages/queue/src/index.ts"],
+      "@repo/auth-policy": ["../../packages/auth-policy/src/index.ts"],
+      "@repo/documents": ["../../packages/documents/src/index.ts"]
     }
   },
   "exclude": ["node_modules"]

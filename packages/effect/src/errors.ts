@@ -120,6 +120,53 @@ export class DocumentError extends Schema.TaggedError<DocumentError>()('Document
   static readonly code = 'DOCUMENT_ERROR' as const;
 }
 
+/**
+ * Document file size exceeds limit.
+ */
+export class DocumentTooLargeError extends Schema.TaggedError<DocumentTooLargeError>()(
+  'DocumentTooLargeError',
+  {
+    fileName: Schema.String,
+    fileSize: Schema.Number,
+    maxSize: Schema.Number,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly status = 413 as const;
+  static readonly code = 'DOCUMENT_TOO_LARGE' as const;
+}
+
+/**
+ * Document format not supported.
+ */
+export class UnsupportedDocumentFormat extends Schema.TaggedError<UnsupportedDocumentFormat>()(
+  'UnsupportedDocumentFormat',
+  {
+    fileName: Schema.String,
+    mimeType: Schema.String,
+    supportedFormats: Schema.Array(Schema.String),
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly status = 415 as const;
+  static readonly code = 'UNSUPPORTED_DOCUMENT_FORMAT' as const;
+}
+
+/**
+ * Document parsing failure.
+ */
+export class DocumentParseError extends Schema.TaggedError<DocumentParseError>()(
+  'DocumentParseError',
+  {
+    fileName: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly status = 422 as const;
+  static readonly code = 'DOCUMENT_PARSE_ERROR' as const;
+}
+
 // =============================================================================
 // Domain: Podcasts
 // =============================================================================
@@ -351,6 +398,9 @@ export type ApiError =
   // Documents
   | DocumentNotFound
   | DocumentError
+  | DocumentTooLargeError
+  | UnsupportedDocumentFormat
+  | DocumentParseError
   // Podcasts
   | PodcastNotFound
   | ScriptNotFound

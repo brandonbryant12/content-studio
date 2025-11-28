@@ -24,6 +24,8 @@ export default {
     '^@repo/queue$': `${packagesRoot}/queue/src/index.ts`,
     '^@repo/auth-policy$': `${packagesRoot}/auth-policy/src/index.ts`,
     '^@repo/auth-policy/providers/(.*)$': `${packagesRoot}/auth-policy/src/providers/$1.ts`,
+    '^@repo/documents$': `${packagesRoot}/documents/src/index.ts`,
+    '^@repo/podcast$': `${packagesRoot}/podcast/src/index.ts`,
   },
   transform: {
     '^.+\\.tsx?$': [
