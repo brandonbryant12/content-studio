@@ -1,4 +1,5 @@
 import { Effect, Layer, Context } from 'effect';
+import crypto from 'crypto';
 import { Documents, DocumentsLive, type DocumentService } from '../index';
 import { Storage, type StorageService } from '@repo/storage';
 import { Db, type DbService } from '@repo/effect/db';
@@ -78,9 +79,9 @@ const createMockDb = () => {
 
   let idCounter = 1;
 
-  const service: DbService = {
-    withTransaction: (effect) => effect,
-  };
+  const service = {
+    withTransaction: (effect: any) => effect,
+  } as unknown as DbService;
 
   return { service, documents, generateId: () => `doc-${idCounter++}` };
 };
@@ -241,8 +242,8 @@ describe('DocumentService error handling', () => {
     });
 
     it('user cannot access other users documents', () => {
-      const docCreatedBy = 'user-456';
-      const currentUserId = 'user-123';
+      const docCreatedBy: string = 'user-456';
+      const currentUserId: string = 'user-123';
       const isOwner = docCreatedBy === currentUserId;
       expect(isOwner).toBe(false);
     });
@@ -257,7 +258,7 @@ describe('DocumentService error handling', () => {
   describe('list filtering', () => {
     it('non-admin users only see their own documents', () => {
       const user = mockUser;
-      const isAdmin = user.role === Role.ADMIN;
+      const isAdmin = (user.role as Role) === Role.ADMIN;
       const filterCreatedBy = isAdmin ? undefined : user.id;
       expect(filterCreatedBy).toBe('user-123');
     });
