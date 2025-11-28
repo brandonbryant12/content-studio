@@ -18,6 +18,8 @@
     "lint:fix": "pnpm lint --fix",
     "postclean": "git clean -xdf .cache .turbo node_modules",
     "start": "turbo run start",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add -F @repo/ui --"
   },

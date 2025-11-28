@@ -1,0 +1,10 @@
+{
+  "name": "@repo/jest-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./jest.config.js"
+    }
+  }
+}

@@ -30,7 +30,10 @@
     "@orpc/tanstack-query": "catalog:",
     "@orpc/valibot": "catalog:",
     "@repo/auth": "workspace:*",
+    "@repo/auth-policy": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/effect": "workspace:*",
+    "effect": "^3.16.0",
     "url-join": "catalog:",
     "valibot": "catalog:"
   },
