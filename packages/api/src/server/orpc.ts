@@ -47,7 +47,8 @@ const createEffectLayers = (
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = DatabaseStorageLive;
+  // DatabaseStorageLive now requires Db for persistent storage
+  const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
   const ttsLayer = GoogleTTSLive();
   const llmLayer = OpenAILive();
 

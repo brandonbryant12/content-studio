@@ -37,7 +37,8 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const ttsLayer = GoogleTTSLive({ apiKey: config.googleApiKey });
-  const storageLayer = DatabaseStorageLive;
+  // DatabaseStorageLive requires Db for persistent storage
+  const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
   const llmLayer = OpenAILive({ apiKey: config.openaiApiKey });
   // Runtime for queue polling (doesn't need user context or documents)
   const workerLayers = Layer.mergeAll(dbLayer, queueLayer, ttsLayer, storageLayer, policyLayer, llmLayer);

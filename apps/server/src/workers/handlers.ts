@@ -1,7 +1,26 @@
 import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/podcast';
 import { JobProcessingError } from '@repo/queue';
-import { Effect } from 'effect';
+import { Effect, Cause } from 'effect';
 import type { GeneratePodcastPayload, GeneratePodcastResult, Job } from '@repo/queue';
+
+/**
+ * Format an error for logging - handles Effect tagged errors and standard errors.
+ */
+const formatError = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    // Effect tagged error
+    if ('_tag' in error) {
+      const tag = (error as { _tag: string })._tag;
+      const message = 'message' in error ? (error as { message: string }).message : '';
+      return message ? `${tag}: ${message}` : tag;
+    }
+    // Standard Error
+    if (error instanceof Error) {
+      return error.message || error.name;
+    }
+  }
+  return String(error);
+};
 
 /**
  * Handler for generate-podcast jobs.
@@ -39,10 +58,13 @@ export const handleGeneratePodcast = (
           Effect.catchAll(() => Effect.void), // Ignore errors updating status
         );
 
+        const errorMessage = formatError(error);
+        console.error('[Worker] Generation failed:', errorMessage, error);
+
         return yield* Effect.fail(
           new JobProcessingError({
             jobId: job.id,
-            message: `Failed to generate podcast: ${error instanceof Error ? error.message : String(error)}`,
+            message: `Failed to generate podcast: ${errorMessage}`,
             cause: error,
           }),
         );
