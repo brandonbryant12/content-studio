@@ -21,7 +21,7 @@ import {
  * Configuration for Google Gemini TTS provider.
  */
 export interface GoogleTTSConfig {
-  /** Google Cloud API key or uses GOOGLE_API_KEY env var */
+  /** Google Cloud API key or uses GEMINI_API_KEY env var */
   readonly apiKey?: string;
   /** Default: 'gemini-2.5-flash-tts' */
   readonly model?: string;
@@ -54,11 +54,11 @@ const mapError = (error: unknown): TTSError | TTSQuotaExceededError => {
  * Create Google TTS service implementation.
  */
 const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
-  const apiKey = config.apiKey ?? process.env.GOOGLE_API_KEY;
+  const apiKey = config.apiKey ?? process.env.GEMINI_API_KEY;
   const modelName = config.model ?? 'gemini-2.5-flash-tts';
 
   if (!apiKey) {
-    throw new Error('Google API key is required. Set GOOGLE_API_KEY or pass apiKey in config.');
+    throw new Error('Google API key is required. Set GEMINI_API_KEY or pass apiKey in config.');
   }
 
   return {

@@ -15,10 +15,10 @@ export type ErrorMapper<E extends { _tag: string }> = {
  * explicitly mapped in the errorMapper. This ensures exhaustive error handling
  * at the API boundary.
  *
- * **Important**: The Effect must have all requirements satisfied (R = never).
+ * **Important**: The Effect must have all requirements satisfied.
  * Use `Effect.provide(layers)` before passing to handleEffect.
  *
- * @param effect - The Effect to run (must have R = never)
+ * @param effect - The Effect to run (with all requirements provided)
  * @param errorMapper - Object mapping each error tag to a handler that throws an oRPC error
  *
  * @example

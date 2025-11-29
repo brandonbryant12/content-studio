@@ -24,22 +24,25 @@ function RootComponent() {
 
   if (isPending) {
     return (
-      <NavContainer>
-        <Spinner />
-      </NavContainer>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <NavContainer>
+          <div />
+        </NavContainer>
+        <div className="flex items-center justify-center h-[calc(100vh-57px)]">
+          <Spinner />
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar session={session} />
-      <Toaster />
-      <div className="p-2 md:p-4">
-        <Outlet />
-      </div>
+      <Toaster position="bottom-right" />
+      <Outlet />
       <React.Suspense>
         <TanStackRouterDevtools position="bottom-right" />
       </React.Suspense>
-    </>
+    </div>
   );
 }

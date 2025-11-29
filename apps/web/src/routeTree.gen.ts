@@ -14,8 +14,9 @@ import { Route as ProtectedLayoutRouteImport } from './routes/_protected/layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as ProtectedPostsIndexRouteImport } from './routes/_protected/posts/index'
-import { Route as ProtectedPostsPostidIndexRouteImport } from './routes/_protected/posts/$postid/index'
+import { Route as ProtectedPodcastsIndexRouteImport } from './routes/_protected/podcasts/index'
+import { Route as ProtectedDocumentsIndexRouteImport } from './routes/_protected/documents/index'
+import { Route as ProtectedPodcastsPodcastIdIndexRouteImport } from './routes/_protected/podcasts/$podcastId/index'
 
 const PublicLayoutRoute = PublicLayoutRouteImport.update({
   id: '/_public',
@@ -40,15 +41,20 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => PublicLayoutRoute,
 } as any)
-const ProtectedPostsIndexRoute = ProtectedPostsIndexRouteImport.update({
-  id: '/posts/',
-  path: '/posts/',
+const ProtectedPodcastsIndexRoute = ProtectedPodcastsIndexRouteImport.update({
+  id: '/podcasts/',
+  path: '/podcasts/',
   getParentRoute: () => ProtectedLayoutRoute,
 } as any)
-const ProtectedPostsPostidIndexRoute =
-  ProtectedPostsPostidIndexRouteImport.update({
-    id: '/posts/$postid/',
-    path: '/posts/$postid/',
+const ProtectedDocumentsIndexRoute = ProtectedDocumentsIndexRouteImport.update({
+  id: '/documents/',
+  path: '/documents/',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
+const ProtectedPodcastsPodcastIdIndexRoute =
+  ProtectedPodcastsPodcastIdIndexRouteImport.update({
+    id: '/podcasts/$podcastId/',
+    path: '/podcasts/$podcastId/',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
 
@@ -56,15 +62,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
-  '/posts': typeof ProtectedPostsIndexRoute
-  '/posts/$postid': typeof ProtectedPostsPostidIndexRoute
+  '/documents': typeof ProtectedDocumentsIndexRoute
+  '/podcasts': typeof ProtectedPodcastsIndexRoute
+  '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
-  '/posts': typeof ProtectedPostsIndexRoute
-  '/posts/$postid': typeof ProtectedPostsPostidIndexRoute
+  '/documents': typeof ProtectedDocumentsIndexRoute
+  '/podcasts': typeof ProtectedPodcastsIndexRoute
+  '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -73,14 +81,27 @@ export interface FileRoutesById {
   '/_public': typeof PublicLayoutRouteWithChildren
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
-  '/_protected/posts/': typeof ProtectedPostsIndexRoute
-  '/_protected/posts/$postid/': typeof ProtectedPostsPostidIndexRoute
+  '/_protected/documents/': typeof ProtectedDocumentsIndexRoute
+  '/_protected/podcasts/': typeof ProtectedPodcastsIndexRoute
+  '/_protected/podcasts/$podcastId/': typeof ProtectedPodcastsPodcastIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/posts' | '/posts/$postid'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/documents'
+    | '/podcasts'
+    | '/podcasts/$podcastId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/posts' | '/posts/$postid'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/documents'
+    | '/podcasts'
+    | '/podcasts/$podcastId'
   id:
     | '__root__'
     | '/'
@@ -88,8 +109,9 @@ export interface FileRouteTypes {
     | '/_public'
     | '/_public/login'
     | '/_public/register'
-    | '/_protected/posts/'
-    | '/_protected/posts/$postid/'
+    | '/_protected/documents/'
+    | '/_protected/podcasts/'
+    | '/_protected/podcasts/$podcastId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,31 +157,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicLayoutRoute
     }
-    '/_protected/posts/': {
-      id: '/_protected/posts/'
-      path: '/posts'
-      fullPath: '/posts'
-      preLoaderRoute: typeof ProtectedPostsIndexRouteImport
+    '/_protected/podcasts/': {
+      id: '/_protected/podcasts/'
+      path: '/podcasts'
+      fullPath: '/podcasts'
+      preLoaderRoute: typeof ProtectedPodcastsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
-    '/_protected/posts/$postid/': {
-      id: '/_protected/posts/$postid/'
-      path: '/posts/$postid'
-      fullPath: '/posts/$postid'
-      preLoaderRoute: typeof ProtectedPostsPostidIndexRouteImport
+    '/_protected/documents/': {
+      id: '/_protected/documents/'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof ProtectedDocumentsIndexRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
+    '/_protected/podcasts/$podcastId/': {
+      id: '/_protected/podcasts/$podcastId/'
+      path: '/podcasts/$podcastId'
+      fullPath: '/podcasts/$podcastId'
+      preLoaderRoute: typeof ProtectedPodcastsPodcastIdIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
   }
 }
 
 interface ProtectedLayoutRouteChildren {
-  ProtectedPostsIndexRoute: typeof ProtectedPostsIndexRoute
-  ProtectedPostsPostidIndexRoute: typeof ProtectedPostsPostidIndexRoute
+  ProtectedDocumentsIndexRoute: typeof ProtectedDocumentsIndexRoute
+  ProtectedPodcastsIndexRoute: typeof ProtectedPodcastsIndexRoute
+  ProtectedPodcastsPodcastIdIndexRoute: typeof ProtectedPodcastsPodcastIdIndexRoute
 }
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
-  ProtectedPostsIndexRoute: ProtectedPostsIndexRoute,
-  ProtectedPostsPostidIndexRoute: ProtectedPostsPostidIndexRoute,
+  ProtectedDocumentsIndexRoute: ProtectedDocumentsIndexRoute,
+  ProtectedPodcastsIndexRoute: ProtectedPodcastsIndexRoute,
+  ProtectedPodcastsPodcastIdIndexRoute: ProtectedPodcastsPodcastIdIndexRoute,
 }
 
 const ProtectedLayoutRouteWithChildren = ProtectedLayoutRoute._addFileChildren(

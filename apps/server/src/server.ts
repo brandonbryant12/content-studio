@@ -1,6 +1,17 @@
 import { serve } from '@hono/node-server';
 import { env } from './env';
 import app from '.';
+import { createPodcastWorker } from './workers/podcast-worker';
+
+// Start the podcast worker
+const worker = createPodcastWorker({
+  databaseUrl: env.SERVER_POSTGRES_URL,
+  pollInterval: 3000, // Poll every 3 seconds
+});
+
+worker.start().catch((error) => {
+  console.error('Worker error:', error);
+});
 
 const server = serve(
   {

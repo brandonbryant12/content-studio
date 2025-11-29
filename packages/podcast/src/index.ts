@@ -1,7 +1,7 @@
 // Types and errors
 export * from './errors';
 
-// Service interface
+// Service interface (CRUD operations)
 export {
   Podcasts,
   type PodcastService,
@@ -10,8 +10,12 @@ export {
   type PodcastFull,
 } from './service';
 
-// Live implementation
+// Live implementation (CRUD)
 export { PodcastsLive } from './live';
+
+// Generator service (script + audio generation)
+export { PodcastGenerator, type PodcastGeneratorService, type GenerationError } from './generator';
+export { PodcastGeneratorLive } from './generator-live';
 
 // Re-export DB types for convenience
 export type {

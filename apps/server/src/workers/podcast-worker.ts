@@ -4,9 +4,9 @@ import { createDb } from '@repo/db/client';
 import { DocumentsLive } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
 import { OpenAILive } from '@repo/llm';
-import { PodcastsLive } from '@repo/podcast';
+import { PodcastsLive, PodcastGeneratorLive } from '@repo/podcast';
 import { Queue, QueueLive, type GeneratePodcastPayload, type Job } from '@repo/queue';
-import { FilesystemStorageLive } from '@repo/storage';
+import { DatabaseStorageLive } from '@repo/storage';
 import { GoogleTTSLive } from '@repo/tts';
 import { Effect, Layer, Schedule, ManagedRuntime } from 'effect';
 import { handleGeneratePodcast } from './handlers';
@@ -16,13 +16,9 @@ export interface PodcastWorkerConfig {
   databaseUrl: string;
   /** Polling interval in milliseconds (default: 5000) */
   pollInterval?: number;
-  /** Base path for storing audio files */
-  storagePath: string;
-  /** Base URL for serving audio files */
-  storageUrl: string;
-  /** Google API key for TTS (optional, uses env var if not provided) */
+  /** Google API key for TTS (optional, uses GEMINI_API_KEY env var if not provided) */
   googleApiKey?: string;
-  /** OpenAI API key (optional, uses env var if not provided) */
+  /** OpenAI API key (optional, uses OPENAI_API_KEY env var if not provided) */
   openaiApiKey?: string;
 }
 
@@ -41,10 +37,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const ttsLayer = GoogleTTSLive({ apiKey: config.googleApiKey });
-  const storageLayer = FilesystemStorageLive({
-    basePath: config.storagePath,
-    baseUrl: config.storageUrl,
-  });
+  const storageLayer = DatabaseStorageLive;
   const llmLayer = OpenAILive({ apiKey: config.openaiApiKey });
   // Runtime for queue polling (doesn't need user context or documents)
   const workerLayers = Layer.mergeAll(dbLayer, queueLayer, ttsLayer, storageLayer, policyLayer, llmLayer);
@@ -67,9 +60,15 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
     );
 
-    // PodcastsLive requires Db, CurrentUser
+    // PodcastsLive requires Db, CurrentUser (CRUD only)
     const podcastsLayer = PodcastsLive.pipe(
       Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
+    );
+
+    // PodcastGeneratorLive uses Layer.effect - requires all deps at layer construction
+    // This ensures compile-time verification that all dependencies are provided
+    const generatorLayer = PodcastGeneratorLive.pipe(
+      Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayerWithUser, llmLayer, ttsLayer, storageLayer)),
     );
 
     // Combine all layers needed for the handler
@@ -82,6 +81,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       documentsLayerWithUser,
       queueLayer,
       podcastsLayer,
+      generatorLayer,
     );
 
     return ManagedRuntime.make(allLayers);

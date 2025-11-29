@@ -446,15 +446,24 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
+      '@repo/documents':
+        specifier: workspace:*
+        version: link:../documents
       '@repo/effect':
         specifier: workspace:*
         version: link:../effect
+      '@repo/llm':
+        specifier: workspace:*
+        version: link:../llm
       '@repo/podcast':
         specifier: workspace:*
         version: link:../podcast
       '@repo/queue':
         specifier: workspace:*
         version: link:../queue
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
       '@repo/tts':
         specifier: workspace:*
         version: link:../tts

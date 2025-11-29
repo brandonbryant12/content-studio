@@ -1,39 +1,26 @@
-import { Podcasts, type PodcastFull } from '@repo/podcast';
+import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/podcast';
 import { JobProcessingError } from '@repo/queue';
 import { Effect } from 'effect';
-import type { CurrentUser } from '@repo/auth-policy';
-import type { Documents } from '@repo/documents';
-import type { Db } from '@repo/effect/db';
-import type { LLM } from '@repo/llm';
 import type { GeneratePodcastPayload, GeneratePodcastResult, Job } from '@repo/queue';
-import type { Storage } from '@repo/storage';
-import type { TTS } from '@repo/tts';
-
-/** Context required for podcast generation handler */
-type HandlerContext = Podcasts | Db | CurrentUser | TTS | Storage | Documents | LLM;
 
 /**
  * Handler for generate-podcast jobs.
- * Calls the podcast service to generate script, synthesize audio, upload to storage, and update the record.
+ * Calls the PodcastGenerator service to generate script, synthesize audio, upload to storage, and update the record.
  *
- * Requires the following services in context:
- * - Podcasts: The podcast service
- * - Db: Database access
- * - CurrentUser: User context for authorization
- * - TTS: Text-to-speech service
- * - Storage: File storage service
- * - Documents: Document content service
- * - LLM: Language model service
+ * Context requirements are inferred from the Effect - do NOT manually annotate the return type
+ * as that can hide missing dependencies at runtime.
+ *
+ * Requires: PodcastGenerator (for generation), Podcasts (for setStatus on error)
  */
 export const handleGeneratePodcast = (
   job: Job<GeneratePodcastPayload>,
-): Effect.Effect<GeneratePodcastResult, JobProcessingError, HandlerContext> =>
+) =>
   Effect.gen(function* () {
-    const podcasts = yield* Podcasts;
+    const generator = yield* PodcastGenerator;
     const { podcastId, promptInstructions } = job.payload;
 
-    // Generate podcast (Script + Audio - all handled by the service)
-    const podcast: PodcastFull = yield* podcasts.generate(podcastId, { promptInstructions });
+    // Generate podcast (Script + Audio - all handled by the generator service)
+    const podcast: PodcastFull = yield* generator.generate(podcastId, { promptInstructions });
 
     return {
       scriptId: podcast.script?.id ?? '',

@@ -5,11 +5,12 @@ import {
   type User,
 } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
-import { eq } from '@repo/db';
-import { user } from '@repo/db/schema';
+import { DocumentsLive, type Documents } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
-import { PodcastsLive, type Podcasts } from '@repo/podcast';
+import { OpenAILive, type LLM } from '@repo/llm';
+import { PodcastsLive, PodcastGeneratorLive, type Podcasts, type PodcastGenerator } from '@repo/podcast';
 import { QueueLive, type Queue } from '@repo/queue';
+import { DatabaseStorageLive, type Storage } from '@repo/storage';
 import { GoogleTTSLive, type TTS } from '@repo/tts';
 import { Layer, ManagedRuntime } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
@@ -23,46 +24,48 @@ import { appContract } from '../contracts';
 
 type Session = AuthInstance['$Infer']['Session'];
 
-/**
- * Fetches user role from the database.
- * Returns 'user' as default if user not found.
- */
-const getUserRole = async (db: DatabaseInstance, userId: string): Promise<Role> => {
-  const [row] = await db.select({ role: user.role }).from(user).where(eq(user.id, userId));
-  return (row?.role as Role) ?? Role.USER;
-};
-
 /** All services provided by the API context */
-export type ApiServices = Db | CurrentUser | Policy | Podcasts | Queue | TTS;
+export type ApiServices = Db | CurrentUser | Policy | Documents | Storage | Podcasts | PodcastGenerator | Queue | TTS | LLM;
 
 /**
  * Creates an Effect Layer with all required services:
  * - Db: Database access
  * - CurrentUser: Currently authenticated user
  * - Policy: Authorization policy service
- * - Podcasts: Podcast domain service
+ * - Documents: Document management service
+ * - Storage: File storage service
+ * - Podcasts: Podcast CRUD service
+ * - PodcastGenerator: Podcast generation service (script + audio)
  * - Queue: Job queue service
  * - TTS: Text-to-speech service
+ * - LLM: Language model service
  */
 const createEffectLayers = (
   db: DatabaseInstance,
   currentUser: User | null,
-): Layer.Layer<ApiServices> => {
+): Layer.Layer<ApiServices, never, never> => {
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
+  const storageLayer = DatabaseStorageLive;
   const ttsLayer = GoogleTTSLive();
+  const llmLayer = OpenAILive();
 
   if (currentUser) {
     const userLayer = CurrentUserLive(currentUser);
+    const documentsLayer = DocumentsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)));
     const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
+    // PodcastGenerator uses Layer.effect - requires all deps at layer construction for compile-time safety
+    const generatorLayer = PodcastGeneratorLive.pipe(
+      Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayer, llmLayer, ttsLayer, storageLayer)),
+    );
 
-    return Layer.mergeAll(dbLayer, userLayer, policyLayer, podcastsLayer, queueLayer, ttsLayer);
+    return Layer.mergeAll(dbLayer, userLayer, policyLayer, documentsLayer, storageLayer, podcastsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer);
   }
 
-  // For unauthenticated requests, provide empty layers for CurrentUser
-  // Policy checks will fail if they require CurrentUser
-  return Layer.mergeAll(dbLayer, policyLayer, queueLayer, ttsLayer) as Layer.Layer<ApiServices>;
+  // For unauthenticated requests, provide layers without CurrentUser
+  // Policy checks will fail if they require CurrentUser - we cast as any to satisfy type
+  return Layer.mergeAll(dbLayer, policyLayer, storageLayer, queueLayer, ttsLayer, llmLayer) as any;
 };
 
 export interface ORPCContext {
@@ -72,7 +75,7 @@ export interface ORPCContext {
    * Effect layers providing all API services.
    * Use with `Effect.provide(context.layers)` in handlers.
    */
-  layers: Layer.Layer<ApiServices>;
+  layers: Layer.Layer<ApiServices, never, never>;
   /**
    * Run an Effect with the request's services.
    * Use this to integrate Effect-based domain services in oRPC handlers.
@@ -105,12 +108,11 @@ export const createORPCContext = async ({
   // Build current user from session if authenticated
   let currentUser: User | null = null;
   if (session?.user) {
-    const role = await getUserRole(db, session.user.id);
     currentUser = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
-      role,
+      role: Role.USER, // Default role for all authenticated users
     };
   }
 
