@@ -1,6 +1,5 @@
 import { Context } from 'effect';
 import type { LLMError, LLMRateLimitError } from '@repo/effect/errors';
-import type { LanguageModel } from 'ai';
 import type { Schema , Effect } from 'effect';
 
 /**
@@ -34,7 +33,7 @@ export interface LLMService {
   /**
    * The underlying AI SDK model instance.
    */
-  readonly model: LanguageModel;
+  readonly model: unknown;
 
   /**
    * Generate a typed object from a prompt using Effect Schema.

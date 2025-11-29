@@ -33,6 +33,9 @@ export const envSchema = v.object({
 
   // Frontend URL, used to configure trusted origin (CORS)
   PUBLIC_WEB_URL: v.pipe(v.string(), v.url()),
+
+  // Google AI API key for LLM and TTS
+  GEMINI_API_KEY: v.pipe(v.string(), v.minLength(1)),
 });
 
 export const env = v.parse(envSchema, process.env);

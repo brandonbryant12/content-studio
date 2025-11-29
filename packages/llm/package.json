@@ -24,22 +24,23 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
+    "@ai-sdk/google": "^2.0.44",
+    "@ai-sdk/openai": "^1.0.0",
     "@repo/effect": "workspace:*",
-    "effect": "^3.16.0",
     "ai": "^5.0.0",
-    "@ai-sdk/openai": "^1.0.0"
+    "effect": "^3.16.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/jest-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:",
     "jest": "catalog:",
-    "@types/jest": "catalog:",
-    "ts-jest": "catalog:"
+    "prettier": "catalog:",
+    "ts-jest": "catalog:",
+    "typescript": "catalog:"
   }
 }

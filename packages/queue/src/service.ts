@@ -31,6 +31,15 @@ export interface QueueService {
     handler: (job: Job) => Effect.Effect<unknown, JobProcessingError>,
   ) => Effect.Effect<Job | null, QueueError | JobProcessingError | JobNotFoundError>;
 
+  readonly processJobById: (
+    jobId: string,
+    handler: (job: Job) => Effect.Effect<unknown, JobProcessingError>,
+  ) => Effect.Effect<Job, QueueError | JobProcessingError | JobNotFoundError>;
+
+  readonly findPendingJobForPodcast: (
+    podcastId: string,
+  ) => Effect.Effect<Job | null, QueueError>;
+
   readonly deleteJob: (
     jobId: string,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;

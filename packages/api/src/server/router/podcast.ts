@@ -1,8 +1,7 @@
-import { JobProcessingError } from '@repo/effect/errors';
-import { Podcasts, PodcastGenerator } from '@repo/podcast';
+import { Podcasts } from '@repo/podcast';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
-import type { GeneratePodcastPayload, Job } from '@repo/queue';
+import type { GeneratePodcastPayload } from '@repo/queue';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
@@ -267,10 +266,18 @@ const podcastRouter = {
         Effect.gen(function* () {
           const podcasts = yield* Podcasts;
           const queue = yield* Queue;
-          const generator = yield* PodcastGenerator;
 
           // Verify podcast exists and user has access
           const podcast = yield* podcasts.findById(input.id);
+
+          // Check for existing pending/processing job (idempotency)
+          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
+          if (existingJob) {
+            return {
+              jobId: existingJob.id,
+              status: existingJob.status,
+            };
+          }
 
           // Enqueue the combined generation job
           const payload: GeneratePodcastPayload = {
@@ -281,27 +288,7 @@ const podcastRouter = {
 
           const job = yield* queue.enqueue('generate-podcast', payload, podcast.createdBy);
 
-          // Fire-and-forget: trigger immediate processing instead of waiting for worker poll
-          yield* Effect.fork(
-            queue.processNextJob('generate-podcast', (j: Job) => {
-              const jobPayload = j.payload as GeneratePodcastPayload;
-              return generator
-                .generate(jobPayload.podcastId, {
-                  promptInstructions: jobPayload.promptInstructions,
-                })
-                .pipe(
-                  Effect.asVoid,
-                  Effect.mapError(
-                    (err) =>
-                      new JobProcessingError({
-                        jobId: j.id,
-                        message: err.message,
-                        cause: err,
-                      }),
-                  ),
-                );
-            }),
-          );
+          // Job will be picked up by the polling worker
 
           return {
             jobId: job.id,

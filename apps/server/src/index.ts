@@ -24,6 +24,7 @@ const api = createApi({
   db,
   serverUrl: env.PUBLIC_SERVER_URL,
   apiPath: env.PUBLIC_SERVER_API_PATH,
+  geminiApiKey: env.GEMINI_API_KEY,
 });
 
 const app = new Hono<{

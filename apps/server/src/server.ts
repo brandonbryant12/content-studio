@@ -7,6 +7,7 @@ import { createPodcastWorker } from './workers/podcast-worker';
 const worker = createPodcastWorker({
   databaseUrl: env.SERVER_POSTGRES_URL,
   pollInterval: 3000, // Poll every 3 seconds
+  geminiApiKey: env.GEMINI_API_KEY,
 });
 
 worker.start().catch((error) => {

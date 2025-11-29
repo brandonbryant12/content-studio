@@ -9,5 +9,5 @@ export {
   type GenerateResult,
 } from './service';
 
-// OpenAI provider
-export { OpenAILive, type OpenAIConfig } from './providers/openai';
+// Google AI provider
+export { GoogleLive, type GoogleConfig } from './providers/google';

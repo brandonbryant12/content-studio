@@ -138,15 +138,26 @@ export default function CreatePodcastDialog({
 
   const { data: voices = [] } = useQuery(apiClient.voices.list.queryOptions({ input: {} }));
 
+  const generateMutation = useMutation(
+    apiClient.podcasts.generate.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to start generation');
+      },
+    }),
+  );
+
   const createMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (podcast) => {
+        // Trigger generation immediately after creation
+        generateMutation.mutate({ id: podcast.id });
+
         await queryClient.invalidateQueries({
           predicate: (query) =>
             Array.isArray(query.queryKey) && query.queryKey[0] === 'podcasts',
         });
         onOpenChange(false);
-        // Navigate to detail page and trigger generation
+        // Navigate to detail page to watch progress
         navigate({ to: '/podcasts/$podcastId', params: { podcastId: podcast.id } });
         toast.success('Podcast created! Starting generation...');
       },

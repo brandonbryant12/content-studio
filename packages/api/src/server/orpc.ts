@@ -7,12 +7,12 @@ import {
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { DocumentsLive, type Documents } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
-import { OpenAILive, type LLM } from '@repo/llm';
+import { GoogleLive, type LLM } from '@repo/llm';
 import { PodcastsLive, PodcastGeneratorLive, type Podcasts, type PodcastGenerator } from '@repo/podcast';
 import { QueueLive, type Queue } from '@repo/queue';
 import { DatabaseStorageLive, type Storage } from '@repo/storage';
 import { GoogleTTSLive, type TTS } from '@repo/tts';
-import { Layer, ManagedRuntime } from 'effect';
+import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
 import type {
   CurrentUser,
@@ -24,108 +24,133 @@ import { appContract } from '../contracts';
 
 type Session = AuthInstance['$Infer']['Session'];
 
-/** All services provided by the API context */
-export type ApiServices = Db | CurrentUser | Policy | Documents | Storage | Podcasts | PodcastGenerator | Queue | TTS | LLM;
+/** Services available without authentication */
+export type PublicServices = Db | Policy | Storage | Queue | TTS | LLM;
+
+/** Services that require authentication */
+export type AuthenticatedServices = PublicServices | CurrentUser | Documents | Podcasts | PodcastGenerator;
+
+/** All services provided by the API context (alias for AuthenticatedServices) */
+export type ApiServices = AuthenticatedServices;
 
 /**
- * Creates an Effect Layer with all required services:
- * - Db: Database access
- * - CurrentUser: Currently authenticated user
- * - Policy: Authorization policy service
- * - Documents: Document management service
- * - Storage: File storage service
- * - Podcasts: Podcast CRUD service
- * - PodcastGenerator: Podcast generation service (script + audio)
- * - Queue: Job queue service
- * - TTS: Text-to-speech service
- * - LLM: Language model service
+ * Creates base layers available to all requests (authenticated or not).
  */
-const createEffectLayers = (
-  db: DatabaseInstance,
-  currentUser: User | null,
-): Layer.Layer<ApiServices, never, never> => {
+const createBaseLayers = (db: DatabaseInstance, geminiApiKey: string) => {
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  // DatabaseStorageLive now requires Db for persistent storage
   const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
-  const ttsLayer = GoogleTTSLive();
-  const llmLayer = OpenAILive();
+  const ttsLayer = GoogleTTSLive({ apiKey: geminiApiKey });
+  const llmLayer = GoogleLive({ apiKey: geminiApiKey });
+  const loggerLayer = Logger.pretty;
 
-  if (currentUser) {
-    const userLayer = CurrentUserLive(currentUser);
-    const documentsLayer = DocumentsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)));
-    const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
-    // PodcastGenerator uses Layer.effect - requires all deps at layer construction for compile-time safety
-    const generatorLayer = PodcastGeneratorLive.pipe(
-      Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayer, llmLayer, ttsLayer, storageLayer)),
-    );
-
-    return Layer.mergeAll(dbLayer, userLayer, policyLayer, documentsLayer, storageLayer, podcastsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer);
-  }
-
-  // For unauthenticated requests, provide layers without CurrentUser
-  // Policy checks will fail if they require CurrentUser - we cast as any to satisfy type
-  return Layer.mergeAll(dbLayer, policyLayer, storageLayer, queueLayer, ttsLayer, llmLayer) as any;
+  return {
+    dbLayer,
+    policyLayer,
+    queueLayer,
+    storageLayer,
+    ttsLayer,
+    llmLayer,
+    loggerLayer,
+  };
 };
 
-export interface ORPCContext {
+/**
+ * Creates an Effect Layer with services for authenticated requests.
+ */
+const createAuthenticatedLayers = (
+  db: DatabaseInstance,
+  currentUser: User,
+  geminiApiKey: string,
+): Layer.Layer<AuthenticatedServices, never, never> => {
+  const { dbLayer, policyLayer, queueLayer, storageLayer, ttsLayer, llmLayer, loggerLayer } = createBaseLayers(db, geminiApiKey);
+
+  const userLayer = CurrentUserLive(currentUser);
+  const documentsLayer = DocumentsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)));
+  const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
+  const generatorLayer = PodcastGeneratorLive.pipe(
+    Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayer, llmLayer, ttsLayer, storageLayer)),
+  );
+
+  return Layer.mergeAll(
+    dbLayer, userLayer, policyLayer, documentsLayer, storageLayer,
+    podcastsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer, loggerLayer
+  );
+};
+
+/**
+ * Creates an Effect Layer with services for unauthenticated requests.
+ */
+const createPublicLayers = (
+  db: DatabaseInstance,
+  geminiApiKey: string,
+): Layer.Layer<PublicServices, never, never> => {
+  const { dbLayer, policyLayer, queueLayer, storageLayer, ttsLayer, llmLayer, loggerLayer } = createBaseLayers(db, geminiApiKey);
+
+  return Layer.mergeAll(dbLayer, policyLayer, storageLayer, queueLayer, ttsLayer, llmLayer, loggerLayer);
+};
+
+interface BaseORPCContext {
   db: DatabaseInstance;
   session: Session | null;
-  /**
-   * Effect layers providing all API services.
-   * Use with `Effect.provide(context.layers)` in handlers.
-   */
-  layers: Layer.Layer<ApiServices, never, never>;
-  /**
-   * Run an Effect with the request's services.
-   * Use this to integrate Effect-based domain services in oRPC handlers.
-   *
-   * @example
-   * ```typescript
-   * const result = await context.runEffect(
-   *   Effect.gen(function* () {
-   *     yield* requireOwnership(post.createdBy);
-   *     yield* PostService.delete(postId);
-   *     return { success: true };
-   *   })
-   * );
-   * ```
-   */
-  runEffect: <A, E>(effect: Effect.Effect<A, E, ApiServices>) => Promise<A>;
 }
+
+export interface PublicORPCContext extends BaseORPCContext {
+  session: null;
+  layers: Layer.Layer<PublicServices, never, never>;
+  runEffect: <A, E>(effect: Effect.Effect<A, E, PublicServices>) => Promise<A>;
+}
+
+export interface AuthenticatedORPCContext extends BaseORPCContext {
+  session: Session;
+  layers: Layer.Layer<AuthenticatedServices, never, never>;
+  runEffect: <A, E>(effect: Effect.Effect<A, E, AuthenticatedServices>) => Promise<A>;
+}
+
+export type ORPCContext = PublicORPCContext | AuthenticatedORPCContext;
 
 export const createORPCContext = async ({
   auth,
   db,
   headers,
+  geminiApiKey,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
   headers: Headers;
+  geminiApiKey: string;
 }): Promise<ORPCContext> => {
   const session = await auth.api.getSession({ headers });
 
-  // Build current user from session if authenticated
-  let currentUser: User | null = null;
   if (session?.user) {
-    currentUser = {
+    const currentUser: User = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
-      role: Role.USER, // Default role for all authenticated users
+      role: Role.USER,
+    };
+
+    const layers = createAuthenticatedLayers(db, currentUser, geminiApiKey);
+    const runtime = ManagedRuntime.make(layers);
+
+    return {
+      db,
+      session,
+      layers,
+      runEffect: <A, E>(effect: Effect.Effect<A, E, AuthenticatedServices>) =>
+        runtime.runPromise(effect),
     };
   }
 
-  // Create Effect layers with all services
-  const layers = createEffectLayers(db, currentUser);
+  const layers = createPublicLayers(db, geminiApiKey);
   const runtime = ManagedRuntime.make(layers);
 
   return {
     db,
-    session,
+    session: null,
     layers,
-    runEffect: <A, E>(effect: Effect.Effect<A, E, ApiServices>) =>
+    runEffect: <A, E>(effect: Effect.Effect<A, E, PublicServices>) =>
       runtime.runPromise(effect),
   };
 };
@@ -158,9 +183,12 @@ export const protectedProcedure = publicProcedure.use(({ context, next, errors }
       message: 'Missing user session. Please log in!',
     });
   }
+  // Type narrowing: session exists means we have AuthenticatedORPCContext
+  const authenticatedContext = context as AuthenticatedORPCContext;
   return next({
     context: {
-      session: { ...context.session },
+      session: authenticatedContext.session,
+      layers: authenticatedContext.layers,
     },
   });
 });

@@ -1,4 +1,4 @@
-import { eq, and, asc } from '@repo/db';
+import { eq, and, asc, inArray, sql } from '@repo/db';
 import { job } from '@repo/db/schema';
 import { Db } from '@repo/effect';
 import { Effect, Layer } from 'effect';
@@ -174,6 +174,55 @@ const makeQueueService = Effect.gen(function* () {
       }),
     );
 
+  const processJobById: QueueService['processJobById'] = (jobId, handler) =>
+    getJob(jobId).pipe(
+      Effect.flatMap((jobData) => {
+        // Only process if job is still pending
+        if (jobData.status !== 'pending') {
+          return Effect.succeed(jobData);
+        }
+
+        return updateJobStatus(jobData.id, 'processing').pipe(
+          Effect.flatMap((updatedJob) =>
+            handler(updatedJob).pipe(
+              Effect.flatMap((result) =>
+                updateJobStatus(updatedJob.id, 'completed', result),
+              ),
+              Effect.catchAll((err) =>
+                updateJobStatus(
+                  updatedJob.id,
+                  'failed',
+                  undefined,
+                  err instanceof JobProcessingError ? err.message : String(err),
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+
+  const findPendingJobForPodcast: QueueService['findPendingJobForPodcast'] = (podcastId) =>
+    runQuery(
+      'findPendingJobForPodcast',
+      async () => {
+        const [row] = await db
+          .select()
+          .from(job)
+          .where(
+            and(
+              eq(job.type, 'generate-podcast'),
+              inArray(job.status, ['pending', 'processing']),
+              sql`${job.payload}->>'podcastId' = ${podcastId}`
+            )
+          )
+          .limit(1);
+
+        return row ? mapRowToJob(row) : null;
+      },
+      'Failed to find pending job for podcast',
+    ).pipe(Effect.tap(() => Effect.annotateCurrentSpan('podcast.id', podcastId)));
+
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(
       'deleteJob',
@@ -199,6 +248,8 @@ const makeQueueService = Effect.gen(function* () {
     getJobsByUser,
     updateJobStatus,
     processNextJob,
+    processJobById,
+    findPendingJobForPodcast,
     deleteJob,
   } satisfies QueueService;
 });

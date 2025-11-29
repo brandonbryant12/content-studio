@@ -1,19 +1,17 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { LLMError, LLMRateLimitError } from '@repo/effect/errors';
-import { generateObject, jsonSchema, type LanguageModel } from 'ai';
+import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
 import { LLM, type LLMService, type GenerateOptions, type GenerateResult } from '../service';
 
 /**
- * Configuration for OpenAI provider via AI SDK.
+ * Configuration for Google AI provider via AI SDK.
  */
-export interface OpenAIConfig {
-  /** Uses OPENAI_API_KEY env var if not provided */
-  readonly apiKey?: string;
-  /** Default: 'gpt-4o-mini' */
+export interface GoogleConfig {
+  /** API key - required, should be passed from validated env.GEMINI_API_KEY */
+  readonly apiKey: string;
+  /** Default: 'gemini-2.5-flash' */
   readonly model?: string;
-  /** For proxies/alternative endpoints */
-  readonly baseURL?: string;
 }
 
 /**
@@ -41,19 +39,18 @@ const mapError = (error: unknown): LLMError | LLMRateLimitError => {
 };
 
 /**
- * Create OpenAI service implementation via AI SDK.
+ * Create Google AI service implementation via AI SDK.
  */
-const makeOpenAIService = (config: OpenAIConfig): LLMService => {
-  const modelId = config.model ?? 'gpt-4o-mini';
+const makeGoogleService = (config: GoogleConfig): LLMService => {
+  const modelId = config.model ?? 'gemini-2.5-flash';
 
-  // Create provider with custom settings if needed
-  const provider = createOpenAI({
+  // Create provider with API key
+  const google = createGoogleGenerativeAI({
     apiKey: config.apiKey,
-    baseURL: config.baseURL,
   });
 
-  // The provider returns LanguageModelV1, which is compatible with generateObject
-  const model = provider(modelId) as unknown as LanguageModel;
+  // Create model instance
+  const model = google(modelId);
 
   return {
     model,
@@ -94,18 +91,18 @@ const makeOpenAIService = (config: OpenAIConfig): LLMService => {
         catch: mapError,
       }).pipe(
         Effect.withSpan('llm.generate', {
-          attributes: { 'llm.provider': 'openai', 'llm.model': modelId },
+          attributes: { 'llm.provider': 'google', 'llm.model': modelId },
         }),
       ),
   };
 };
 
 /**
- * Create OpenAI LLM service layer via AI SDK v5.
+ * Create Google AI LLM service layer via AI SDK v5.
  *
  * @example
  * ```typescript
- * const LLMLive = OpenAILive({ model: 'gpt-4o-mini' });
+ * const LLMLive = GoogleLive({ model: 'gemini-2.5-flash' });
  *
  * const program = Effect.gen(function* () {
  *   const llm = yield* LLM;
@@ -117,5 +114,5 @@ const makeOpenAIService = (config: OpenAIConfig): LLMService => {
  * }).pipe(Effect.provide(LLMLive));
  * ```
  */
-export const OpenAILive = (config: OpenAIConfig = {}): Layer.Layer<LLM> =>
-  Layer.succeed(LLM, makeOpenAIService(config));
+export const GoogleLive = (config: GoogleConfig): Layer.Layer<LLM> =>
+  Layer.succeed(LLM, makeGoogleService(config));

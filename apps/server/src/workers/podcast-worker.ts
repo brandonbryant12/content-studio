@@ -3,12 +3,12 @@ import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { createDb } from '@repo/db/client';
 import { DocumentsLive } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
-import { OpenAILive } from '@repo/llm';
+import { GoogleLive } from '@repo/llm';
 import { PodcastsLive, PodcastGeneratorLive } from '@repo/podcast';
-import { Queue, QueueLive, type GeneratePodcastPayload, type Job } from '@repo/queue';
+import { Queue, QueueLive, JobProcessingError, type GeneratePodcastPayload, type Job } from '@repo/queue';
 import { DatabaseStorageLive } from '@repo/storage';
 import { GoogleTTSLive } from '@repo/tts';
-import { Effect, Layer, Schedule, ManagedRuntime } from 'effect';
+import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
 import { handleGeneratePodcast } from './handlers';
 
 export interface PodcastWorkerConfig {
@@ -16,10 +16,8 @@ export interface PodcastWorkerConfig {
   databaseUrl: string;
   /** Polling interval in milliseconds (default: 5000) */
   pollInterval?: number;
-  /** Google API key for TTS (optional, uses GEMINI_API_KEY env var if not provided) */
-  googleApiKey?: string;
-  /** OpenAI API key (optional, uses OPENAI_API_KEY env var if not provided) */
-  openaiApiKey?: string;
+  /** Google API key for LLM and TTS - required */
+  geminiApiKey: string;
 }
 
 /**
@@ -36,12 +34,14 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const dbLayer = DbLive(db);
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
-  const ttsLayer = GoogleTTSLive({ apiKey: config.googleApiKey });
+  const ttsLayer = GoogleTTSLive({ apiKey: config.geminiApiKey });
   // DatabaseStorageLive requires Db for persistent storage
   const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
-  const llmLayer = OpenAILive({ apiKey: config.openaiApiKey });
+  const llmLayer = GoogleLive({ apiKey: config.geminiApiKey });
   // Runtime for queue polling (doesn't need user context or documents)
-  const workerLayers = Layer.mergeAll(dbLayer, queueLayer, ttsLayer, storageLayer, policyLayer, llmLayer);
+  // Include pretty logger so Effect.logInfo etc. output to console
+  const loggerLayer = Logger.pretty;
+  const workerLayers = Layer.mergeAll(dbLayer, queueLayer, ttsLayer, storageLayer, policyLayer, llmLayer, loggerLayer);
   const runtime = ManagedRuntime.make(workerLayers);
 
   /**
@@ -98,18 +98,22 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       // Create a dedicated runtime for this job with user context
       const jobRuntime = makeJobRuntime(job.payload.userId);
 
-      try {
-        // Run the handler with the job-specific runtime
-        const result = yield* Effect.promise(() =>
-          jobRuntime.runPromise(handleGeneratePodcast(job)),
-        );
+      // Run the handler with the job-specific runtime
+      // Use tryPromise to properly convert rejections into Effect failures
+      const result = yield* Effect.tryPromise({
+        try: () => jobRuntime.runPromise(handleGeneratePodcast(job)),
+        catch: (error) => new JobProcessingError({
+          jobId: job.id,
+          message: error instanceof Error ? error.message : String(error),
+          cause: error,
+        }),
+      }).pipe(
+        // Always clean up the job runtime, whether success or failure
+        Effect.ensuring(Effect.promise(() => jobRuntime.dispose())),
+      );
 
-        yield* Effect.logInfo(`Job ${job.id} completed`);
-        return result;
-      } finally {
-        // Clean up the job runtime
-        yield* Effect.promise(() => jobRuntime.dispose());
-      }
+      yield* Effect.logInfo(`Job ${job.id} completed`);
+      return result;
     }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
 
   /**
@@ -124,6 +128,8 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
 
     if (job) {
       yield* Effect.logInfo(`Finished processing job ${job.id}, status: ${job.status}`);
+    } else {
+      yield* Effect.logInfo('No pending jobs found');
     }
 
     return job;

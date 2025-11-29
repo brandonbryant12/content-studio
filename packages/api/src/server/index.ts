@@ -27,11 +27,13 @@ export const createApi = ({
   db,
   serverUrl,
   apiPath,
+  geminiApiKey,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
   serverUrl: string;
   apiPath: `/${string}`;
+  geminiApiKey: string;
 }) => {
   const handler = new OpenAPIHandler(appRouter, {
     plugins: [
@@ -78,6 +80,7 @@ export const createApi = ({
           db,
           auth,
           headers: request.headers,
+          geminiApiKey,
         }),
       });
     },

@@ -6,7 +6,6 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -159,13 +158,6 @@ function PodcastDetailPage() {
       },
     }),
   );
-
-  // Auto-trigger generation when visiting a draft podcast
-  useEffect(() => {
-    if (podcast?.status === 'draft' && !generateMutation.isPending) {
-      generateMutation.mutate({ id: podcastId });
-    }
-  }, [podcast?.status, podcastId]);
 
   if (isPending) {
     return (
