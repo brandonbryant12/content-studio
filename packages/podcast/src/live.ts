@@ -135,6 +135,7 @@ const makePodcastService: PodcastService = {
  * For podcast generation (script + audio), use PodcastGeneratorLive instead.
  * This separation ensures CRUD consumers don't need heavy AI dependencies.
  */
+// eslint-disable-next-line no-restricted-syntax -- CRUD-only service: all methods return Effect<..., ..., Db | CurrentUser> with no hidden deps
 export const PodcastsLive: Layer.Layer<Podcasts, never, Db | CurrentUser> = Layer.succeed(
   Podcasts,
   makePodcastService,

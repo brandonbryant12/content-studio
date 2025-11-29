@@ -96,4 +96,21 @@ export default defineConfig([
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  // Effect-TS best practices
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'CallExpression[callee.object.name="Layer"][callee.property.name="succeed"]',
+          message:
+            'Avoid Layer.succeed - it hides method-level Effect context requirements from the layer type. ' +
+            'Use Layer.effect instead to capture dependencies at layer construction time for compile-time safety. ' +
+            'If this service has NO methods returning Effects with context requirements, add: ' +
+            '// eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements',
+        },
+      ],
+    },
+  },
 ]);
