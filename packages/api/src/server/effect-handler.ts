@@ -1,5 +1,4 @@
 import { Effect } from 'effect';
-import type { ApiError, ApiErrorTag } from '@repo/effect/errors';
 
 /**
  * Error mapper type - must handle ALL errors the Effect can produce.

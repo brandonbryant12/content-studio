@@ -1,9 +1,9 @@
-import { Effect } from 'effect';
 import {
   DocumentParseError,
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
 } from '@repo/effect/errors';
+import { Effect } from 'effect';
 import type { DocumentSource } from '@repo/db/schema';
 
 /**

@@ -1,5 +1,7 @@
 import { Context } from 'effect';
-import type { Effect } from 'effect';
+import type { CurrentUser } from '@repo/auth-policy';
+import type { Document, CreateDocument, UpdateDocument } from '@repo/db/schema';
+import type { Db } from '@repo/effect/db';
 import type {
   DbError,
   DocumentNotFound,
@@ -12,10 +14,8 @@ import type {
   StorageNotFoundError,
   StorageUploadError,
 } from '@repo/effect/errors';
-import type { Document, CreateDocument, UpdateDocument } from '@repo/db/schema';
-import type { Db } from '@repo/effect/db';
-import type { CurrentUser } from '@repo/auth-policy';
 import type { Storage } from '@repo/storage';
+import type { Effect } from 'effect';
 
 /**
  * Context requirements for document service operations.

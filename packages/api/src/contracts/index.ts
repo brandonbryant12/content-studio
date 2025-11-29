@@ -1,5 +1,7 @@
 import { oc } from '@orpc/contract';
+import podcastContract from './podcasts';
 import postContract from './posts';
+import voicesContract from './voices';
 
 /**
  * Base errors available to all routes.
@@ -55,5 +57,7 @@ export const appContract = oc
     },
   })
   .router({
+    podcasts: podcastContract,
     posts: postContract,
+    voices: voicesContract,
   });

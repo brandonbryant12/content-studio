@@ -1,7 +1,3 @@
-import { Effect } from 'effect';
-import { eq, desc, and, inArray, count as drizzleCount, sql } from 'drizzle-orm';
-import { withDb } from '@repo/effect/db';
-import { PodcastNotFound, ScriptNotFound, DocumentNotFound } from '@repo/effect/errors';
 import {
   podcast,
   podcastDocument,
@@ -15,27 +11,43 @@ import {
   type UpdateScript,
   type PodcastStatus,
 } from '@repo/db/schema';
+import { withDb } from '@repo/effect/db';
+import { PodcastNotFound, ScriptNotFound, DocumentNotFound } from '@repo/effect/errors';
+import { eq, desc, and, inArray, count as drizzleCount, sql } from 'drizzle-orm';
+import { Effect } from 'effect';
 
 /**
- * Verify all document IDs exist and return them.
+ * Verify all document IDs exist and are owned by the specified user.
  */
-export const verifyDocumentsExist = (documentIds: string[]) =>
+export const verifyDocumentsExist = (documentIds: string[], userId: string) =>
   withDb('podcast.verifyDocuments', async (db) => {
     const docs = await db
-      .select({ id: document.id })
+      .select({ id: document.id, createdBy: document.createdBy })
       .from(document)
       .where(inArray(document.id, documentIds));
 
     const foundIds = new Set(docs.map((d) => d.id));
     const missingId = documentIds.find((id) => !foundIds.has(id));
 
-    return { docs, missingId };
+    // Check ownership - all documents must belong to the user
+    const notOwned = docs.find((d) => d.createdBy !== userId);
+
+    return { docs, missingId, notOwnedId: notOwned?.id };
   }).pipe(
-    Effect.flatMap(({ docs, missingId }) =>
-      missingId
-        ? Effect.fail(new DocumentNotFound({ id: missingId }))
-        : Effect.succeed(docs),
-    ),
+    Effect.flatMap(({ docs, missingId, notOwnedId }) => {
+      if (missingId) {
+        return Effect.fail(new DocumentNotFound({ id: missingId }));
+      }
+      if (notOwnedId) {
+        return Effect.fail(
+          new DocumentNotFound({
+            id: notOwnedId,
+            message: 'Document not found or access denied',
+          }),
+        );
+      }
+      return Effect.succeed(docs);
+    }),
   );
 
 /**
@@ -173,6 +185,30 @@ export const updatePodcastStatus = (id: string, status: PodcastStatus, errorMess
   );
 
 /**
+ * Update podcast audio details after generation.
+ */
+export const updatePodcastAudio = (
+  id: string,
+  data: { audioUrl: string; duration: number; status: PodcastStatus },
+) =>
+  withDb('podcast.updateAudio', async (db) => {
+    const [pod] = await db
+      .update(podcast)
+      .set({
+        audioUrl: data.audioUrl,
+        duration: data.duration,
+        status: data.status,
+        errorMessage: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(podcast.id, id))
+      .returning();
+    return pod;
+  }).pipe(
+    Effect.flatMap((pod) => (pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })))),
+  );
+
+/**
  * Delete podcast by ID (cascade deletes documents and scripts).
  */
 export const deletePodcast = (id: string) =>
@@ -201,7 +237,12 @@ export const getActiveScript = (podcastId: string) =>
 /**
  * Create or update script (deactivates old versions).
  */
-export const upsertScript = (podcastId: string, data: UpdateScript, summary?: string) =>
+export const upsertScript = (
+  podcastId: string,
+  data: UpdateScript,
+  summary?: string,
+  generationPrompt?: string,
+) =>
   withDb('podcast.upsertScript', async (db) => {
     // Get current max version
     const [current] = await db
@@ -228,6 +269,7 @@ export const upsertScript = (podcastId: string, data: UpdateScript, summary?: st
         isActive: true,
         segments: data.segments,
         summary,
+        generationPrompt,
       })
       .returning();
 

@@ -1,11 +1,11 @@
-import { Effect, Layer } from 'effect';
-import { Documents, type DocumentService } from './service';
-import { DocumentNotFound } from './errors';
 import { CurrentUser, requireOwnership, Role } from '@repo/auth-policy';
-import { Db } from '@repo/effect/db';
 import { Storage } from '@repo/storage';
-import * as Repo from './repository';
+import { Effect, Layer } from 'effect';
+import type { Db } from '@repo/effect/db';
+import { DocumentNotFound } from './errors';
 import { parseUploadedFile, parseDocumentContent, validateFileSize, validateMimeType, getMimeType } from './parsers';
+import * as Repo from './repository';
+import { Documents, type DocumentService } from './service';
 
 /**
  * Calculate word count from content.

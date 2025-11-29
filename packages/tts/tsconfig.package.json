@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/typescript-config/internal-package.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.package.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+}

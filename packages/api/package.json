@@ -33,6 +33,9 @@
     "@repo/auth-policy": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/effect": "workspace:*",
+    "@repo/podcast": "workspace:*",
+    "@repo/queue": "workspace:*",
+    "@repo/tts": "workspace:*",
     "effect": "^3.16.0",
     "url-join": "catalog:",
     "valibot": "catalog:"

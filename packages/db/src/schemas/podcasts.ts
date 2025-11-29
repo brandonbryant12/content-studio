@@ -41,6 +41,7 @@ export const podcast = pgTable(
     audioUrl: text('audio_url'),
     duration: integer('duration'),
     errorMessage: text('error_message'),
+    tags: jsonb('tags').$type<string[]>().default([]),
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -126,6 +127,7 @@ export const UpdatePodcastSchema = v.partial(
     hostVoiceName: v.optional(v.string()),
     coHostVoice: v.optional(v.string()),
     coHostVoiceName: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   }),
 );
 

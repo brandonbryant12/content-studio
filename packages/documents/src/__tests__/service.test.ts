@@ -1,15 +1,15 @@
-import { Effect, Layer, Context } from 'effect';
 import crypto from 'crypto';
-import { Documents, DocumentsLive, type DocumentService } from '../index';
-import { Storage, type StorageService } from '@repo/storage';
-import { Db, type DbService } from '@repo/effect/db';
 import { CurrentUser, Role } from '@repo/auth-policy';
+import { Db, type DbService } from '@repo/effect/db';
 import {
   DocumentNotFound,
   ForbiddenError,
   StorageUploadError,
   StorageNotFoundError,
 } from '@repo/effect/errors';
+import { Storage, type StorageService } from '@repo/storage';
+import { Effect, Layer, Context } from 'effect';
+import { Documents, DocumentsLive, type DocumentService } from '../index';
 
 // Mock user for testing
 const mockUser = {

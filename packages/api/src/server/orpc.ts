@@ -8,6 +8,9 @@ import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { eq } from '@repo/db';
 import { user } from '@repo/db/schema';
 import { DbLive } from '@repo/effect/db';
+import { PodcastsLive, type Podcasts } from '@repo/podcast';
+import { QueueLive, type Queue } from '@repo/queue';
+import { GoogleTTSLive, type TTS } from '@repo/tts';
 import { Layer, ManagedRuntime } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
 import type {
@@ -29,34 +32,49 @@ const getUserRole = async (db: DatabaseInstance, userId: string): Promise<Role> 
   return (row?.role as Role) ?? Role.USER;
 };
 
+/** All services provided by the API context */
+export type ApiServices = Db | CurrentUser | Policy | Podcasts | Queue | TTS;
+
 /**
- * Creates an Effect runtime with all required services:
+ * Creates an Effect Layer with all required services:
  * - Db: Database access
  * - CurrentUser: Currently authenticated user
  * - Policy: Authorization policy service
+ * - Podcasts: Podcast domain service
+ * - Queue: Job queue service
+ * - TTS: Text-to-speech service
  */
 const createEffectLayers = (
   db: DatabaseInstance,
   currentUser: User | null,
-): Layer.Layer<Db | CurrentUser | Policy> => {
+): Layer.Layer<ApiServices> => {
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
+  const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
+  const ttsLayer = GoogleTTSLive();
 
   if (currentUser) {
     const userLayer = CurrentUserLive(currentUser);
-    return Layer.mergeAll(dbLayer, userLayer, policyLayer);
+    const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
+
+    return Layer.mergeAll(dbLayer, userLayer, policyLayer, podcastsLayer, queueLayer, ttsLayer);
   }
 
   // For unauthenticated requests, provide empty layers for CurrentUser
   // Policy checks will fail if they require CurrentUser
-  return Layer.mergeAll(dbLayer, policyLayer) as Layer.Layer<Db | CurrentUser | Policy>;
+  return Layer.mergeAll(dbLayer, policyLayer, queueLayer, ttsLayer) as Layer.Layer<ApiServices>;
 };
 
 export interface ORPCContext {
   db: DatabaseInstance;
   session: Session | null;
   /**
-   * Run an Effect with the request's services (Db, CurrentUser, Policy).
+   * Effect layers providing all API services.
+   * Use with `Effect.provide(context.layers)` in handlers.
+   */
+  layers: Layer.Layer<ApiServices>;
+  /**
+   * Run an Effect with the request's services.
    * Use this to integrate Effect-based domain services in oRPC handlers.
    *
    * @example
@@ -70,7 +88,7 @@ export interface ORPCContext {
    * );
    * ```
    */
-  runEffect: <A, E>(effect: Effect.Effect<A, E, Db | CurrentUser | Policy>) => Promise<A>;
+  runEffect: <A, E>(effect: Effect.Effect<A, E, ApiServices>) => Promise<A>;
 }
 
 export const createORPCContext = async ({
@@ -96,14 +114,15 @@ export const createORPCContext = async ({
     };
   }
 
-  // Create Effect runtime with all services
+  // Create Effect layers with all services
   const layers = createEffectLayers(db, currentUser);
   const runtime = ManagedRuntime.make(layers);
 
   return {
     db,
     session,
-    runEffect: <A, E>(effect: Effect.Effect<A, E, Db | CurrentUser | Policy>) =>
+    layers,
+    runEffect: <A, E>(effect: Effect.Effect<A, E, ApiServices>) =>
       runtime.runPromise(effect),
   };
 };

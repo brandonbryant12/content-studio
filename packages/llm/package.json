@@ -26,7 +26,8 @@
   "dependencies": {
     "@repo/effect": "workspace:*",
     "effect": "^3.16.0",
-    "openai": "^4.76.0"
+    "ai": "^5.0.0",
+    "@ai-sdk/openai": "^1.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

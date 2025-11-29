@@ -1,4 +1,13 @@
-// LLM service - placeholder
-// TODO: Implement OpenAI integration
+// Errors
+export * from './errors';
 
-export const LLM_PLACEHOLDER = true;
+// Service interface and Context.Tag
+export {
+  LLM,
+  type LLMService,
+  type GenerateOptions,
+  type GenerateResult,
+} from './service';
+
+// OpenAI provider
+export { OpenAILive, type OpenAIConfig } from './providers/openai';

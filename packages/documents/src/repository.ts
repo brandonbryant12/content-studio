@@ -1,8 +1,8 @@
-import { Effect } from 'effect';
-import { eq, desc, count as drizzleCount } from 'drizzle-orm';
+import { document, type Document, type UpdateDocument, type DocumentSource } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
 import { DocumentNotFound } from '@repo/effect/errors';
-import { document, type Document, type UpdateDocument, type DocumentSource } from '@repo/db/schema';
+import { eq, desc, count as drizzleCount } from 'drizzle-orm';
+import { Effect } from 'effect';
 
 /**
  * Input for inserting a document with content stored in external storage.

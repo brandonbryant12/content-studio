@@ -93,6 +93,7 @@ export default defineConfig([
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
 ]);

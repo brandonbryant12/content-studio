@@ -1,4 +1,8 @@
 import { Effect } from 'effect';
+import type {
+  DocumentTooLargeError,
+  UnsupportedDocumentFormat,
+} from '@repo/effect/errors';
 import {
   validateFileSize,
   validateMimeType,
@@ -9,10 +13,6 @@ import {
   MAX_FILE_SIZE,
   SUPPORTED_MIME_TYPES,
 } from '../parsers';
-import {
-  DocumentTooLargeError,
-  UnsupportedDocumentFormat,
-} from '@repo/effect/errors';
 
 describe('parsers', () => {
   describe('getMimeType', () => {
