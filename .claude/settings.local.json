@@ -8,7 +8,11 @@
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm tsc:*)",
       "Bash(source ~/.nvm/nvm.sh)",
-      "Bash(nvm use:*)"
+      "Bash(nvm use:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm install)"
     ],
     "deny": [],
     "ask": []

@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
 import { env } from './env';
-import app from '.';
 import { createPodcastWorker } from './workers/podcast-worker';
+import app from '.';
 
 // Start the podcast worker
 const worker = createPodcastWorker({

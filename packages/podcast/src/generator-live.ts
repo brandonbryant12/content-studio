@@ -5,9 +5,9 @@ import { LLM } from '@repo/llm';
 import { Storage } from '@repo/storage';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/tts';
 import { Context, Effect, Layer, Schema } from 'effect';
+import { PodcastGenerator, type PodcastGeneratorService } from './generator';
 import { buildSystemPrompt, buildUserPrompt } from './prompts';
 import * as Repo from './repository';
-import { PodcastGenerator, type PodcastGeneratorService } from './generator';
 
 /**
  * Schema for LLM output - includes podcast metadata and script segments.

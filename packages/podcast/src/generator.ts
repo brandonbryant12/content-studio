@@ -1,4 +1,5 @@
 import { Context } from 'effect';
+import type { PodcastFull } from './service';
 import type {
   DbError,
   PodcastNotFound,
@@ -15,7 +16,6 @@ import type {
   LLMRateLimitError,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
-import type { PodcastFull } from './service';
 
 /**
  * Error types that can occur during podcast generation.

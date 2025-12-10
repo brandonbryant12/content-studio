@@ -1,7 +1,7 @@
 import { Context } from 'effect';
+import type { VoiceInfo, GeminiVoiceId, VoiceGender } from './voices';
 import type { TTSError, TTSQuotaExceededError } from '@repo/effect/errors';
 import type { Effect } from 'effect';
-import type { VoiceInfo, GeminiVoiceId, VoiceGender } from './voices';
 
 /**
  * Audio encoding options.

@@ -9,6 +9,7 @@ import { DocumentsLive, type Documents } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
 import { GoogleLive, type LLM } from '@repo/llm';
 import { PodcastsLive, PodcastGeneratorLive, type Podcasts, type PodcastGenerator } from '@repo/podcast';
+import { ProjectsLive, type Projects } from '@repo/project'; // Import Projects
 import { QueueLive, type Queue } from '@repo/queue';
 import { DatabaseStorageLive, type Storage } from '@repo/storage';
 import { GoogleTTSLive, type TTS } from '@repo/tts';
@@ -16,10 +17,11 @@ import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
 import type {
   CurrentUser,
-  Policy} from '@repo/auth-policy';
+  Policy
+} from '@repo/auth-policy';
 import type { DatabaseInstance } from '@repo/db/client';
-import type { Db} from '@repo/effect/db';
-import type { Effect} from 'effect';
+import type { Db } from '@repo/effect/db';
+import type { Effect } from 'effect';
 import { appContract } from '../contracts';
 
 type Session = AuthInstance['$Infer']['Session'];
@@ -28,7 +30,7 @@ type Session = AuthInstance['$Infer']['Session'];
 export type PublicServices = Db | Policy | Storage | Queue | TTS | LLM;
 
 /** Services that require authentication */
-export type AuthenticatedServices = PublicServices | CurrentUser | Documents | Podcasts | PodcastGenerator;
+export type AuthenticatedServices = PublicServices | CurrentUser | Documents | Podcasts | PodcastGenerator | Projects;
 
 /** All services provided by the API context (alias for AuthenticatedServices) */
 export type ApiServices = AuthenticatedServices;
@@ -69,13 +71,14 @@ const createAuthenticatedLayers = (
   const userLayer = CurrentUserLive(currentUser);
   const documentsLayer = DocumentsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)));
   const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
+  const projectsLayer = ProjectsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
   const generatorLayer = PodcastGeneratorLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayer, llmLayer, ttsLayer, storageLayer)),
   );
 
   return Layer.mergeAll(
     dbLayer, userLayer, policyLayer, documentsLayer, storageLayer,
-    podcastsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer, loggerLayer
+    podcastsLayer, projectsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer, loggerLayer
   );
 };
 

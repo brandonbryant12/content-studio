@@ -6,10 +6,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
+import UploadDocumentDialog from './-components/upload-document';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import Spinner from '@/routes/-components/common/spinner';
-import UploadDocumentDialog from './-components/upload-document';
 
 export const Route = createFileRoute('/_protected/documents/')({
   loader: () => queryClient.ensureQueryData(apiClient.documents.list.queryOptions({ input: {} })),
