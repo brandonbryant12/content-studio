@@ -3,6 +3,7 @@ import {
   podcastDocument,
   podcastScript,
   document,
+  project,
   type Podcast,
   type PodcastDocument,
   type PodcastScript,
@@ -12,8 +13,20 @@ import {
   type PodcastStatus,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
-import { PodcastNotFound, ScriptNotFound, DocumentNotFound } from '@repo/effect/errors';
-import { eq, desc, and, inArray, count as drizzleCount, sql } from 'drizzle-orm';
+import {
+  PodcastNotFound,
+  ScriptNotFound,
+  DocumentNotFound,
+  ProjectNotFound,
+} from '@repo/effect/errors';
+import {
+  eq,
+  desc,
+  and,
+  inArray,
+  count as drizzleCount,
+  sql,
+} from 'drizzle-orm';
 import { Effect } from 'effect';
 
 /**
@@ -51,6 +64,34 @@ export const verifyDocumentsExist = (documentIds: string[], userId: string) =>
   );
 
 /**
+ * Verify project exists and is owned by the specified user.
+ */
+export const verifyProjectExists = (projectId: string, userId: string) =>
+  withDb('podcast.verifyProject', async (db) => {
+    const [proj] = await db
+      .select({ id: project.id, createdBy: project.createdBy })
+      .from(project)
+      .where(eq(project.id, projectId))
+      .limit(1);
+    return proj;
+  }).pipe(
+    Effect.flatMap((proj) => {
+      if (!proj) {
+        return Effect.fail(new ProjectNotFound({ id: projectId }));
+      }
+      if (proj.createdBy !== userId) {
+        return Effect.fail(
+          new ProjectNotFound({
+            id: projectId,
+            message: 'Project not found or access denied',
+          }),
+        );
+      }
+      return Effect.succeed(proj);
+    }),
+  );
+
+/**
  * Insert a new podcast with document links.
  * Returns the podcast with documents spread into a single object (PodcastWithDocuments shape).
  */
@@ -63,6 +104,7 @@ export const insertPodcast = (
     const [pod] = await db
       .insert(podcast)
       .values({
+        projectId: data.projectId,
         title: data.title,
         description: data.description,
         format: data.format,
@@ -97,7 +139,11 @@ export const insertPodcast = (
  */
 export const findPodcastById = (id: string) =>
   withDb('podcast.findById', async (db) => {
-    const [pod] = await db.select().from(podcast).where(eq(podcast.id, id)).limit(1);
+    const [pod] = await db
+      .select()
+      .from(podcast)
+      .where(eq(podcast.id, id))
+      .limit(1);
 
     if (!pod) return null;
 
@@ -110,13 +156,17 @@ export const findPodcastById = (id: string) =>
     const [script] = await db
       .select()
       .from(podcastScript)
-      .where(and(eq(podcastScript.podcastId, id), eq(podcastScript.isActive, true)))
+      .where(
+        and(eq(podcastScript.podcastId, id), eq(podcastScript.isActive, true)),
+      )
       .limit(1);
 
     return { ...pod, documents: docs, script: script ?? null };
   }).pipe(
     Effect.flatMap((result) =>
-      result ? Effect.succeed(result) : Effect.fail(new PodcastNotFound({ id })),
+      result
+        ? Effect.succeed(result)
+        : Effect.fail(new PodcastNotFound({ id })),
     ),
   );
 
@@ -162,13 +212,19 @@ export const updatePodcast = (id: string, data: UpdatePodcast) =>
       .returning();
     return pod;
   }).pipe(
-    Effect.flatMap((pod) => (pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })))),
+    Effect.flatMap((pod) =>
+      pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+    ),
   );
 
 /**
  * Update podcast status.
  */
-export const updatePodcastStatus = (id: string, status: PodcastStatus, errorMessage?: string) =>
+export const updatePodcastStatus = (
+  id: string,
+  status: PodcastStatus,
+  errorMessage?: string,
+) =>
   withDb('podcast.updateStatus', async (db) => {
     const [pod] = await db
       .update(podcast)
@@ -181,7 +237,9 @@ export const updatePodcastStatus = (id: string, status: PodcastStatus, errorMess
       .returning();
     return pod;
   }).pipe(
-    Effect.flatMap((pod) => (pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })))),
+    Effect.flatMap((pod) =>
+      pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+    ),
   );
 
 /**
@@ -205,7 +263,9 @@ export const updatePodcastAudio = (
       .returning();
     return pod;
   }).pipe(
-    Effect.flatMap((pod) => (pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })))),
+    Effect.flatMap((pod) =>
+      pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+    ),
   );
 
 /**
@@ -213,7 +273,10 @@ export const updatePodcastAudio = (
  */
 export const deletePodcast = (id: string) =>
   withDb('podcast.delete', async (db) => {
-    const result = await db.delete(podcast).where(eq(podcast.id, id)).returning({ id: podcast.id });
+    const result = await db
+      .delete(podcast)
+      .where(eq(podcast.id, id))
+      .returning({ id: podcast.id });
     return result.length > 0;
   });
 
@@ -225,12 +288,19 @@ export const getActiveScript = (podcastId: string) =>
     db
       .select()
       .from(podcastScript)
-      .where(and(eq(podcastScript.podcastId, podcastId), eq(podcastScript.isActive, true)))
+      .where(
+        and(
+          eq(podcastScript.podcastId, podcastId),
+          eq(podcastScript.isActive, true),
+        ),
+      )
       .limit(1)
       .then((rows) => rows[0]),
   ).pipe(
     Effect.flatMap((script) =>
-      script ? Effect.succeed(script) : Effect.fail(new ScriptNotFound({ podcastId })),
+      script
+        ? Effect.succeed(script)
+        : Effect.fail(new ScriptNotFound({ podcastId })),
     ),
   );
 
@@ -279,7 +349,10 @@ export const upsertScript = (
 /**
  * Count podcasts with optional filters.
  */
-export const countPodcasts = (options?: { createdBy?: string; status?: PodcastStatus }) =>
+export const countPodcasts = (options?: {
+  createdBy?: string;
+  status?: PodcastStatus;
+}) =>
   withDb('podcast.count', async (db) => {
     const conditions = [];
     if (options?.createdBy) {

@@ -103,7 +103,8 @@ export default defineConfig([
       'no-restricted-syntax': [
         'warn',
         {
-          selector: 'CallExpression[callee.object.name="Layer"][callee.property.name="succeed"]',
+          selector:
+            'CallExpression[callee.object.name="Layer"][callee.property.name="succeed"]',
           message:
             'Avoid Layer.succeed - it hides method-level Effect context requirements from the layer type. ' +
             'Use Layer.effect instead to capture dependencies at layer construction time for compile-time safety. ' +

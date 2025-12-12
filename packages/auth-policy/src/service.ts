@@ -29,4 +29,7 @@ export interface PolicyService {
   ) => Effect.Effect<readonly Permission[], PolicyError>;
 }
 
-export class Policy extends Context.Tag('@repo/auth-policy/Policy')<Policy, PolicyService>() {}
+export class Policy extends Context.Tag('@repo/auth-policy/Policy')<
+  Policy,
+  PolicyService
+>() {}

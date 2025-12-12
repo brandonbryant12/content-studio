@@ -1,5 +1,5 @@
 import { Effect } from 'effect';
-import type { Permission} from './types';
+import type { Permission } from './types';
 import { Forbidden } from './errors';
 import { Policy } from './service';
 import { Role } from './types';
@@ -60,11 +60,20 @@ export const requirePermission = (resource: string, action: Permission) =>
   );
 
 /** Require user can access specific resource instance */
-export const requireAccess = (resource: string, resourceId: string, action: Permission) =>
+export const requireAccess = (
+  resource: string,
+  resourceId: string,
+  action: Permission,
+) =>
   Effect.gen(function* () {
     const user = yield* CurrentUser;
     const policy = yield* Policy;
-    const allowed = yield* policy.canAccess(user.id, resource, resourceId, action);
+    const allowed = yield* policy.canAccess(
+      user.id,
+      resource,
+      resourceId,
+      action,
+    );
     if (!allowed) {
       return yield* Effect.fail(
         new Forbidden({

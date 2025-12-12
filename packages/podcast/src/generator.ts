@@ -1,4 +1,5 @@
 import { Context } from 'effect';
+import type { PodcastFull } from './service';
 import type {
   DbError,
   PodcastNotFound,
@@ -15,7 +16,6 @@ import type {
   LLMRateLimitError,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
-import type { PodcastFull } from './service';
 
 /**
  * Error types that can occur during podcast generation.
@@ -75,7 +75,6 @@ export interface PodcastGeneratorService {
  * - TTS: Text-to-speech for audio synthesis
  * - Storage: File storage for audio upload
  */
-export class PodcastGenerator extends Context.Tag('@repo/podcast/PodcastGenerator')<
-  PodcastGenerator,
-  PodcastGeneratorService
->() {}
+export class PodcastGenerator extends Context.Tag(
+  '@repo/podcast/PodcastGenerator',
+)<PodcastGenerator, PodcastGeneratorService>() {}

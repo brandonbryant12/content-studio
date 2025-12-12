@@ -1,7 +1,11 @@
 import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/podcast';
 import { JobProcessingError } from '@repo/queue';
 import { Effect, Cause } from 'effect';
-import type { GeneratePodcastPayload, GeneratePodcastResult, Job } from '@repo/queue';
+import type {
+  GeneratePodcastPayload,
+  GeneratePodcastResult,
+  Job,
+} from '@repo/queue';
 
 /**
  * Format an error for logging - handles Effect tagged errors and standard errors.
@@ -11,7 +15,8 @@ const formatError = (error: unknown): string => {
     // Effect tagged error
     if ('_tag' in error) {
       const tag = (error as { _tag: string })._tag;
-      const message = 'message' in error ? (error as { message: string }).message : '';
+      const message =
+        'message' in error ? (error as { message: string }).message : '';
       return message ? `${tag}: ${message}` : tag;
     }
     // Standard Error
@@ -31,15 +36,15 @@ const formatError = (error: unknown): string => {
  *
  * Requires: PodcastGenerator (for generation), Podcasts (for setStatus on error)
  */
-export const handleGeneratePodcast = (
-  job: Job<GeneratePodcastPayload>,
-) =>
+export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
   Effect.gen(function* () {
     const generator = yield* PodcastGenerator;
     const { podcastId, promptInstructions } = job.payload;
 
     // Generate podcast (Script + Audio - all handled by the generator service)
-    const podcast: PodcastFull = yield* generator.generate(podcastId, { promptInstructions });
+    const podcast: PodcastFull = yield* generator.generate(podcastId, {
+      promptInstructions,
+    });
 
     return {
       scriptId: podcast.script?.id ?? '',

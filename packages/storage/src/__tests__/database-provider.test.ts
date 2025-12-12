@@ -35,7 +35,11 @@ describe('DatabaseStorage provider', () => {
       const result = await runWithStorage(
         Effect.gen(function* () {
           const storage = yield* Storage;
-          return yield* storage.upload('binary-key', binaryData, 'application/octet-stream');
+          return yield* storage.upload(
+            'binary-key',
+            binaryData,
+            'application/octet-stream',
+          );
         }),
       );
 
@@ -83,7 +87,11 @@ describe('DatabaseStorage provider', () => {
       const result = await runWithStorage(
         Effect.gen(function* () {
           const storage = yield* Storage;
-          yield* storage.upload('delete-test', Buffer.from('data'), 'text/plain');
+          yield* storage.upload(
+            'delete-test',
+            Buffer.from('data'),
+            'text/plain',
+          );
           yield* storage.delete('delete-test');
           return yield* storage.exists('delete-test');
         }),
@@ -98,7 +106,11 @@ describe('DatabaseStorage provider', () => {
       const result = await runWithStorage(
         Effect.gen(function* () {
           const storage = yield* Storage;
-          yield* storage.upload('url-test', Buffer.from('content'), 'text/plain');
+          yield* storage.upload(
+            'url-test',
+            Buffer.from('content'),
+            'text/plain',
+          );
           return yield* storage.getUrl('url-test');
         }),
       );
@@ -123,7 +135,11 @@ describe('DatabaseStorage provider', () => {
       const result = await runWithStorage(
         Effect.gen(function* () {
           const storage = yield* Storage;
-          yield* storage.upload('exists-test', Buffer.from('data'), 'text/plain');
+          yield* storage.upload(
+            'exists-test',
+            Buffer.from('data'),
+            'text/plain',
+          );
           return yield* storage.exists('exists-test');
         }),
       );

@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, uuid, jsonb, index, pgEnum } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  jsonb,
+  index,
+  pgEnum,
+} from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-valibot';
 import { user } from './auth';
 
@@ -28,7 +36,10 @@ export const job = pgTable(
       .notNull()
       .defaultNow(),
     startedAt: timestamp('started_at', { mode: 'date', withTimezone: true }),
-    completedAt: timestamp('completed_at', { mode: 'date', withTimezone: true }),
+    completedAt: timestamp('completed_at', {
+      mode: 'date',
+      withTimezone: true,
+    }),
   },
   (table) => [
     index('job_created_by_idx').on(table.createdBy),

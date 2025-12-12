@@ -59,7 +59,11 @@ export interface DocumentService {
    */
   readonly create: (
     data: CreateDocument,
-  ) => Effect.Effect<Document, DbError | PolicyError | ForbiddenError | StorageUploadError, DocumentContext>;
+  ) => Effect.Effect<
+    Document,
+    DbError | PolicyError | ForbiddenError | StorageUploadError,
+    DocumentContext
+  >;
 
   /**
    * Upload and store a document file (TXT, PDF, DOCX, PPTX).
@@ -92,7 +96,11 @@ export interface DocumentService {
    */
   readonly findById: (
     id: string,
-  ) => Effect.Effect<Document, DocumentNotFound | DbError | PolicyError | ForbiddenError, DocumentContext>;
+  ) => Effect.Effect<
+    Document,
+    DocumentNotFound | DbError | PolicyError | ForbiddenError,
+    DocumentContext
+  >;
 
   /**
    * Get parsed content of a document.
@@ -120,7 +128,11 @@ export interface DocumentService {
   readonly list: (options?: {
     limit?: number;
     offset?: number;
-  }) => Effect.Effect<readonly Document[], DbError | PolicyError, DocumentContext>;
+  }) => Effect.Effect<
+    readonly Document[],
+    DbError | PolicyError,
+    DocumentContext
+  >;
 
   /**
    * Update a document metadata and optionally content.
@@ -132,7 +144,12 @@ export interface DocumentService {
     data: UpdateDocument,
   ) => Effect.Effect<
     Document,
-    DocumentNotFound | DbError | PolicyError | ForbiddenError | StorageUploadError | StorageError,
+    | DocumentNotFound
+    | DbError
+    | PolicyError
+    | ForbiddenError
+    | StorageUploadError
+    | StorageError,
     DocumentContext
   >;
 
@@ -151,7 +168,11 @@ export interface DocumentService {
   /**
    * Count documents for the current user.
    */
-  readonly count: () => Effect.Effect<number, DbError | PolicyError, DocumentContext>;
+  readonly count: () => Effect.Effect<
+    number,
+    DbError | PolicyError,
+    DocumentContext
+  >;
 }
 
 export class Documents extends Context.Tag('@repo/documents/Documents')<

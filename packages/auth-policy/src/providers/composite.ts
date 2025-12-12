@@ -11,14 +11,18 @@ export interface CompositeConfig {
 
 const make = (config: CompositeConfig): PolicyService => ({
   getUserRole: (userId) =>
-    config.roleProvider.getUserRole(userId).pipe(Effect.withSpan('policy.composite.getUserRole')),
+    config.roleProvider
+      .getUserRole(userId)
+      .pipe(Effect.withSpan('policy.composite.getUserRole')),
 
   hasPermission: (userId, resource, action) =>
     Effect.gen(function* () {
       // Check all providers - if any grants permission, allow
       const results = yield* Effect.all(
         [config.roleProvider, ...config.permissionProviders].map((p) =>
-          p.hasPermission(userId, resource, action).pipe(Effect.catchAll(() => Effect.succeed(false))),
+          p
+            .hasPermission(userId, resource, action)
+            .pipe(Effect.catchAll(() => Effect.succeed(false))),
         ),
         { concurrency: 'unbounded' },
       );
@@ -29,9 +33,9 @@ const make = (config: CompositeConfig): PolicyService => ({
     Effect.gen(function* () {
       const results = yield* Effect.all(
         [config.roleProvider, ...config.permissionProviders].map((p) =>
-          p.canAccess(userId, resource, resourceId, action).pipe(
-            Effect.catchAll(() => Effect.succeed(false)),
-          ),
+          p
+            .canAccess(userId, resource, resourceId, action)
+            .pipe(Effect.catchAll(() => Effect.succeed(false))),
         ),
         { concurrency: 'unbounded' },
       );
@@ -42,9 +46,13 @@ const make = (config: CompositeConfig): PolicyService => ({
     Effect.gen(function* () {
       const results = yield* Effect.all(
         [config.roleProvider, ...config.permissionProviders].map((p) =>
-          p.getPermissions(userId, resource).pipe(
-            Effect.catchAll(() => Effect.succeed([] as readonly Permission[])),
-          ),
+          p
+            .getPermissions(userId, resource)
+            .pipe(
+              Effect.catchAll(() =>
+                Effect.succeed([] as readonly Permission[]),
+              ),
+            ),
         ),
         { concurrency: 'unbounded' },
       );
@@ -53,5 +61,6 @@ const make = (config: CompositeConfig): PolicyService => ({
     }).pipe(Effect.withSpan('policy.composite.getPermissions')),
 });
 
-export const CompositePolicyLive = (config: CompositeConfig): Layer.Layer<Policy> =>
-  Layer.succeed(Policy, make(config));
+export const CompositePolicyLive = (
+  config: CompositeConfig,
+): Layer.Layer<Policy> => Layer.succeed(Policy, make(config));

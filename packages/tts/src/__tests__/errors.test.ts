@@ -37,7 +37,9 @@ describe('TTS Errors', () => {
     });
 
     it('should fail an Effect with TTSQuotaExceededError', async () => {
-      const program = Effect.fail(new TTSQuotaExceededError({ message: 'Too many requests' }));
+      const program = Effect.fail(
+        new TTSQuotaExceededError({ message: 'Too many requests' }),
+      );
 
       const result = await Effect.runPromiseExit(program);
 
@@ -46,7 +48,9 @@ describe('TTS Errors', () => {
 
     it('should be distinguishable from TTSError', () => {
       const ttsError = new TTSError({ message: 'Generic error' });
-      const quotaError = new TTSQuotaExceededError({ message: 'Quota exceeded' });
+      const quotaError = new TTSQuotaExceededError({
+        message: 'Quota exceeded',
+      });
 
       expect(ttsError._tag).not.toBe(quotaError._tag);
       expect(ttsError._tag).toBe('TTSError');

@@ -19,7 +19,9 @@ describe('errors', () => {
     });
 
     it('should fail an Effect with NotFoundError', async () => {
-      const effect = Effect.fail(new NotFoundError({ entity: 'Document', id: '456' }));
+      const effect = Effect.fail(
+        new NotFoundError({ entity: 'Document', id: '456' }),
+      );
 
       const exit = await Effect.runPromiseExit(effect);
 
@@ -34,7 +36,10 @@ describe('errors', () => {
 
   describe('ValidationError', () => {
     it('should create a tagged error with field and message', () => {
-      const error = new ValidationError({ field: 'email', message: 'Invalid email format' });
+      const error = new ValidationError({
+        field: 'email',
+        message: 'Invalid email format',
+      });
 
       expect(error._tag).toBe('ValidationError');
       expect(error.field).toBe('email');
@@ -60,7 +65,10 @@ describe('errors', () => {
     });
 
     it('should accept optional resource field', () => {
-      const error = new ForbiddenError({ message: 'Access denied', resource: '/admin' });
+      const error = new ForbiddenError({
+        message: 'Access denied',
+        resource: '/admin',
+      });
 
       expect(error.resource).toBe('/admin');
     });

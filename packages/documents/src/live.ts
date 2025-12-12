@@ -3,7 +3,13 @@ import { Storage } from '@repo/storage';
 import { Effect, Layer } from 'effect';
 import type { Db } from '@repo/effect/db';
 import { DocumentNotFound } from './errors';
-import { parseUploadedFile, parseDocumentContent, validateFileSize, validateMimeType, getMimeType } from './parsers';
+import {
+  parseUploadedFile,
+  parseDocumentContent,
+  validateFileSize,
+  validateMimeType,
+  getMimeType,
+} from './parsers';
 import * as Repo from './repository';
 import { Documents, type DocumentService } from './service';
 
@@ -111,7 +117,10 @@ const makeDocumentService: DocumentService = {
       return doc;
     }).pipe(
       Effect.withSpan('documents.upload', {
-        attributes: { 'file.name': input.fileName, 'file.size': input.data.length },
+        attributes: {
+          'file.name': input.fileName,
+          'file.size': input.data.length,
+        },
       }),
     ),
 
@@ -269,7 +278,8 @@ const makeDocumentService: DocumentService = {
  * );
  * ```
  */
-export const DocumentsLive: Layer.Layer<Documents, never, Db | CurrentUser | Storage> = Layer.succeed(
+export const DocumentsLive: Layer.Layer<
   Documents,
-  makeDocumentService,
-);
+  never,
+  Db | CurrentUser | Storage
+> = Layer.succeed(Documents, makeDocumentService);

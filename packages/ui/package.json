@@ -35,6 +35,7 @@
     "@radix-ui/react-icons": "catalog:",
     "@radix-ui/react-label": "catalog:",
     "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
     "class-variance-authority": "catalog:",

@@ -2,7 +2,11 @@
 export * from './errors';
 
 // Service interface
-export { Documents, type DocumentService, type UploadDocumentInput } from './service';
+export {
+  Documents,
+  type DocumentService,
+  type UploadDocumentInput,
+} from './service';
 
 // Live implementation
 export { DocumentsLive } from './live';
@@ -26,4 +30,9 @@ export {
 export type { InsertDocumentInput, UpdateDocumentInput } from './repository';
 
 // Re-export DB types for convenience
-export type { Document, CreateDocument, UpdateDocument, DocumentSource } from '@repo/db/schema';
+export type {
+  Document,
+  CreateDocument,
+  UpdateDocument,
+  DocumentSource,
+} from '@repo/db/schema';

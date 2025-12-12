@@ -171,7 +171,8 @@ describe('parsers', () => {
       });
 
       it('handles unicode content', async () => {
-        const content = 'Hello \u4e16\u754c! \ud83c\udf0d \u00e9\u00e0\u00fc\u00f1';
+        const content =
+          'Hello \u4e16\u754c! \ud83c\udf0d \u00e9\u00e0\u00fc\u00f1';
         const buffer = Buffer.from(content, 'utf-8');
 
         const result = await Effect.runPromise(

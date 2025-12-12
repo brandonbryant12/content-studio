@@ -8,11 +8,14 @@ import { Schema } from 'effect';
  * Generic not found error.
  * Use domain-specific errors (DocumentNotFound, PodcastNotFound, etc.) when possible.
  */
-export class NotFoundError extends Schema.TaggedError<NotFoundError>()('NotFoundError', {
-  entity: Schema.String,
-  id: Schema.String,
-  message: Schema.optional(Schema.String),
-}) {
+export class NotFoundError extends Schema.TaggedError<NotFoundError>()(
+  'NotFoundError',
+  {
+    entity: Schema.String,
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 404 as const;
   static readonly code = 'NOT_FOUND' as const;
 }
@@ -20,11 +23,14 @@ export class NotFoundError extends Schema.TaggedError<NotFoundError>()('NotFound
 /**
  * Authorization failure - user doesn't have permission.
  */
-export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()('ForbiddenError', {
-  message: Schema.String,
-  resource: Schema.optional(Schema.String),
-  action: Schema.optional(Schema.String),
-}) {
+export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
+  'ForbiddenError',
+  {
+    message: Schema.String,
+    resource: Schema.optional(Schema.String),
+    action: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 403 as const;
   static readonly code = 'FORBIDDEN' as const;
 }
@@ -45,10 +51,13 @@ export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
 /**
  * Input validation failure.
  */
-export class ValidationError extends Schema.TaggedError<ValidationError>()('ValidationError', {
-  field: Schema.String,
-  message: Schema.String,
-}) {
+export class ValidationError extends Schema.TaggedError<ValidationError>()(
+  'ValidationError',
+  {
+    field: Schema.String,
+    message: Schema.String,
+  },
+) {
   static readonly status = 422 as const;
   static readonly code = 'VALIDATION_ERROR' as const;
 }
@@ -86,10 +95,13 @@ export class ExternalServiceError extends Schema.TaggedError<ExternalServiceErro
 /**
  * Policy service error (e.g., failed to fetch permissions).
  */
-export class PolicyError extends Schema.TaggedError<PolicyError>()('PolicyError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
+export class PolicyError extends Schema.TaggedError<PolicyError>()(
+  'PolicyError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
   static readonly status = 500 as const;
   static readonly code = 'POLICY_ERROR' as const;
 }
@@ -101,10 +113,13 @@ export class PolicyError extends Schema.TaggedError<PolicyError>()('PolicyError'
 /**
  * Document not found.
  */
-export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()('DocumentNotFound', {
-  id: Schema.String,
-  message: Schema.optional(Schema.String),
-}) {
+export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
+  'DocumentNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 404 as const;
   static readonly code = 'DOCUMENT_NOT_FOUND' as const;
 }
@@ -112,10 +127,13 @@ export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()('Do
 /**
  * Document operation failure.
  */
-export class DocumentError extends Schema.TaggedError<DocumentError>()('DocumentError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
+export class DocumentError extends Schema.TaggedError<DocumentError>()(
+  'DocumentError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
   static readonly status = 500 as const;
   static readonly code = 'DOCUMENT_ERROR' as const;
 }
@@ -174,10 +192,13 @@ export class DocumentParseError extends Schema.TaggedError<DocumentParseError>()
 /**
  * Podcast not found.
  */
-export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()('PodcastNotFound', {
-  id: Schema.String,
-  message: Schema.optional(Schema.String),
-}) {
+export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()(
+  'PodcastNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 404 as const;
   static readonly code = 'PODCAST_NOT_FOUND' as const;
 }
@@ -185,10 +206,13 @@ export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()('Podc
 /**
  * Podcast script not found.
  */
-export class ScriptNotFound extends Schema.TaggedError<ScriptNotFound>()('ScriptNotFound', {
-  podcastId: Schema.String,
-  message: Schema.optional(Schema.String),
-}) {
+export class ScriptNotFound extends Schema.TaggedError<ScriptNotFound>()(
+  'ScriptNotFound',
+  {
+    podcastId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 404 as const;
   static readonly code = 'SCRIPT_NOT_FOUND' as const;
 }
@@ -196,12 +220,49 @@ export class ScriptNotFound extends Schema.TaggedError<ScriptNotFound>()('Script
 /**
  * Podcast operation failure.
  */
-export class PodcastError extends Schema.TaggedError<PodcastError>()('PodcastError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
+export class PodcastError extends Schema.TaggedError<PodcastError>()(
+  'PodcastError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
   static readonly status = 500 as const;
   static readonly code = 'PODCAST_ERROR' as const;
+}
+
+// =============================================================================
+// Domain: Projects / Media
+// =============================================================================
+
+/**
+ * Project not found.
+ */
+export class ProjectNotFound extends Schema.TaggedError<ProjectNotFound>()(
+  'ProjectNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly status = 404 as const;
+  static readonly code = 'PROJECT_NOT_FOUND' as const;
+}
+
+/**
+ * Media item not found or inaccessible.
+ * Used when resolving polymorphic media references.
+ */
+export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
+  'MediaNotFound',
+  {
+    mediaType: Schema.String,
+    mediaId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly status = 404 as const;
+  static readonly code = 'MEDIA_NOT_FOUND' as const;
 }
 
 // =============================================================================
@@ -299,10 +360,13 @@ export class AudioProcessingError extends Schema.TaggedError<AudioProcessingErro
 /**
  * Storage operation failure.
  */
-export class StorageError extends Schema.TaggedError<StorageError>()('StorageError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
+export class StorageError extends Schema.TaggedError<StorageError>()(
+  'StorageError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
   static readonly status = 500 as const;
   static readonly code = 'STORAGE_ERROR' as const;
 }
@@ -354,10 +418,13 @@ export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
 /**
  * Job not found.
  */
-export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()('JobNotFoundError', {
-  jobId: Schema.String,
-  message: Schema.optional(Schema.String),
-}) {
+export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(
+  'JobNotFoundError',
+  {
+    jobId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
   static readonly status = 404 as const;
   static readonly code = 'JOB_NOT_FOUND' as const;
 }
@@ -405,6 +472,9 @@ export type ApiError =
   | PodcastNotFound
   | ScriptNotFound
   | PodcastError
+  // Projects / Media
+  | ProjectNotFound
+  | MediaNotFound
   // LLM
   | LLMError
   | LLMRateLimitError

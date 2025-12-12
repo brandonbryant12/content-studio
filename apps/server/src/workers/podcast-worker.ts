@@ -5,8 +5,19 @@ import { DocumentsLive } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
 import { GoogleLive } from '@repo/llm';
 import { PodcastsLive, PodcastGeneratorLive } from '@repo/podcast';
-import { Queue, QueueLive, JobProcessingError, type GeneratePodcastPayload, type Job } from '@repo/queue';
-import { DatabaseStorageLive } from '@repo/storage';
+import {
+  Queue,
+  QueueLive,
+  JobProcessingError,
+  type GeneratePodcastPayload,
+  type Job,
+} from '@repo/queue';
+import {
+  DatabaseStorageLive,
+  FilesystemStorageLive,
+  S3StorageLive,
+} from '@repo/storage';
+import type { StorageConfig } from '@repo/api/server';
 import { GoogleTTSLive } from '@repo/tts';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
 import { handleGeneratePodcast } from './handlers';
@@ -18,6 +29,8 @@ export interface PodcastWorkerConfig {
   pollInterval?: number;
   /** Google API key for LLM and TTS - required */
   geminiApiKey: string;
+  /** Storage configuration */
+  storageConfig: StorageConfig;
 }
 
 /**
@@ -35,13 +48,37 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const ttsLayer = GoogleTTSLive({ apiKey: config.geminiApiKey });
-  // DatabaseStorageLive requires Db for persistent storage
-  const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
+
+  // Select storage provider based on config
+  const storageLayer =
+    config.storageConfig.provider === 'filesystem'
+      ? FilesystemStorageLive({
+          basePath: config.storageConfig.basePath,
+          baseUrl: config.storageConfig.baseUrl,
+        })
+      : config.storageConfig.provider === 's3'
+        ? S3StorageLive({
+            bucket: config.storageConfig.bucket,
+            region: config.storageConfig.region,
+            accessKeyId: config.storageConfig.accessKeyId,
+            secretAccessKey: config.storageConfig.secretAccessKey,
+            endpoint: config.storageConfig.endpoint,
+          })
+        : DatabaseStorageLive.pipe(Layer.provide(dbLayer));
+
   const llmLayer = GoogleLive({ apiKey: config.geminiApiKey });
   // Runtime for queue polling (doesn't need user context or documents)
   // Include pretty logger so Effect.logInfo etc. output to console
   const loggerLayer = Logger.pretty;
-  const workerLayers = Layer.mergeAll(dbLayer, queueLayer, ttsLayer, storageLayer, policyLayer, llmLayer, loggerLayer);
+  const workerLayers = Layer.mergeAll(
+    dbLayer,
+    queueLayer,
+    ttsLayer,
+    storageLayer,
+    policyLayer,
+    llmLayer,
+    loggerLayer,
+  );
   const runtime = ManagedRuntime.make(workerLayers);
 
   /**
@@ -69,7 +106,16 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     // PodcastGeneratorLive uses Layer.effect - requires all deps at layer construction
     // This ensures compile-time verification that all dependencies are provided
     const generatorLayer = PodcastGeneratorLive.pipe(
-      Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayerWithUser, llmLayer, ttsLayer, storageLayer)),
+      Layer.provide(
+        Layer.mergeAll(
+          dbLayer,
+          userLayer,
+          documentsLayerWithUser,
+          llmLayer,
+          ttsLayer,
+          storageLayer,
+        ),
+      ),
     );
 
     // Combine all layers needed for the handler
@@ -93,7 +139,9 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
    */
   const processJob = (job: Job<GeneratePodcastPayload>) =>
     Effect.gen(function* () {
-      yield* Effect.logInfo(`Processing job ${job.id} for podcast ${job.payload.podcastId}`);
+      yield* Effect.logInfo(
+        `Processing job ${job.id} for podcast ${job.payload.podcastId}`,
+      );
 
       // Create a dedicated runtime for this job with user context
       const jobRuntime = makeJobRuntime(job.payload.userId);
@@ -102,11 +150,12 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       // Use tryPromise to properly convert rejections into Effect failures
       const result = yield* Effect.tryPromise({
         try: () => jobRuntime.runPromise(handleGeneratePodcast(job)),
-        catch: (error) => new JobProcessingError({
-          jobId: job.id,
-          message: error instanceof Error ? error.message : String(error),
-          cause: error,
-        }),
+        catch: (error) =>
+          new JobProcessingError({
+            jobId: job.id,
+            message: error instanceof Error ? error.message : String(error),
+            cause: error,
+          }),
       }).pipe(
         // Always clean up the job runtime, whether success or failure
         Effect.ensuring(Effect.promise(() => jobRuntime.dispose())),
@@ -127,7 +176,9 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     );
 
     if (job) {
-      yield* Effect.logInfo(`Finished processing job ${job.id}, status: ${job.status}`);
+      yield* Effect.logInfo(
+        `Finished processing job ${job.id}, status: ${job.status}`,
+      );
     } else {
       yield* Effect.logInfo('No pending jobs found');
     }

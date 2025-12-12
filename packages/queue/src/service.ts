@@ -1,5 +1,9 @@
 import { Context } from 'effect';
-import type { QueueError, JobNotFoundError, JobProcessingError } from './errors';
+import type {
+  QueueError,
+  JobNotFoundError,
+  JobProcessingError,
+} from './errors';
 import type { Job, JobType, JobStatus } from './types';
 import type { Effect } from 'effect';
 
@@ -29,7 +33,10 @@ export interface QueueService {
   readonly processNextJob: (
     type: JobType,
     handler: (job: Job) => Effect.Effect<unknown, JobProcessingError>,
-  ) => Effect.Effect<Job | null, QueueError | JobProcessingError | JobNotFoundError>;
+  ) => Effect.Effect<
+    Job | null,
+    QueueError | JobProcessingError | JobNotFoundError
+  >;
 
   readonly processJobById: (
     jobId: string,

@@ -87,7 +87,12 @@ const make = Effect.gen(function* () {
       Effect.gen(function* () {
         const role = yield* service.getUserRole(userId);
         if (role === Role.ADMIN) {
-          return [Permission.READ, Permission.WRITE, Permission.DELETE, Permission.ADMIN];
+          return [
+            Permission.READ,
+            Permission.WRITE,
+            Permission.DELETE,
+            Permission.ADMIN,
+          ];
         }
         return [Permission.READ, Permission.WRITE];
       }).pipe(Effect.withSpan('policy.graph.getPermissions')),
@@ -97,4 +102,6 @@ const make = Effect.gen(function* () {
 });
 
 export const GraphPolicyLive = (config: GraphConfig): Layer.Layer<Policy> =>
-  Layer.effect(Policy, make).pipe(Layer.provide(Layer.succeed(GraphClient, { config })));
+  Layer.effect(Policy, make).pipe(
+    Layer.provide(Layer.succeed(GraphClient, { config })),
+  );

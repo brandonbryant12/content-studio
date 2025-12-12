@@ -13,8 +13,12 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-valibot';
 import * as v from 'valibot';
 import { user } from './auth';
 import { document } from './documents';
+import { project } from './projects';
 
-export const podcastFormatEnum = pgEnum('podcast_format', ['voice_over', 'conversation']);
+export const podcastFormatEnum = pgEnum('podcast_format', [
+  'voice_over',
+  'conversation',
+]);
 export const podcastStatusEnum = pgEnum('podcast_status', [
   'draft',
   'generating_script',
@@ -28,6 +32,9 @@ export const podcast = pgTable(
   'podcast',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     description: text('description'),
     format: podcastFormatEnum('format').notNull(),
@@ -53,6 +60,7 @@ export const podcast = pgTable(
       .defaultNow(),
   },
   (table) => [
+    index('podcast_project_id_idx').on(table.projectId),
     index('podcast_created_by_idx').on(table.createdBy),
     index('podcast_status_idx').on(table.status),
   ],
@@ -105,12 +113,15 @@ export const podcastScript = pgTable(
 );
 
 export const CreatePodcastSchema = v.object({
+  projectId: v.pipe(v.string(), v.uuid()),
   title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
   description: v.optional(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
   documentIds: v.pipe(v.array(v.pipe(v.string(), v.uuid())), v.minLength(1)),
   promptInstructions: v.optional(v.string()),
-  targetDurationMinutes: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(60))),
+  targetDurationMinutes: v.optional(
+    v.pipe(v.number(), v.minValue(1), v.maxValue(60)),
+  ),
   hostVoice: v.optional(v.string()),
   hostVoiceName: v.optional(v.string()),
   coHostVoice: v.optional(v.string()),
@@ -122,7 +133,9 @@ export const UpdatePodcastSchema = v.partial(
     title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
     description: v.optional(v.string()),
     promptInstructions: v.optional(v.string()),
-    targetDurationMinutes: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(60))),
+    targetDurationMinutes: v.optional(
+      v.pipe(v.number(), v.minValue(1), v.maxValue(60)),
+    ),
     hostVoice: v.optional(v.string()),
     hostVoiceName: v.optional(v.string()),
     coHostVoice: v.optional(v.string()),

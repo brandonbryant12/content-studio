@@ -17,6 +17,7 @@ import type {
   ForbiddenError,
   PolicyError,
   DocumentNotFound,
+  ProjectNotFound,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
 
@@ -55,12 +56,13 @@ export interface PodcastFull extends Podcast {
 export interface PodcastService {
   /**
    * Create a new podcast with linked documents.
+   * Requires a valid projectId - the podcast will belong to that project.
    */
   readonly create: (
     data: CreatePodcast,
   ) => Effect.Effect<
     PodcastWithDocuments,
-    DbError | PolicyError | ForbiddenError | DocumentNotFound,
+    DbError | PolicyError | ForbiddenError | DocumentNotFound | ProjectNotFound,
     PodcastContext
   >;
 
@@ -82,7 +84,11 @@ export interface PodcastService {
     limit?: number;
     offset?: number;
     status?: PodcastStatus;
-  }) => Effect.Effect<readonly Podcast[], DbError | PolicyError, PodcastContext>;
+  }) => Effect.Effect<
+    readonly Podcast[],
+    DbError | PolicyError,
+    PodcastContext
+  >;
 
   /**
    * Update a podcast.
@@ -147,4 +153,7 @@ export interface PodcastService {
   }) => Effect.Effect<number, DbError | PolicyError, PodcastContext>;
 }
 
-export class Podcasts extends Context.Tag('@repo/podcast/Podcasts')<Podcasts, PodcastService>() {}
+export class Podcasts extends Context.Tag('@repo/podcast/Podcasts')<
+  Podcasts,
+  PodcastService
+>() {}

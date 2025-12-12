@@ -1,5 +1,9 @@
 import { Context } from 'effect';
-import type { StorageError, StorageNotFoundError, StorageUploadError } from './errors';
+import type {
+  StorageError,
+  StorageNotFoundError,
+  StorageUploadError,
+} from './errors';
 import type { Effect } from 'effect';
 
 export interface StorageService {

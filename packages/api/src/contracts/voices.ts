@@ -22,7 +22,8 @@ const voicesContract = oc
         method: 'GET',
         path: '/',
         summary: 'List voices',
-        description: 'Retrieve all available TTS voices, optionally filtered by gender',
+        description:
+          'Retrieve all available TTS voices, optionally filtered by gender',
       })
       .input(
         v.object({

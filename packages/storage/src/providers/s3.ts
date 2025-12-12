@@ -1,5 +1,9 @@
 import { Effect, Layer } from 'effect';
-import { StorageError, StorageNotFoundError, StorageUploadError } from '../errors';
+import {
+  StorageError,
+  StorageNotFoundError,
+  StorageUploadError,
+} from '../errors';
 import { Storage, type StorageService } from '../service';
 
 export interface S3StorageConfig {
@@ -39,7 +43,15 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => ({
           message: `Failed to upload to S3: ${key}`,
           cause,
         }),
-    }).pipe(Effect.withSpan('storage.upload', { attributes: { 'storage.key': key, 'storage.provider': 's3', 'storage.bucket': config.bucket } })),
+    }).pipe(
+      Effect.withSpan('storage.upload', {
+        attributes: {
+          'storage.key': key,
+          'storage.provider': 's3',
+          'storage.bucket': config.bucket,
+        },
+      }),
+    ),
 
   download: (key) =>
     Effect.tryPromise({
@@ -62,12 +74,27 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => ({
         return Buffer.from(arrayBuffer);
       },
       catch: (cause) => {
-        if (typeof cause === 'object' && cause !== null && 'notFound' in cause) {
+        if (
+          typeof cause === 'object' &&
+          cause !== null &&
+          'notFound' in cause
+        ) {
           return new StorageNotFoundError({ key });
         }
-        return new StorageError({ message: `Failed to download from S3: ${key}`, cause });
+        return new StorageError({
+          message: `Failed to download from S3: ${key}`,
+          cause,
+        });
       },
-    }).pipe(Effect.withSpan('storage.download', { attributes: { 'storage.key': key, 'storage.provider': 's3', 'storage.bucket': config.bucket } })),
+    }).pipe(
+      Effect.withSpan('storage.download', {
+        attributes: {
+          'storage.key': key,
+          'storage.provider': 's3',
+          'storage.bucket': config.bucket,
+        },
+      }),
+    ),
 
   delete: (key) =>
     Effect.tryPromise({
@@ -83,13 +110,32 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => ({
         }
       },
       catch: (cause) =>
-        new StorageError({ message: `Failed to delete from S3: ${key}`, cause }),
-    }).pipe(Effect.withSpan('storage.delete', { attributes: { 'storage.key': key, 'storage.provider': 's3', 'storage.bucket': config.bucket } })),
+        new StorageError({
+          message: `Failed to delete from S3: ${key}`,
+          cause,
+        }),
+    }).pipe(
+      Effect.withSpan('storage.delete', {
+        attributes: {
+          'storage.key': key,
+          'storage.provider': 's3',
+          'storage.bucket': config.bucket,
+        },
+      }),
+    ),
 
   getUrl: (key) =>
     Effect.succeed(
       `${config.endpoint ?? `https://s3.${config.region}.amazonaws.com`}/${config.bucket}/${key}`,
-    ).pipe(Effect.withSpan('storage.getUrl', { attributes: { 'storage.key': key, 'storage.provider': 's3', 'storage.bucket': config.bucket } })),
+    ).pipe(
+      Effect.withSpan('storage.getUrl', {
+        attributes: {
+          'storage.key': key,
+          'storage.provider': 's3',
+          'storage.bucket': config.bucket,
+        },
+      }),
+    ),
 
   exists: (key) =>
     Effect.tryPromise({
@@ -101,8 +147,17 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => ({
         const response = await fetch(url, { method: 'HEAD' });
         return response.ok;
       },
-      catch: () => new StorageError({ message: `Failed to check S3 object: ${key}` }),
-    }).pipe(Effect.withSpan('storage.exists', { attributes: { 'storage.key': key, 'storage.provider': 's3', 'storage.bucket': config.bucket } })),
+      catch: () =>
+        new StorageError({ message: `Failed to check S3 object: ${key}` }),
+    }).pipe(
+      Effect.withSpan('storage.exists', {
+        attributes: {
+          'storage.key': key,
+          'storage.provider': 's3',
+          'storage.bucket': config.bucket,
+        },
+      }),
+    ),
 });
 
 export const S3StorageLive = (config: S3StorageConfig): Layer.Layer<Storage> =>

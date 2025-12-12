@@ -1,17 +1,10 @@
 {
-    "extends": "@repo/typescript-config/internal-package.json",
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ],
-    "compilerOptions": {
-        "types": [
-            "jest",
-            "node"
-        ],
-        "noEmit": true,
-        "tsBuildInfoFile": "./node_modules/.cache/tsconfig.test.tsbuildinfo"
-    }
+  "extends": "@repo/typescript-config/internal-package.json",
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.test.tsbuildinfo"
+  }
 }

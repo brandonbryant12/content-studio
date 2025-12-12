@@ -30,30 +30,45 @@ const createAdminUser = (overrides: Partial<User> = {}): User => ({
 });
 
 const mockPolicyService: PolicyService = {
-  getUserRole: (userId) => Effect.succeed(userId === 'admin-1' ? Role.ADMIN : Role.USER),
+  getUserRole: (userId) =>
+    Effect.succeed(userId === 'admin-1' ? Role.ADMIN : Role.USER),
   hasPermission: (userId, _resource, action) =>
     Effect.succeed(
-      userId === 'admin-1' || action === Permission.READ || action === Permission.WRITE,
+      userId === 'admin-1' ||
+        action === Permission.READ ||
+        action === Permission.WRITE,
     ),
   canAccess: (userId, _resource, _resourceId, action) =>
     Effect.succeed(userId === 'admin-1' || action === Permission.READ),
   getPermissions: (userId, _resource) =>
     Effect.succeed(
       userId === 'admin-1'
-        ? [Permission.READ, Permission.WRITE, Permission.DELETE, Permission.ADMIN]
+        ? [
+            Permission.READ,
+            Permission.WRITE,
+            Permission.DELETE,
+            Permission.ADMIN,
+          ]
         : [Permission.READ, Permission.WRITE],
     ),
 };
 
 const MockPolicyLive = Layer.succeed(Policy, mockPolicyService);
 
-const runWithUser = <A, E>(user: User, effect: Effect.Effect<A, E, CurrentUser>) =>
-  Effect.runPromise(effect.pipe(Effect.provide(CurrentUserLive(user))));
+const runWithUser = <A, E>(
+  user: User,
+  effect: Effect.Effect<A, E, CurrentUser>,
+) => Effect.runPromise(effect.pipe(Effect.provide(CurrentUserLive(user))));
 
 const runWithUserAndPolicy = <A, E>(
   user: User,
   effect: Effect.Effect<A, E, CurrentUser | Policy>,
-) => Effect.runPromise(effect.pipe(Effect.provide(Layer.merge(CurrentUserLive(user), MockPolicyLive))));
+) =>
+  Effect.runPromise(
+    effect.pipe(
+      Effect.provide(Layer.merge(CurrentUserLive(user), MockPolicyLive)),
+    ),
+  );
 
 describe('requireOwnership', () => {
   it('should succeed when user owns the resource', async () => {
@@ -64,7 +79,9 @@ describe('requireOwnership', () => {
 
   it('should fail when user does not own the resource', async () => {
     const user = createTestUser({ id: 'other-id' });
-    await expect(runWithUser(user, requireOwnership('owner-id'))).rejects.toThrow();
+    await expect(
+      runWithUser(user, requireOwnership('owner-id')),
+    ).rejects.toThrow();
   });
 
   it('should succeed when admin accesses any resource', async () => {
@@ -119,7 +136,10 @@ describe('requirePermission', () => {
   it('should fail when policy denies permission', async () => {
     const user = createTestUser();
     await expect(
-      runWithUserAndPolicy(user, requirePermission('document', Permission.DELETE)),
+      runWithUserAndPolicy(
+        user,
+        requirePermission('document', Permission.DELETE),
+      ),
     ).rejects.toThrow();
   });
 
@@ -146,7 +166,10 @@ describe('requireAccess', () => {
   it('should fail when policy denies access to resource instance', async () => {
     const user = createTestUser();
     await expect(
-      runWithUserAndPolicy(user, requireAccess('document', 'doc-123', Permission.DELETE)),
+      runWithUserAndPolicy(
+        user,
+        requireAccess('document', 'doc-123', Permission.DELETE),
+      ),
     ).rejects.toThrow();
   });
 });

@@ -1,6 +1,11 @@
 import { Effect, Layer, Schema } from 'effect';
 import { LLMError, LLMRateLimitError } from '../errors';
-import { LLM, type LLMService, type GenerateResult, type GenerateOptions } from '../service';
+import {
+  LLM,
+  type LLMService,
+  type GenerateResult,
+  type GenerateOptions,
+} from '../service';
 
 // Test schema
 const GreetingSchema = Schema.Struct({
@@ -38,7 +43,9 @@ describe('LLM Service', () => {
         },
       };
 
-      const mockService = createMockLLMService(() => Effect.succeed(mockResult));
+      const mockService = createMockLLMService(() =>
+        Effect.succeed(mockResult),
+      );
       const MockLLMLive = Layer.succeed(LLM, mockService);
 
       const program = Effect.gen(function* () {
@@ -49,7 +56,9 @@ describe('LLM Service', () => {
         });
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(MockLLMLive)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(MockLLMLive)),
+      );
 
       expect(result.object).toEqual({ greeting: 'Hello', language: 'English' });
       expect(result.usage).toEqual({
@@ -126,7 +135,9 @@ describe('LLM Service', () => {
         });
       });
 
-      const result = await Effect.runPromiseExit(program.pipe(Effect.provide(MockLLMLive)));
+      const result = await Effect.runPromiseExit(
+        program.pipe(Effect.provide(MockLLMLive)),
+      );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
@@ -149,7 +160,9 @@ describe('LLM Service', () => {
         });
       });
 
-      const result = await Effect.runPromiseExit(program.pipe(Effect.provide(MockLLMLive)));
+      const result = await Effect.runPromiseExit(
+        program.pipe(Effect.provide(MockLLMLive)),
+      );
 
       expect(result._tag).toBe('Failure');
     });
@@ -180,7 +193,9 @@ describe('LLM Service', () => {
         },
       };
 
-      const mockService = createMockLLMService(() => Effect.succeed(mockResult));
+      const mockService = createMockLLMService(() =>
+        Effect.succeed(mockResult),
+      );
       const MockLLMLive = Layer.succeed(LLM, mockService);
 
       const program = Effect.gen(function* () {
@@ -191,7 +206,9 @@ describe('LLM Service', () => {
         });
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(MockLLMLive)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(MockLLMLive)),
+      );
 
       expect(result.object.title).toBe('Test');
       expect(result.object.items).toHaveLength(1);
@@ -205,7 +222,9 @@ describe('LLM Service', () => {
         // No usage provided
       };
 
-      const mockService = createMockLLMService(() => Effect.succeed(mockResult));
+      const mockService = createMockLLMService(() =>
+        Effect.succeed(mockResult),
+      );
       const MockLLMLive = Layer.succeed(LLM, mockService);
 
       const program = Effect.gen(function* () {
@@ -216,7 +235,9 @@ describe('LLM Service', () => {
         });
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(MockLLMLive)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(MockLLMLive)),
+      );
 
       expect(result.object).toEqual({ greeting: 'Hello', language: 'English' });
       expect(result.usage).toBeUndefined();

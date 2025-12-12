@@ -1,4 +1,5 @@
 import { Podcasts } from '@repo/podcast';
+import { Projects } from '@repo/project';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { GeneratePodcastPayload } from '@repo/queue';
@@ -53,179 +54,244 @@ const serializeJob = (job: any): any => ({
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const podcastRouter = {
-  list: protectedProcedure.podcasts.list.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const result = yield* podcasts.list(input);
-        return result.map(serializePodcast);
-      }).pipe(Effect.provide(context.layers)),
-      {
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+  list: protectedProcedure.podcasts.list.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const result = yield* podcasts.list(input);
+          return result.map(serializePodcast);
+        }).pipe(Effect.provide(context.layers)),
+        {
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
         },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-      },
-    );
-  }),
+      );
+    },
+  ),
 
-  get: protectedProcedure.podcasts.get.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const result = yield* podcasts.findById(input.id);
-        return serializePodcastFull(result);
-      }).pipe(Effect.provide(context.layers)),
-      {
-        PodcastNotFound: (e) => {
-          throw errors.PODCAST_NOT_FOUND({
-            message: e.message ?? `Podcast ${e.id} not found`,
-            data: { podcastId: e.id },
-          });
+  get: protectedProcedure.podcasts.get.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const result = yield* podcasts.findById(input.id);
+          return serializePodcastFull(result);
+        }).pipe(Effect.provide(context.layers)),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
         },
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-        },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-        ForbiddenError: (e) => {
-          throw errors.FORBIDDEN({ message: e.message });
-        },
-      },
-    );
-  }),
+      );
+    },
+  ),
 
-  create: protectedProcedure.podcasts.create.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const result = yield* podcasts.create(input);
-        // Return full podcast shape with script (null for new podcasts)
-        return serializePodcastFull({ ...result, script: null });
-      }).pipe(Effect.provide(context.layers)),
-      {
-        DocumentNotFound: (e) => {
-          throw errors.DOCUMENT_NOT_FOUND({
-            message: e.message ?? `Document ${e.id} not found or access denied`,
-            data: { documentId: e.id },
-          });
-        },
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-        },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-        ForbiddenError: (e) => {
-          throw errors.FORBIDDEN({ message: e.message });
-        },
-      },
-    );
-  }),
+  create: protectedProcedure.podcasts.create.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const projects = yield* Projects;
+          const result = yield* podcasts.create(input);
 
-  update: protectedProcedure.podcasts.update.handler(async ({ context, input, errors }) => {
-    const { id, ...data } = input;
+          // Auto-add podcast to project's media list
+          yield* projects.addMedia(input.projectId, {
+            mediaType: 'podcast',
+            mediaId: result.id,
+          });
 
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const result = yield* podcasts.update(id, data);
-        return serializePodcast(result);
-      }).pipe(Effect.provide(context.layers)),
-      {
-        PodcastNotFound: (e) => {
-          throw errors.PODCAST_NOT_FOUND({
-            message: e.message ?? `Podcast ${e.id} not found`,
-            data: { podcastId: e.id },
-          });
+          // Return full podcast shape with script (null for new podcasts)
+          return serializePodcastFull({ ...result, script: null });
+        }).pipe(Effect.provide(context.layers)),
+        {
+          DocumentNotFound: (e) => {
+            throw errors.DOCUMENT_NOT_FOUND({
+              message:
+                e.message ?? `Document ${e.id} not found or access denied`,
+              data: { documentId: e.id },
+            });
+          },
+          ProjectNotFound: (e) => {
+            // Handle both podcast and project package ProjectNotFound errors
+            const projectId =
+              'id' in e
+                ? e.id
+                : 'projectId' in e
+                  ? String(e.projectId)
+                  : 'unknown';
+            throw errors.PROJECT_NOT_FOUND({
+              message:
+                e.message ?? `Project ${projectId} not found or access denied`,
+              data: { projectId },
+            });
+          },
+          MediaNotFound: (e) => {
+            throw errors.MEDIA_NOT_FOUND({
+              message: e.message ?? `Media not found`,
+              data: { mediaType: e.mediaType, mediaId: e.mediaId },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
         },
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-        },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-        ForbiddenError: (e) => {
-          throw errors.FORBIDDEN({ message: e.message });
-        },
-      },
-    );
-  }),
+      );
+    },
+  ),
 
-  delete: protectedProcedure.podcasts.delete.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        yield* podcasts.delete(input.id);
-        return {};
-      }).pipe(Effect.provide(context.layers)),
-      {
-        PodcastNotFound: (e) => {
-          throw errors.PODCAST_NOT_FOUND({
-            message: e.message ?? `Podcast ${e.id} not found`,
-            data: { podcastId: e.id },
-          });
-        },
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-        },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-        ForbiddenError: (e) => {
-          throw errors.FORBIDDEN({ message: e.message });
-        },
-      },
-    );
-  }),
+  update: protectedProcedure.podcasts.update.handler(
+    async ({ context, input, errors }) => {
+      const { id, ...data } = input;
 
-  getScript: protectedProcedure.podcasts.getScript.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const result = yield* podcasts.getScript(input.id);
-        return serializeScript(result);
-      }).pipe(Effect.provide(context.layers)),
-      {
-        PodcastNotFound: (e) => {
-          throw errors.PODCAST_NOT_FOUND({
-            message: e.message ?? `Podcast ${e.id} not found`,
-            data: { podcastId: e.id },
-          });
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const result = yield* podcasts.update(id, data);
+          return serializePodcast(result);
+        }).pipe(Effect.provide(context.layers)),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
         },
-        ScriptNotFound: (e) => {
-          throw errors.SCRIPT_NOT_FOUND({
-            message: e.message ?? 'Script not found',
-            data: { podcastId: e.podcastId },
-          });
+      );
+    },
+  ),
+
+  delete: protectedProcedure.podcasts.delete.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          yield* podcasts.delete(input.id);
+          return {};
+        }).pipe(Effect.provide(context.layers)),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
         },
-        DbError: (e) => {
-          console.error('[DbError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+      );
+    },
+  ),
+
+  getScript: protectedProcedure.podcasts.getScript.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const result = yield* podcasts.getScript(input.id);
+          return serializeScript(result);
+        }).pipe(Effect.provide(context.layers)),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'Script not found',
+              data: { podcastId: e.podcastId },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
         },
-        PolicyError: (e) => {
-          console.error('[PolicyError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-        },
-        ForbiddenError: (e) => {
-          throw errors.FORBIDDEN({ message: e.message });
-        },
-      },
-    );
-  }),
+      );
+    },
+  ),
 
   updateScript: protectedProcedure.podcasts.updateScript.handler(
     async ({ context, input, errors }) => {
@@ -246,11 +312,15 @@ const podcastRouter = {
           },
           DbError: (e) => {
             console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
           },
           PolicyError: (e) => {
             console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
           },
           ForbiddenError: (e) => {
             throw errors.FORBIDDEN({ message: e.message });
@@ -286,7 +356,11 @@ const podcastRouter = {
             promptInstructions: input.promptInstructions,
           };
 
-          const job = yield* queue.enqueue('generate-podcast', payload, podcast.createdBy);
+          const job = yield* queue.enqueue(
+            'generate-podcast',
+            payload,
+            podcast.createdBy,
+          );
 
           // Job will be picked up by the polling worker
 
@@ -309,50 +383,60 @@ const podcastRouter = {
           },
           DbError: (e) => {
             console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
           },
           PolicyError: (e) => {
             console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
           },
           ForbiddenError: (e) => {
             throw errors.FORBIDDEN({ message: e.message });
           },
           QueueError: (e) => {
             console.error('[QueueError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({ message: 'Failed to queue podcast generation' });
+            throw errors.INTERNAL_ERROR({
+              message: 'Failed to queue podcast generation',
+            });
           },
         },
       );
     },
   ),
 
-  getJob: protectedProcedure.podcasts.getJob.handler(async ({ context, input, errors }) => {
-    return handleEffect(
-      Effect.gen(function* () {
-        const queue = yield* Queue;
-        const job = yield* queue.getJob(input.jobId);
-        return serializeJob(job);
-      }).pipe(
-        Effect.withSpan('api.podcasts.getJob', {
-          attributes: { 'job.id': input.jobId },
-        }),
-        Effect.provide(context.layers),
-      ),
-      {
-        QueueError: (e) => {
-          console.error('[QueueError]', e.message, e.cause);
-          throw errors.INTERNAL_ERROR({ message: 'Failed to fetch job status' });
+  getJob: protectedProcedure.podcasts.getJob.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const queue = yield* Queue;
+          const job = yield* queue.getJob(input.jobId);
+          return serializeJob(job);
+        }).pipe(
+          Effect.withSpan('api.podcasts.getJob', {
+            attributes: { 'job.id': input.jobId },
+          }),
+          Effect.provide(context.layers),
+        ),
+        {
+          QueueError: (e) => {
+            console.error('[QueueError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Failed to fetch job status',
+            });
+          },
+          JobNotFoundError: (e) => {
+            throw errors.JOB_NOT_FOUND({
+              message: e.message ?? `Job ${e.jobId} not found`,
+              data: { jobId: e.jobId },
+            });
+          },
         },
-        JobNotFoundError: (e) => {
-          throw errors.JOB_NOT_FOUND({
-            message: e.message ?? `Job ${e.jobId} not found`,
-            data: { jobId: e.jobId },
-          });
-        },
-      },
-    );
-  }),
+      );
+    },
+  ),
 };
 
 export default podcastRouter;
