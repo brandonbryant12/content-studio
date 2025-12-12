@@ -56,7 +56,9 @@ export const PodcastGeneratorLive: Layer.Layer<
     const storage = yield* Storage;
 
     // Create a context with Db and CurrentUser for repository operations
-    const repoContext = Context.make(Db, db).pipe(Context.add(CurrentUser, currentUser));
+    const repoContext = Context.make(Db, db).pipe(
+      Context.add(CurrentUser, currentUser),
+    );
 
     // Create a full context including Storage for document operations
     const fullContext = Context.make(Db, db).pipe(
@@ -68,24 +70,35 @@ export const PodcastGeneratorLive: Layer.Layer<
       generate: (podcastId, options) =>
         Effect.gen(function* () {
           // 1. Load podcast and verify ownership
-          let podcast = yield* Repo.findPodcastById(podcastId).pipe(Effect.provide(repoContext));
-          yield* requireOwnership(podcast.createdBy).pipe(Effect.provide(repoContext));
+          let podcast = yield* Repo.findPodcastById(podcastId).pipe(
+            Effect.provide(repoContext),
+          );
+          yield* requireOwnership(podcast.createdBy).pipe(
+            Effect.provide(repoContext),
+          );
 
           // ============================================
           // PHASE 1: Generate Script
           // ============================================
 
           // 2. Update status to generating script
-          yield* Repo.updatePodcastStatus(podcastId, 'generating_script').pipe(Effect.provide(repoContext));
+          yield* Repo.updatePodcastStatus(podcastId, 'generating_script').pipe(
+            Effect.provide(repoContext),
+          );
 
           // 3. Fetch all document content (ordered by podcast_document.order)
           const documentContents = yield* Effect.all(
-            podcast.documents.map((pd) => docs.getContent(pd.documentId).pipe(Effect.provide(fullContext))),
+            podcast.documents.map((pd) =>
+              docs.getContent(pd.documentId).pipe(Effect.provide(fullContext)),
+            ),
           );
           const combinedContent = documentContents.join('\n\n---\n\n');
 
           // 4. Build prompts based on format
-          const systemPrompt = buildSystemPrompt(podcast.format, options?.promptInstructions);
+          const systemPrompt = buildSystemPrompt(
+            podcast.format,
+            options?.promptInstructions,
+          );
           const userPrompt = buildUserPrompt(podcast, combinedContent);
 
           // 5. Generate script via LLM
@@ -118,17 +131,23 @@ export const PodcastGeneratorLive: Layer.Layer<
             description: llmResult.object.description,
             tags: [...llmResult.object.tags],
           }).pipe(Effect.provide(repoContext));
-          yield* Repo.updatePodcastStatus(podcastId, 'script_ready').pipe(Effect.provide(repoContext));
+          yield* Repo.updatePodcastStatus(podcastId, 'script_ready').pipe(
+            Effect.provide(repoContext),
+          );
 
           // ============================================
           // PHASE 2: Generate Audio
           // ============================================
 
           // 9. Update status to generating audio
-          yield* Repo.updatePodcastStatus(podcastId, 'generating_audio').pipe(Effect.provide(repoContext));
+          yield* Repo.updatePodcastStatus(podcastId, 'generating_audio').pipe(
+            Effect.provide(repoContext),
+          );
 
           // 10. Reload podcast to get updated voice settings
-          podcast = yield* Repo.findPodcastById(podcastId).pipe(Effect.provide(repoContext));
+          podcast = yield* Repo.findPodcastById(podcastId).pipe(
+            Effect.provide(repoContext),
+          );
 
           // 11. Convert segments to TTS turns
           const turns: SpeakerTurn[] = segments.map((s) => ({
@@ -137,15 +156,11 @@ export const PodcastGeneratorLive: Layer.Layer<
           }));
 
           // 12. Build voice configs
+          // Google's multi-speaker TTS API requires exactly 2 voice configs
           const voiceConfigs: SpeakerVoiceConfig[] = [
             { speakerAlias: 'host', voiceId: podcast.hostVoice ?? 'Charon' },
+            { speakerAlias: 'cohost', voiceId: podcast.coHostVoice ?? 'Kore' },
           ];
-          if (podcast.format === 'conversation' && podcast.coHostVoice) {
-            voiceConfigs.push({
-              speakerAlias: 'co-host',
-              voiceId: podcast.coHostVoice,
-            });
-          }
 
           // 13. Synthesize audio
           const ttsResult = yield* tts.synthesize({
@@ -154,12 +169,15 @@ export const PodcastGeneratorLive: Layer.Layer<
             audioEncoding: 'MP3',
           });
 
-          // 14. Upload to storage
-          const audioKey = `podcasts/${podcastId}/audio.mp3`;
-          const audioUrl = yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/mpeg');
+          // 14. Upload to storage (Gemini TTS returns WAV)
+          const audioKey = `podcasts/${podcastId}/audio.wav`;
+          yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
+          // Always call getUrl to ensure we have a playable URL
+          // (DatabaseStorage returns just the key for large files, getUrl returns data URL)
+          const audioUrl = yield* storage.getUrl(audioKey);
 
-          // 15. Estimate duration (~128kbps MP3 = 16KB/sec)
-          const duration = Math.round(ttsResult.audioContent.length / 16000);
+          // 15. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
+          const duration = Math.round(ttsResult.audioContent.length / 48000);
 
           // 16. Update podcast with audio details and final status
           yield* Repo.updatePodcastAudio(podcastId, {
@@ -169,7 +187,9 @@ export const PodcastGeneratorLive: Layer.Layer<
           }).pipe(Effect.provide(repoContext));
 
           // 17. Return full podcast for display
-          return yield* Repo.findPodcastById(podcastId).pipe(Effect.provide(repoContext));
+          return yield* Repo.findPodcastById(podcastId).pipe(
+            Effect.provide(repoContext),
+          );
         }).pipe(
           Effect.withSpan('podcastGenerator.generate', {
             attributes: { 'podcast.id': podcastId },

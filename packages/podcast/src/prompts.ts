@@ -10,7 +10,7 @@ export const buildSystemPrompt = (
   const basePrompt =
     format === 'conversation'
       ? `You are a podcast script writer creating engaging dialogue between two hosts.
-Use "host" and "co-host" as speaker names.
+Use "host" and "cohost" as speaker names.
 Create natural back-and-forth conversation that explains the content clearly.
 Include moments of curiosity, clarification, and enthusiasm.
 Make the dialogue feel authentic - hosts can agree, disagree, ask follow-up questions, and share insights.`

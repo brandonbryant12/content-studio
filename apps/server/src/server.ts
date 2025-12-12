@@ -1,13 +1,14 @@
 import { serve } from '@hono/node-server';
 import { env } from './env';
 import { createPodcastWorker } from './workers/podcast-worker';
-import app from '.';
+import app, { storageConfig } from '.';
 
 // Start the podcast worker
 const worker = createPodcastWorker({
   databaseUrl: env.SERVER_POSTGRES_URL,
   pollInterval: 3000, // Poll every 3 seconds
   geminiApiKey: env.GEMINI_API_KEY,
+  storageConfig,
 });
 
 worker.start().catch((error) => {

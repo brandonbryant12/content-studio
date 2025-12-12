@@ -74,7 +74,8 @@ export const handleEffect = <A, E extends { _tag: string }>(
  * type Errors = EffectErrors<typeof effect>; // DocumentNotFound | DbError
  * ```
  */
-export type EffectErrors<T> = T extends Effect.Effect<unknown, infer E, unknown> ? E : never;
+export type EffectErrors<T> =
+  T extends Effect.Effect<unknown, infer E, unknown> ? E : never;
 
 /**
  * Helper type to extract success type from an Effect.
@@ -85,7 +86,8 @@ export type EffectErrors<T> = T extends Effect.Effect<unknown, infer E, unknown>
  * type Result = EffectSuccess<typeof effect>; // Document
  * ```
  */
-export type EffectSuccess<T> = T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
+export type EffectSuccess<T> =
+  T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
 
 /**
  * Common error handler factories for reuse across handlers.

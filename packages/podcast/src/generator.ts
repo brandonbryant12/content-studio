@@ -75,7 +75,6 @@ export interface PodcastGeneratorService {
  * - TTS: Text-to-speech for audio synthesis
  * - Storage: File storage for audio upload
  */
-export class PodcastGenerator extends Context.Tag('@repo/podcast/PodcastGenerator')<
-  PodcastGenerator,
-  PodcastGeneratorService
->() {}
+export class PodcastGenerator extends Context.Tag(
+  '@repo/podcast/PodcastGenerator',
+)<PodcastGenerator, PodcastGeneratorService>() {}

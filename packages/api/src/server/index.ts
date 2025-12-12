@@ -8,8 +8,10 @@ import urlJoin from 'url-join';
 import * as v from 'valibot';
 import type { AuthInstance } from '@repo/auth/server';
 import type { DatabaseInstance } from '@repo/db/client';
-import { createORPCContext } from './orpc';
+import { createORPCContext, type StorageConfig } from './orpc';
 import { appRouter } from './router';
+
+export type { StorageConfig } from './orpc';
 
 // Export effect handler utilities
 export {
@@ -28,12 +30,14 @@ export const createApi = ({
   serverUrl,
   apiPath,
   geminiApiKey,
+  storageConfig,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
   serverUrl: string;
   apiPath: `/${string}`;
   geminiApiKey: string;
+  storageConfig: StorageConfig;
 }) => {
   const handler = new OpenAPIHandler(appRouter, {
     plugins: [
@@ -81,6 +85,7 @@ export const createApi = ({
           auth,
           headers: request.headers,
           geminiApiKey,
+          storageConfig,
         }),
       });
     },

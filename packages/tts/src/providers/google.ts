@@ -21,11 +21,49 @@ import {
  * Configuration for Google Gemini TTS provider.
  */
 export interface GoogleTTSConfig {
-  /** Google Cloud API key - required, should be passed from validated env.GEMINI_API_KEY */
+  /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
-  /** Default: 'gemini-2.5-flash-tts' */
+  /** Default: 'gemini-2.5-flash-preview-tts' */
   readonly model?: string;
 }
+
+/**
+ * Wrap raw PCM data in a WAV container.
+ * Gemini TTS returns raw PCM: 24kHz, 16-bit, mono
+ */
+const wrapPcmAsWav = (pcmData: Buffer): Buffer => {
+  const sampleRate = 24000;
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = pcmData.length;
+  const headerSize = 44;
+
+  const buffer = Buffer.alloc(headerSize + dataSize);
+
+  // RIFF header
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4); // file size - 8
+  buffer.write('WAVE', 8);
+
+  // fmt chunk
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16); // fmt chunk size
+  buffer.writeUInt16LE(1, 20); // audio format (1 = PCM)
+  buffer.writeUInt16LE(numChannels, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(byteRate, 28);
+  buffer.writeUInt16LE(blockAlign, 32);
+  buffer.writeUInt16LE(bitsPerSample, 34);
+
+  // data chunk
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+  pcmData.copy(buffer, 44);
+
+  return buffer;
+};
 
 /**
  * Map Google API errors to domain errors.
@@ -55,7 +93,7 @@ const mapError = (error: unknown): TTSError | TTSQuotaExceededError => {
  */
 const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
   const apiKey = config.apiKey;
-  const modelName = config.model ?? 'gemini-2.5-flash-tts';
+  const modelName = config.model ?? 'gemini-2.5-flash-preview-tts';
 
   return {
     listVoices: (options?: ListVoicesOptions) =>
@@ -80,7 +118,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
           const audioEncoding: AudioEncoding = options.audioEncoding ?? 'MP3';
 
           const response = await fetch(
-            `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+            `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
             {
               method: 'POST',
               headers: {
@@ -101,7 +139,9 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
 
           if (!response.ok) {
             const errorBody = await response.text();
-            throw new Error(`Google TTS API error: ${response.status} - ${errorBody}`);
+            throw new Error(
+              `Google TTS API error: ${response.status} - ${errorBody}`,
+            );
           }
 
           const data = (await response.json()) as { audioContent: string };
@@ -128,36 +168,41 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       Effect.tryPromise({
         try: async () => {
           const audioEncoding: AudioEncoding = options.audioEncoding ?? 'MP3';
-          const languageCode = options.languageCode ?? 'en-US';
 
+          // Build conversation text in format "Speaker: text\nSpeaker2: text"
+          const conversationText = options.turns
+            .map((t) => `${t.speaker}: ${t.text}`)
+            .join('\n');
+
+          // Use Gemini API endpoint for multi-speaker synthesis
           const response = await fetch(
-            `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
             {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey,
               },
               body: JSON.stringify({
-                input: {
-                  multiSpeakerMarkup: {
-                    turns: options.turns.map((t) => ({
-                      speaker: t.speaker,
-                      text: t.text,
-                    })),
+                contents: [
+                  {
+                    parts: [{ text: conversationText }],
                   },
-                },
-                voice: {
-                  languageCode,
-                  model: modelName,
-                },
-                multiSpeakerVoiceConfig: {
-                  speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
-                    speaker: vc.speakerAlias,
-                    voiceName: vc.voiceId,
-                  })),
-                },
-                audioConfig: {
-                  audioEncoding,
+                ],
+                generationConfig: {
+                  responseModalities: ['AUDIO'],
+                  speechConfig: {
+                    multiSpeakerVoiceConfig: {
+                      speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
+                        speaker: vc.speakerAlias,
+                        voiceConfig: {
+                          prebuiltVoiceConfig: {
+                            voiceName: vc.voiceId,
+                          },
+                        },
+                      })),
+                    },
+                  },
                 },
               }),
             },
@@ -165,15 +210,36 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
 
           if (!response.ok) {
             const errorBody = await response.text();
-            throw new Error(`Google TTS API error: ${response.status} - ${errorBody}`);
+            throw new Error(
+              `Google TTS API error: ${response.status} - ${errorBody}`,
+            );
           }
 
-          const data = (await response.json()) as { audioContent: string };
-          const audioContent = Buffer.from(data.audioContent, 'base64');
+          // Gemini API returns audio in candidates[0].content.parts[0].inlineData
+          const data = (await response.json()) as {
+            candidates: Array<{
+              content: {
+                parts: Array<{
+                  inlineData?: { mimeType: string; data: string };
+                }>;
+              };
+            }>;
+          };
+
+          const inlineData =
+            data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+          if (!inlineData?.data) {
+            throw new Error('No audio data in response');
+          }
+
+          // Gemini returns raw PCM, wrap it as WAV for browser compatibility
+          const pcmData = Buffer.from(inlineData.data, 'base64');
+          const audioContent = wrapPcmAsWav(pcmData);
 
           return {
             audioContent,
-            audioEncoding,
+            audioEncoding: 'LINEAR16', // WAV format
+            mimeType: 'audio/wav',
           } satisfies SynthesizeResult;
         },
         catch: mapError,
@@ -195,7 +261,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
  *
  * @example
  * ```typescript
- * const TTSLive = GoogleTTSLive({ model: 'gemini-2.5-flash-tts' });
+ * const TTSLive = GoogleTTSLive({ apiKey: 'your-api-key' });
  *
  * const program = Effect.gen(function* () {
  *   const tts = yield* TTS;

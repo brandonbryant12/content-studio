@@ -1,6 +1,6 @@
 import { Context } from 'effect';
 import type { LLMError, LLMRateLimitError } from '@repo/effect/errors';
-import type { Schema , Effect } from 'effect';
+import type { Schema, Effect } from 'effect';
 
 /**
  * Options for structured object generation.

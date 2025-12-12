@@ -1,15 +1,52 @@
-import { createApi } from '@repo/api/server';
+import { createApi, type StorageConfig } from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { env } from './env';
 import { generateRootHtml } from './utils';
 
 // ========================================================================= //
 
 const trustedOrigins = [env.PUBLIC_WEB_URL].map((url) => new URL(url).origin);
+
+// Build storage config based on env
+const buildStorageConfig = (): StorageConfig => {
+  if (env.STORAGE_PROVIDER === 'filesystem') {
+    if (!env.STORAGE_PATH)
+      throw new Error('STORAGE_PATH required for filesystem provider');
+    return {
+      provider: 'filesystem',
+      basePath: env.STORAGE_PATH,
+      baseUrl: env.STORAGE_BASE_URL ?? `${env.PUBLIC_SERVER_URL}/storage`,
+    };
+  }
+  if (env.STORAGE_PROVIDER === 's3') {
+    if (
+      !env.S3_BUCKET ||
+      !env.S3_REGION ||
+      !env.S3_ACCESS_KEY_ID ||
+      !env.S3_SECRET_ACCESS_KEY
+    ) {
+      throw new Error(
+        'S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY required for s3 provider',
+      );
+    }
+    return {
+      provider: 's3',
+      bucket: env.S3_BUCKET,
+      region: env.S3_REGION,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+      endpoint: env.S3_ENDPOINT,
+    };
+  }
+  return { provider: 'database' };
+};
+
+export const storageConfig = buildStorageConfig();
 
 const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
 const auth = createAuth({
@@ -25,6 +62,7 @@ const api = createApi({
   serverUrl: env.PUBLIC_SERVER_URL,
   apiPath: env.PUBLIC_SERVER_API_PATH,
   geminiApiKey: env.GEMINI_API_KEY,
+  storageConfig,
 });
 
 const app = new Hono<{
@@ -45,6 +83,17 @@ app.use(logger());
 app.get('/', (c) => {
   return c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL));
 });
+
+// Serve static files from storage directory (only for filesystem provider)
+if (storageConfig.provider === 'filesystem') {
+  app.use(
+    '/storage/*',
+    serveStatic({
+      root: storageConfig.basePath,
+      rewriteRequestPath: (path) => path.replace('/storage', ''),
+    }),
+  );
+}
 
 // ========================================================================= //
 

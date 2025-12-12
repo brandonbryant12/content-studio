@@ -56,9 +56,12 @@ describe('runtime', () => {
 
       const effect = Effect.fail(new Error('Test error'));
 
-      await expect(runEffect(runtime, effect as unknown as Effect.Effect<never, Error, Db>)).rejects.toThrow(
-        'Test error',
-      );
+      await expect(
+        runEffect(
+          runtime,
+          effect as unknown as Effect.Effect<never, Error, Db>,
+        ),
+      ).rejects.toThrow('Test error');
     });
   });
 });

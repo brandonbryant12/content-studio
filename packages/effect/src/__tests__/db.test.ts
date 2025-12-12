@@ -13,7 +13,10 @@ const mockDb = {
 describe('db', () => {
   describe('DbError', () => {
     it('should create a tagged error with cause and message', () => {
-      const error = new DbError({ cause: new Error('Connection failed'), message: 'Connection failed' });
+      const error = new DbError({
+        cause: new Error('Connection failed'),
+        message: 'Connection failed',
+      });
 
       expect(error._tag).toBe('DbError');
       expect(error.message).toBe('Connection failed');

@@ -66,7 +66,9 @@ export default function UploadDocumentDialog({
     if (!selectedFile) return;
 
     if (!SUPPORTED_TYPES.includes(selectedFile.type)) {
-      toast.error('Unsupported file type. Please upload TXT, PDF, DOCX, or PPTX.');
+      toast.error(
+        'Unsupported file type. Please upload TXT, PDF, DOCX, or PPTX.',
+      );
       return;
     }
 
@@ -119,7 +121,8 @@ export default function UploadDocumentDialog({
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
-            Upload a document to use for podcast generation. Supports TXT, PDF, DOCX, and PPTX.
+            Upload a document to use for podcast generation. Supports TXT, PDF,
+            DOCX, and PPTX.
           </DialogDescription>
         </DialogHeader>
 

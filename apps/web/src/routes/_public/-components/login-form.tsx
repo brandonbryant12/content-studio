@@ -63,7 +63,10 @@ export default function LoginCredentialsForm() {
           children={(field) => {
             return (
               <>
-                <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+                <Label
+                  htmlFor={field.name}
+                  className="text-gray-700 dark:text-gray-300"
+                >
                   Email
                 </Label>
                 <Input
@@ -87,7 +90,10 @@ export default function LoginCredentialsForm() {
           name="password"
           children={(field) => (
             <>
-              <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+              <Label
+                htmlFor={field.name}
+                className="text-gray-700 dark:text-gray-300"
+              >
                 Password
               </Label>
               <>

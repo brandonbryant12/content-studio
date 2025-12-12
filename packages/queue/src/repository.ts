@@ -21,7 +21,11 @@ const makeQueueService = Effect.gen(function* () {
           message: `${errorMessage}: ${cause instanceof Error ? cause.message : String(cause)}`,
           cause,
         }),
-    }).pipe(Effect.withSpan(`queue.${name}`, { attributes: { 'queue.system': 'database' } }));
+    }).pipe(
+      Effect.withSpan(`queue.${name}`, {
+        attributes: { 'queue.system': 'database' },
+      }),
+    );
 
   const enqueue: QueueService['enqueue'] = (type, payload, userId) =>
     runQuery(
@@ -49,7 +53,11 @@ const makeQueueService = Effect.gen(function* () {
     runQuery(
       'getJob',
       async () => {
-        const [row] = await db.select().from(job).where(eq(job.id, jobId)).limit(1);
+        const [row] = await db
+          .select()
+          .from(job)
+          .where(eq(job.id, jobId))
+          .limit(1);
         return row;
       },
       'Failed to get job',
@@ -80,7 +88,9 @@ const makeQueueService = Effect.gen(function* () {
         return rows.map(mapRowToJob);
       },
       'Failed to get jobs',
-    ).pipe(Effect.tap(() => Effect.annotateCurrentSpan('queue.user.id', userId)));
+    ).pipe(
+      Effect.tap(() => Effect.annotateCurrentSpan('queue.user.id', userId)),
+    );
 
   const updateJobStatus: QueueService['updateJobStatus'] = (
     jobId,
@@ -202,7 +212,9 @@ const makeQueueService = Effect.gen(function* () {
       }),
     );
 
-  const findPendingJobForPodcast: QueueService['findPendingJobForPodcast'] = (podcastId) =>
+  const findPendingJobForPodcast: QueueService['findPendingJobForPodcast'] = (
+    podcastId,
+  ) =>
     runQuery(
       'findPendingJobForPodcast',
       async () => {
@@ -213,15 +225,17 @@ const makeQueueService = Effect.gen(function* () {
             and(
               eq(job.type, 'generate-podcast'),
               inArray(job.status, ['pending', 'processing']),
-              sql`${job.payload}->>'podcastId' = ${podcastId}`
-            )
+              sql`${job.payload}->>'podcastId' = ${podcastId}`,
+            ),
           )
           .limit(1);
 
         return row ? mapRowToJob(row) : null;
       },
       'Failed to find pending job for podcast',
-    ).pipe(Effect.tap(() => Effect.annotateCurrentSpan('podcast.id', podcastId)));
+    ).pipe(
+      Effect.tap(() => Effect.annotateCurrentSpan('podcast.id', podcastId)),
+    );
 
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(

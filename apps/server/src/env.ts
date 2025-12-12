@@ -36,6 +36,19 @@ export const envSchema = v.object({
 
   // Google AI API key for LLM and TTS
   GEMINI_API_KEY: v.pipe(v.string(), v.minLength(1)),
+
+  // Storage configuration
+  STORAGE_PROVIDER: v.optional(
+    v.picklist(['database', 'filesystem', 's3']),
+    'database',
+  ),
+  STORAGE_PATH: v.optional(v.string()), // For filesystem provider
+  STORAGE_BASE_URL: v.optional(v.string()), // For filesystem provider (e.g., http://localhost:3035/storage)
+  S3_BUCKET: v.optional(v.string()), // For S3 provider
+  S3_REGION: v.optional(v.string()), // For S3 provider
+  S3_ACCESS_KEY_ID: v.optional(v.string()), // For S3 provider
+  S3_SECRET_ACCESS_KEY: v.optional(v.string()), // For S3 provider
+  S3_ENDPOINT: v.optional(v.string()), // For S3 provider (optional, for S3-compatible services)
 });
 
 export const env = v.parse(envSchema, process.env);

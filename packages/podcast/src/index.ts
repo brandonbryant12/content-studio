@@ -14,7 +14,11 @@ export {
 export { PodcastsLive } from './live';
 
 // Generator service (script + audio generation)
-export { PodcastGenerator, type PodcastGeneratorService, type GenerationError } from './generator';
+export {
+  PodcastGenerator,
+  type PodcastGeneratorService,
+  type GenerationError,
+} from './generator';
 export { PodcastGeneratorLive } from './generator-live';
 
 // Re-export DB types for convenience

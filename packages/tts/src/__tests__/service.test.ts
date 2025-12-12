@@ -9,7 +9,9 @@ import {
 } from '../service';
 
 // Mock TTS service for testing
-const createMockTTSService = (mockSynthesize: TTSService['synthesize']): TTSService => ({
+const createMockTTSService = (
+  mockSynthesize: TTSService['synthesize'],
+): TTSService => ({
   synthesize: mockSynthesize,
 });
 
@@ -28,7 +30,9 @@ describe('TTS Service', () => {
         audioEncoding: 'MP3',
       };
 
-      const mockService = createMockTTSService(() => Effect.succeed(mockResult));
+      const mockService = createMockTTSService(() =>
+        Effect.succeed(mockResult),
+      );
       const MockTTSLive = Layer.succeed(TTS, mockService);
 
       const turns: SpeakerTurn[] = [
@@ -49,14 +53,17 @@ describe('TTS Service', () => {
         });
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(MockTTSLive)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(MockTTSLive)),
+      );
 
       expect(result.audioContent).toEqual(mockAudio);
       expect(result.audioEncoding).toBe('MP3');
     });
 
     it('should pass turns and voice configs correctly', async () => {
-      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null = null;
+      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null =
+        null;
 
       const mockService = createMockTTSService((options) => {
         capturedOptions = options;
@@ -89,13 +96,20 @@ describe('TTS Service', () => {
       await Effect.runPromise(program.pipe(Effect.provide(MockTTSLive)));
 
       expect(capturedOptions?.turns).toHaveLength(3);
-      expect(capturedOptions?.turns[0]).toEqual({ speaker: 'host', text: 'Hello!' });
+      expect(capturedOptions?.turns[0]).toEqual({
+        speaker: 'host',
+        text: 'Hello!',
+      });
       expect(capturedOptions?.voiceConfigs).toHaveLength(2);
-      expect(capturedOptions?.voiceConfigs[0]).toEqual({ speakerAlias: 'host', voiceId: 'Charon' });
+      expect(capturedOptions?.voiceConfigs[0]).toEqual({
+        speakerAlias: 'host',
+        voiceId: 'Charon',
+      });
     });
 
     it('should pass audio encoding option', async () => {
-      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null = null;
+      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null =
+        null;
 
       const mockService = createMockTTSService((options) => {
         capturedOptions = options;
@@ -115,14 +129,17 @@ describe('TTS Service', () => {
         });
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(MockTTSLive)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(MockTTSLive)),
+      );
 
       expect(capturedOptions?.audioEncoding).toBe('OGG_OPUS');
       expect(result.audioEncoding).toBe('OGG_OPUS');
     });
 
     it('should pass language code option', async () => {
-      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null = null;
+      let capturedOptions: Parameters<TTSService['synthesize']>[0] | null =
+        null;
 
       const mockService = createMockTTSService((options) => {
         capturedOptions = options;
@@ -161,7 +178,9 @@ describe('TTS Service', () => {
         });
       });
 
-      const result = await Effect.runPromiseExit(program.pipe(Effect.provide(MockTTSLive)));
+      const result = await Effect.runPromiseExit(
+        program.pipe(Effect.provide(MockTTSLive)),
+      );
 
       expect(result._tag).toBe('Failure');
     });
@@ -180,7 +199,9 @@ describe('TTS Service', () => {
         });
       });
 
-      const result = await Effect.runPromiseExit(program.pipe(Effect.provide(MockTTSLive)));
+      const result = await Effect.runPromiseExit(
+        program.pipe(Effect.provide(MockTTSLive)),
+      );
 
       expect(result._tag).toBe('Failure');
     });

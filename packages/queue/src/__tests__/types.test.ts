@@ -10,7 +10,12 @@ import type {
 describe('queue types', () => {
   describe('JobStatus', () => {
     it('should support pending, processing, completed, and failed statuses', () => {
-      const statuses: JobStatus[] = ['pending', 'processing', 'completed', 'failed'];
+      const statuses: JobStatus[] = [
+        'pending',
+        'processing',
+        'completed',
+        'failed',
+      ];
       expect(statuses).toHaveLength(4);
     });
   });
@@ -74,7 +79,9 @@ describe('queue types', () => {
       expect(job.payload.podcastId).toBe('pod-1');
       expect(job.result?.scriptId).toBe('script-1');
       expect(job.result?.segmentCount).toBe(5);
-      expect(job.result?.audioUrl).toBe('https://storage.example.com/audio/podcast-123.mp3');
+      expect(job.result?.audioUrl).toBe(
+        'https://storage.example.com/audio/podcast-123.mp3',
+      );
       expect(job.result?.duration).toBe(1800);
     });
   });
@@ -112,7 +119,9 @@ describe('queue types', () => {
 
       expect(result.scriptId).toBe('script-123');
       expect(result.segmentCount).toBe(10);
-      expect(result.audioUrl).toBe('https://storage.example.com/audio/podcast-123.mp3');
+      expect(result.audioUrl).toBe(
+        'https://storage.example.com/audio/podcast-123.mp3',
+      );
       expect(result.duration).toBe(1800);
     });
   });

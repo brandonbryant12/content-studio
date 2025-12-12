@@ -83,7 +83,10 @@ export default function RegisterCredentialsForm() {
           name="name"
           children={(field) => (
             <>
-              <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+              <Label
+                htmlFor={field.name}
+                className="text-gray-700 dark:text-gray-300"
+              >
                 Full Name
               </Label>
               <Input
@@ -106,7 +109,10 @@ export default function RegisterCredentialsForm() {
           name="email"
           children={(field) => (
             <>
-              <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+              <Label
+                htmlFor={field.name}
+                className="text-gray-700 dark:text-gray-300"
+              >
                 Email
               </Label>
               <Input
@@ -129,7 +135,10 @@ export default function RegisterCredentialsForm() {
           name="password"
           children={(field) => (
             <>
-              <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+              <Label
+                htmlFor={field.name}
+                className="text-gray-700 dark:text-gray-300"
+              >
                 Password
               </Label>
               <div className="flex justify-end items-center relative w-full">
@@ -167,7 +176,10 @@ export default function RegisterCredentialsForm() {
           name="confirmPassword"
           children={(field) => (
             <>
-              <Label htmlFor={field.name} className="text-gray-700 dark:text-gray-300">
+              <Label
+                htmlFor={field.name}
+                className="text-gray-700 dark:text-gray-300"
+              >
                 Confirm Password
               </Label>
               <div className="flex justify-end items-center relative w-full">

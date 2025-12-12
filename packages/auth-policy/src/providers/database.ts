@@ -71,7 +71,12 @@ export const DatabasePolicyLive: Layer.Layer<Policy, never, Db> = Layer.effect(
       Effect.gen(function* () {
         const role = yield* getUserRole(userId);
         if (role === Role.ADMIN) {
-          return [Permission.READ, Permission.WRITE, Permission.DELETE, Permission.ADMIN];
+          return [
+            Permission.READ,
+            Permission.WRITE,
+            Permission.DELETE,
+            Permission.ADMIN,
+          ];
         }
         return [Permission.READ, Permission.WRITE];
       }).pipe(Effect.withSpan('policy.db.getPermissions'));

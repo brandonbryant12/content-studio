@@ -17,8 +17,10 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export const SUPPORTED_MIME_TYPES: Record<string, DocumentSource> = {
   'text/plain': 'upload_txt',
   'application/pdf': 'upload_pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'upload_docx',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'upload_pptx',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+    'upload_docx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+    'upload_pptx',
 };
 
 /**
@@ -27,8 +29,10 @@ export const SUPPORTED_MIME_TYPES: Record<string, DocumentSource> = {
 export const EXTENSION_TO_MIME: Record<string, string> = {
   '.txt': 'text/plain',
   '.pdf': 'application/pdf',
-  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.docx':
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.pptx':
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 };
 
 /**
@@ -53,12 +57,17 @@ export interface FileUploadInput {
 /**
  * Get MIME type from file extension if not provided.
  */
-export const getMimeType = (fileName: string, providedMimeType?: string): string => {
+export const getMimeType = (
+  fileName: string,
+  providedMimeType?: string,
+): string => {
   if (providedMimeType && providedMimeType !== 'application/octet-stream') {
     return providedMimeType;
   }
   const ext = fileName.toLowerCase().slice(fileName.lastIndexOf('.'));
-  return EXTENSION_TO_MIME[ext] ?? providedMimeType ?? 'application/octet-stream';
+  return (
+    EXTENSION_TO_MIME[ext] ?? providedMimeType ?? 'application/octet-stream'
+  );
 };
 
 /**
@@ -108,7 +117,10 @@ export const extractTitleFromFileName = (fileName: string): string => {
 /**
  * Parse plain text file.
  */
-const parseTxt = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument, DocumentParseError> =>
+const parseTxt = (
+  data: Buffer,
+  fileName: string,
+): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.try({
     try: () => ({
       content: data.toString('utf-8'),
@@ -126,7 +138,10 @@ const parseTxt = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument,
 /**
  * Parse PDF file using pdf-parse.
  */
-const parsePdf = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument, DocumentParseError> =>
+const parsePdf = (
+  data: Buffer,
+  fileName: string,
+): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
       // Dynamic import to handle ESM/CJS interop
@@ -153,7 +168,10 @@ const parsePdf = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument,
 /**
  * Parse DOCX file using mammoth.
  */
-const parseDocx = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument, DocumentParseError> =>
+const parseDocx = (
+  data: Buffer,
+  fileName: string,
+): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
       const mammoth = await import('mammoth');
@@ -162,7 +180,10 @@ const parseDocx = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument
         content: result.value,
         title: extractTitleFromFileName(fileName),
         source: 'upload_docx' as const,
-        metadata: result.messages.length > 0 ? { warnings: result.messages } : undefined,
+        metadata:
+          result.messages.length > 0
+            ? { warnings: result.messages }
+            : undefined,
       };
     },
     catch: (cause) =>
@@ -176,7 +197,10 @@ const parseDocx = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument
 /**
  * Parse PPTX file.
  */
-const parsePptx = (data: Buffer, fileName: string): Effect.Effect<ParsedDocument, DocumentParseError> =>
+const parsePptx = (
+  data: Buffer,
+  fileName: string,
+): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
       const pptxParser = await import('pptx-parser');
@@ -253,7 +277,11 @@ export const parseUploadedFile = (
           }),
         );
     }
-  }).pipe(Effect.withSpan('documents.parseUploadedFile', { attributes: { 'file.name': input.fileName } }));
+  }).pipe(
+    Effect.withSpan('documents.parseUploadedFile', {
+      attributes: { 'file.name': input.fileName },
+    }),
+  );
 
 /**
  * Parse document content without validation (for on-demand parsing of already-stored files).
@@ -283,4 +311,8 @@ export const parseDocumentContent = (
         // Unknown type - try treating as text
         return data.toString('utf-8');
     }
-  }).pipe(Effect.withSpan('documents.parseDocumentContent', { attributes: { 'file.name': input.fileName } }));
+  }).pipe(
+    Effect.withSpan('documents.parseDocumentContent', {
+      attributes: { 'file.name': input.fileName },
+    }),
+  );

@@ -1,24 +1,27 @@
 import { os, implement } from '@orpc/server';
-import {
-  CurrentUserLive,
-  Role,
-  type User,
-} from '@repo/auth-policy';
+import { CurrentUserLive, Role, type User } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { DocumentsLive, type Documents } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
 import { GoogleLive, type LLM } from '@repo/llm';
-import { PodcastsLive, PodcastGeneratorLive, type Podcasts, type PodcastGenerator } from '@repo/podcast';
+import {
+  PodcastsLive,
+  PodcastGeneratorLive,
+  type Podcasts,
+  type PodcastGenerator,
+} from '@repo/podcast';
 import { ProjectsLive, type Projects } from '@repo/project'; // Import Projects
 import { QueueLive, type Queue } from '@repo/queue';
-import { DatabaseStorageLive, type Storage } from '@repo/storage';
+import {
+  DatabaseStorageLive,
+  FilesystemStorageLive,
+  S3StorageLive,
+  type Storage,
+} from '@repo/storage';
 import { GoogleTTSLive, type TTS } from '@repo/tts';
 import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
-import type {
-  CurrentUser,
-  Policy
-} from '@repo/auth-policy';
+import type { CurrentUser, Policy } from '@repo/auth-policy';
 import type { DatabaseInstance } from '@repo/db/client';
 import type { Db } from '@repo/effect/db';
 import type { Effect } from 'effect';
@@ -30,19 +33,59 @@ type Session = AuthInstance['$Infer']['Session'];
 export type PublicServices = Db | Policy | Storage | Queue | TTS | LLM;
 
 /** Services that require authentication */
-export type AuthenticatedServices = PublicServices | CurrentUser | Documents | Podcasts | PodcastGenerator | Projects;
+export type AuthenticatedServices =
+  | PublicServices
+  | CurrentUser
+  | Documents
+  | Podcasts
+  | PodcastGenerator
+  | Projects;
 
 /** All services provided by the API context (alias for AuthenticatedServices) */
 export type ApiServices = AuthenticatedServices;
 
+/** Storage configuration for different providers */
+export type StorageConfig =
+  | { provider: 'database' }
+  | { provider: 'filesystem'; basePath: string; baseUrl: string }
+  | {
+      provider: 's3';
+      bucket: string;
+      region: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      endpoint?: string;
+    };
+
 /**
  * Creates base layers available to all requests (authenticated or not).
  */
-const createBaseLayers = (db: DatabaseInstance, geminiApiKey: string) => {
+const createBaseLayers = (
+  db: DatabaseInstance,
+  geminiApiKey: string,
+  storageConfig: StorageConfig,
+) => {
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = DatabaseStorageLive.pipe(Layer.provide(dbLayer));
+
+  // Select storage provider based on config
+  const storageLayer =
+    storageConfig.provider === 'filesystem'
+      ? FilesystemStorageLive({
+          basePath: storageConfig.basePath,
+          baseUrl: storageConfig.baseUrl,
+        })
+      : storageConfig.provider === 's3'
+        ? S3StorageLive({
+            bucket: storageConfig.bucket,
+            region: storageConfig.region,
+            accessKeyId: storageConfig.accessKeyId,
+            secretAccessKey: storageConfig.secretAccessKey,
+            endpoint: storageConfig.endpoint,
+          })
+        : DatabaseStorageLive.pipe(Layer.provide(dbLayer));
+
   const ttsLayer = GoogleTTSLive({ apiKey: geminiApiKey });
   const llmLayer = GoogleLive({ apiKey: geminiApiKey });
   const loggerLayer = Logger.pretty;
@@ -65,20 +108,54 @@ const createAuthenticatedLayers = (
   db: DatabaseInstance,
   currentUser: User,
   geminiApiKey: string,
+  storageConfig: StorageConfig,
 ): Layer.Layer<AuthenticatedServices, never, never> => {
-  const { dbLayer, policyLayer, queueLayer, storageLayer, ttsLayer, llmLayer, loggerLayer } = createBaseLayers(db, geminiApiKey);
+  const {
+    dbLayer,
+    policyLayer,
+    queueLayer,
+    storageLayer,
+    ttsLayer,
+    llmLayer,
+    loggerLayer,
+  } = createBaseLayers(db, geminiApiKey, storageConfig);
 
   const userLayer = CurrentUserLive(currentUser);
-  const documentsLayer = DocumentsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)));
-  const podcastsLayer = PodcastsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
-  const projectsLayer = ProjectsLive.pipe(Layer.provide(Layer.mergeAll(dbLayer, userLayer)));
+  const documentsLayer = DocumentsLive.pipe(
+    Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
+  );
+  const podcastsLayer = PodcastsLive.pipe(
+    Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
+  );
+  const projectsLayer = ProjectsLive.pipe(
+    Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
+  );
   const generatorLayer = PodcastGeneratorLive.pipe(
-    Layer.provide(Layer.mergeAll(dbLayer, userLayer, documentsLayer, llmLayer, ttsLayer, storageLayer)),
+    Layer.provide(
+      Layer.mergeAll(
+        dbLayer,
+        userLayer,
+        documentsLayer,
+        llmLayer,
+        ttsLayer,
+        storageLayer,
+      ),
+    ),
   );
 
   return Layer.mergeAll(
-    dbLayer, userLayer, policyLayer, documentsLayer, storageLayer,
-    podcastsLayer, projectsLayer, generatorLayer, queueLayer, ttsLayer, llmLayer, loggerLayer
+    dbLayer,
+    userLayer,
+    policyLayer,
+    documentsLayer,
+    storageLayer,
+    podcastsLayer,
+    projectsLayer,
+    generatorLayer,
+    queueLayer,
+    ttsLayer,
+    llmLayer,
+    loggerLayer,
   );
 };
 
@@ -88,10 +165,27 @@ const createAuthenticatedLayers = (
 const createPublicLayers = (
   db: DatabaseInstance,
   geminiApiKey: string,
+  storageConfig: StorageConfig,
 ): Layer.Layer<PublicServices, never, never> => {
-  const { dbLayer, policyLayer, queueLayer, storageLayer, ttsLayer, llmLayer, loggerLayer } = createBaseLayers(db, geminiApiKey);
+  const {
+    dbLayer,
+    policyLayer,
+    queueLayer,
+    storageLayer,
+    ttsLayer,
+    llmLayer,
+    loggerLayer,
+  } = createBaseLayers(db, geminiApiKey, storageConfig);
 
-  return Layer.mergeAll(dbLayer, policyLayer, storageLayer, queueLayer, ttsLayer, llmLayer, loggerLayer);
+  return Layer.mergeAll(
+    dbLayer,
+    policyLayer,
+    storageLayer,
+    queueLayer,
+    ttsLayer,
+    llmLayer,
+    loggerLayer,
+  );
 };
 
 interface BaseORPCContext {
@@ -108,7 +202,9 @@ export interface PublicORPCContext extends BaseORPCContext {
 export interface AuthenticatedORPCContext extends BaseORPCContext {
   session: Session;
   layers: Layer.Layer<AuthenticatedServices, never, never>;
-  runEffect: <A, E>(effect: Effect.Effect<A, E, AuthenticatedServices>) => Promise<A>;
+  runEffect: <A, E>(
+    effect: Effect.Effect<A, E, AuthenticatedServices>,
+  ) => Promise<A>;
 }
 
 export type ORPCContext = PublicORPCContext | AuthenticatedORPCContext;
@@ -118,11 +214,13 @@ export const createORPCContext = async ({
   db,
   headers,
   geminiApiKey,
+  storageConfig,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
   headers: Headers;
   geminiApiKey: string;
+  storageConfig: StorageConfig;
 }): Promise<ORPCContext> => {
   const session = await auth.api.getSession({ headers });
 
@@ -134,7 +232,12 @@ export const createORPCContext = async ({
       role: Role.USER,
     };
 
-    const layers = createAuthenticatedLayers(db, currentUser, geminiApiKey);
+    const layers = createAuthenticatedLayers(
+      db,
+      currentUser,
+      geminiApiKey,
+      storageConfig,
+    );
     const runtime = ManagedRuntime.make(layers);
 
     return {
@@ -146,7 +249,7 @@ export const createORPCContext = async ({
     };
   }
 
-  const layers = createPublicLayers(db, geminiApiKey);
+  const layers = createPublicLayers(db, geminiApiKey, storageConfig);
   const runtime = ManagedRuntime.make(layers);
 
   return {
@@ -170,7 +273,9 @@ const timingMiddleware = os.middleware(async ({ next, path }) => {
   const result = await next();
   const end = Date.now();
 
-  console.log(`\t[RPC] /${path.join('/')} executed after ${end - start}ms${waitMsDisplay}`);
+  console.log(
+    `\t[RPC] /${path.join('/')} executed after ${end - start}ms${waitMsDisplay}`,
+  );
   return result;
 });
 
@@ -180,18 +285,20 @@ export const publicProcedure = base
   .$context<Awaited<ReturnType<typeof createORPCContext>>>()
   .use(timingMiddleware);
 
-export const protectedProcedure = publicProcedure.use(({ context, next, errors }) => {
-  if (!context.session?.user) {
-    throw errors.UNAUTHORIZED({
-      message: 'Missing user session. Please log in!',
+export const protectedProcedure = publicProcedure.use(
+  ({ context, next, errors }) => {
+    if (!context.session?.user) {
+      throw errors.UNAUTHORIZED({
+        message: 'Missing user session. Please log in!',
+      });
+    }
+    // Type narrowing: session exists means we have AuthenticatedORPCContext
+    const authenticatedContext = context as AuthenticatedORPCContext;
+    return next({
+      context: {
+        session: authenticatedContext.session,
+        layers: authenticatedContext.layers,
+      },
     });
-  }
-  // Type narrowing: session exists means we have AuthenticatedORPCContext
-  const authenticatedContext = context as AuthenticatedORPCContext;
-  return next({
-    context: {
-      session: authenticatedContext.session,
-      layers: authenticatedContext.layers,
-    },
-  });
-});
+  },
+);

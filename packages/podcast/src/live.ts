@@ -12,7 +12,10 @@ const makePodcastService: PodcastService = {
   create: (data) =>
     Effect.gen(function* () {
       const user = yield* CurrentUser;
-      const { documentIds, ...podcastData } = data;
+      const { documentIds, projectId, ...podcastData } = data;
+
+      // Verify project exists and is owned by the user
+      yield* Repo.verifyProjectExists(projectId, user.id);
 
       // Verify all documents exist and are owned by the user
       yield* Repo.verifyDocumentsExist(documentIds, user.id);
@@ -21,6 +24,7 @@ const makePodcastService: PodcastService = {
       const result = yield* Repo.insertPodcast(
         {
           ...podcastData,
+          projectId,
           createdBy: user.id,
         },
         documentIds,
@@ -136,7 +140,5 @@ const makePodcastService: PodcastService = {
  * This separation ensures CRUD consumers don't need heavy AI dependencies.
  */
 // eslint-disable-next-line no-restricted-syntax -- CRUD-only service: all methods return Effect<..., ..., Db | CurrentUser> with no hidden deps
-export const PodcastsLive: Layer.Layer<Podcasts, never, Db | CurrentUser> = Layer.succeed(
-  Podcasts,
-  makePodcastService,
-);
+export const PodcastsLive: Layer.Layer<Podcasts, never, Db | CurrentUser> =
+  Layer.succeed(Podcasts, makePodcastService);

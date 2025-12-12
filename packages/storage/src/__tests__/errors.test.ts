@@ -1,5 +1,9 @@
 import { describe, it, expect } from '@jest/globals';
-import { StorageError, StorageNotFoundError, StorageUploadError } from '../errors';
+import {
+  StorageError,
+  StorageNotFoundError,
+  StorageUploadError,
+} from '../errors';
 
 describe('storage errors', () => {
   describe('StorageError', () => {

@@ -1,4 +1,9 @@
-import { document, type Document, type UpdateDocument, type DocumentSource } from '@repo/db/schema';
+import {
+  document,
+  type Document,
+  type UpdateDocument,
+  type DocumentSource,
+} from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
 import { DocumentNotFound } from '@repo/effect/errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
@@ -70,7 +75,9 @@ export const listDocuments = (options: {
   offset?: number;
 }) =>
   withDb('documents.list', (db) => {
-    const conditions = options.createdBy ? eq(document.createdBy, options.createdBy) : undefined;
+    const conditions = options.createdBy
+      ? eq(document.createdBy, options.createdBy)
+      : undefined;
 
     return db
       .select()
@@ -125,7 +132,10 @@ export const updateDocument = (id: string, data: UpdateDocumentInput) =>
  */
 export const deleteDocument = (id: string) =>
   withDb('documents.delete', async (db) => {
-    const result = await db.delete(document).where(eq(document.id, id)).returning({ id: document.id });
+    const result = await db
+      .delete(document)
+      .where(eq(document.id, id))
+      .returning({ id: document.id });
     return result.length > 0;
   });
 
@@ -134,7 +144,9 @@ export const deleteDocument = (id: string) =>
  */
 export const countDocuments = (options?: { createdBy?: string }) =>
   withDb('documents.count', async (db) => {
-    const conditions = options?.createdBy ? eq(document.createdBy, options.createdBy) : undefined;
+    const conditions = options?.createdBy
+      ? eq(document.createdBy, options.createdBy)
+      : undefined;
     const [result] = await db
       .select({ count: drizzleCount() })
       .from(document)

@@ -65,6 +65,7 @@ export interface SynthesizeOptions {
 export interface SynthesizeResult {
   readonly audioContent: Buffer; // Raw audio bytes
   readonly audioEncoding: AudioEncoding;
+  readonly mimeType: string; // Actual mime type from API response (e.g., 'audio/wav', 'audio/mpeg')
 }
 
 /**
@@ -75,7 +76,9 @@ export interface TTSService {
   /**
    * List available voices, optionally filtered by gender.
    */
-  readonly listVoices: (options?: ListVoicesOptions) => Effect.Effect<readonly VoiceInfo[]>;
+  readonly listVoices: (
+    options?: ListVoicesOptions,
+  ) => Effect.Effect<readonly VoiceInfo[]>;
 
   /**
    * Generate a short preview of a voice.

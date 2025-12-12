@@ -1,5 +1,9 @@
 import { oc } from '@orpc/contract';
-import { CreatePodcastSchema, UpdatePodcastSchema, UpdateScriptSchema } from '@repo/db/schema';
+import {
+  CreatePodcastSchema,
+  UpdatePodcastSchema,
+  UpdateScriptSchema,
+} from '@repo/db/schema';
 import * as v from 'valibot';
 
 const podcastErrors = {
@@ -21,6 +25,19 @@ const podcastErrors = {
       documentId: v.string(),
     }),
   },
+  PROJECT_NOT_FOUND: {
+    status: 404,
+    data: v.object({
+      projectId: v.string(),
+    }),
+  },
+  MEDIA_NOT_FOUND: {
+    status: 404,
+    data: v.object({
+      mediaType: v.string(),
+      mediaId: v.string(),
+    }),
+  },
 } as const;
 
 const jobErrors = {
@@ -35,10 +52,18 @@ const jobErrors = {
 // Output schemas
 const podcastOutputSchema = v.object({
   id: v.string(),
+  projectId: v.string(),
   title: v.string(),
   description: v.nullable(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
-  status: v.picklist(['draft', 'generating_script', 'script_ready', 'generating_audio', 'ready', 'failed']),
+  status: v.picklist([
+    'draft',
+    'generating_script',
+    'script_ready',
+    'generating_audio',
+    'ready',
+    'failed',
+  ]),
   hostVoice: v.nullable(v.string()),
   hostVoiceName: v.nullable(v.string()),
   coHostVoice: v.nullable(v.string()),
@@ -86,7 +111,12 @@ const podcastFullSchema = v.object({
   script: v.nullable(podcastScriptSchema),
 });
 
-const jobStatusSchema = v.picklist(['pending', 'processing', 'completed', 'failed']);
+const jobStatusSchema = v.picklist([
+  'pending',
+  'processing',
+  'completed',
+  'failed',
+]);
 
 const jobOutputSchema = v.object({
   id: v.string(),
@@ -117,7 +147,16 @@ const podcastContract = oc
         v.object({
           limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
           offset: v.optional(v.pipe(v.number(), v.minValue(0))),
-          status: v.optional(v.picklist(['draft', 'generating_script', 'script_ready', 'generating_audio', 'ready', 'failed'])),
+          status: v.optional(
+            v.picklist([
+              'draft',
+              'generating_script',
+              'script_ready',
+              'generating_audio',
+              'ready',
+              'failed',
+            ]),
+          ),
         }),
       )
       .output(v.array(podcastOutputSchema)),
@@ -210,7 +249,8 @@ const podcastContract = oc
         method: 'POST',
         path: '/{id}/generate',
         summary: 'Generate podcast',
-        description: 'Generate complete podcast (script + audio) in a single async job. Returns a job ID to poll for status.',
+        description:
+          'Generate complete podcast (script + audio) in a single async job. Returns a job ID to poll for status.',
       })
       .errors({ ...podcastErrors, ...jobErrors })
       .input(

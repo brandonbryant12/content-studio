@@ -32,10 +32,15 @@ export const withDb = <A>(
     Effect.tryPromise({
       try: () => f(db),
       catch: (cause) =>
-        new DbError({ cause, message: cause instanceof Error ? cause.message : String(cause) }),
+        new DbError({
+          cause,
+          message: cause instanceof Error ? cause.message : String(cause),
+        }),
     }),
   ).pipe(
-    Effect.withSpan(`db.${name}`, { attributes: { 'db.system': 'postgresql' } }),
+    Effect.withSpan(`db.${name}`, {
+      attributes: { 'db.system': 'postgresql' },
+    }),
   );
 
 export const DbLive = (db: DatabaseInstance): Layer.Layer<Db> =>

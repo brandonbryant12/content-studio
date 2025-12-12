@@ -1,4 +1,10 @@
-import { customType, pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
+import {
+  customType,
+  pgTable,
+  text,
+  timestamp,
+  index,
+} from 'drizzle-orm/pg-core';
 
 /**
  * Custom bytea type for storing binary data.

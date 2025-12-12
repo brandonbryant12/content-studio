@@ -11,7 +11,6 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
@@ -22,10 +21,15 @@ import Spinner from '@/routes/-components/common/spinner';
 interface CreatePodcastDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultFormat: 'conversation' | 'voice_over';
+  projectId: string;
+  projectDocuments: ProjectDocument[];
 }
 
-type Document = RouterOutput['documents']['list'][number];
+type ProjectDocument =
+  RouterOutput['projects']['getWithMedia']['media'][number] & {
+    mediaType: 'document';
+  };
+
 type Voice = RouterOutput['voices']['list'][number];
 
 function DocumentPicker({
@@ -33,37 +37,39 @@ function DocumentPicker({
   selectedIds,
   onSelect,
 }: {
-  documents: Document[];
+  documents: ProjectDocument[];
   selectedIds: Set<string>;
   onSelect: (id: string) => void;
 }) {
   if (documents.length === 0) {
     return (
-      <p className="text-sm text-gray-500 py-4 text-center">
-        No documents available. Please upload documents first.
+      <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+        No documents in this project. Add documents first.
       </p>
     );
   }
 
   return (
-    <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2">
+    <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2 dark:border-gray-700">
       {documents.map((doc) => (
         <label
-          key={doc.id}
+          key={doc.mediaId}
           className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
-            selectedIds.has(doc.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+            selectedIds.has(doc.mediaId)
+              ? 'bg-violet-50 dark:bg-violet-900/20'
+              : ''
           }`}
         >
           <input
             type="checkbox"
-            checked={selectedIds.has(doc.id)}
-            onChange={() => onSelect(doc.id)}
+            checked={selectedIds.has(doc.mediaId)}
+            onChange={() => onSelect(doc.mediaId)}
             className="rounded"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{doc.title}</p>
-            <p className="text-xs text-gray-500">
-              {doc.wordCount.toLocaleString()} words
+            <p className="text-sm font-medium truncate">{doc.media.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {doc.media.wordCount.toLocaleString()} words
             </p>
           </div>
         </label>
@@ -105,13 +111,14 @@ function VoiceSelector({
 export default function CreatePodcastDialog({
   open,
   onOpenChange,
-  defaultFormat,
+  projectId,
+  projectDocuments,
 }: CreatePodcastDialogProps) {
-  const navigate = useNavigate();
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [format, setFormat] = useState<'conversation' | 'voice_over'>(defaultFormat);
+  const [format, setFormat] = useState<'conversation' | 'voice_over'>(
+    'conversation',
+  );
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [hostVoice, setHostVoice] = useState('');
   const [coHostVoice, setCoHostVoice] = useState('');
@@ -121,22 +128,20 @@ export default function CreatePodcastDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setFormat(defaultFormat);
       setTitle('');
       setDescription('');
+      setFormat('conversation');
       setSelectedDocIds(new Set());
       setHostVoice('');
       setCoHostVoice('');
       setInstructions('');
       setTargetDuration(5);
     }
-  }, [open, defaultFormat]);
+  }, [open]);
 
-  const { data: documents = [] } = useQuery(
-    apiClient.documents.list.queryOptions({ input: {} }),
+  const { data: voices = [] } = useQuery(
+    apiClient.voices.list.queryOptions({ input: {} }),
   );
-
-  const { data: voices = [] } = useQuery(apiClient.voices.list.queryOptions({ input: {} }));
 
   const generateMutation = useMutation(
     apiClient.podcasts.generate.mutationOptions({
@@ -154,11 +159,11 @@ export default function CreatePodcastDialog({
 
         await queryClient.invalidateQueries({
           predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'podcasts',
+            Array.isArray(query.queryKey) &&
+            (query.queryKey[0] === 'podcasts' ||
+              query.queryKey[0] === 'projects'),
         });
         onOpenChange(false);
-        // Navigate to detail page to watch progress
-        navigate({ to: '/podcasts/$podcastId', params: { podcastId: podcast.id } });
         toast.success('Podcast created! Starting generation...');
       },
       onError: (error) => {
@@ -197,14 +202,17 @@ export default function CreatePodcastDialog({
     const selectedCoHost = voices.find((v) => v.id === coHostVoice);
 
     createMutation.mutate({
+      projectId,
       title: title.trim(),
       description: description.trim() || undefined,
       format,
       documentIds: Array.from(selectedDocIds),
       hostVoice: hostVoice || undefined,
       hostVoiceName: selectedVoice?.name,
-      coHostVoice: format === 'conversation' ? (coHostVoice || undefined) : undefined,
-      coHostVoiceName: format === 'conversation' ? selectedCoHost?.name : undefined,
+      coHostVoice:
+        format === 'conversation' ? coHostVoice || undefined : undefined,
+      coHostVoiceName:
+        format === 'conversation' ? selectedCoHost?.name : undefined,
       promptInstructions: instructions.trim() || undefined,
       targetDurationMinutes: targetDuration,
     });
@@ -221,8 +229,8 @@ export default function CreatePodcastDialog({
           </DialogTitle>
           <DialogDescription>
             {isConversation
-              ? 'Create a conversational podcast from your documents.'
-              : 'Create a voice over narration from your documents.'}
+              ? 'Create a conversational podcast from project documents.'
+              : 'Create a voice over narration from project documents.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -234,7 +242,10 @@ export default function CreatePodcastDialog({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={isConversation ? 'My Podcast Episode' : 'My Voice Over'}
+              placeholder={
+                isConversation ? 'My Podcast Episode' : 'My Voice Over'
+              }
+              autoFocus
             />
           </div>
 
@@ -277,13 +288,14 @@ export default function CreatePodcastDialog({
           <div className="space-y-2">
             <Label>Source Documents *</Label>
             <DocumentPicker
-              documents={documents}
+              documents={projectDocuments}
               selectedIds={selectedDocIds}
               onSelect={toggleDocument}
             />
             {selectedDocIds.size > 0 && (
-              <p className="text-xs text-gray-500">
-                {selectedDocIds.size} document{selectedDocIds.size > 1 ? 's' : ''} selected
+              <p className="text-xs text-violet-600 dark:text-violet-400">
+                {selectedDocIds.size} document
+                {selectedDocIds.size > 1 ? 's' : ''} selected
               </p>
             )}
           </div>
@@ -307,7 +319,9 @@ export default function CreatePodcastDialog({
 
           {/* Target duration */}
           <div className="space-y-2">
-            <Label htmlFor="duration">Target Duration: {targetDuration} minutes</Label>
+            <Label htmlFor="duration">
+              Target Duration: {targetDuration} minutes
+            </Label>
             <input
               type="range"
               id="duration"
@@ -343,6 +357,7 @@ export default function CreatePodcastDialog({
           <Button
             onClick={handleSubmit}
             disabled={createMutation.isPending || selectedDocIds.size === 0}
+            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
           >
             {createMutation.isPending ? (
               <>
