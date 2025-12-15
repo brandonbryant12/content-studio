@@ -232,9 +232,20 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
             throw new Error('No audio data in response');
           }
 
-          // Gemini returns raw PCM, wrap it as WAV for browser compatibility
-          const pcmData = Buffer.from(inlineData.data, 'base64');
-          const audioContent = wrapPcmAsWav(pcmData);
+          // Decode base64 audio data
+          const audioData = Buffer.from(inlineData.data, 'base64');
+
+          // Log format info for debugging
+          console.log('[TTS] Gemini response:', {
+            mimeType: inlineData.mimeType,
+            dataSize: audioData.length,
+            first4Bytes: audioData.slice(0, 4).toString('hex'),
+            headerCheck: audioData.slice(0, 4).toString('ascii'),
+          });
+
+          // Check if already WAV (starts with RIFF header) - don't double-wrap
+          const isAlreadyWav = audioData.slice(0, 4).toString('ascii') === 'RIFF';
+          const audioContent = isAlreadyWav ? audioData : wrapPcmAsWav(audioData);
 
           return {
             audioContent,

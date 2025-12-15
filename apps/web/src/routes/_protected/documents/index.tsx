@@ -191,8 +191,16 @@ function DocumentsPage() {
     apiClient.documents.delete.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'documents',
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['documents', 'list'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'documents' || firstKey[0] === 'projects';
+            }
+            return firstKey === 'documents' || firstKey === 'projects';
+          },
         });
         toast.success('Document deleted');
       },

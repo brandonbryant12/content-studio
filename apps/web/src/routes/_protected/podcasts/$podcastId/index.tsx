@@ -269,8 +269,16 @@ function PodcastDetailPage() {
     apiClient.podcasts.generate.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'podcasts',
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['podcasts', 'get'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'podcasts';
+            }
+            return firstKey === 'podcasts';
+          },
         });
       },
       onError: (error) => {
@@ -283,10 +291,16 @@ function PodcastDetailPage() {
     apiClient.podcasts.delete.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) &&
-            (query.queryKey[0] === 'podcasts' ||
-              query.queryKey[0] === 'projects'),
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['podcasts', 'get'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'podcasts' || firstKey[0] === 'projects';
+            }
+            return firstKey === 'podcasts' || firstKey === 'projects';
+          },
         });
         toast.success('Podcast deleted');
         // Navigate back to project

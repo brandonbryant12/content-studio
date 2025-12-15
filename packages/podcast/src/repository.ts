@@ -105,7 +105,7 @@ export const insertPodcast = (
       .insert(podcast)
       .values({
         projectId: data.projectId,
-        title: data.title,
+        title: data.title ?? 'Generating...',
         description: data.description,
         format: data.format,
         promptInstructions: data.promptInstructions,

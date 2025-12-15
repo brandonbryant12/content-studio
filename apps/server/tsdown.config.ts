@@ -9,7 +9,7 @@ export default defineConfig({
   outDir: './dist',
   clean: true,
   minify: true,
-  sourcemap: false,
+  sourcemap: true,
   outputOptions: {
     inlineDynamicImports: true,
   },

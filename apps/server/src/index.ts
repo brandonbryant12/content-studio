@@ -80,6 +80,12 @@ app.get('/healthcheck', (c) => {
 
 app.use(logger());
 
+// Log stack traces for 500 errors
+app.onError((err, c) => {
+  console.error('\t[ERROR]', err.stack || err.message || err);
+  return c.json({ error: 'Internal Server Error' }, 500);
+});
+
 app.get('/', (c) => {
   return c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL));
 });

@@ -130,10 +130,13 @@ File Types
    - Speaker assignments
 3. Audio generation (TTS)
    - Script → Multi-speaker audio
-   - Voice synthesis via Google TTS
+   - Voice synthesis via Google Gemini TTS
+   - Output: WAV (24kHz, 16-bit, mono)
 4. Storage upload
    - Audio file → S3/storage
 ```
+
+See [TTS Architecture](./tts.md) for audio format details and gotchas.
 
 ### Graphics Generation (Planned)
 

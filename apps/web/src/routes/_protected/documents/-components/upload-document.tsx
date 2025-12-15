@@ -44,8 +44,16 @@ export default function UploadDocumentDialog({
       onSuccess: async () => {
         // Invalidate all queries that start with 'documents'
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'documents',
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['documents', 'list'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'documents';
+            }
+            return firstKey === 'documents';
+          },
         });
         toast.success('Document uploaded successfully');
         handleClose();

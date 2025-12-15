@@ -162,14 +162,13 @@ export const PodcastGeneratorLive: Layer.Layer<
             { speakerAlias: 'cohost', voiceId: podcast.coHostVoice ?? 'Kore' },
           ];
 
-          // 13. Synthesize audio
+          // 13. Synthesize audio (Gemini returns raw PCM, wrapped as WAV)
           const ttsResult = yield* tts.synthesize({
             turns,
             voiceConfigs,
-            audioEncoding: 'MP3',
           });
 
-          // 14. Upload to storage (Gemini TTS returns WAV)
+          // 14. Upload to storage
           const audioKey = `podcasts/${podcastId}/audio.wav`;
           yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
           // Always call getUrl to ensure we have a playable URL

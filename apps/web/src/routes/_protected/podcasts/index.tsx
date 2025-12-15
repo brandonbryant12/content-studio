@@ -243,8 +243,16 @@ function PodcastsPage() {
     apiClient.podcasts.delete.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'podcasts',
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['podcasts', 'list'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'podcasts' || firstKey[0] === 'projects';
+            }
+            return firstKey === 'podcasts' || firstKey === 'projects';
+          },
         });
         toast.success('Podcast deleted');
       },

@@ -31,6 +31,8 @@ export interface PodcastWorkerConfig {
   geminiApiKey: string;
   /** Storage configuration */
   storageConfig: StorageConfig;
+  /** Max consecutive errors before exiting (default: 10) */
+  maxConsecutiveErrors?: number;
 }
 
 /**
@@ -39,6 +41,7 @@ export interface PodcastWorkerConfig {
  */
 export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const pollInterval = config.pollInterval ?? 5000;
+  const maxConsecutiveErrors = config.maxConsecutiveErrors ?? 10;
 
   // Create database connection
   const db = createDb({ databaseUrl: config.databaseUrl });
@@ -187,22 +190,43 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
 
   /**
-   * Start the worker loop.
+   * Start the worker loop with error handling and backoff.
    */
   const start = async () => {
+    // Retry schedule: exponential backoff starting at pollInterval, capped at 60s, max retries
+    const retrySchedule = Schedule.exponential(pollInterval, 2).pipe(
+      Schedule.union(Schedule.spaced(60000)), // Use min of exponential or 60s (caps the backoff)
+      Schedule.intersect(Schedule.recurs(maxConsecutiveErrors - 1)),
+    );
+
     const loop = Effect.gen(function* () {
       yield* Effect.logInfo(`Starting worker, polling every ${pollInterval}ms`);
 
+      // Main polling loop - runs forever on success
       yield* pollOnce.pipe(
-        Effect.catchAll((error) =>
-          Effect.logError('Error processing job').pipe(
-            Effect.annotateLogs('error', String(error)),
-            Effect.map(() => null),
-          ),
-        ),
-        Effect.repeat(Schedule.spaced(pollInterval)),
+        Effect.tap(() => Effect.sleep(pollInterval)),
+        Effect.forever,
       );
-    }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
+    }).pipe(
+      Effect.annotateLogs('worker', 'PodcastWorker'),
+      // Retry the entire loop with backoff on infrastructure errors
+      Effect.retry({
+        schedule: retrySchedule,
+        while: (error) => {
+          Effect.runSync(
+            Effect.logWarning(`Worker error, will retry...`).pipe(
+              Effect.annotateLogs('error', String(error)),
+            ),
+          );
+          return true;
+        },
+      }),
+      Effect.tapError((error) =>
+        Effect.logError(
+          `Too many consecutive errors (${maxConsecutiveErrors}), shutting down`,
+        ).pipe(Effect.annotateLogs('error', String(error))),
+      ),
+    );
 
     await runtime.runPromise(loop);
   };

@@ -114,7 +114,7 @@ export const podcastScript = pgTable(
 
 export const CreatePodcastSchema = v.object({
   projectId: v.pipe(v.string(), v.uuid()),
-  title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
+  title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(256))),
   description: v.optional(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
   documentIds: v.pipe(v.array(v.pipe(v.string(), v.uuid())), v.minLength(1)),

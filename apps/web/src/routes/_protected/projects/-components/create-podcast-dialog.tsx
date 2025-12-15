@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui/components/dialog';
-import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -114,8 +113,6 @@ export default function CreatePodcastDialog({
   projectId,
   projectDocuments,
 }: CreatePodcastDialogProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [format, setFormat] = useState<'conversation' | 'voice_over'>(
     'conversation',
   );
@@ -128,8 +125,6 @@ export default function CreatePodcastDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setTitle('');
-      setDescription('');
       setFormat('conversation');
       setSelectedDocIds(new Set());
       setHostVoice('');
@@ -158,10 +153,16 @@ export default function CreatePodcastDialog({
         generateMutation.mutate({ id: podcast.id });
 
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) &&
-            (query.queryKey[0] === 'podcasts' ||
-              query.queryKey[0] === 'projects'),
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'podcasts' || firstKey[0] === 'projects';
+            }
+            return firstKey === 'podcasts' || firstKey === 'projects';
+          },
         });
         onOpenChange(false);
         toast.success('Podcast created! Starting generation...');
@@ -189,10 +190,6 @@ export default function CreatePodcastDialog({
   };
 
   const handleSubmit = () => {
-    if (!title.trim()) {
-      toast.error('Please enter a title');
-      return;
-    }
     if (selectedDocIds.size === 0) {
       toast.error('Please select at least one document');
       return;
@@ -203,8 +200,6 @@ export default function CreatePodcastDialog({
 
     createMutation.mutate({
       projectId,
-      title: title.trim(),
-      description: description.trim() || undefined,
       format,
       documentIds: Array.from(selectedDocIds),
       hostVoice: hostVoice || undefined,
@@ -235,32 +230,6 @@ export default function CreatePodcastDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={
-                isConversation ? 'My Podcast Episode' : 'My Voice Over'
-              }
-              autoFocus
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description..."
-              rows={2}
-            />
-          </div>
-
           {/* Format toggle */}
           <div className="space-y-2">
             <Label>Format</Label>

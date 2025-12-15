@@ -24,6 +24,37 @@ export {
 
 export type AppRouter = typeof appRouter;
 
+/**
+ * Cleans up stack traces by filtering node_modules and making paths relative
+ */
+const formatStackTrace = (error: Error): string => {
+  if (!error.stack) return error.message;
+
+  const cwd = process.cwd();
+  const lines = error.stack.split('\n');
+  const messageLine = lines[0];
+
+  const appFrames = lines
+    .slice(1)
+    .filter((line) => !line.includes('node_modules'))
+    .map((line) => line.replace(cwd + '/', '').replace(/file:\/\//, ''))
+    .slice(0, 5); // Keep top 5 relevant frames
+
+  if (appFrames.length === 0) {
+    // If all frames are from node_modules, show the first few anyway
+    return (
+      messageLine +
+      '\n' +
+      lines
+        .slice(1, 4)
+        .map((line) => line.replace(cwd + '/', '').replace(/file:\/\//, ''))
+        .join('\n')
+    );
+  }
+
+  return messageLine + '\n' + appFrames.join('\n');
+};
+
 export const createApi = ({
   auth,
   db,
@@ -57,6 +88,11 @@ export const createApi = ({
     ],
     clientInterceptors: [
       onError((error) => {
+        // Log stack trace for server errors
+        if (error instanceof Error) {
+          console.error('\t[ERROR]', formatStackTrace(error));
+        }
+
         if (
           error instanceof ORPCError &&
           error.code === 'BAD_REQUEST' &&

@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import * as schema from './schema';
@@ -19,4 +20,18 @@ export const createDb = (opts?: DatabaseClientOptions): DatabaseInstance => {
       max: opts?.max,
     },
   });
+};
+
+/**
+ * Verify database connection by executing a simple query.
+ * Throws if the connection fails.
+ */
+export const verifyDbConnection = async (db: DatabaseInstance): Promise<void> => {
+  try {
+    await db.execute(sql`SELECT 1`);
+  } catch (error) {
+    throw new Error(
+      `Failed to connect to database: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 };

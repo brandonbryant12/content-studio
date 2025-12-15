@@ -87,8 +87,16 @@ export default function CreateProjectDialog({
     apiClient.projects.create.mutationOptions({
       onSuccess: async (data) => {
         await queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey[0] === 'projects',
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (!Array.isArray(key) || key.length === 0) return false;
+            // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
+            const firstKey = key[0];
+            if (Array.isArray(firstKey)) {
+              return firstKey[0] === 'projects';
+            }
+            return firstKey === 'projects';
+          },
         });
         toast.success('Project created');
         onOpenChange(false);
