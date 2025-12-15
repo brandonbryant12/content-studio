@@ -2,7 +2,7 @@ import type { ProjectNotFound } from './repository';
 import type {
   CreateProject,
   Project,
-  ProjectDocument,
+  ProjectMedia,
   UpdateProject,
 } from '@repo/db/schema';
 import type {
@@ -20,10 +20,10 @@ import type {
 } from './types';
 
 /**
- * @deprecated Use ProjectWithMedia instead for polymorphic media support.
+ * Project with media items (raw junction records).
  */
-export interface ProjectFull extends Project {
-  documents: ProjectDocument[];
+export interface ProjectWithMediaRecords extends Project {
+  media: ProjectMedia[];
 }
 
 export type ProjectError =
@@ -36,12 +36,12 @@ export type ProjectError =
 
 export interface ProjectsService {
   // ==========================================================================
-  // Core CRUD (Legacy - returns ProjectFull for backward compatibility)
+  // Core CRUD
   // ==========================================================================
 
   readonly create: (
     input: CreateProject,
-  ) => Effect.Effect<ProjectFull, ProjectError, never>;
+  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
 
   readonly list: (options?: {
     limit?: number;
@@ -50,17 +50,17 @@ export interface ProjectsService {
 
   readonly findById: (
     id: string,
-  ) => Effect.Effect<ProjectFull, ProjectError, never>;
+  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
 
   readonly update: (
     id: string,
     input: UpdateProject,
-  ) => Effect.Effect<ProjectFull, ProjectError, never>;
+  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
 
   readonly delete: (id: string) => Effect.Effect<void, ProjectError, never>;
 
   // ==========================================================================
-  // New: Polymorphic Media Management
+  // Polymorphic Media Management
   // ==========================================================================
 
   /**

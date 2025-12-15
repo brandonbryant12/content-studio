@@ -1,13 +1,12 @@
 import {
   document,
   project,
-  projectDocument,
   projectMedia,
-  type ProjectDocument,
+  mediaSource,
   type ProjectMedia,
   type CreateProject,
   type UpdateProject,
-  type MediaType,
+  type ContentType,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
 import {
@@ -62,7 +61,7 @@ export const verifyDocumentsExistForProject = (
   );
 
 /**
- * Insert a new project with document links.
+ * Insert a new project with optional initial media (documents).
  */
 export const insertProject = (
   data: Omit<CreateProject, 'documentIds'> & { createdBy: string },
@@ -79,26 +78,27 @@ export const insertProject = (
       })
       .returning();
 
-    // Insert document links
-    let docLinks: ProjectDocument[] = [];
+    // Insert document links as media items
+    let mediaItems: ProjectMedia[] = [];
     if (documentIds.length > 0) {
-      docLinks = await db
-        .insert(projectDocument)
+      mediaItems = await db
+        .insert(projectMedia)
         .values(
           documentIds.map((documentId, index) => ({
             projectId: proj!.id,
-            documentId,
+            mediaType: 'document' as ContentType,
+            mediaId: documentId,
             order: index,
           })),
         )
         .returning();
     }
 
-    return { ...proj!, documents: docLinks };
+    return { ...proj!, media: mediaItems };
   });
 
 /**
- * Find project by ID with documents.
+ * Find project by ID with media.
  */
 export const findProjectById = (id: string) =>
   withDb('project.findById', async (db) => {
@@ -110,13 +110,13 @@ export const findProjectById = (id: string) =>
 
     if (!proj) return null;
 
-    const docs = await db
+    const media = await db
       .select()
-      .from(projectDocument)
-      .where(eq(projectDocument.projectId, id))
-      .orderBy(projectDocument.order);
+      .from(projectMedia)
+      .where(eq(projectMedia.projectId, id))
+      .orderBy(projectMedia.order);
 
-    return { ...proj, documents: docs };
+    return { ...proj, media };
   }).pipe(
     Effect.flatMap((result) =>
       result
@@ -168,34 +168,42 @@ export const updateProject = (id: string, data: UpdateProject) =>
     if (!proj) return null;
 
     // Handle document links if provided
-    let docLinks: ProjectDocument[] = [];
+    let mediaItems: ProjectMedia[] = [];
     if (documentIds !== undefined) {
-      // Delete existing links
-      await db.delete(projectDocument).where(eq(projectDocument.projectId, id));
+      // Delete existing document media items
+      await db
+        .delete(projectMedia)
+        .where(
+          and(
+            eq(projectMedia.projectId, id),
+            eq(projectMedia.mediaType, 'document'),
+          ),
+        );
 
-      // Insert new links
+      // Insert new document links as media items
       if (documentIds.length > 0) {
-        docLinks = await db
-          .insert(projectDocument)
+        mediaItems = await db
+          .insert(projectMedia)
           .values(
             documentIds.map((documentId, index) => ({
               projectId: id,
-              documentId,
+              mediaType: 'document' as ContentType,
+              mediaId: documentId,
               order: index,
             })),
           )
           .returning();
       }
     } else {
-      // Fetch existing document links if not updating
-      docLinks = await db
+      // Fetch existing media items if not updating
+      mediaItems = await db
         .select()
-        .from(projectDocument)
-        .where(eq(projectDocument.projectId, id))
-        .orderBy(projectDocument.order);
+        .from(projectMedia)
+        .where(eq(projectMedia.projectId, id))
+        .orderBy(projectMedia.order);
     }
 
-    return { ...proj, documents: docLinks };
+    return { ...proj, media: mediaItems };
   }).pipe(
     Effect.flatMap((result) =>
       result
@@ -284,7 +292,7 @@ export const insertProjectMedia = (projectId: string, input: AddMediaInput) =>
  */
 export const insertProjectMediaBatch = (
   projectId: string,
-  items: { mediaType: MediaType; mediaId: string }[],
+  items: { mediaType: ContentType; mediaId: string }[],
 ) =>
   withDb('projectMedia.insertBatch', async (db) => {
     if (items.length === 0) return [];
@@ -305,7 +313,19 @@ export const insertProjectMediaBatch = (
   });
 
 /**
- * Delete a media item from a project.
+ * Delete a media item from a project by its projectMedia id.
+ */
+export const deleteProjectMediaById = (projectMediaId: string) =>
+  withDb('projectMedia.deleteById', async (db) => {
+    const result = await db
+      .delete(projectMedia)
+      .where(eq(projectMedia.id, projectMediaId))
+      .returning({ id: projectMedia.id });
+    return result.length > 0;
+  });
+
+/**
+ * Delete a media item from a project by mediaId.
  */
 export const deleteProjectMedia = (projectId: string, mediaId: string) =>
   withDb('projectMedia.delete', async (db) => {
@@ -356,4 +376,159 @@ export const reorderProjectMedia = (projectId: string, mediaIds: string[]) =>
       .from(projectMedia)
       .where(eq(projectMedia.projectId, projectId))
       .orderBy(projectMedia.order);
+  });
+
+// =============================================================================
+// Media Source Operations (Content Derivation Graph)
+// =============================================================================
+
+/**
+ * Find all sources for a given target (what media was used to create this content).
+ */
+export const findSourcesForTarget = (
+  targetType: ContentType,
+  targetId: string,
+) =>
+  withDb('mediaSource.findForTarget', (db) =>
+    db
+      .select()
+      .from(mediaSource)
+      .where(
+        and(
+          eq(mediaSource.targetType, targetType),
+          eq(mediaSource.targetId, targetId),
+        ),
+      )
+      .orderBy(mediaSource.order),
+  );
+
+/**
+ * Find all targets that use a given source (what content was created from this media).
+ */
+export const findTargetsFromSource = (
+  sourceType: ContentType,
+  sourceId: string,
+) =>
+  withDb('mediaSource.findFromSource', (db) =>
+    db
+      .select()
+      .from(mediaSource)
+      .where(
+        and(
+          eq(mediaSource.sourceType, sourceType),
+          eq(mediaSource.sourceId, sourceId),
+        ),
+      )
+      .orderBy(mediaSource.createdAt),
+  );
+
+/**
+ * Add a source relationship.
+ */
+export const addMediaSource = (input: {
+  targetType: ContentType;
+  targetId: string;
+  sourceType: ContentType;
+  sourceId: string;
+  order?: number;
+}) =>
+  withDb('mediaSource.add', async (db) => {
+    // If order not specified, get max order and add 1
+    let order = input.order;
+    if (order === undefined) {
+      const existing = await db
+        .select({ order: mediaSource.order })
+        .from(mediaSource)
+        .where(
+          and(
+            eq(mediaSource.targetType, input.targetType),
+            eq(mediaSource.targetId, input.targetId),
+          ),
+        )
+        .orderBy(desc(mediaSource.order))
+        .limit(1);
+      order = existing.length > 0 ? existing[0]!.order + 1 : 0;
+    }
+
+    const [result] = await db
+      .insert(mediaSource)
+      .values({
+        targetType: input.targetType,
+        targetId: input.targetId,
+        sourceType: input.sourceType,
+        sourceId: input.sourceId,
+        order,
+      })
+      .returning();
+
+    return result!;
+  });
+
+/**
+ * Add multiple source relationships in batch.
+ */
+export const addMediaSourceBatch = (
+  targetType: ContentType,
+  targetId: string,
+  sources: { sourceType: ContentType; sourceId: string }[],
+) =>
+  withDb('mediaSource.addBatch', async (db) => {
+    if (sources.length === 0) return [];
+
+    const result = await db
+      .insert(mediaSource)
+      .values(
+        sources.map((source, index) => ({
+          targetType,
+          targetId,
+          sourceType: source.sourceType,
+          sourceId: source.sourceId,
+          order: index,
+        })),
+      )
+      .returning();
+
+    return result;
+  });
+
+/**
+ * Remove a specific source relationship.
+ */
+export const removeMediaSource = (
+  targetType: ContentType,
+  targetId: string,
+  sourceType: ContentType,
+  sourceId: string,
+) =>
+  withDb('mediaSource.remove', async (db) => {
+    const result = await db
+      .delete(mediaSource)
+      .where(
+        and(
+          eq(mediaSource.targetType, targetType),
+          eq(mediaSource.targetId, targetId),
+          eq(mediaSource.sourceType, sourceType),
+          eq(mediaSource.sourceId, sourceId),
+        ),
+      )
+      .returning({ id: mediaSource.id });
+    return result.length > 0;
+  });
+
+/**
+ * Remove all sources for a target.
+ */
+export const removeAllSourcesForTarget = (
+  targetType: ContentType,
+  targetId: string,
+) =>
+  withDb('mediaSource.removeAllForTarget', async (db) => {
+    await db
+      .delete(mediaSource)
+      .where(
+        and(
+          eq(mediaSource.targetType, targetType),
+          eq(mediaSource.targetId, targetId),
+        ),
+      );
   });

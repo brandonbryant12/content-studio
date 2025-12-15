@@ -9,11 +9,11 @@ import {
   pgEnum,
   boolean,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-valibot';
+import { createSelectSchema } from 'drizzle-valibot';
 import * as v from 'valibot';
 import { user } from './auth';
-import { document } from './documents';
 import { project } from './projects';
+import { type GenerationContext } from './media-source';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
@@ -49,6 +49,8 @@ export const podcast = pgTable(
     duration: integer('duration'),
     errorMessage: text('error_message'),
     tags: jsonb('tags').$type<string[]>().default([]),
+    /** Generation context storing prompts and source references */
+    generationContext: jsonb('generation_context').$type<GenerationContext>(),
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -64,24 +66,6 @@ export const podcast = pgTable(
     index('podcast_created_by_idx').on(table.createdBy),
     index('podcast_status_idx').on(table.status),
   ],
-);
-
-export const podcastDocument = pgTable(
-  'podcast_document',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    podcastId: uuid('podcast_id')
-      .notNull()
-      .references(() => podcast.id, { onDelete: 'cascade' }),
-    documentId: uuid('document_id')
-      .notNull()
-      .references(() => document.id, { onDelete: 'cascade' }),
-    order: integer('order').notNull().default(0),
-    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [index('podcast_document_podcast_id_idx').on(table.podcastId)],
 );
 
 export interface ScriptSegment {
@@ -155,11 +139,9 @@ export const UpdateScriptSchema = v.object({
 });
 
 export const PodcastSchema = createSelectSchema(podcast);
-export const PodcastDocumentSchema = createSelectSchema(podcastDocument);
 export const PodcastScriptSchema = createSelectSchema(podcastScript);
 
 export type Podcast = typeof podcast.$inferSelect;
-export type PodcastDocument = typeof podcastDocument.$inferSelect;
 export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
 export type PodcastStatus = Podcast['status'];

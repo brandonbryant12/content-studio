@@ -22,6 +22,8 @@ interface CreatePodcastDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId: string;
   projectDocuments: ProjectDocument[];
+  /** Pre-selected document IDs from the content library sidebar */
+  preSelectedDocumentIds?: string[];
 }
 
 type ProjectDocument =
@@ -112,6 +114,7 @@ export default function CreatePodcastDialog({
   onOpenChange,
   projectId,
   projectDocuments,
+  preSelectedDocumentIds = [],
 }: CreatePodcastDialogProps) {
   const [format, setFormat] = useState<'conversation' | 'voice_over'>(
     'conversation',
@@ -122,17 +125,17 @@ export default function CreatePodcastDialog({
   const [instructions, setInstructions] = useState('');
   const [targetDuration, setTargetDuration] = useState(5);
 
-  // Reset form when dialog opens
+  // Reset form when dialog opens, using pre-selected docs if available
   useEffect(() => {
     if (open) {
       setFormat('conversation');
-      setSelectedDocIds(new Set());
+      setSelectedDocIds(new Set(preSelectedDocumentIds));
       setHostVoice('');
       setCoHostVoice('');
       setInstructions('');
       setTargetDuration(5);
     }
-  }, [open]);
+  }, [open, preSelectedDocumentIds]);
 
   const { data: voices = [] } = useQuery(
     apiClient.voices.list.queryOptions({ input: {} }),

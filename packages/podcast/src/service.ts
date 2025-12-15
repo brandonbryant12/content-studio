@@ -3,7 +3,7 @@ import type { CurrentUser } from '@repo/auth-policy';
 import type {
   Podcast,
   PodcastScript,
-  PodcastDocument,
+  MediaSource,
   CreatePodcast,
   UpdatePodcast,
   UpdateScript,
@@ -27,10 +27,10 @@ import type { Effect } from 'effect';
 type PodcastContext = Db | CurrentUser;
 
 /**
- * Podcast with associated documents.
+ * Podcast with associated source documents (via mediaSource).
  */
 export interface PodcastWithDocuments extends Podcast {
-  documents: readonly PodcastDocument[];
+  documents: readonly MediaSource[];
 }
 
 /**
@@ -44,7 +44,7 @@ export interface PodcastWithScript extends Podcast {
  * Full podcast with all relations.
  */
 export interface PodcastFull extends Podcast {
-  documents: readonly PodcastDocument[];
+  documents: readonly MediaSource[];
   script: PodcastScript | null;
 }
 

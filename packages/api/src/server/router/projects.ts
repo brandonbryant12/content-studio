@@ -2,8 +2,9 @@ import {
   Projects,
   type ProjectMediaItem,
   type ProjectWithMedia,
+  type ProjectWithMediaRecords,
 } from '@repo/project';
-import type { Project, ProjectDocument } from '@repo/db/schema';
+import type { Project, ProjectMedia } from '@repo/db/schema';
 import { Effect } from 'effect';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
@@ -15,15 +16,15 @@ const serializeProject = (project: Project): any => ({
   updatedAt: project.updatedAt.toISOString(),
 });
 
-const serializeProjectFull = (
-  project: Project & { documents: ProjectDocument[] },
+const serializeProjectWithMediaRecords = (
+  project: ProjectWithMediaRecords,
 ): any => ({
   ...project,
   createdAt: project.createdAt.toISOString(),
   updatedAt: project.updatedAt.toISOString(),
-  documents: project.documents.map((d) => ({
-    ...d,
-    createdAt: d.createdAt.toISOString(),
+  media: project.media.map((m: ProjectMedia) => ({
+    ...m,
+    createdAt: m.createdAt.toISOString(),
   })),
 });
 
@@ -35,6 +36,8 @@ const serializeMediaItem = (item: ProjectMediaItem): any => ({
     createdAt: item.media.createdAt.toISOString(),
     updatedAt: item.media.updatedAt.toISOString(),
   },
+  // Include source lineage if present
+  sources: item.sources ?? [],
 });
 
 const serializeProjectWithMedia = (project: ProjectWithMedia): any => ({
@@ -94,7 +97,9 @@ const projectRouter = {
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
-          return serializeProjectFull(yield* projects.findById(input.id));
+          return serializeProjectWithMediaRecords(
+            yield* projects.findById(input.id),
+          );
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -121,7 +126,7 @@ const projectRouter = {
         Effect.gen(function* () {
           const projects = yield* Projects;
           const result = yield* projects.create(input);
-          return serializeProjectFull(result);
+          return serializeProjectWithMediaRecords(result);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -149,7 +154,7 @@ const projectRouter = {
         Effect.gen(function* () {
           const projects = yield* Projects;
           const result = yield* projects.update(id, data);
-          return serializeProjectFull(result);
+          return serializeProjectWithMediaRecords(result);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),

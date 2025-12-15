@@ -15,7 +15,11 @@ import {
   deleteProjectMedia,
   reorderProjectMedia,
 } from './repository';
-import { resolveProjectMedia, verifyMediaOwnership } from './media-resolver';
+import {
+  resolveProjectMedia,
+  resolveProjectMediaWithSources,
+  verifyMediaOwnership,
+} from './media-resolver';
 
 export class Projects extends Context.Tag('@repo/project/Projects')<
   Projects,
@@ -109,8 +113,10 @@ export const ProjectsLive = Layer.effect(
           // Get media items from junction table
           const mediaRecords = yield* provide(findProjectMediaByProjectId(id));
 
-          // Resolve media items to full objects
-          const media = yield* provide(resolveProjectMedia(mediaRecords));
+          // Resolve media items to full objects with source lineage
+          const media = yield* provide(
+            resolveProjectMediaWithSources(mediaRecords),
+          );
 
           const result: ProjectWithMedia = {
             ...project,

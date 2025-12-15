@@ -5,15 +5,11 @@ import {
   uuid,
   integer,
   index,
-  pgEnum,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-valibot';
+import { createSelectSchema } from 'drizzle-valibot';
 import * as v from 'valibot';
 import { user } from './auth';
-import { document } from './documents';
-
-// Enums
-export const mediaTypeEnum = pgEnum('media_type', ['document', 'podcast']);
+import { contentTypeEnum, type ContentType } from './media-types';
 
 export const project = pgTable(
   'project',
@@ -37,24 +33,10 @@ export const project = pgTable(
   ],
 );
 
-export const projectDocument = pgTable(
-  'project_document',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    projectId: uuid('project_id')
-      .notNull()
-      .references(() => project.id, { onDelete: 'cascade' }),
-    documentId: uuid('document_id')
-      .notNull()
-      .references(() => document.id, { onDelete: 'cascade' }),
-    order: integer('order').notNull().default(0),
-    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [index('project_document_project_id_idx').on(table.projectId)],
-);
-
+/**
+ * Links content items to projects.
+ * All content types (documents, podcasts, videos, etc.) use this table.
+ */
 export const projectMedia = pgTable(
   'project_media',
   {
@@ -62,7 +44,7 @@ export const projectMedia = pgTable(
     projectId: uuid('project_id')
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
-    mediaType: mediaTypeEnum('media_type').notNull(),
+    mediaType: contentTypeEnum('media_type').notNull(),
     mediaId: uuid('media_id').notNull(),
     order: integer('order').notNull().default(0),
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
@@ -90,12 +72,10 @@ export const UpdateProjectSchema = v.partial(
 );
 
 export const ProjectSchema = createSelectSchema(project);
-export const ProjectDocumentSchema = createSelectSchema(projectDocument);
 export const ProjectMediaSchema = createSelectSchema(projectMedia);
 
 export type Project = typeof project.$inferSelect;
-export type ProjectDocument = typeof projectDocument.$inferSelect;
 export type ProjectMedia = typeof projectMedia.$inferSelect;
-export type MediaType = ProjectMedia['mediaType'];
+export type MediaType = ContentType;
 export type CreateProject = v.InferInput<typeof CreateProjectSchema>;
 export type UpdateProject = v.InferInput<typeof UpdateProjectSchema>;

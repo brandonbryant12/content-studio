@@ -21,7 +21,8 @@
       "Bash(docker compose logs:*)",
       "Bash(docker logs:*)",
       "Bash(docker inspect:*)",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []

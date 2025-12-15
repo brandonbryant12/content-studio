@@ -24,7 +24,7 @@ export { PodcastGeneratorLive } from './generator-live';
 // Re-export DB types for convenience
 export type {
   Podcast,
-  PodcastDocument,
+  MediaSource,
   PodcastScript,
   PodcastFormat,
   PodcastStatus,

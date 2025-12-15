@@ -86,10 +86,10 @@ export const PodcastGeneratorLive: Layer.Layer<
             Effect.provide(repoContext),
           );
 
-          // 3. Fetch all document content (ordered by podcast_document.order)
+          // 3. Fetch all document content (ordered by media_source.order)
           const documentContents = yield* Effect.all(
             podcast.documents.map((pd) =>
-              docs.getContent(pd.documentId).pipe(Effect.provide(fullContext)),
+              docs.getContent(pd.sourceId).pipe(Effect.provide(fullContext)),
             ),
           );
           const combinedContent = documentContents.join('\n\n---\n\n');
@@ -117,13 +117,27 @@ export const PodcastGeneratorLive: Layer.Layer<
             }),
           );
 
-          // 7. Store script with summary
+          // 7. Store script with summary and FULL generation prompt
+          const fullGenerationPrompt = `=== SYSTEM PROMPT ===\n${systemPrompt}\n\n=== USER PROMPT ===\n${userPrompt}`;
           yield* Repo.upsertScript(
             podcastId,
             { segments },
             llmResult.object.summary,
-            options?.promptInstructions,
+            fullGenerationPrompt,
           ).pipe(Effect.provide(repoContext));
+
+          // 7b. Store generation context for reproducibility
+          yield* Repo.updatePodcastGenerationContext(podcastId, {
+            systemPromptTemplate: systemPrompt,
+            userInstructions: options?.promptInstructions ?? '',
+            sourceMediaRefs: podcast.documents.map((doc) => ({
+              mediaType: 'document' as const,
+              mediaId: doc.sourceId,
+            })),
+            modelId: 'gemini-2.0-flash', // TODO: Get from LLM service
+            modelParams: { temperature: 0.7 },
+            generatedAt: new Date().toISOString(),
+          }).pipe(Effect.provide(repoContext));
 
           // 8. Update podcast with generated metadata and status
           yield* Repo.updatePodcast(podcastId, {

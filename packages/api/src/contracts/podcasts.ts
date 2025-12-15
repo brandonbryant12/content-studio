@@ -79,10 +79,13 @@ const podcastOutputSchema = v.object({
   updatedAt: v.string(),
 });
 
-const podcastDocumentSchema = v.object({
+// Media source schema (replaces podcastDocument)
+const podcastSourceSchema = v.object({
   id: v.string(),
-  podcastId: v.string(),
-  documentId: v.string(),
+  targetType: v.string(),
+  targetId: v.string(),
+  sourceType: v.string(),
+  sourceId: v.string(),
   order: v.number(),
   createdAt: v.string(),
 });
@@ -107,7 +110,7 @@ const podcastScriptSchema = v.object({
 
 const podcastFullSchema = v.object({
   ...podcastOutputSchema.entries,
-  documents: v.array(podcastDocumentSchema),
+  documents: v.array(podcastSourceSchema),
   script: v.nullable(podcastScriptSchema),
 });
 

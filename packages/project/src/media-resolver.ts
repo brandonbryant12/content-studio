@@ -1,18 +1,21 @@
 import {
   document,
   podcast,
+  mediaSource,
   type Document,
   type Podcast,
   type ProjectMedia,
+  type ContentType,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
 import { MediaNotFound } from '@repo/effect/errors';
-import { inArray } from 'drizzle-orm';
+import { inArray, and, eq, or } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type {
   ProjectMediaItem,
   DocumentMediaItem,
   PodcastMediaItem,
+  SourceRef,
 } from './types';
 
 /**
@@ -134,11 +137,83 @@ export const resolveProjectMedia = (items: ProjectMedia[]) =>
   });
 
 /**
+ * Fetches source references for multiple media items in batch.
+ * Returns a map of (mediaType:mediaId) -> SourceRef[]
+ */
+const fetchSourcesForMediaItems = (
+  items: { mediaType: ContentType; mediaId: string }[],
+) =>
+  withDb('media.fetchSources', async (db) => {
+    if (items.length === 0) {
+      return new Map<string, SourceRef[]>();
+    }
+
+    // Build conditions for all items
+    const conditions = items.map((item) =>
+      and(
+        eq(mediaSource.targetType, item.mediaType),
+        eq(mediaSource.targetId, item.mediaId),
+      ),
+    );
+
+    const sources = await db
+      .select()
+      .from(mediaSource)
+      .where(or(...conditions))
+      .orderBy(mediaSource.order);
+
+    // Group by target
+    const sourceMap = new Map<string, SourceRef[]>();
+    for (const source of sources) {
+      const key = `${source.targetType}:${source.targetId}`;
+      const existing = sourceMap.get(key) ?? [];
+      existing.push({
+        sourceType: source.sourceType,
+        sourceId: source.sourceId,
+      });
+      sourceMap.set(key, existing);
+    }
+
+    return sourceMap;
+  });
+
+/**
+ * Resolves project media items with their source lineage.
+ * Each media item will include a `sources` array showing what it was derived from.
+ */
+export const resolveProjectMediaWithSources = (items: ProjectMedia[]) =>
+  Effect.gen(function* () {
+    // First resolve the media items
+    const resolved = yield* resolveProjectMedia(items);
+
+    if (resolved.length === 0) {
+      return resolved;
+    }
+
+    // Fetch sources for all items
+    const sourceMap = yield* fetchSourcesForMediaItems(
+      resolved.map((item) => ({
+        mediaType: item.mediaType,
+        mediaId: item.mediaId,
+      })),
+    );
+
+    // Attach sources to each item
+    return resolved.map((item) => ({
+      ...item,
+      sources: sourceMap.get(`${item.mediaType}:${item.mediaId}`) ?? [],
+    }));
+  });
+
+/**
  * Verifies that media items exist and are owned by the user.
  * Returns the validated media items or fails with appropriate error.
+ *
+ * Note: Currently only supports 'document' and 'podcast' types.
+ * Other content types will be supported as their tables are created.
  */
 export const verifyMediaOwnership = (
-  mediaItems: { mediaType: 'document' | 'podcast'; mediaId: string }[],
+  mediaItems: { mediaType: ContentType; mediaId: string }[],
   userId: string,
 ) =>
   Effect.gen(function* () {

@@ -5,3 +5,5 @@ export * from './schemas/podcasts';
 export * from './schemas/jobs';
 export * from './schemas/storage';
 export * from './schemas/projects';
+export * from './schemas/media-types';
+export * from './schemas/media-source';

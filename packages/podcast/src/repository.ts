@@ -1,16 +1,17 @@
 import {
   podcast,
-  podcastDocument,
   podcastScript,
   document,
   project,
+  mediaSource,
   type Podcast,
-  type PodcastDocument,
+  type MediaSource,
   type PodcastScript,
   type CreatePodcast,
   type UpdatePodcast,
   type UpdateScript,
   type PodcastStatus,
+  type GenerationContext,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
 import {
@@ -118,13 +119,15 @@ export const insertPodcast = (
       })
       .returning();
 
-    // Insert document links
+    // Insert document links using mediaSource (content derivation)
     const docLinks = await db
-      .insert(podcastDocument)
+      .insert(mediaSource)
       .values(
         documentIds.map((documentId, index) => ({
-          podcastId: pod!.id,
-          documentId,
+          targetType: 'podcast' as const,
+          targetId: pod!.id,
+          sourceType: 'document' as const,
+          sourceId: documentId,
           order: index,
         })),
       )
@@ -147,11 +150,18 @@ export const findPodcastById = (id: string) =>
 
     if (!pod) return null;
 
+    // Get source documents from mediaSource
     const docs = await db
       .select()
-      .from(podcastDocument)
-      .where(eq(podcastDocument.podcastId, id))
-      .orderBy(podcastDocument.order);
+      .from(mediaSource)
+      .where(
+        and(
+          eq(mediaSource.targetType, 'podcast'),
+          eq(mediaSource.targetId, id),
+          eq(mediaSource.sourceType, 'document'),
+        ),
+      )
+      .orderBy(mediaSource.order);
 
     const [script] = await db
       .select()
@@ -345,6 +355,29 @@ export const upsertScript = (
 
     return script!;
   });
+
+/**
+ * Update podcast generation context.
+ */
+export const updatePodcastGenerationContext = (
+  id: string,
+  generationContext: GenerationContext,
+) =>
+  withDb('podcast.updateGenerationContext', async (db) => {
+    const [pod] = await db
+      .update(podcast)
+      .set({
+        generationContext,
+        updatedAt: new Date(),
+      })
+      .where(eq(podcast.id, id))
+      .returning();
+    return pod;
+  }).pipe(
+    Effect.flatMap((pod) =>
+      pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+    ),
+  );
 
 /**
  * Count podcasts with optional filters.
