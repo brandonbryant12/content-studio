@@ -10,7 +10,10 @@ import {
   QueueLive,
   JobProcessingError,
   type GeneratePodcastPayload,
+  type GenerateScriptPayload,
+  type GenerateAudioPayload,
   type Job,
+  type JobType,
 } from '@repo/queue';
 import {
   DatabaseStorageLive,
@@ -19,7 +22,7 @@ import {
 } from '@repo/storage';
 import type { StorageConfig } from '@repo/api/server';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
-import { handleGeneratePodcast } from './handlers';
+import { handleGeneratePodcast, handleGenerateScript, handleGenerateAudio } from './handlers';
 
 export interface PodcastWorkerConfig {
   /** Database URL */
@@ -137,21 +140,35 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   };
 
   /**
-   * Process a single job.
+   * Process a single job based on its type.
    */
-  const processJob = (job: Job<GeneratePodcastPayload>) =>
+  const processJob = (job: Job<GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload>) =>
     Effect.gen(function* () {
       yield* Effect.logInfo(
-        `Processing job ${job.id} for podcast ${job.payload.podcastId}`,
+        `Processing ${job.type} job ${job.id} for podcast ${job.payload.podcastId}`,
       );
 
       // Create a dedicated runtime for this job with user context
       const jobRuntime = makeJobRuntime(job.payload.userId);
 
+      // Run the appropriate handler based on job type
+      const runHandler = async (): Promise<unknown> => {
+        switch (job.type) {
+          case 'generate-podcast':
+            return jobRuntime.runPromise(handleGeneratePodcast(job as Job<GeneratePodcastPayload>));
+          case 'generate-script':
+            return jobRuntime.runPromise(handleGenerateScript(job as Job<GenerateScriptPayload>));
+          case 'generate-audio':
+            return jobRuntime.runPromise(handleGenerateAudio(job as Job<GenerateAudioPayload>));
+          default:
+            throw new Error(`Unknown job type: ${job.type}`);
+        }
+      };
+
       // Run the handler with the job-specific runtime
       // Use tryPromise to properly convert rejections into Effect failures
       const result = yield* Effect.tryPromise({
-        try: () => jobRuntime.runPromise(handleGeneratePodcast(job)),
+        try: runHandler,
         catch: (error) =>
           new JobProcessingError({
             jobId: job.id,
@@ -167,25 +184,31 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       return result;
     }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
 
+  // Job types this worker handles
+  const JOB_TYPES: JobType[] = ['generate-podcast', 'generate-script', 'generate-audio'];
+
   /**
-   * Poll for and process the next job.
+   * Poll for and process the next job from any of the supported types.
    */
   const pollOnce = Effect.gen(function* () {
     const queue = yield* Queue;
 
-    const job = yield* queue.processNextJob('generate-podcast', (j) =>
-      processJob(j as Job<GeneratePodcastPayload>),
-    );
-
-    if (job) {
-      yield* Effect.logInfo(
-        `Finished processing job ${job.id}, status: ${job.status}`,
+    // Try each job type until we find one
+    for (const jobType of JOB_TYPES) {
+      const job = yield* queue.processNextJob(jobType, (j) =>
+        processJob(j as Job<GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload>),
       );
-    } else {
-      yield* Effect.logInfo('No pending jobs found');
+
+      if (job) {
+        yield* Effect.logInfo(
+          `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
+        );
+        return job;
+      }
     }
 
-    return job;
+    yield* Effect.logInfo('No pending jobs found');
+    return null;
   }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
 
   /**

@@ -30,7 +30,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(pnpm --filter web typecheck:*)",
       "Bash(pnpm --filter @repo/db typecheck:*)",
-      "Bash(pnpm --filter @repo/api typecheck:*)"
+      "Bash(pnpm --filter @repo/api typecheck:*)",
+      "Bash(pnpm --filter server typecheck:*)"
     ],
     "deny": [],
     "ask": []
