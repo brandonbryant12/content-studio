@@ -43,8 +43,9 @@ export function PodcastItem({
   return (
     <div className="group border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md transition-all overflow-hidden">
       <Link
-        to="/projects/$projectId/podcasts/$podcastId"
-        params={{ projectId: podcast.projectId, podcastId: podcast.id }}
+        to="/projects/$projectId/$mediaType/$mediaId"
+        params={{ projectId: podcast.projectId, mediaType: 'podcast', mediaId: podcast.id }}
+        search={{ docs: '' }}
         className="flex items-start gap-4 p-4"
       >
         <PodcastIcon format={podcast.format} status={podcast.status} />

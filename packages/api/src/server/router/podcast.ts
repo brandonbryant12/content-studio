@@ -1,7 +1,11 @@
 import { Podcasts } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
-import type { GeneratePodcastPayload } from '@repo/queue';
+import type {
+  GeneratePodcastPayload,
+  GenerateScriptPayload,
+  GenerateAudioPayload,
+} from '@repo/queue';
 import type { Job } from '@repo/db/schema';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
@@ -411,6 +415,162 @@ const podcastRouter = {
             throw errors.JOB_NOT_FOUND({
               message: e.message ?? `Job ${e.jobId} not found`,
               data: { jobId: e.jobId },
+            });
+          },
+        },
+      );
+    },
+  ),
+
+  generateScript: protectedProcedure.podcasts.generateScript.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const queue = yield* Queue;
+
+          // Verify podcast exists and user has access
+          const podcast = yield* podcasts.findById(input.id);
+
+          // Check for existing pending/processing job (idempotency)
+          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
+          if (existingJob) {
+            return {
+              jobId: existingJob.id,
+              status: existingJob.status,
+            };
+          }
+
+          // Enqueue the script-only generation job
+          const payload: GenerateScriptPayload = {
+            podcastId: podcast.id,
+            userId: podcast.createdBy,
+            promptInstructions: input.promptInstructions,
+          };
+
+          const job = yield* queue.enqueue(
+            'generate-script',
+            payload,
+            podcast.createdBy,
+          );
+
+          return {
+            jobId: job.id,
+            status: job.status,
+          };
+        }).pipe(
+          Effect.withSpan('api.podcasts.generateScript', {
+            attributes: { 'podcast.id': input.id },
+          }),
+          Effect.provide(context.layers),
+        ),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
+          QueueError: (e) => {
+            console.error('[QueueError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Failed to queue script generation',
+            });
+          },
+        },
+      );
+    },
+  ),
+
+  generateAudio: protectedProcedure.podcasts.generateAudio.handler(
+    async ({ context, input, errors }) => {
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const queue = yield* Queue;
+
+          // Verify podcast exists and user has access
+          const podcast = yield* podcasts.findById(input.id);
+
+          // Verify podcast is in script_ready status
+          if (podcast.status !== 'script_ready') {
+            throw errors.INTERNAL_ERROR({
+              message: `Podcast must be in script_ready status to generate audio. Current status: ${podcast.status}`,
+            });
+          }
+
+          // Check for existing pending/processing job (idempotency)
+          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
+          if (existingJob) {
+            return {
+              jobId: existingJob.id,
+              status: existingJob.status,
+            };
+          }
+
+          // Enqueue the audio-only generation job
+          const payload: GenerateAudioPayload = {
+            podcastId: podcast.id,
+            userId: podcast.createdBy,
+          };
+
+          const job = yield* queue.enqueue(
+            'generate-audio',
+            payload,
+            podcast.createdBy,
+          );
+
+          return {
+            jobId: job.id,
+            status: job.status,
+          };
+        }).pipe(
+          Effect.withSpan('api.podcasts.generateAudio', {
+            attributes: { 'podcast.id': input.id },
+          }),
+          Effect.provide(context.layers),
+        ),
+        {
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          DbError: (e) => {
+            console.error('[DbError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Database operation failed',
+            });
+          },
+          PolicyError: (e) => {
+            console.error('[PolicyError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Authorization check failed',
+            });
+          },
+          ForbiddenError: (e) => {
+            throw errors.FORBIDDEN({ message: e.message });
+          },
+          QueueError: (e) => {
+            console.error('[QueueError]', e.message, e.cause);
+            throw errors.INTERNAL_ERROR({
+              message: 'Failed to queue audio generation',
             });
           },
         },

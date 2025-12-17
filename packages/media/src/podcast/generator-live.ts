@@ -66,145 +66,199 @@ export const PodcastGeneratorLive: Layer.Layer<
       Context.add(Storage, storage),
     );
 
+    // ============================================
+    // Helper: Phase 1 - Generate Script
+    // ============================================
+    const runPhase1Script = (
+      podcastId: string,
+      options?: { promptInstructions?: string },
+    ) =>
+      Effect.gen(function* () {
+        // 1. Load podcast and verify ownership
+        const podcast = yield* Repo.findPodcastById(podcastId).pipe(
+          Effect.provide(repoContext),
+        );
+        yield* requireOwnership(podcast.createdBy).pipe(
+          Effect.provide(repoContext),
+        );
+
+        // 2. Update status to generating script
+        yield* Repo.updatePodcastStatus(podcastId, 'generating_script').pipe(
+          Effect.provide(repoContext),
+        );
+
+        // 3. Fetch all document content
+        const documentContents = yield* Effect.all(
+          podcast.documents.map((doc) =>
+            docs.getContent(doc.id).pipe(Effect.provide(fullContext)),
+          ),
+        );
+        const combinedContent = documentContents.join('\n\n---\n\n');
+
+        // 4. Build prompts based on format
+        const systemPrompt = buildSystemPrompt(
+          podcast.format,
+          options?.promptInstructions,
+        );
+        const userPrompt = buildUserPrompt(podcast, combinedContent);
+
+        // 5. Generate script via LLM
+        const llmResult = yield* llm.generate({
+          system: systemPrompt,
+          prompt: userPrompt,
+          schema: ScriptOutputSchema,
+          temperature: 0.7,
+        });
+
+        // 6. Add index to segments
+        const segments = llmResult.object.segments.map(
+          (s: { speaker: string; line: string }, i: number) => ({
+            ...s,
+            index: i,
+          }),
+        );
+
+        // 7. Store script with summary and FULL generation prompt
+        const fullGenerationPrompt = `=== SYSTEM PROMPT ===\n${systemPrompt}\n\n=== USER PROMPT ===\n${userPrompt}`;
+        yield* Repo.upsertScript(
+          podcastId,
+          { segments },
+          llmResult.object.summary,
+          fullGenerationPrompt,
+        ).pipe(Effect.provide(repoContext));
+
+        // 7b. Store generation context for reproducibility
+        yield* Repo.updatePodcastGenerationContext(podcastId, {
+          systemPromptTemplate: systemPrompt,
+          userInstructions: options?.promptInstructions ?? '',
+          sourceDocuments: podcast.documents.map((doc) => ({
+            id: doc.id,
+            title: doc.title,
+          })),
+          modelId: 'gemini-2.0-flash',
+          modelParams: { temperature: 0.7 },
+          generatedAt: new Date().toISOString(),
+        }).pipe(Effect.provide(repoContext));
+
+        // 8. Update podcast with generated metadata and status
+        yield* Repo.updatePodcast(podcastId, {
+          title: llmResult.object.title,
+          description: llmResult.object.description,
+          tags: [...llmResult.object.tags],
+        }).pipe(Effect.provide(repoContext));
+        yield* Repo.updatePodcastStatus(podcastId, 'script_ready').pipe(
+          Effect.provide(repoContext),
+        );
+
+        return segments;
+      });
+
+    // ============================================
+    // Helper: Phase 2 - Generate Audio
+    // ============================================
+    const runPhase2Audio = (podcastId: string) =>
+      Effect.gen(function* () {
+        // 1. Load podcast and verify ownership
+        const podcast = yield* Repo.findPodcastById(podcastId).pipe(
+          Effect.provide(repoContext),
+        );
+        yield* requireOwnership(podcast.createdBy).pipe(
+          Effect.provide(repoContext),
+        );
+
+        // 2. Load script segments
+        const script = yield* Repo.getActiveScript(podcastId).pipe(
+          Effect.provide(repoContext),
+        );
+
+        // 3. Update status to generating audio
+        yield* Repo.updatePodcastStatus(podcastId, 'generating_audio').pipe(
+          Effect.provide(repoContext),
+        );
+
+        // 4. Convert segments to TTS turns
+        const turns: SpeakerTurn[] = script.segments.map((s) => ({
+          speaker: s.speaker,
+          text: s.line,
+        }));
+
+        // 5. Build voice configs
+        const voiceConfigs: SpeakerVoiceConfig[] = [
+          { speakerAlias: 'host', voiceId: podcast.hostVoice ?? 'Charon' },
+          { speakerAlias: 'cohost', voiceId: podcast.coHostVoice ?? 'Kore' },
+        ];
+
+        // 6. Synthesize audio
+        const ttsResult = yield* tts.synthesize({
+          turns,
+          voiceConfigs,
+        });
+
+        // 7. Upload to storage
+        const audioKey = `podcasts/${podcastId}/audio.wav`;
+        yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
+        const audioUrl = yield* storage.getUrl(audioKey);
+
+        // 8. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
+        const duration = Math.round(ttsResult.audioContent.length / 48000);
+
+        // 9. Update podcast with audio details and final status
+        yield* Repo.updatePodcastAudio(podcastId, {
+          audioUrl,
+          duration,
+          status: 'ready',
+        }).pipe(Effect.provide(repoContext));
+      });
+
+    // ============================================
+    // Service Implementation
+    // ============================================
     const service: PodcastGeneratorService = {
+      // Full generation (script + audio)
       generate: (podcastId, options) =>
         Effect.gen(function* () {
-          // 1. Load podcast and verify ownership
-          let podcast = yield* Repo.findPodcastById(podcastId).pipe(
-            Effect.provide(repoContext),
-          );
-          yield* requireOwnership(podcast.createdBy).pipe(
-            Effect.provide(repoContext),
-          );
+          // Phase 1: Generate script
+          yield* runPhase1Script(podcastId, options);
 
-          // ============================================
-          // PHASE 1: Generate Script
-          // ============================================
+          // Phase 2: Generate audio
+          yield* runPhase2Audio(podcastId);
 
-          // 2. Update status to generating script
-          yield* Repo.updatePodcastStatus(podcastId, 'generating_script').pipe(
-            Effect.provide(repoContext),
-          );
-
-          // 3. Fetch all document content (documents are now resolved Document objects)
-          const documentContents = yield* Effect.all(
-            podcast.documents.map((doc) =>
-              docs.getContent(doc.id).pipe(Effect.provide(fullContext)),
-            ),
-          );
-          const combinedContent = documentContents.join('\n\n---\n\n');
-
-          // 4. Build prompts based on format
-          const systemPrompt = buildSystemPrompt(
-            podcast.format,
-            options?.promptInstructions,
-          );
-          const userPrompt = buildUserPrompt(podcast, combinedContent);
-
-          // 5. Generate script via LLM
-          const llmResult = yield* llm.generate({
-            system: systemPrompt,
-            prompt: userPrompt,
-            schema: ScriptOutputSchema,
-            temperature: 0.7,
-          });
-
-          // 6. Add index to segments
-          const segments = llmResult.object.segments.map(
-            (s: { speaker: string; line: string }, i: number) => ({
-              ...s,
-              index: i,
-            }),
-          );
-
-          // 7. Store script with summary and FULL generation prompt
-          const fullGenerationPrompt = `=== SYSTEM PROMPT ===\n${systemPrompt}\n\n=== USER PROMPT ===\n${userPrompt}`;
-          yield* Repo.upsertScript(
-            podcastId,
-            { segments },
-            llmResult.object.summary,
-            fullGenerationPrompt,
-          ).pipe(Effect.provide(repoContext));
-
-          // 7b. Store generation context for reproducibility
-          yield* Repo.updatePodcastGenerationContext(podcastId, {
-            systemPromptTemplate: systemPrompt,
-            userInstructions: options?.promptInstructions ?? '',
-            sourceDocuments: podcast.documents.map((doc) => ({
-              id: doc.id,
-              title: doc.title,
-            })),
-            modelId: 'gemini-2.0-flash', // TODO: Get from LLM service
-            modelParams: { temperature: 0.7 },
-            generatedAt: new Date().toISOString(),
-          }).pipe(Effect.provide(repoContext));
-
-          // 8. Update podcast with generated metadata and status
-          yield* Repo.updatePodcast(podcastId, {
-            title: llmResult.object.title,
-            description: llmResult.object.description,
-            tags: [...llmResult.object.tags],
-          }).pipe(Effect.provide(repoContext));
-          yield* Repo.updatePodcastStatus(podcastId, 'script_ready').pipe(
-            Effect.provide(repoContext),
-          );
-
-          // ============================================
-          // PHASE 2: Generate Audio
-          // ============================================
-
-          // 9. Update status to generating audio
-          yield* Repo.updatePodcastStatus(podcastId, 'generating_audio').pipe(
-            Effect.provide(repoContext),
-          );
-
-          // 10. Reload podcast to get updated voice settings
-          podcast = yield* Repo.findPodcastById(podcastId).pipe(
-            Effect.provide(repoContext),
-          );
-
-          // 11. Convert segments to TTS turns
-          const turns: SpeakerTurn[] = segments.map((s) => ({
-            speaker: s.speaker,
-            text: s.line,
-          }));
-
-          // 12. Build voice configs
-          // Google's multi-speaker TTS API requires exactly 2 voice configs
-          const voiceConfigs: SpeakerVoiceConfig[] = [
-            { speakerAlias: 'host', voiceId: podcast.hostVoice ?? 'Charon' },
-            { speakerAlias: 'cohost', voiceId: podcast.coHostVoice ?? 'Kore' },
-          ];
-
-          // 13. Synthesize audio (Gemini returns raw PCM, wrapped as WAV)
-          const ttsResult = yield* tts.synthesize({
-            turns,
-            voiceConfigs,
-          });
-
-          // 14. Upload to storage
-          const audioKey = `podcasts/${podcastId}/audio.wav`;
-          yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
-          // Always call getUrl to ensure we have a playable URL
-          // (DatabaseStorage returns just the key for large files, getUrl returns data URL)
-          const audioUrl = yield* storage.getUrl(audioKey);
-
-          // 15. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
-          const duration = Math.round(ttsResult.audioContent.length / 48000);
-
-          // 16. Update podcast with audio details and final status
-          yield* Repo.updatePodcastAudio(podcastId, {
-            audioUrl,
-            duration,
-            status: 'ready',
-          }).pipe(Effect.provide(repoContext));
-
-          // 17. Return full podcast for display
+          // Return full podcast
           return yield* Repo.findPodcastById(podcastId).pipe(
             Effect.provide(repoContext),
           );
         }).pipe(
           Effect.withSpan('podcastGenerator.generate', {
+            attributes: { 'podcast.id': podcastId },
+          }),
+        ),
+
+      // Script-only generation (Phase 1)
+      generateScript: (podcastId, options) =>
+        Effect.gen(function* () {
+          yield* runPhase1Script(podcastId, options);
+
+          // Return full podcast (with script, no audio)
+          return yield* Repo.findPodcastById(podcastId).pipe(
+            Effect.provide(repoContext),
+          );
+        }).pipe(
+          Effect.withSpan('podcastGenerator.generateScript', {
+            attributes: { 'podcast.id': podcastId },
+          }),
+        ),
+
+      // Audio-only generation (Phase 2)
+      generateAudio: (podcastId) =>
+        Effect.gen(function* () {
+          yield* runPhase2Audio(podcastId);
+
+          // Return full podcast
+          return yield* Repo.findPodcastById(podcastId).pipe(
+            Effect.provide(repoContext),
+          );
+        }).pipe(
+          Effect.withSpan('podcastGenerator.generateAudio', {
             attributes: { 'podcast.id': podcastId },
           }),
         ),

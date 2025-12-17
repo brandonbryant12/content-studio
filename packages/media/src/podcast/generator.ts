@@ -3,6 +3,7 @@ import type { PodcastFull } from './service';
 import type {
   DbError,
   PodcastNotFound,
+  ScriptNotFound,
   ForbiddenError,
   PolicyError,
   DocumentNotFound,
@@ -22,6 +23,7 @@ import type { Effect } from 'effect';
  */
 export type GenerationError =
   | PodcastNotFound
+  | ScriptNotFound
   | DocumentNotFound
   | DocumentParseError
   | LLMError
@@ -61,6 +63,36 @@ export interface PodcastGeneratorService {
   readonly generate: (
     podcastId: string,
     options?: { promptInstructions?: string },
+  ) => Effect.Effect<PodcastFull, GenerationError, never>;
+
+  /**
+   * Generate only the script (Phase 1).
+   *
+   * 1. Fetches document content
+   * 2. Generates script using LLM (with metadata: title, description, tags)
+   * 3. Updates podcast status to script_ready
+   *
+   * Use this when you want to preview/edit the script before generating audio.
+   * After editing, call generateAudio to complete the podcast.
+   */
+  readonly generateScript: (
+    podcastId: string,
+    options?: { promptInstructions?: string },
+  ) => Effect.Effect<PodcastFull, GenerationError, never>;
+
+  /**
+   * Generate audio from an existing script (Phase 2).
+   *
+   * 1. Loads existing script
+   * 2. Synthesizes audio using TTS
+   * 3. Uploads audio to storage
+   * 4. Updates podcast status to ready
+   *
+   * Podcast must be in script_ready status. Call this after generateScript
+   * and optionally editing the script.
+   */
+  readonly generateAudio: (
+    podcastId: string,
   ) => Effect.Effect<PodcastFull, GenerationError, never>;
 }
 

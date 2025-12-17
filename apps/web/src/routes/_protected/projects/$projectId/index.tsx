@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import AddMediaDialog from '../-components/add-media-dialog';
 import { ContentLibrary } from '../-components/content-library';
 import { ContentStudio } from '../-components/content-studio';
-import CreatePodcastDialog from '../-components/create-podcast-dialog';
 import UploadDocumentDialog from '../-components/upload-document-dialog';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
@@ -39,7 +38,6 @@ function ProjectDetailPage() {
   // Dialog states
   const [addDocumentOpen, setAddDocumentOpen] = useState(false);
   const [uploadDocumentOpen, setUploadDocumentOpen] = useState(false);
-  const [createPodcastOpen, setCreatePodcastOpen] = useState(false);
 
   // Sidebar visibility (mobile)
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,9 +77,14 @@ function ProjectDetailPage() {
   );
 
   const handleCreateContent = (type: ContentType) => {
-    // For now, only podcasts are supported
+    // Navigate to workbench for supported media types
     if (type === 'podcast') {
-      setCreatePodcastOpen(true);
+      const docsParam = selectedIds.size > 0 ? Array.from(selectedIds).join(',') : '';
+      navigate({
+        to: '/projects/$projectId/$mediaType/$mediaId',
+        params: { projectId, mediaType: type, mediaId: 'new' },
+        search: { docs: docsParam },
+      });
     } else {
       toast.info(`${type} creation coming soon!`);
     }
@@ -231,14 +234,6 @@ function ProjectDetailPage() {
         open={uploadDocumentOpen}
         onOpenChange={setUploadDocumentOpen}
         projectId={projectId}
-      />
-
-      <CreatePodcastDialog
-        open={createPodcastOpen}
-        onOpenChange={setCreatePodcastOpen}
-        projectId={projectId}
-        projectDocuments={project.documents}
-        preSelectedDocumentIds={Array.from(selectedIds)}
       />
     </div>
   );

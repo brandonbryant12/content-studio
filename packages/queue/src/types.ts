@@ -1,6 +1,6 @@
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
-export type JobType = 'generate-podcast';
+export type JobType = 'generate-podcast' | 'generate-script' | 'generate-audio';
 
 export interface Job<TPayload = unknown, TResult = unknown> {
   readonly id: string;
@@ -25,6 +25,27 @@ export interface GeneratePodcastPayload {
 export interface GeneratePodcastResult {
   readonly scriptId: string;
   readonly segmentCount: number;
+  readonly audioUrl: string;
+  readonly duration: number;
+}
+
+export interface GenerateScriptPayload {
+  readonly podcastId: string;
+  readonly userId: string;
+  readonly promptInstructions?: string;
+}
+
+export interface GenerateScriptResult {
+  readonly scriptId: string;
+  readonly segmentCount: number;
+}
+
+export interface GenerateAudioPayload {
+  readonly podcastId: string;
+  readonly userId: string;
+}
+
+export interface GenerateAudioResult {
   readonly audioUrl: string;
   readonly duration: number;
 }

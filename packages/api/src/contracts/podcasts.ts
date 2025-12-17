@@ -263,6 +263,51 @@ const podcastContract = oc
         }),
       ),
 
+    // Trigger script-only generation (Phase 1)
+    generateScript: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/generate-script',
+        summary: 'Generate script only',
+        description:
+          'Generate podcast script without audio. Stops at script_ready status. Use this to preview/edit script before generating audio.',
+      })
+      .errors({ ...podcastErrors, ...jobErrors })
+      .input(
+        v.object({
+          id: v.pipe(v.string(), v.uuid()),
+          promptInstructions: v.optional(v.string()),
+        }),
+      )
+      .output(
+        v.object({
+          jobId: v.string(),
+          status: jobStatusSchema,
+        }),
+      ),
+
+    // Trigger audio generation from existing script (Phase 2)
+    generateAudio: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/generate-audio',
+        summary: 'Generate audio from script',
+        description:
+          'Generate audio from an existing approved script. Podcast must be in script_ready status.',
+      })
+      .errors({ ...podcastErrors, ...jobErrors })
+      .input(
+        v.object({
+          id: v.pipe(v.string(), v.uuid()),
+        }),
+      )
+      .output(
+        v.object({
+          jobId: v.string(),
+          status: jobStatusSchema,
+        }),
+      ),
+
     // Get job status
     getJob: oc
       .route({
