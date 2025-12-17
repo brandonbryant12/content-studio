@@ -93,6 +93,7 @@ export const createApi = ({
           console.error('\t[ERROR]', formatStackTrace(error));
         }
 
+        // Handle input validation errors (BAD_REQUEST)
         if (
           error instanceof ORPCError &&
           error.code === 'BAD_REQUEST' &&
@@ -102,10 +103,35 @@ export const createApi = ({
             v.BaseIssue<unknown>,
             ...v.BaseIssue<unknown>[],
           ];
-          console.error(v.flatten(valiIssues));
+          console.error('[INPUT_VALIDATION]', v.flatten(valiIssues));
           throw new ORPCError('INPUT_VALIDATION_FAILED', {
             status: 422,
             message: v.summarize(valiIssues),
+            cause: error.cause,
+          });
+        }
+
+        // Handle output validation errors (INTERNAL_SERVER_ERROR)
+        // These indicate a bug in the API - response doesn't match contract
+        if (
+          error instanceof ORPCError &&
+          error.code === 'INTERNAL_SERVER_ERROR' &&
+          error.cause instanceof ValidationError
+        ) {
+          const valiIssues = error.cause.issues as [
+            v.BaseIssue<unknown>,
+            ...v.BaseIssue<unknown>[],
+          ];
+          console.error('[OUTPUT_VALIDATION] Response does not match contract:');
+          console.error('  Issues:', JSON.stringify(v.flatten(valiIssues), null, 2));
+          // Log the actual data that failed validation (helpful for debugging)
+          if (error.cause.data !== undefined) {
+            console.error('  Data:', JSON.stringify(error.cause.data, null, 2).slice(0, 1000));
+          }
+          // Re-throw with the same code but better message for debugging
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            status: 500,
+            message: `Output validation failed: ${v.summarize(valiIssues)}`,
             cause: error.cause,
           });
         }

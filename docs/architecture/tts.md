@@ -1,159 +1,74 @@
 # TTS Architecture
 
-## Overview
+Text-to-speech for generating audio from scripts. Uses Google's Gemini multi-speaker synthesis.
 
-The `@repo/tts` package provides text-to-speech functionality for generating podcast audio. It currently uses Google's Gemini API for multi-speaker synthesis.
-
-## Package Structure
+## Concept
 
 ```
-packages/tts/
-├── src/
-│   ├── index.ts           # Public exports
-│   ├── service.ts         # Service interface & types
-│   ├── voices.ts          # Available voices catalog
-│   └── providers/
-│       └── google.ts      # Gemini TTS implementation
-├── package.json
-└── tsconfig.json
+Script (speaker-tagged text)
+        │
+        ▼
+  TTS Provider (Gemini)
+        │
+        ▼
+   Audio (WAV file)
 ```
 
 ## Service Interface
 
-```typescript
-interface TTSService {
-  // List available voices
-  listVoices(options?: ListVoicesOptions): Effect<VoiceInfo[], TTSError>;
+| Method | Purpose |
+|--------|---------|
+| listVoices | Available voice catalog with metadata |
+| previewVoice | Generate sample for voice selection |
+| synthesize | Full multi-speaker audio generation |
 
-  // Preview a single voice
-  previewVoice(options: PreviewVoiceOptions): Effect<PreviewVoiceResult, TTSError>;
+## Multi-Speaker Format
 
-  // Synthesize multi-speaker audio
-  synthesize(options: SynthesizeOptions): Effect<SynthesizeResult, TTSError>;
-}
-```
+Scripts use speaker aliases that map to voices:
 
-## Audio Format
-
-### Gemini TTS Output
-
-Gemini's multi-speaker TTS API (`generateContent` with `responseModalities: ['AUDIO']`) returns:
-
-| Property | Value |
-|----------|-------|
-| Format | Raw PCM (Linear16) |
-| Sample Rate | 24,000 Hz |
-| Bit Depth | 16-bit |
-| Channels | Mono |
-| Byte Rate | 48,000 bytes/sec |
-
-**Important:** The audio is returned as base64-encoded data in `candidates[0].content.parts[0].inlineData`.
-
-### WAV Wrapping
-
-The raw PCM must be wrapped with a WAV header for browser/player compatibility. The `wrapPcmAsWav()` function adds a 44-byte header:
-
-```
-Bytes 0-3:   "RIFF"
-Bytes 4-7:   File size - 8
-Bytes 8-11:  "WAVE"
-Bytes 12-15: "fmt "
-Bytes 16-19: 16 (fmt chunk size)
-Bytes 20-21: 1 (PCM format)
-Bytes 22-23: 1 (mono)
-Bytes 24-27: 24000 (sample rate)
-Bytes 28-31: 48000 (byte rate)
-Bytes 32-33: 2 (block align)
-Bytes 34-35: 16 (bits per sample)
-Bytes 36-39: "data"
-Bytes 40-43: data size
-Bytes 44+:   PCM audio data
-```
-
-## Gotchas & Learnings
-
-### Double-Wrapping Detection
-
-Gemini's response format can vary. Sometimes the API returns already-wrapped WAV data instead of raw PCM. Always check before wrapping:
-
-```typescript
-const audioData = Buffer.from(inlineData.data, 'base64');
-
-// Check if already WAV (starts with RIFF header)
-const isAlreadyWav = audioData.slice(0, 4).toString('ascii') === 'RIFF';
-const audioContent = isAlreadyWav ? audioData : wrapPcmAsWav(audioData);
-```
-
-**Symptom of double-wrapping:** QuickTime shows duration and slider moves, but no audio plays. The WAV header is valid but the audio data is corrupted.
-
-### Debug Logging
-
-The provider logs format info for debugging:
-
-```typescript
-console.log('[TTS] Gemini response:', {
-  mimeType: inlineData.mimeType,
-  dataSize: audioData.length,
-  first4Bytes: audioData.slice(0, 4).toString('hex'),
-  headerCheck: audioData.slice(0, 4).toString('ascii'),
-});
-```
-
-Check logs if audio issues occur. Expected output for raw PCM:
-- `mimeType`: varies (may be `audio/L16`, `audio/pcm`, or unspecified)
-- `headerCheck`: random characters (NOT "RIFF")
-
-Expected output for already-wrapped WAV:
-- `headerCheck`: "RIFF"
-
-### Duration Calculation
-
-For WAV audio at 24kHz, 16-bit, mono:
-
-```typescript
-const durationSeconds = Math.round(audioContent.length / 48000);
-```
-
-This accounts for the 44-byte header being negligible for typical audio lengths.
-
-## Multi-Speaker Configuration
-
-Google's Gemini multi-speaker TTS requires exactly 2 voice configurations:
-
-```typescript
-const voiceConfigs: SpeakerVoiceConfig[] = [
-  { speakerAlias: 'host', voiceId: 'Charon' },
-  { speakerAlias: 'cohost', voiceId: 'Kore' },
-];
-```
-
-The conversation text format:
 ```
 host: Welcome to the show!
 cohost: Thanks for having me!
 ```
 
-## Available Voices
+Voice assignment happens at synthesis time—same script can use different voice combinations.
 
-Voices are catalogued in `voices.ts` with gender metadata for filtering:
+## Provider Model
 
-| Voice | Gender |
-|-------|--------|
-| Charon | Male |
-| Kore | Female |
-| Fenrir | Male |
-| Aoede | Female |
-| Puck | Male |
-| Leda | Female |
+Provider interface allows swapping TTS backends:
 
-## Error Handling
+- Google Gemini (current)
+- Future: ElevenLabs, Azure, local models
 
-```typescript
-TTSError          // General TTS failure
-TTSQuotaExceededError  // Rate limit / quota exceeded (429)
-```
+Each provider handles raw audio format conversion internally.
 
-## References
+## Audio Pipeline
 
-- [Gemini Speech Generation](https://ai.google.dev/gemini-api/docs/speech-generation)
-- [Gemini API Reference](https://ai.google.dev/api/generate-content)
+Gemini returns raw PCM. Must be wrapped as WAV for playback:
+
+1. Receive base64 PCM data
+2. Check if already WAV format (varies by API response)
+3. Wrap with WAV header if needed
+4. Store resulting audio file
+
+**Format**: 24kHz, 16-bit, mono.
+
+## Debugging Audio Issues
+
+If audio doesn't play:
+1. Check if WAV was double-wrapped (header corruption)
+2. Verify sample rate matches expected
+3. Check provider logs for format info
+
+**Symptom of double-wrap**: Player shows duration but no sound.
+
+## Error Types
+
+| Error | Meaning |
+|-------|---------|
+| TTSError | General synthesis failure |
+| TTSQuotaExceeded | API rate limit hit |
+
+## Voices
+
+Six voices available, mix of male/female. Voice selection exposed in UI for podcast generation.

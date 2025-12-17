@@ -3,7 +3,7 @@ import {
   isValidVoiceId,
   type GeminiVoiceId,
   type AudioEncoding,
-} from '@repo/tts';
+} from '@repo/ai/tts';
 import { Effect } from 'effect';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';

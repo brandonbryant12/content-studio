@@ -1,0 +1,56 @@
+{
+  "name": "@repo/media",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./document": {
+      "types": "./dist/src/document/index.d.ts",
+      "default": "./src/document/index.ts"
+    },
+    "./podcast": {
+      "types": "./dist/src/podcast/index.d.ts",
+      "default": "./src/podcast/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc --build tsconfig.package.json",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
+  },
+  "prettier": "@repo/prettier-config",
+  "dependencies": {
+    "@repo/effect": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/auth-policy": "workspace:*",
+    "@repo/ai": "workspace:*",
+    "@repo/storage": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.8.0",
+    "pptx-parser": "^1.1.1"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/jest-config": "workspace:*",
+    "@repo/prettier-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pdf-parse": "^1.1.5",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "jest": "catalog:",
+    "@types/jest": "catalog:",
+    "ts-jest": "catalog:"
+  }
+}

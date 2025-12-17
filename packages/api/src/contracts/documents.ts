@@ -1,5 +1,9 @@
 import { oc } from '@orpc/contract';
-import { CreateDocumentSchema, UpdateDocumentSchema } from '@repo/db/schema';
+import {
+  CreateDocumentSchema,
+  UpdateDocumentSchema,
+  DocumentOutputSchema,
+} from '@repo/db/schema';
 import * as v from 'valibot';
 
 const documentErrors = {
@@ -33,30 +37,6 @@ const documentErrors = {
   },
 } as const;
 
-// Output schemas
-const documentSourceSchema = v.picklist([
-  'manual',
-  'upload_txt',
-  'upload_pdf',
-  'upload_docx',
-  'upload_pptx',
-]);
-
-const documentOutputSchema = v.object({
-  id: v.string(),
-  title: v.string(),
-  contentKey: v.string(),
-  mimeType: v.string(),
-  wordCount: v.number(),
-  source: documentSourceSchema,
-  originalFileName: v.nullable(v.string()),
-  originalFileSize: v.nullable(v.number()),
-  metadata: v.nullable(v.record(v.string(), v.unknown())),
-  createdBy: v.string(),
-  createdAt: v.string(),
-  updatedAt: v.string(),
-});
-
 // Upload input schema (base64 encoded file)
 const uploadDocumentSchema = v.object({
   fileName: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
@@ -84,7 +64,7 @@ const documentContract = oc
           offset: v.optional(v.pipe(v.number(), v.minValue(0))),
         }),
       )
-      .output(v.array(documentOutputSchema)),
+      .output(v.array(DocumentOutputSchema)),
 
     // Get a single document by ID
     get: oc
@@ -96,7 +76,7 @@ const documentContract = oc
       })
       .errors(documentErrors)
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(documentOutputSchema),
+      .output(DocumentOutputSchema),
 
     // Get document content
     getContent: oc
@@ -120,7 +100,7 @@ const documentContract = oc
       })
       .errors(documentErrors)
       .input(CreateDocumentSchema)
-      .output(documentOutputSchema),
+      .output(DocumentOutputSchema),
 
     // Upload a document file
     upload: oc
@@ -132,7 +112,7 @@ const documentContract = oc
       })
       .errors(documentErrors)
       .input(uploadDocumentSchema)
-      .output(documentOutputSchema),
+      .output(DocumentOutputSchema),
 
     // Update a document
     update: oc
@@ -149,7 +129,7 @@ const documentContract = oc
           ...UpdateDocumentSchema.entries,
         }),
       )
-      .output(documentOutputSchema),
+      .output(DocumentOutputSchema),
 
     // Delete a document
     delete: oc

@@ -14,7 +14,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import Spinner from '@/routes/-components/common/spinner';
 
 const SUPPORTED_TYPES = [
@@ -42,19 +42,7 @@ export default function UploadDocumentDialog({
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
       onSuccess: async () => {
-        // Invalidate all queries that start with 'documents'
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            if (!Array.isArray(key) || key.length === 0) return false;
-            // oRPC uses path arrays like ['documents', 'list'] as the first element
-            const firstKey = key[0];
-            if (Array.isArray(firstKey)) {
-              return firstKey[0] === 'documents';
-            }
-            return firstKey === 'documents';
-          },
-        });
+        await invalidateQueries('documents');
         toast.success('Document uploaded successfully');
         handleClose();
       },

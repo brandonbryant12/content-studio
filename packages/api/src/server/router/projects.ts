@@ -1,52 +1,13 @@
-import {
-  Projects,
-  type ProjectMediaItem,
-  type ProjectWithMedia,
-  type ProjectWithMediaRecords,
-} from '@repo/project';
-import type { Project, ProjectMedia } from '@repo/db/schema';
+import { Projects } from '@repo/project';
 import { Effect } from 'effect';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const serializeProject = (project: Project): any => ({
-  ...project,
-  createdAt: project.createdAt.toISOString(),
-  updatedAt: project.updatedAt.toISOString(),
-});
-
-const serializeProjectWithMediaRecords = (
-  project: ProjectWithMediaRecords,
-): any => ({
-  ...project,
-  createdAt: project.createdAt.toISOString(),
-  updatedAt: project.updatedAt.toISOString(),
-  media: project.media.map((m: ProjectMedia) => ({
-    ...m,
-    createdAt: m.createdAt.toISOString(),
-  })),
-});
-
-const serializeMediaItem = (item: ProjectMediaItem): any => ({
-  ...item,
-  createdAt: item.createdAt.toISOString(),
-  media: {
-    ...item.media,
-    createdAt: item.media.createdAt.toISOString(),
-    updatedAt: item.media.updatedAt.toISOString(),
-  },
-  // Include source lineage if present
-  sources: item.sources ?? [],
-});
-
-const serializeProjectWithMedia = (project: ProjectWithMedia): any => ({
-  ...project,
-  createdAt: project.createdAt.toISOString(),
-  updatedAt: project.updatedAt.toISOString(),
-  media: project.media.map(serializeMediaItem),
-});
-/* eslint-enable @typescript-eslint/no-explicit-any */
+import {
+  serializeProject,
+  serializeProjectDocument,
+  serializeProjectWithDocuments,
+  serializeProjectFull,
+} from '../serializers';
 
 // Common error handlers
 const commonErrorHandlers = (errors: any) => ({
@@ -84,9 +45,6 @@ const projectRouter = {
           DocumentNotFound: (e) => {
             throw errors.NOT_FOUND({ message: e.message });
           },
-          MediaNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
         },
       );
     },
@@ -97,9 +55,7 @@ const projectRouter = {
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
-          return serializeProjectWithMediaRecords(
-            yield* projects.findById(input.id),
-          );
+          return serializeProjectFull(yield* projects.findById(input.id));
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -110,10 +66,10 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message,
+              data: { documentId: e.id },
+            });
           },
         },
       );
@@ -126,7 +82,7 @@ const projectRouter = {
         Effect.gen(function* () {
           const projects = yield* Projects;
           const result = yield* projects.create(input);
-          return serializeProjectWithMediaRecords(result);
+          return serializeProjectWithDocuments(result);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -137,10 +93,10 @@ const projectRouter = {
             });
           },
           ProjectNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
+            throw errors.PROJECT_NOT_FOUND({
+              message: e.message,
+              data: { projectId: e.props.id },
+            });
           },
         },
       );
@@ -154,7 +110,7 @@ const projectRouter = {
         Effect.gen(function* () {
           const projects = yield* Projects;
           const result = yield* projects.update(id, data);
-          return serializeProjectWithMediaRecords(result);
+          return serializeProjectWithDocuments(result);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -165,10 +121,10 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message,
+              data: { documentId: e.id },
+            });
           },
         },
       );
@@ -192,10 +148,10 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message,
+              data: { documentId: e.id },
+            });
           },
         },
       );
@@ -203,16 +159,17 @@ const projectRouter = {
   ),
 
   // =========================================================================
-  // Polymorphic Media Management
+  // Document Management
   // =========================================================================
 
-  getWithMedia: protectedProcedure.projects.getWithMedia.handler(
+  addDocument: protectedProcedure.projects.addDocument.handler(
     async ({ context, input, errors }) => {
+      const { id, ...docInput } = input;
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
-          const result = yield* projects.findByIdWithMedia(input.id);
-          return serializeProjectWithMedia(result);
+          const result = yield* projects.addDocument(id, docInput);
+          return serializeProjectDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -223,13 +180,9 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.MEDIA_NOT_FOUND({
-              message:
-                e.message ?? `Media ${e.mediaType}/${e.mediaId} not found`,
-              data: { mediaType: e.mediaType, mediaId: e.mediaId },
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message ?? `Document ${e.id} not found`,
+              data: { documentId: e.id },
             });
           },
         },
@@ -237,44 +190,12 @@ const projectRouter = {
     },
   ),
 
-  addMedia: protectedProcedure.projects.addMedia.handler(
-    async ({ context, input, errors }) => {
-      const { id, ...mediaInput } = input;
-      return handleEffect(
-        Effect.gen(function* () {
-          const projects = yield* Projects;
-          const result = yield* projects.addMedia(id, mediaInput);
-          return serializeMediaItem(result);
-        }).pipe(Effect.provide(context.layers)),
-        {
-          ...commonErrorHandlers(errors),
-          ProjectNotFound: (e) => {
-            throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
-            });
-          },
-          DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.MEDIA_NOT_FOUND({
-              message:
-                e.message ?? `Media ${e.mediaType}/${e.mediaId} not found`,
-              data: { mediaType: e.mediaType, mediaId: e.mediaId },
-            });
-          },
-        },
-      );
-    },
-  ),
-
-  removeMedia: protectedProcedure.projects.removeMedia.handler(
+  removeDocument: protectedProcedure.projects.removeDocument.handler(
     async ({ context, input, errors }) => {
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
-          yield* projects.removeMedia(input.id, input.mediaId);
+          yield* projects.removeDocument(input.id, input.documentId);
           return {};
         }).pipe(Effect.provide(context.layers)),
         {
@@ -286,13 +207,9 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.MEDIA_NOT_FOUND({
-              message:
-                e.message ?? `Media ${e.mediaType}/${e.mediaId} not found`,
-              data: { mediaType: e.mediaType, mediaId: e.mediaId },
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message,
+              data: { documentId: e.id },
             });
           },
         },
@@ -300,13 +217,16 @@ const projectRouter = {
     },
   ),
 
-  reorderMedia: protectedProcedure.projects.reorderMedia.handler(
+  reorderDocuments: protectedProcedure.projects.reorderDocuments.handler(
     async ({ context, input, errors }) => {
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
-          const result = yield* projects.reorderMedia(input.id, input.mediaIds);
-          return result.map(serializeMediaItem);
+          const result = yield* projects.reorderDocuments(
+            input.id,
+            input.documentIds,
+          );
+          return result.map(serializeProjectDocument);
         }).pipe(Effect.provide(context.layers)),
         {
           ...commonErrorHandlers(errors),
@@ -317,13 +237,9 @@ const projectRouter = {
             });
           },
           DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({ message: e.message });
-          },
-          MediaNotFound: (e) => {
-            throw errors.MEDIA_NOT_FOUND({
-              message:
-                e.message ?? `Media ${e.mediaType}/${e.mediaId} not found`,
-              data: { mediaType: e.mediaType, mediaId: e.mediaId },
+            throw errors.DOCUMENT_NOT_FOUND({
+              message: e.message,
+              data: { documentId: e.id },
             });
           },
         },

@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import Spinner from '@/routes/-components/common/spinner';
 
 interface CreateProjectDialogProps {
@@ -86,18 +86,7 @@ export default function CreateProjectDialog({
   const createMutation = useMutation(
     apiClient.projects.create.mutationOptions({
       onSuccess: async (data) => {
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            if (!Array.isArray(key) || key.length === 0) return false;
-            // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
-            const firstKey = key[0];
-            if (Array.isArray(firstKey)) {
-              return firstKey[0] === 'projects';
-            }
-            return firstKey === 'projects';
-          },
-        });
+        await invalidateQueries('projects');
         toast.success('Project created');
         onOpenChange(false);
         navigate({

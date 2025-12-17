@@ -16,6 +16,7 @@ import { ContentStudio } from '../-components/content-studio';
 import CreatePodcastDialog from '../-components/create-podcast-dialog';
 import UploadDocumentDialog from '../-components/upload-document-dialog';
 import { apiClient } from '@/clients/apiClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
 import Spinner from '@/routes/-components/common/spinner';
 
@@ -24,7 +25,7 @@ type ContentType = 'document' | 'podcast' | 'video' | 'article' | 'social' | 'gr
 export const Route = createFileRoute('/_protected/projects/$projectId/')({
   loader: ({ params }) =>
     queryClient.ensureQueryData(
-      apiClient.projects.getWithMedia.queryOptions({
+      apiClient.projects.get.queryOptions({
         input: { id: params.projectId },
       }),
     ),
@@ -47,30 +48,19 @@ function ProjectDetailPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const { data: project, isPending } = useQuery(
-    apiClient.projects.getWithMedia.queryOptions({ input: { id: projectId } }),
+    apiClient.projects.get.queryOptions({ input: { id: projectId } }),
   );
 
-  const invalidateProjects = () =>
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const key = query.queryKey;
-        if (!Array.isArray(key) || key.length === 0) return false;
-        const firstKey = key[0];
-        if (Array.isArray(firstKey)) {
-          return firstKey[0] === 'projects';
-        }
-        return firstKey === 'projects';
-      },
-    });
+  const invalidateProjectQueries = () => invalidateQueries('projects');
 
-  const removeMediaMutation = useMutation(
-    apiClient.projects.removeMedia.mutationOptions({
+  const removeDocumentMutation = useMutation(
+    apiClient.projects.removeDocument.mutationOptions({
       onSuccess: async () => {
-        await invalidateProjects();
-        toast.success('Media removed from project');
+        await invalidateProjectQueries();
+        toast.success('Document removed from project');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to remove media');
+        toast.error(error.message ?? 'Failed to remove document');
       },
     }),
   );
@@ -78,7 +68,7 @@ function ProjectDetailPage() {
   const deleteMutation = useMutation(
     apiClient.projects.delete.mutationOptions({
       onSuccess: async () => {
-        await invalidateProjects();
+        await invalidateProjectQueries();
         toast.success('Project deleted');
         navigate({ to: '/projects' });
       },
@@ -114,8 +104,6 @@ function ProjectDetailPage() {
       </div>
     );
   }
-
-  const documents = project.media.filter((m) => m.mediaType === 'document');
 
   return (
     <div className="flex flex-col h-full">
@@ -200,7 +188,7 @@ function ProjectDetailPage() {
           `}
         >
           <ContentLibrary
-            content={project.media}
+            documents={project.documents}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
             onAddExisting={() => {
@@ -211,11 +199,11 @@ function ProjectDetailPage() {
               setUploadDocumentOpen(true);
               setSidebarOpen(false);
             }}
-            onRemoveMedia={(mediaId) =>
-              removeMediaMutation.mutate({ id: projectId, mediaId })
+            onRemoveDocument={(documentId) =>
+              removeDocumentMutation.mutate({ id: projectId, documentId })
             }
-            isRemoving={removeMediaMutation.isPending}
-            removingMediaId={removeMediaMutation.variables?.mediaId}
+            isRemoving={removeDocumentMutation.isPending}
+            removingDocumentId={removeDocumentMutation.variables?.documentId}
           />
         </aside>
 
@@ -223,14 +211,10 @@ function ProjectDetailPage() {
         <main className="flex-1 overflow-hidden">
           <ContentStudio
             projectId={projectId}
-            content={project.media}
+            documents={project.documents}
+            outputCounts={project.outputCounts}
             selectedSourceIds={selectedIds}
             onCreateContent={handleCreateContent}
-            onRemoveMedia={(mediaId) =>
-              removeMediaMutation.mutate({ id: projectId, mediaId })
-            }
-            isRemoving={removeMediaMutation.isPending}
-            removingMediaId={removeMediaMutation.variables?.mediaId}
           />
         </main>
       </div>
@@ -240,7 +224,7 @@ function ProjectDetailPage() {
         open={addDocumentOpen}
         onOpenChange={setAddDocumentOpen}
         projectId={projectId}
-        existingMediaIds={project.media.map((m) => m.mediaId)}
+        existingDocumentIds={project.documents.map((d) => d.id)}
       />
 
       <UploadDocumentDialog
@@ -253,17 +237,8 @@ function ProjectDetailPage() {
         open={createPodcastOpen}
         onOpenChange={setCreatePodcastOpen}
         projectId={projectId}
-        projectDocuments={
-          documents as ((typeof documents)[number] & {
-            mediaType: 'document';
-          })[]
-        }
-        preSelectedDocumentIds={
-          // Pass selected document IDs from sidebar
-          Array.from(selectedIds).filter((id) =>
-            documents.some((d) => d.mediaId === id),
-          )
-        }
+        projectDocuments={project.documents}
+        preSelectedDocumentIds={Array.from(selectedIds)}
       />
     </div>
   );

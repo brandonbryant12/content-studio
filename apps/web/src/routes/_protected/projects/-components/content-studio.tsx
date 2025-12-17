@@ -4,16 +4,14 @@ import {
   ReaderIcon,
   Share1Icon,
   SpeakerLoudIcon,
-  TrashIcon,
   VideoIcon,
 } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
-import Spinner from '@/routes/-components/common/spinner';
 
-type MediaItem = RouterOutput['projects']['getWithMedia']['media'][number];
+type Document = RouterOutput['projects']['get']['documents'][number];
+type OutputCounts = RouterOutput['projects']['get']['outputCounts'];
 type ContentType = 'document' | 'podcast' | 'video' | 'article' | 'social' | 'graphic';
 
 interface MediaTypeConfig {
@@ -109,18 +107,17 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 interface ContentStudioProps {
   projectId: string;
-  content: MediaItem[];
+  documents: Document[];
+  outputCounts: OutputCounts;
   selectedSourceIds: Set<string>;
   onCreateContent: (type: ContentType) => void;
-  onRemoveMedia: (mediaId: string) => void;
-  isRemoving: boolean;
-  removingMediaId?: string;
 }
 
 interface MediaTypeCardProps {
   config: (typeof MEDIA_TYPE_CONFIG)[ContentType];
   selectedCount: number;
   compatibleCount: number;
+  outputCount?: number;
   onClick: () => void;
 }
 
@@ -128,6 +125,7 @@ function MediaTypeCard({
   config,
   selectedCount,
   compatibleCount,
+  outputCount,
   onClick,
 }: MediaTypeCardProps) {
   const Icon = ICON_MAP[config.icon] ?? FileTextIcon;
@@ -147,6 +145,12 @@ function MediaTypeCard({
       {!isAvailable && (
         <span className="absolute top-2 right-2 text-[10px] uppercase tracking-wider font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
           Coming Soon
+        </span>
+      )}
+
+      {outputCount !== undefined && outputCount > 0 && (
+        <span className="absolute top-2 right-2 text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded-full">
+          {outputCount} created
         </span>
       )}
 
@@ -185,26 +189,12 @@ function MediaTypeCard({
   );
 }
 
-interface ContentCardProps {
-  item: MediaItem;
-  onRemove: () => void;
-  isRemoving: boolean;
+interface DocumentCardProps {
+  document: Document;
 }
 
-function ContentCard({ item, onRemove, isRemoving }: ContentCardProps) {
-  const config = MEDIA_TYPE_CONFIG[item.mediaType as ContentType];
-  const Icon = ICON_MAP[config?.icon ?? 'FileTextIcon'] ?? FileTextIcon;
-
-  const title = item.media.title;
-  const status =
-    item.mediaType === 'document'
-      ? `${(item.media as any).wordCount?.toLocaleString() ?? 0} words`
-      : (item.media as any).status ?? 'pending';
-
-  // Get source count for lineage display (sources are included in API response)
-  const sourceCount = ((item as any).sources as any[] | undefined)?.length ?? 0;
-
-  const card = (
+function DocumentCard({ document }: DocumentCardProps) {
+  return (
     <div
       className={cn(
         'group relative flex items-start gap-4 p-4 rounded-xl border transition-all',
@@ -215,80 +205,39 @@ function ContentCard({ item, onRemove, isRemoving }: ContentCardProps) {
       <div
         className={cn(
           'w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br shrink-0',
-          config?.gradient ?? 'from-gray-500 to-gray-600',
+          'from-blue-500 to-indigo-500',
         )}
       >
-        <Icon className="w-5 h-5 text-white" />
+        <FileTextIcon className="w-5 h-5 text-white" />
       </div>
 
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate mb-1">
-          {title}
+          {document.title}
         </h4>
-        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-          {config?.label ?? item.mediaType} &middot; {status}
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Document &middot; {document.wordCount.toLocaleString()} words
         </p>
-
-        {sourceCount > 0 && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            Created from {sourceCount} source{sourceCount !== 1 ? 's' : ''}
-          </p>
-        )}
       </div>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onRemove();
-        }}
-        disabled={isRemoving}
-        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shrink-0"
-      >
-        {isRemoving ? (
-          <Spinner className="w-4 h-4" />
-        ) : (
-          <TrashIcon className="w-4 h-4" />
-        )}
-      </Button>
     </div>
   );
-
-  // Only podcasts are linkable for now
-  if (item.mediaType === 'podcast') {
-    return (
-      <Link to="/podcasts/$podcastId" params={{ podcastId: item.mediaId }}>
-        {card}
-      </Link>
-    );
-  }
-
-  return card;
 }
 
 export function ContentStudio({
-  content,
+  projectId,
+  documents,
+  outputCounts,
   selectedSourceIds,
   onCreateContent,
-  onRemoveMedia,
-  isRemoving,
-  removingMediaId,
 }: ContentStudioProps) {
   // Count compatible selected sources for each media type
   const getCompatibleCount = (targetType: ContentType) => {
     const acceptedTypes = MEDIA_TYPE_CONFIG[targetType].acceptsInputFrom;
-    let count = 0;
-    for (const item of content) {
-      if (
-        selectedSourceIds.has(item.mediaId) &&
-        acceptedTypes.includes(item.mediaType as ContentType)
-      ) {
-        count++;
-      }
+    // Documents are the only source type in projects now
+    if (acceptedTypes.includes('document')) {
+      return selectedSourceIds.size;
     }
-    return count;
+    return 0;
   };
 
   // Filter content to show (all for now, could filter by type)
@@ -311,25 +260,26 @@ export function ContentStudio({
               config={config}
               selectedCount={selectedSourceIds.size}
               compatibleCount={getCompatibleCount(type)}
+              outputCount={type === 'podcast' ? outputCounts.podcasts : undefined}
               onClick={() => onCreateContent(type)}
             />
           ))}
         </div>
       </section>
 
-      {/* All Content Grid */}
+      {/* Source Documents Section */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          All Content ({content.length})
+          Source Documents ({documents.length})
         </h2>
 
-        {content.length === 0 ? (
+        {documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/30 flex items-center justify-center mb-4">
               <FileTextIcon className="w-6 h-6 text-violet-500" />
             </div>
             <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
-              No content yet
+              No documents yet
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-xs">
               Add documents from the sidebar to use as source material, then
@@ -338,14 +288,28 @@ export function ContentStudio({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {content.map((item) => (
-              <ContentCard
-                key={item.id}
-                item={item}
-                onRemove={() => onRemoveMedia(item.id)}
-                isRemoving={isRemoving && removingMediaId === item.id}
-              />
+            {documents.map((doc) => (
+              <DocumentCard key={doc.id} document={doc} />
             ))}
+          </div>
+        )}
+
+        {/* Output counts summary */}
+        {outputCounts.podcasts > 0 && (
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Generated Content
+            </h3>
+            <div className="flex gap-4">
+              <Link
+                to="/projects/$projectId/podcasts"
+                params={{ projectId }}
+                className="flex items-center gap-2 text-sm text-violet-600 dark:text-violet-400 hover:underline"
+              >
+                <SpeakerLoudIcon className="w-4 h-4" />
+                {outputCounts.podcasts} podcast{outputCounts.podcasts !== 1 ? 's' : ''}
+              </Link>
+            </div>
           </div>
         )}
       </section>

@@ -2,35 +2,23 @@ import type { ProjectNotFound } from './repository';
 import type {
   CreateProject,
   Project,
-  ProjectMedia,
+  ProjectDocument,
   UpdateProject,
+  Document,
 } from '@repo/db/schema';
 import type {
   DbError,
   DocumentNotFound,
   PolicyError,
   ForbiddenError,
-  MediaNotFound,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
-import type {
-  ProjectMediaItem,
-  ProjectWithMedia,
-  AddMediaInput,
-} from './types';
-
-/**
- * Project with media items (raw junction records).
- */
-export interface ProjectWithMediaRecords extends Project {
-  media: ProjectMedia[];
-}
+import type { ProjectWithDocuments, ProjectFull, AddDocumentInput } from './types';
 
 export type ProjectError =
   | DbError
   | ProjectNotFound
   | DocumentNotFound
-  | MediaNotFound
   | PolicyError
   | ForbiddenError;
 
@@ -41,7 +29,7 @@ export interface ProjectsService {
 
   readonly create: (
     input: CreateProject,
-  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
+  ) => Effect.Effect<ProjectWithDocuments, ProjectError, never>;
 
   readonly list: (options?: {
     limit?: number;
@@ -50,48 +38,40 @@ export interface ProjectsService {
 
   readonly findById: (
     id: string,
-  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
+  ) => Effect.Effect<ProjectFull, ProjectError, never>;
 
   readonly update: (
     id: string,
     input: UpdateProject,
-  ) => Effect.Effect<ProjectWithMediaRecords, ProjectError, never>;
+  ) => Effect.Effect<ProjectWithDocuments, ProjectError, never>;
 
   readonly delete: (id: string) => Effect.Effect<void, ProjectError, never>;
 
   // ==========================================================================
-  // Polymorphic Media Management
+  // Document Management
   // ==========================================================================
 
   /**
-   * Get a project with all resolved media items.
+   * Add a document to a project.
    */
-  readonly findByIdWithMedia: (
-    id: string,
-  ) => Effect.Effect<ProjectWithMedia, ProjectError, never>;
+  readonly addDocument: (
+    projectId: string,
+    input: AddDocumentInput,
+  ) => Effect.Effect<ProjectDocument, ProjectError, never>;
 
   /**
-   * Add a media item (document, podcast, etc.) to a project.
+   * Remove a document from a project.
    */
-  readonly addMedia: (
+  readonly removeDocument: (
     projectId: string,
-    input: AddMediaInput,
-  ) => Effect.Effect<ProjectMediaItem, ProjectError, never>;
-
-  /**
-   * Remove a media item from a project.
-   */
-  readonly removeMedia: (
-    projectId: string,
-    mediaId: string,
+    documentId: string,
   ) => Effect.Effect<void, ProjectError, never>;
 
   /**
-   * Reorder media items in a project.
-   * Takes an ordered array of media IDs.
+   * Reorder documents in a project.
    */
-  readonly reorderMedia: (
+  readonly reorderDocuments: (
     projectId: string,
-    mediaIds: string[],
-  ) => Effect.Effect<ProjectMediaItem[], ProjectError, never>;
+    documentIds: string[],
+  ) => Effect.Effect<ProjectDocument[], ProjectError, never>;
 }

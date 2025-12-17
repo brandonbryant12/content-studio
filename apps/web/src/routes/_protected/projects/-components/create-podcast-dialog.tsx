@@ -1,3 +1,4 @@
+import type { RouterOutput } from '@repo/api/client';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -12,101 +13,21 @@ import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { RouterOutput } from '@repo/api/client';
+import { DocumentPicker } from './podcast/document-picker';
+import { VoiceSelector } from './podcast/voice-selector';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import Spinner from '@/routes/-components/common/spinner';
+
+type Document = RouterOutput['projects']['get']['documents'][number];
 
 interface CreatePodcastDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  projectDocuments: ProjectDocument[];
+  projectDocuments: Document[];
   /** Pre-selected document IDs from the content library sidebar */
   preSelectedDocumentIds?: string[];
-}
-
-type ProjectDocument =
-  RouterOutput['projects']['getWithMedia']['media'][number] & {
-    mediaType: 'document';
-  };
-
-type Voice = RouterOutput['voices']['list'][number];
-
-function DocumentPicker({
-  documents,
-  selectedIds,
-  onSelect,
-}: {
-  documents: ProjectDocument[];
-  selectedIds: Set<string>;
-  onSelect: (id: string) => void;
-}) {
-  if (documents.length === 0) {
-    return (
-      <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
-        No documents in this project. Add documents first.
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2 dark:border-gray-700">
-      {documents.map((doc) => (
-        <label
-          key={doc.mediaId}
-          className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
-            selectedIds.has(doc.mediaId)
-              ? 'bg-violet-50 dark:bg-violet-900/20'
-              : ''
-          }`}
-        >
-          <input
-            type="checkbox"
-            checked={selectedIds.has(doc.mediaId)}
-            onChange={() => onSelect(doc.mediaId)}
-            className="rounded"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{doc.media.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {doc.media.wordCount.toLocaleString()} words
-            </p>
-          </div>
-        </label>
-      ))}
-    </div>
-  );
-}
-
-function VoiceSelector({
-  voices,
-  value,
-  onChange,
-  label,
-}: {
-  voices: Voice[];
-  value: string;
-  onChange: (value: string) => void;
-  label: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-      >
-        <option value="">Select a voice...</option>
-        {voices.map((voice) => (
-          <option key={voice.id} value={voice.id}>
-            {voice.name} ({voice.gender})
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 }
 
 export default function CreatePodcastDialog({
@@ -155,18 +76,7 @@ export default function CreatePodcastDialog({
         // Trigger generation immediately after creation
         generateMutation.mutate({ id: podcast.id });
 
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            if (!Array.isArray(key) || key.length === 0) return false;
-            // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
-            const firstKey = key[0];
-            if (Array.isArray(firstKey)) {
-              return firstKey[0] === 'podcasts' || firstKey[0] === 'projects';
-            }
-            return firstKey === 'podcasts' || firstKey === 'projects';
-          },
-        });
+        await invalidateQueries('podcasts', 'projects');
         onOpenChange(false);
         toast.success('Podcast created! Starting generation...');
       },

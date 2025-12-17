@@ -1,10 +1,10 @@
 import { CurrentUserLive, Role } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { createDb } from '@repo/db/client';
-import { DocumentsLive } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
-import { GoogleLive } from '@repo/llm';
-import { PodcastsLive, PodcastGeneratorLive } from '@repo/podcast';
+import { GoogleLive } from '@repo/ai/llm';
+import { GoogleTTSLive } from '@repo/ai/tts';
+import { DocumentsLive, PodcastsLive, PodcastGeneratorLive } from '@repo/media';
 import {
   Queue,
   QueueLive,
@@ -18,7 +18,6 @@ import {
   S3StorageLive,
 } from '@repo/storage';
 import type { StorageConfig } from '@repo/api/server';
-import { GoogleTTSLive } from '@repo/tts';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
 import { handleGeneratePodcast } from './handlers';
 

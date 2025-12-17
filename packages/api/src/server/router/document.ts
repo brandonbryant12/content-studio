@@ -1,21 +1,8 @@
-import { Documents } from '@repo/documents';
+import { Documents } from '@repo/media';
+import { serializeDocument } from '@repo/db/schema';
 import { Effect } from 'effect';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-
-/**
- * Serialize Date fields to ISO strings for API output.
- */
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const serializeDocument = (doc: any): any => ({
-  ...doc,
-  createdAt: doc.createdAt.toISOString(),
-  updatedAt: doc.updatedAt.toISOString(),
-});
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const documentRouter = {
   list: protectedProcedure.documents.list.handler(

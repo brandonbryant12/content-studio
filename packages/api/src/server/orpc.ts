@@ -1,16 +1,18 @@
 import { os, implement } from '@orpc/server';
 import { CurrentUserLive, Role, type User } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
-import { DocumentsLive, type Documents } from '@repo/documents';
 import { DbLive } from '@repo/effect/db';
-import { GoogleLive, type LLM } from '@repo/llm';
+import { GoogleLive, type LLM } from '@repo/ai/llm';
+import { GoogleTTSLive, type TTS } from '@repo/ai/tts';
 import {
+  DocumentsLive,
   PodcastsLive,
   PodcastGeneratorLive,
+  type Documents,
   type Podcasts,
   type PodcastGenerator,
-} from '@repo/podcast';
-import { ProjectsLive, type Projects } from '@repo/project'; // Import Projects
+} from '@repo/media';
+import { ProjectsLive, type Projects } from '@repo/project';
 import { QueueLive, type Queue } from '@repo/queue';
 import {
   DatabaseStorageLive,
@@ -18,7 +20,6 @@ import {
   S3StorageLive,
   type Storage,
 } from '@repo/storage';
-import { GoogleTTSLive, type TTS } from '@repo/tts';
 import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
 import type { CurrentUser, Policy } from '@repo/auth-policy';
@@ -49,13 +50,13 @@ export type StorageConfig =
   | { provider: 'database' }
   | { provider: 'filesystem'; basePath: string; baseUrl: string }
   | {
-      provider: 's3';
-      bucket: string;
-      region: string;
-      accessKeyId: string;
-      secretAccessKey: string;
-      endpoint?: string;
-    };
+    provider: 's3';
+    bucket: string;
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    endpoint?: string;
+  };
 
 /**
  * Creates base layers available to all requests (authenticated or not).
@@ -73,17 +74,17 @@ const createBaseLayers = (
   const storageLayer =
     storageConfig.provider === 'filesystem'
       ? FilesystemStorageLive({
-          basePath: storageConfig.basePath,
-          baseUrl: storageConfig.baseUrl,
-        })
+        basePath: storageConfig.basePath,
+        baseUrl: storageConfig.baseUrl,
+      })
       : storageConfig.provider === 's3'
         ? S3StorageLive({
-            bucket: storageConfig.bucket,
-            region: storageConfig.region,
-            accessKeyId: storageConfig.accessKeyId,
-            secretAccessKey: storageConfig.secretAccessKey,
-            endpoint: storageConfig.endpoint,
-          })
+          bucket: storageConfig.bucket,
+          region: storageConfig.region,
+          accessKeyId: storageConfig.accessKeyId,
+          secretAccessKey: storageConfig.secretAccessKey,
+          endpoint: storageConfig.endpoint,
+        })
         : DatabaseStorageLive.pipe(Layer.provide(dbLayer));
 
   const ttsLayer = GoogleTTSLive({ apiKey: geminiApiKey });

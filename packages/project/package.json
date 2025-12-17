@@ -23,7 +23,6 @@
     "@repo/effect": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/auth-policy": "workspace:*",
-    "@repo/documents": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "^3.16.0"
   },

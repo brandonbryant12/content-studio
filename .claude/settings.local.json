@@ -22,7 +22,15 @@
       "Bash(docker logs:*)",
       "Bash(docker inspect:*)",
       "WebFetch(domain:ai.google.dev)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(pnpm build:api:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(pnpm --filter web typecheck:*)",
+      "Bash(pnpm --filter @repo/db typecheck:*)",
+      "Bash(pnpm --filter @repo/api typecheck:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,9 @@
 import { oc } from '@orpc/contract';
-import { CreateProjectSchema, UpdateProjectSchema } from '@repo/db/schema';
+import {
+  CreateProjectSchema,
+  UpdateProjectSchema,
+  DocumentOutputSchema,
+} from '@repo/db/schema';
 import * as v from 'valibot';
 
 const projectErrors = {
@@ -15,17 +19,7 @@ const projectErrors = {
       documentId: v.string(),
     }),
   },
-  MEDIA_NOT_FOUND: {
-    status: 404,
-    data: v.object({
-      mediaType: v.string(),
-      mediaId: v.string(),
-    }),
-  },
 } as const;
-
-// Enums
-const mediaTypeSchema = v.picklist(['document', 'podcast']);
 
 // Output schemas
 const projectOutputSchema = v.object({
@@ -45,65 +39,19 @@ const projectDocumentSchema = v.object({
   createdAt: v.string(),
 });
 
-// Polymorphic media schemas
-const baseMediaItemSchema = v.object({
-  id: v.string(),
-  projectId: v.string(),
-  mediaId: v.string(),
-  order: v.number(),
-  createdAt: v.string(),
-});
-
-const documentMediaItemSchema = v.object({
-  ...baseMediaItemSchema.entries,
-  mediaType: v.literal('document'),
-  media: v.object({
-    id: v.string(),
-    title: v.string(),
-    contentKey: v.string(),
-    mimeType: v.string(),
-    wordCount: v.number(),
-    source: v.string(),
-    originalFileName: v.nullable(v.string()),
-    originalFileSize: v.nullable(v.number()),
-    createdBy: v.string(),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }),
-});
-
-const podcastMediaItemSchema = v.object({
-  ...baseMediaItemSchema.entries,
-  mediaType: v.literal('podcast'),
-  media: v.object({
-    id: v.string(),
-    title: v.string(),
-    description: v.nullable(v.string()),
-    format: v.string(),
-    status: v.string(),
-    audioUrl: v.nullable(v.string()),
-    duration: v.nullable(v.number()),
-    createdBy: v.string(),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }),
-});
-
-const projectMediaItemSchema = v.union([
-  documentMediaItemSchema,
-  podcastMediaItemSchema,
-]);
-
-// Legacy full schema (with documents array)
-const projectFullSchema = v.object({
+// Project with document junction records (for create/update responses)
+const projectWithDocumentsSchema = v.object({
   ...projectOutputSchema.entries,
   documents: v.array(projectDocumentSchema),
 });
 
-// New full schema (with polymorphic media)
-const projectWithMediaSchema = v.object({
+// Full project with resolved documents and output counts (for get responses)
+const projectFullSchema = v.object({
   ...projectOutputSchema.entries,
-  media: v.array(projectMediaItemSchema),
+  documents: v.array(DocumentOutputSchema),
+  outputCounts: v.object({
+    podcasts: v.number(),
+  }),
 });
 
 const projectContract = oc
@@ -123,7 +71,6 @@ const projectContract = oc
       })
       .input(
         v.object({
-          // Query params come as strings, so coerce to number
           limit: v.optional(
             v.pipe(
               v.union([v.string(), v.number()]),
@@ -150,7 +97,8 @@ const projectContract = oc
         method: 'GET',
         path: '/{id}',
         summary: 'Get project',
-        description: 'Retrieve a project with its documents (legacy)',
+        description:
+          'Retrieve a project with resolved documents and output counts',
       })
       .errors(projectErrors)
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
@@ -161,18 +109,18 @@ const projectContract = oc
         method: 'POST',
         path: '/',
         summary: 'Create project',
-        description: 'Create a new project from documents',
+        description: 'Create a new project with optional documents',
       })
       .errors(projectErrors)
       .input(CreateProjectSchema)
-      .output(projectFullSchema),
+      .output(projectWithDocumentsSchema),
 
     update: oc
       .route({
         method: 'PATCH',
         path: '/{id}',
         summary: 'Update project',
-        description: 'Update project settings',
+        description: 'Update project settings and optionally replace documents',
       })
       .errors(projectErrors)
       .input(
@@ -181,7 +129,7 @@ const projectContract = oc
           ...UpdateProjectSchema.entries,
         }),
       )
-      .output(projectFullSchema),
+      .output(projectWithDocumentsSchema),
 
     delete: oc
       .route({
@@ -195,72 +143,57 @@ const projectContract = oc
       .output(v.object({})),
 
     // =====================================================================
-    // Polymorphic Media Management
+    // Document Management
     // =====================================================================
 
-    getWithMedia: oc
-      .route({
-        method: 'GET',
-        path: '/{id}/full',
-        summary: 'Get project with media',
-        description:
-          'Retrieve a project with all resolved media items (polymorphic)',
-      })
-      .errors(projectErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(projectWithMediaSchema),
-
-    addMedia: oc
+    addDocument: oc
       .route({
         method: 'POST',
-        path: '/{id}/media',
-        summary: 'Add media to project',
-        description:
-          'Add a document, podcast, or other media item to a project',
+        path: '/{id}/documents',
+        summary: 'Add document to project',
+        description: 'Add a document to a project',
       })
       .errors(projectErrors)
       .input(
         v.object({
           id: v.pipe(v.string(), v.uuid()),
-          mediaType: mediaTypeSchema,
-          mediaId: v.pipe(v.string(), v.uuid()),
+          documentId: v.pipe(v.string(), v.uuid()),
           order: v.optional(v.number()),
         }),
       )
-      .output(projectMediaItemSchema),
+      .output(projectDocumentSchema),
 
-    removeMedia: oc
+    removeDocument: oc
       .route({
         method: 'DELETE',
-        path: '/{id}/media/{mediaId}',
-        summary: 'Remove media from project',
-        description: 'Remove a media item from a project',
+        path: '/{id}/documents/{documentId}',
+        summary: 'Remove document from project',
+        description: 'Remove a document from a project',
       })
       .errors(projectErrors)
       .input(
         v.object({
           id: v.pipe(v.string(), v.uuid()),
-          mediaId: v.pipe(v.string(), v.uuid()),
+          documentId: v.pipe(v.string(), v.uuid()),
         }),
       )
       .output(v.object({})),
 
-    reorderMedia: oc
+    reorderDocuments: oc
       .route({
         method: 'PUT',
-        path: '/{id}/media/order',
-        summary: 'Reorder project media',
-        description:
-          'Set the order of media items by providing ordered media IDs',
+        path: '/{id}/documents/order',
+        summary: 'Reorder project documents',
+        description: 'Set the order of documents by providing ordered IDs',
       })
       .errors(projectErrors)
       .input(
         v.object({
           id: v.pipe(v.string(), v.uuid()),
-          mediaIds: v.array(v.pipe(v.string(), v.uuid())),
+          documentIds: v.array(v.pipe(v.string(), v.uuid())),
         }),
       )
-      .output(v.array(projectMediaItemSchema)),
+      .output(v.array(projectDocumentSchema)),
   });
 
 export default projectContract;

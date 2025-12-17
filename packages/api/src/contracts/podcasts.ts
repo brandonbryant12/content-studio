@@ -3,6 +3,7 @@ import {
   CreatePodcastSchema,
   UpdatePodcastSchema,
   UpdateScriptSchema,
+  DocumentOutputSchema,
 } from '@repo/db/schema';
 import * as v from 'valibot';
 
@@ -74,20 +75,12 @@ const podcastOutputSchema = v.object({
   duration: v.nullable(v.number()),
   errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
+  publishStatus: v.picklist(['draft', 'ready', 'published', 'rejected']),
+  publishedAt: v.nullable(v.string()),
+  publishedBy: v.nullable(v.string()),
   createdBy: v.string(),
   createdAt: v.string(),
   updatedAt: v.string(),
-});
-
-// Media source schema (replaces podcastDocument)
-const podcastSourceSchema = v.object({
-  id: v.string(),
-  targetType: v.string(),
-  targetId: v.string(),
-  sourceType: v.string(),
-  sourceId: v.string(),
-  order: v.number(),
-  createdAt: v.string(),
 });
 
 const scriptSegmentSchema = v.object({
@@ -110,7 +103,7 @@ const podcastScriptSchema = v.object({
 
 const podcastFullSchema = v.object({
   ...podcastOutputSchema.entries,
-  documents: v.array(podcastSourceSchema),
+  documents: v.array(DocumentOutputSchema),
   script: v.nullable(podcastScriptSchema),
 });
 
@@ -148,6 +141,7 @@ const podcastContract = oc
       })
       .input(
         v.object({
+          projectId: v.optional(v.pipe(v.string(), v.uuid())),
           limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
           offset: v.optional(v.pipe(v.number(), v.minValue(0))),
           status: v.optional(

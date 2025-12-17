@@ -1,4 +1,4 @@
-import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/podcast';
+import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/media';
 import { JobProcessingError } from '@repo/queue';
 import { Effect, Cause } from 'effect';
 import type {

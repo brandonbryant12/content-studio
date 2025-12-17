@@ -21,7 +21,7 @@ export function Navbar({ session }: Readonly<{ session: AuthSession }>) {
   return (
     <NavContainer>
       <Link
-        to={session?.user ? '/podcasts' : '/'}
+        to={session?.user ? '/projects' : '/'}
         className="flex items-center gap-2.5 font-semibold text-base hover:opacity-80 transition-opacity"
       >
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/25">

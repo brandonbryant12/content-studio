@@ -74,7 +74,71 @@ export const UpdateDocumentSchema = v.partial(
 
 export const DocumentSchema = createSelectSchema(document);
 
+/**
+ * Document source enum values as a Valibot picklist.
+ * DERIVED from documentSourceEnum - update both if adding new sources!
+ */
+export const DocumentSourceSchema = v.picklist([
+  'manual',
+  'upload_txt',
+  'upload_pdf',
+  'upload_docx',
+  'upload_pptx',
+]);
+
+/**
+ * API output schema for documents.
+ * Dates are serialized as ISO strings for JSON transport.
+ * Used by API contracts to ensure consistency with DB schema.
+ */
+export const DocumentOutputSchema = v.object({
+  id: v.string(),
+  title: v.string(),
+  contentKey: v.string(),
+  mimeType: v.string(),
+  wordCount: v.number(),
+  source: DocumentSourceSchema,
+  originalFileName: v.nullable(v.string()),
+  originalFileSize: v.nullable(v.number()),
+  metadata: v.nullable(v.record(v.string(), v.unknown())),
+  createdBy: v.string(),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
+// =============================================================================
+// Types - all derived from schemas above
+// =============================================================================
+
 export type Document = typeof document.$inferSelect;
 export type DocumentSource = Document['source'];
+export type DocumentOutput = v.InferOutput<typeof DocumentOutputSchema>;
 export type CreateDocument = v.InferInput<typeof CreateDocumentSchema>;
 export type UpdateDocument = v.InferInput<typeof UpdateDocumentSchema>;
+
+// =============================================================================
+// Serializer - co-located with entity so changes can't be missed
+// =============================================================================
+
+/**
+ * Serialize a Document to API output format.
+ *
+ * Co-located with entity definition so that:
+ * 1. Adding a field to `document` table → TypeScript errors here
+ * 2. Updating serializer → must update DocumentOutputSchema (same file)
+ * 3. Contracts import DocumentOutputSchema → automatically in sync
+ */
+export const serializeDocument = (doc: Document): DocumentOutput => ({
+  id: doc.id,
+  title: doc.title,
+  contentKey: doc.contentKey,
+  mimeType: doc.mimeType,
+  wordCount: doc.wordCount,
+  source: doc.source,
+  originalFileName: doc.originalFileName,
+  originalFileSize: doc.originalFileSize,
+  metadata: doc.metadata,
+  createdBy: doc.createdBy,
+  createdAt: doc.createdAt.toISOString(),
+  updatedAt: doc.updatedAt.toISOString(),
+});

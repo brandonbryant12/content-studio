@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import CreateProjectDialog from './-components/create-project';
 import { apiClient } from '@/clients/apiClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
 import Spinner from '@/routes/-components/common/spinner';
 
@@ -138,18 +139,7 @@ function ProjectsPage() {
   const deleteMutation = useMutation(
     apiClient.projects.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            if (!Array.isArray(key) || key.length === 0) return false;
-            // oRPC uses path arrays like ['projects', 'list'] as the first element
-            const firstKey = key[0];
-            if (Array.isArray(firstKey)) {
-              return firstKey[0] === 'projects';
-            }
-            return firstKey === 'projects';
-          },
-        });
+        await invalidateQueries('projects');
         toast.success('Project deleted');
       },
       onError: (error) => {

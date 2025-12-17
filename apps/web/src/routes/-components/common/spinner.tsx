@@ -1,12 +1,3 @@
-import { GearIcon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
-
-function Spinner({ className }: Readonly<{ className?: string }>) {
-  return (
-    <div className={cn('inline-block animate-spin duration-500', className)}>
-      <GearIcon />
-    </div>
-  );
-}
-
-export default Spinner;
+// Re-export Spinner from @repo/ui for backward compatibility
+// TODO: Update imports across the app to use @repo/ui/components/spinner directly
+export { Spinner as default } from '@repo/ui/components/spinner';

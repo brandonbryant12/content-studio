@@ -1,57 +1,59 @@
-import { Podcasts } from '@repo/podcast';
-import { Projects } from '@repo/project';
+import { Podcasts } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { GeneratePodcastPayload } from '@repo/queue';
+import type { Job } from '@repo/db/schema';
 import { handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
+import {
+  serializePodcast,
+  serializePodcastScript,
+  serializePodcastFull,
+} from '../serializers';
 
 /**
- * Serialize Date fields to ISO strings for API output.
- * We use explicit any types since the serialization is straightforward
- * and the contract schemas validate the output shape.
+ * Serialized job output type.
  */
+interface JobOutput {
+  id: string;
+  type: string;
+  status: Job['status'];
+  result: unknown;
+  error: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+}
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const serializePodcast = (podcast: any): any => ({
-  ...podcast,
-  createdAt: podcast.createdAt.toISOString(),
-  updatedAt: podcast.updatedAt.toISOString(),
-});
-
-const serializeScript = (script: any): any => ({
-  ...script,
-  createdAt: script.createdAt.toISOString(),
-  updatedAt: script.updatedAt.toISOString(),
-});
-
-const serializePodcastFull = (podcast: any): any => ({
-  ...podcast,
-  createdAt: podcast.createdAt.toISOString(),
-  updatedAt: podcast.updatedAt.toISOString(),
-  documents: podcast.documents.map((d: any) => ({
-    ...d,
-    createdAt: d.createdAt.toISOString(),
-  })),
-  script: podcast.script
-    ? {
-        ...podcast.script,
-        createdAt: podcast.script.createdAt.toISOString(),
-        updatedAt: podcast.script.updatedAt.toISOString(),
-      }
-    : null,
-});
-
-const serializeJob = (job: any): any => ({
-  ...job,
+/**
+ * Serialize a job for API output.
+ * Uses a generic to accept job types from the queue which may have unknown payload/result types.
+ */
+const serializeJob = (job: {
+  id: string;
+  type: string;
+  status: Job['status'];
+  result: unknown;
+  error: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}): JobOutput => ({
+  id: job.id,
+  type: job.type,
+  status: job.status,
+  result: job.result,
+  error: job.error,
+  createdBy: job.createdBy,
   createdAt: job.createdAt.toISOString(),
   updatedAt: job.updatedAt.toISOString(),
   startedAt: job.startedAt?.toISOString() ?? null,
   completedAt: job.completedAt?.toISOString() ?? null,
 });
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const podcastRouter = {
   list: protectedProcedure.podcasts.list.handler(
@@ -120,15 +122,7 @@ const podcastRouter = {
       return handleEffect(
         Effect.gen(function* () {
           const podcasts = yield* Podcasts;
-          const projects = yield* Projects;
           const result = yield* podcasts.create(input);
-
-          // Auto-add podcast to project's media list
-          yield* projects.addMedia(input.projectId, {
-            mediaType: 'podcast',
-            mediaId: result.id,
-          });
-
           // Return full podcast shape with script (null for new podcasts)
           return serializePodcastFull({ ...result, script: null });
         }).pipe(Effect.provide(context.layers)),
@@ -141,23 +135,9 @@ const podcastRouter = {
             });
           },
           ProjectNotFound: (e) => {
-            // Handle both podcast and project package ProjectNotFound errors
-            const projectId =
-              'id' in e
-                ? e.id
-                : 'projectId' in e
-                  ? String(e.projectId)
-                  : 'unknown';
             throw errors.PROJECT_NOT_FOUND({
-              message:
-                e.message ?? `Project ${projectId} not found or access denied`,
-              data: { projectId },
-            });
-          },
-          MediaNotFound: (e) => {
-            throw errors.MEDIA_NOT_FOUND({
-              message: e.message ?? `Media not found`,
-              data: { mediaType: e.mediaType, mediaId: e.mediaId },
+              message: e.message ?? `Project ${e.id} not found or access denied`,
+              data: { projectId: e.id },
             });
           },
           DbError: (e) => {
@@ -258,7 +238,7 @@ const podcastRouter = {
         Effect.gen(function* () {
           const podcasts = yield* Podcasts;
           const result = yield* podcasts.getScript(input.id);
-          return serializeScript(result);
+          return serializePodcastScript(result);
         }).pipe(Effect.provide(context.layers)),
         {
           PodcastNotFound: (e) => {
@@ -301,7 +281,7 @@ const podcastRouter = {
         Effect.gen(function* () {
           const podcasts = yield* Podcasts;
           const result = yield* podcasts.updateScript(id, data);
-          return serializeScript(result);
+          return serializePodcastScript(result);
         }).pipe(Effect.provide(context.layers)),
         {
           PodcastNotFound: (e) => {

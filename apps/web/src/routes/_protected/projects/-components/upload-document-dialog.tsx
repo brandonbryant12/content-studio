@@ -14,7 +14,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import Spinner from '@/routes/-components/common/spinner';
 
 const SUPPORTED_TYPES = [
@@ -41,8 +41,8 @@ export default function UploadDocumentDialog({
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
-  const addMediaMutation = useMutation(
-    apiClient.projects.addMedia.mutationOptions({
+  const addDocumentMutation = useMutation(
+    apiClient.projects.addDocument.mutationOptions({
       onError: (error) => {
         toast.error(error.message ?? 'Failed to add document to project');
       },
@@ -53,26 +53,12 @@ export default function UploadDocumentDialog({
     apiClient.documents.upload.mutationOptions({
       onSuccess: async (document) => {
         // Add the document to the project
-        await addMediaMutation.mutateAsync({
+        await addDocumentMutation.mutateAsync({
           id: projectId,
-          mediaType: 'document',
-          mediaId: document.id,
+          documentId: document.id,
         });
 
-        // Invalidate queries
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            if (!Array.isArray(key) || key.length === 0) return false;
-            // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
-            const firstKey = key[0];
-            if (Array.isArray(firstKey)) {
-              return firstKey[0] === 'documents' || firstKey[0] === 'projects';
-            }
-            return firstKey === 'documents' || firstKey === 'projects';
-          },
-        });
-
+        await invalidateQueries('documents', 'projects');
         toast.success('Document uploaded and added to project');
         handleClose();
       },
@@ -141,7 +127,7 @@ export default function UploadDocumentDialog({
     });
   };
 
-  const isUploading = uploadMutation.isPending || addMediaMutation.isPending;
+  const isUploading = uploadMutation.isPending || addDocumentMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

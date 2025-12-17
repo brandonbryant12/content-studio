@@ -1,21 +1,17 @@
 import {
   document,
   project,
-  projectMedia,
-  mediaSource,
-  type ProjectMedia,
+  projectDocument,
+  podcast,
+  type ProjectDocument,
   type CreateProject,
   type UpdateProject,
-  type ContentType,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
-import {
-  DocumentNotFound,
-  ProjectNotFound as ProjectNotFoundError,
-} from '@repo/effect/errors';
+import { DocumentNotFound } from '@repo/effect/errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
-import type { AddMediaInput } from './types';
+import type { AddDocumentInput } from './types';
 
 /**
  * Project Not Found Error
@@ -28,10 +24,10 @@ export class ProjectNotFound {
   }
 }
 
-export const verifyDocumentsExistForProject = (
-  documentIds: string[],
-  userId: string,
-) =>
+/**
+ * Verify documents exist and are owned by the user.
+ */
+export const verifyDocumentsExist = (documentIds: string[], userId: string) =>
   withDb('project.verifyDocuments', async (db) => {
     const docs = await db
       .select({ id: document.id, createdBy: document.createdBy })
@@ -61,14 +57,13 @@ export const verifyDocumentsExistForProject = (
   );
 
 /**
- * Insert a new project with optional initial media (documents).
+ * Insert a new project with optional initial documents.
  */
 export const insertProject = (
   data: Omit<CreateProject, 'documentIds'> & { createdBy: string },
   documentIds: string[],
 ) =>
   withDb('project.insert', async (db) => {
-    // Insert project
     const [proj] = await db
       .insert(project)
       .values({
@@ -78,27 +73,25 @@ export const insertProject = (
       })
       .returning();
 
-    // Insert document links as media items
-    let mediaItems: ProjectMedia[] = [];
+    let documents: ProjectDocument[] = [];
     if (documentIds.length > 0) {
-      mediaItems = await db
-        .insert(projectMedia)
+      documents = await db
+        .insert(projectDocument)
         .values(
           documentIds.map((documentId, index) => ({
             projectId: proj!.id,
-            mediaType: 'document' as ContentType,
-            mediaId: documentId,
+            documentId,
             order: index,
           })),
         )
         .returning();
     }
 
-    return { ...proj!, media: mediaItems };
+    return { ...proj!, documents };
   });
 
 /**
- * Find project by ID with media.
+ * Find project by ID with documents and output counts.
  */
 export const findProjectById = (id: string) =>
   withDb('project.findById', async (db) => {
@@ -110,13 +103,42 @@ export const findProjectById = (id: string) =>
 
     if (!proj) return null;
 
-    const media = await db
+    // Get document junction records
+    const docLinks = await db
       .select()
-      .from(projectMedia)
-      .where(eq(projectMedia.projectId, id))
-      .orderBy(projectMedia.order);
+      .from(projectDocument)
+      .where(eq(projectDocument.projectId, id))
+      .orderBy(projectDocument.order);
 
-    return { ...proj, media };
+    // Resolve full document objects
+    const documentIds = docLinks.map((d) => d.documentId);
+    const documents =
+      documentIds.length > 0
+        ? await db
+            .select()
+            .from(document)
+            .where(inArray(document.id, documentIds))
+        : [];
+
+    // Sort documents by junction table order
+    const docMap = new Map(documents.map((d) => [d.id, d]));
+    const sortedDocuments = docLinks
+      .map((link) => docMap.get(link.documentId))
+      .filter((d): d is NonNullable<typeof d> => d !== undefined);
+
+    // Count podcasts for this project
+    const [podcastCount] = await db
+      .select({ count: drizzleCount() })
+      .from(podcast)
+      .where(eq(podcast.projectId, id));
+
+    return {
+      ...proj,
+      documents: sortedDocuments,
+      outputCounts: {
+        podcasts: podcastCount?.count ?? 0,
+      },
+    };
   }).pipe(
     Effect.flatMap((result) =>
       result
@@ -155,7 +177,6 @@ export const updateProject = (id: string, data: UpdateProject) =>
   withDb('project.update', async (db) => {
     const { documentIds, ...projectData } = data;
 
-    // Update project metadata only
     const [proj] = await db
       .update(project)
       .set({
@@ -167,43 +188,35 @@ export const updateProject = (id: string, data: UpdateProject) =>
 
     if (!proj) return null;
 
-    // Handle document links if provided
-    let mediaItems: ProjectMedia[] = [];
+    let documents: ProjectDocument[] = [];
     if (documentIds !== undefined) {
-      // Delete existing document media items
+      // Delete existing document links
       await db
-        .delete(projectMedia)
-        .where(
-          and(
-            eq(projectMedia.projectId, id),
-            eq(projectMedia.mediaType, 'document'),
-          ),
-        );
+        .delete(projectDocument)
+        .where(eq(projectDocument.projectId, id));
 
-      // Insert new document links as media items
+      // Insert new document links
       if (documentIds.length > 0) {
-        mediaItems = await db
-          .insert(projectMedia)
+        documents = await db
+          .insert(projectDocument)
           .values(
             documentIds.map((documentId, index) => ({
               projectId: id,
-              mediaType: 'document' as ContentType,
-              mediaId: documentId,
+              documentId,
               order: index,
             })),
           )
           .returning();
       }
     } else {
-      // Fetch existing media items if not updating
-      mediaItems = await db
+      documents = await db
         .select()
-        .from(projectMedia)
-        .where(eq(projectMedia.projectId, id))
-        .orderBy(projectMedia.order);
+        .from(projectDocument)
+        .where(eq(projectDocument.projectId, id))
+        .orderBy(projectDocument.order);
     }
 
-    return { ...proj, media: mediaItems };
+    return { ...proj, documents };
   }).pipe(
     Effect.flatMap((result) =>
       result
@@ -242,44 +255,59 @@ export const countProjects = (options?: { createdBy?: string }) =>
   });
 
 // =============================================================================
-// Project Media Operations (Polymorphic)
+// Document Operations
 // =============================================================================
 
 /**
- * Get all media items for a project.
+ * Get all documents for a project.
  */
-export const findProjectMediaByProjectId = (projectId: string) =>
-  withDb('projectMedia.findByProjectId', (db) =>
-    db
+export const findDocumentsByProjectId = (projectId: string) =>
+  withDb('project.findDocuments', async (db) => {
+    const links = await db
       .select()
-      .from(projectMedia)
-      .where(eq(projectMedia.projectId, projectId))
-      .orderBy(projectMedia.order),
-  );
+      .from(projectDocument)
+      .where(eq(projectDocument.projectId, projectId))
+      .orderBy(projectDocument.order);
+
+    if (links.length === 0) return [];
+
+    const documentIds = links.map((l) => l.documentId);
+    const docs = await db
+      .select()
+      .from(document)
+      .where(inArray(document.id, documentIds));
+
+    // Sort by order
+    const docMap = new Map(docs.map((d) => [d.id, d]));
+    return links
+      .map((link) => docMap.get(link.documentId))
+      .filter((d): d is NonNullable<typeof d> => d !== undefined);
+  });
 
 /**
- * Insert a media item into a project.
+ * Add a document to a project.
  */
-export const insertProjectMedia = (projectId: string, input: AddMediaInput) =>
-  withDb('projectMedia.insert', async (db) => {
-    // If order not specified, get the max order and add 1
+export const insertProjectDocument = (
+  projectId: string,
+  input: AddDocumentInput,
+) =>
+  withDb('projectDocument.insert', async (db) => {
     let order = input.order;
     if (order === undefined) {
       const existing = await db
-        .select({ order: projectMedia.order })
-        .from(projectMedia)
-        .where(eq(projectMedia.projectId, projectId))
-        .orderBy(desc(projectMedia.order))
+        .select({ order: projectDocument.order })
+        .from(projectDocument)
+        .where(eq(projectDocument.projectId, projectId))
+        .orderBy(desc(projectDocument.order))
         .limit(1);
       order = existing.length > 0 ? existing[0]!.order + 1 : 0;
     }
 
     const [result] = await db
-      .insert(projectMedia)
+      .insert(projectDocument)
       .values({
         projectId,
-        mediaType: input.mediaType,
-        mediaId: input.mediaId,
+        documentId: input.documentId,
         order,
       })
       .returning();
@@ -288,247 +316,47 @@ export const insertProjectMedia = (projectId: string, input: AddMediaInput) =>
   });
 
 /**
- * Insert multiple media items into a project.
+ * Remove a document from a project.
  */
-export const insertProjectMediaBatch = (
-  projectId: string,
-  items: { mediaType: ContentType; mediaId: string }[],
-) =>
-  withDb('projectMedia.insertBatch', async (db) => {
-    if (items.length === 0) return [];
-
+export const deleteProjectDocument = (projectId: string, documentId: string) =>
+  withDb('projectDocument.delete', async (db) => {
     const result = await db
-      .insert(projectMedia)
-      .values(
-        items.map((item, index) => ({
-          projectId,
-          mediaType: item.mediaType,
-          mediaId: item.mediaId,
-          order: index,
-        })),
-      )
-      .returning();
-
-    return result;
-  });
-
-/**
- * Delete a media item from a project by its projectMedia id.
- */
-export const deleteProjectMediaById = (projectMediaId: string) =>
-  withDb('projectMedia.deleteById', async (db) => {
-    const result = await db
-      .delete(projectMedia)
-      .where(eq(projectMedia.id, projectMediaId))
-      .returning({ id: projectMedia.id });
-    return result.length > 0;
-  });
-
-/**
- * Delete a media item from a project by mediaId.
- */
-export const deleteProjectMedia = (projectId: string, mediaId: string) =>
-  withDb('projectMedia.delete', async (db) => {
-    const result = await db
-      .delete(projectMedia)
+      .delete(projectDocument)
       .where(
         and(
-          eq(projectMedia.projectId, projectId),
-          eq(projectMedia.mediaId, mediaId),
+          eq(projectDocument.projectId, projectId),
+          eq(projectDocument.documentId, documentId),
         ),
       )
-      .returning({ id: projectMedia.id });
+      .returning({ id: projectDocument.id });
     return result.length > 0;
   });
 
 /**
- * Delete all media items from a project.
+ * Reorder documents in a project.
  */
-export const deleteAllProjectMedia = (projectId: string) =>
-  withDb('projectMedia.deleteAll', async (db) => {
-    await db.delete(projectMedia).where(eq(projectMedia.projectId, projectId));
-  });
-
-/**
- * Reorder media items in a project.
- * Takes an ordered array of media IDs and updates their order accordingly.
- */
-export const reorderProjectMedia = (projectId: string, mediaIds: string[]) =>
-  withDb('projectMedia.reorder', async (db) => {
-    // Update each item's order based on its position in the array
-    const updates = mediaIds.map((mediaId, index) =>
+export const reorderProjectDocuments = (
+  projectId: string,
+  documentIds: string[],
+) =>
+  withDb('projectDocument.reorder', async (db) => {
+    const updates = documentIds.map((documentId, index) =>
       db
-        .update(projectMedia)
+        .update(projectDocument)
         .set({ order: index })
         .where(
           and(
-            eq(projectMedia.projectId, projectId),
-            eq(projectMedia.mediaId, mediaId),
+            eq(projectDocument.projectId, projectId),
+            eq(projectDocument.documentId, documentId),
           ),
         ),
     );
 
     await Promise.all(updates);
 
-    // Return updated items
     return db
       .select()
-      .from(projectMedia)
-      .where(eq(projectMedia.projectId, projectId))
-      .orderBy(projectMedia.order);
-  });
-
-// =============================================================================
-// Media Source Operations (Content Derivation Graph)
-// =============================================================================
-
-/**
- * Find all sources for a given target (what media was used to create this content).
- */
-export const findSourcesForTarget = (
-  targetType: ContentType,
-  targetId: string,
-) =>
-  withDb('mediaSource.findForTarget', (db) =>
-    db
-      .select()
-      .from(mediaSource)
-      .where(
-        and(
-          eq(mediaSource.targetType, targetType),
-          eq(mediaSource.targetId, targetId),
-        ),
-      )
-      .orderBy(mediaSource.order),
-  );
-
-/**
- * Find all targets that use a given source (what content was created from this media).
- */
-export const findTargetsFromSource = (
-  sourceType: ContentType,
-  sourceId: string,
-) =>
-  withDb('mediaSource.findFromSource', (db) =>
-    db
-      .select()
-      .from(mediaSource)
-      .where(
-        and(
-          eq(mediaSource.sourceType, sourceType),
-          eq(mediaSource.sourceId, sourceId),
-        ),
-      )
-      .orderBy(mediaSource.createdAt),
-  );
-
-/**
- * Add a source relationship.
- */
-export const addMediaSource = (input: {
-  targetType: ContentType;
-  targetId: string;
-  sourceType: ContentType;
-  sourceId: string;
-  order?: number;
-}) =>
-  withDb('mediaSource.add', async (db) => {
-    // If order not specified, get max order and add 1
-    let order = input.order;
-    if (order === undefined) {
-      const existing = await db
-        .select({ order: mediaSource.order })
-        .from(mediaSource)
-        .where(
-          and(
-            eq(mediaSource.targetType, input.targetType),
-            eq(mediaSource.targetId, input.targetId),
-          ),
-        )
-        .orderBy(desc(mediaSource.order))
-        .limit(1);
-      order = existing.length > 0 ? existing[0]!.order + 1 : 0;
-    }
-
-    const [result] = await db
-      .insert(mediaSource)
-      .values({
-        targetType: input.targetType,
-        targetId: input.targetId,
-        sourceType: input.sourceType,
-        sourceId: input.sourceId,
-        order,
-      })
-      .returning();
-
-    return result!;
-  });
-
-/**
- * Add multiple source relationships in batch.
- */
-export const addMediaSourceBatch = (
-  targetType: ContentType,
-  targetId: string,
-  sources: { sourceType: ContentType; sourceId: string }[],
-) =>
-  withDb('mediaSource.addBatch', async (db) => {
-    if (sources.length === 0) return [];
-
-    const result = await db
-      .insert(mediaSource)
-      .values(
-        sources.map((source, index) => ({
-          targetType,
-          targetId,
-          sourceType: source.sourceType,
-          sourceId: source.sourceId,
-          order: index,
-        })),
-      )
-      .returning();
-
-    return result;
-  });
-
-/**
- * Remove a specific source relationship.
- */
-export const removeMediaSource = (
-  targetType: ContentType,
-  targetId: string,
-  sourceType: ContentType,
-  sourceId: string,
-) =>
-  withDb('mediaSource.remove', async (db) => {
-    const result = await db
-      .delete(mediaSource)
-      .where(
-        and(
-          eq(mediaSource.targetType, targetType),
-          eq(mediaSource.targetId, targetId),
-          eq(mediaSource.sourceType, sourceType),
-          eq(mediaSource.sourceId, sourceId),
-        ),
-      )
-      .returning({ id: mediaSource.id });
-    return result.length > 0;
-  });
-
-/**
- * Remove all sources for a target.
- */
-export const removeAllSourcesForTarget = (
-  targetType: ContentType,
-  targetId: string,
-) =>
-  withDb('mediaSource.removeAllForTarget', async (db) => {
-    await db
-      .delete(mediaSource)
-      .where(
-        and(
-          eq(mediaSource.targetType, targetType),
-          eq(mediaSource.targetId, targetId),
-        ),
-      );
+      .from(projectDocument)
+      .where(eq(projectDocument.projectId, projectId))
+      .orderBy(projectDocument.order);
   });

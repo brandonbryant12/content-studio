@@ -13,14 +13,14 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import Spinner from '@/routes/-components/common/spinner';
 
 interface AddMediaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  existingMediaIds: string[];
+  existingDocumentIds: string[];
 }
 
 type Document = RouterOutput['documents']['list'][number];
@@ -84,7 +84,7 @@ export default function AddMediaDialog({
   open,
   onOpenChange,
   projectId,
-  existingMediaIds,
+  existingDocumentIds,
 }: AddMediaDialogProps) {
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
@@ -93,8 +93,8 @@ export default function AddMediaDialog({
     apiClient.documents.list.queryOptions({ input: {} }),
   );
 
-  const addMediaMutation = useMutation(
-    apiClient.projects.addMedia.mutationOptions({
+  const addDocumentMutation = useMutation(
+    apiClient.projects.addDocument.mutationOptions({
       onError: (error) => {
         toast.error(error.message ?? 'Failed to add document');
       },
@@ -123,25 +123,13 @@ export default function AddMediaDialog({
     try {
       // Add documents sequentially
       for (const docId of selectedDocs) {
-        await addMediaMutation.mutateAsync({
+        await addDocumentMutation.mutateAsync({
           id: projectId,
-          mediaType: 'document',
-          mediaId: docId,
+          documentId: docId,
         });
       }
 
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey;
-          if (!Array.isArray(key) || key.length === 0) return false;
-          // oRPC uses path arrays like ['projects', 'getWithMedia'] as the first element
-          const firstKey = key[0];
-          if (Array.isArray(firstKey)) {
-            return firstKey[0] === 'projects';
-          }
-          return firstKey === 'projects';
-        },
-      });
+      await invalidateQueries('projects');
 
       toast.success(
         `Added ${selectedDocs.size} document${selectedDocs.size === 1 ? '' : 's'} to project`,
@@ -186,7 +174,7 @@ export default function AddMediaDialog({
                   doc={doc}
                   selected={selectedDocs.has(doc.id)}
                   onToggle={() => toggleDoc(doc.id)}
-                  disabled={existingMediaIds.includes(doc.id)}
+                  disabled={existingDocumentIds.includes(doc.id)}
                 />
               ))}
             </div>
