@@ -10,12 +10,12 @@ import {
 } from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
-import Spinner from '@/routes/-components/common/spinner';
 
 const SUPPORTED_TYPES = [
   'text/plain',

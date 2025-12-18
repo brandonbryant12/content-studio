@@ -2,6 +2,7 @@ import { EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -9,7 +10,6 @@ import { toast } from 'sonner';
 import * as v from 'valibot';
 import { authClient } from '@/clients/authClient';
 import FormFieldInfo from '@/routes/-components/common/form-field-info';
-import Spinner from '@/routes/-components/common/spinner';
 
 const FormSchema = v.pipe(
   v.object({
@@ -64,7 +64,7 @@ export default function RegisterCredentialsForm() {
         },
       );
       if (error) {
-        toast.error(error.message ?? JSON.stringify(error));
+        toast.error(error.message ?? 'An unexpected error occurred');
       }
     },
   });

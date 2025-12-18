@@ -19,8 +19,8 @@ import { ArrowLeftIcon, FileTextIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Link } from '@tanstack/react-router';
 import { useState, useCallback } from 'react';
-import { SourcePanel } from './source-panel';
 import type { Document, StagingProps, CommitProps, MediaData } from './workbench-registry';
+import { SourcePanel } from './source-panel';
 
 interface WorkbenchShellProps {
   projectId: string;

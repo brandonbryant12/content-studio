@@ -1,9 +1,9 @@
-import type { RouterOutput } from '@repo/api/client';
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
-import { formatFileSize } from '@/lib/formatters';
-import Spinner from '@/routes/-components/common/spinner';
+import { Spinner } from '@repo/ui/components/spinner';
+import type { RouterOutput } from '@repo/api/client';
 import { DocumentIcon } from './document-icon';
+import { formatFileSize } from '@/lib/formatters';
 
 function formatSource(source: string): { label: string; color: string } {
   const map: Record<string, { label: string; color: string }> = {

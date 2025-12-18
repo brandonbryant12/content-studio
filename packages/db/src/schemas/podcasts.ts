@@ -12,7 +12,6 @@ import {
 import { createSelectSchema } from 'drizzle-valibot';
 import * as v from 'valibot';
 import { user } from './auth';
-import { project } from './projects';
 import {
   document,
   DocumentOutputSchema,
@@ -20,6 +19,7 @@ import {
   type Document,
   type DocumentOutput,
 } from './documents';
+import { project } from './projects';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',

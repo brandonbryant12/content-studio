@@ -1,6 +1,7 @@
 import { Podcasts } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
+import type { Job } from '@repo/db/schema';
 import type {
   GeneratePodcastPayload,
   GeneratePodcastResult,
@@ -9,7 +10,6 @@ import type {
   GenerateAudioPayload,
   GenerateAudioResult,
 } from '@repo/queue';
-import type { Job } from '@repo/db/schema';
 import { createErrorHandlers, handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {

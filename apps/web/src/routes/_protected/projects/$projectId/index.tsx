@@ -6,6 +6,7 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -17,7 +18,6 @@ import UploadDocumentDialog from '../-components/upload-document-dialog';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
-import Spinner from '@/routes/-components/common/spinner';
 
 type ContentType = 'document' | 'podcast' | 'video' | 'article' | 'social' | 'graphic';
 

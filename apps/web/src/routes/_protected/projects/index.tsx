@@ -5,6 +5,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import CreateProjectDialog from './-components/create-project';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
-import Spinner from '@/routes/-components/common/spinner';
 
 export const Route = createFileRoute('/_protected/projects/')({
   loader: () =>

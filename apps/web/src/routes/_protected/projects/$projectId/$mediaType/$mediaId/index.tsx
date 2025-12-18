@@ -1,20 +1,20 @@
-import type { RouterOutput } from '@repo/api/client';
 import { Button } from '@repo/ui/components/button';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
-import Spinner from '@/routes/-components/common/spinner';
-import AddMediaDialog from '../../../-components/add-media-dialog';
-import UploadDocumentDialog from '../../../-components/upload-document-dialog';
-import { WorkbenchShell } from '../../-components/workbench/workbench-shell';
+import type { RouterOutput } from '@repo/api/client';
 import {
   getWorkbenchConfig,
   isValidWorkbenchType,
   type WorkbenchConfig,
   type MediaData,
 } from '../../-components/workbench/workbench-registry';
+import { WorkbenchShell } from '../../-components/workbench/workbench-shell';
+import AddMediaDialog from '../../../-components/add-media-dialog';
+import UploadDocumentDialog from '../../../-components/upload-document-dialog';
+import { apiClient } from '@/clients/apiClient';
+import { queryClient } from '@/clients/queryClient';
 
 type ProjectData = RouterOutput['projects']['get'];
 

@@ -1,4 +1,5 @@
 import { FileTextIcon, PlusIcon, StackIcon } from '@radix-ui/react-icons';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useQuery } from '@tanstack/react-query';
 import {
   Navigate,
@@ -7,10 +8,11 @@ import {
   Link,
 } from '@tanstack/react-router';
 import { useState } from 'react';
-import { authClient } from '@/clients/authClient';
-import { apiClient } from '@/clients/apiClient';
 import CreateProjectDialog from './projects/-components/create-project';
-import Spinner from '@/routes/-components/common/spinner';
+import { apiClient } from '@/clients/apiClient';
+import { authClient } from '@/clients/authClient';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { APP_NAME_WITH_VERSION } from '@/constants';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,
@@ -98,7 +100,7 @@ function Sidebar() {
 
       <div className="p-3 border-t border-gray-200 dark:border-gray-800">
         <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
-          PodcastAI v1.0
+          {APP_NAME_WITH_VERSION}
         </div>
       </div>
 
@@ -126,7 +128,9 @@ function Layout() {
     <div className="flex">
       <Sidebar />
       <main className="flex-1 overflow-auto h-[calc(100vh-57px)] bg-white dark:bg-gray-950">
-        <Outlet />
+        <ErrorBoundary resetKeys={[session?.user?.id]}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </div>
   );

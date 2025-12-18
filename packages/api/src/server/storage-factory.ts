@@ -4,9 +4,9 @@ import {
   S3StorageLive,
   type Storage,
 } from '@repo/storage';
-import type { Db } from '@repo/effect/db';
 import { Layer } from 'effect';
 import type { StorageConfig } from './orpc';
+import type { Db } from '@repo/effect/db';
 
 /**
  * Creates a storage layer based on the provided configuration.

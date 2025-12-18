@@ -1,5 +1,5 @@
-import { useSortable } from '@dnd-kit/sortable';
 import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   CheckIcon,
@@ -28,14 +28,19 @@ function Checkbox({
   checked,
   onCheckedChange,
   disabled,
+  label,
 }: {
   checked: boolean;
   onCheckedChange: () => void;
   disabled?: boolean;
+  label: string;
 }) {
   return (
     <button
       type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={label}
       onClick={(e) => {
         e.stopPropagation();
         if (!disabled) onCheckedChange();
@@ -85,6 +90,7 @@ export function SourceDocumentCard({
         checked={isSelected ?? false}
         onCheckedChange={onToggle ?? (() => {})}
         disabled={readOnly}
+        label={`Select ${document.title}`}
       />
       <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
         <FileTextIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />

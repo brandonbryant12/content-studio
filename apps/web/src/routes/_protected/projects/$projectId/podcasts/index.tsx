@@ -1,15 +1,15 @@
 import { ArrowLeftIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { PodcastItem } from '@/routes/_protected/podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
-import Spinner from '@/routes/-components/common/spinner';
+import { PodcastItem } from '@/routes/_protected/podcasts/-components/podcast-item';
 
 export const Route = createFileRoute(
   '/_protected/projects/$projectId/podcasts/',
