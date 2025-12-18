@@ -8,21 +8,10 @@ import {
   type UpdateProject,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
-import { DocumentNotFound } from '@repo/effect/errors';
+import { DocumentNotFound, ProjectNotFound } from '@repo/effect/errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { AddDocumentInput } from './types';
-
-/**
- * Project Not Found Error
- */
-export class ProjectNotFound {
-  readonly _tag = 'ProjectNotFound';
-  constructor(readonly props: { id: string; message?: string }) {}
-  get message() {
-    return this.props.message ?? `Project ${this.props.id} not found`;
-  }
-}
 
 /**
  * Verify documents exist and are owned by the user.
@@ -334,29 +323,32 @@ export const deleteProjectDocument = (projectId: string, documentId: string) =>
 
 /**
  * Reorder documents in a project.
+ * Uses a transaction for atomicity - all updates succeed or none do.
  */
 export const reorderProjectDocuments = (
   projectId: string,
   documentIds: string[],
 ) =>
-  withDb('projectDocument.reorder', async (db) => {
-    const updates = documentIds.map((documentId, index) =>
-      db
-        .update(projectDocument)
-        .set({ order: index })
-        .where(
-          and(
-            eq(projectDocument.projectId, projectId),
-            eq(projectDocument.documentId, documentId),
+  withDb('projectDocument.reorder', (db) =>
+    db.transaction(async (tx) => {
+      const updates = documentIds.map((documentId, index) =>
+        tx
+          .update(projectDocument)
+          .set({ order: index })
+          .where(
+            and(
+              eq(projectDocument.projectId, projectId),
+              eq(projectDocument.documentId, documentId),
+            ),
           ),
-        ),
-    );
+      );
 
-    await Promise.all(updates);
+      await Promise.all(updates);
 
-    return db
-      .select()
-      .from(projectDocument)
-      .where(eq(projectDocument.projectId, projectId))
-      .orderBy(projectDocument.order);
-  });
+      return tx
+        .select()
+        .from(projectDocument)
+        .where(eq(projectDocument.projectId, projectId))
+        .orderBy(projectDocument.order);
+    }),
+  );

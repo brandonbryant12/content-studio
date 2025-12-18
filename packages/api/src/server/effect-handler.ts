@@ -89,7 +89,219 @@ export type EffectErrors<T> =
 export type EffectSuccess<T> =
   T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
 
+// =============================================================================
+// Error Handler Factory
+// =============================================================================
+
 /**
+ * Error factory configuration for oRPC errors.
+ * Uses `unknown` return type to accommodate oRPC's error throwing mechanism.
+ */
+interface ErrorFactoryConfig {
+  INTERNAL_ERROR: (opts: { message: string }) => unknown;
+  FORBIDDEN: (opts: { message: string }) => unknown;
+  UNAUTHORIZED: (opts: { message: string }) => unknown;
+  NOT_FOUND: (opts: { message: string; data?: unknown }) => unknown;
+  SERVICE_UNAVAILABLE?: (opts: { message: string }) => unknown;
+  RATE_LIMITED?: (opts: { message: string }) => unknown;
+  CONFLICT?: (opts: { message: string }) => unknown;
+}
+
+/**
+ * Log an error with its stack trace and throw an internal error.
+ */
+const logAndThrowInternal = (
+  tag: string,
+  e: { message: string; cause?: unknown },
+  errors: { INTERNAL_ERROR: (opts: { message: string }) => unknown },
+  publicMessage: string,
+): never => {
+  const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+  console.error(`[${tag}]`, e.message, { cause: e.cause, stack });
+  throw errors.INTERNAL_ERROR({ message: publicMessage });
+};
+
+/**
+ * Creates a complete set of error handlers for use with handleEffect.
+ * Eliminates duplication while preserving stack traces in logs.
+ *
+ * Returns grouped handlers that can be spread into handleEffect:
+ * - common: DbError, PolicyError, ForbiddenError, etc.
+ * - database: ConstraintViolationError, DeadlockError, ConnectionError
+ * - storage: StorageError, StorageUploadError, StorageNotFoundError
+ * - queue: QueueError, JobNotFoundError, JobProcessingError
+ * - tts: TTSError, TTSQuotaExceededError
+ *
+ * @example
+ * ```typescript
+ * const handlers = createErrorHandlers(errors);
+ * return handleEffect(effect, {
+ *   ...handlers.common,
+ *   ...handlers.database,
+ *   DocumentNotFound: (e) => { throw errors.DOCUMENT_NOT_FOUND(...) },
+ * });
+ * ```
+ */
+export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => ({
+  /**
+   * Common handlers present in all routes.
+   * Includes: DbError, PolicyError, ForbiddenError, UnauthorizedError, NotFoundError
+   */
+  common: {
+    DbError: (e: { message: string; cause?: unknown }) =>
+      logAndThrowInternal('DbError', e, errors, 'Database operation failed'),
+
+    PolicyError: (e: { message: string; cause?: unknown }) =>
+      logAndThrowInternal('PolicyError', e, errors, 'Authorization check failed'),
+
+    ForbiddenError: (e: { message: string }) => {
+      throw errors.FORBIDDEN({ message: e.message });
+    },
+
+    UnauthorizedError: (e: { message: string }) => {
+      throw errors.UNAUTHORIZED({ message: e.message });
+    },
+
+    NotFoundError: (e: { entity: string; id: string; message?: string }) => {
+      throw errors.NOT_FOUND({
+        message: e.message ?? `${e.entity} with id ${e.id} not found`,
+        data: { entity: e.entity, id: e.id },
+      });
+    },
+  },
+
+  /**
+   * Database-specific error handlers.
+   * Use when your Effect can produce ConstraintViolationError, DeadlockError, or ConnectionError.
+   */
+  database: {
+    ConstraintViolationError: (e: {
+      constraint: string;
+      table?: string;
+      message: string;
+      cause?: unknown;
+    }) => {
+      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+      console.error('[ConstraintViolationError]', e.message, {
+        constraint: e.constraint,
+        table: e.table,
+        stack,
+      });
+      // Use CONFLICT if available, otherwise INTERNAL_ERROR
+      if (errors.CONFLICT) {
+        throw errors.CONFLICT({ message: 'A conflict occurred with existing data' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+    },
+
+    DeadlockError: (e: { message: string; cause?: unknown }) => {
+      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+      console.error('[DeadlockError]', e.message, { stack });
+      if (errors.SERVICE_UNAVAILABLE) {
+        throw errors.SERVICE_UNAVAILABLE({
+          message: 'Database temporarily unavailable, please retry',
+        });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+    },
+
+    ConnectionError: (e: { message: string; cause?: unknown }) => {
+      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+      console.error('[ConnectionError]', e.message, { stack });
+      if (errors.SERVICE_UNAVAILABLE) {
+        throw errors.SERVICE_UNAVAILABLE({ message: 'Database connection failed' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
+    },
+  },
+
+  /**
+   * Storage-related handlers.
+   * Use when your Effect interacts with StorageService.
+   */
+  storage: {
+    StorageError: (e: { message: string; cause?: unknown }) =>
+      logAndThrowInternal('StorageError', e, errors, 'Storage operation failed'),
+
+    StorageUploadError: (e: { key: string; message: string; cause?: unknown }) =>
+      logAndThrowInternal('StorageUploadError', e, errors, 'File upload failed'),
+
+    StorageNotFoundError: (e: { key: string; message?: string }) => {
+      throw errors.NOT_FOUND({
+        message: e.message ?? `File not found: ${e.key}`,
+        data: { key: e.key },
+      });
+    },
+  },
+
+  /**
+   * Queue-related handlers.
+   * Use when your Effect interacts with the job queue.
+   */
+  queue: {
+    QueueError: (e: { message: string; cause?: unknown }) =>
+      logAndThrowInternal('QueueError', e, errors, 'Job queue operation failed'),
+
+    JobNotFoundError: (e: { jobId: string; message?: string }) => {
+      throw errors.NOT_FOUND({
+        message: e.message ?? `Job ${e.jobId} not found`,
+        data: { jobId: e.jobId },
+      });
+    },
+
+    JobProcessingError: (e: { jobId: string; message: string; cause?: unknown }) =>
+      logAndThrowInternal('JobProcessingError', e, errors, 'Job processing failed'),
+  },
+
+  /**
+   * TTS-related handlers.
+   * Use when your Effect interacts with TTS service.
+   */
+  tts: {
+    TTSError: (e: { message: string; cause?: unknown }) => {
+      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+      console.error('[TTSError]', e.message, { stack });
+      if (errors.SERVICE_UNAVAILABLE) {
+        throw errors.SERVICE_UNAVAILABLE({ message: 'Text-to-speech service unavailable' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'Text-to-speech operation failed' });
+    },
+
+    TTSQuotaExceededError: (e: { message: string }) => {
+      console.error('[TTSQuotaExceededError]', e.message);
+      if (errors.RATE_LIMITED) {
+        throw errors.RATE_LIMITED({ message: 'TTS quota exceeded' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'Text-to-speech quota exceeded' });
+    },
+  },
+
+  /**
+   * LLM-related handlers.
+   * Use when your Effect interacts with LLM service.
+   */
+  llm: {
+    LLMError: (e: { message: string; model?: string; cause?: unknown }) => {
+      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
+      console.error('[LLMError]', e.message, { model: e.model, stack });
+      if (errors.SERVICE_UNAVAILABLE) {
+        throw errors.SERVICE_UNAVAILABLE({ message: 'AI service unavailable' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'AI operation failed' });
+    },
+
+    LLMRateLimitError: (e: { message: string; retryAfter?: number }) => {
+      console.error('[LLMRateLimitError]', e.message, { retryAfter: e.retryAfter });
+      if (errors.RATE_LIMITED) {
+        throw errors.RATE_LIMITED({ message: 'AI rate limit exceeded' });
+      }
+      throw errors.INTERNAL_ERROR({ message: 'AI rate limit exceeded' });
+    },
+  },
+});
+
+/**
+ * @deprecated Use createErrorHandlers instead for grouped handlers.
  * Common error handler factories for reuse across handlers.
  * These create functions that map Effect errors to oRPC errors.
  */

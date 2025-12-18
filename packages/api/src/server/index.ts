@@ -13,9 +13,13 @@ import { appRouter } from './router';
 
 export type { StorageConfig } from './orpc';
 
+// Export storage factory for worker reuse
+export { createStorageLayer } from './storage-factory';
+
 // Export effect handler utilities
 export {
   handleEffect,
+  createErrorHandlers,
   createCommonErrorHandlers,
   type ErrorMapper,
   type EffectErrors,

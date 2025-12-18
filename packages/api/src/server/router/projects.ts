@@ -1,6 +1,6 @@
 import { Projects } from '@repo/project';
 import { Effect } from 'effect';
-import { handleEffect } from '../effect-handler';
+import { createErrorHandlers, handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
   serializeProject,
@@ -9,21 +9,6 @@ import {
   serializeProjectFull,
 } from '../serializers';
 
-// Common error handlers
-const commonErrorHandlers = (errors: any) => ({
-  DbError: (e: any) => {
-    console.error('[DbError]', e.message, e.cause);
-    throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-  },
-  PolicyError: (e: any) => {
-    console.error('[PolicyError]', e.message, e.cause);
-    throw errors.INTERNAL_ERROR({ message: 'Authorization check failed' });
-  },
-  ForbiddenError: (e: any) => {
-    throw errors.FORBIDDEN({ message: e.message });
-  },
-});
-
 const projectRouter = {
   // =========================================================================
   // Core CRUD
@@ -31,6 +16,7 @@ const projectRouter = {
 
   list: protectedProcedure.projects.list.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
@@ -38,7 +24,8 @@ const projectRouter = {
           return result.map(serializeProject);
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.NOT_FOUND({ message: e.message });
           },
@@ -52,17 +39,19 @@ const projectRouter = {
 
   get: protectedProcedure.projects.get.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
           return serializeProjectFull(yield* projects.findById(input.id));
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {
@@ -78,6 +67,7 @@ const projectRouter = {
 
   create: protectedProcedure.projects.create.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
@@ -85,7 +75,8 @@ const projectRouter = {
           return serializeProjectWithDocuments(result);
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           DocumentNotFound: (e) => {
             throw errors.DOCUMENT_NOT_FOUND({
               message: e.message ?? `Document ${e.id} not found`,
@@ -95,7 +86,7 @@ const projectRouter = {
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
               message: e.message,
-              data: { projectId: e.props.id },
+              data: { projectId: e.id },
             });
           },
         },
@@ -105,6 +96,7 @@ const projectRouter = {
 
   update: protectedProcedure.projects.update.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       const { id, ...data } = input;
       return handleEffect(
         Effect.gen(function* () {
@@ -113,11 +105,12 @@ const projectRouter = {
           return serializeProjectWithDocuments(result);
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {
@@ -133,6 +126,7 @@ const projectRouter = {
 
   delete: protectedProcedure.projects.delete.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
@@ -140,11 +134,12 @@ const projectRouter = {
           return {};
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {
@@ -164,6 +159,7 @@ const projectRouter = {
 
   addDocument: protectedProcedure.projects.addDocument.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       const { id, ...docInput } = input;
       return handleEffect(
         Effect.gen(function* () {
@@ -172,11 +168,12 @@ const projectRouter = {
           return serializeProjectDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {
@@ -192,6 +189,7 @@ const projectRouter = {
 
   removeDocument: protectedProcedure.projects.removeDocument.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
@@ -199,11 +197,12 @@ const projectRouter = {
           return {};
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {
@@ -219,6 +218,7 @@ const projectRouter = {
 
   reorderDocuments: protectedProcedure.projects.reorderDocuments.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const projects = yield* Projects;
@@ -229,11 +229,12 @@ const projectRouter = {
           return result.map(serializeProjectDocument);
         }).pipe(Effect.provide(context.layers)),
         {
-          ...commonErrorHandlers(errors),
+          ...handlers.common,
+          ...handlers.database,
           ProjectNotFound: (e) => {
             throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.props.id} not found`,
-              data: { projectId: e.props.id },
+              message: e.message ?? `Project ${e.id} not found`,
+              data: { projectId: e.id },
             });
           },
           DocumentNotFound: (e) => {

@@ -1,4 +1,3 @@
-import type { ProjectNotFound } from './repository';
 import type {
   CreateProject,
   Project,
@@ -6,17 +5,18 @@ import type {
   UpdateProject,
   Document,
 } from '@repo/db/schema';
+import type { DatabaseError } from '@repo/effect/db';
 import type {
-  DbError,
   DocumentNotFound,
   PolicyError,
   ForbiddenError,
+  ProjectNotFound,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
 import type { ProjectWithDocuments, ProjectFull, AddDocumentInput } from './types';
 
 export type ProjectError =
-  | DbError
+  | DatabaseError
   | ProjectNotFound
   | DocumentNotFound
   | PolicyError

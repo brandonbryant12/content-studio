@@ -114,11 +114,36 @@ const jobStatusSchema = v.picklist([
   'failed',
 ]);
 
+// Job result schemas - matches queue result types
+const generatePodcastResultSchema = v.object({
+  scriptId: v.string(),
+  segmentCount: v.number(),
+  audioUrl: v.string(),
+  duration: v.number(),
+});
+
+const generateScriptResultSchema = v.object({
+  scriptId: v.string(),
+  segmentCount: v.number(),
+});
+
+const generateAudioResultSchema = v.object({
+  audioUrl: v.string(),
+  duration: v.number(),
+});
+
+// Union of all possible job results
+const jobResultSchema = v.union([
+  generatePodcastResultSchema,
+  generateScriptResultSchema,
+  generateAudioResultSchema,
+]);
+
 const jobOutputSchema = v.object({
   id: v.string(),
   type: v.string(),
   status: jobStatusSchema,
-  result: v.nullable(v.unknown()),
+  result: v.nullable(jobResultSchema),
   error: v.nullable(v.string()),
   createdBy: v.string(),
   createdAt: v.string(),

@@ -1,8 +1,43 @@
 import { serve } from '@hono/node-server';
 import { createDb, verifyDbConnection } from '@repo/db/client';
+import { QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
 import { createPodcastWorker } from './workers/podcast-worker';
 import app, { storageConfig } from '.';
+
+// =============================================================================
+// Global Error Handlers
+// =============================================================================
+
+/**
+ * Handle unhandled promise rejections.
+ * Logs the error with stack trace but doesn't crash - allows graceful handling.
+ */
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Promise Rejection:', {
+    reason:
+      reason instanceof Error
+        ? { message: reason.message, stack: reason.stack }
+        : reason,
+    promise: String(promise),
+  });
+});
+
+/**
+ * Handle uncaught exceptions.
+ * These are fatal - log and exit to prevent undefined state.
+ */
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught Exception:', {
+    message: error.message,
+    stack: error.stack,
+  });
+  process.exit(1);
+});
+
+// =============================================================================
+// Server Startup
+// =============================================================================
 
 const startServer = async () => {
   // Verify database connection before starting
@@ -20,7 +55,7 @@ const startServer = async () => {
   // Start the podcast worker
   const worker = createPodcastWorker({
     databaseUrl: env.SERVER_POSTGRES_URL,
-    pollInterval: 3000, // Poll every 3 seconds
+    pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     geminiApiKey: env.GEMINI_API_KEY,
     storageConfig,
   });

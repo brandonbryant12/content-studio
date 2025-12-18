@@ -14,13 +14,9 @@ import {
 } from '@repo/media';
 import { ProjectsLive, type Projects } from '@repo/project';
 import { QueueLive, type Queue } from '@repo/queue';
-import {
-  DatabaseStorageLive,
-  FilesystemStorageLive,
-  S3StorageLive,
-  type Storage,
-} from '@repo/storage';
+import type { Storage } from '@repo/storage';
 import { Layer, ManagedRuntime, Logger } from 'effect';
+import { createStorageLayer } from './storage-factory';
 import type { AuthInstance } from '@repo/auth/server';
 import type { CurrentUser, Policy } from '@repo/auth-policy';
 import type { DatabaseInstance } from '@repo/db/client';
@@ -69,24 +65,7 @@ const createBaseLayers = (
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-
-  // Select storage provider based on config
-  const storageLayer =
-    storageConfig.provider === 'filesystem'
-      ? FilesystemStorageLive({
-        basePath: storageConfig.basePath,
-        baseUrl: storageConfig.baseUrl,
-      })
-      : storageConfig.provider === 's3'
-        ? S3StorageLive({
-          bucket: storageConfig.bucket,
-          region: storageConfig.region,
-          accessKeyId: storageConfig.accessKeyId,
-          secretAccessKey: storageConfig.secretAccessKey,
-          endpoint: storageConfig.endpoint,
-        })
-        : DatabaseStorageLive.pipe(Layer.provide(dbLayer));
-
+  const storageLayer = createStorageLayer(storageConfig, dbLayer);
   const ttsLayer = GoogleTTSLive({ apiKey: geminiApiKey });
   const llmLayer = GoogleLive({ apiKey: geminiApiKey });
   const loggerLayer = Logger.pretty;

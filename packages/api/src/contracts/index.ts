@@ -1,7 +1,6 @@
 import { oc } from '@orpc/contract';
 import documentContract from './documents';
 import podcastContract from './podcasts';
-import postContract from './posts';
 import projectContract from './projects';
 import voicesContract from './voices';
 
@@ -62,6 +61,5 @@ export const appContract = oc
     documents: documentContract,
     podcasts: podcastContract,
     projects: projectContract,
-    posts: postContract,
     voices: voicesContract,
   });

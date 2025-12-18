@@ -64,7 +64,15 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
 
         // Try to mark podcast as failed
         yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll(() => Effect.void), // Ignore errors updating status
+          Effect.catchAll((statusError) =>
+            Effect.sync(() => {
+              console.error('[Worker] Failed to update podcast status:', {
+                podcastId,
+                originalError: formatError(error),
+                statusError: formatError(statusError),
+              });
+            }),
+          ),
         );
 
         const errorMessage = formatError(error);
@@ -116,7 +124,15 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
 
         // Try to mark podcast as failed
         yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll(() => Effect.void), // Ignore errors updating status
+          Effect.catchAll((statusError) =>
+            Effect.sync(() => {
+              console.error('[Worker] Failed to update podcast status:', {
+                podcastId,
+                originalError: formatError(error),
+                statusError: formatError(statusError),
+              });
+            }),
+          ),
         );
 
         const errorMessage = formatError(error);
@@ -166,7 +182,15 @@ export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
 
         // Try to mark podcast as failed
         yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll(() => Effect.void), // Ignore errors updating status
+          Effect.catchAll((statusError) =>
+            Effect.sync(() => {
+              console.error('[Worker] Failed to update podcast status:', {
+                podcastId,
+                originalError: formatError(error),
+                statusError: formatError(statusError),
+              });
+            }),
+          ),
         );
 
         const errorMessage = formatError(error);
