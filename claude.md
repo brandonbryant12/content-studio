@@ -1,0 +1,198 @@
+# Content Studio - AI Agent Guide
+
+## Project Overview
+
+Content Studio is a web application for creating and managing multimedia content, primarily AI-generated podcasts from documents. The codebase prioritizes **type safety**, **graceful error handling**, and **simple, readable code**.
+
+## Technology Stack
+
+- **Runtime**: Node.js with TypeScript (strict mode)
+- **Backend Framework**: Hono + oRPC
+- **Database**: PostgreSQL via Drizzle ORM
+- **Effect System**: Effect-TS for typed errors and dependency injection
+- **Frontend**: React + TanStack Router + Tailwind CSS
+- **AI Services**: Google Gemini for LLM and TTS
+
+## Monorepo Structure
+
+```
+apps/
+  server/              # Hono HTTP server + background workers
+  web/                 # React frontend (Vite)
+
+packages/
+  api/                 # oRPC contracts and API handlers
+    src/contracts/     # API shape definitions (Valibot schemas)
+    src/server/router/ # Handler implementations
+  db/                  # Drizzle schemas and database client
+    src/schemas/       # Table definitions
+  effect/              # Effect utilities
+    src/errors.ts      # All error type definitions
+    src/db.ts          # Database Effect wrapper
+  media/               # Document and Podcast services
+  ai/                  # LLM and TTS providers
+  storage/             # File storage (filesystem, S3, database)
+  queue/               # Background job processing
+  project/             # Project management service
+```
+
+## Critical Conventions
+
+### Error Handling
+
+**Always use `handleEffect` with `createErrorHandlers`:**
+
+```typescript
+const handlers = createErrorHandlers(errors);
+return handleEffect(effect, {
+  ...handlers.common,
+  ...handlers.database,
+  DocumentNotFound: (e) => {
+    throw errors.DOCUMENT_NOT_FOUND({ message: e.message, data: { documentId: e.id } });
+  },
+});
+```
+
+**Never:**
+- Use `Effect.runPromise` directly without error mapping
+- Use `any` types in error handlers
+- Silently suppress errors with `Effect.catchAll(() => Effect.void)`
+- Use `console.log` for errors - use structured logging with stack traces
+
+### Database Operations
+
+**Always use `withDb` wrapper:**
+
+```typescript
+import { withDb } from '@repo/effect/db';
+
+const findById = (id: string) =>
+  withDb('entity.findById', (db) =>
+    db.select().from(table).where(eq(table.id, id))
+  );
+```
+
+**Timestamps must be timezone-aware:**
+
+```typescript
+createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+```
+
+### Service Layer Pattern
+
+Services follow a three-tier structure:
+
+```typescript
+// 1. Interface (Context.Tag)
+export class Documents extends Context.Tag('@repo/media/Documents')<
+  Documents,
+  DocumentsService
+>() {}
+
+// 2. Implementation
+const make = Effect.gen(function* () {
+  const db = yield* Db;
+  return {
+    findById: (id) => withDb('documents.findById', ...)
+  };
+});
+
+// 3. Layer
+export const DocumentsLive = Layer.effect(Documents, make);
+```
+
+### API Handlers
+
+**Structure:**
+- Contracts in `packages/api/src/contracts/` define input/output schemas
+- Handlers in `packages/api/src/server/router/` implement the logic
+- Use `protectedProcedure` for authenticated routes
+- Serialize database objects before returning
+
+```typescript
+const handler = protectedProcedure.entity.action.handler(
+  async ({ context, input, errors }) => {
+    const handlers = createErrorHandlers(errors);
+    return handleEffect(
+      Effect.gen(function* () {
+        const service = yield* Service;
+        const result = yield* service.action(input);
+        return serializeEntity(result);
+      }).pipe(Effect.provide(context.layers)),
+      { ...handlers.common, ...handlers.database },
+    );
+  },
+);
+```
+
+### Type Safety
+
+**Required practices:**
+- All function parameters and returns must be typed
+- Use discriminated unions for error types
+- Validate inputs at API boundaries with Valibot
+- Use `satisfies` for type checking without widening
+
+**Avoid:**
+- `any` type - use `unknown` and narrow
+- Type assertions (`as`) without validation
+- `v.unknown()` in schemas - define specific types
+
+## Common Tasks
+
+### Adding a New Entity
+
+1. **Schema**: `packages/db/src/schemas/[entity].ts`
+2. **Errors**: `packages/effect/src/errors.ts` (add NotFound, etc.)
+3. **Service**: `packages/[domain]/src/[entity]/`
+4. **Contract**: `packages/api/src/contracts/[entity].ts`
+5. **Handler**: `packages/api/src/server/router/[entity].ts`
+6. **Update exports** in index files
+
+### Adding Error Types
+
+1. Define in `packages/effect/src/errors.ts` extending `Schema.TaggedError`
+2. Add to `ApiError` union type
+3. Add handler to `createErrorHandlers` in `effect-handler.ts`
+
+### Background Jobs
+
+1. Define payload/result types in `packages/queue/src/types.ts`
+2. Add handler in `apps/server/src/workers/handlers.ts`
+3. Register in worker's job type switch
+
+## Running the Project
+
+```bash
+pnpm install           # Install dependencies
+pnpm db:push           # Apply database schema
+pnpm dev               # Start all apps in development
+pnpm typecheck         # Run TypeScript checks
+pnpm lint              # Run linting
+```
+
+## Testing Considerations
+
+- Unit tests should mock Effect layers
+- Integration tests use real database with transaction rollback
+- All error paths must be tested
+
+## What NOT to Do
+
+1. **Don't bypass the Effect system** - No direct database access outside `withDb`
+2. **Don't suppress errors** - Always log with context and stack traces
+3. **Don't use magic numbers** - Extract to named constants
+4. **Don't duplicate error handling** - Use `createErrorHandlers` factory
+5. **Don't skip type validation** - All API inputs must be validated
+6. **Don't create new patterns** - Follow existing service layer structure
+
+## Code Review Checklist
+
+- [ ] All errors handled with proper typing (no `any`)
+- [ ] `handleEffect` used with error factory
+- [ ] Database operations wrapped in `withDb`
+- [ ] Stack traces preserved in error logging
+- [ ] No silent error suppression
+- [ ] Input validation at API boundary
+- [ ] Serializers used for API responses
+- [ ] TypeScript compiles without errors

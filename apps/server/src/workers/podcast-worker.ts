@@ -15,25 +15,33 @@ import {
   type Job,
   type JobType,
 } from '@repo/queue';
-import {
-  DatabaseStorageLive,
-  FilesystemStorageLive,
-  S3StorageLive,
-} from '@repo/storage';
-import type { StorageConfig } from '@repo/api/server';
+import { createStorageLayer, type StorageConfig } from '@repo/api/server';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
+import { WORKER_DEFAULTS } from '../constants';
 import { handleGeneratePodcast, handleGenerateScript, handleGenerateAudio } from './handlers';
+
+// Type guards for job type discrimination
+type WorkerPayload = GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload;
+
+const isGeneratePodcastJob = (job: Job<WorkerPayload>): job is Job<GeneratePodcastPayload> =>
+  job.type === 'generate-podcast';
+
+const isGenerateScriptJob = (job: Job<WorkerPayload>): job is Job<GenerateScriptPayload> =>
+  job.type === 'generate-script';
+
+const isGenerateAudioJob = (job: Job<WorkerPayload>): job is Job<GenerateAudioPayload> =>
+  job.type === 'generate-audio';
 
 export interface PodcastWorkerConfig {
   /** Database URL */
   databaseUrl: string;
-  /** Polling interval in milliseconds (default: 5000) */
+  /** Polling interval in milliseconds */
   pollInterval?: number;
   /** Google API key for LLM and TTS - required */
   geminiApiKey: string;
   /** Storage configuration */
   storageConfig: StorageConfig;
-  /** Max consecutive errors before exiting (default: 10) */
+  /** Max consecutive errors before exiting */
   maxConsecutiveErrors?: number;
 }
 
@@ -42,8 +50,8 @@ export interface PodcastWorkerConfig {
  * Polls the queue for generate-podcast jobs and processes them.
  */
 export const createPodcastWorker = (config: PodcastWorkerConfig) => {
-  const pollInterval = config.pollInterval ?? 5000;
-  const maxConsecutiveErrors = config.maxConsecutiveErrors ?? 10;
+  const pollInterval = config.pollInterval ?? WORKER_DEFAULTS.POLL_INTERVAL_MS;
+  const maxConsecutiveErrors = config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
 
   // Create database connection
   const db = createDb({ databaseUrl: config.databaseUrl });
@@ -53,24 +61,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const ttsLayer = GoogleTTSLive({ apiKey: config.geminiApiKey });
-
-  // Select storage provider based on config
-  const storageLayer =
-    config.storageConfig.provider === 'filesystem'
-      ? FilesystemStorageLive({
-          basePath: config.storageConfig.basePath,
-          baseUrl: config.storageConfig.baseUrl,
-        })
-      : config.storageConfig.provider === 's3'
-        ? S3StorageLive({
-            bucket: config.storageConfig.bucket,
-            region: config.storageConfig.region,
-            accessKeyId: config.storageConfig.accessKeyId,
-            secretAccessKey: config.storageConfig.secretAccessKey,
-            endpoint: config.storageConfig.endpoint,
-          })
-        : DatabaseStorageLive.pipe(Layer.provide(dbLayer));
-
+  const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
   const llmLayer = GoogleLive({ apiKey: config.geminiApiKey });
   // Runtime for queue polling (doesn't need user context or documents)
   // Include pretty logger so Effect.logInfo etc. output to console
@@ -142,7 +133,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   /**
    * Process a single job based on its type.
    */
-  const processJob = (job: Job<GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload>) =>
+  const processJob = (job: Job<WorkerPayload>) =>
     Effect.gen(function* () {
       yield* Effect.logInfo(
         `Processing ${job.type} job ${job.id} for podcast ${job.payload.podcastId}`,
@@ -151,18 +142,20 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       // Create a dedicated runtime for this job with user context
       const jobRuntime = makeJobRuntime(job.payload.userId);
 
-      // Run the appropriate handler based on job type
+      // Run the appropriate handler based on job type using type guards
       const runHandler = async (): Promise<unknown> => {
-        switch (job.type) {
-          case 'generate-podcast':
-            return jobRuntime.runPromise(handleGeneratePodcast(job as Job<GeneratePodcastPayload>));
-          case 'generate-script':
-            return jobRuntime.runPromise(handleGenerateScript(job as Job<GenerateScriptPayload>));
-          case 'generate-audio':
-            return jobRuntime.runPromise(handleGenerateAudio(job as Job<GenerateAudioPayload>));
-          default:
-            throw new Error(`Unknown job type: ${job.type}`);
+        if (isGeneratePodcastJob(job)) {
+          return jobRuntime.runPromise(handleGeneratePodcast(job));
         }
+        if (isGenerateScriptJob(job)) {
+          return jobRuntime.runPromise(handleGenerateScript(job));
+        }
+        if (isGenerateAudioJob(job)) {
+          return jobRuntime.runPromise(handleGenerateAudio(job));
+        }
+        // Exhaustive check - this should never be reached
+        const _exhaustiveCheck: never = job;
+        throw new Error(`Unknown job type: ${(_exhaustiveCheck as Job<WorkerPayload>).type}`);
       };
 
       // Run the handler with the job-specific runtime
@@ -196,7 +189,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     // Try each job type until we find one
     for (const jobType of JOB_TYPES) {
       const job = yield* queue.processNextJob(jobType, (j) =>
-        processJob(j as Job<GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload>),
+        processJob(j as Job<WorkerPayload>),
       );
 
       if (job) {
@@ -215,9 +208,9 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
    * Start the worker loop with error handling and backoff.
    */
   const start = async () => {
-    // Retry schedule: exponential backoff starting at pollInterval, capped at 60s, max retries
+    // Retry schedule: exponential backoff starting at pollInterval, capped at BACKOFF_CAP_MS, max retries
     const retrySchedule = Schedule.exponential(pollInterval, 2).pipe(
-      Schedule.union(Schedule.spaced(60000)), // Use min of exponential or 60s (caps the backoff)
+      Schedule.union(Schedule.spaced(WORKER_DEFAULTS.BACKOFF_CAP_MS)),
       Schedule.intersect(Schedule.recurs(maxConsecutiveErrors - 1)),
     );
 
@@ -260,7 +253,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     const effect = Effect.gen(function* () {
       const queue = yield* Queue;
       const job = yield* queue.getJob(jobId);
-      return yield* processJob(job as Job<GeneratePodcastPayload>);
+      return yield* processJob(job as Job<WorkerPayload>);
     });
 
     // Use the worker runtime which has queue access

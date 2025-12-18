@@ -5,7 +5,7 @@ import {
   type AudioEncoding,
 } from '@repo/ai/tts';
 import { Effect } from 'effect';
-import { handleEffect } from '../effect-handler';
+import { createErrorHandlers, handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 interface PreviewResult {
@@ -15,18 +15,24 @@ interface PreviewResult {
 }
 
 const voicesRouter = {
-  list: protectedProcedure.voices.list.handler(async ({ context }) => {
-    const effect = Effect.gen(function* () {
-      const tts = yield* TTS;
-      const voices = yield* tts.listVoices({});
-      return [...voices];
-    }).pipe(Effect.withSpan('api.voices.list'), Effect.provide(context.layers));
-
-    return Effect.runPromise(effect);
+  list: protectedProcedure.voices.list.handler(async ({ context, errors }) => {
+    const handlers = createErrorHandlers(errors);
+    return handleEffect(
+      Effect.gen(function* () {
+        const tts = yield* TTS;
+        const voices = yield* tts.listVoices({});
+        return [...voices];
+      }).pipe(Effect.withSpan('api.voices.list'), Effect.provide(context.layers)),
+      {
+        ...handlers.tts,
+      },
+    );
   }),
 
   preview: protectedProcedure.voices.preview.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
+
       // Validate voice ID
       if (!isValidVoiceId(input.voiceId)) {
         throw errors.VOICE_NOT_FOUND({
@@ -56,12 +62,7 @@ const voicesRouter = {
           Effect.provide(context.layers),
         ),
         {
-          TTSError: (e) => {
-            throw errors.SERVICE_UNAVAILABLE({ message: e.message });
-          },
-          TTSQuotaExceededError: (e) => {
-            throw errors.RATE_LIMITED({ message: e.message });
-          },
+          ...handlers.tts,
         },
       );
     },

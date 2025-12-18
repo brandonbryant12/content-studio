@@ -74,6 +74,53 @@ export class DbError extends Schema.TaggedError<DbError>()('DbError', {
 }
 
 /**
+ * Database constraint violation (unique, foreign key, check constraint).
+ * PostgreSQL error codes: 23xxx
+ */
+export class ConstraintViolationError extends Schema.TaggedError<ConstraintViolationError>()(
+  'ConstraintViolationError',
+  {
+    constraint: Schema.String,
+    table: Schema.optional(Schema.String),
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly status = 409 as const;
+  static readonly code = 'CONSTRAINT_VIOLATION' as const;
+}
+
+/**
+ * Database deadlock detected.
+ * PostgreSQL error code: 40P01
+ */
+export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
+  'DeadlockError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly status = 503 as const;
+  static readonly code = 'DEADLOCK' as const;
+}
+
+/**
+ * Database connection failure.
+ * PostgreSQL error codes: 08xxx
+ */
+export class ConnectionError extends Schema.TaggedError<ConnectionError>()(
+  'ConnectionError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly status = 503 as const;
+  static readonly code = 'CONNECTION_ERROR' as const;
+}
+
+/**
  * External service failure (generic).
  */
 export class ExternalServiceError extends Schema.TaggedError<ExternalServiceError>()(
@@ -459,6 +506,9 @@ export type ApiError =
   | UnauthorizedError
   | ValidationError
   | DbError
+  | ConstraintViolationError
+  | DeadlockError
+  | ConnectionError
   | ExternalServiceError
   // Auth Policy
   | PolicyError

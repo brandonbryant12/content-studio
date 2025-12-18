@@ -1,12 +1,13 @@
 import { Documents } from '@repo/media';
 import { serializeDocument } from '@repo/db/schema';
 import { Effect } from 'effect';
-import { handleEffect } from '../effect-handler';
+import { createErrorHandlers, handleEffect } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const documentRouter = {
   list: protectedProcedure.documents.list.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -14,18 +15,8 @@ const documentRouter = {
           return result.map(serializeDocument);
         }).pipe(Effect.provide(context.layers)),
         {
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
+          ...handlers.common,
+          ...handlers.database,
         },
       );
     },
@@ -33,6 +24,7 @@ const documentRouter = {
 
   get: protectedProcedure.documents.get.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -40,26 +32,13 @@ const documentRouter = {
           return serializeDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
+          ...handlers.common,
+          ...handlers.database,
           DocumentNotFound: (e) => {
             throw errors.DOCUMENT_NOT_FOUND({
               message: e.message ?? `Document ${e.id} not found`,
               data: { documentId: e.id },
             });
-          },
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
           },
         },
       );
@@ -68,6 +47,7 @@ const documentRouter = {
 
   getContent: protectedProcedure.documents.getContent.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -75,38 +55,13 @@ const documentRouter = {
           return { content };
         }).pipe(Effect.provide(context.layers)),
         {
+          ...handlers.common,
+          ...handlers.database,
+          ...handlers.storage,
           DocumentNotFound: (e) => {
             throw errors.DOCUMENT_NOT_FOUND({
               message: e.message ?? `Document ${e.id} not found`,
               data: { documentId: e.id },
-            });
-          },
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
-          },
-          StorageError: (e) => {
-            console.error('[StorageError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Failed to retrieve document content',
-            });
-          },
-          StorageNotFoundError: (e) => {
-            console.error('[StorageNotFoundError]', e.message);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: 'Document content not found in storage',
-              data: { documentId: input.id },
             });
           },
           DocumentParseError: (e) => {
@@ -122,6 +77,7 @@ const documentRouter = {
 
   create: protectedProcedure.documents.create.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -129,27 +85,9 @@ const documentRouter = {
           return serializeDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
-          },
-          StorageUploadError: (e) => {
-            console.error('[StorageUploadError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Failed to store document content',
-            });
-          },
+          ...handlers.common,
+          ...handlers.database,
+          ...handlers.storage,
         },
       );
     },
@@ -157,6 +95,7 @@ const documentRouter = {
 
   upload: protectedProcedure.documents.upload.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -175,27 +114,9 @@ const documentRouter = {
           return serializeDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
-          },
-          StorageUploadError: (e) => {
-            console.error('[StorageUploadError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Failed to store document',
-            });
-          },
+          ...handlers.common,
+          ...handlers.database,
+          ...handlers.storage,
           DocumentTooLargeError: (e) => {
             throw errors.DOCUMENT_TOO_LARGE({
               message: e.message,
@@ -229,6 +150,7 @@ const documentRouter = {
 
   update: protectedProcedure.documents.update.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       const { id, ...data } = input;
 
       return handleEffect(
@@ -238,37 +160,13 @@ const documentRouter = {
           return serializeDocument(result);
         }).pipe(Effect.provide(context.layers)),
         {
+          ...handlers.common,
+          ...handlers.database,
+          ...handlers.storage,
           DocumentNotFound: (e) => {
             throw errors.DOCUMENT_NOT_FOUND({
               message: e.message ?? `Document ${e.id} not found`,
               data: { documentId: e.id },
-            });
-          },
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
-          },
-          StorageUploadError: (e) => {
-            console.error('[StorageUploadError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Failed to update document content',
-            });
-          },
-          StorageError: (e) => {
-            console.error('[StorageError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Storage operation failed',
             });
           },
         },
@@ -278,6 +176,7 @@ const documentRouter = {
 
   delete: protectedProcedure.documents.delete.handler(
     async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const documents = yield* Documents;
@@ -285,31 +184,13 @@ const documentRouter = {
           return {};
         }).pipe(Effect.provide(context.layers)),
         {
+          ...handlers.common,
+          ...handlers.database,
+          ...handlers.storage,
           DocumentNotFound: (e) => {
             throw errors.DOCUMENT_NOT_FOUND({
               message: e.message ?? `Document ${e.id} not found`,
               data: { documentId: e.id },
-            });
-          },
-          DbError: (e) => {
-            console.error('[DbError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Database operation failed',
-            });
-          },
-          PolicyError: (e) => {
-            console.error('[PolicyError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Authorization check failed',
-            });
-          },
-          ForbiddenError: (e) => {
-            throw errors.FORBIDDEN({ message: e.message });
-          },
-          StorageError: (e) => {
-            console.error('[StorageError]', e.message, e.cause);
-            throw errors.INTERNAL_ERROR({
-              message: 'Failed to delete document from storage',
             });
           },
         },
