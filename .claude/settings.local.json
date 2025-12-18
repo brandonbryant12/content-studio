@@ -36,7 +36,11 @@
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(readlink:*)",
+      "Bash(pnpm store prune:*)",
+      "Bash(pnpm install:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

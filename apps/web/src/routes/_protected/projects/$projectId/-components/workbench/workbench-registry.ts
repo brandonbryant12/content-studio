@@ -20,6 +20,8 @@ export interface StagingProps {
   selectedDocuments: Document[];
   onDocumentOrderChange: (documentIds: string[]) => void;
   onRemoveDocument: (documentId: string) => void;
+  // Shared actions
+  onAddSources?: () => void;
   // Edit mode support
   media?: MediaData | null;
   isEditMode: boolean;

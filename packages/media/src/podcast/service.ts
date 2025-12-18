@@ -9,9 +9,8 @@ import type {
   UpdateScript,
   PodcastStatus,
 } from '@repo/db/schema';
-import type { Db } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/effect/db';
 import type {
-  DbError,
   PodcastNotFound,
   ScriptNotFound,
   ForbiddenError,
@@ -62,7 +61,11 @@ export interface PodcastService {
     data: CreatePodcast,
   ) => Effect.Effect<
     PodcastWithDocuments,
-    DbError | PolicyError | ForbiddenError | DocumentNotFound | ProjectNotFound,
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError
+    | DocumentNotFound
+    | ProjectNotFound,
     PodcastContext
   >;
 
@@ -73,7 +76,7 @@ export interface PodcastService {
     id: string,
   ) => Effect.Effect<
     PodcastFull,
-    PodcastNotFound | DbError | PolicyError | ForbiddenError,
+    PodcastNotFound | DatabaseError | PolicyError | ForbiddenError,
     PodcastContext
   >;
 
@@ -87,7 +90,7 @@ export interface PodcastService {
     status?: PodcastStatus;
   }) => Effect.Effect<
     readonly Podcast[],
-    DbError | PolicyError,
+    DatabaseError | PolicyError,
     PodcastContext
   >;
 
@@ -99,7 +102,11 @@ export interface PodcastService {
     data: UpdatePodcast,
   ) => Effect.Effect<
     Podcast,
-    PodcastNotFound | DbError | PolicyError | ForbiddenError,
+    | PodcastNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError
+    | DocumentNotFound,
     PodcastContext
   >;
 
@@ -110,7 +117,7 @@ export interface PodcastService {
     id: string,
   ) => Effect.Effect<
     void,
-    PodcastNotFound | DbError | PolicyError | ForbiddenError,
+    PodcastNotFound | DatabaseError | PolicyError | ForbiddenError,
     PodcastContext
   >;
 
@@ -121,7 +128,11 @@ export interface PodcastService {
     podcastId: string,
   ) => Effect.Effect<
     PodcastScript,
-    PodcastNotFound | ScriptNotFound | DbError | PolicyError | ForbiddenError,
+    | PodcastNotFound
+    | ScriptNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError,
     PodcastContext
   >;
 
@@ -133,7 +144,7 @@ export interface PodcastService {
     data: UpdateScript,
   ) => Effect.Effect<
     PodcastScript,
-    PodcastNotFound | DbError | PolicyError | ForbiddenError,
+    PodcastNotFound | DatabaseError | PolicyError | ForbiddenError,
     PodcastContext
   >;
 
@@ -144,14 +155,14 @@ export interface PodcastService {
     id: string,
     status: PodcastStatus,
     errorMessage?: string,
-  ) => Effect.Effect<Podcast, PodcastNotFound | DbError, PodcastContext>;
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, PodcastContext>;
 
   /**
    * Count podcasts for the current user.
    */
   readonly count: (options?: {
     status?: PodcastStatus;
-  }) => Effect.Effect<number, DbError | PolicyError, PodcastContext>;
+  }) => Effect.Effect<number, DatabaseError | PolicyError, PodcastContext>;
 }
 
 export class Podcasts extends Context.Tag('@repo/media/Podcasts')<
