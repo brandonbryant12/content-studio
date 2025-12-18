@@ -158,6 +158,12 @@ const podcastRouter = {
               data: { podcastId: e.id },
             });
           },
+          DocumentNotFound: (e) => {
+            throw errors.NOT_FOUND({
+              message: e.message ?? `Document ${e.id} not found`,
+              data: { documentId: e.id },
+            });
+          },
         },
       );
     },

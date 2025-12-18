@@ -28,6 +28,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/router-devtools": "catalog:",
     "dotenv-cli": "catalog:",
+    "framer-motion": "^12.23.26",
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

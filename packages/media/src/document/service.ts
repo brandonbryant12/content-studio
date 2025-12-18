@@ -1,9 +1,8 @@
 import { Context } from 'effect';
 import type { CurrentUser } from '@repo/auth-policy';
 import type { Document, CreateDocument, UpdateDocument } from '@repo/db/schema';
-import type { Db } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/effect/db';
 import type {
-  DbError,
   DocumentNotFound,
   ForbiddenError,
   PolicyError,
@@ -61,7 +60,7 @@ export interface DocumentService {
     data: CreateDocument,
   ) => Effect.Effect<
     Document,
-    DbError | PolicyError | ForbiddenError | StorageUploadError,
+    DatabaseError | PolicyError | ForbiddenError | StorageUploadError,
     DocumentContext
   >;
 
@@ -79,7 +78,7 @@ export interface DocumentService {
     input: UploadDocumentInput,
   ) => Effect.Effect<
     Document,
-    | DbError
+    | DatabaseError
     | PolicyError
     | ForbiddenError
     | StorageUploadError
@@ -98,7 +97,7 @@ export interface DocumentService {
     id: string,
   ) => Effect.Effect<
     Document,
-    DocumentNotFound | DbError | PolicyError | ForbiddenError,
+    DocumentNotFound | DatabaseError | PolicyError | ForbiddenError,
     DocumentContext
   >;
 
@@ -112,7 +111,7 @@ export interface DocumentService {
   ) => Effect.Effect<
     string,
     | DocumentNotFound
-    | DbError
+    | DatabaseError
     | PolicyError
     | ForbiddenError
     | StorageError
@@ -130,7 +129,7 @@ export interface DocumentService {
     offset?: number;
   }) => Effect.Effect<
     readonly Document[],
-    DbError | PolicyError,
+    DatabaseError | PolicyError,
     DocumentContext
   >;
 
@@ -145,7 +144,7 @@ export interface DocumentService {
   ) => Effect.Effect<
     Document,
     | DocumentNotFound
-    | DbError
+    | DatabaseError
     | PolicyError
     | ForbiddenError
     | StorageUploadError
@@ -161,7 +160,7 @@ export interface DocumentService {
     id: string,
   ) => Effect.Effect<
     void,
-    DocumentNotFound | DbError | PolicyError | ForbiddenError | StorageError,
+    DocumentNotFound | DatabaseError | PolicyError | ForbiddenError | StorageError,
     DocumentContext
   >;
 
@@ -170,7 +169,7 @@ export interface DocumentService {
    */
   readonly count: () => Effect.Effect<
     number,
-    DbError | PolicyError,
+    DatabaseError | PolicyError,
     DocumentContext
   >;
 }
@@ -178,4 +177,4 @@ export interface DocumentService {
 export class Documents extends Context.Tag('@repo/media/Documents')<
   Documents,
   DocumentService
->() {}
+>() { }

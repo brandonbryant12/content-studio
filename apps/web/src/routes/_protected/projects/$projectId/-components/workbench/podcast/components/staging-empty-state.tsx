@@ -1,31 +1,43 @@
-import { SpeakerLoudIcon, FileTextIcon } from '@radix-ui/react-icons';
+import { SpeakerLoudIcon, FileTextIcon, PlusIcon } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
 
 interface StagingEmptyStateProps {
   type: 'no-documents' | 'draft' | 'preview';
   isOver?: boolean;
+  onAddSources?: () => void;
 }
 
-export function StagingEmptyState({ type, isOver }: StagingEmptyStateProps) {
+export function StagingEmptyState({ type, isOver, onAddSources }: StagingEmptyStateProps) {
   if (type === 'no-documents') {
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center py-12 px-6 rounded-xl border-2 border-dashed transition-colors',
+          'flex flex-col items-center justify-center py-16 px-6 rounded-xl border-2 border-dashed transition-all duration-200',
           isOver
-            ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20'
-            : 'border-gray-200 dark:border-gray-800',
+            ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20 scale-[1.02]'
+            : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30',
         )}
       >
-        <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-          <FileTextIcon className="w-6 h-6 text-gray-400" />
+        <div className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center mb-4 ring-1 ring-gray-100 dark:ring-gray-700">
+          <FileTextIcon className="w-8 h-8 text-violet-400" />
         </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-          No documents selected
+        <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Start with Sources
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
-          Select documents from the library on the left, or drag them here to start creating your podcast.
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6 leading-relaxed">
+          Your podcast needs content. Add documents from your library to start generating your script.
         </p>
+
+        {/* Only show button if handler provided (useful if we pass the toggle function down) */}
+        <Button
+          variant="outline"
+          onClick={onAddSources}
+          className="gap-2"
+        >
+          <PlusIcon className="w-4 h-4" />
+          Add Documents
+        </Button>
       </div>
     );
   }
