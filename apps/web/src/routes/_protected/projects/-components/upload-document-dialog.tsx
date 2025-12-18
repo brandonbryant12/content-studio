@@ -48,9 +48,9 @@ export default function UploadDocumentDialog({
           documentId: document.id,
         });
 
-        await invalidateQueries('documents', 'projects');
         toast.success('Document uploaded and added to project');
         handleClose();
+        await invalidateQueries('documents', 'projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to upload document');

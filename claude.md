@@ -285,15 +285,36 @@ const { data, isPending } = useQuery(
 // Mutations with cache invalidation
 const mutation = useMutation(
   apiClient.podcasts.create.mutationOptions({
-    onSuccess: () => {
-      invalidateQueries('podcasts', 'projects');
+    onSuccess: async () => {
       toast.success('Created!');
+      onOpenChange(false);  // Close dialog BEFORE await
+      await invalidateQueries('podcasts', 'projects');
     },
     onError: (error) => {
       toast.error(error.message ?? 'Failed to create');
     },
   })
 );
+```
+
+### Mutation Success Handler Order
+
+**CRITICAL**: In `onSuccess` handlers, always close dialogs or navigate BEFORE awaiting `invalidateQueries`. This prevents memory leaks from async operations running on unmounted components.
+
+```typescript
+// ✅ CORRECT: Close/navigate before await
+onSuccess: async (data) => {
+  toast.success('Created!');
+  onOpenChange(false);  // Close dialog first
+  navigate({ to: '/new-route' });  // Or navigate first
+  await invalidateQueries('entities');  // Then await
+}
+
+// ❌ WRONG: Await before close/navigate (causes memory leaks)
+onSuccess: async (data) => {
+  await invalidateQueries('entities');  // Component may unmount during await
+  onOpenChange(false);  // Too late - component already unmounted
+}
 ```
 
 ### Form Handling
@@ -322,3 +343,4 @@ const mutation = useMutation(
 - [ ] Frontend components under 200 lines
 - [ ] Dialogs use BaseDialog component
 - [ ] Error boundaries in place at layout levels
+- [ ] Mutation onSuccess: close/navigate BEFORE await invalidateQueries

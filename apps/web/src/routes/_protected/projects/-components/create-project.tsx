@@ -77,13 +77,13 @@ export default function CreateProjectDialog({
   const createMutation = useMutation(
     apiClient.projects.create.mutationOptions({
       onSuccess: async (data) => {
-        await invalidateQueries('projects');
         toast.success('Project created');
         onOpenChange(false);
         navigate({
           to: '/projects/$projectId',
           params: { projectId: data.id },
         });
+        await invalidateQueries('projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create project');

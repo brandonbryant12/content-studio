@@ -192,11 +192,38 @@ const createMutation = useMutation(
     onSuccess: async (podcast) => {
       // Chain: trigger generation after creation
       generateMutation.mutate({ id: podcast.id });
+      toast.success('Podcast created!');
+      onOpenChange(false);  // Close dialog BEFORE await
       await invalidateQueries('podcasts', 'projects');
     },
   }),
 );
 ```
+
+### Mutation Success Handler Order (Critical)
+
+**ALWAYS close dialogs or navigate BEFORE awaiting `invalidateQueries`**. This prevents memory leaks from async operations running on unmounted components.
+
+```typescript
+// ✅ CORRECT: Close/navigate before await
+onSuccess: async (data) => {
+  toast.success('Created!');
+  onOpenChange(false);  // Close dialog first
+  navigate({ to: '/new-route' });  // Or navigate first
+  await invalidateQueries('entities');  // Then await
+}
+
+// ❌ WRONG: Await before close/navigate (causes memory leaks)
+onSuccess: async (data) => {
+  await invalidateQueries('entities');  // Component may unmount during await
+  onOpenChange(false);  // Too late - component already unmounted
+}
+```
+
+**Why this matters:**
+- When a dialog closes or navigation occurs, React unmounts the component
+- If an async operation (like `invalidateQueries`) is still running, it may try to update state on an unmounted component
+- This causes React warnings and potential memory leaks
 
 ### Query Invalidation
 
@@ -435,9 +462,9 @@ function CreateEntityDialog({ open, onOpenChange }: Props) {
   const createMutation = useMutation(
     apiClient.entities.create.mutationOptions({
       onSuccess: async () => {
-        await invalidateQueries('entities');
-        onOpenChange(false);
         toast.success('Created!');
+        onOpenChange(false);  // Close BEFORE await (prevents memory leaks)
+        await invalidateQueries('entities');
       },
     }),
   );

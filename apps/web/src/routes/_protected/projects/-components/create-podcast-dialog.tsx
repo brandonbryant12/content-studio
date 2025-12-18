@@ -66,9 +66,9 @@ export default function CreatePodcastDialog({
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (podcast) => {
         generateMutation.mutate({ id: podcast.id });
-        await invalidateQueries('podcasts', 'projects');
-        onOpenChange(false);
         toast.success('Podcast created! Starting generation...');
+        onOpenChange(false);
+        await invalidateQueries('podcasts', 'projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');

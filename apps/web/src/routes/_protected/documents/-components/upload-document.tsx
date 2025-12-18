@@ -42,9 +42,9 @@ export default function UploadDocumentDialog({
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
       onSuccess: async () => {
-        await invalidateQueries('documents');
         toast.success('Document uploaded successfully');
         handleClose();
+        await invalidateQueries('documents');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to upload document');
