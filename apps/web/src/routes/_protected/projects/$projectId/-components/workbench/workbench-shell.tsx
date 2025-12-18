@@ -15,9 +15,10 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
-import { ArrowLeftIcon, FileTextIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, FileTextIcon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Link } from '@tanstack/react-router';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useCallback } from 'react';
 import type { Document, StagingProps, CommitProps, MediaData } from './workbench-registry';
 import { SourcePanel } from './source-panel';
@@ -57,6 +58,7 @@ export function WorkbenchShell({
   isEditMode,
 }: WorkbenchShellProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isSourcePanelOpen, setIsSourcePanelOpen] = useState(false);
 
   // Convert array to Set for source panel
   const selectedIdsSet = new Set(selectedDocumentIds);
@@ -81,9 +83,6 @@ export function WorkbenchShell({
   // Handle selection change from source panel (Set to array)
   const handleSourceSelectionChange = useCallback(
     (ids: Set<string>) => {
-      // In edit mode, don't allow selection changes
-      if (isEditMode) return;
-
       // Preserve order of existing selections, append new ones
       const existingOrder = selectedDocumentIds.filter((id) => ids.has(id));
       const newIds = Array.from(ids).filter(
@@ -91,33 +90,29 @@ export function WorkbenchShell({
       );
       onSelectionChange([...existingOrder, ...newIds]);
     },
-    [selectedDocumentIds, onSelectionChange, isEditMode],
+    [selectedDocumentIds, onSelectionChange],
   );
 
   // Handle document order change within staging area
   const handleDocumentOrderChange = useCallback(
     (newOrder: string[]) => {
-      // In edit mode, don't allow order changes
-      if (isEditMode) return;
       onSelectionChange(newOrder);
     },
-    [onSelectionChange, isEditMode],
+    [onSelectionChange],
   );
 
   // Handle removing a document from staging
   const handleRemoveDocument = useCallback(
     (documentId: string) => {
-      // In edit mode, don't allow removal
-      if (isEditMode) return;
       onSelectionChange(selectedDocumentIds.filter((id) => id !== documentId));
     },
-    [selectedDocumentIds, onSelectionChange, isEditMode],
+    [selectedDocumentIds, onSelectionChange],
   );
 
   // Drag start handler
   const handleDragStart = (event: DragStartEvent) => {
     // Disable dragging in edit mode
-    if (isEditMode) return;
+    // if (isEditMode) return;
     const { active } = event;
     setActiveId(active.id as string);
   };
@@ -125,10 +120,10 @@ export function WorkbenchShell({
   // Drag end handler
   const handleDragEnd = (event: DragEndEvent) => {
     // Disable drag operations in edit mode
-    if (isEditMode) {
+    /* if (isEditMode) {
       setActiveId(null);
       return;
-    }
+    } */
 
     const { active, over } = event;
     setActiveId(null);
@@ -166,8 +161,8 @@ export function WorkbenchShell({
   // Get the active document for drag overlay
   const activeDocument = activeId
     ? documents.find(
-        (d) => d.id === activeId || d.id === activeId.replace('source-', ''),
-      )
+      (d) => d.id === activeId || d.id === activeId.replace('source-', ''),
+    )
     : null;
 
   // Get title for edit mode
@@ -211,41 +206,91 @@ export function WorkbenchShell({
         </header>
 
         {/* Main content: Source + Staging + Commit */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Source Panel (shared) - read-only in edit mode */}
-          <SourcePanel
-            documents={documents}
-            selectedIds={selectedIdsSet}
-            onSelectionChange={handleSourceSelectionChange}
-            onAddExisting={onAddExisting}
-            onUploadNew={onUploadNew}
-            readOnly={isEditMode}
-          />
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Source Panel (Drawer) */}
+          <AnimatePresence>
+            {isSourcePanelOpen && (
+              <>
+                {/* Backdrop for mobile/overlay feel if needed, but we'll push content or overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsSourcePanelOpen(false)}
+                  className="absolute inset-0 bg-black/20 backdrop-blur-sm z-10 lg:hidden"
+                />
+                <motion.div
+                  initial={{ x: -320 }}
+                  animate={{ x: 0 }}
+                  exit={{ x: -320 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="absolute left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 z-20 shadow-xl"
+                >
+                  <SourcePanel
+                    documents={documents}
+                    selectedIds={selectedIdsSet}
+                    onSelectionChange={handleSourceSelectionChange}
+                    onAddExisting={onAddExisting}
+                    onUploadNew={onUploadNew}
+                    readOnly={false}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-4 right-4 lg:hidden"
+                    onClick={() => setIsSourcePanelOpen(false)}
+                  >
+                    <Cross2Icon className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Staging Area (pluggable) */}
-          <div className="flex-1 overflow-hidden">
-            <SortableContext
-              items={selectedDocumentIds}
-              strategy={verticalListSortingStrategy}
-            >
-              <StagingComponent
-                projectId={projectId}
-                selectedDocuments={selectedDocuments}
-                onDocumentOrderChange={handleDocumentOrderChange}
-                onRemoveDocument={handleRemoveDocument}
-                media={media}
-                isEditMode={isEditMode}
-              />
-            </SortableContext>
+          <div className="flex-1 overflow-hidden flex flex-col relative z-0">
+            {/* Toolbar */}
+            <div className="px-6 py-2 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
+              <Button
+                variant={isSourcePanelOpen ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => setIsSourcePanelOpen(!isSourcePanelOpen)}
+                className="gap-2"
+              >
+                <PlusIcon className="w-4 h-4" />
+                {isSourcePanelOpen ? 'Hide Sources' : 'Add Sources'}
+              </Button>
+
+              <div className="text-xs text-gray-500">
+                {selectedDocumentIds.length} documents selected
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              <SortableContext
+                items={selectedDocumentIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <StagingComponent
+                  projectId={projectId}
+                  selectedDocuments={selectedDocuments}
+                  onDocumentOrderChange={handleDocumentOrderChange}
+                  onRemoveDocument={handleRemoveDocument}
+                  onAddSources={() => setIsSourcePanelOpen(true)}
+                  media={media}
+                  isEditMode={isEditMode}
+                />
+              </SortableContext>
+            </div>
           </div>
 
           {/* Commit Panel (pluggable) */}
-          <div className="w-80 shrink-0 border-l border-gray-200 dark:border-gray-800 overflow-y-auto">
+          <div className="w-80 shrink-0 border-l border-gray-200 dark:border-gray-800 overflow-y-auto bg-white dark:bg-gray-950 relative z-0">
             <CommitComponent
               projectId={projectId}
               selectedDocumentIds={selectedDocumentIds}
               onSuccess={onSuccess}
-              disabled={!isEditMode && selectedDocumentIds.length === 0}
+              disabled={selectedDocumentIds.length === 0}
               media={media}
               isEditMode={isEditMode}
             />
@@ -253,9 +298,8 @@ export function WorkbenchShell({
         </div>
       </div>
 
-      {/* Drag overlay - only in create mode */}
-      {!isEditMode && (
-        <DragOverlay>
+      {/* Drag overlay */}
+      <DragOverlay>
           {activeDocument && (
             <div className="flex items-center gap-3 p-3 rounded-xl border bg-white dark:bg-gray-900 border-violet-300 dark:border-violet-700 shadow-lg">
               <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -272,7 +316,6 @@ export function WorkbenchShell({
             </div>
           )}
         </DragOverlay>
-      )}
     </DndContext>
   );
 }

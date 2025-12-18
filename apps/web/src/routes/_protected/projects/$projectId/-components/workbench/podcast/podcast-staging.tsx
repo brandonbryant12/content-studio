@@ -1,9 +1,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { FileTextIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
 import { useMutation } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { StagingProps, PodcastFull } from '../workbench-registry';
@@ -16,6 +16,7 @@ import { invalidateQueries } from '@/clients/query-helpers';
 export function PodcastStaging({
   selectedDocuments,
   onRemoveDocument,
+  onAddSources,
   media,
   isEditMode,
 }: StagingProps) {
@@ -86,25 +87,42 @@ export function PodcastStaging({
 
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            Source Documents ({podcast.documents.length})
+            Source Documents ({selectedDocuments.length})
+            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 font-normal">
+              Drag to reorder
+            </span>
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {podcast.documents.map((doc, index) => (
-              <div
-                key={doc.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+          <div className="mb-4">
+            {hasDocuments ? (
+              <SortableContext
+                items={selectedDocuments.map((d) => d.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                  <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
-                    {index + 1}
-                  </span>
+                <div className="space-y-2">
+                  <AnimatePresence mode="popLayout">
+                    {selectedDocuments.map((doc, index) => (
+                      <motion.div
+                        key={doc.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <StagingDocumentCard
+                          document={doc}
+                          variant="staging"
+                          index={index}
+                          onRemove={() => onRemoveDocument(doc.id)}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
-                <FileTextIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {doc.title}
-                </span>
-              </div>
-            ))}
+              </SortableContext>
+            ) : (
+              <StagingEmptyState type="no-documents" isOver={isOver} onAddSources={onAddSources} />
+            )}
           </div>
         </div>
 
@@ -193,19 +211,29 @@ export function PodcastStaging({
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-2">
-              {selectedDocuments.map((doc, index) => (
-                <StagingDocumentCard
-                  key={doc.id}
-                  document={doc}
-                  variant="staging"
-                  index={index}
-                  onRemove={() => onRemoveDocument(doc.id)}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {selectedDocuments.map((doc, index) => (
+                  <motion.div
+                    key={doc.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <StagingDocumentCard
+                      document={doc}
+                      variant="staging"
+                      index={index}
+                      onRemove={() => onRemoveDocument(doc.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </SortableContext>
         ) : (
-          <StagingEmptyState type="no-documents" isOver={isOver} />
+          <StagingEmptyState type="no-documents" isOver={isOver} onAddSources={onAddSources} />
         )}
       </div>
 

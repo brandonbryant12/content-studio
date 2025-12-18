@@ -1,7 +1,7 @@
 import { Context } from 'effect';
+import type { DatabaseError } from '@repo/effect/db';
 import type { PodcastFull } from './service';
 import type {
-  DbError,
   PodcastNotFound,
   ScriptNotFound,
   ForbiddenError,
@@ -33,7 +33,7 @@ export type GenerationError =
   | StorageError
   | StorageUploadError
   | StorageNotFoundError
-  | DbError
+  | DatabaseError
   | PolicyError
   | ForbiddenError;
 
@@ -109,4 +109,4 @@ export interface PodcastGeneratorService {
  */
 export class PodcastGenerator extends Context.Tag(
   '@repo/media/PodcastGenerator',
-)<PodcastGenerator, PodcastGeneratorService>() {}
+)<PodcastGenerator, PodcastGeneratorService>() { }

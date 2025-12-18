@@ -122,9 +122,9 @@ export const insertPodcast = (
     const docs =
       documentIds.length > 0
         ? await db
-            .select()
-            .from(document)
-            .where(inArray(document.id, documentIds))
+          .select()
+          .from(document)
+          .where(inArray(document.id, documentIds))
         : [];
 
     // Maintain order based on documentIds array
@@ -153,9 +153,9 @@ export const findPodcastById = (id: string) =>
     const docs =
       pod.sourceDocumentIds.length > 0
         ? await db
-            .select()
-            .from(document)
-            .where(inArray(document.id, pod.sourceDocumentIds))
+          .select()
+          .from(document)
+          .where(inArray(document.id, pod.sourceDocumentIds))
         : [];
 
     // Maintain order based on sourceDocumentIds array
@@ -217,12 +217,19 @@ export const listPodcasts = (options: {
  */
 export const updatePodcast = (id: string, data: UpdatePodcast) =>
   withDb('podcast.update', async (db) => {
+    const { documentIds, ...rest } = data;
+    const updateValues: Partial<Podcast> = {
+      ...rest,
+      updatedAt: new Date(),
+    };
+
+    if (documentIds) {
+      updateValues.sourceDocumentIds = documentIds;
+    }
+
     const [pod] = await db
       .update(podcast)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateValues)
       .where(eq(podcast.id, id))
       .returning();
     return pod;

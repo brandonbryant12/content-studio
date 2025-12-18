@@ -172,6 +172,7 @@ export const UpdatePodcastSchema = v.partial(
     coHostVoice: v.optional(v.string()),
     coHostVoiceName: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    documentIds: v.optional(v.array(v.string())),
   }),
 );
 

@@ -93,6 +93,15 @@ export function usePodcastGeneration({
     }),
   );
 
+  // Update podcast mutation
+  const updateMutation = useMutation(
+    apiClient.podcasts.update.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to update podcast');
+      },
+    }),
+  );
+
   const navigateToPodcast = (podcastId: string) => {
     navigate({
       to: '/projects/$projectId/$mediaType/$mediaId',
@@ -162,18 +171,43 @@ export function usePodcastGeneration({
     createAndPreviewMutation.mutate(getCreatePayload());
   };
 
+  const handleActionWithUpdate = async (
+    podcastId: string,
+    action: (id: string) => void,
+  ) => {
+    try {
+      if (selectedDocumentIds.length > 0) {
+        await updateMutation.mutateAsync({
+          id: podcastId,
+          documentIds: selectedDocumentIds,
+        });
+      }
+      action(podcastId);
+    } catch {
+      // Toast handled by mutation
+    }
+  };
+
   const loadingStates = {
     generateFull: generateMutation.isPending,
     generateScript: generateScriptMutation.isPending,
     generateAudio: generateAudioMutation.isPending,
     createAndGenerate: createAndGenerateMutation.isPending,
     createAndPreview: createAndPreviewMutation.isPending,
+    update: updateMutation.isPending,
   };
 
   return {
-    generateFull: (podcastId: string) => generateMutation.mutate({ id: podcastId }),
-    generateScript: (podcastId: string) => generateScriptMutation.mutate({ id: podcastId }),
-    generateAudio: (podcastId: string) => generateAudioMutation.mutate({ id: podcastId }),
+    generateFull: (podcastId: string) =>
+      handleActionWithUpdate(podcastId, (id) => generateMutation.mutate({ id })),
+    generateScript: (podcastId: string) =>
+      handleActionWithUpdate(podcastId, (id) =>
+        generateScriptMutation.mutate({ id, promptInstructions: config.instructions.trim() || undefined }),
+      ),
+    generateAudio: (podcastId: string) =>
+      handleActionWithUpdate(podcastId, (id) =>
+        generateAudioMutation.mutate({ id }),
+      ),
     createAndGenerate,
     createAndPreview,
     isLoading: Object.values(loadingStates).some(Boolean),

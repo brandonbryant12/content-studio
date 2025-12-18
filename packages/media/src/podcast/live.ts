@@ -64,6 +64,10 @@ const makePodcastService: PodcastService = {
       const existing = yield* Repo.findPodcastById(id);
       yield* requireOwnership(existing.createdBy);
 
+      if (data.documentIds) {
+        yield* Repo.verifyDocumentsExist(data.documentIds, existing.createdBy);
+      }
+
       return yield* Repo.updatePodcast(id, data);
     }).pipe(
       Effect.withSpan('podcasts.update', {
