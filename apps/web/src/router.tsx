@@ -1,9 +1,9 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createRouter as createTanstackRouter } from '@tanstack/react-router';
 import { queryClient } from '@/clients/queryClient';
 import { env } from '@/env';
 import { routeTree } from '@/routeTree.gen';
-import Spinner from '@/routes/-components/common/spinner';
 
 export function createRouter() {
   const router = createTanstackRouter({

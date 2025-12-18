@@ -15,8 +15,8 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { cn } from '@repo/ui/lib/utils';
 import { useState, useMemo } from 'react';
-import { SourceDocumentCard } from './document-card';
 import type { Document } from './workbench-registry';
+import { SourceDocumentCard } from './document-card';
 
 interface SourcePanelProps {
   documents: Document[];

@@ -1,16 +1,16 @@
-import type { RouterOutput } from '@repo/api/client';
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import type { RouterOutput } from '@repo/api/client';
 import {
   type PodcastStatus,
   getStatusConfig,
   isGeneratingStatus,
 } from '../-constants/status';
-import { formatDuration } from '@/lib/formatters';
-import Spinner from '@/routes/-components/common/spinner';
 import { PodcastIcon } from './podcast-icon';
+import { formatDuration } from '@/lib/formatters';
 
 function StatusBadge({ status }: { status: PodcastStatus }) {
   const config = getStatusConfig(status);

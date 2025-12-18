@@ -2,6 +2,7 @@ import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { authClient } from '@/clients/authClient';
+import { APP_NAME } from '@/constants';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -183,7 +184,7 @@ function RouteComponent() {
       <footer className="px-4 py-6 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-5xl mx-auto flex items-center justify-between text-sm text-gray-500">
           <span>Built with AI</span>
-          <span>&copy; {new Date().getFullYear()} PodcastAI</span>
+          <span>&copy; {new Date().getFullYear()} {APP_NAME}</span>
         </div>
       </footer>
     </div>

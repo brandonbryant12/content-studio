@@ -65,5 +65,5 @@
     }
   },
   "globalEnv": [],
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event"]
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event", "DEV"]
 }

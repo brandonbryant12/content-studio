@@ -186,6 +186,150 @@ pnpm lint              # Run linting
 5. **Don't skip type validation** - All API inputs must be validated
 6. **Don't create new patterns** - Follow existing service layer structure
 
+## Frontend Patterns
+
+### Component Organization
+
+- **Target size**: Keep components under 200 lines
+- **Split large components** into focused sub-components in a `/components` subdirectory
+- **Use barrel exports** (`index.ts`) for component directories
+
+### Custom Hooks
+
+Location: `apps/web/src/hooks/`
+
+Available hooks:
+- `useQueryInvalidation` - Cache invalidation by entity type
+- `useSessionGuard` - Authentication state and guards
+- `usePodcastGeneration` - Podcast creation and generation mutations
+
+```typescript
+import { useQueryInvalidation, useSessionGuard } from '@/hooks';
+
+const { invalidatePodcasts, invalidateProjects } = useQueryInvalidation();
+const { user, isAuthenticated, isPending } = useSessionGuard();
+```
+
+### BaseDialog Component
+
+Use `BaseDialog` for all modal dialogs to ensure consistent styling and behavior.
+
+Location: `apps/web/src/components/base-dialog/`
+
+```typescript
+import { BaseDialog } from '@/components/base-dialog';
+
+<BaseDialog
+  open={open}
+  onOpenChange={onOpenChange}
+  title="Create Project"
+  description="Optional description text"
+  maxWidth="lg"  // 'sm' | 'md' | 'lg' | 'xl'
+  scrollable     // Enable for long content
+  footer={{
+    submitText: 'Create',
+    loadingText: 'Creating...',
+    submitDisabled: !isValid,
+    onSubmit: handleSubmit,
+    isLoading: mutation.isPending,
+  }}
+>
+  {/* Form content */}
+</BaseDialog>
+```
+
+### Error Boundaries
+
+Location: `apps/web/src/components/error-boundary/`
+
+Error boundaries are integrated at:
+- Root layout (`__root.tsx`) - Catches app-wide errors
+- Protected layout (`_protected/layout.tsx`) - Resets on user change
+
+```typescript
+import { ErrorBoundary } from '@/components/error-boundary';
+
+<ErrorBoundary
+  resetKeys={[userId]}  // Reset when these values change
+  onError={(error) => logError(error)}
+  FallbackComponent={CustomFallback}  // Optional custom UI
+>
+  {children}
+</ErrorBoundary>
+```
+
+### Constants
+
+Location: `apps/web/src/constants.ts`
+
+Centralize app-wide constants (branding, status strings, etc.):
+
+```typescript
+import { APP_NAME, APP_VERSION, APP_NAME_WITH_VERSION } from '@/constants';
+```
+
+### API Client Usage
+
+Use oRPC client with React Query for type-safe API calls:
+
+```typescript
+import { apiClient } from '@/clients/apiClient';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { invalidateQueries } from '@/clients/query-helpers';
+
+// Queries
+const { data, isPending } = useQuery(
+  apiClient.podcasts.get.queryOptions({ input: { id } })
+);
+
+// Mutations with cache invalidation
+const mutation = useMutation(
+  apiClient.podcasts.create.mutationOptions({
+    onSuccess: async () => {
+      toast.success('Created!');
+      onOpenChange(false);  // Close dialog BEFORE await
+      await invalidateQueries('podcasts', 'projects');
+    },
+    onError: (error) => {
+      toast.error(error.message ?? 'Failed to create');
+    },
+  })
+);
+```
+
+### Mutation Success Handler Order
+
+**CRITICAL**: In `onSuccess` handlers, always close dialogs or navigate BEFORE awaiting `invalidateQueries`. This prevents memory leaks from async operations running on unmounted components.
+
+```typescript
+// ✅ CORRECT: Close/navigate before await
+onSuccess: async (data) => {
+  toast.success('Created!');
+  onOpenChange(false);  // Close dialog first
+  navigate({ to: '/new-route' });  // Or navigate first
+  await invalidateQueries('entities');  // Then await
+}
+
+// ❌ WRONG: Await before close/navigate (causes memory leaks)
+onSuccess: async (data) => {
+  await invalidateQueries('entities');  // Component may unmount during await
+  onOpenChange(false);  // Too late - component already unmounted
+}
+```
+
+### Form Handling
+
+- Use React state for form values
+- Validate on submit, not on every change
+- Show loading state during submission
+- Display user-friendly error messages
+
+### Accessibility
+
+- Add `aria-label` to icon-only buttons
+- Use `aria-checked` and `role="checkbox"` for custom checkboxes
+- Ensure all form inputs have associated labels
+
 ## Code Review Checklist
 
 - [ ] All errors handled with proper typing (no `any`)
@@ -196,3 +340,7 @@ pnpm lint              # Run linting
 - [ ] Input validation at API boundary
 - [ ] Serializers used for API responses
 - [ ] TypeScript compiles without errors
+- [ ] Frontend components under 200 lines
+- [ ] Dialogs use BaseDialog component
+- [ ] Error boundaries in place at layout levels
+- [ ] Mutation onSuccess: close/navigate BEFORE await invalidateQueries

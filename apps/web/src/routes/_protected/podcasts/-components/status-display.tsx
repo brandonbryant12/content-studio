@@ -1,6 +1,6 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import type { PodcastStatus } from '../-constants/status';
 import { getStatusConfig, isGeneratingStatus } from '../-constants/status';
-import Spinner from '@/routes/-components/common/spinner';
 
 // Panel styling for StatusDisplay (different from Badge variants)
 const statusPanelStyles: Record<

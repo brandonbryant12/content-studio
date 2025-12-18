@@ -1,6 +1,6 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import { Navigate, Outlet, createFileRoute } from '@tanstack/react-router';
 import { authClient } from '@/clients/authClient';
-import Spinner from '@/routes/-components/common/spinner';
 
 export const Route = createFileRoute('/_public')({
   component: Layout,

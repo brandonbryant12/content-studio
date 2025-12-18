@@ -1,3 +1,4 @@
+import type { ProjectWithDocuments, ProjectFull, AddDocumentInput } from './types';
 import type {
   CreateProject,
   Project,
@@ -13,7 +14,6 @@ import type {
   ProjectNotFound,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
-import type { ProjectWithDocuments, ProjectFull, AddDocumentInput } from './types';
 
 export type ProjectError =
   | DatabaseError

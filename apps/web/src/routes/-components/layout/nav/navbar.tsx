@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import type { AuthSession } from '@/clients/authClient';
+import { APP_NAME } from '@/constants';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import UserAvatar from '@/routes/-components/layout/nav/user-avatar';
 
@@ -28,7 +29,7 @@ export function Navbar({ session }: Readonly<{ session: AuthSession }>) {
           <MicIcon className="w-4 h-4 text-white" />
         </div>
         <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 dark:from-violet-400 dark:to-fuchsia-400 bg-clip-text text-transparent font-bold tracking-tight">
-          PodcastAI
+          {APP_NAME}
         </span>
       </Link>
       {session?.user ? (

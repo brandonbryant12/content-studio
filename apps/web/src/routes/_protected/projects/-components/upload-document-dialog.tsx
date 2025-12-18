@@ -1,13 +1,4 @@
 import { UploadIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { useMutation } from '@tanstack/react-query';
@@ -15,7 +6,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
-import Spinner from '@/routes/-components/common/spinner';
+import { BaseDialog } from '@/components/base-dialog';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -52,15 +43,14 @@ export default function UploadDocumentDialog({
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
       onSuccess: async (document) => {
-        // Add the document to the project
         await addDocumentMutation.mutateAsync({
           id: projectId,
           documentId: document.id,
         });
 
-        await invalidateQueries('documents', 'projects');
         toast.success('Document uploaded and added to project');
         handleClose();
+        await invalidateQueries('documents', 'projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to upload document');
@@ -90,7 +80,6 @@ export default function UploadDocumentDialog({
     }
 
     setFile(selectedFile);
-    // Auto-fill title from filename (without extension)
     const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, '');
     setTitle(nameWithoutExt.replace(/[-_]/g, ' '));
   }, []);
@@ -110,7 +99,6 @@ export default function UploadDocumentDialog({
   const handleSubmit = async () => {
     if (!file) return;
 
-    // Convert file to base64
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(
       new Uint8Array(arrayBuffer).reduce(
@@ -130,93 +118,74 @@ export default function UploadDocumentDialog({
   const isUploading = uploadMutation.isPending || addDocumentMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
-          <DialogDescription>
-            Upload a document to this project. Supports TXT, PDF, DOCX, and
-            PPTX.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {/* Drop zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            className={`
-              border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
-              ${isDragging ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' : 'border-gray-300 dark:border-gray-700'}
-              ${file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
-            `}
-            onClick={() =>
-              document.getElementById('project-file-input')?.click()
-            }
-          >
-            <input
-              id="project-file-input"
-              type="file"
-              accept={SUPPORTED_EXTENSIONS}
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
-            />
-            {file ? (
-              <div>
-                <p className="font-medium text-green-600 dark:text-green-400">
-                  {file.name}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
-            ) : (
-              <div>
-                <UploadIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Drag and drop or click to select
-                </p>
-                <p className="text-sm text-gray-400 mt-1">Max 10MB</p>
-              </div>
-            )}
-          </div>
-
-          {/* Title input */}
-          <div className="space-y-2">
-            <Label htmlFor="doc-title">Title (optional)</Label>
-            <Input
-              id="doc-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Document title"
-            />
-          </div>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Upload Document"
+      description="Upload a document to this project. Supports TXT, PDF, DOCX, and PPTX."
+      maxWidth="md"
+      footer={{
+        submitText: 'Upload',
+        loadingText: 'Uploading...',
+        submitDisabled: !file,
+        onSubmit: handleSubmit,
+        isLoading: isUploading,
+      }}
+    >
+      <div className="space-y-4">
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+            ${isDragging ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' : 'border-gray-300 dark:border-gray-700'}
+            ${file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
+          `}
+          onClick={() =>
+            document.getElementById('project-file-input')?.click()
+          }
+        >
+          <input
+            id="project-file-input"
+            type="file"
+            accept={SUPPORTED_EXTENSIONS}
+            className="hidden"
+            onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+          />
+          {file ? (
+            <div>
+              <p className="font-medium text-green-600 dark:text-green-400">
+                {file.name}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {(file.size / 1024).toFixed(1)} KB
+              </p>
+            </div>
+          ) : (
+            <div>
+              <UploadIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-600 dark:text-gray-400">
+                Drag and drop or click to select
+              </p>
+              <p className="text-sm text-gray-400 mt-1">Max 10MB</p>
+            </div>
+          )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!file || isUploading}
-            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
-          >
-            {isUploading ? (
-              <>
-                <Spinner className="w-4 h-4 mr-2" />
-                Uploading...
-              </>
-            ) : (
-              'Upload'
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-2">
+          <Label htmlFor="doc-title">Title (optional)</Label>
+          <Input
+            id="doc-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Document title"
+          />
+        </div>
+      </div>
+    </BaseDialog>
   );
 }

@@ -1,23 +1,14 @@
-import { Button } from '@repo/ui/components/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
-import Spinner from '@/routes/-components/common/spinner';
+import { BaseDialog } from '@/components/base-dialog';
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -86,13 +77,13 @@ export default function CreateProjectDialog({
   const createMutation = useMutation(
     apiClient.projects.create.mutationOptions({
       onSuccess: async (data) => {
-        await invalidateQueries('projects');
         toast.success('Project created');
         onOpenChange(false);
         navigate({
           to: '/projects/$projectId',
           params: { projectId: data.id },
         });
+        await invalidateQueries('projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create project');
@@ -100,13 +91,15 @@ export default function CreateProjectDialog({
     }),
   );
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      // Reset form state when dialog opens
       setTitle('');
       setDescription('');
       setSelectedDocIds(new Set());
     }
-  }, [open]);
+    onOpenChange(newOpen);
+  };
 
   const toggleDocument = (id: string) => {
     setSelectedDocIds((prev) => {
@@ -134,78 +127,61 @@ export default function CreateProjectDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
-          <DialogDescription>
-            Create a new project to bundle documents and media together.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Project title..."
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe what this project is about..."
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Documents (optional)</Label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Select documents to include in this project. You can add more
-              later.
-            </p>
-            <DocumentPicker
-              documents={documents ?? []}
-              selectedIds={selectedDocIds}
-              onSelect={toggleDocument}
-            />
-            {selectedDocIds.size > 0 && (
-              <p className="text-xs text-violet-600 dark:text-violet-400">
-                {selectedDocIds.size} document
-                {selectedDocIds.size === 1 ? '' : 's'} selected
-              </p>
-            )}
-          </div>
+    <BaseDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Create Project"
+      description="Create a new project to bundle documents and media together."
+      footer={{
+        submitText: 'Create Project',
+        loadingText: 'Creating...',
+        submitDisabled: !title.trim(),
+        onSubmit: handleSubmit,
+        isLoading: createMutation.isPending,
+      }}
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Project title..."
+            autoFocus
+          />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={createMutation.isPending || !title.trim()}
-            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
-          >
-            {createMutation.isPending ? (
-              <>
-                <Spinner className="w-4 h-4 mr-2" />
-                Creating...
-              </>
-            ) : (
-              'Create Project'
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-2">
+          <Label htmlFor="description">Description (optional)</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe what this project is about..."
+            rows={2}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Documents (optional)</Label>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Select documents to include in this project. You can add more
+            later.
+          </p>
+          <DocumentPicker
+            documents={documents ?? []}
+            selectedIds={selectedDocIds}
+            onSelect={toggleDocument}
+          />
+          {selectedDocIds.size > 0 && (
+            <p className="text-xs text-violet-600 dark:text-violet-400">
+              {selectedDocIds.size} document
+              {selectedDocIds.size === 1 ? '' : 's'} selected
+            </p>
+          )}
+        </div>
+      </div>
+    </BaseDialog>
   );
 }

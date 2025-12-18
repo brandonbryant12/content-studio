@@ -14,10 +14,10 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { Input } from '@repo/ui/components/input';
+import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
 import { useState, useMemo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import Spinner from '@/routes/-components/common/spinner';
 
 type Document = RouterOutput['projects']['get']['documents'][number];
 
@@ -35,13 +35,18 @@ interface ContentLibraryProps {
 function Checkbox({
   checked,
   onCheckedChange,
+  label,
 }: {
   checked: boolean;
   onCheckedChange: () => void;
+  label: string;
 }) {
   return (
     <button
       type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={label}
       onClick={(e) => {
         e.stopPropagation();
         onCheckedChange();
@@ -142,6 +147,7 @@ export function ContentLibrary({
               <Checkbox
                 checked={selectedIds.has(doc.id)}
                 onCheckedChange={() => handleToggle(doc.id)}
+                label={`Select ${doc.title}`}
               />
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleToggle(doc.id)}>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">

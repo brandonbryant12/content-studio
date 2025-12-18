@@ -192,11 +192,38 @@ const createMutation = useMutation(
     onSuccess: async (podcast) => {
       // Chain: trigger generation after creation
       generateMutation.mutate({ id: podcast.id });
+      toast.success('Podcast created!');
+      onOpenChange(false);  // Close dialog BEFORE await
       await invalidateQueries('podcasts', 'projects');
     },
   }),
 );
 ```
+
+### Mutation Success Handler Order (Critical)
+
+**ALWAYS close dialogs or navigate BEFORE awaiting `invalidateQueries`**. This prevents memory leaks from async operations running on unmounted components.
+
+```typescript
+// ✅ CORRECT: Close/navigate before await
+onSuccess: async (data) => {
+  toast.success('Created!');
+  onOpenChange(false);  // Close dialog first
+  navigate({ to: '/new-route' });  // Or navigate first
+  await invalidateQueries('entities');  // Then await
+}
+
+// ❌ WRONG: Await before close/navigate (causes memory leaks)
+onSuccess: async (data) => {
+  await invalidateQueries('entities');  // Component may unmount during await
+  onOpenChange(false);  // Too late - component already unmounted
+}
+```
+
+**Why this matters:**
+- When a dialog closes or navigation occurs, React unmounts the component
+- If an async operation (like `invalidateQueries`) is still running, it may try to update state on an unmounted component
+- This causes React warnings and potential memory leaks
 
 ### Query Invalidation
 
@@ -418,13 +445,16 @@ function ListPage() {
 }
 ```
 
-### Dialog Pattern
+### Dialog Pattern with BaseDialog
+
+Use `BaseDialog` for consistent dialog styling and behavior:
 
 ```typescript
+import { BaseDialog } from '@/components/base-dialog';
+
 function CreateEntityDialog({ open, onOpenChange }: Props) {
   const [formState, setFormState] = useState(initialState);
 
-  // Reset on open
   useEffect(() => {
     if (open) setFormState(initialState);
   }, [open]);
@@ -432,24 +462,123 @@ function CreateEntityDialog({ open, onOpenChange }: Props) {
   const createMutation = useMutation(
     apiClient.entities.create.mutationOptions({
       onSuccess: async () => {
-        await invalidateQueries('entities');
-        onOpenChange(false);
         toast.success('Created!');
+        onOpenChange(false);  // Close BEFORE await (prevents memory leaks)
+        await invalidateQueries('entities');
       },
     }),
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        {/* Form fields */}
-        <DialogFooter>
-          <Button onClick={() => createMutation.mutate(formState)}>
-            {createMutation.isPending ? <Spinner /> : 'Create'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create Entity"
+      description="Optional description"
+      maxWidth="lg"  // 'sm' | 'md' | 'lg' | 'xl'
+      scrollable     // For long content
+      footer={{
+        submitText: 'Create',
+        loadingText: 'Creating...',
+        submitDisabled: !formState.isValid,
+        onSubmit: () => createMutation.mutate(formState),
+        isLoading: createMutation.isPending,
+      }}
+    >
+      {/* Form content */}
+    </BaseDialog>
   );
 }
+```
+
+## Custom Hooks
+
+Location: `apps/web/src/hooks/`
+
+### Available Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useQueryInvalidation` | Cache invalidation by entity type |
+| `useSessionGuard` | Authentication state and guards |
+| `usePodcastGeneration` | Podcast creation and generation mutations |
+
+```typescript
+import { useQueryInvalidation, useSessionGuard } from '@/hooks';
+
+// Cache invalidation
+const { invalidatePodcasts, invalidateProjects, invalidate } = useQueryInvalidation();
+await invalidate('podcasts', 'projects');
+
+// Session guard
+const { user, isAuthenticated, isPending, session } = useSessionGuard();
+```
+
+## Error Boundaries
+
+Location: `apps/web/src/components/error-boundary/`
+
+Error boundaries catch React errors and display a fallback UI with retry option.
+
+### Integration Points
+
+- **Root layout** (`__root.tsx`): Catches app-wide errors
+- **Protected layout** (`_protected/layout.tsx`): Resets on user change
+
+```typescript
+import { ErrorBoundary } from '@/components/error-boundary';
+
+<ErrorBoundary
+  resetKeys={[userId]}           // Reset when these values change
+  onError={(error) => logError(error)}
+  FallbackComponent={CustomFallback}  // Optional custom fallback
+>
+  {children}
+</ErrorBoundary>
+```
+
+### Default Error Fallback
+
+The default `ErrorFallback` displays:
+- Error icon
+- Error message
+- "Try Again" button
+- Stack trace (dev mode only)
+
+## Constants
+
+Location: `apps/web/src/constants.ts`
+
+Centralize app-wide constants:
+
+```typescript
+import { APP_NAME, APP_VERSION, APP_NAME_WITH_VERSION } from '@/constants';
+
+// Available constants
+APP_NAME           // 'PodcastAI'
+APP_VERSION        // '1.0'
+APP_NAME_WITH_VERSION  // 'PodcastAI v1.0'
+```
+
+## Accessibility
+
+### ARIA Labels
+
+- Add `aria-label` to icon-only buttons
+- Use `role="checkbox"` and `aria-checked` for custom checkboxes
+- Ensure form inputs have associated `<Label>` components
+
+```typescript
+// Icon button
+<button aria-label="Delete item" onClick={onDelete}>
+  <TrashIcon />
+</button>
+
+// Custom checkbox
+<button
+  role="checkbox"
+  aria-checked={checked}
+  aria-label={`Select ${item.title}`}
+  onClick={onToggle}
+/>
 ```

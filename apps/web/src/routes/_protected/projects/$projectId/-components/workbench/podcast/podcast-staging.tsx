@@ -1,23 +1,17 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import {
-  FileTextIcon,
-  SpeakerLoudIcon,
-  Pencil1Icon,
-  CheckIcon,
-  Cross2Icon,
-} from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
+import { FileTextIcon } from '@radix-ui/react-icons';
+import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import type { StagingProps, PodcastFull } from '../workbench-registry';
+import type { ScriptSegment } from './script-editor';
+import { StagingDocumentCard } from '../document-card';
+import { StagingScriptSection, StagingEmptyState } from './components';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
-import Spinner from '@/routes/-components/common/spinner';
-import { StagingDocumentCard } from '../document-card';
-import type { StagingProps, PodcastFull } from '../workbench-registry';
-import { ScriptEditor, type ScriptSegment } from './script-editor';
 
 export function PodcastStaging({
   selectedDocuments,
@@ -32,7 +26,6 @@ export function PodcastStaging({
     disabled: isEditMode,
   });
 
-  // Script editing state
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedSegments, setEditedSegments] = useState<ScriptSegment[]>([]);
 
@@ -42,7 +35,6 @@ export function PodcastStaging({
   const isScriptReady = podcast?.status === 'script_ready';
   const isGenerating = podcast?.status === 'generating_script' || podcast?.status === 'generating_audio';
 
-  // Script update mutation
   const updateScriptMutation = useMutation(
     apiClient.podcasts.updateScript.mutationOptions({
       onSuccess: () => {
@@ -81,7 +73,6 @@ export function PodcastStaging({
   if (isEditMode && podcast) {
     return (
       <div className="flex flex-col h-full p-6 overflow-y-auto">
-        {/* Podcast Title & Description */}
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {podcast.title}
@@ -93,7 +84,6 @@ export function PodcastStaging({
           )}
         </div>
 
-        {/* Source Documents */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
             Source Documents ({podcast.documents.length})
@@ -118,64 +108,21 @@ export function PodcastStaging({
           </div>
         </div>
 
-        {/* Script Section */}
         {hasScript && (
-          <div className="mb-6 flex-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Script
-                </h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {podcast.script!.segments.length} segments
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                {isEditingScript ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelEditing}
-                      disabled={updateScriptMutation.isPending}
-                    >
-                      <Cross2Icon className="w-4 h-4 mr-1" />
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveScript}
-                      disabled={updateScriptMutation.isPending}
-                    >
-                      {updateScriptMutation.isPending ? (
-                        <Spinner className="w-4 h-4 mr-1" />
-                      ) : (
-                        <CheckIcon className="w-4 h-4 mr-1" />
-                      )}
-                      Save
-                    </Button>
-                  </>
-                ) : isScriptReady ? (
-                  <Button variant="outline" size="sm" onClick={handleStartEditing}>
-                    <Pencil1Icon className="w-4 h-4 mr-1" />
-                    Edit Script
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
-              <ScriptEditor
-                segments={isEditingScript ? editedSegments : podcast.script!.segments}
-                onChange={setEditedSegments}
-                readOnly={!isEditingScript}
-                summary={podcast.script!.summary}
-              />
-            </div>
-          </div>
+          <StagingScriptSection
+            segments={podcast.script!.segments}
+            summary={podcast.script!.summary}
+            isEditing={isEditingScript}
+            isScriptReady={isScriptReady}
+            isSaving={updateScriptMutation.isPending}
+            editedSegments={editedSegments}
+            onStartEditing={handleStartEditing}
+            onCancelEditing={handleCancelEditing}
+            onSaveScript={handleSaveScript}
+            onSegmentsChange={setEditedSegments}
+          />
         )}
 
-        {/* Generation Progress */}
         {isGenerating && (
           <div className="mb-6 p-4 bg-violet-50 dark:bg-violet-900/20 rounded-xl border border-violet-200 dark:border-violet-800">
             <div className="flex items-center gap-3">
@@ -192,7 +139,6 @@ export function PodcastStaging({
           </div>
         )}
 
-        {/* Audio Section */}
         {hasAudio && (
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-3">
@@ -213,25 +159,14 @@ export function PodcastStaging({
           </div>
         )}
 
-        {/* No Script Yet - for drafts */}
         {!hasScript && !isGenerating && podcast?.status === 'draft' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-16 px-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 flex items-center justify-center mb-4">
-              <SpeakerLoudIcon className="w-8 h-8 text-violet-500" />
-            </div>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              Ready to generate
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
-              Click "Generate" in the panel on the right to create the podcast.
-            </p>
-          </div>
+          <StagingEmptyState type="draft" />
         )}
       </div>
     );
   }
 
-  // Create mode - original behavior
+  // Create mode
   return (
     <div
       ref={setNodeRef}
@@ -240,7 +175,6 @@ export function PodcastStaging({
         isOver && 'bg-violet-50 dark:bg-violet-900/10',
       )}
     >
-      {/* Selected Documents Section */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -271,28 +205,10 @@ export function PodcastStaging({
             </div>
           </SortableContext>
         ) : (
-          <div
-            className={cn(
-              'flex flex-col items-center justify-center py-12 px-6 rounded-xl border-2 border-dashed transition-colors',
-              isOver
-                ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20'
-                : 'border-gray-200 dark:border-gray-800',
-            )}
-          >
-            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-              <FileTextIcon className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              No documents selected
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
-              Select documents from the library on the left, or drag them here to start creating your podcast.
-            </p>
-          </div>
+          <StagingEmptyState type="no-documents" isOver={isOver} />
         )}
       </div>
 
-      {/* Script Preview Section (placeholder for create mode) */}
       {hasDocuments && (
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-3">
@@ -303,18 +219,7 @@ export function PodcastStaging({
               Preview
             </span>
           </div>
-
-          <div className="flex flex-col items-center justify-center py-16 px-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 flex items-center justify-center mb-4">
-              <SpeakerLoudIcon className="w-8 h-8 text-violet-500" />
-            </div>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              Ready to generate
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
-              Configure your podcast settings and click "Generate" to create a script from your documents.
-            </p>
-          </div>
+          <StagingEmptyState type="preview" />
         </div>
       )}
     </div>

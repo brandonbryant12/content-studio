@@ -1,20 +1,12 @@
 import { FileTextIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui/components/dialog';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
-import Spinner from '@/routes/-components/common/spinner';
+import { BaseDialog } from '@/components/base-dialog';
 
 interface AddMediaDialogProps {
   open: boolean;
@@ -121,7 +113,6 @@ export default function AddMediaDialog({
 
     setIsAdding(true);
     try {
-      // Add documents sequentially
       for (const docId of selectedDocs) {
         await addDocumentMutation.mutateAsync({
           id: projectId,
@@ -148,38 +139,44 @@ export default function AddMediaDialog({
     onOpenChange(newOpen);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Documents</DialogTitle>
-          <DialogDescription>
-            Select documents to add to this project. These will be available as
-            source material for podcasts.
-          </DialogDescription>
-        </DialogHeader>
+  const submitText = selectedDocs.size > 0
+    ? `Add ${selectedDocs.size} Document${selectedDocs.size === 1 ? '' : 's'}`
+    : 'Add Documents';
 
-        <div className="mt-4">
-          {loadingDocs ? (
-            <div className="flex justify-center py-8">
-              <Spinner className="w-5 h-5" />
-            </div>
-          ) : !documents?.length ? (
-            <EmptyState />
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {documents.map((doc) => (
-                <DocumentItem
-                  key={doc.id}
-                  doc={doc}
-                  selected={selectedDocs.has(doc.id)}
-                  onToggle={() => toggleDoc(doc.id)}
-                  disabled={existingDocumentIds.includes(doc.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+  return (
+    <BaseDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Add Documents"
+      description="Select documents to add to this project. These will be available as source material for podcasts."
+      footer={{
+        submitText,
+        loadingText: 'Adding...',
+        submitDisabled: selectedDocs.size === 0,
+        onSubmit: handleAdd,
+        isLoading: isAdding,
+      }}
+    >
+      <div>
+        {loadingDocs ? (
+          <div className="flex justify-center py-8">
+            <Spinner className="w-5 h-5" />
+          </div>
+        ) : !documents?.length ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {documents.map((doc) => (
+              <DocumentItem
+                key={doc.id}
+                doc={doc}
+                selected={selectedDocs.has(doc.id)}
+                onToggle={() => toggleDoc(doc.id)}
+                disabled={existingDocumentIds.includes(doc.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {selectedDocs.size > 0 && (
           <p className="text-sm text-violet-600 dark:text-violet-400 mt-2">
@@ -187,27 +184,7 @@ export default function AddMediaDialog({
             selected
           </p>
         )}
-
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAdd}
-            disabled={isAdding || selectedDocs.size === 0}
-            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
-          >
-            {isAdding ? (
-              <>
-                <Spinner className="w-4 h-4 mr-2" />
-                Adding...
-              </>
-            ) : (
-              `Add ${selectedDocs.size > 0 ? selectedDocs.size : ''} Document${selectedDocs.size === 1 ? '' : 's'}`
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseDialog>
   );
 }
