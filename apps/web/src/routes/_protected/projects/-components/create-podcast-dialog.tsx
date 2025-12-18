@@ -2,7 +2,7 @@ import { Button } from '@repo/ui/components/button';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { DocumentPicker } from './podcast/document-picker';
@@ -37,8 +37,9 @@ export default function CreatePodcastDialog({
   const [instructions, setInstructions] = useState('');
   const [targetDuration, setTargetDuration] = useState(5);
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      // Reset form state when dialog opens
       setFormat('conversation');
       setSelectedDocIds(new Set(preSelectedDocumentIds));
       setHostVoice('');
@@ -46,7 +47,8 @@ export default function CreatePodcastDialog({
       setInstructions('');
       setTargetDuration(5);
     }
-  }, [open, preSelectedDocumentIds]);
+    onOpenChange(newOpen);
+  };
 
   const { data: voices = [] } = useQuery(
     apiClient.voices.list.queryOptions({ input: {} }),
@@ -115,7 +117,7 @@ export default function CreatePodcastDialog({
   return (
     <BaseDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={`Create ${isConversation ? 'Podcast' : 'Voice Over'}`}
       description={
         isConversation

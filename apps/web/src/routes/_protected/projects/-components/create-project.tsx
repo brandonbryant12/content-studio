@@ -3,7 +3,7 @@ import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -91,13 +91,15 @@ export default function CreateProjectDialog({
     }),
   );
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      // Reset form state when dialog opens
       setTitle('');
       setDescription('');
       setSelectedDocIds(new Set());
     }
-  }, [open]);
+    onOpenChange(newOpen);
+  };
 
   const toggleDocument = (id: string) => {
     setSelectedDocIds((prev) => {
@@ -127,7 +129,7 @@ export default function CreateProjectDialog({
   return (
     <BaseDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Create Project"
       description="Create a new project to bundle documents and media together."
       footer={{

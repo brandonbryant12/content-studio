@@ -1,7 +1,6 @@
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import type { CommitProps, PodcastFull } from '../workbench-registry';
 import {
@@ -12,7 +11,7 @@ import {
   type PodcastConfig,
 } from './components';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { usePodcastGeneration } from '@/hooks';
 
 export function PodcastCommit({
   projectId,
@@ -23,7 +22,6 @@ export function PodcastCommit({
   isEditMode,
 }: CommitProps) {
   const podcast = media as PodcastFull | undefined;
-  const navigate = useNavigate();
 
   const [config, setConfig] = useState<PodcastConfig>({
     format: 'conversation',
@@ -37,6 +35,23 @@ export function PodcastCommit({
     apiClient.voices.list.queryOptions({ input: {} }),
   );
 
+  // Compute config with voice names for the hook
+  const configWithNames = useMemo(() => {
+    const selectedVoice = voices.find((v) => v.id === config.hostVoice);
+    const selectedCoHost = voices.find((v) => v.id === config.coHostVoice);
+    return {
+      ...config,
+      hostVoiceName: selectedVoice?.name,
+      coHostVoiceName: selectedCoHost?.name,
+    };
+  }, [config, voices]);
+
+  const generation = usePodcastGeneration({
+    projectId,
+    selectedDocumentIds,
+    config: configWithNames,
+  });
+
   const handleConfigChange = <K extends keyof PodcastConfig>(
     key: K,
     value: PodcastConfig[K],
@@ -44,138 +59,30 @@ export function PodcastCommit({
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Mutations
-  const generateMutation = useMutation(
-    apiClient.podcasts.generate.mutationOptions({
-      onSuccess: () => {
-        invalidateQueries('podcasts');
-        toast.success('Generation started!');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start generation');
-      },
-    }),
-  );
-
-  const generateScriptMutation = useMutation(
-    apiClient.podcasts.generateScript.mutationOptions({
-      onSuccess: () => {
-        invalidateQueries('podcasts');
-        toast.success('Script generation started!');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start script generation');
-      },
-    }),
-  );
-
-  const generateAudioMutation = useMutation(
-    apiClient.podcasts.generateAudio.mutationOptions({
-      onSuccess: () => {
-        invalidateQueries('podcasts');
-        toast.success('Audio generation started!');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start audio generation');
-      },
-    }),
-  );
-
-  const navigateToPodcast = (podcastId: string) => {
-    navigate({
-      to: '/projects/$projectId/$mediaType/$mediaId',
-      params: { projectId, mediaType: 'podcast', mediaId: podcastId },
-      search: { docs: '' },
-    });
-  };
-
-  const getCreatePayload = () => {
-    const selectedVoice = voices.find((v) => v.id === config.hostVoice);
-    const selectedCoHost = voices.find((v) => v.id === config.coHostVoice);
-
-    return {
-      projectId,
-      format: config.format,
-      documentIds: selectedDocumentIds,
-      hostVoice: config.hostVoice || undefined,
-      hostVoiceName: selectedVoice?.name,
-      coHostVoice: config.format === 'conversation' ? config.coHostVoice || undefined : undefined,
-      coHostVoiceName: config.format === 'conversation' ? selectedCoHost?.name : undefined,
-      promptInstructions: config.instructions.trim() || undefined,
-      targetDurationMinutes: config.targetDuration,
-    };
-  };
-
-  const createAndGenerateMutation = useMutation(
-    apiClient.podcasts.create.mutationOptions({
-      onSuccess: async (newPodcast) => {
-        generateMutation.mutate({ id: newPodcast.id });
-        toast.success('Podcast created! Starting generation...');
-        navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts', 'projects');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
-      },
-    }),
-  );
-
-  const createAndPreviewMutation = useMutation(
-    apiClient.podcasts.create.mutationOptions({
-      onSuccess: async (newPodcast) => {
-        generateScriptMutation.mutate({
-          id: newPodcast.id,
-          promptInstructions: config.instructions.trim() || undefined,
-        });
-        toast.success('Podcast created! Generating script preview...');
-        navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts', 'projects');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
-      },
-    }),
-  );
-
   const handleGenerateFull = () => {
     if (isEditMode && podcast) {
-      generateMutation.mutate({ id: podcast.id });
+      generation.generateFull(podcast.id);
     } else {
-      if (selectedDocumentIds.length === 0) {
-        toast.error('Please select at least one document');
-        return;
-      }
-      createAndGenerateMutation.mutate(getCreatePayload());
+      generation.createAndGenerate();
     }
   };
 
   const handlePreviewScript = () => {
     if (isEditMode && podcast) {
-      generateScriptMutation.mutate({ id: podcast.id });
+      generation.generateScript(podcast.id);
     } else {
-      if (selectedDocumentIds.length === 0) {
-        toast.error('Please select at least one document');
-        return;
-      }
-      createAndPreviewMutation.mutate(getCreatePayload());
+      generation.createAndPreview();
     }
   };
 
   const handleGenerateAudio = () => {
     if (podcast) {
-      generateAudioMutation.mutate({ id: podcast.id });
+      generation.generateAudio(podcast.id);
+    } else {
+      toast.error('No podcast to generate audio for');
     }
   };
 
-  const loadingStates = {
-    generateFull: generateMutation.isPending,
-    generateScript: generateScriptMutation.isPending,
-    generateAudio: generateAudioMutation.isPending,
-    createAndGenerate: createAndGenerateMutation.isPending,
-    createAndPreview: createAndPreviewMutation.isPending,
-  };
-
-  const isLoading = Object.values(loadingStates).some(Boolean);
   const isGenerating =
     podcast?.status === 'generating_script' || podcast?.status === 'generating_audio';
   const isConversation = isEditMode
@@ -261,9 +168,9 @@ export function PodcastCommit({
         <CommitActions
           status={podcast.status}
           isEditMode
-          isLoading={isLoading}
+          isLoading={generation.isLoading}
           selectedDocumentCount={selectedDocumentIds.length}
-          loadingStates={loadingStates}
+          loadingStates={generation.loadingStates}
           onGenerateFull={handleGenerateFull}
           onPreviewScript={handlePreviewScript}
           onGenerateAudio={handleGenerateAudio}
@@ -283,10 +190,10 @@ export function PodcastCommit({
 
       <CommitActions
         isEditMode={false}
-        isLoading={isLoading}
+        isLoading={generation.isLoading}
         disabled={disabled}
         selectedDocumentCount={selectedDocumentIds.length}
-        loadingStates={loadingStates}
+        loadingStates={generation.loadingStates}
         onGenerateFull={handleGenerateFull}
         onPreviewScript={handlePreviewScript}
         onGenerateAudio={handleGenerateAudio}

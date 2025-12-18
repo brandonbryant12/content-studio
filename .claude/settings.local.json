@@ -34,7 +34,9 @@
       "Bash(pnpm --filter server typecheck:*)",
       "Bash(gh pr merge:*)",
       "Bash(git checkout:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
