@@ -39,8 +39,10 @@ function RootComponent() {
   return (
     <ErrorBoundary
       onError={(error) => {
-        // Future: send to error tracking service
-        console.error('Root error boundary caught:', error);
+        if (import.meta.env.DEV) {
+          console.error('Root error boundary caught:', error);
+        }
+        // TODO: Send to error tracking service in production
       }}
     >
       <div className="min-h-screen bg-white dark:bg-gray-950">

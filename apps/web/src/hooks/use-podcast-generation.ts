@@ -118,9 +118,9 @@ export function usePodcastGeneration({
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (newPodcast) => {
         generateMutation.mutate({ id: newPodcast.id });
-        await invalidateQueries('podcasts', 'projects');
         toast.success('Podcast created! Starting generation...');
         navigateToPodcast(newPodcast.id);
+        await invalidateQueries('podcasts', 'projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
@@ -136,9 +136,9 @@ export function usePodcastGeneration({
           id: newPodcast.id,
           promptInstructions: config.instructions.trim() || undefined,
         });
-        await invalidateQueries('podcasts', 'projects');
         toast.success('Podcast created! Generating script preview...');
         navigateToPodcast(newPodcast.id);
+        await invalidateQueries('podcasts', 'projects');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
