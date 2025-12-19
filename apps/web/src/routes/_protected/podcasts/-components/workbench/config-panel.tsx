@@ -1,4 +1,4 @@
-import { ClockIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
+import { ClockIcon, GearIcon, SpeakerLoudIcon, FileTextIcon } from '@radix-ui/react-icons';
 import type { RouterOutput } from '@repo/api/client';
 import { SmartActions } from './smart-actions';
 import { ErrorDisplay } from './error-display';
@@ -6,8 +6,10 @@ import { VersionHistory } from './version-history';
 import { DocumentManager } from './document-manager';
 import { PodcastSettings } from './podcast-settings';
 import { AudioPlayer } from '../audio-player';
+import { CollapsibleSection } from './collapsible-section';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
+type PendingAction = 'script' | 'audio' | 'all' | null;
 
 interface ConfigPanelProps {
   podcast: PodcastFull;
@@ -18,24 +20,7 @@ interface ConfigPanelProps {
   onGenerateAudio: () => void;
   onGenerateAll: () => void;
   isGenerating: boolean;
-}
-
-interface SectionHeaderProps {
-  icon: React.ReactNode;
-  title: string;
-}
-
-function SectionHeader({ icon, title }: SectionHeaderProps) {
-  return (
-    <div className="flex items-center gap-2 mb-3">
-      <div className="flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-        {icon}
-      </div>
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-        {title}
-      </h3>
-    </div>
-  );
+  pendingAction: PendingAction;
 }
 
 export function ConfigPanel({
@@ -47,11 +32,12 @@ export function ConfigPanel({
   onGenerateAudio,
   onGenerateAll,
   isGenerating,
+  pendingAction,
 }: ConfigPanelProps) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="p-5 space-y-6">
-        {/* Smart Actions */}
+      <div className="p-4 space-y-4">
+        {/* Primary Actions - Always visible */}
         <section>
           <SmartActions
             status={podcast.status}
@@ -59,6 +45,7 @@ export function ConfigPanel({
             hasUnsavedChanges={hasUnsavedChanges}
             isSaving={isSaving}
             isGenerating={isGenerating}
+            pendingAction={pendingAction}
             onSave={onSave}
             onGenerateScript={onGenerateScript}
             onGenerateAudio={onGenerateAudio}
@@ -66,59 +53,62 @@ export function ConfigPanel({
           />
         </section>
 
-        {/* Audio Player */}
+        {/* Audio Player - Prominent when available */}
         {podcast.audioUrl && (
-          <section className="pt-2">
-            <SectionHeader
-              icon={<SpeakerLoudIcon className="w-3.5 h-3.5" />}
-              title="Audio"
-            />
+          <section className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2 mb-3">
+              <SpeakerLoudIcon className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Audio
+              </span>
+            </div>
             <AudioPlayer url={podcast.audioUrl} />
           </section>
         )}
 
-        {/* Divider */}
-        <div className="border-t border-gray-200/60 dark:border-gray-800/60" />
+        {/* Error Display */}
+        {podcast.status === 'failed' && podcast.errorMessage && (
+          <ErrorDisplay message={podcast.errorMessage} />
+        )}
 
-        {/* Source Documents */}
-        <section>
+        {/* Divider */}
+        <hr className="border-gray-200 dark:border-gray-800" />
+
+        {/* Source Documents - Collapsible */}
+        <CollapsibleSection
+          icon={<FileTextIcon className="w-3.5 h-3.5" />}
+          title="Source Documents"
+          badge={
+            <span className="ml-1.5 text-xs text-gray-400 tabular-nums">
+              {podcast.documents.length}
+            </span>
+          }
+          defaultOpen={true}
+        >
           <DocumentManager
             podcastId={podcast.id}
             documents={podcast.documents}
             disabled={isGenerating}
           />
-        </section>
+        </CollapsibleSection>
 
-        {/* Divider */}
-        <div className="border-t border-gray-200/60 dark:border-gray-800/60" />
+        {/* Settings - Collapsible */}
+        <CollapsibleSection
+          icon={<GearIcon className="w-3.5 h-3.5" />}
+          title="Settings"
+          defaultOpen={false}
+        >
+          <PodcastSettings podcast={podcast} disabled={isGenerating} />
+        </CollapsibleSection>
 
-        {/* Podcast Settings */}
-        <section>
-          <PodcastSettings
-            podcast={podcast}
-            disabled={isGenerating}
-          />
-        </section>
-
-        {/* Divider */}
-        <div className="border-t border-gray-200/60 dark:border-gray-800/60" />
-
-        {/* Version History */}
-        <section>
-          <SectionHeader
-            icon={<ClockIcon className="w-3.5 h-3.5" />}
-            title="Version History"
-          />
+        {/* Version History - Collapsible */}
+        <CollapsibleSection
+          icon={<ClockIcon className="w-3.5 h-3.5" />}
+          title="Version History"
+          defaultOpen={false}
+        >
           <VersionHistory podcastId={podcast.id} />
-        </section>
-
-        {/* Error Display */}
-        {podcast.status === 'failed' && podcast.errorMessage && (
-          <>
-            <div className="border-t border-gray-200/60 dark:border-gray-800/60" />
-            <ErrorDisplay message={podcast.errorMessage} />
-          </>
-        )}
+        </CollapsibleSection>
       </div>
     </div>
   );

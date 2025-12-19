@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { GearIcon } from '@radix-ui/react-icons';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@repo/ui/components/button';
@@ -91,23 +90,14 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
 
   return (
-    <div className="space-y-5">
-      {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-            <GearIcon className="w-3.5 h-3.5" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-            Settings
-          </h3>
-        </div>
-        {hasChanges && (
+    <div className="space-y-4">
+      {/* Save button when changes exist */}
+      {hasChanges && (
+        <div className="flex justify-end">
           <Button
             size="sm"
             onClick={handleSave}
             disabled={disabled || updateMutation.isPending}
-            className="h-7 px-3 text-xs bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
           >
             {updateMutation.isPending ? (
               <>
@@ -115,11 +105,11 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
                 Saving...
               </>
             ) : (
-              'Save'
+              'Save Settings'
             )}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Voice Selection */}
       <div className="space-y-3">

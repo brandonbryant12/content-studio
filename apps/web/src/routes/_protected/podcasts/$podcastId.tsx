@@ -156,10 +156,15 @@ function PodcastWorkbench() {
   }
 
   const isGenerating = isGeneratingStatus(podcast.status);
-  const isAnyMutationPending =
-    generateScriptMutation.isPending ||
-    generateAudioMutation.isPending ||
-    generateAllMutation.isPending;
+
+  // Track which specific generation action is pending
+  const pendingAction = generateScriptMutation.isPending
+    ? 'script'
+    : generateAudioMutation.isPending
+      ? 'audio'
+      : generateAllMutation.isPending
+        ? 'all'
+        : null;
 
   return (
     <WorkbenchLayout
@@ -189,7 +194,8 @@ function PodcastWorkbench() {
           onGenerateScript={() => generateScriptMutation.mutate({ id: podcast.id })}
           onGenerateAudio={() => generateAudioMutation.mutate({ id: podcast.id })}
           onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
-          isGenerating={isGenerating || isAnyMutationPending}
+          isGenerating={isGenerating}
+          pendingAction={pendingAction}
         />
       }
     />

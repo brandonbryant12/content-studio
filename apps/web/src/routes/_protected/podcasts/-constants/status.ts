@@ -22,7 +22,7 @@ export const PODCAST_STATUS_CONFIG: Record<PodcastStatus, StatusConfig> = {
   },
   script_ready: {
     label: 'Script Ready',
-    message: 'Script ready, creating audio...',
+    message: 'Ready to generate audio',
     badgeVariant: 'warning',
   },
   generating_audio: {
@@ -42,12 +42,16 @@ export const PODCAST_STATUS_CONFIG: Record<PodcastStatus, StatusConfig> = {
   },
 };
 
-/** Check if a status indicates active generation */
+/** Check if a status indicates active generation (showing spinner/progress) */
 export function isGeneratingStatus(status: PodcastStatus): boolean {
+  return status === 'generating_script' || status === 'generating_audio';
+}
+
+/** Check if actions should be disabled (during generation or transitional states) */
+export function isActionDisabled(status: PodcastStatus): boolean {
   return (
     status === 'generating_script' ||
-    status === 'generating_audio' ||
-    status === 'script_ready'
+    status === 'generating_audio'
   );
 }
 
