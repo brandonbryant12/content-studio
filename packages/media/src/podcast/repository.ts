@@ -374,3 +374,118 @@ export const countPodcasts = (options?: {
       .where(conditions.length > 0 ? and(...conditions) : undefined);
     return result?.count ?? 0;
   });
+
+/**
+ * Script version summary for version history listing.
+ */
+export interface ScriptVersionSummary {
+  id: string;
+  version: number;
+  isActive: boolean;
+  segmentCount: number;
+  createdAt: Date;
+}
+
+/**
+ * List all script versions for a podcast.
+ */
+export const listScriptVersions = (podcastId: string) =>
+  withDb('podcast.listScriptVersions', async (db) => {
+    const scripts = await db
+      .select({
+        id: podcastScript.id,
+        version: podcastScript.version,
+        isActive: podcastScript.isActive,
+        segments: podcastScript.segments,
+        createdAt: podcastScript.createdAt,
+      })
+      .from(podcastScript)
+      .where(eq(podcastScript.podcastId, podcastId))
+      .orderBy(desc(podcastScript.version));
+
+    return scripts.map((s) => ({
+      id: s.id,
+      version: s.version,
+      isActive: s.isActive,
+      segmentCount: s.segments?.length ?? 0,
+      createdAt: s.createdAt,
+    }));
+  });
+
+/**
+ * Get a specific script version by ID.
+ */
+export const getScriptById = (scriptId: string) =>
+  withDb('podcast.getScriptById', (db) =>
+    db
+      .select()
+      .from(podcastScript)
+      .where(eq(podcastScript.id, scriptId))
+      .limit(1)
+      .then((rows) => rows[0]),
+  ).pipe(
+    Effect.flatMap((script) =>
+      script
+        ? Effect.succeed(script)
+        : Effect.fail(new ScriptNotFound({ podcastId: 'unknown', message: 'Script version not found' })),
+    ),
+  );
+
+/**
+ * Restore a script version by copying its segments to a new active version.
+ */
+export const restoreScriptVersion = (podcastId: string, sourceScriptId: string) =>
+  withDb('podcast.restoreScriptVersion', async (db) => {
+    // Get the source script
+    const [sourceScript] = await db
+      .select()
+      .from(podcastScript)
+      .where(
+        and(
+          eq(podcastScript.id, sourceScriptId),
+          eq(podcastScript.podcastId, podcastId),
+        ),
+      )
+      .limit(1);
+
+    if (!sourceScript) {
+      return null;
+    }
+
+    // Get current max version
+    const [current] = await db
+      .select({ version: podcastScript.version })
+      .from(podcastScript)
+      .where(eq(podcastScript.podcastId, podcastId))
+      .orderBy(desc(podcastScript.version))
+      .limit(1);
+
+    const nextVersion = (current?.version ?? 0) + 1;
+
+    // Deactivate all existing scripts
+    await db
+      .update(podcastScript)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(podcastScript.podcastId, podcastId));
+
+    // Insert new active script with restored segments
+    const [restoredScript] = await db
+      .insert(podcastScript)
+      .values({
+        podcastId,
+        version: nextVersion,
+        isActive: true,
+        segments: sourceScript.segments,
+        summary: sourceScript.summary,
+        generationPrompt: `Restored from version ${sourceScript.version}`,
+      })
+      .returning();
+
+    return restoredScript;
+  }).pipe(
+    Effect.flatMap((script) =>
+      script
+        ? Effect.succeed(script)
+        : Effect.fail(new ScriptNotFound({ podcastId, message: 'Script version not found' })),
+    ),
+  );

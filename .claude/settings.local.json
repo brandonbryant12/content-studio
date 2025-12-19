@@ -41,7 +41,10 @@
       "Bash(pnpm store prune:*)",
       "Bash(pnpm install:*)",
       "Bash(pnpm --filter web exec tsr:*)",
-      "Bash(pnpm --filter web build:*)"
+      "Bash(pnpm --filter web build:*)",
+      "Bash(xargs ls:*)",
+      "Bash(pnpm --filter @repo/media typecheck:*)",
+      "Skill(frontend-design:frontend-design)"
     ],
     "deny": [],
     "ask": []

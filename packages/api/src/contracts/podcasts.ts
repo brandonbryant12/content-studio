@@ -343,6 +343,45 @@ const podcastContract = oc
       .errors(jobErrors)
       .input(v.object({ jobId: v.pipe(v.string(), v.uuid()) }))
       .output(jobOutputSchema),
+
+    // List script versions
+    listScriptVersions: oc
+      .route({
+        method: 'GET',
+        path: '/{id}/scripts',
+        summary: 'List script versions',
+        description: 'List all script versions for a podcast (for version history)',
+      })
+      .errors(podcastErrors)
+      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
+      .output(
+        v.array(
+          v.object({
+            id: v.string(),
+            version: v.number(),
+            isActive: v.boolean(),
+            segmentCount: v.number(),
+            createdAt: v.string(),
+          }),
+        ),
+      ),
+
+    // Restore script version
+    restoreScriptVersion: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/scripts/{scriptId}/restore',
+        summary: 'Restore script version',
+        description: 'Restore a previous script version (creates a new version)',
+      })
+      .errors(podcastErrors)
+      .input(
+        v.object({
+          id: v.pipe(v.string(), v.uuid()),
+          scriptId: v.pipe(v.string(), v.uuid()),
+        }),
+      )
+      .output(podcastScriptSchema),
   });
 
 export default podcastContract;

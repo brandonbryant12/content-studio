@@ -1,12 +1,14 @@
 import { FileTextIcon, SpeakerLoudIcon, UploadIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { DocumentItem } from './documents/-components/document-item';
 import { PodcastItem } from './podcasts/-components/podcast-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
 import { apiClient } from '@/clients/apiClient';
+import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
 
 export const Route = createFileRoute('/_protected/dashboard')({
@@ -24,6 +26,7 @@ export const Route = createFileRoute('/_protected/dashboard')({
 });
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const { data: documents, isPending: docsPending } = useQuery(
@@ -33,6 +36,25 @@ function Dashboard() {
   const { data: podcasts, isPending: podcastsPending } = useQuery(
     apiClient.podcasts.list.queryOptions({ input: { limit: 5 } }),
   );
+
+  const createPodcastMutation = useMutation(
+    apiClient.podcasts.create.mutationOptions({
+      onSuccess: async (data) => {
+        navigate({ to: '/podcasts/$podcastId', params: { podcastId: data.id } });
+        await invalidateQueries('podcasts');
+      },
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to create podcast');
+      },
+    }),
+  );
+
+  const handleCreatePodcast = () => {
+    createPodcastMutation.mutate({
+      title: 'Untitled Podcast',
+      format: 'conversation',
+    });
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -65,22 +87,27 @@ function Dashboard() {
           </div>
         </button>
 
-        <Link
-          to="/documents"
-          className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 hover:border-violet-300 dark:hover:border-violet-700 transition-all group"
+        <button
+          onClick={handleCreatePodcast}
+          disabled={createPodcastMutation.isPending}
+          className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 hover:border-violet-300 dark:hover:border-violet-700 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <PlusIcon className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+            {createPodcastMutation.isPending ? (
+              <Spinner className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+            ) : (
+              <PlusIcon className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+            )}
           </div>
           <div className="text-left">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              Create Podcast
+              {createPodcastMutation.isPending ? 'Creating...' : 'Create Podcast'}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Generate audio from documents
             </p>
           </div>
-        </Link>
+        </button>
       </div>
 
       {/* Recent Documents */}

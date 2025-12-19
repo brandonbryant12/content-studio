@@ -156,6 +156,40 @@ export interface PodcastService {
   readonly count: (options?: {
     status?: PodcastStatus;
   }) => Effect.Effect<number, DatabaseError | PolicyError, PodcastContext>;
+
+  /**
+   * List all script versions for a podcast.
+   */
+  readonly listScriptVersions: (
+    podcastId: string,
+  ) => Effect.Effect<
+    readonly ScriptVersionSummary[],
+    PodcastNotFound | DatabaseError | PolicyError | ForbiddenError,
+    PodcastContext
+  >;
+
+  /**
+   * Restore a previous script version (creates a new version).
+   */
+  readonly restoreScriptVersion: (
+    podcastId: string,
+    scriptId: string,
+  ) => Effect.Effect<
+    PodcastScript,
+    PodcastNotFound | ScriptNotFound | DatabaseError | PolicyError | ForbiddenError,
+    PodcastContext
+  >;
+}
+
+/**
+ * Script version summary for history listing.
+ */
+export interface ScriptVersionSummary {
+  id: string;
+  version: number;
+  isActive: boolean;
+  segmentCount: number;
+  createdAt: Date;
 }
 
 export class Podcasts extends Context.Tag('@repo/media/Podcasts')<

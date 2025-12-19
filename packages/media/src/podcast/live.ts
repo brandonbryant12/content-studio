@@ -12,10 +12,12 @@ const makePodcastService: PodcastService = {
   create: (data) =>
     Effect.gen(function* () {
       const user = yield* CurrentUser;
-      const { documentIds, ...podcastData } = data;
+      const { documentIds = [], ...podcastData } = data;
 
-      // Verify all documents exist and are owned by the user
-      yield* Repo.verifyDocumentsExist(documentIds, user.id);
+      // Verify all documents exist and are owned by the user (only if there are documents)
+      if (documentIds.length > 0) {
+        yield* Repo.verifyDocumentsExist(documentIds, user.id);
+      }
 
       // Create podcast with document links
       const result = yield* Repo.insertPodcast(
@@ -127,6 +129,32 @@ const makePodcastService: PodcastService = {
         status: options?.status,
       });
     }).pipe(Effect.withSpan('podcasts.count')),
+
+  listScriptVersions: (podcastId) =>
+    Effect.gen(function* () {
+      // Verify access to podcast first
+      const existing = yield* Repo.findPodcastById(podcastId);
+      yield* requireOwnership(existing.createdBy);
+
+      return yield* Repo.listScriptVersions(podcastId);
+    }).pipe(
+      Effect.withSpan('podcasts.listScriptVersions', {
+        attributes: { 'podcast.id': podcastId },
+      }),
+    ),
+
+  restoreScriptVersion: (podcastId, scriptId) =>
+    Effect.gen(function* () {
+      // Verify access to podcast first
+      const existing = yield* Repo.findPodcastById(podcastId);
+      yield* requireOwnership(existing.createdBy);
+
+      return yield* Repo.restoreScriptVersion(podcastId, scriptId);
+    }).pipe(
+      Effect.withSpan('podcasts.restoreScriptVersion', {
+        attributes: { 'podcast.id': podcastId, 'script.id': scriptId },
+      }),
+    ),
 };
 
 /**

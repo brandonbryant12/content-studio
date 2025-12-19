@@ -1,8 +1,9 @@
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PodcastItem } from './-components/podcast-item';
@@ -18,7 +19,7 @@ export const Route = createFileRoute('/_protected/podcasts/')({
   component: PodcastsPage,
 });
 
-function EmptyState({ hasSearch }: { hasSearch: boolean }) {
+function EmptyState({ onCreateClick, isCreating }: { onCreateClick: () => void; isCreating: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
@@ -37,31 +38,50 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
         </svg>
       </div>
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-        {hasSearch ? 'No podcasts found' : 'No podcasts yet'}
+        No podcasts yet
       </h3>
       <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-4">
-        {hasSearch
-          ? 'Try adjusting your search query.'
-          : 'Create your first podcast from a document to get started.'}
+        Create your first podcast to get started.
       </p>
-      {!hasSearch && (
-        <Link
-          to="/documents"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-medium shadow-md"
-        >
-          <PlusIcon className="w-4 h-4" />
-          Create Podcast
-        </Link>
-      )}
+      <Button
+        onClick={onCreateClick}
+        disabled={isCreating}
+        className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-md"
+      >
+        {isCreating ? (
+          <>
+            <Spinner className="w-4 h-4 mr-2" />
+            Creating...
+          </>
+        ) : (
+          <>
+            <PlusIcon className="w-4 h-4 mr-2" />
+            Create Podcast
+          </>
+        )}
+      </Button>
     </div>
   );
 }
 
 function PodcastsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: podcasts, isPending } = useQuery(
     apiClient.podcasts.list.queryOptions({ input: {} }),
+  );
+
+  const createMutation = useMutation(
+    apiClient.podcasts.create.mutationOptions({
+      onSuccess: async (data) => {
+        navigate({ to: '/podcasts/$podcastId', params: { podcastId: data.id } });
+        await invalidateQueries('podcasts');
+      },
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to create podcast');
+      },
+    }),
   );
 
   const deleteMutation = useMutation(
@@ -76,6 +96,13 @@ function PodcastsPage() {
     }),
   );
 
+  const handleCreate = () => {
+    createMutation.mutate({
+      title: 'Untitled Podcast',
+      format: 'conversation',
+    });
+  };
+
   const filteredPodcasts = podcasts?.filter((podcast) =>
     podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -89,16 +116,26 @@ function PodcastsPage() {
             Podcasts
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Manage your generated podcasts and voice overs
+            Manage your generated podcasts
           </p>
         </div>
-        <Link
-          to="/documents"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-medium shadow-md shadow-violet-500/20"
+        <Button
+          onClick={handleCreate}
+          disabled={createMutation.isPending}
+          className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-md shadow-violet-500/20"
         >
-          <PlusIcon className="w-4 h-4" />
-          Create New
-        </Link>
+          {createMutation.isPending ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Create New
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Search */}
@@ -118,7 +155,13 @@ function PodcastsPage() {
           <Spinner className="w-6 h-6" />
         </div>
       ) : filteredPodcasts?.length === 0 ? (
-        <EmptyState hasSearch={!!searchQuery} />
+        searchQuery ? (
+          <div className="text-center py-16">
+            <p className="text-gray-500 dark:text-gray-400">No podcasts found matching "{searchQuery}"</p>
+          </div>
+        ) : (
+          <EmptyState onCreateClick={handleCreate} isCreating={createMutation.isPending} />
+        )
       ) : (
         <div className="space-y-3">
           {filteredPodcasts?.map((podcast) => (

@@ -1,9 +1,9 @@
-import { MagnifyingGlassIcon, UploadIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, PlusIcon, UploadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { DocumentItem } from './-components/document-item';
@@ -87,13 +87,24 @@ function DocumentsPage() {
             Upload and manage your source documents
           </p>
         </div>
-        <Button
-          onClick={() => setUploadOpen(true)}
-          className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-md shadow-violet-500/20"
-        >
-          <UploadIcon className="w-4 h-4 mr-2" />
-          Upload
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link to="/podcasts">
+            <Button
+              variant="outline"
+              className="border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Create Podcast
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setUploadOpen(true)}
+            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-md shadow-violet-500/20"
+          >
+            <UploadIcon className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

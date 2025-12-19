@@ -142,7 +142,7 @@ export const CreatePodcastSchema = v.object({
   title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(256))),
   description: v.optional(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
-  documentIds: v.pipe(v.array(v.pipe(v.string(), v.uuid())), v.minLength(1)),
+  documentIds: v.optional(v.array(v.pipe(v.string(), v.uuid()))),
   promptInstructions: v.optional(v.string()),
   targetDurationMinutes: v.optional(
     v.pipe(v.number(), v.minValue(1), v.maxValue(60)),

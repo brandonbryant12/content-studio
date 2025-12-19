@@ -444,6 +444,64 @@ const podcastRouter = {
       );
     },
   ),
+
+  listScriptVersions: protectedProcedure.podcasts.listScriptVersions.handler(
+    async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const versions = yield* podcasts.listScriptVersions(input.id);
+          return versions.map((v) => ({
+            id: v.id,
+            version: v.version,
+            isActive: v.isActive,
+            segmentCount: v.segmentCount,
+            createdAt: v.createdAt.toISOString(),
+          }));
+        }).pipe(Effect.provide(context.layers)),
+        {
+          ...handlers.common,
+          ...handlers.database,
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+        },
+      );
+    },
+  ),
+
+  restoreScriptVersion: protectedProcedure.podcasts.restoreScriptVersion.handler(
+    async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
+      return handleEffect(
+        Effect.gen(function* () {
+          const podcasts = yield* Podcasts;
+          const script = yield* podcasts.restoreScriptVersion(input.id, input.scriptId);
+          return serializePodcastScript(script);
+        }).pipe(Effect.provide(context.layers)),
+        {
+          ...handlers.common,
+          ...handlers.database,
+          PodcastNotFound: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message ?? `Podcast ${e.id} not found`,
+              data: { podcastId: e.id },
+            });
+          },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'Script version not found',
+              data: { podcastId: e.podcastId },
+            });
+          },
+        },
+      );
+    },
+  ),
 };
 
 export default podcastRouter;
