@@ -1,7 +1,6 @@
 import { oc } from '@orpc/contract';
 import documentContract from './documents';
 import podcastContract from './podcasts';
-import projectContract from './projects';
 import voicesContract from './voices';
 
 /**
@@ -60,6 +59,5 @@ export const appContract = oc
   .router({
     documents: documentContract,
     podcasts: podcastContract,
-    projects: projectContract,
     voices: voicesContract,
   });

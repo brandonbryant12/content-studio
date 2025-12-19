@@ -516,9 +516,6 @@ importers:
       '@repo/media':
         specifier: workspace:*
         version: link:../media
-      '@repo/project':
-        specifier: workspace:*
-        version: link:../project
       '@repo/queue':
         specifier: workspace:*
         version: link:../queue
@@ -798,58 +795,6 @@ importers:
       '@types/pdf-parse':
         specifier: ^1.1.5
         version: 1.1.5
-      eslint:
-        specifier: 'catalog:'
-        version: 9.39.1(jiti@2.6.1)
-      jest:
-        specifier: 'catalog:'
-        version: 29.7.0(@types/node@24.10.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.6.2
-      ts-jest:
-        specifier: 'catalog:'
-        version: 29.4.5(@babel/core@7.28.3)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.3))(jest-util@29.7.0)(jest@29.7.0(@types/node@24.10.1))(typescript@5.9.3)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-
-  packages/project:
-    dependencies:
-      '@repo/auth-policy':
-        specifier: workspace:*
-        version: link:../auth-policy
-      '@repo/db':
-        specifier: workspace:*
-        version: link:../db
-      '@repo/effect':
-        specifier: workspace:*
-        version: link:../effect
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.5)(pg@8.16.3)
-      effect:
-        specifier: ^3.16.0
-        version: 3.19.8
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../tools/eslint
-      '@repo/jest-config':
-        specifier: workspace:*
-        version: link:../../tools/jest
-      '@repo/prettier-config':
-        specifier: workspace:*
-        version: link:../../tools/prettier
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../tools/typescript
-      '@types/jest':
-        specifier: 'catalog:'
-        version: 29.5.14
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.10.1
       eslint:
         specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)

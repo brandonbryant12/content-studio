@@ -1,25 +1,22 @@
-import { MagnifyingGlassIcon, UploadIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
+import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { DocumentItem } from './-components/document-item';
-import UploadDocumentDialog from './-components/upload-document';
+import { PodcastItem } from './-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
 
-export const Route = createFileRoute('/_protected/documents/')({
+export const Route = createFileRoute('/_protected/podcasts/')({
   loader: () =>
     queryClient.ensureQueryData(
-      apiClient.documents.list.queryOptions({ input: {} }),
+      apiClient.podcasts.list.queryOptions({ input: {} }),
     ),
-  component: DocumentsPage,
+  component: PodcastsPage,
 });
-
 
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   return (
@@ -35,44 +32,52 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
           />
         </svg>
       </div>
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-        {hasSearch ? 'No documents found' : 'No documents yet'}
+        {hasSearch ? 'No podcasts found' : 'No podcasts yet'}
       </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm">
+      <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-4">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Upload your first document to start creating podcasts and voice overs.'}
+          : 'Create your first podcast from a document to get started.'}
       </p>
+      {!hasSearch && (
+        <Link
+          to="/documents"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-medium shadow-md"
+        >
+          <PlusIcon className="w-4 h-4" />
+          Create Podcast
+        </Link>
+      )}
     </div>
   );
 }
 
-function DocumentsPage() {
+function PodcastsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [uploadOpen, setUploadOpen] = useState(false);
 
-  const { data: documents, isPending } = useQuery(
-    apiClient.documents.list.queryOptions({ input: {} }),
+  const { data: podcasts, isPending } = useQuery(
+    apiClient.podcasts.list.queryOptions({ input: {} }),
   );
 
   const deleteMutation = useMutation(
-    apiClient.documents.delete.mutationOptions({
+    apiClient.podcasts.delete.mutationOptions({
       onSuccess: async () => {
-        await invalidateQueries('documents', 'podcasts');
-        toast.success('Document deleted');
+        await invalidateQueries('podcasts');
+        toast.success('Podcast deleted');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete document');
+        toast.error(error.message ?? 'Failed to delete podcast');
       },
     }),
   );
 
-  const filteredDocuments = documents?.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredPodcasts = podcasts?.filter((podcast) =>
+    podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -81,19 +86,19 @@ function DocumentsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Documents
+            Podcasts
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Upload and manage your source documents
+            Manage your generated podcasts and voice overs
           </p>
         </div>
-        <Button
-          onClick={() => setUploadOpen(true)}
-          className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-md shadow-violet-500/20"
+        <Link
+          to="/documents"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-medium shadow-md shadow-violet-500/20"
         >
-          <UploadIcon className="w-4 h-4 mr-2" />
-          Upload
-        </Button>
+          <PlusIcon className="w-4 h-4" />
+          Create New
+        </Link>
       </div>
 
       {/* Search */}
@@ -101,7 +106,7 @@ function DocumentsPage() {
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search documents..."
+          placeholder="Search podcasts..."
           className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 focus:bg-white dark:focus:bg-gray-950 transition-colors"
         />
         <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -112,25 +117,23 @@ function DocumentsPage() {
         <div className="flex justify-center py-16">
           <Spinner className="w-6 h-6" />
         </div>
-      ) : filteredDocuments?.length === 0 ? (
+      ) : filteredPodcasts?.length === 0 ? (
         <EmptyState hasSearch={!!searchQuery} />
       ) : (
         <div className="space-y-3">
-          {filteredDocuments?.map((doc) => (
-            <DocumentItem
-              key={doc.id}
-              document={doc}
-              onDelete={() => deleteMutation.mutate({ id: doc.id })}
+          {filteredPodcasts?.map((podcast) => (
+            <PodcastItem
+              key={podcast.id}
+              podcast={podcast}
+              onDelete={() => deleteMutation.mutate({ id: podcast.id })}
               isDeleting={
                 deleteMutation.isPending &&
-                deleteMutation.variables?.id === doc.id
+                deleteMutation.variables?.id === podcast.id
               }
             />
           ))}
         </div>
       )}
-
-      <UploadDocumentDialog open={uploadOpen} onOpenChange={setUploadOpen} />
     </div>
   );
 }

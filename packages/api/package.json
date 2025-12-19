@@ -35,7 +35,6 @@
     "@repo/effect": "workspace:*",
     "@repo/ai": "workspace:*",
     "@repo/media": "workspace:*",
-    "@repo/project": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "effect": "^3.16.0",

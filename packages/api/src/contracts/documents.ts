@@ -6,6 +6,12 @@ import {
 } from '@repo/db/schema';
 import * as v from 'valibot';
 
+// Helper for query params that may come in as strings
+const coerceNumber = v.pipe(
+  v.union([v.number(), v.pipe(v.string(), v.transform(Number))]),
+  v.number(),
+);
+
 const documentErrors = {
   DOCUMENT_NOT_FOUND: {
     status: 404,
@@ -60,8 +66,8 @@ const documentContract = oc
       })
       .input(
         v.object({
-          limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
-          offset: v.optional(v.pipe(v.number(), v.minValue(0))),
+          limit: v.optional(v.pipe(coerceNumber, v.minValue(1), v.maxValue(100))),
+          offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
         }),
       )
       .output(v.array(DocumentOutputSchema)),

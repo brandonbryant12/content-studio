@@ -19,7 +19,6 @@ import {
   type Document,
   type DocumentOutput,
 } from './documents';
-import { project } from './projects';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
@@ -65,9 +64,6 @@ export const podcast = pgTable(
   'podcast',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    projectId: uuid('project_id')
-      .notNull()
-      .references(() => project.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     description: text('description'),
     format: podcastFormatEnum('format').notNull(),
@@ -83,7 +79,7 @@ export const podcast = pgTable(
     errorMessage: text('error_message'),
     tags: jsonb('tags').$type<string[]>().default([]),
 
-    // Source documents (replaces mediaSource junction table)
+    // Source documents used to generate this podcast
     sourceDocumentIds: uuid('source_document_ids')
       .array()
       .notNull()
@@ -108,7 +104,6 @@ export const podcast = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index('podcast_project_id_idx').on(table.projectId),
     index('podcast_created_by_idx').on(table.createdBy),
     index('podcast_status_idx').on(table.status),
     index('podcast_publish_status_idx').on(table.publishStatus),
@@ -144,7 +139,6 @@ export const podcastScript = pgTable(
 );
 
 export const CreatePodcastSchema = v.object({
-  projectId: v.pipe(v.string(), v.uuid()),
   title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(256))),
   description: v.optional(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
@@ -215,7 +209,6 @@ export const PublishStatusSchema = v.picklist([
 
 export const PodcastOutputSchema = v.object({
   id: v.string(),
-  projectId: v.string(),
   title: v.string(),
   description: v.nullable(v.string()),
   format: PodcastFormatSchema,
@@ -230,6 +223,7 @@ export const PodcastOutputSchema = v.object({
   duration: v.nullable(v.number()),
   errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
+  sourceDocumentIds: v.array(v.string()),
   publishStatus: PublishStatusSchema,
   publishedAt: v.nullable(v.string()),
   publishedBy: v.nullable(v.string()),
@@ -287,7 +281,6 @@ export type UpdateScript = v.InferInput<typeof UpdateScriptSchema>;
  */
 export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
   id: podcast.id,
-  projectId: podcast.projectId,
   title: podcast.title,
   description: podcast.description,
   format: podcast.format,
@@ -302,6 +295,7 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
   duration: podcast.duration,
   errorMessage: podcast.errorMessage,
   tags: podcast.tags ?? [],
+  sourceDocumentIds: podcast.sourceDocumentIds ?? [],
   publishStatus: podcast.publishStatus,
   publishedAt: podcast.publishedAt?.toISOString() ?? null,
   publishedBy: podcast.publishedBy,

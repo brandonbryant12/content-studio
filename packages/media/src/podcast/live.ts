@@ -12,10 +12,7 @@ const makePodcastService: PodcastService = {
   create: (data) =>
     Effect.gen(function* () {
       const user = yield* CurrentUser;
-      const { documentIds, projectId, ...podcastData } = data;
-
-      // Verify project exists and is owned by the user
-      yield* Repo.verifyProjectExists(projectId, user.id);
+      const { documentIds, ...podcastData } = data;
 
       // Verify all documents exist and are owned by the user
       yield* Repo.verifyDocumentsExist(documentIds, user.id);
@@ -24,7 +21,6 @@ const makePodcastService: PodcastService = {
       const result = yield* Repo.insertPodcast(
         {
           ...podcastData,
-          projectId,
           createdBy: user.id,
         },
         documentIds,
@@ -51,7 +47,6 @@ const makePodcastService: PodcastService = {
 
       return yield* Repo.listPodcasts({
         createdBy: isAdmin ? undefined : user.id,
-        projectId: options?.projectId,
         status: options?.status,
         limit: options?.limit,
         offset: options?.offset,

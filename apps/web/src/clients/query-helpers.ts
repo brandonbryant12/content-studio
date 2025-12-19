@@ -1,7 +1,7 @@
 import type { Query } from '@tanstack/react-query';
 import { queryClient } from './queryClient';
 
-type QueryKeyPrefix = 'podcasts' | 'documents' | 'projects' | 'voices';
+type QueryKeyPrefix = 'podcasts' | 'documents' | 'voices';
 
 /**
  * Creates a predicate function for invalidating oRPC query keys.

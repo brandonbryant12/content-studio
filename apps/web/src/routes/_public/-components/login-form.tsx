@@ -38,7 +38,7 @@ export default function LoginCredentialsForm() {
         },
         {
           onSuccess: () => {
-            navigate({ to: '/projects' });
+            navigate({ to: '/dashboard' });
           },
         },
       );

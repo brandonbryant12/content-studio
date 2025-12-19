@@ -15,7 +15,6 @@ interface PodcastConfig {
 }
 
 interface UsePodcastGenerationOptions {
-  projectId: string;
   selectedDocumentIds: string[];
   config: PodcastConfig;
 }
@@ -48,7 +47,6 @@ export interface UsePodcastGenerationReturn {
  * Handles creation and generation of podcasts with proper cache invalidation.
  */
 export function usePodcastGeneration({
-  projectId,
   selectedDocumentIds,
   config,
 }: UsePodcastGenerationOptions): UsePodcastGenerationReturn {
@@ -104,14 +102,12 @@ export function usePodcastGeneration({
 
   const navigateToPodcast = (podcastId: string) => {
     navigate({
-      to: '/projects/$projectId/$mediaType/$mediaId',
-      params: { projectId, mediaType: 'podcast', mediaId: podcastId },
-      search: { docs: '' },
+      to: '/podcasts/$podcastId',
+      params: { podcastId },
     });
   };
 
   const getCreatePayload = () => ({
-    projectId,
     format: config.format,
     documentIds: selectedDocumentIds,
     hostVoice: config.hostVoice || undefined,
@@ -129,7 +125,7 @@ export function usePodcastGeneration({
         generateMutation.mutate({ id: newPodcast.id });
         toast.success('Podcast created! Starting generation...');
         navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts', 'projects');
+        await invalidateQueries('podcasts');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
@@ -147,7 +143,7 @@ export function usePodcastGeneration({
         });
         toast.success('Podcast created! Generating script preview...');
         navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts', 'projects');
+        await invalidateQueries('podcasts');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');

@@ -12,7 +12,6 @@ import {
   type Podcasts,
   type PodcastGenerator,
 } from '@repo/media';
-import { ProjectsLive, type Projects } from '@repo/project';
 import { QueueLive, type Queue } from '@repo/queue';
 import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
@@ -35,8 +34,7 @@ export type AuthenticatedServices =
   | CurrentUser
   | Documents
   | Podcasts
-  | PodcastGenerator
-  | Projects;
+  | PodcastGenerator;
 
 /** All services provided by the API context (alias for AuthenticatedServices) */
 export type ApiServices = AuthenticatedServices;
@@ -107,9 +105,6 @@ const createAuthenticatedLayers = (
   const podcastsLayer = PodcastsLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
   );
-  const projectsLayer = ProjectsLive.pipe(
-    Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
-  );
   const generatorLayer = PodcastGeneratorLive.pipe(
     Layer.provide(
       Layer.mergeAll(
@@ -130,7 +125,6 @@ const createAuthenticatedLayers = (
     documentsLayer,
     storageLayer,
     podcastsLayer,
-    projectsLayer,
     generatorLayer,
     queueLayer,
     ttsLayer,

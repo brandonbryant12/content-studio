@@ -14,11 +14,10 @@ import { Route as ProtectedLayoutRouteImport } from './routes/_protected/layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as ProtectedProjectsIndexRouteImport } from './routes/_protected/projects/index'
+import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
+import { Route as ProtectedPodcastsIndexRouteImport } from './routes/_protected/podcasts/index'
 import { Route as ProtectedDocumentsIndexRouteImport } from './routes/_protected/documents/index'
-import { Route as ProtectedProjectsProjectIdIndexRouteImport } from './routes/_protected/projects/$projectId/index'
-import { Route as ProtectedProjectsProjectIdPodcastsIndexRouteImport } from './routes/_protected/projects/$projectId/podcasts/index'
-import { Route as ProtectedProjectsProjectIdMediaTypeMediaIdIndexRouteImport } from './routes/_protected/projects/$projectId/$mediaType/$mediaId/index'
+import { Route as ProtectedPodcastsPodcastIdRouteImport } from './routes/_protected/podcasts/$podcastId'
 
 const PublicLayoutRoute = PublicLayoutRouteImport.update({
   id: '/_public',
@@ -43,9 +42,14 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => PublicLayoutRoute,
 } as any)
-const ProtectedProjectsIndexRoute = ProtectedProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
+const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
+const ProtectedPodcastsIndexRoute = ProtectedPodcastsIndexRouteImport.update({
+  id: '/podcasts/',
+  path: '/podcasts/',
   getParentRoute: () => ProtectedLayoutRoute,
 } as any)
 const ProtectedDocumentsIndexRoute = ProtectedDocumentsIndexRouteImport.update({
@@ -53,91 +57,73 @@ const ProtectedDocumentsIndexRoute = ProtectedDocumentsIndexRouteImport.update({
   path: '/documents/',
   getParentRoute: () => ProtectedLayoutRoute,
 } as any)
-const ProtectedProjectsProjectIdIndexRoute =
-  ProtectedProjectsProjectIdIndexRouteImport.update({
-    id: '/projects/$projectId/',
-    path: '/projects/$projectId/',
-    getParentRoute: () => ProtectedLayoutRoute,
-  } as any)
-const ProtectedProjectsProjectIdPodcastsIndexRoute =
-  ProtectedProjectsProjectIdPodcastsIndexRouteImport.update({
-    id: '/projects/$projectId/podcasts/',
-    path: '/projects/$projectId/podcasts/',
-    getParentRoute: () => ProtectedLayoutRoute,
-  } as any)
-const ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute =
-  ProtectedProjectsProjectIdMediaTypeMediaIdIndexRouteImport.update({
-    id: '/projects/$projectId/$mediaType/$mediaId/',
-    path: '/projects/$projectId/$mediaType/$mediaId/',
+const ProtectedPodcastsPodcastIdRoute =
+  ProtectedPodcastsPodcastIdRouteImport.update({
+    id: '/podcasts/$podcastId',
+    path: '/podcasts/$podcastId',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
-  '/projects': typeof ProtectedProjectsIndexRoute
-  '/projects/$projectId': typeof ProtectedProjectsProjectIdIndexRoute
-  '/projects/$projectId/podcasts': typeof ProtectedProjectsProjectIdPodcastsIndexRoute
-  '/projects/$projectId/$mediaType/$mediaId': typeof ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute
+  '/podcasts': typeof ProtectedPodcastsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
-  '/projects': typeof ProtectedProjectsIndexRoute
-  '/projects/$projectId': typeof ProtectedProjectsProjectIdIndexRoute
-  '/projects/$projectId/podcasts': typeof ProtectedProjectsProjectIdPodcastsIndexRoute
-  '/projects/$projectId/$mediaType/$mediaId': typeof ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute
+  '/podcasts': typeof ProtectedPodcastsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedLayoutRouteWithChildren
   '/_public': typeof PublicLayoutRouteWithChildren
+  '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
+  '/_protected/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/_protected/documents/': typeof ProtectedDocumentsIndexRoute
-  '/_protected/projects/': typeof ProtectedProjectsIndexRoute
-  '/_protected/projects/$projectId/': typeof ProtectedProjectsProjectIdIndexRoute
-  '/_protected/projects/$projectId/podcasts/': typeof ProtectedProjectsProjectIdPodcastsIndexRoute
-  '/_protected/projects/$projectId/$mediaType/$mediaId/': typeof ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute
+  '/_protected/podcasts/': typeof ProtectedPodcastsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/login'
     | '/register'
+    | '/podcasts/$podcastId'
     | '/documents'
-    | '/projects'
-    | '/projects/$projectId'
-    | '/projects/$projectId/podcasts'
-    | '/projects/$projectId/$mediaType/$mediaId'
+    | '/podcasts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard'
     | '/login'
     | '/register'
+    | '/podcasts/$podcastId'
     | '/documents'
-    | '/projects'
-    | '/projects/$projectId'
-    | '/projects/$projectId/podcasts'
-    | '/projects/$projectId/$mediaType/$mediaId'
+    | '/podcasts'
   id:
     | '__root__'
     | '/'
     | '/_protected'
     | '/_public'
+    | '/_protected/dashboard'
     | '/_public/login'
     | '/_public/register'
+    | '/_protected/podcasts/$podcastId'
     | '/_protected/documents/'
-    | '/_protected/projects/'
-    | '/_protected/projects/$projectId/'
-    | '/_protected/projects/$projectId/podcasts/'
-    | '/_protected/projects/$projectId/$mediaType/$mediaId/'
+    | '/_protected/podcasts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,11 +169,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicLayoutRoute
     }
-    '/_protected/projects/': {
-      id: '/_protected/projects/'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof ProtectedProjectsIndexRouteImport
+    '/_protected/dashboard': {
+      id: '/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ProtectedDashboardRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
+    '/_protected/podcasts/': {
+      id: '/_protected/podcasts/'
+      path: '/podcasts'
+      fullPath: '/podcasts'
+      preLoaderRoute: typeof ProtectedPodcastsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/documents/': {
@@ -197,46 +190,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedDocumentsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
-    '/_protected/projects/$projectId/': {
-      id: '/_protected/projects/$projectId/'
-      path: '/projects/$projectId'
-      fullPath: '/projects/$projectId'
-      preLoaderRoute: typeof ProtectedProjectsProjectIdIndexRouteImport
-      parentRoute: typeof ProtectedLayoutRoute
-    }
-    '/_protected/projects/$projectId/podcasts/': {
-      id: '/_protected/projects/$projectId/podcasts/'
-      path: '/projects/$projectId/podcasts'
-      fullPath: '/projects/$projectId/podcasts'
-      preLoaderRoute: typeof ProtectedProjectsProjectIdPodcastsIndexRouteImport
-      parentRoute: typeof ProtectedLayoutRoute
-    }
-    '/_protected/projects/$projectId/$mediaType/$mediaId/': {
-      id: '/_protected/projects/$projectId/$mediaType/$mediaId/'
-      path: '/projects/$projectId/$mediaType/$mediaId'
-      fullPath: '/projects/$projectId/$mediaType/$mediaId'
-      preLoaderRoute: typeof ProtectedProjectsProjectIdMediaTypeMediaIdIndexRouteImport
+    '/_protected/podcasts/$podcastId': {
+      id: '/_protected/podcasts/$podcastId'
+      path: '/podcasts/$podcastId'
+      fullPath: '/podcasts/$podcastId'
+      preLoaderRoute: typeof ProtectedPodcastsPodcastIdRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
   }
 }
 
 interface ProtectedLayoutRouteChildren {
+  ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedPodcastsPodcastIdRoute: typeof ProtectedPodcastsPodcastIdRoute
   ProtectedDocumentsIndexRoute: typeof ProtectedDocumentsIndexRoute
-  ProtectedProjectsIndexRoute: typeof ProtectedProjectsIndexRoute
-  ProtectedProjectsProjectIdIndexRoute: typeof ProtectedProjectsProjectIdIndexRoute
-  ProtectedProjectsProjectIdPodcastsIndexRoute: typeof ProtectedProjectsProjectIdPodcastsIndexRoute
-  ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute: typeof ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute
+  ProtectedPodcastsIndexRoute: typeof ProtectedPodcastsIndexRoute
 }
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
+  ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedPodcastsPodcastIdRoute: ProtectedPodcastsPodcastIdRoute,
   ProtectedDocumentsIndexRoute: ProtectedDocumentsIndexRoute,
-  ProtectedProjectsIndexRoute: ProtectedProjectsIndexRoute,
-  ProtectedProjectsProjectIdIndexRoute: ProtectedProjectsProjectIdIndexRoute,
-  ProtectedProjectsProjectIdPodcastsIndexRoute:
-    ProtectedProjectsProjectIdPodcastsIndexRoute,
-  ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute:
-    ProtectedProjectsProjectIdMediaTypeMediaIdIndexRoute,
+  ProtectedPodcastsIndexRoute: ProtectedPodcastsIndexRoute,
 }
 
 const ProtectedLayoutRouteWithChildren = ProtectedLayoutRoute._addFileChildren(

@@ -59,7 +59,7 @@ export default function RegisterCredentialsForm() {
         },
         {
           onSuccess: () => {
-            navigate({ to: '/projects' });
+            navigate({ to: '/dashboard' });
           },
         },
       );

@@ -2,7 +2,6 @@ import {
   podcast,
   podcastScript,
   document,
-  project,
   type Podcast,
   type PodcastScript,
   type CreatePodcast,
@@ -13,12 +12,7 @@ import {
   type Document,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
-import {
-  PodcastNotFound,
-  ScriptNotFound,
-  DocumentNotFound,
-  ProjectNotFound,
-} from '@repo/effect/errors';
+import { PodcastNotFound, ScriptNotFound, DocumentNotFound } from '@repo/effect/errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
 
@@ -65,34 +59,6 @@ export const verifyDocumentsExist = (documentIds: string[], userId: string) =>
   );
 
 /**
- * Verify project exists and is owned by the specified user.
- */
-export const verifyProjectExists = (projectId: string, userId: string) =>
-  withDb('podcast.verifyProject', async (db) => {
-    const [proj] = await db
-      .select({ id: project.id, createdBy: project.createdBy })
-      .from(project)
-      .where(eq(project.id, projectId))
-      .limit(1);
-    return proj;
-  }).pipe(
-    Effect.flatMap((proj) => {
-      if (!proj) {
-        return Effect.fail(new ProjectNotFound({ id: projectId }));
-      }
-      if (proj.createdBy !== userId) {
-        return Effect.fail(
-          new ProjectNotFound({
-            id: projectId,
-            message: 'Project not found or access denied',
-          }),
-        );
-      }
-      return Effect.succeed(proj);
-    }),
-  );
-
-/**
  * Insert a new podcast with source document IDs stored directly.
  */
 export const insertPodcast = (
@@ -103,7 +69,6 @@ export const insertPodcast = (
     const [pod] = await db
       .insert(podcast)
       .values({
-        projectId: data.projectId,
         title: data.title ?? 'Generating...',
         description: data.description,
         format: data.format,
@@ -186,7 +151,6 @@ export const findPodcastById = (id: string) =>
  */
 export const listPodcasts = (options: {
   createdBy?: string;
-  projectId?: string;
   status?: PodcastStatus;
   limit?: number;
   offset?: number;
@@ -195,9 +159,6 @@ export const listPodcasts = (options: {
     const conditions = [];
     if (options.createdBy) {
       conditions.push(eq(podcast.createdBy, options.createdBy));
-    }
-    if (options.projectId) {
-      conditions.push(eq(podcast.projectId, options.projectId));
     }
     if (options.status) {
       conditions.push(eq(podcast.status, options.status));

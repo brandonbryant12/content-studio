@@ -127,12 +127,6 @@ const podcastRouter = {
               data: { documentId: e.id },
             });
           },
-          ProjectNotFound: (e) => {
-            throw errors.PROJECT_NOT_FOUND({
-              message: e.message ?? `Project ${e.id} not found or access denied`,
-              data: { projectId: e.id },
-            });
-          },
         },
       );
     },

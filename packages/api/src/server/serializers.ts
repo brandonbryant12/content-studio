@@ -22,15 +22,3 @@ export {
   type PodcastScriptOutput,
   type PodcastFullOutput,
 } from '@repo/db/schema';
-
-// Project serializers
-export {
-  serializeProject,
-  serializeProjectDocument,
-  serializeProjectWithDocuments,
-  serializeProjectFull,
-  type ProjectOutput,
-  type ProjectDocumentOutput,
-  type ProjectWithDocumentsOutput,
-  type ProjectFullOutput,
-} from '@repo/db/schema';

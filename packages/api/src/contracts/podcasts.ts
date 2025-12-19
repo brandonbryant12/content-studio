@@ -7,6 +7,12 @@ import {
 } from '@repo/db/schema';
 import * as v from 'valibot';
 
+// Helper for query params that may come in as strings
+const coerceNumber = v.pipe(
+  v.union([v.number(), v.pipe(v.string(), v.transform(Number))]),
+  v.number(),
+);
+
 const podcastErrors = {
   PODCAST_NOT_FOUND: {
     status: 404,
@@ -24,12 +30,6 @@ const podcastErrors = {
     status: 404,
     data: v.object({
       documentId: v.string(),
-    }),
-  },
-  PROJECT_NOT_FOUND: {
-    status: 404,
-    data: v.object({
-      projectId: v.string(),
     }),
   },
   MEDIA_NOT_FOUND: {
@@ -53,7 +53,6 @@ const jobErrors = {
 // Output schemas
 const podcastOutputSchema = v.object({
   id: v.string(),
-  projectId: v.string(),
   title: v.string(),
   description: v.nullable(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
@@ -75,6 +74,7 @@ const podcastOutputSchema = v.object({
   duration: v.nullable(v.number()),
   errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
+  sourceDocumentIds: v.array(v.string()),
   publishStatus: v.picklist(['draft', 'ready', 'published', 'rejected']),
   publishedAt: v.nullable(v.string()),
   publishedBy: v.nullable(v.string()),
@@ -166,9 +166,8 @@ const podcastContract = oc
       })
       .input(
         v.object({
-          projectId: v.optional(v.pipe(v.string(), v.uuid())),
-          limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
-          offset: v.optional(v.pipe(v.number(), v.minValue(0))),
+          limit: v.optional(v.pipe(coerceNumber, v.minValue(1), v.maxValue(100))),
+          offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
           status: v.optional(
             v.picklist([
               'draft',

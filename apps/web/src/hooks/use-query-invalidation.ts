@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { invalidateQueries } from '@/clients/query-helpers';
 
-type QueryKeyPrefix = 'podcasts' | 'documents' | 'projects' | 'voices';
+type QueryKeyPrefix = 'podcasts' | 'documents' | 'voices';
 
 export interface UseQueryInvalidationReturn {
   invalidate: (...prefixes: QueryKeyPrefix[]) => Promise<void>;
   invalidatePodcasts: () => Promise<void>;
-  invalidateProjects: () => Promise<void>;
   invalidateDocuments: () => Promise<void>;
   invalidateVoices: () => Promise<void>;
   invalidateAll: () => Promise<void>;
@@ -25,10 +24,6 @@ export function useQueryInvalidation(): UseQueryInvalidationReturn {
     return invalidateQueries('podcasts');
   }, []);
 
-  const invalidateProjects = useCallback(() => {
-    return invalidateQueries('projects');
-  }, []);
-
   const invalidateDocuments = useCallback(() => {
     return invalidateQueries('documents');
   }, []);
@@ -38,13 +33,12 @@ export function useQueryInvalidation(): UseQueryInvalidationReturn {
   }, []);
 
   const invalidateAll = useCallback(() => {
-    return invalidateQueries('podcasts', 'documents', 'projects', 'voices');
+    return invalidateQueries('podcasts', 'documents', 'voices');
   }, []);
 
   return {
     invalidate,
     invalidatePodcasts,
-    invalidateProjects,
     invalidateDocuments,
     invalidateVoices,
     invalidateAll,

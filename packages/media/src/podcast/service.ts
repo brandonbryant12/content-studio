@@ -16,7 +16,6 @@ import type {
   ForbiddenError,
   PolicyError,
   DocumentNotFound,
-  ProjectNotFound,
 } from '@repo/effect/errors';
 import type { Effect } from 'effect';
 
@@ -55,17 +54,12 @@ export interface PodcastFull extends Podcast {
 export interface PodcastService {
   /**
    * Create a new podcast with linked documents.
-   * Requires a valid projectId - the podcast will belong to that project.
    */
   readonly create: (
     data: CreatePodcast,
   ) => Effect.Effect<
     PodcastWithDocuments,
-    | DatabaseError
-    | PolicyError
-    | ForbiddenError
-    | DocumentNotFound
-    | ProjectNotFound,
+    DatabaseError | PolicyError | ForbiddenError | DocumentNotFound,
     PodcastContext
   >;
 
@@ -84,7 +78,6 @@ export interface PodcastService {
    * List all podcasts for the current user.
    */
   readonly list: (options?: {
-    projectId?: string;
     limit?: number;
     offset?: number;
     status?: PodcastStatus;

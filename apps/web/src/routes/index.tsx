@@ -51,9 +51,9 @@ function FeatureCard({
 function RouteComponent() {
   const { data: session } = authClient.useSession();
 
-  // Redirect authenticated users to projects
+  // Redirect authenticated users to dashboard
   if (session?.user) {
-    return <Navigate to="/projects" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return (

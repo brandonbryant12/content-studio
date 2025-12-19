@@ -39,7 +39,9 @@
       "Bash(git commit:*)",
       "Bash(readlink:*)",
       "Bash(pnpm store prune:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(pnpm --filter web exec tsr:*)",
+      "Bash(pnpm --filter web build:*)"
     ],
     "deny": [],
     "ask": []
