@@ -21,10 +21,10 @@ export const Route = createFileRoute('/_protected/podcasts/')({
 
 function EmptyState({ onCreateClick, isCreating }: { onCreateClick: () => void; isCreating: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+    <div className="empty-state-lg">
+      <div className="empty-state-icon">
         <svg
-          className="w-8 h-8 text-gray-400"
+          className="w-7 h-7 text-muted-foreground"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -37,17 +37,11 @@ function EmptyState({ onCreateClick, isCreating }: { onCreateClick: () => void; 
           />
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-        No podcasts yet
-      </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-4">
+      <h3 className="empty-state-title">No podcasts yet</h3>
+      <p className="empty-state-description">
         Create your first podcast to get started.
       </p>
-      <Button
-        onClick={onCreateClick}
-        disabled={isCreating}
-        className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-md"
-      >
+      <Button onClick={onCreateClick} disabled={isCreating}>
         {isCreating ? (
           <>
             <Spinner className="w-4 h-4 mr-2" />
@@ -108,22 +102,14 @@ function PodcastsPage() {
   );
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl">
+    <div className="page-container-narrow">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Podcasts
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Manage your generated podcasts
-          </p>
+          <p className="page-eyebrow">Audio Content</p>
+          <h1 className="page-title">Podcasts</h1>
         </div>
-        <Button
-          onClick={handleCreate}
-          disabled={createMutation.isPending}
-          className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-md shadow-violet-500/20"
-        >
+        <Button onClick={handleCreate} disabled={createMutation.isPending}>
           {createMutation.isPending ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
@@ -144,26 +130,26 @@ function PodcastsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search podcasts..."
-          className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 focus:bg-white dark:focus:bg-gray-950 transition-colors"
+          className="search-input"
         />
-        <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <MagnifyingGlassIcon className="search-icon" />
       </div>
 
       {/* Content */}
       {isPending ? (
-        <div className="flex justify-center py-16">
+        <div className="loading-center-lg">
           <Spinner className="w-6 h-6" />
         </div>
       ) : filteredPodcasts?.length === 0 ? (
         searchQuery ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 dark:text-gray-400">No podcasts found matching "{searchQuery}"</p>
+            <p className="text-muted-foreground">No podcasts found matching "{searchQuery}"</p>
           </div>
         ) : (
           <EmptyState onCreateClick={handleCreate} isCreating={createMutation.isPending} />
         )
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filteredPodcasts?.map((podcast) => (
             <PodcastItem
               key={podcast.id}

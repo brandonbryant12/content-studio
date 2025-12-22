@@ -57,83 +57,65 @@ function Dashboard() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Dashboard
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Your content overview and quick actions
-        </p>
+        <p className="page-eyebrow">Overview</p>
+        <h1 className="page-title">Dashboard</h1>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <button
-          onClick={() => setUploadOpen(true)}
-          className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-all group"
-        >
-          <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <UploadIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div className="content-grid-2 mb-10">
+        <button onClick={() => setUploadOpen(true)} className="action-card">
+          <div className="action-card-icon">
+            <UploadIcon className="w-5 h-5 text-foreground" />
           </div>
-          <div className="text-left">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              Upload Document
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Add source content for podcasts
-            </p>
+          <div>
+            <h3 className="action-card-title">Upload Document</h3>
+            <p className="action-card-description">Add source content</p>
           </div>
         </button>
 
         <button
           onClick={handleCreatePodcast}
           disabled={createPodcastMutation.isPending}
-          className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 hover:border-violet-300 dark:hover:border-violet-700 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+          className="action-card"
         >
-          <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="action-card-icon">
             {createPodcastMutation.isPending ? (
-              <Spinner className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <Spinner className="w-5 h-5" />
             ) : (
-              <PlusIcon className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <PlusIcon className="w-5 h-5 text-foreground" />
             )}
           </div>
-          <div className="text-left">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              {createPodcastMutation.isPending ? 'Creating...' : 'Create Podcast'}
+          <div>
+            <h3 className="action-card-title">
+              {createPodcastMutation.isPending ? 'Creating...' : 'New Podcast'}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Generate audio from documents
-            </p>
+            <p className="action-card-description">Generate audio content</p>
           </div>
         </button>
       </div>
 
       {/* Recent Documents */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+      <section className="page-section">
+        <div className="section-header">
           <div className="flex items-center gap-2">
-            <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Recent Documents
-            </h2>
+            <FileTextIcon className="w-4 h-4 text-muted-foreground" />
+            <h2 className="section-title">Recent Documents</h2>
           </div>
-          <Link
-            to="/documents"
-            className="text-sm text-violet-600 dark:text-violet-400 hover:underline"
-          >
+          <Link to="/documents" className="text-link">
             View all
           </Link>
         </div>
 
         {docsPending ? (
-          <div className="flex justify-center py-8">
+          <div className="loading-center">
             <Spinner className="w-5 h-5" />
           </div>
         ) : documents?.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>No documents yet. Upload your first document to get started.</p>
+          <div className="empty-state">
+            <p className="text-body">No documents yet</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -151,28 +133,23 @@ function Dashboard() {
 
       {/* Recent Podcasts */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="section-header">
           <div className="flex items-center gap-2">
-            <SpeakerLoudIcon className="w-5 h-5 text-fuchsia-600 dark:text-fuchsia-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Recent Podcasts
-            </h2>
+            <SpeakerLoudIcon className="w-4 h-4 text-muted-foreground" />
+            <h2 className="section-title">Recent Podcasts</h2>
           </div>
-          <Link
-            to="/podcasts"
-            className="text-sm text-violet-600 dark:text-violet-400 hover:underline"
-          >
+          <Link to="/podcasts" className="text-link">
             View all
           </Link>
         </div>
 
         {podcastsPending ? (
-          <div className="flex justify-center py-8">
+          <div className="loading-center">
             <Spinner className="w-5 h-5" />
           </div>
         ) : podcasts?.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>No podcasts yet. Create your first podcast from a document.</p>
+          <div className="empty-state">
+            <p className="text-body">No podcasts yet</p>
           </div>
         ) : (
           <div className="space-y-2">

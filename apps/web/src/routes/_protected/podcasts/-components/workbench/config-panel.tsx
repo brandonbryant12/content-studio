@@ -35,8 +35,8 @@ export function ConfigPanel({
   pendingAction,
 }: ConfigPanelProps) {
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="p-4 space-y-4">
+    <div className="config-panel">
+      <div className="config-panel-content">
         {/* Primary Actions - Always visible */}
         <section>
           <SmartActions
@@ -55,12 +55,10 @@ export function ConfigPanel({
 
         {/* Audio Player - Prominent when available */}
         {podcast.audioUrl && (
-          <section className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-2 mb-3">
-              <SpeakerLoudIcon className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Audio
-              </span>
+          <section className="config-section">
+            <div className="config-section-header">
+              <SpeakerLoudIcon />
+              <span className="config-section-title">Audio</span>
             </div>
             <AudioPlayer url={podcast.audioUrl} />
           </section>
@@ -72,16 +70,14 @@ export function ConfigPanel({
         )}
 
         {/* Divider */}
-        <hr className="border-gray-200 dark:border-gray-800" />
+        <hr className="config-divider" />
 
         {/* Source Documents - Collapsible */}
         <CollapsibleSection
           icon={<FileTextIcon className="w-3.5 h-3.5" />}
           title="Source Documents"
           badge={
-            <span className="ml-1.5 text-xs text-gray-400 tabular-nums">
-              {podcast.documents.length}
-            </span>
+            <span className="text-meta ml-1.5">{podcast.documents.length}</span>
           }
           defaultOpen={true}
         >

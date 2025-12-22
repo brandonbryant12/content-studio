@@ -33,10 +33,10 @@ export function SmartActions({
   // If unsaved changes, show save prompt
   if (hasUnsavedChanges) {
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-          <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-          <span className="text-xs font-medium">Unsaved changes</span>
+      <div className="smart-actions">
+        <div className="smart-actions-unsaved">
+          <div className="smart-actions-unsaved-dot" />
+          <span className="smart-actions-unsaved-text">Unsaved changes</span>
         </div>
         <Button
           onClick={onSave}
@@ -75,15 +75,11 @@ export function SmartActions({
         : 'Starting...';
 
     return (
-      <div className="flex items-center gap-3 p-4 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
-        <Spinner className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+      <div className="smart-actions-progress">
+        <Spinner className="smart-actions-progress-spinner" />
         <div>
-          <p className="text-sm font-medium text-violet-900 dark:text-violet-100">
-            {progressMessage}
-          </p>
-          <p className="text-xs text-violet-600/70 dark:text-violet-400/60">
-            This may take a minute
-          </p>
+          <p className="smart-actions-progress-title">{progressMessage}</p>
+          <p className="smart-actions-progress-subtitle">This may take a minute</p>
         </div>
       </div>
     );
@@ -122,10 +118,8 @@ export function SmartActions({
     case 'ready':
       return (
         <div className="space-y-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-            Regenerate
-          </p>
-          <div className="flex gap-2">
+          <p className="smart-actions-label">Regenerate</p>
+          <div className="smart-actions-row">
             <Button
               variant="outline"
               size="sm"
@@ -163,7 +157,7 @@ export function SmartActions({
             <ReloadIcon className="w-4 h-4 mr-2" />
             Retry
           </Button>
-          <div className="flex gap-2">
+          <div className="smart-actions-row">
             <Button
               variant="outline"
               size="sm"

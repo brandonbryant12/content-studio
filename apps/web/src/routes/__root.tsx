@@ -25,7 +25,7 @@ function RootComponent() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-950">
+      <div className="min-h-screen bg-background">
         <NavContainer>
           <div />
         </NavContainer>
@@ -45,7 +45,7 @@ function RootComponent() {
         // TODO: Send to error tracking service in production
       }}
     >
-      <div className="min-h-screen bg-white dark:bg-gray-950">
+      <div className="min-h-screen bg-background">
         <Navbar session={session} />
         <Toaster position="bottom-right" />
         <Outlet />

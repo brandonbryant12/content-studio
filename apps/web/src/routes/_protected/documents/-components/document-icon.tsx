@@ -1,18 +1,14 @@
 export function DocumentIcon({ source }: { source: string }) {
-  const color = source.includes('pdf')
-    ? 'text-red-500'
-    : source.includes('docx')
-      ? 'text-indigo-500'
-      : source.includes('pptx')
-        ? 'text-orange-500'
-        : source.includes('txt')
-          ? 'text-blue-500'
-          : 'text-gray-500';
+  const getIconColor = () => {
+    if (source.includes('pdf')) return 'text-red-600 dark:text-red-400';
+    if (source.includes('docx')) return 'text-sky-600 dark:text-sky-400';
+    if (source.includes('pptx')) return 'text-amber-600 dark:text-amber-400';
+    if (source.includes('txt')) return 'text-sky-600 dark:text-sky-400';
+    return 'text-muted-foreground';
+  };
 
   return (
-    <div
-      className={`w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${color}`}
-    >
+    <div className={`icon-box ${getIconColor()}`}>
       <svg
         className="w-5 h-5"
         fill="none"

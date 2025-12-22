@@ -34,6 +34,11 @@ packages/
   storage/             # File storage (filesystem, S3, database)
   queue/               # Background job processing
   project/             # Project management service
+  ui/                  # Shared UI components (Button, Badge, etc.)
+
+tools/
+  tailwind/
+    style.css          # Global CSS - design system & component styles
 ```
 
 ## Critical Conventions
@@ -330,6 +335,74 @@ onSuccess: async (data) => {
 - Use `aria-checked` and `role="checkbox"` for custom checkboxes
 - Ensure all form inputs have associated labels
 
+### CSS & Styling
+
+**Location**: `tools/tailwind/style.css`
+
+All component styles MUST be centralized in the global CSS file using `@layer components`. This ensures consistency, maintainability, and prevents "AI slop" aesthetics.
+
+**Design System: "Studio Editorial"**
+- **Primary**: Warm amber/gold (HSL 38) - evokes studio VU meters
+- **Accent**: Teal/seafoam for contrast
+- **Typography**: DM Sans (body), Source Serif 4 (editorial headings), JetBrains Mono (technical/meta)
+- **Theme**: Warm cream backgrounds (light) / deep charcoal with warm undertones (dark)
+
+**Required practices:**
+
+1. **Centralize all styles** - Define component classes in `@layer components` in `tools/tailwind/style.css`
+2. **Use semantic class names** - Name classes by purpose, not appearance (e.g., `.script-panel-header` not `.flex-between-border`)
+3. **Avoid inline Tailwind** - Components should use centralized classes, not long chains of utility classes
+
+```tsx
+// ✅ CORRECT: Use centralized classes
+<div className="workbench-header">
+  <h1 className="workbench-title">{title}</h1>
+</div>
+
+// ❌ WRONG: Inline utility classes
+<div className="shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80 shadow-sm">
+  <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50 truncate tracking-tight">{title}</h1>
+</div>
+```
+
+**Exceptions** (inline Tailwind allowed):
+- Layout utilities: `flex`, `flex-1`, `gap-2`, `w-full`, `min-w-0`
+- Spacing adjustments: `mr-2`, `mt-4`, `p-4`
+- Responsive modifiers: `md:flex`, `lg:grid-cols-2`
+- One-off size overrides: `w-4 h-4` for icons
+
+**Never use these patterns (AI slop):**
+- Purple/violet/fuchsia gradient combinations
+- Generic fonts (Inter, Roboto, Arial, system-ui alone)
+- Gradient buttons with `from-X-600 to-Y-600` patterns
+- Overused color schemes (purple on white backgrounds)
+
+**Adding new component styles:**
+
+```css
+/* In tools/tailwind/style.css */
+@layer components {
+  .my-component {
+    @apply border border-border bg-card rounded-lg p-4;
+  }
+
+  .my-component-title {
+    @apply font-medium text-foreground;
+  }
+
+  .my-component:hover .my-component-title {
+    @apply text-primary;
+  }
+}
+```
+
+**Key centralized class categories:**
+- Layout: `.page-container`, `.content-grid-2`, `.workbench`
+- Typography: `.page-title`, `.page-eyebrow`, `.text-body`, `.text-meta`
+- Cards: `.card`, `.action-card`, `.list-item`
+- Forms: `.search-input`, `.settings-option`, `.settings-textarea`
+- States: `.empty-state`, `.loading-center`, `.error-display`
+
 ## Code Review Checklist
 
 - [ ] All errors handled with proper typing (no `any`)
@@ -344,3 +417,6 @@ onSuccess: async (data) => {
 - [ ] Dialogs use BaseDialog component
 - [ ] Error boundaries in place at layout levels
 - [ ] Mutation onSuccess: close/navigate BEFORE await invalidateQueries
+- [ ] Component styles centralized in `tools/tailwind/style.css`
+- [ ] No inline Tailwind chains (use semantic class names)
+- [ ] No AI slop patterns (purple gradients, generic fonts)

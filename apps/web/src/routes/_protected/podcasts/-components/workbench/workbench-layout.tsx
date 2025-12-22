@@ -29,37 +29,33 @@ export function WorkbenchLayout({
   const isGenerating = isGeneratingStatus(podcast.status);
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950">
-      {/* Header with subtle gradient */}
-      <header className="shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80 shadow-sm">
-        <div className="px-4 py-4 lg:px-6">
-          <div className="flex items-center gap-4">
+    <div className="workbench">
+      {/* Header */}
+      <header className="workbench-header">
+        <div className="workbench-header-content">
+          <div className="workbench-header-row">
             {/* Back button */}
             <Link
               to="/podcasts"
-              className="group flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+              className="workbench-back-btn"
               aria-label="Back to podcasts"
             >
-              <ArrowLeftIcon className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors" />
+              <ArrowLeftIcon />
             </Link>
 
             {/* Podcast icon and title */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="workbench-title-group">
               <PodcastIcon format={podcast.format} status={podcast.status} />
               <div className="min-w-0">
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50 truncate tracking-tight">
-                  {podcast.title}
-                </h1>
+                <h1 className="workbench-title">{podcast.title}</h1>
                 {podcast.description && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                    {podcast.description}
-                  </p>
+                  <p className="workbench-subtitle">{podcast.description}</p>
                 )}
               </div>
             </div>
 
             {/* Status badges and metadata */}
-            <div className="flex items-center gap-3">
+            <div className="workbench-meta">
               <Badge
                 variant={statusConfig.badgeVariant}
                 className="gap-1.5 px-2.5 py-1 font-medium"
@@ -69,7 +65,7 @@ export function WorkbenchLayout({
               </Badge>
 
               {podcast.duration && (
-                <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 font-medium tabular-nums">
+                <div className="workbench-duration">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -78,13 +74,13 @@ export function WorkbenchLayout({
               )}
 
               {/* Delete button */}
-              <div className="ml-2 pl-3 border-l border-gray-200 dark:border-gray-700">
+              <div className="workbench-actions">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onDelete}
                   disabled={isDeleting || isGenerating}
-                  className="w-9 h-9 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
+                  className="workbench-delete-btn"
                   aria-label="Delete podcast"
                 >
                   {isDeleting ? (
@@ -100,14 +96,14 @@ export function WorkbenchLayout({
       </header>
 
       {/* Main content - split panels */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-        {/* Left panel - Script (main content area) */}
-        <div className="flex-1 lg:w-3/5 overflow-hidden bg-white dark:bg-gray-900">
+      <div className="workbench-main">
+        {/* Left panel - Script */}
+        <div className="workbench-panel-left">
           {leftPanel}
         </div>
 
-        {/* Right panel - Config (sidebar) */}
-        <div className="lg:w-2/5 overflow-hidden border-t lg:border-t-0 lg:border-l border-gray-200/80 dark:border-gray-800/80 bg-gray-50/50 dark:bg-gray-950/50">
+        {/* Right panel - Config */}
+        <div className="workbench-panel-right">
           {rightPanel}
         </div>
       </div>

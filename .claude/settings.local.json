@@ -44,7 +44,9 @@
       "Bash(pnpm --filter web build:*)",
       "Bash(xargs ls:*)",
       "Bash(pnpm --filter @repo/media typecheck:*)",
-      "Skill(frontend-design:frontend-design)"
+      "Skill(frontend-design:frontend-design)",
+      "Bash(curl:*)",
+      "Skill(frontend-design)"
     ],
     "deny": [],
     "ask": []

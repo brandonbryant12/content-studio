@@ -7,25 +7,18 @@ export const Route = createFileRoute('/_public/register')({
 
 function RouteComponent() {
   return (
-    <div className="min-h-[calc(100vh-57px)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Create an account
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Get started with AI-powered podcast creation
-          </p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <p className="page-eyebrow">Get started</p>
+          <h1 className="page-title">Create account</h1>
         </div>
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 md:p-8 shadow-sm">
+        <div className="card-padded">
           <RegisterCredentialsForm />
         </div>
-        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p className="auth-footer">
           Already have an account?{' '}
-          <Link
-            to="/login"
-            className="font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300"
-          >
+          <Link to="/login" className="text-link-primary">
             Sign in
           </Link>
         </p>

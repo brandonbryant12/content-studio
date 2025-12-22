@@ -19,28 +19,22 @@ export function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div>
+    <div className="collapsible-section">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-2 group"
+        className="collapsible-section-trigger"
       >
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-            {icon}
-          </div>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
+        <div className="collapsible-section-header">
+          <div className="collapsible-section-icon">{icon}</div>
+          <h3 className="collapsible-section-title">{title}</h3>
           {badge}
         </div>
         <ChevronDownIcon
-          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`collapsible-section-chevron ${isOpen ? 'expanded' : ''}`}
         />
       </button>
-      {isOpen && <div className="pt-3 pb-1">{children}</div>}
+      {isOpen && <div className="collapsible-section-content">{children}</div>}
     </div>
   );
 }
