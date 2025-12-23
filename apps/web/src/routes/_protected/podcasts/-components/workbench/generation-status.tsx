@@ -52,7 +52,11 @@ export function GenerationStatus({
   isSavingSettings,
   isPendingGeneration,
 }: GenerationStatusProps) {
-  const activeStep = getActiveStep(status, isSavingSettings, isPendingGeneration);
+  const activeStep = getActiveStep(
+    status,
+    isSavingSettings,
+    isPendingGeneration,
+  );
   const stepConfig = STEPS[activeStep];
   const steps: Step[] = ['saving', 'script', 'audio', 'complete'];
 
@@ -98,7 +102,9 @@ export function GenerationStatus({
               </span>
 
               {/* Connector */}
-              {!isLast && <div className={`generation-step-connector ${state}`} />}
+              {!isLast && (
+                <div className={`generation-step-connector ${state}`} />
+              )}
             </div>
           );
         })}

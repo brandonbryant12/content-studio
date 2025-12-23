@@ -1,12 +1,12 @@
-import { jest, describe, it, expect } from '@jest/globals';
 import { Effect, Exit } from 'effect';
+import { vi, describe, it, expect } from 'vitest';
 import { Db, DbError, DbLive, withDb } from '../db';
 
 const mockDb = {
-  select: jest.fn(),
-  insert: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
+  select: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
   query: {},
 } as unknown as Parameters<typeof DbLive>[0];
 

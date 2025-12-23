@@ -1,5 +1,5 @@
-@import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
 
 @plugin 'tailwindcss-animate';
 
@@ -1545,7 +1545,10 @@
   }
 
   .mixer-save-btn {
-    @apply text-xs;
+    @apply text-xs font-medium px-3 py-1.5
+           bg-warning text-warning-foreground
+           hover:bg-warning/90
+           border-0 shadow-sm;
   }
 
   /* Channel Strips - side by side like a mixing console */
@@ -1745,16 +1748,29 @@
 
   /* Duration Slider */
   .mixer-duration-slider {
-    @apply flex items-center gap-3;
+    @apply flex items-center gap-2;
+  }
+
+  .mixer-duration-slider > [data-slot='slider'] {
+    @apply flex-1;
+  }
+
+  .mixer-duration-range-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] text-muted-foreground tabular-nums shrink-0;
+  }
+
+  .mixer-duration-value-display {
+    @apply flex items-center justify-center gap-1 mt-2;
   }
 
   .mixer-duration-value {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-sm font-medium text-warning tabular-nums min-w-[3ch] text-right;
+    @apply text-lg font-semibold text-warning tabular-nums;
   }
 
   .mixer-duration-unit {
-    @apply text-xs text-muted-foreground;
+    @apply text-sm text-muted-foreground;
   }
 
   /* -----------------------------------------
@@ -2166,6 +2182,71 @@
   .audio-section-title {
     font-family: 'Source Serif 4', Georgia, serif;
     @apply text-sm font-semibold text-foreground;
+  }
+
+  /* Custom Audio Player */
+  .audio-player {
+    @apply flex items-center gap-3;
+  }
+
+  .audio-player-play-btn {
+    @apply w-10 h-10 rounded-full bg-warning text-warning-foreground
+           flex items-center justify-center shrink-0
+           transition-all duration-200
+           hover:bg-warning/90 hover:scale-105
+           active:scale-95;
+  }
+
+  .audio-player-main {
+    @apply flex-1 min-w-0 space-y-2;
+  }
+
+  .audio-player-waveform {
+    @apply flex items-end gap-[2px] h-10 cursor-pointer;
+  }
+
+  .audio-player-bar {
+    @apply flex-1 bg-warning/30 rounded-sm transition-all duration-150;
+    min-height: 15%;
+  }
+
+  .audio-player-bar.active {
+    @apply bg-warning/70;
+  }
+
+  .audio-player-bar.playing {
+    animation: audio-pulse 0.6s ease-in-out infinite;
+  }
+
+  @keyframes audio-pulse {
+    0%,
+    100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(1.1);
+    }
+  }
+
+  .audio-player-time {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply flex items-center gap-1 text-xs text-muted-foreground;
+  }
+
+  .audio-player-current {
+    @apply text-foreground font-medium;
+  }
+
+  .audio-player-separator {
+    @apply text-muted-foreground/50;
+  }
+
+  .audio-player-duration {
+    @apply text-muted-foreground;
+  }
+
+  .audio-player-volume {
+    @apply text-muted-foreground shrink-0;
   }
 
   /* ============================================

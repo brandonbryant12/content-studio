@@ -1,5 +1,17 @@
-import { LightningBoltIcon, PlayIcon, ReloadIcon } from '@radix-ui/react-icons';
+import {
+  ChevronDownIcon,
+  LightningBoltIcon,
+  PlayIcon,
+  ReloadIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { PodcastStatus } from '../../-constants/status';
 import { GenerationStatus } from './generation-status';
@@ -102,37 +114,30 @@ export function SmartActions({
 
     case 'ready':
       return (
-        <div className="space-y-2">
-          <p className="smart-actions-label">Regenerate</p>
-          <div className="smart-actions-row">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGenerateScript}
-              className="flex-1"
-            >
-              <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-              Script
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <ReloadIcon className="w-4 h-4 mr-2" />
+              Regenerate
+              <ChevronDownIcon className="w-4 h-4 ml-auto" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGenerateAudio}
-              className="flex-1"
-            >
-              <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-              Audio
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGenerateAll}
-              aria-label="Regenerate all"
-            >
-              <LightningBoltIcon className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem onClick={onGenerateScript}>
+              <ReloadIcon className="w-4 h-4 mr-2" />
+              Regenerate Script
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onGenerateAudio}>
+              <ReloadIcon className="w-4 h-4 mr-2" />
+              Regenerate Audio
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onGenerateAll}>
+              <LightningBoltIcon className="w-4 h-4 mr-2" />
+              Regenerate All
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
 
     case 'failed':
@@ -145,26 +150,27 @@ export function SmartActions({
             <ReloadIcon className="w-4 h-4 mr-2" />
             Retry
           </Button>
-          <div className="smart-actions-row">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGenerateScript}
-              className="flex-1"
-            >
-              Script
-            </Button>
-            {hasScript && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onGenerateAudio}
-                className="flex-1"
-              >
-                Audio
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+                Regenerate
+                <ChevronDownIcon className="w-3.5 h-3.5 ml-auto" />
               </Button>
-            )}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={onGenerateScript}>
+                <ReloadIcon className="w-4 h-4 mr-2" />
+                Regenerate Script
+              </DropdownMenuItem>
+              {hasScript && (
+                <DropdownMenuItem onClick={onGenerateAudio}>
+                  <ReloadIcon className="w-4 h-4 mr-2" />
+                  Regenerate Audio
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
 

@@ -3,7 +3,7 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "types": ["jest", "node"],
+    "types": ["node"],
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.test.tsbuildinfo"
   }

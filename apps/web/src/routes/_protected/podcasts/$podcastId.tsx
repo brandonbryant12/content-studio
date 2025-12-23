@@ -27,8 +27,7 @@ import {
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
   validateSearch: (search: Record<string, unknown>) => ({
-    scriptId:
-      typeof search.scriptId === 'string' ? search.scriptId : undefined,
+    scriptId: typeof search.scriptId === 'string' ? search.scriptId : undefined,
   }),
   loader: ({ params }) =>
     queryClient.ensureQueryData(

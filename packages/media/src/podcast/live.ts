@@ -190,6 +190,6 @@ const makePodcastService: PodcastService = {
  * For podcast generation (script + audio), use PodcastGeneratorLive instead.
  * This separation ensures CRUD consumers don't need heavy AI dependencies.
  */
- 
+
 export const PodcastsLive: Layer.Layer<Podcasts, never, Db | CurrentUser> =
   Layer.succeed(Podcasts, makePodcastService);

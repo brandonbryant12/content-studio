@@ -64,7 +64,7 @@ const VOICES = [
 ] as const;
 
 const MIN_DURATION = 1;
-const MAX_DURATION = 60;
+const MAX_DURATION = 10;
 
 interface PodcastSettingsProps {
   podcast: PodcastFull;
@@ -295,6 +295,7 @@ export function PodcastSettings({
       <div className="mixer-duration">
         <span className="mixer-duration-label">Target Length</span>
         <div className="mixer-duration-slider">
+          <span className="mixer-duration-range-label">{MIN_DURATION}</span>
           <Slider
             value={[targetDuration]}
             onValueChange={([value]) => value && setTargetDuration(value)}
@@ -303,6 +304,9 @@ export function PodcastSettings({
             step={1}
             disabled={disabled}
           />
+          <span className="mixer-duration-range-label">{MAX_DURATION}</span>
+        </div>
+        <div className="mixer-duration-value-display">
           <span className="mixer-duration-value">{targetDuration}</span>
           <span className="mixer-duration-unit">min</span>
         </div>

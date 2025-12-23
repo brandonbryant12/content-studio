@@ -37,6 +37,15 @@ export const envSchema = v.object({
   // Google AI API key for LLM and TTS
   GEMINI_API_KEY: v.pipe(v.string(), v.minLength(1)),
 
+  // Use mock AI services (for testing)
+  USE_MOCK_AI: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((s) => s === 'true' || s === '1'),
+    ),
+    'false',
+  ),
+
   // Storage configuration
   STORAGE_PROVIDER: v.optional(
     v.picklist(['database', 'filesystem', 's3']),

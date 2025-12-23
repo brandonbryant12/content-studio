@@ -76,6 +76,7 @@ catalog:
   vite: ^7.2.4
   vitest: ^3.2.4
   '@vitest/coverage-v8': ^3.2.4
+  '@playwright/test': ^1.52.0
   jest: ^29.7.0
   '@types/jest': ^29.5.14
   ts-jest: ^29.3.4

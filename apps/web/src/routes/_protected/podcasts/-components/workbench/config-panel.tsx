@@ -85,8 +85,8 @@ export function ConfigPanel({
   const versionCount = versions?.length ?? 0;
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
-    { id: 'produce', label: 'Produce', icon: <LightningBoltIcon /> },
-    { id: 'mix', label: 'Mix', icon: <MixerHorizontalIcon /> },
+    { id: 'produce', label: 'Generate', icon: <LightningBoltIcon /> },
+    { id: 'mix', label: 'Settings', icon: <MixerHorizontalIcon /> },
   ];
 
   return (

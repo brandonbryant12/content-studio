@@ -12,6 +12,7 @@ Content Studio is a web application for creating and managing multimedia content
 - **Effect System**: Effect-TS for typed errors and dependency injection
 - **Frontend**: React + TanStack Router + Tailwind CSS
 - **AI Services**: Google Gemini for LLM and TTS
+- **Testing**: Vitest (unit), Playwright (E2E)
 
 ## Monorepo Structure
 
@@ -19,6 +20,7 @@ Content Studio is a web application for creating and managing multimedia content
 apps/
   server/              # Hono HTTP server + background workers
   web/                 # React frontend (Vite)
+    e2e/               # Playwright E2E tests
 
 packages/
   api/                 # oRPC contracts and API handlers
@@ -34,11 +36,15 @@ packages/
   storage/             # File storage (filesystem, S3, database)
   queue/               # Background job processing
   project/             # Project management service
+  testing/             # Shared test utilities, mocks, factories
   ui/                  # Shared UI components (Button, Badge, etc.)
 
 tools/
   tailwind/
     style.css          # Global CSS - design system & component styles
+
+docs/
+  testing/             # Testing documentation
 ```
 
 ## Critical Conventions
@@ -176,11 +182,93 @@ pnpm typecheck         # Run TypeScript checks
 pnpm lint              # Run linting
 ```
 
-## Testing Considerations
+## Testing
 
-- Unit tests should mock Effect layers
-- Integration tests use real database with transaction rollback
-- All error paths must be tested
+Content Studio uses a **testing pyramid**: unit tests (Vitest) → integration tests (real DB) → E2E tests (Playwright).
+
+**Full documentation**: `docs/testing/README.md`
+
+### Quick Commands
+
+```bash
+# Unit tests
+pnpm test                    # Run all unit tests
+
+# E2E tests (fully automated)
+pnpm test:db:setup           # First time: start test DB + migrations
+pnpm test:e2e                # Run E2E tests (auto-starts servers)
+pnpm test:e2e:ui             # Playwright UI mode
+
+# Test database
+pnpm test:db:up              # Start test database
+pnpm test:db:down            # Stop test database
+```
+
+### E2E Test Environment
+
+E2E tests run in an **isolated environment**:
+- **Test database**: PostgreSQL on port 5433 (Docker)
+- **Mock AI**: LLM and TTS return fixed responses (no API calls)
+- **Auto-start**: Playwright starts server + web app automatically
+
+### Test Structure
+
+```
+packages/testing/            # Shared test utilities
+  src/mocks/                 # MockLLMLive, MockTTSLive, InMemoryStorageLive
+  src/factories/             # createTestUser, createTestPodcast, etc.
+  src/setup/                 # TestContext with transaction rollback
+
+apps/web/e2e/
+  fixtures/                  # auth.ts (login), api.ts (data creation)
+  tests/                     # *.spec.ts test files
+  seed.ts                    # Creates test user via sign-up API
+```
+
+### E2E Test Patterns
+
+**Authentication** - use `login` fixture in `beforeEach`:
+```typescript
+import { login } from '../fixtures';
+
+test.beforeEach(async ({ page }) => {
+  await login(page);
+});
+```
+
+**API calls with auth** - use `page.request` (NOT `request` fixture):
+```typescript
+// ✅ Correct - shares browser cookies
+const doc = await createDocument(page.request, { title: 'Test' });
+
+// ❌ Wrong - no authentication
+const doc = await createDocument(request, { title: 'Test' });
+```
+
+**Flexible selectors** - handle different UI states:
+```typescript
+const createButton = page
+  .getByRole('button', { name: 'Create New' })
+  .or(page.getByRole('button', { name: 'Create Podcast' }));
+await createButton.first().click();
+```
+
+### Mock Layers
+
+Use mocks from `@repo/testing` for external services:
+
+```typescript
+import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
+
+// In tests
+Effect.provide(myEffect, Layer.mergeAll(MockLLMLive, MockTTSLive));
+```
+
+### Test User
+
+Default credentials (created by `e2e:seed`):
+- Email: `test@example.com`
+- Password: `testpassword123`
 
 ## What NOT to Do
 
@@ -405,6 +493,7 @@ All component styles MUST be centralized in the global CSS file using `@layer co
 
 ## Code Review Checklist
 
+**Backend:**
 - [ ] All errors handled with proper typing (no `any`)
 - [ ] `handleEffect` used with error factory
 - [ ] Database operations wrapped in `withDb`
@@ -412,6 +501,8 @@ All component styles MUST be centralized in the global CSS file using `@layer co
 - [ ] No silent error suppression
 - [ ] Input validation at API boundary
 - [ ] Serializers used for API responses
+
+**Frontend:**
 - [ ] TypeScript compiles without errors
 - [ ] Frontend components under 200 lines
 - [ ] Dialogs use BaseDialog component
@@ -420,3 +511,10 @@ All component styles MUST be centralized in the global CSS file using `@layer co
 - [ ] Component styles centralized in `tools/tailwind/style.css`
 - [ ] No inline Tailwind chains (use semantic class names)
 - [ ] No AI slop patterns (purple gradients, generic fonts)
+
+**Testing:**
+- [ ] E2E tests use `page.request` for authenticated API calls
+- [ ] Tests clean up created resources in `afterEach`
+- [ ] No `test.only` in committed code
+- [ ] Critical user flows have E2E coverage
+- [ ] Mock layers used for external services (AI, storage)

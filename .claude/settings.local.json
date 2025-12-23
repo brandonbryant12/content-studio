@@ -49,7 +49,22 @@
       "Skill(frontend-design)",
       "Bash(pnpm --filter @repo/db build:*)",
       "Bash(pnpm --filter @repo/api build:*)",
-      "Bash(pnpm --filter web tsc:*)"
+      "Bash(pnpm --filter web tsc:*)",
+      "Bash(pnpm --filter web lint:*)",
+      "Bash(git push:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm exec playwright:*)",
+      "Bash(pnpm test:e2e:*)",
+      "WebFetch(domain:www.better-auth.com)",
+      "Bash(pnpm e2e:seed:*)",
+      "Bash(pnpm test:db:setup:*)",
+      "Bash(DATABASE_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker rm:*)",
+      "Bash(PGPASSWORD=test psql:*)",
+      "Bash(DB_POSTGRES_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm --filter @repo/db exec drizzle-kit push:*)",
+      "Bash(pnpm:*)"
     ],
     "deny": [],
     "ask": []

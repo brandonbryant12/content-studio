@@ -1,9 +1,16 @@
-import { Cross2Icon, CodeIcon, ChatBubbleIcon, FileTextIcon } from '@radix-ui/react-icons';
+import {
+  Cross2Icon,
+  CodeIcon,
+  ChatBubbleIcon,
+  FileTextIcon,
+} from '@radix-ui/react-icons';
 import type { RouterOutput } from '@repo/api/client';
-import { PromptSection } from './prompt-section';
 import { DocumentContentViewer } from './document-content-viewer';
+import { PromptSection } from './prompt-section';
 
-type GenerationContext = NonNullable<RouterOutput['podcasts']['get']['generationContext']>;
+type GenerationContext = NonNullable<
+  RouterOutput['podcasts']['get']['generationContext']
+>;
 
 interface PromptViewerPanelProps {
   generationContext: GenerationContext;
@@ -25,10 +32,17 @@ export function PromptViewerPanel({
   generationContext,
   onClose,
 }: PromptViewerPanelProps) {
-  const { systemPromptTemplate, userInstructions, sourceDocuments, modelId, modelParams, generatedAt } =
-    generationContext;
+  const {
+    systemPromptTemplate,
+    userInstructions,
+    sourceDocuments,
+    modelId,
+    modelParams,
+    generatedAt,
+  } = generationContext;
 
-  const hasUserInstructions = userInstructions && userInstructions.trim().length > 0;
+  const hasUserInstructions =
+    userInstructions && userInstructions.trim().length > 0;
 
   return (
     <div className="prompt-viewer-overlay">
@@ -55,12 +69,16 @@ export function PromptViewerPanel({
             {modelParams?.temperature != null && (
               <div className="prompt-meta-row">
                 <span className="prompt-meta-label">Temperature</span>
-                <span className="prompt-meta-value">{modelParams.temperature}</span>
+                <span className="prompt-meta-value">
+                  {modelParams.temperature}
+                </span>
               </div>
             )}
             <div className="prompt-meta-row">
               <span className="prompt-meta-label">Generated</span>
-              <span className="prompt-meta-value">{formatDate(generatedAt)}</span>
+              <span className="prompt-meta-value">
+                {formatDate(generatedAt)}
+              </span>
             </div>
           </div>
 
@@ -89,7 +107,9 @@ export function PromptViewerPanel({
             icon={<FileTextIcon />}
             title="Source Documents"
             badge={
-              <span className="prompt-section-badge">{sourceDocuments.length}</span>
+              <span className="prompt-section-badge">
+                {sourceDocuments.length}
+              </span>
             }
             defaultOpen={false}
           >

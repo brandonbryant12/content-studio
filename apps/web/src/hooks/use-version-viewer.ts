@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
 import type { RouterOutput } from '@repo/api/client';
+import { apiClient } from '@/clients/apiClient';
 
 type PodcastScript = RouterOutput['podcasts']['getScript'];
 

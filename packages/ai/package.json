@@ -22,8 +22,8 @@
     "dev": "tsc --build tsconfig.package.json",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },
   "prettier": "@repo/prettier-config",
@@ -36,15 +36,12 @@
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
-    "@repo/jest-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "prettier": "catalog:",
-    "ts-jest": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

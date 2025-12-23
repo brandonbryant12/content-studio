@@ -1,5 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
 import { Effect, Layer } from 'effect';
+import { describe, it, expect } from 'vitest';
 import { Forbidden } from '../errors';
 import {
   requireOwnership,

@@ -12,6 +12,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "start": "NODE_ENV=production NODE_OPTIONS='--enable-source-maps' pnpm env:run node dist/server.js",
+    "start:test": "NODE_OPTIONS='--enable-source-maps' dotenv -e .env.test -- tsx src/server.ts",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@repo/prettier-config",

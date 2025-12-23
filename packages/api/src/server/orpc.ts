@@ -13,6 +13,7 @@ import {
   type PodcastGenerator,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
+import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
 import { Layer, ManagedRuntime, Logger } from 'effect';
 import type { AuthInstance } from '@repo/auth/server';
 import type { CurrentUser, Policy } from '@repo/auth-policy';
@@ -59,14 +60,26 @@ const createBaseLayers = (
   db: DatabaseInstance,
   geminiApiKey: string,
   storageConfig: StorageConfig,
+  useMockAI: boolean = false,
 ) => {
   const dbLayer = DbLive(db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const storageLayer = createStorageLayer(storageConfig, dbLayer);
-  const ttsLayer = GoogleTTSLive({ apiKey: geminiApiKey });
-  const llmLayer = GoogleLive({ apiKey: geminiApiKey });
+
+  // Use mock AI layers for testing, real Google layers for production
+  const ttsLayer = useMockAI
+    ? MockTTSLive
+    : GoogleTTSLive({ apiKey: geminiApiKey });
+  const llmLayer = useMockAI
+    ? MockLLMLive
+    : GoogleLive({ apiKey: geminiApiKey });
+
   const loggerLayer = Logger.pretty;
+
+  if (useMockAI) {
+    console.log('[API] Using mock AI layers for testing');
+  }
 
   return {
     dbLayer,
@@ -87,6 +100,7 @@ const createAuthenticatedLayers = (
   currentUser: User,
   geminiApiKey: string,
   storageConfig: StorageConfig,
+  useMockAI: boolean = false,
 ): Layer.Layer<AuthenticatedServices, never, never> => {
   const {
     dbLayer,
@@ -96,7 +110,7 @@ const createAuthenticatedLayers = (
     ttsLayer,
     llmLayer,
     loggerLayer,
-  } = createBaseLayers(db, geminiApiKey, storageConfig);
+  } = createBaseLayers(db, geminiApiKey, storageConfig, useMockAI);
 
   const userLayer = CurrentUserLive(currentUser);
   const documentsLayer = DocumentsLive.pipe(
@@ -140,6 +154,7 @@ const createPublicLayers = (
   db: DatabaseInstance,
   geminiApiKey: string,
   storageConfig: StorageConfig,
+  useMockAI: boolean = false,
 ): Layer.Layer<PublicServices, never, never> => {
   const {
     dbLayer,
@@ -149,7 +164,7 @@ const createPublicLayers = (
     ttsLayer,
     llmLayer,
     loggerLayer,
-  } = createBaseLayers(db, geminiApiKey, storageConfig);
+  } = createBaseLayers(db, geminiApiKey, storageConfig, useMockAI);
 
   return Layer.mergeAll(
     dbLayer,
@@ -189,12 +204,14 @@ export const createORPCContext = async ({
   headers,
   geminiApiKey,
   storageConfig,
+  useMockAI = false,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
   headers: Headers;
   geminiApiKey: string;
   storageConfig: StorageConfig;
+  useMockAI?: boolean;
 }): Promise<ORPCContext> => {
   const session = await auth.api.getSession({ headers });
 
@@ -211,6 +228,7 @@ export const createORPCContext = async ({
       currentUser,
       geminiApiKey,
       storageConfig,
+      useMockAI,
     );
     const runtime = ManagedRuntime.make(layers);
 
@@ -223,7 +241,7 @@ export const createORPCContext = async ({
     };
   }
 
-  const layers = createPublicLayers(db, geminiApiKey, storageConfig);
+  const layers = createPublicLayers(db, geminiApiKey, storageConfig, useMockAI);
   const runtime = ManagedRuntime.make(layers);
 
   return {

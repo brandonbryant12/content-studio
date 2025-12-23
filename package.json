@@ -18,14 +18,24 @@
     "lint:fix": "pnpm lint --fix",
     "postclean": "git clean -xdf .cache .turbo node_modules",
     "start": "turbo run start",
-    "test": "turbo run test",
-    "test:watch": "turbo run test:watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "pnpm --filter web test:e2e",
+    "test:e2e:ui": "pnpm --filter web test:e2e:ui",
+    "test:db:up": "docker compose -f docker-compose.test.yml up -d",
+    "test:db:down": "docker compose -f docker-compose.test.yml down",
+    "test:db:setup": "pnpm test:db:up && DB_POSTGRES_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm db:push",
+    "e2e:seed": "pnpm --filter web e2e:seed",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add -F @repo/ui --"
   },
   "packageManager": "pnpm@10.23.0",
   "devDependencies": {
-    "turbo": "catalog:"
+    "turbo": "catalog:",
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:"
   },
   "engines": {
     "node": ">=22.10.0"

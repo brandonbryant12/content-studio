@@ -51,9 +51,7 @@ export function DocumentContentViewer({
               Failed to load document content
             </div>
           )}
-          {data && (
-            <pre className="doc-content-text">{data.content}</pre>
-          )}
+          {data && <pre className="doc-content-text">{data.content}</pre>}
         </div>
       )}
     </div>

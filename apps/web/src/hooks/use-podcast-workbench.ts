@@ -39,7 +39,10 @@ export interface UsePodcastWorkbenchReturn {
     hasChanges: boolean;
     isSaving: boolean;
     updateSegment: (index: number, data: Partial<ScriptSegment>) => void;
-    addSegment: (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => void;
+    addSegment: (
+      afterIndex: number,
+      data: Omit<ScriptSegment, 'index'>,
+    ) => void;
     removeSegment: (index: number) => void;
     reorderSegments: (fromIndex: number, toIndex: number) => void;
     saveChanges: () => void;
@@ -101,7 +104,11 @@ export function usePodcastWorkbench({
       };
     }
     return { type: 'editing' };
-  }, [isGeneratingStatus, versionViewer.isViewingHistory, versionViewer.viewedScript]);
+  }, [
+    isGeneratingStatus,
+    versionViewer.isViewingHistory,
+    versionViewer.viewedScript,
+  ]);
 
   // Mode-aware sync: Only sync editor when editing AND script ID actually changed
   useEffect(() => {
@@ -162,7 +169,11 @@ export function usePodcastWorkbench({
       case 'generating':
         return null;
     }
-  }, [mode.type, versionViewer.viewedScript?.summary, podcast?.script?.summary]);
+  }, [
+    mode.type,
+    versionViewer.viewedScript?.summary,
+    podcast?.script?.summary,
+  ]);
 
   // Convenience booleans
   const isEditing = mode.type === 'editing';

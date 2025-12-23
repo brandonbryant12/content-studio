@@ -79,7 +79,9 @@ export function VersionHistory({
               <div className="timeline-card">
                 <div className="timeline-card-header">
                   <div className="timeline-version">
-                    <span className="timeline-version-number">v{v.version}</span>
+                    <span className="timeline-version-number">
+                      v{v.version}
+                    </span>
                     {v.isActive && (
                       <span className="timeline-version-badge">Current</span>
                     )}

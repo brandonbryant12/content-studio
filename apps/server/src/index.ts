@@ -63,6 +63,7 @@ const api = createApi({
   apiPath: env.PUBLIC_SERVER_API_PATH,
   geminiApiKey: env.GEMINI_API_KEY,
   storageConfig,
+  useMockAI: env.USE_MOCK_AI,
 });
 
 const app = new Hono<{

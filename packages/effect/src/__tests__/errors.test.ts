@@ -1,5 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
 import { Effect, Exit } from 'effect';
+import { describe, it, expect } from 'vitest';
 import {
   NotFoundError,
   ValidationError,

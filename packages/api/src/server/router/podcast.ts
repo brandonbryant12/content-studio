@@ -483,7 +483,10 @@ const podcastRouter = {
       return handleEffect(
         Effect.gen(function* () {
           const podcasts = yield* Podcasts;
-          const script = yield* podcasts.getScriptById(input.id, input.scriptId);
+          const script = yield* podcasts.getScriptById(
+            input.id,
+            input.scriptId,
+          );
           return serializePodcastScript(script);
         }).pipe(Effect.provide(context.layers)),
         {

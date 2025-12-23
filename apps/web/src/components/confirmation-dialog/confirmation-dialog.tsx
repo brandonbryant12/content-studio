@@ -42,7 +42,9 @@ export function ConfirmationDialog({
               <ExclamationTriangleIcon className="w-5 h-5" />
             </div>
           </div>
-          <DialogTitle className="confirmation-dialog-title">{title}</DialogTitle>
+          <DialogTitle className="confirmation-dialog-title">
+            {title}
+          </DialogTitle>
           <DialogDescription className="confirmation-dialog-description">
             {description}
           </DialogDescription>

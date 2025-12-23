@@ -66,6 +66,7 @@ export const createApi = ({
   apiPath,
   geminiApiKey,
   storageConfig,
+  useMockAI = false,
 }: {
   auth: AuthInstance;
   db: DatabaseInstance;
@@ -73,6 +74,7 @@ export const createApi = ({
   apiPath: `/${string}`;
   geminiApiKey: string;
   storageConfig: StorageConfig;
+  useMockAI?: boolean;
 }) => {
   const handler = new OpenAPIHandler(appRouter, {
     plugins: [
@@ -160,6 +162,7 @@ export const createApi = ({
           headers: request.headers,
           geminiApiKey,
           storageConfig,
+          useMockAI,
         }),
       });
     },
