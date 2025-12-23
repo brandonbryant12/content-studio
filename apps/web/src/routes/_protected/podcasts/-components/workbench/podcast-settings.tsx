@@ -1,12 +1,13 @@
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import { Slider } from '@repo/ui/components/slider';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -62,17 +63,14 @@ const VOICES = [
   },
 ] as const;
 
-const DURATION_OPTIONS = [
-  { value: 3, label: '3m' },
-  { value: 5, label: '5m' },
-  { value: 10, label: '10m' },
-  { value: 15, label: '15m' },
-  { value: 30, label: '30m' },
-] as const;
+const MIN_DURATION = 1;
+const MAX_DURATION = 60;
 
 interface PodcastSettingsProps {
   podcast: PodcastFull;
   disabled?: boolean;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
 }
 
 interface VoiceSelectorProps {
@@ -152,7 +150,12 @@ function VoiceSelector({
   );
 }
 
-export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
+export function PodcastSettings({
+  podcast,
+  disabled,
+  onRegenerate,
+  isRegenerating,
+}: PodcastSettingsProps) {
   const [hostVoice, setHostVoice] = useState(podcast.hostVoice ?? 'Aoede');
   const [coHostVoice, setCoHostVoice] = useState(
     podcast.coHostVoice ?? 'Charon',
@@ -163,8 +166,8 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
   const [instructions, setInstructions] = useState(
     podcast.promptInstructions ?? '',
   );
-  const [showNotes, setShowNotes] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Track changes
   useEffect(() => {
@@ -186,10 +189,6 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
 
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Settings saved');
-        await invalidateQueries('podcasts');
-      },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to save settings');
       },
@@ -197,18 +196,37 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
   );
 
   const handleSave = () => {
+    // If podcast has existing audio, show confirmation before regenerating
+    if (podcast.audioUrl) {
+      setShowConfirmation(true);
+      return;
+    }
+    // Otherwise, save and regenerate directly
+    saveAndTriggerRegeneration();
+  };
+
+  const saveAndTriggerRegeneration = async () => {
+    setShowConfirmation(false);
+
     const hostVoiceInfo = VOICES.find((v) => v.id === hostVoice);
     const coHostVoiceInfo = VOICES.find((v) => v.id === coHostVoice);
 
-    updateMutation.mutate({
-      id: podcast.id,
-      hostVoice,
-      hostVoiceName: hostVoiceInfo?.name,
-      coHostVoice,
-      coHostVoiceName: coHostVoiceInfo?.name,
-      targetDurationMinutes: targetDuration,
-      promptInstructions: instructions || undefined,
-    });
+    try {
+      await updateMutation.mutateAsync({
+        id: podcast.id,
+        hostVoice,
+        hostVoiceName: hostVoiceInfo?.name,
+        coHostVoice,
+        coHostVoiceName: coHostVoiceInfo?.name,
+        targetDurationMinutes: targetDuration,
+        promptInstructions: instructions || undefined,
+      });
+
+      // Settings saved, now trigger regeneration
+      onRegenerate();
+    } catch {
+      // Error already handled by mutation onError
+    }
   };
 
   const isConversation = podcast.format === 'conversation';
@@ -223,16 +241,16 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
             size="sm"
             variant="outline"
             onClick={handleSave}
-            disabled={disabled || updateMutation.isPending}
+            disabled={disabled || updateMutation.isPending || isRegenerating}
             className="mixer-save-btn"
           >
-            {updateMutation.isPending ? (
+            {updateMutation.isPending || isRegenerating ? (
               <>
                 <Spinner className="w-3 h-3 mr-1" />
-                Saving
+                {updateMutation.isPending ? 'Saving' : 'Generating'}
               </>
             ) : (
-              'Save'
+              'Save & Regenerate'
             )}
           </Button>
         )}
@@ -276,43 +294,43 @@ export function PodcastSettings({ podcast, disabled }: PodcastSettingsProps) {
       {/* Duration Control */}
       <div className="mixer-duration">
         <span className="mixer-duration-label">Target Length</span>
-        <div className="mixer-duration-track">
-          {DURATION_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setTargetDuration(option.value)}
-              disabled={disabled}
-              className={`mixer-duration-option ${targetDuration === option.value ? 'selected' : ''}`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="mixer-duration-slider">
+          <Slider
+            value={[targetDuration]}
+            onValueChange={([value]) => value && setTargetDuration(value)}
+            min={MIN_DURATION}
+            max={MAX_DURATION}
+            step={1}
+            disabled={disabled}
+          />
+          <span className="mixer-duration-value">{targetDuration}</span>
+          <span className="mixer-duration-unit">min</span>
         </div>
       </div>
 
       {/* Custom Instructions */}
       <div className="mixer-notes">
-        <button
-          type="button"
-          onClick={() => setShowNotes(!showNotes)}
-          className={`mixer-notes-toggle ${showNotes ? 'open' : ''}`}
-        >
-          <span>Custom Instructions</span>
-          <ChevronDownIcon />
-        </button>
-        {showNotes && (
-          <div className="mixer-notes-content">
-            <textarea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              disabled={disabled}
-              placeholder="Add specific instructions for the AI..."
-              className="mixer-notes-textarea"
-            />
-          </div>
-        )}
+        <span className="mixer-notes-label">Custom Instructions</span>
+        <textarea
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          disabled={disabled}
+          placeholder="Add specific instructions for the AI..."
+          className="mixer-notes-textarea"
+        />
       </div>
+
+      {/* Confirmation Dialog for Regeneration */}
+      <ConfirmationDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+        title="Regenerate Podcast?"
+        description="This will replace your existing script and audio with newly generated content. This action cannot be undone."
+        confirmText="Regenerate"
+        variant="warning"
+        isLoading={updateMutation.isPending || isRegenerating}
+        onConfirm={saveAndTriggerRegeneration}
+      />
     </div>
   );
 }

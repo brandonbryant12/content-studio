@@ -1,4 +1,9 @@
-import { ChevronDownIcon, FileTextIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  ChevronDownIcon,
+  EyeOpenIcon,
+  FileTextIcon,
+  PlusIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
@@ -11,6 +16,8 @@ interface ScriptPanelProps {
   summary: string | null;
   hasChanges: boolean;
   isSaving: boolean;
+  readOnly?: boolean;
+  viewingVersion?: number;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
@@ -20,6 +27,8 @@ interface ScriptPanelProps {
   ) => void;
   onSave: () => void;
   onDiscard: () => void;
+  onSetAsCurrent?: () => void;
+  isRestoring?: boolean;
 }
 
 export function ScriptPanel({
@@ -27,18 +36,47 @@ export function ScriptPanel({
   summary,
   hasChanges,
   isSaving,
+  readOnly,
+  viewingVersion,
   onUpdateSegment,
   onRemoveSegment,
   onReorderSegments,
   onAddSegment,
   onSave,
   onDiscard,
+  onSetAsCurrent,
+  isRestoring,
 }: ScriptPanelProps) {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const isEmpty = segments.length === 0;
 
   return (
     <div className="script-panel">
+      {/* Read-only banner for historical versions */}
+      {readOnly && viewingVersion && (
+        <div className="script-panel-readonly-banner">
+          <div className="script-panel-readonly-info">
+            <EyeOpenIcon className="w-4 h-4" />
+            <span>Viewing version {viewingVersion} (read-only)</span>
+          </div>
+          <Button
+            size="sm"
+            onClick={onSetAsCurrent}
+            disabled={isRestoring}
+            className="script-panel-restore-btn"
+          >
+            {isRestoring ? (
+              <>
+                <Spinner className="w-3 h-3 mr-1.5" />
+                Restoring...
+              </>
+            ) : (
+              'Set as Current'
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Panel header */}
       <div className="script-panel-header">
         <div className="script-panel-title-group">
@@ -47,12 +85,12 @@ export function ScriptPanel({
           </div>
           <div>
             <h2 className="script-panel-title">Script</h2>
-            {segments.length > 0 && (
+            {segments.length > 0 && !readOnly && (
               <span className="script-edit-hint">Click any line to edit</span>
             )}
           </div>
         </div>
-        {hasChanges && (
+        {hasChanges && !readOnly && (
           <div className="script-panel-actions">
             <Badge variant="warning" className="mr-2 animate-pulse">
               Unsaved
@@ -114,20 +152,25 @@ export function ScriptPanel({
             </div>
             <h3 className="script-empty-title">No script yet</h3>
             <p className="script-empty-description">
-              Generate a script from your documents or add segments manually.
+              {readOnly
+                ? 'This version has no script segments.'
+                : 'Generate a script from your documents or add segments manually.'}
             </p>
-            <Button
-              variant="outline"
-              onClick={() => onAddSegment(-1, { speaker: 'host', line: '' })}
-              className="script-empty-btn"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Add First Segment
-            </Button>
+            {!readOnly && (
+              <Button
+                variant="outline"
+                onClick={() => onAddSegment(-1, { speaker: 'host', line: '' })}
+                className="script-empty-btn"
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Add First Segment
+              </Button>
+            )}
           </div>
         ) : (
           <ScriptEditor
             segments={segments}
+            readOnly={readOnly}
             onUpdateSegment={onUpdateSegment}
             onRemoveSegment={onRemoveSegment}
             onReorderSegments={onReorderSegments}

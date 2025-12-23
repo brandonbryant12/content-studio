@@ -78,6 +78,7 @@ function PodcastsPage() {
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },
+          search: { scriptId: undefined },
         });
         await invalidateQueries('podcasts');
       },

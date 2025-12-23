@@ -1,13 +1,11 @@
-import { CounterClockwiseClockIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 
 interface VersionHistoryProps {
   podcastId: string;
+  selectedScriptId?: string;
+  onSelectVersion: (scriptId: string) => void;
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -25,22 +23,14 @@ function formatTimeAgo(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
-export function VersionHistory({ podcastId }: VersionHistoryProps) {
+export function VersionHistory({
+  podcastId,
+  selectedScriptId,
+  onSelectVersion,
+}: VersionHistoryProps) {
   const { data: versions, isPending } = useQuery(
     apiClient.podcasts.listScriptVersions.queryOptions({
       input: { id: podcastId },
-    }),
-  );
-
-  const restoreMutation = useMutation(
-    apiClient.podcasts.restoreScriptVersion.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Script version restored');
-        await invalidateQueries('podcasts');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to restore version');
-      },
     }),
   );
 
@@ -64,53 +54,49 @@ export function VersionHistory({ podcastId }: VersionHistoryProps) {
     );
   }
 
+  // Determine which version is selected - default to active if none specified
+  const effectiveSelectedId =
+    selectedScriptId ?? versions.find((v) => v.isActive)?.id;
+
   return (
     <div className="timeline-section">
       <div className="timeline-list">
-        {versions.map((v) => (
-          <div
-            key={v.id}
-            className={`timeline-item ${v.isActive ? 'current' : ''}`}
-          >
-            {/* Timeline node */}
-            <div className="timeline-node" />
+        {versions.map((v) => {
+          const isSelected = v.id === effectiveSelectedId;
+          const isViewing = isSelected && !v.isActive;
 
-            {/* Version card */}
-            <div className="timeline-card">
-              <div className="timeline-card-header">
-                <div className="timeline-version">
-                  <span className="timeline-version-number">v{v.version}</span>
-                  {v.isActive && (
-                    <span className="timeline-version-badge">Current</span>
-                  )}
-                </div>
-                {!v.isActive && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      restoreMutation.mutate({ id: podcastId, scriptId: v.id })
-                    }
-                    disabled={restoreMutation.isPending}
-                    className="timeline-restore-btn"
-                  >
-                    {restoreMutation.isPending ? (
-                      <Spinner className="w-3 h-3" />
-                    ) : (
-                      <>
-                        <CounterClockwiseClockIcon className="w-3 h-3 mr-1" />
-                        Restore
-                      </>
+          return (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => onSelectVersion(v.id)}
+              className={`timeline-item ${v.isActive ? 'current' : ''} ${isSelected ? 'selected' : ''}`}
+            >
+              {/* Timeline node */}
+              <div className="timeline-node" />
+
+              {/* Version card */}
+              <div className="timeline-card">
+                <div className="timeline-card-header">
+                  <div className="timeline-version">
+                    <span className="timeline-version-number">v{v.version}</span>
+                    {v.isActive && (
+                      <span className="timeline-version-badge">Current</span>
                     )}
-                  </Button>
-                )}
+                    {isViewing && (
+                      <span className="timeline-version-badge viewing">
+                        Viewing
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="timeline-meta">
+                  {v.segmentCount} segments · {formatTimeAgo(v.createdAt)}
+                </p>
               </div>
-              <p className="timeline-meta">
-                {v.segmentCount} segments · {formatTimeAgo(v.createdAt)}
-              </p>
-            </div>
-          </div>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

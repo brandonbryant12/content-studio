@@ -46,7 +46,10 @@
       "Bash(pnpm --filter @repo/media typecheck:*)",
       "Skill(frontend-design:frontend-design)",
       "Bash(curl:*)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "Bash(pnpm --filter @repo/db build:*)",
+      "Bash(pnpm --filter @repo/api build:*)",
+      "Bash(pnpm --filter web tsc:*)"
     ],
     "deny": [],
     "ask": []

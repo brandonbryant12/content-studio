@@ -21,6 +21,7 @@ import { SegmentItem } from './segment-item';
 
 interface ScriptEditorProps {
   segments: ScriptSegment[];
+  readOnly?: boolean;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
@@ -32,6 +33,7 @@ interface ScriptEditorProps {
 
 export function ScriptEditor({
   segments,
+  readOnly,
   onUpdateSegment,
   onRemoveSegment,
   onReorderSegments,
@@ -112,6 +114,32 @@ export function ScriptEditor({
     }
   };
 
+  // In read-only mode, render without drag/drop
+  const segmentList = (
+    <div className={`space-y-3 ${readOnly ? 'script-editor-readonly' : ''}`}>
+      {segments.map((segment, idx) => (
+        <SegmentItem
+          key={segment.index}
+          segment={segment}
+          lineNumber={idx + 1}
+          isEditing={!readOnly && editingIndex === segment.index}
+          readOnly={readOnly}
+          onStartEdit={() => !readOnly && handleStartEdit(segment.index)}
+          onSaveEdit={(data) => handleSaveEdit(segment.index, data)}
+          onCancelEdit={handleCancelEdit}
+          onNavigate={(direction) => handleNavigate(segment.index, direction)}
+          onRemove={() => onRemoveSegment(segment.index)}
+          onAddAfter={() => setAddAfterIndex(segment.index)}
+        />
+      ))}
+    </div>
+  );
+
+  // In read-only mode, skip the DndContext wrapper
+  if (readOnly) {
+    return segmentList;
+  }
+
   return (
     <>
       <DndContext
@@ -123,24 +151,7 @@ export function ScriptEditor({
           items={segments.map((s) => s.index)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-3">
-            {segments.map((segment, idx) => (
-              <SegmentItem
-                key={segment.index}
-                segment={segment}
-                lineNumber={idx + 1}
-                isEditing={editingIndex === segment.index}
-                onStartEdit={() => handleStartEdit(segment.index)}
-                onSaveEdit={(data) => handleSaveEdit(segment.index, data)}
-                onCancelEdit={handleCancelEdit}
-                onNavigate={(direction) =>
-                  handleNavigate(segment.index, direction)
-                }
-                onRemove={() => onRemoveSegment(segment.index)}
-                onAddAfter={() => setAddAfterIndex(segment.index)}
-              />
-            ))}
-          </div>
+          {segmentList}
         </SortableContext>
       </DndContext>
 

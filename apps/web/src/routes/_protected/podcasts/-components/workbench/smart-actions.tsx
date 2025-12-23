@@ -2,6 +2,7 @@ import { LightningBoltIcon, PlayIcon, ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { PodcastStatus } from '../../-constants/status';
+import { GenerationStatus } from './generation-status';
 
 type PendingAction = 'script' | 'audio' | 'all' | null;
 
@@ -52,34 +53,16 @@ export function SmartActions({
     );
   }
 
-  // During generation, show progress
+  // During generation, show enhanced progress indicator
   const isShowingProgress = pendingAction !== null || isGenerating;
 
   if (isShowingProgress) {
-    const generatingScript =
-      pendingAction === 'script' ||
-      pendingAction === 'all' ||
-      status === 'generating_script';
-    const generatingAudio =
-      pendingAction === 'audio' ||
-      (status === 'generating_audio' && pendingAction === null);
-
-    const progressMessage = generatingScript
-      ? 'Writing script...'
-      : generatingAudio
-        ? 'Creating audio...'
-        : 'Starting...';
-
     return (
-      <div className="smart-actions-progress">
-        <Spinner className="smart-actions-progress-spinner" />
-        <div>
-          <p className="smart-actions-progress-title">{progressMessage}</p>
-          <p className="smart-actions-progress-subtitle">
-            This may take a minute
-          </p>
-        </div>
-      </div>
+      <GenerationStatus
+        status={status}
+        isSavingSettings={false}
+        isPendingGeneration={pendingAction !== null}
+      />
     );
   }
 

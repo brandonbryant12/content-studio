@@ -1,7 +1,7 @@
 import { CurrentUser, requireOwnership, Role } from '@repo/auth-policy';
 import { Effect, Layer } from 'effect';
 import type { Db } from '@repo/effect/db';
-import { PodcastNotFound } from './errors';
+import { PodcastNotFound, ScriptNotFound } from './errors';
 import * as Repo from './repository';
 import { Podcasts, type PodcastService } from './service';
 
@@ -152,6 +152,29 @@ const makePodcastService: PodcastService = {
       return yield* Repo.restoreScriptVersion(podcastId, scriptId);
     }).pipe(
       Effect.withSpan('podcasts.restoreScriptVersion', {
+        attributes: { 'podcast.id': podcastId, 'script.id': scriptId },
+      }),
+    ),
+
+  getScriptById: (podcastId, scriptId) =>
+    Effect.gen(function* () {
+      // Verify access to podcast first
+      const existing = yield* Repo.findPodcastById(podcastId);
+      yield* requireOwnership(existing.createdBy);
+
+      // Get the script and verify it belongs to this podcast
+      const script = yield* Repo.getScriptById(scriptId);
+      if (script.podcastId !== podcastId) {
+        return yield* Effect.fail(
+          new ScriptNotFound({
+            podcastId,
+            message: 'Script version not found for this podcast',
+          }),
+        );
+      }
+      return script;
+    }).pipe(
+      Effect.withSpan('podcasts.getScriptById', {
         attributes: { 'podcast.id': podcastId, 'script.id': scriptId },
       }),
     ),

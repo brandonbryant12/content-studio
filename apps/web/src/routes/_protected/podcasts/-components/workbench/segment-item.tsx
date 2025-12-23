@@ -13,6 +13,7 @@ interface SegmentItemProps {
   segment: ScriptSegment;
   lineNumber: number;
   isEditing: boolean;
+  readOnly?: boolean;
   onStartEdit: () => void;
   onSaveEdit: (data: { speaker: string; line: string }) => void;
   onCancelEdit: () => void;
@@ -25,6 +26,7 @@ export function SegmentItem({
   segment,
   lineNumber,
   isEditing,
+  readOnly,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -97,7 +99,7 @@ export function SegmentItem({
   };
 
   const handleContentClick = () => {
-    if (!isEditing && !isDragging) {
+    if (!isEditing && !isDragging && !readOnly) {
       onStartEdit();
     }
   };
@@ -119,16 +121,18 @@ export function SegmentItem({
         <span>{lineNumber}</span>
       </div>
 
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="segment-item-drag-handle"
-        aria-label="Drag to reorder"
-        tabIndex={-1}
-      >
-        <DragHandleDots2Icon />
-      </button>
+      {/* Drag handle - hidden in read-only mode */}
+      {!readOnly && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="segment-item-drag-handle"
+          aria-label="Drag to reorder"
+          tabIndex={-1}
+        >
+          <DragHandleDots2Icon />
+        </button>
+      )}
 
       {/* Speaker - toggle in edit mode, badge in view mode */}
       <div className="segment-item-speaker">
@@ -197,29 +201,31 @@ export function SegmentItem({
         </p>
       )}
 
-      {/* Actions */}
-      <div className="segment-item-actions">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onAddAfter}
-          className="segment-action-btn add"
-          aria-label="Add segment after"
-          tabIndex={-1}
-        >
-          <PlusIcon className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRemove}
-          className="segment-action-btn delete"
-          aria-label="Remove segment"
-          tabIndex={-1}
-        >
-          <TrashIcon className="w-4 h-4" />
-        </Button>
-      </div>
+      {/* Actions - hidden in read-only mode */}
+      {!readOnly && (
+        <div className="segment-item-actions">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onAddAfter}
+            className="segment-action-btn add"
+            aria-label="Add segment after"
+            tabIndex={-1}
+          >
+            <PlusIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            className="segment-action-btn delete"
+            aria-label="Remove segment"
+            tabIndex={-1}
+          >
+            <TrashIcon className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

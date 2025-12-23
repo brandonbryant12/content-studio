@@ -51,6 +51,26 @@ const jobErrors = {
 } as const;
 
 // Output schemas
+const generationContextSchema = v.object({
+  systemPromptTemplate: v.string(),
+  userInstructions: v.string(),
+  sourceDocuments: v.array(
+    v.object({
+      id: v.string(),
+      title: v.string(),
+      contentHash: v.optional(v.string()),
+    }),
+  ),
+  modelId: v.string(),
+  modelParams: v.optional(
+    v.object({
+      temperature: v.optional(v.number()),
+      maxTokens: v.optional(v.number()),
+    }),
+  ),
+  generatedAt: v.string(),
+});
+
 const podcastOutputSchema = v.object({
   id: v.string(),
   title: v.string(),
@@ -75,6 +95,7 @@ const podcastOutputSchema = v.object({
   errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
+  generationContext: v.nullable(generationContextSchema),
   publishStatus: v.picklist(['draft', 'ready', 'published', 'rejected']),
   publishedAt: v.nullable(v.string()),
   publishedBy: v.nullable(v.string()),
@@ -368,6 +389,23 @@ const podcastContract = oc
           }),
         ),
       ),
+
+    // Get specific script version
+    getScriptVersion: oc
+      .route({
+        method: 'GET',
+        path: '/{id}/scripts/{scriptId}',
+        summary: 'Get script version',
+        description: 'Get a specific script version by ID',
+      })
+      .errors(podcastErrors)
+      .input(
+        v.object({
+          id: v.pipe(v.string(), v.uuid()),
+          scriptId: v.pipe(v.string(), v.uuid()),
+        }),
+      )
+      .output(podcastScriptSchema),
 
     // Restore script version
     restoreScriptVersion: oc

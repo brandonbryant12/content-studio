@@ -104,6 +104,7 @@ export function usePodcastGeneration({
     navigate({
       to: '/podcasts/$podcastId',
       params: { podcastId },
+      search: { scriptId: undefined },
     });
   };
 

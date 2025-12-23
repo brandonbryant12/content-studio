@@ -750,6 +750,30 @@
     @apply shadow-sm;
   }
 
+  /* Read-only banner for viewing historical versions */
+  .script-panel-readonly-banner {
+    @apply shrink-0 flex items-center justify-between px-5 py-3
+           bg-primary/10 border-b border-primary/20
+           text-primary;
+  }
+
+  .script-panel-readonly-info {
+    @apply flex items-center gap-2 text-sm font-medium;
+  }
+
+  .script-panel-restore-btn {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm;
+  }
+
+  /* Read-only editor state */
+  .script-editor-readonly {
+    @apply select-text;
+  }
+
+  .script-editor-readonly .segment-item-content {
+    @apply cursor-default;
+  }
+
   .script-panel-content {
     @apply flex-1 overflow-y-auto px-5 py-5;
   }
@@ -1067,6 +1091,143 @@
   }
 
   /* -----------------------------------------
+     CONFIRMATION DIALOG
+     ----------------------------------------- */
+  .confirmation-dialog-icon-wrapper {
+    @apply flex justify-center mb-4;
+  }
+
+  .confirmation-dialog-icon {
+    @apply w-12 h-12 rounded-full flex items-center justify-center;
+  }
+
+  .confirmation-dialog-icon.warning {
+    @apply bg-warning/15 text-warning;
+  }
+
+  .confirmation-dialog-icon.destructive {
+    @apply bg-destructive/15 text-destructive;
+  }
+
+  .confirmation-dialog-title {
+    @apply text-center;
+  }
+
+  .confirmation-dialog-description {
+    @apply text-center mt-2;
+  }
+
+  .confirmation-dialog-footer {
+    @apply mt-6 gap-3;
+  }
+
+  .confirmation-dialog-confirm {
+    @apply transition-colors;
+  }
+
+  .confirmation-dialog-confirm.warning {
+    @apply bg-warning text-warning-foreground hover:bg-warning/90;
+  }
+
+  .confirmation-dialog-confirm.destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  /* -----------------------------------------
+     GENERATION STATUS
+     ----------------------------------------- */
+  .generation-status {
+    @apply p-4 rounded-xl border border-warning/25 bg-warning/5;
+  }
+
+  .generation-status-header {
+    @apply flex items-center gap-3;
+  }
+
+  .generation-status-spinner {
+    @apply w-5 h-5 text-warning;
+  }
+
+  .generation-status-check {
+    @apply w-5 h-5 rounded-full bg-success text-success-foreground
+           flex items-center justify-center;
+  }
+
+  .generation-status-text {
+    @apply flex-1;
+  }
+
+  .generation-status-title {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .generation-status-subtitle {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .generation-steps {
+    @apply flex items-center gap-1 mt-4 pt-4 border-t border-warning/15;
+  }
+
+  .generation-step {
+    @apply flex items-center gap-1.5;
+  }
+
+  .generation-step-indicator {
+    @apply w-5 h-5 rounded-full border-2 flex items-center justify-center
+           transition-all duration-300;
+  }
+
+  .generation-step-indicator.pending {
+    @apply border-border bg-transparent;
+  }
+
+  .generation-step-indicator.active {
+    @apply border-warning bg-warning/20;
+  }
+
+  .generation-step-indicator.completed {
+    @apply border-success bg-success text-success-foreground;
+  }
+
+  .generation-step-pulse {
+    @apply w-2 h-2 rounded-full bg-warning animate-pulse;
+  }
+
+  .generation-step-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] uppercase tracking-wider transition-colors duration-300;
+  }
+
+  .generation-step-label.pending {
+    @apply text-muted-foreground/50;
+  }
+
+  .generation-step-label.active {
+    @apply text-warning font-medium;
+  }
+
+  .generation-step-label.completed {
+    @apply text-success;
+  }
+
+  .generation-step-connector {
+    @apply w-3 h-0.5 rounded-full mx-0.5 transition-colors duration-300;
+  }
+
+  .generation-step-connector.pending {
+    @apply bg-border;
+  }
+
+  .generation-step-connector.active {
+    @apply bg-warning/50;
+  }
+
+  .generation-step-connector.completed {
+    @apply bg-success;
+  }
+
+  /* -----------------------------------------
      COLLAPSIBLE SECTION
      ----------------------------------------- */
   .collapsible-section {
@@ -1303,7 +1464,19 @@
   }
 
   .control-room-content {
-    @apply flex-1 overflow-y-auto;
+    @apply flex-1 overflow-y-auto relative;
+  }
+
+  /* Read-only overlay for config panel when viewing historical version */
+  .config-panel-readonly-overlay {
+    @apply absolute inset-0 z-20 bg-background/60 backdrop-blur-[1px]
+           flex items-start justify-center pt-8 cursor-pointer;
+  }
+
+  .config-panel-readonly-badge {
+    @apply flex items-center gap-2 px-4 py-2 rounded-full
+           bg-primary/15 text-primary text-sm font-medium
+           border border-primary/20 shadow-sm;
   }
 
   /* -----------------------------------------
@@ -1565,6 +1738,48 @@
            resize-none transition-all duration-200;
   }
 
+  .mixer-notes-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block;
+  }
+
+  /* Duration Slider */
+  .mixer-duration-slider {
+    @apply flex items-center gap-3;
+  }
+
+  .mixer-duration-value {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-sm font-medium text-warning tabular-nums min-w-[3ch] text-right;
+  }
+
+  .mixer-duration-unit {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* -----------------------------------------
+     SLIDER COMPONENT
+     ----------------------------------------- */
+  .slider {
+    @apply relative flex w-full touch-none select-none items-center;
+  }
+
+  .slider-track {
+    @apply relative h-1.5 w-full grow overflow-hidden rounded-full bg-muted;
+  }
+
+  .slider-range {
+    @apply absolute h-full bg-warning;
+  }
+
+  .slider-thumb {
+    @apply block h-4 w-4 rounded-full border-2 border-warning bg-background
+           ring-offset-background transition-colors
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50
+           hover:bg-warning/10 cursor-grab active:cursor-grabbing;
+  }
+
   /* -----------------------------------------
      TIMELINE SECTION (Version History)
      ----------------------------------------- */
@@ -1592,7 +1807,15 @@
   }
 
   .timeline-item {
-    @apply relative pl-5 pb-4 last:pb-0;
+    @apply relative pl-5 pb-4 last:pb-0 w-full text-left cursor-pointer;
+  }
+
+  .timeline-item.selected .timeline-card {
+    @apply ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900;
+  }
+
+  .timeline-item.selected:not(.current) .timeline-node {
+    @apply border-primary bg-primary/20;
   }
 
   /* Timeline node */
@@ -1638,6 +1861,10 @@
   .timeline-version-badge {
     @apply px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide
            bg-warning/20 text-warning;
+  }
+
+  .timeline-version-badge.viewing {
+    @apply bg-primary/20 text-primary;
   }
 
   .timeline-meta {
@@ -1734,6 +1961,166 @@
 
   .history-panel-content {
     @apply flex-1 overflow-y-auto p-4;
+  }
+
+  /* -----------------------------------------
+     PROMPT VIEWER PANEL
+     ----------------------------------------- */
+  .prompt-viewer-overlay {
+    @apply absolute inset-0 z-30;
+    animation: history-fade-in 0.2s ease-out;
+  }
+
+  .prompt-viewer-backdrop {
+    @apply absolute inset-0 bg-background/60 backdrop-blur-sm;
+  }
+
+  .prompt-viewer-panel {
+    @apply absolute top-0 right-0 bottom-0 w-80 bg-card border-l border-border shadow-xl
+           flex flex-col;
+    animation: history-slide-in 0.25s ease-out;
+  }
+
+  .prompt-viewer-header {
+    @apply flex items-center justify-between px-4 py-3 border-b border-border;
+  }
+
+  .prompt-viewer-title {
+    font-family: 'Source Serif 4', Georgia, serif;
+    @apply text-sm font-semibold text-foreground;
+  }
+
+  .prompt-viewer-close {
+    @apply w-7 h-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted
+           transition-colors flex items-center justify-center;
+  }
+
+  .prompt-viewer-close svg {
+    @apply w-4 h-4;
+  }
+
+  .prompt-viewer-content {
+    @apply flex-1 overflow-y-auto p-4 space-y-4;
+  }
+
+  /* Prompt Meta (Model, Temperature, Generated At) */
+  .prompt-meta {
+    @apply bg-muted/50 rounded-lg p-3 space-y-1.5;
+  }
+
+  .prompt-meta-row {
+    @apply flex items-center justify-between text-xs;
+  }
+
+  .prompt-meta-label {
+    @apply text-muted-foreground;
+  }
+
+  .prompt-meta-value {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-foreground;
+  }
+
+  /* Prompt Section (Collapsible) */
+  .prompt-section {
+    @apply border border-border rounded-lg overflow-hidden;
+  }
+
+  .prompt-section-trigger {
+    @apply w-full flex items-center justify-between px-3 py-2.5 bg-muted/30
+           hover:bg-muted/50 transition-colors text-left;
+  }
+
+  .prompt-section-header {
+    @apply flex items-center gap-2;
+  }
+
+  .prompt-section-icon {
+    @apply w-4 h-4 text-muted-foreground;
+  }
+
+  .prompt-section-icon svg {
+    @apply w-4 h-4;
+  }
+
+  .prompt-section-title {
+    @apply text-xs font-medium text-foreground;
+  }
+
+  .prompt-section-badge {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded ml-1;
+  }
+
+  .prompt-section-chevron {
+    @apply w-4 h-4 text-muted-foreground transition-transform duration-200;
+  }
+
+  .prompt-section-chevron.expanded {
+    @apply rotate-180;
+  }
+
+  .prompt-section-content {
+    @apply px-3 py-3 border-t border-border bg-background;
+  }
+
+  /* Prompt Code Block */
+  .prompt-code {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-xs text-foreground whitespace-pre-wrap break-words leading-relaxed;
+  }
+
+  /* Prompt Documents List */
+  .prompt-documents {
+    @apply space-y-2;
+  }
+
+  /* Document Content Item */
+  .doc-content-item {
+    @apply border border-border rounded-md overflow-hidden;
+  }
+
+  .doc-content-trigger {
+    @apply w-full flex items-center justify-between px-3 py-2 bg-muted/20
+           hover:bg-muted/40 transition-colors text-left;
+  }
+
+  .doc-content-header {
+    @apply flex items-center gap-2 min-w-0;
+  }
+
+  .doc-content-icon {
+    @apply w-3.5 h-3.5 text-muted-foreground shrink-0;
+  }
+
+  .doc-content-title {
+    @apply text-xs text-foreground truncate;
+  }
+
+  .doc-content-chevron {
+    @apply w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 shrink-0;
+  }
+
+  .doc-content-chevron.expanded {
+    @apply rotate-180;
+  }
+
+  .doc-content-body {
+    @apply border-t border-border bg-background;
+  }
+
+  .doc-content-loading {
+    @apply flex items-center gap-2 px-3 py-4 text-xs text-muted-foreground;
+  }
+
+  .doc-content-error {
+    @apply px-3 py-4 text-xs text-destructive;
+  }
+
+  .doc-content-text {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-xs text-foreground whitespace-pre-wrap break-words leading-relaxed
+           max-h-64 overflow-y-auto px-3 py-3;
   }
 
   /* -----------------------------------------

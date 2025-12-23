@@ -183,6 +183,22 @@ export interface PodcastService {
     | ForbiddenError,
     PodcastContext
   >;
+
+  /**
+   * Get a specific script version by ID.
+   */
+  readonly getScriptById: (
+    podcastId: string,
+    scriptId: string,
+  ) => Effect.Effect<
+    PodcastScript,
+    | PodcastNotFound
+    | ScriptNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError,
+    PodcastContext
+  >;
 }
 
 /**

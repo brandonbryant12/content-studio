@@ -4,6 +4,8 @@ import {
   ClockIcon,
   SpeakerLoudIcon,
   Cross2Icon,
+  FileTextIcon,
+  EyeOpenIcon,
 } from '@radix-ui/react-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -12,9 +14,11 @@ import { AudioPlayer } from '../audio-player';
 import { DocumentManager } from './document-manager';
 import { ErrorDisplay } from './error-display';
 import { PodcastSettings } from './podcast-settings';
+import { PromptViewerPanel } from './prompt-viewer';
 import { SmartActions } from './smart-actions';
 import { VersionHistory } from './version-history';
 import { apiClient } from '@/clients/apiClient';
+import { BaseDialog } from '@/components/base-dialog';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 type PendingAction = 'script' | 'audio' | 'all' | null;
@@ -30,6 +34,14 @@ interface ConfigPanelProps {
   onGenerateAll: () => void;
   isGenerating: boolean;
   pendingAction: PendingAction;
+  selectedScriptId?: string;
+  onSelectVersion: (scriptId: string) => void;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
+  isViewingHistory: boolean;
+  viewingVersion?: number;
+  onSetAsCurrent: () => void;
+  isRestoring: boolean;
 }
 
 export function ConfigPanel({
@@ -42,9 +54,26 @@ export function ConfigPanel({
   onGenerateAll,
   isGenerating,
   pendingAction,
+  selectedScriptId,
+  onSelectVersion,
+  onRegenerate,
+  isRegenerating,
+  isViewingHistory,
+  viewingVersion,
+  onSetAsCurrent,
+  isRestoring,
 }: ConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('produce');
   const [showHistory, setShowHistory] = useState(false);
+  const [showPromptViewer, setShowPromptViewer] = useState(false);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+
+  // Handler for when user tries to interact with settings while viewing history
+  const handleReadOnlyInteraction = () => {
+    if (isViewingHistory) {
+      setShowRestoreDialog(true);
+    }
+  };
 
   // Fetch version count for the badge
   const { data: versions } = useQuery(
@@ -75,6 +104,18 @@ export function ConfigPanel({
           </button>
         ))}
 
+        {/* Prompt Viewer Toggle */}
+        {podcast.generationContext && (
+          <button
+            onClick={() => setShowPromptViewer(!showPromptViewer)}
+            className={`history-toggle ${showPromptViewer ? 'active' : ''}`}
+            aria-label="View generation details"
+            title="View generation details"
+          >
+            <FileTextIcon />
+          </button>
+        )}
+
         {/* History Toggle */}
         <button
           onClick={() => setShowHistory(!showHistory)}
@@ -90,6 +131,22 @@ export function ConfigPanel({
 
       {/* Tab Content */}
       <div className="control-room-content">
+        {/* Read-only overlay when viewing historical version */}
+        {isViewingHistory && (
+          <div
+            className="config-panel-readonly-overlay"
+            onClick={handleReadOnlyInteraction}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleReadOnlyInteraction()}
+          >
+            <div className="config-panel-readonly-badge">
+              <EyeOpenIcon className="w-4 h-4" />
+              <span>Viewing v{viewingVersion}</span>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'produce' && (
           <div key="produce" className="control-panel">
             {/* Smart Actions - Always at top */}
@@ -135,7 +192,7 @@ export function ConfigPanel({
               <DocumentManager
                 podcastId={podcast.id}
                 documents={podcast.documents}
-                disabled={isGenerating}
+                disabled={isGenerating || isViewingHistory}
               />
             </div>
           </div>
@@ -143,10 +200,38 @@ export function ConfigPanel({
 
         {activeTab === 'mix' && (
           <div key="mix" className="control-panel">
-            <PodcastSettings podcast={podcast} disabled={isGenerating} />
+            <PodcastSettings
+              podcast={podcast}
+              disabled={isGenerating || isViewingHistory}
+              onRegenerate={onRegenerate}
+              isRegenerating={isRegenerating}
+            />
           </div>
         )}
       </div>
+
+      {/* Restore Version Dialog */}
+      <BaseDialog
+        open={showRestoreDialog}
+        onOpenChange={setShowRestoreDialog}
+        title="Viewing Older Version"
+        description={`You're currently viewing version ${viewingVersion}. To make changes, you need to restore this version first.`}
+        maxWidth="sm"
+        footer={{
+          submitText: 'Set as Current',
+          loadingText: 'Restoring...',
+          onSubmit: () => {
+            setShowRestoreDialog(false);
+            onSetAsCurrent();
+          },
+          isLoading: isRestoring,
+        }}
+      >
+        <p className="text-sm text-muted-foreground">
+          Restoring will create a new version based on this one, making it the
+          current version that you can edit.
+        </p>
+      </BaseDialog>
 
       {/* History Slide-out Panel */}
       {showHistory && (
@@ -167,10 +252,22 @@ export function ConfigPanel({
               </button>
             </div>
             <div className="history-panel-content">
-              <VersionHistory podcastId={podcast.id} />
+              <VersionHistory
+                podcastId={podcast.id}
+                selectedScriptId={selectedScriptId}
+                onSelectVersion={onSelectVersion}
+              />
             </div>
           </div>
         </div>
+      )}
+
+      {/* Prompt Viewer Slide-out Panel */}
+      {showPromptViewer && podcast.generationContext && (
+        <PromptViewerPanel
+          generationContext={podcast.generationContext}
+          onClose={() => setShowPromptViewer(false)}
+        />
       )}
     </div>
   );

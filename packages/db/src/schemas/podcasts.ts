@@ -212,6 +212,26 @@ export const PublishStatusSchema = v.picklist([
 // Output Schemas - for API responses (Date → string)
 // =============================================================================
 
+export const GenerationContextOutputSchema = v.object({
+  systemPromptTemplate: v.string(),
+  userInstructions: v.string(),
+  sourceDocuments: v.array(
+    v.object({
+      id: v.string(),
+      title: v.string(),
+      contentHash: v.optional(v.string()),
+    }),
+  ),
+  modelId: v.string(),
+  modelParams: v.optional(
+    v.object({
+      temperature: v.optional(v.number()),
+      maxTokens: v.optional(v.number()),
+    }),
+  ),
+  generatedAt: v.string(),
+});
+
 export const PodcastOutputSchema = v.object({
   id: v.string(),
   title: v.string(),
@@ -229,6 +249,7 @@ export const PodcastOutputSchema = v.object({
   errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
+  generationContext: v.nullable(GenerationContextOutputSchema),
   publishStatus: PublishStatusSchema,
   publishedAt: v.nullable(v.string()),
   publishedBy: v.nullable(v.string()),
@@ -270,6 +291,9 @@ export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
 export type PodcastStatus = Podcast['status'];
 export type PublishStatus = Podcast['publishStatus'];
+export type GenerationContextOutput = v.InferOutput<
+  typeof GenerationContextOutputSchema
+>;
 export type PodcastOutput = v.InferOutput<typeof PodcastOutputSchema>;
 export type PodcastScriptOutput = v.InferOutput<
   typeof PodcastScriptOutputSchema
@@ -303,6 +327,7 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
   errorMessage: podcast.errorMessage,
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
+  generationContext: podcast.generationContext ?? null,
   publishStatus: podcast.publishStatus,
   publishedAt: podcast.publishedAt?.toISOString() ?? null,
   publishedBy: podcast.publishedBy,

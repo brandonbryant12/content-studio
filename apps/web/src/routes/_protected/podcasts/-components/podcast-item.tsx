@@ -45,6 +45,7 @@ export function PodcastItem({
       <Link
         to="/podcasts/$podcastId"
         params={{ podcastId: podcast.id }}
+        search={{ scriptId: undefined }}
         className="flex items-start gap-4 flex-1"
       >
         <PodcastIcon format={podcast.format} status={podcast.status} />

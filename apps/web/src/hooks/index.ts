@@ -14,3 +14,7 @@ export {
   useScriptEditor,
   type UseScriptEditorReturn,
 } from './use-script-editor';
+export {
+  useVersionViewer,
+  type UseVersionViewerReturn,
+} from './use-version-viewer';
