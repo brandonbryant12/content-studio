@@ -215,18 +215,26 @@ function PodcastWorkbench() {
           hasUnsavedChanges={workbench.editState.hasChanges}
           isSaving={workbench.editState.isSaving}
           onSave={workbench.editState.saveChanges}
-          onGenerateScript={() =>
-            generateScriptMutation.mutate({ id: podcast.id })
-          }
-          onGenerateAudio={() =>
-            generateAudioMutation.mutate({ id: podcast.id })
-          }
-          onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
+          onGenerateScript={() => {
+            workbench.clearSelection();
+            generateScriptMutation.mutate({ id: podcast.id });
+          }}
+          onGenerateAudio={() => {
+            workbench.clearSelection();
+            generateAudioMutation.mutate({ id: podcast.id });
+          }}
+          onGenerateAll={() => {
+            workbench.clearSelection();
+            generateAllMutation.mutate({ id: podcast.id });
+          }}
           isGenerating={isGenerating || generateAllMutation.isPending}
           pendingAction={pendingAction}
           selectedScriptId={selectedScriptId}
           onSelectVersion={workbench.selectVersion}
-          onRegenerate={() => generateAllMutation.mutate({ id: podcast.id })}
+          onRegenerate={() => {
+            workbench.clearSelection();
+            generateAllMutation.mutate({ id: podcast.id });
+          }}
           isRegenerating={generateAllMutation.isPending}
           isViewingHistory={workbench.isViewingHistory}
           viewingVersion={workbench.viewedVersion}
