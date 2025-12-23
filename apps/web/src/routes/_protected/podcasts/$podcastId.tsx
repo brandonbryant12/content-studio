@@ -1,5 +1,5 @@
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   createFileRoute,
   Link,
@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import type { RouterOutput } from '@repo/api/client';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
   WorkbenchLayout,
@@ -19,9 +18,12 @@ import { isGeneratingStatus } from './-constants/status';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
-import { useScriptEditor, useVersionViewer } from '@/hooks';
-
-type PodcastFull = RouterOutput['podcasts']['get'];
+import {
+  usePodcastWorkbench,
+  useOptimisticScriptGeneration,
+  useOptimisticAudioGeneration,
+  useOptimisticFullGeneration,
+} from '@/hooks';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -53,31 +55,19 @@ function PodcastWorkbench() {
     },
   });
 
-  // Version viewing state
-  const versionViewer = useVersionViewer({
+  // Unified workbench state management
+  const workbench = usePodcastWorkbench({
     podcastId,
-    activeScript: podcast?.script ?? null,
+    podcast,
     selectedScriptId,
   });
-
-  const scriptEditor = useScriptEditor({
-    podcastId,
-    initialSegments: podcast?.script?.segments ?? [],
-  });
-
-  // Reset segments when podcast data changes (e.g., after generation)
-  useEffect(() => {
-    if (podcast?.script?.segments) {
-      scriptEditor.resetToSegments(podcast.script.segments);
-    }
-  }, [podcast?.script?.segments]);
 
   // Restore mutation for "Set as Current" action
   const restoreMutation = useMutation(
     apiClient.podcasts.restoreScriptVersion.mutationOptions({
       onSuccess: async () => {
         toast.success('Script version restored');
-        versionViewer.clearSelection();
+        workbench.clearSelection();
         await invalidateQueries('podcasts');
       },
       onError: (error) => {
@@ -87,10 +77,10 @@ function PodcastWorkbench() {
   );
 
   const handleSetAsCurrent = () => {
-    if (versionViewer.viewedScript && versionViewer.isViewingHistory) {
+    if (workbench.viewedScript && workbench.isViewingHistory) {
       restoreMutation.mutate({
         id: podcastId,
-        scriptId: versionViewer.viewedScript.id,
+        scriptId: workbench.viewedScript.id,
       });
     }
   };
@@ -100,17 +90,17 @@ function PodcastWorkbench() {
     (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        // Only save if viewing active version (editable)
+        // Only save if in editing mode
         if (
-          versionViewer.isEditable &&
-          scriptEditor.hasChanges &&
-          !scriptEditor.isSaving
+          workbench.isEditing &&
+          workbench.editState.hasChanges &&
+          !workbench.editState.isSaving
         ) {
-          scriptEditor.saveChanges();
+          workbench.editState.saveChanges();
         }
       }
     },
-    [scriptEditor, versionViewer.isEditable],
+    [workbench],
   );
 
   useEffect(() => {
@@ -118,23 +108,23 @@ function PodcastWorkbench() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Block navigation if there are unsaved changes (only when editing active version)
+  // Block navigation if there are unsaved changes (only when editing)
   useBlocker({
-    shouldBlockFn: () => versionViewer.isEditable && scriptEditor.hasChanges,
+    shouldBlockFn: () => workbench.isEditing && workbench.editState.hasChanges,
     withResolver: true,
   });
 
   // Browser beforeunload warning for unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (versionViewer.isEditable && scriptEditor.hasChanges) {
+      if (workbench.isEditing && workbench.editState.hasChanges) {
         e.preventDefault();
         e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [scriptEditor.hasChanges, versionViewer.isEditable]);
+  }, [workbench.editState.hasChanges, workbench.isEditing]);
 
   const deleteMutation = useMutation(
     apiClient.podcasts.delete.mutationOptions({
@@ -149,80 +139,10 @@ function PodcastWorkbench() {
     }),
   );
 
-  const generateScriptMutation = useMutation(
-    apiClient.podcasts.generateScript.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Script generation started');
-        await invalidateQueries('podcasts');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start script generation');
-      },
-    }),
-  );
-
-  const generateAudioMutation = useMutation(
-    apiClient.podcasts.generateAudio.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Audio generation started');
-        await invalidateQueries('podcasts');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start audio generation');
-      },
-    }),
-  );
-
-  const generateAllMutation = useMutation(
-    apiClient.podcasts.generate.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Generation started');
-        await invalidateQueries('podcasts');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start generation');
-      },
-    }),
-  );
-
-  // Optimistic regeneration mutation - used when settings are saved
-  const qc = useQueryClient();
-  const podcastQueryKey = apiClient.podcasts.get.queryOptions({
-    input: { id: podcastId },
-  }).queryKey;
-
-  const regenerateMutation = useMutation(
-    apiClient.podcasts.generate.mutationOptions({
-      onMutate: async () => {
-        // Cancel any outgoing refetches
-        await qc.cancelQueries({ queryKey: podcastQueryKey });
-
-        // Snapshot the previous value
-        const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
-
-        // Optimistically update to generating_script
-        if (previousPodcast) {
-          qc.setQueryData<PodcastFull>(podcastQueryKey, {
-            ...previousPodcast,
-            status: 'generating_script',
-          });
-        }
-
-        return { previousPodcast };
-      },
-      onError: (_err, _vars, context) => {
-        // Rollback on error
-        if (context?.previousPodcast) {
-          qc.setQueryData(podcastQueryKey, context.previousPodcast);
-        }
-        toast.error('Failed to start generation');
-      },
-      onSettled: () => {
-        // Always refetch to ensure sync
-        invalidateQueries('podcasts');
-      },
-    }),
-  );
+  // Generation mutations with optimistic updates
+  const generateScriptMutation = useOptimisticScriptGeneration(podcastId);
+  const generateAudioMutation = useOptimisticAudioGeneration(podcastId);
+  const generateAllMutation = useOptimisticFullGeneration(podcastId);
 
   if (isPending) {
     return (
@@ -266,15 +186,6 @@ function PodcastWorkbench() {
     );
   }
 
-  // Determine which segments to display
-  const displaySegments = versionViewer.isViewingHistory
-    ? versionViewer.viewedScript?.segments ?? []
-    : scriptEditor.segments;
-
-  const displaySummary = versionViewer.isViewingHistory
-    ? versionViewer.viewedScript?.summary ?? null
-    : podcast.script?.summary ?? null;
-
   return (
     <WorkbenchLayout
       podcast={podcast}
@@ -282,22 +193,18 @@ function PodcastWorkbench() {
       isDeleting={deleteMutation.isPending}
       leftPanel={
         <ScriptPanel
-          segments={displaySegments}
-          summary={displaySummary}
-          hasChanges={scriptEditor.hasChanges}
-          isSaving={scriptEditor.isSaving}
-          readOnly={versionViewer.isViewingHistory}
-          viewingVersion={
-            versionViewer.isViewingHistory
-              ? versionViewer.viewedScript?.version
-              : undefined
-          }
-          onUpdateSegment={scriptEditor.updateSegment}
-          onRemoveSegment={scriptEditor.removeSegment}
-          onReorderSegments={scriptEditor.reorderSegments}
-          onAddSegment={scriptEditor.addSegment}
-          onSave={scriptEditor.saveChanges}
-          onDiscard={scriptEditor.discardChanges}
+          segments={workbench.displaySegments}
+          summary={workbench.displaySummary}
+          hasChanges={workbench.editState.hasChanges}
+          isSaving={workbench.editState.isSaving}
+          readOnly={!workbench.isEditing}
+          viewingVersion={workbench.viewedVersion}
+          onUpdateSegment={workbench.editState.updateSegment}
+          onRemoveSegment={workbench.editState.removeSegment}
+          onReorderSegments={workbench.editState.reorderSegments}
+          onAddSegment={workbench.editState.addSegment}
+          onSave={workbench.editState.saveChanges}
+          onDiscard={workbench.editState.discardChanges}
           onSetAsCurrent={handleSetAsCurrent}
           isRestoring={restoreMutation.isPending}
         />
@@ -305,9 +212,9 @@ function PodcastWorkbench() {
       rightPanel={
         <ConfigPanel
           podcast={podcast}
-          hasUnsavedChanges={scriptEditor.hasChanges}
-          isSaving={scriptEditor.isSaving}
-          onSave={scriptEditor.saveChanges}
+          hasUnsavedChanges={workbench.editState.hasChanges}
+          isSaving={workbench.editState.isSaving}
+          onSave={workbench.editState.saveChanges}
           onGenerateScript={() =>
             generateScriptMutation.mutate({ id: podcast.id })
           }
@@ -315,14 +222,14 @@ function PodcastWorkbench() {
             generateAudioMutation.mutate({ id: podcast.id })
           }
           onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
-          isGenerating={isGenerating || regenerateMutation.isPending}
+          isGenerating={isGenerating || generateAllMutation.isPending}
           pendingAction={pendingAction}
           selectedScriptId={selectedScriptId}
-          onSelectVersion={versionViewer.selectVersion}
-          onRegenerate={() => regenerateMutation.mutate({ id: podcast.id })}
-          isRegenerating={regenerateMutation.isPending}
-          isViewingHistory={versionViewer.isViewingHistory}
-          viewingVersion={versionViewer.viewedScript?.version}
+          onSelectVersion={workbench.selectVersion}
+          onRegenerate={() => generateAllMutation.mutate({ id: podcast.id })}
+          isRegenerating={generateAllMutation.isPending}
+          isViewingHistory={workbench.isViewingHistory}
+          viewingVersion={workbench.viewedVersion}
           onSetAsCurrent={handleSetAsCurrent}
           isRestoring={restoreMutation.isPending}
         />
