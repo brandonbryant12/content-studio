@@ -17,10 +17,8 @@ const buttonVariants = cva(
           'border border-border bg-transparent hover:bg-muted hover:border-foreground/20 active:scale-[0.98]',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98]',
-        ghost:
-          'hover:bg-muted hover:text-foreground',
-        link:
-          'text-foreground underline-offset-4 hover:underline decoration-primary/50 hover:decoration-primary',
+        ghost: 'hover:bg-muted hover:text-foreground',
+        link: 'text-foreground underline-offset-4 hover:underline decoration-primary/50 hover:decoration-primary',
       },
       size: {
         default: 'h-10 px-4 py-2 rounded-md',

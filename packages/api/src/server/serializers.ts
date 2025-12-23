@@ -8,10 +8,7 @@
  */
 
 // Document serializers
-export {
-  serializeDocument,
-  type DocumentOutput,
-} from '@repo/db/schema';
+export { serializeDocument, type DocumentOutput } from '@repo/db/schema';
 
 // Podcast serializers
 export {

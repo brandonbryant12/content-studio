@@ -142,7 +142,9 @@ const logAndThrowInternal = (
  * });
  * ```
  */
-export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => ({
+export const createErrorHandlers = <T extends ErrorFactoryConfig>(
+  errors: T,
+) => ({
   /**
    * Common handlers present in all routes.
    * Includes: DbError, PolicyError, ForbiddenError, UnauthorizedError, NotFoundError
@@ -152,7 +154,12 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
       logAndThrowInternal('DbError', e, errors, 'Database operation failed'),
 
     PolicyError: (e: { message: string; cause?: unknown }) =>
-      logAndThrowInternal('PolicyError', e, errors, 'Authorization check failed'),
+      logAndThrowInternal(
+        'PolicyError',
+        e,
+        errors,
+        'Authorization check failed',
+      ),
 
     ForbiddenError: (e: { message: string }) => {
       throw errors.FORBIDDEN({ message: e.message });
@@ -189,7 +196,9 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
       });
       // Use CONFLICT if available, otherwise INTERNAL_ERROR
       if (errors.CONFLICT) {
-        throw errors.CONFLICT({ message: 'A conflict occurred with existing data' });
+        throw errors.CONFLICT({
+          message: 'A conflict occurred with existing data',
+        });
       }
       throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
     },
@@ -209,7 +218,9 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
       const stack = e.cause instanceof Error ? e.cause.stack : undefined;
       console.error('[ConnectionError]', e.message, { stack });
       if (errors.SERVICE_UNAVAILABLE) {
-        throw errors.SERVICE_UNAVAILABLE({ message: 'Database connection failed' });
+        throw errors.SERVICE_UNAVAILABLE({
+          message: 'Database connection failed',
+        });
       }
       throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
     },
@@ -221,10 +232,24 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
    */
   storage: {
     StorageError: (e: { message: string; cause?: unknown }) =>
-      logAndThrowInternal('StorageError', e, errors, 'Storage operation failed'),
+      logAndThrowInternal(
+        'StorageError',
+        e,
+        errors,
+        'Storage operation failed',
+      ),
 
-    StorageUploadError: (e: { key: string; message: string; cause?: unknown }) =>
-      logAndThrowInternal('StorageUploadError', e, errors, 'File upload failed'),
+    StorageUploadError: (e: {
+      key: string;
+      message: string;
+      cause?: unknown;
+    }) =>
+      logAndThrowInternal(
+        'StorageUploadError',
+        e,
+        errors,
+        'File upload failed',
+      ),
 
     StorageNotFoundError: (e: { key: string; message?: string }) => {
       throw errors.NOT_FOUND({
@@ -240,7 +265,12 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
    */
   queue: {
     QueueError: (e: { message: string; cause?: unknown }) =>
-      logAndThrowInternal('QueueError', e, errors, 'Job queue operation failed'),
+      logAndThrowInternal(
+        'QueueError',
+        e,
+        errors,
+        'Job queue operation failed',
+      ),
 
     JobNotFoundError: (e: { jobId: string; message?: string }) => {
       throw errors.NOT_FOUND({
@@ -249,8 +279,17 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
       });
     },
 
-    JobProcessingError: (e: { jobId: string; message: string; cause?: unknown }) =>
-      logAndThrowInternal('JobProcessingError', e, errors, 'Job processing failed'),
+    JobProcessingError: (e: {
+      jobId: string;
+      message: string;
+      cause?: unknown;
+    }) =>
+      logAndThrowInternal(
+        'JobProcessingError',
+        e,
+        errors,
+        'Job processing failed',
+      ),
   },
 
   /**
@@ -262,9 +301,13 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
       const stack = e.cause instanceof Error ? e.cause.stack : undefined;
       console.error('[TTSError]', e.message, { stack });
       if (errors.SERVICE_UNAVAILABLE) {
-        throw errors.SERVICE_UNAVAILABLE({ message: 'Text-to-speech service unavailable' });
+        throw errors.SERVICE_UNAVAILABLE({
+          message: 'Text-to-speech service unavailable',
+        });
       }
-      throw errors.INTERNAL_ERROR({ message: 'Text-to-speech operation failed' });
+      throw errors.INTERNAL_ERROR({
+        message: 'Text-to-speech operation failed',
+      });
     },
 
     TTSQuotaExceededError: (e: { message: string }) => {
@@ -291,7 +334,9 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(errors: T) => 
     },
 
     LLMRateLimitError: (e: { message: string; retryAfter?: number }) => {
-      console.error('[LLMRateLimitError]', e.message, { retryAfter: e.retryAfter });
+      console.error('[LLMRateLimitError]', e.message, {
+        retryAfter: e.retryAfter,
+      });
       if (errors.RATE_LIMITED) {
         throw errors.RATE_LIMITED({ message: 'AI rate limit exceeded' });
       }

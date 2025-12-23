@@ -4,8 +4,8 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
-import { PodcastIcon } from '../podcast-icon';
 import { getStatusConfig, isGeneratingStatus } from '../../-constants/status';
+import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/lib/formatters';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
@@ -66,8 +66,18 @@ export function WorkbenchLayout({
 
               {podcast.duration && (
                 <div className="workbench-duration">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   {formatDuration(podcast.duration)}
                 </div>
@@ -98,14 +108,10 @@ export function WorkbenchLayout({
       {/* Main content - split panels */}
       <div className="workbench-main">
         {/* Left panel - Script */}
-        <div className="workbench-panel-left">
-          {leftPanel}
-        </div>
+        <div className="workbench-panel-left">{leftPanel}</div>
 
         {/* Right panel - Config */}
-        <div className="workbench-panel-right">
-          {rightPanel}
-        </div>
+        <div className="workbench-panel-right">{rightPanel}</div>
       </div>
     </div>
   );

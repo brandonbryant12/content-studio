@@ -26,12 +26,14 @@ export const createDb = (opts?: DatabaseClientOptions): DatabaseInstance => {
  * Verify database connection by executing a simple query.
  * Throws if the connection fails.
  */
-export const verifyDbConnection = async (db: DatabaseInstance): Promise<void> => {
+export const verifyDbConnection = async (
+  db: DatabaseInstance,
+): Promise<void> => {
   try {
     await db.execute(sql`SELECT 1`);
   } catch (error) {
     throw new Error(
-      `Failed to connect to database: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to connect to database: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };

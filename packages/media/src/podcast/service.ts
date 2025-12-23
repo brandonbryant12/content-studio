@@ -176,7 +176,11 @@ export interface PodcastService {
     scriptId: string,
   ) => Effect.Effect<
     PodcastScript,
-    PodcastNotFound | ScriptNotFound | DatabaseError | PolicyError | ForbiddenError,
+    | PodcastNotFound
+    | ScriptNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError,
     PodcastContext
   >;
 }

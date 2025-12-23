@@ -9,7 +9,6 @@ import {
 import { authClient } from '@/clients/authClient';
 import { ErrorBoundary } from '@/components/error-boundary';
 
-
 export const Route = createFileRoute('/_protected')({
   component: Layout,
 });

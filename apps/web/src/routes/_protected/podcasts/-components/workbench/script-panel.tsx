@@ -1,8 +1,8 @@
 import { ChevronDownIcon, FileTextIcon, PlusIcon } from '@radix-ui/react-icons';
-import { useState } from 'react';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { useState } from 'react';
 import type { ScriptSegment } from '@/hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
 
@@ -14,7 +14,10 @@ interface ScriptPanelProps {
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
-  onAddSegment: (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => void;
+  onAddSegment: (
+    afterIndex: number,
+    data: Omit<ScriptSegment, 'index'>,
+  ) => void;
   onSave: () => void;
   onDiscard: () => void;
 }
@@ -45,15 +48,15 @@ export function ScriptPanel({
           <div>
             <h2 className="script-panel-title">Script</h2>
             {segments.length > 0 && (
-              <p className="script-panel-count">
-                {segments.length} segment{segments.length !== 1 ? 's' : ''}
-              </p>
+              <span className="script-edit-hint">Click any line to edit</span>
             )}
           </div>
         </div>
         {hasChanges && (
           <div className="script-panel-actions">
-            <Badge variant="warning" className="mr-2 animate-pulse">Unsaved</Badge>
+            <Badge variant="warning" className="mr-2 animate-pulse">
+              Unsaved
+            </Badge>
             <Button
               variant="ghost"
               size="sm"
@@ -81,30 +84,29 @@ export function ScriptPanel({
         )}
       </div>
 
-      {/* Summary */}
-      {summary && (
-        <div className="script-summary">
-          <button
-            type="button"
-            onClick={() => setSummaryExpanded(!summaryExpanded)}
-            className="script-summary-toggle"
-          >
-            <div className="script-summary-label">
-              <div className="script-summary-indicator" />
-              <p className="script-summary-text">Summary</p>
-            </div>
-            <ChevronDownIcon
-              className={`script-summary-chevron ${summaryExpanded ? 'expanded' : ''}`}
-            />
-          </button>
-          {summaryExpanded && (
-            <p className="script-summary-content">{summary}</p>
-          )}
-        </div>
-      )}
-
       {/* Script editor */}
       <div className="script-panel-content">
+        {/* Summary */}
+        {summary && (
+          <div className="script-summary">
+            <button
+              type="button"
+              onClick={() => setSummaryExpanded(!summaryExpanded)}
+              className="script-summary-toggle"
+            >
+              <div className="script-summary-label">
+                <div className="script-summary-indicator" />
+                <p className="script-summary-text">Summary</p>
+              </div>
+              <ChevronDownIcon
+                className={`script-summary-chevron ${summaryExpanded ? 'expanded' : ''}`}
+              />
+            </button>
+            {summaryExpanded && (
+              <p className="script-summary-content">{summary}</p>
+            )}
+          </div>
+        )}
         {isEmpty ? (
           <div className="script-empty">
             <div className="script-empty-icon">

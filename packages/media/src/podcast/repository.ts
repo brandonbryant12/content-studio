@@ -12,7 +12,11 @@ import {
   type Document,
 } from '@repo/db/schema';
 import { withDb } from '@repo/effect/db';
-import { PodcastNotFound, ScriptNotFound, DocumentNotFound } from '@repo/effect/errors';
+import {
+  PodcastNotFound,
+  ScriptNotFound,
+  DocumentNotFound,
+} from '@repo/effect/errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
 
@@ -87,9 +91,9 @@ export const insertPodcast = (
     const docs =
       documentIds.length > 0
         ? await db
-          .select()
-          .from(document)
-          .where(inArray(document.id, documentIds))
+            .select()
+            .from(document)
+            .where(inArray(document.id, documentIds))
         : [];
 
     // Maintain order based on documentIds array
@@ -118,9 +122,9 @@ export const findPodcastById = (id: string) =>
     const docs =
       pod.sourceDocumentIds.length > 0
         ? await db
-          .select()
-          .from(document)
-          .where(inArray(document.id, pod.sourceDocumentIds))
+            .select()
+            .from(document)
+            .where(inArray(document.id, pod.sourceDocumentIds))
         : [];
 
     // Maintain order based on sourceDocumentIds array
@@ -427,14 +431,22 @@ export const getScriptById = (scriptId: string) =>
     Effect.flatMap((script) =>
       script
         ? Effect.succeed(script)
-        : Effect.fail(new ScriptNotFound({ podcastId: 'unknown', message: 'Script version not found' })),
+        : Effect.fail(
+            new ScriptNotFound({
+              podcastId: 'unknown',
+              message: 'Script version not found',
+            }),
+          ),
     ),
   );
 
 /**
  * Restore a script version by copying its segments to a new active version.
  */
-export const restoreScriptVersion = (podcastId: string, sourceScriptId: string) =>
+export const restoreScriptVersion = (
+  podcastId: string,
+  sourceScriptId: string,
+) =>
   withDb('podcast.restoreScriptVersion', async (db) => {
     // Get the source script
     const [sourceScript] = await db
@@ -486,6 +498,11 @@ export const restoreScriptVersion = (podcastId: string, sourceScriptId: string) 
     Effect.flatMap((script) =>
       script
         ? Effect.succeed(script)
-        : Effect.fail(new ScriptNotFound({ podcastId, message: 'Script version not found' })),
+        : Effect.fail(
+            new ScriptNotFound({
+              podcastId,
+              message: 'Script version not found',
+            }),
+          ),
     ),
   );

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -15,17 +14,20 @@ import {
 } from '@dnd-kit/sortable';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import { useState, useCallback } from 'react';
 import type { ScriptSegment } from '@/hooks/use-script-editor';
-import { SegmentItem } from './segment-item';
-import { SegmentEditorDialog } from './segment-editor-dialog';
 import { AddSegmentDialog } from './add-segment-dialog';
+import { SegmentItem } from './segment-item';
 
 interface ScriptEditorProps {
   segments: ScriptSegment[];
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
-  onAddSegment: (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => void;
+  onAddSegment: (
+    afterIndex: number,
+    data: Omit<ScriptSegment, 'index'>,
+  ) => void;
 }
 
 export function ScriptEditor({
@@ -35,7 +37,8 @@ export function ScriptEditor({
   onReorderSegments,
   onAddSegment,
 }: ScriptEditorProps) {
-  const [editingSegment, setEditingSegment] = useState<ScriptSegment | null>(null);
+  // Track which segment index is being edited (null = none)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [addAfterIndex, setAddAfterIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -60,16 +63,47 @@ export function ScriptEditor({
     }
   };
 
-  const handleEdit = (segment: ScriptSegment) => {
-    setEditingSegment(segment);
-  };
+  const handleStartEdit = useCallback((segmentIndex: number) => {
+    setEditingIndex(segmentIndex);
+  }, []);
 
-  const handleSaveEdit = (data: { speaker: string; line: string }) => {
-    if (editingSegment) {
-      onUpdateSegment(editingSegment.index, data);
-      setEditingSegment(null);
-    }
-  };
+  const handleSaveEdit = useCallback(
+    (segmentIndex: number, data: { speaker: string; line: string }) => {
+      onUpdateSegment(segmentIndex, data);
+      setEditingIndex(null);
+    },
+    [onUpdateSegment],
+  );
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingIndex(null);
+  }, []);
+
+  const handleNavigate = useCallback(
+    (currentIndex: number, direction: 'next' | 'prev') => {
+      const currentArrayIndex = segments.findIndex(
+        (s) => s.index === currentIndex,
+      );
+      if (currentArrayIndex === -1) return;
+
+      if (direction === 'next') {
+        // Move to next segment, or exit edit mode if at end
+        const nextSegment = segments[currentArrayIndex + 1];
+        if (nextSegment) {
+          setEditingIndex(nextSegment.index);
+        } else {
+          setEditingIndex(null);
+        }
+      } else {
+        // Move to previous segment, or stay if at beginning
+        const prevSegment = segments[currentArrayIndex - 1];
+        if (prevSegment) {
+          setEditingIndex(prevSegment.index);
+        }
+      }
+    },
+    [segments],
+  );
 
   const handleAddSegment = (data: { speaker: string; line: string }) => {
     if (addAfterIndex !== null) {
@@ -95,7 +129,13 @@ export function ScriptEditor({
                 key={segment.index}
                 segment={segment}
                 lineNumber={idx + 1}
-                onEdit={() => handleEdit(segment)}
+                isEditing={editingIndex === segment.index}
+                onStartEdit={() => handleStartEdit(segment.index)}
+                onSaveEdit={(data) => handleSaveEdit(segment.index, data)}
+                onCancelEdit={handleCancelEdit}
+                onNavigate={(direction) =>
+                  handleNavigate(segment.index, direction)
+                }
                 onRemove={() => onRemoveSegment(segment.index)}
                 onAddAfter={() => setAddAfterIndex(segment.index)}
               />
@@ -109,23 +149,17 @@ export function ScriptEditor({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setAddAfterIndex(segments[segments.length - 1]?.index ?? -1)}
-          className="text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 border border-dashed border-gray-300 dark:border-gray-700 hover:border-violet-400 dark:hover:border-violet-600 rounded-lg px-4 transition-colors"
+          onClick={() =>
+            setAddAfterIndex(segments[segments.length - 1]?.index ?? -1)
+          }
+          className="script-add-segment-btn"
         >
           <PlusIcon className="w-4 h-4 mr-1.5" />
           Add Segment
         </Button>
       </div>
 
-      {/* Edit dialog */}
-      <SegmentEditorDialog
-        open={editingSegment !== null}
-        onOpenChange={(open) => !open && setEditingSegment(null)}
-        segment={editingSegment}
-        onSave={handleSaveEdit}
-      />
-
-      {/* Add dialog */}
+      {/* Add dialog - still useful for adding with specific speaker/content */}
       <AddSegmentDialog
         open={addAfterIndex !== null}
         onOpenChange={(open) => !open && setAddAfterIndex(null)}

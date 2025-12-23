@@ -1,4 +1,8 @@
-import { MagnifyingGlassIcon, PlusIcon, UploadIcon } from '@radix-ui/react-icons';
+import {
+  MagnifyingGlassIcon,
+  PlusIcon,
+  UploadIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';

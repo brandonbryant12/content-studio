@@ -1,14 +1,24 @@
-import { useEffect, useCallback } from 'react';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, useNavigate, useBlocker } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useBlocker,
+} from '@tanstack/react-router';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { SetupWizard, isSetupMode } from './-components/setup';
+import {
+  WorkbenchLayout,
+  ScriptPanel,
+  ConfigPanel,
+} from './-components/workbench';
+import { isGeneratingStatus } from './-constants/status';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
 import { useScriptEditor } from '@/hooks';
-import { isGeneratingStatus } from './-constants/status';
-import { WorkbenchLayout, ScriptPanel, ConfigPanel } from './-components/workbench';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
   loader: ({ params }) =>
@@ -21,6 +31,7 @@ export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
 function PodcastWorkbench() {
   const { podcastId } = Route.useParams();
   const navigate = useNavigate();
+  const [setupSkipped, setSetupSkipped] = useState(false);
 
   const { data: podcast, isPending } = useQuery({
     ...apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
@@ -166,6 +177,13 @@ function PodcastWorkbench() {
         ? 'all'
         : null;
 
+  // Show setup wizard for new podcasts that haven't been configured yet
+  if (isSetupMode(podcast) && !setupSkipped) {
+    return (
+      <SetupWizard podcast={podcast} onSkip={() => setSetupSkipped(true)} />
+    );
+  }
+
   return (
     <WorkbenchLayout
       podcast={podcast}
@@ -191,8 +209,12 @@ function PodcastWorkbench() {
           hasUnsavedChanges={scriptEditor.hasChanges}
           isSaving={scriptEditor.isSaving}
           onSave={scriptEditor.saveChanges}
-          onGenerateScript={() => generateScriptMutation.mutate({ id: podcast.id })}
-          onGenerateAudio={() => generateAudioMutation.mutate({ id: podcast.id })}
+          onGenerateScript={() =>
+            generateScriptMutation.mutate({ id: podcast.id })
+          }
+          onGenerateAudio={() =>
+            generateAudioMutation.mutate({ id: podcast.id })
+          }
           onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
           isGenerating={isGenerating}
           pendingAction={pendingAction}

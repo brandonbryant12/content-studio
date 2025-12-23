@@ -40,8 +40,12 @@ export function DocumentItem({
           <span className={getFileBadgeClass(document.source)}>
             {getFileLabel(document.source)}
           </span>
-          <span className="text-meta">{document.wordCount.toLocaleString()} words</span>
-          <span className="text-meta">{formatFileSize(document.originalFileSize)}</span>
+          <span className="text-meta">
+            {document.wordCount.toLocaleString()} words
+          </span>
+          <span className="text-meta">
+            {formatFileSize(document.originalFileSize)}
+          </span>
         </div>
       </div>
       <div className="flex items-center gap-2">

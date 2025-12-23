@@ -49,10 +49,7 @@ export function isGeneratingStatus(status: PodcastStatus): boolean {
 
 /** Check if actions should be disabled (during generation or transitional states) */
 export function isActionDisabled(status: PodcastStatus): boolean {
-  return (
-    status === 'generating_script' ||
-    status === 'generating_audio'
-  );
+  return status === 'generating_script' || status === 'generating_audio';
 }
 
 /** Get the status configuration for a given status */

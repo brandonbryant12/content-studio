@@ -126,11 +126,19 @@ export const createApi = ({
             v.BaseIssue<unknown>,
             ...v.BaseIssue<unknown>[],
           ];
-          console.error('[OUTPUT_VALIDATION] Response does not match contract:');
-          console.error('  Issues:', JSON.stringify(v.flatten(valiIssues), null, 2));
+          console.error(
+            '[OUTPUT_VALIDATION] Response does not match contract:',
+          );
+          console.error(
+            '  Issues:',
+            JSON.stringify(v.flatten(valiIssues), null, 2),
+          );
           // Log the actual data that failed validation (helpful for debugging)
           if (error.cause.data !== undefined) {
-            console.error('  Data:', JSON.stringify(error.cause.data, null, 2).slice(0, 1000));
+            console.error(
+              '  Data:',
+              JSON.stringify(error.cause.data, null, 2).slice(0, 1000),
+            );
           }
           // Re-throw with the same code but better message for debugging
           throw new ORPCError('INTERNAL_SERVER_ERROR', {

@@ -21,7 +21,10 @@ import {
 /**
  * Job result union type - matches contract schema.
  */
-type JobResult = GeneratePodcastResult | GenerateScriptResult | GenerateAudioResult;
+type JobResult =
+  | GeneratePodcastResult
+  | GenerateScriptResult
+  | GenerateAudioResult;
 
 /**
  * Serialized job output type.
@@ -474,34 +477,38 @@ const podcastRouter = {
     },
   ),
 
-  restoreScriptVersion: protectedProcedure.podcasts.restoreScriptVersion.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const script = yield* podcasts.restoreScriptVersion(input.id, input.scriptId);
-          return serializePodcastScript(script);
-        }).pipe(Effect.provide(context.layers)),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e) => {
-            throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
-            });
+  restoreScriptVersion:
+    protectedProcedure.podcasts.restoreScriptVersion.handler(
+      async ({ context, input, errors }) => {
+        const handlers = createErrorHandlers(errors);
+        return handleEffect(
+          Effect.gen(function* () {
+            const podcasts = yield* Podcasts;
+            const script = yield* podcasts.restoreScriptVersion(
+              input.id,
+              input.scriptId,
+            );
+            return serializePodcastScript(script);
+          }).pipe(Effect.provide(context.layers)),
+          {
+            ...handlers.common,
+            ...handlers.database,
+            PodcastNotFound: (e) => {
+              throw errors.PODCAST_NOT_FOUND({
+                message: e.message ?? `Podcast ${e.id} not found`,
+                data: { podcastId: e.id },
+              });
+            },
+            ScriptNotFound: (e) => {
+              throw errors.SCRIPT_NOT_FOUND({
+                message: e.message ?? 'Script version not found',
+                data: { podcastId: e.podcastId },
+              });
+            },
           },
-          ScriptNotFound: (e) => {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'Script version not found',
-              data: { podcastId: e.podcastId },
-            });
-          },
-        },
-      );
-    },
-  ),
+        );
+      },
+    ),
 };
 
 export default podcastRouter;

@@ -49,19 +49,22 @@ function RouteComponent() {
               <div className="relative">
                 <div className="waveform-container">
                   <div className="waveform-bars">
-                    {[0.3, 0.5, 0.8, 0.6, 1, 0.7, 0.9, 0.4, 0.6, 0.8, 0.5, 0.7, 0.3, 0.5, 0.9, 0.6, 0.4, 0.7, 0.5, 0.3].map(
-                      (height, i) => (
-                        <div
-                          key={i}
-                          className="waveform-bar"
-                          style={{ height: `${height * 100}%` }}
-                        />
-                      ),
-                    )}
+                    {[
+                      0.3, 0.5, 0.8, 0.6, 1, 0.7, 0.9, 0.4, 0.6, 0.8, 0.5, 0.7,
+                      0.3, 0.5, 0.9, 0.6, 0.4, 0.7, 0.5, 0.3,
+                    ].map((height, i) => (
+                      <div
+                        key={i}
+                        className="waveform-bar"
+                        style={{ height: `${height * 100}%` }}
+                      />
+                    ))}
                   </div>
                   <div className="waveform-meta text-meta">
                     <span>00:00</span>
-                    <span className="text-foreground font-medium">Generated Audio</span>
+                    <span className="text-foreground font-medium">
+                      Generated Audio
+                    </span>
                     <span>03:24</span>
                   </div>
                 </div>

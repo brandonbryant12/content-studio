@@ -89,8 +89,13 @@ export const podcast = pgTable(
     generationContext: jsonb('generation_context').$type<GenerationContext>(),
 
     // Publishing/compliance fields
-    publishStatus: publishStatusEnum('publish_status').notNull().default('draft'),
-    publishedAt: timestamp('published_at', { mode: 'date', withTimezone: true }),
+    publishStatus: publishStatusEnum('publish_status')
+      .notNull()
+      .default('draft'),
+    publishedAt: timestamp('published_at', {
+      mode: 'date',
+      withTimezone: true,
+    }),
     publishedBy: text('published_by').references(() => user.id),
 
     createdBy: text('created_by')
@@ -266,7 +271,9 @@ export type PodcastFormat = Podcast['format'];
 export type PodcastStatus = Podcast['status'];
 export type PublishStatus = Podcast['publishStatus'];
 export type PodcastOutput = v.InferOutput<typeof PodcastOutputSchema>;
-export type PodcastScriptOutput = v.InferOutput<typeof PodcastScriptOutputSchema>;
+export type PodcastScriptOutput = v.InferOutput<
+  typeof PodcastScriptOutputSchema
+>;
 export type PodcastFullOutput = v.InferOutput<typeof PodcastFullOutputSchema>;
 export type CreatePodcast = v.InferInput<typeof CreatePodcastSchema>;
 export type UpdatePodcast = v.InferInput<typeof UpdatePodcastSchema>;
@@ -307,7 +314,9 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
 /**
  * Serialize a PodcastScript to API output format.
  */
-export const serializePodcastScript = (script: PodcastScript): PodcastScriptOutput => ({
+export const serializePodcastScript = (
+  script: PodcastScript,
+): PodcastScriptOutput => ({
   id: script.id,
   podcastId: script.podcastId,
   version: script.version,

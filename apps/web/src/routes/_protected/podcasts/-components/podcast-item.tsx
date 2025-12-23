@@ -54,7 +54,9 @@ export function PodcastItem({
             <StatusBadge status={podcast.status} />
             <FormatBadge format={podcast.format} />
             {podcast.duration && (
-              <span className="text-meta">{formatDuration(podcast.duration)}</span>
+              <span className="text-meta">
+                {formatDuration(podcast.duration)}
+              </span>
             )}
           </div>
           {podcast.description && (

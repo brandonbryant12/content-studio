@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
@@ -33,7 +33,8 @@ export function useScriptEditor({
   initialSegments,
 }: UseScriptEditorOptions): UseScriptEditorReturn {
   const [segments, setSegments] = useState<ScriptSegment[]>(initialSegments);
-  const [originalSegments, setOriginalSegments] = useState<ScriptSegment[]>(initialSegments);
+  const [originalSegments, setOriginalSegments] =
+    useState<ScriptSegment[]>(initialSegments);
 
   const hasChanges = useMemo(() => {
     if (segments.length !== originalSegments.length) return true;
@@ -61,32 +62,41 @@ export function useScriptEditor({
     }),
   );
 
-  const updateSegment = useCallback((index: number, data: Partial<ScriptSegment>) => {
-    setSegments((prev) =>
-      prev.map((seg) => (seg.index === index ? { ...seg, ...data } : seg)),
-    );
-  }, []);
+  const updateSegment = useCallback(
+    (index: number, data: Partial<ScriptSegment>) => {
+      setSegments((prev) =>
+        prev.map((seg) => (seg.index === index ? { ...seg, ...data } : seg)),
+      );
+    },
+    [],
+  );
 
-  const addSegment = useCallback((afterIndex: number, data: Omit<ScriptSegment, 'index'>) => {
-    setSegments((prev) => {
-      // Find position to insert
-      const insertPosition = afterIndex === -1 ? 0 : prev.findIndex((s) => s.index === afterIndex) + 1;
+  const addSegment = useCallback(
+    (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => {
+      setSegments((prev) => {
+        // Find position to insert
+        const insertPosition =
+          afterIndex === -1
+            ? 0
+            : prev.findIndex((s) => s.index === afterIndex) + 1;
 
-      // Create new segment with unique index
-      const maxIndex = prev.reduce((max, s) => Math.max(max, s.index), -1);
-      const newSegment: ScriptSegment = {
-        ...data,
-        index: maxIndex + 1,
-      };
+        // Create new segment with unique index
+        const maxIndex = prev.reduce((max, s) => Math.max(max, s.index), -1);
+        const newSegment: ScriptSegment = {
+          ...data,
+          index: maxIndex + 1,
+        };
 
-      // Insert at position
-      const newSegments = [...prev];
-      newSegments.splice(insertPosition, 0, newSegment);
+        // Insert at position
+        const newSegments = [...prev];
+        newSegments.splice(insertPosition, 0, newSegment);
 
-      // Re-index all segments to maintain order
-      return newSegments.map((seg, i) => ({ ...seg, index: i }));
-    });
-  }, []);
+        // Re-index all segments to maintain order
+        return newSegments.map((seg, i) => ({ ...seg, index: i }));
+      });
+    },
+    [],
+  );
 
   const removeSegment = useCallback((index: number) => {
     setSegments((prev) => {

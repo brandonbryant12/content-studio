@@ -48,7 +48,10 @@ const startServer = async () => {
     await verifyDbConnection(db);
     console.log('Database connection verified');
   } catch (error) {
-    console.error('Failed to start server:', error instanceof Error ? error.message : error);
+    console.error(
+      'Failed to start server:',
+      error instanceof Error ? error.message : error,
+    );
     process.exit(1);
   }
 

@@ -73,7 +73,7 @@ export default defineConfig({
             const scopedPackageName = modulePath?.split('/')[1];
             const chunkName =
               scopedPackageName?.split('@')[
-              scopedPackageName.startsWith('@') ? 1 : 0
+                scopedPackageName.startsWith('@') ? 1 : 0
               ];
             return chunkName;
           }

@@ -136,7 +136,11 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
         );
 
         const errorMessage = formatError(error);
-        console.error('[Worker] Script generation failed:', errorMessage, error);
+        console.error(
+          '[Worker] Script generation failed:',
+          errorMessage,
+          error,
+        );
 
         return yield* Effect.fail(
           new JobProcessingError({

@@ -38,11 +38,7 @@ export function SmartActions({
           <div className="smart-actions-unsaved-dot" />
           <span className="smart-actions-unsaved-text">Unsaved changes</span>
         </div>
-        <Button
-          onClick={onSave}
-          disabled={isSaving}
-          className="w-full"
-        >
+        <Button onClick={onSave} disabled={isSaving} className="w-full">
           {isSaving ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
@@ -79,7 +75,9 @@ export function SmartActions({
         <Spinner className="smart-actions-progress-spinner" />
         <div>
           <p className="smart-actions-progress-title">{progressMessage}</p>
-          <p className="smart-actions-progress-subtitle">This may take a minute</p>
+          <p className="smart-actions-progress-subtitle">
+            This may take a minute
+          </p>
         </div>
       </div>
     );
@@ -108,7 +106,11 @@ export function SmartActions({
             <PlayIcon className="w-4 h-4 mr-2" />
             Generate Audio
           </Button>
-          <Button variant="outline" onClick={onGenerateScript} className="w-full">
+          <Button
+            variant="outline"
+            onClick={onGenerateScript}
+            className="w-full"
+          >
             <ReloadIcon className="w-4 h-4 mr-2" />
             Regenerate Script
           </Button>
@@ -153,7 +155,10 @@ export function SmartActions({
     case 'failed':
       return (
         <div className="space-y-2">
-          <Button onClick={hasScript ? onGenerateAudio : onGenerateScript} className="w-full">
+          <Button
+            onClick={hasScript ? onGenerateAudio : onGenerateScript}
+            className="w-full"
+          >
             <ReloadIcon className="w-4 h-4 mr-2" />
             Retry
           </Button>

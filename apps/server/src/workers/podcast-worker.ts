@@ -18,19 +18,29 @@ import {
 } from '@repo/queue';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
 import { WORKER_DEFAULTS } from '../constants';
-import { handleGeneratePodcast, handleGenerateScript, handleGenerateAudio } from './handlers';
+import {
+  handleGeneratePodcast,
+  handleGenerateScript,
+  handleGenerateAudio,
+} from './handlers';
 
 // Type guards for job type discrimination
-type WorkerPayload = GeneratePodcastPayload | GenerateScriptPayload | GenerateAudioPayload;
+type WorkerPayload =
+  | GeneratePodcastPayload
+  | GenerateScriptPayload
+  | GenerateAudioPayload;
 
-const isGeneratePodcastJob = (job: Job<WorkerPayload>): job is Job<GeneratePodcastPayload> =>
-  job.type === 'generate-podcast';
+const isGeneratePodcastJob = (
+  job: Job<WorkerPayload>,
+): job is Job<GeneratePodcastPayload> => job.type === 'generate-podcast';
 
-const isGenerateScriptJob = (job: Job<WorkerPayload>): job is Job<GenerateScriptPayload> =>
-  job.type === 'generate-script';
+const isGenerateScriptJob = (
+  job: Job<WorkerPayload>,
+): job is Job<GenerateScriptPayload> => job.type === 'generate-script';
 
-const isGenerateAudioJob = (job: Job<WorkerPayload>): job is Job<GenerateAudioPayload> =>
-  job.type === 'generate-audio';
+const isGenerateAudioJob = (
+  job: Job<WorkerPayload>,
+): job is Job<GenerateAudioPayload> => job.type === 'generate-audio';
 
 export interface PodcastWorkerConfig {
   /** Database URL */
@@ -51,7 +61,8 @@ export interface PodcastWorkerConfig {
  */
 export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const pollInterval = config.pollInterval ?? WORKER_DEFAULTS.POLL_INTERVAL_MS;
-  const maxConsecutiveErrors = config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
+  const maxConsecutiveErrors =
+    config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
 
   // Create database connection
   const db = createDb({ databaseUrl: config.databaseUrl });
@@ -155,7 +166,9 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         }
         // Exhaustive check - this should never be reached
         const _exhaustiveCheck: never = job;
-        throw new Error(`Unknown job type: ${(_exhaustiveCheck as Job<WorkerPayload>).type}`);
+        throw new Error(
+          `Unknown job type: ${(_exhaustiveCheck as Job<WorkerPayload>).type}`,
+        );
       };
 
       // Run the handler with the job-specific runtime
@@ -178,7 +191,11 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
 
   // Job types this worker handles
-  const JOB_TYPES: JobType[] = ['generate-podcast', 'generate-script', 'generate-audio'];
+  const JOB_TYPES: JobType[] = [
+    'generate-podcast',
+    'generate-script',
+    'generate-audio',
+  ];
 
   /**
    * Poll for and process the next job from any of the supported types.

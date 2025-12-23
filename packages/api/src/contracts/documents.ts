@@ -66,7 +66,9 @@ const documentContract = oc
       })
       .input(
         v.object({
-          limit: v.optional(v.pipe(coerceNumber, v.minValue(1), v.maxValue(100))),
+          limit: v.optional(
+            v.pipe(coerceNumber, v.minValue(1), v.maxValue(100)),
+          ),
           offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
         }),
       )

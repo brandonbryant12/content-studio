@@ -1,9 +1,8 @@
 import { CounterClockwiseClockIcon } from '@radix-ui/react-icons';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 
@@ -47,77 +46,72 @@ export function VersionHistory({ podcastId }: VersionHistoryProps) {
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center py-4">
-        <Spinner className="w-4 h-4 text-gray-400" />
+      <div className="timeline-section">
+        <div className="flex items-center justify-center py-8">
+          <Spinner className="w-5 h-5 text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   if (!versions || versions.length === 0) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-        No versions yet
-      </p>
+      <div className="timeline-section">
+        <p className="timeline-empty">
+          No versions yet. Generate a script to create your first version.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-1.5">
-      {versions.map((v) => (
-        <div
-          key={v.id}
-          className={`group flex items-center justify-between p-2.5 rounded-lg border ${
-            v.isActive
-              ? 'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800'
-              : 'bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-800'
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                v.isActive
-                  ? 'bg-violet-500'
-                  : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 tabular-nums">
-                  v{v.version}
-                </span>
-                {v.isActive && (
-                  <Badge variant="info" className="text-[10px] px-1.5 py-0">
-                    Current
-                  </Badge>
+    <div className="timeline-section">
+      <div className="timeline-list">
+        {versions.map((v) => (
+          <div
+            key={v.id}
+            className={`timeline-item ${v.isActive ? 'current' : ''}`}
+          >
+            {/* Timeline node */}
+            <div className="timeline-node" />
+
+            {/* Version card */}
+            <div className="timeline-card">
+              <div className="timeline-card-header">
+                <div className="timeline-version">
+                  <span className="timeline-version-number">v{v.version}</span>
+                  {v.isActive && (
+                    <span className="timeline-version-badge">Current</span>
+                  )}
+                </div>
+                {!v.isActive && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      restoreMutation.mutate({ id: podcastId, scriptId: v.id })
+                    }
+                    disabled={restoreMutation.isPending}
+                    className="timeline-restore-btn"
+                  >
+                    {restoreMutation.isPending ? (
+                      <Spinner className="w-3 h-3" />
+                    ) : (
+                      <>
+                        <CounterClockwiseClockIcon className="w-3 h-3 mr-1" />
+                        Restore
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
+              <p className="timeline-meta">
                 {v.segmentCount} segments · {formatTimeAgo(v.createdAt)}
               </p>
             </div>
           </div>
-          {!v.isActive && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() =>
-                restoreMutation.mutate({ id: podcastId, scriptId: v.id })
-              }
-              disabled={restoreMutation.isPending}
-              className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100"
-            >
-              {restoreMutation.isPending ? (
-                <Spinner className="w-3 h-3" />
-              ) : (
-                <>
-                  <CounterClockwiseClockIcon className="w-3 h-3 mr-1" />
-                  Restore
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

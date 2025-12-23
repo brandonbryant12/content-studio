@@ -19,7 +19,13 @@ export const Route = createFileRoute('/_protected/podcasts/')({
   component: PodcastsPage,
 });
 
-function EmptyState({ onCreateClick, isCreating }: { onCreateClick: () => void; isCreating: boolean }) {
+function EmptyState({
+  onCreateClick,
+  isCreating,
+}: {
+  onCreateClick: () => void;
+  isCreating: boolean;
+}) {
   return (
     <div className="empty-state-lg">
       <div className="empty-state-icon">
@@ -69,7 +75,10 @@ function PodcastsPage() {
   const createMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (data) => {
-        navigate({ to: '/podcasts/$podcastId', params: { podcastId: data.id } });
+        navigate({
+          to: '/podcasts/$podcastId',
+          params: { podcastId: data.id },
+        });
         await invalidateQueries('podcasts');
       },
       onError: (error) => {
@@ -143,10 +152,15 @@ function PodcastsPage() {
       ) : filteredPodcasts?.length === 0 ? (
         searchQuery ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">No podcasts found matching "{searchQuery}"</p>
+            <p className="text-muted-foreground">
+              No podcasts found matching "{searchQuery}"
+            </p>
           </div>
         ) : (
-          <EmptyState onCreateClick={handleCreate} isCreating={createMutation.isPending} />
+          <EmptyState
+            onCreateClick={handleCreate}
+            isCreating={createMutation.isPending}
+          />
         )
       ) : (
         <div className="space-y-2">

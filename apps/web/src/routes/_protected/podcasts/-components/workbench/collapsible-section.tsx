@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { useState } from 'react';
 
 interface CollapsibleSectionProps {
   icon: React.ReactNode;

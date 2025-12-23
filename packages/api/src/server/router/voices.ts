@@ -22,7 +22,10 @@ const voicesRouter = {
         const tts = yield* TTS;
         const voices = yield* tts.listVoices({});
         return [...voices];
-      }).pipe(Effect.withSpan('api.voices.list'), Effect.provide(context.layers)),
+      }).pipe(
+        Effect.withSpan('api.voices.list'),
+        Effect.provide(context.layers),
+      ),
       {
         ...handlers.tts,
       },

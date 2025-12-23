@@ -44,13 +44,13 @@ export type StorageConfig =
   | { provider: 'database' }
   | { provider: 'filesystem'; basePath: string; baseUrl: string }
   | {
-    provider: 's3';
-    bucket: string;
-    region: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-    endpoint?: string;
-  };
+      provider: 's3';
+      bucket: string;
+      region: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      endpoint?: string;
+    };
 
 /**
  * Creates base layers available to all requests (authenticated or not).

@@ -341,11 +341,11 @@ onSuccess: async (data) => {
 
 All component styles MUST be centralized in the global CSS file using `@layer components`. This ensures consistency, maintainability, and prevents "AI slop" aesthetics.
 
-**Design System: "Studio Editorial"**
-- **Primary**: Warm amber/gold (HSL 38) - evokes studio VU meters
-- **Accent**: Teal/seafoam for contrast
+**Design System: "Studio Pro"**
+- **Primary**: Refined sapphire blue (HSL 225) - premium, trustworthy, cutting-edge
+- **Accent**: Subtle blue-tinted grays for cohesion
 - **Typography**: DM Sans (body), Source Serif 4 (editorial headings), JetBrains Mono (technical/meta)
-- **Theme**: Warm cream backgrounds (light) / deep charcoal with warm undertones (dark)
+- **Theme**: Clean whites with cool undertones (light) / deep blacks with electric sapphire glow (dark)
 
 **Required practices:**
 

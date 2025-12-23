@@ -1,12 +1,17 @@
-import { FileTextIcon, SpeakerLoudIcon, UploadIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  FileTextIcon,
+  SpeakerLoudIcon,
+  UploadIcon,
+  PlusIcon,
+} from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { DocumentItem } from './documents/-components/document-item';
-import { PodcastItem } from './podcasts/-components/podcast-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
+import { PodcastItem } from './podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
@@ -40,7 +45,10 @@ function Dashboard() {
   const createPodcastMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (data) => {
-        navigate({ to: '/podcasts/$podcastId', params: { podcastId: data.id } });
+        navigate({
+          to: '/podcasts/$podcastId',
+          params: { podcastId: data.id },
+        });
         await invalidateQueries('podcasts');
       },
       onError: (error) => {

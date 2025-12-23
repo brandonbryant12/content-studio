@@ -1,8 +1,8 @@
+import { Input } from '@repo/ui/components/input';
+import { Label } from '@repo/ui/components/label';
+import { Textarea } from '@repo/ui/components/textarea';
 import { useState } from 'react';
 import { BaseDialog } from '@/components/base-dialog';
-import { Input } from '@repo/ui/components/input';
-import { Textarea } from '@repo/ui/components/textarea';
-import { Label } from '@repo/ui/components/label';
 
 interface AddSegmentDialogProps {
   open: boolean;
@@ -10,7 +10,11 @@ interface AddSegmentDialogProps {
   onAdd: (data: { speaker: string; line: string }) => void;
 }
 
-export function AddSegmentDialog({ open, onOpenChange, onAdd }: AddSegmentDialogProps) {
+export function AddSegmentDialog({
+  open,
+  onOpenChange,
+  onAdd,
+}: AddSegmentDialogProps) {
   const [speaker, setSpeaker] = useState('host');
   const [line, setLine] = useState('');
 

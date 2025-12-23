@@ -244,8 +244,11 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
           });
 
           // Check if already WAV (starts with RIFF header) - don't double-wrap
-          const isAlreadyWav = audioData.slice(0, 4).toString('ascii') === 'RIFF';
-          const audioContent = isAlreadyWav ? audioData : wrapPcmAsWav(audioData);
+          const isAlreadyWav =
+            audioData.slice(0, 4).toString('ascii') === 'RIFF';
+          const audioContent = isAlreadyWav
+            ? audioData
+            : wrapPcmAsWav(audioData);
 
           return {
             audioContent,

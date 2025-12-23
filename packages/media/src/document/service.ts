@@ -160,7 +160,11 @@ export interface DocumentService {
     id: string,
   ) => Effect.Effect<
     void,
-    DocumentNotFound | DatabaseError | PolicyError | ForbiddenError | StorageError,
+    | DocumentNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError
+    | StorageError,
     DocumentContext
   >;
 
@@ -177,4 +181,4 @@ export interface DocumentService {
 export class Documents extends Context.Tag('@repo/media/Documents')<
   Documents,
   DocumentService
->() { }
+>() {}

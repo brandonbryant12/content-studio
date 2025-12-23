@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import { PlusIcon, Cross2Icon, FileTextIcon } from '@radix-ui/react-icons';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
-import { BaseDialog } from '@/components/base-dialog';
 import { apiClient } from '@/clients/apiClient';
 import { invalidateQueries } from '@/clients/query-helpers';
+import { BaseDialog } from '@/components/base-dialog';
 
 type Document = RouterOutput['podcasts']['get']['documents'][number];
 
@@ -17,7 +17,11 @@ interface DocumentManagerProps {
   disabled?: boolean;
 }
 
-export function DocumentManager({ podcastId, documents, disabled }: DocumentManagerProps) {
+export function DocumentManager({
+  podcastId,
+  documents,
+  disabled,
+}: DocumentManagerProps) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -75,11 +79,15 @@ export function DocumentManager({ podcastId, documents, disabled }: DocumentMana
         {documents.map((doc) => (
           <div key={doc.id} className="doc-manager-item group">
             <div className="doc-manager-item-icon">
-              <span>{doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) || 'DOC'}</span>
+              <span>
+                {doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) || 'DOC'}
+              </span>
             </div>
             <div className="doc-manager-item-info">
               <p className="doc-manager-item-title">{doc.title}</p>
-              <p className="doc-manager-item-meta">{doc.wordCount.toLocaleString()} words</p>
+              <p className="doc-manager-item-meta">
+                {doc.wordCount.toLocaleString()} words
+              </p>
             </div>
             {!disabled && documents.length > 1 && (
               <Button
@@ -139,16 +147,32 @@ export function DocumentManager({ podcastId, documents, disabled }: DocumentMana
                 className={`doc-picker-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
               >
                 <div className="doc-picker-item-icon">
-                  <span>{doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) || 'DOC'}</span>
+                  <span>
+                    {doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) ||
+                      'DOC'}
+                  </span>
                 </div>
                 <div className="doc-picker-item-info">
                   <p className="doc-picker-item-title">{doc.title}</p>
-                  <p className="doc-picker-item-meta">{doc.wordCount.toLocaleString()} words</p>
+                  <p className="doc-picker-item-meta">
+                    {doc.wordCount.toLocaleString()} words
+                  </p>
                 </div>
-                <div className={`doc-picker-checkbox ${selectedIds.includes(doc.id) ? 'checked' : ''}`}>
+                <div
+                  className={`doc-picker-checkbox ${selectedIds.includes(doc.id) ? 'checked' : ''}`}
+                >
                   {selectedIds.includes(doc.id) && (
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    <svg
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                 </div>

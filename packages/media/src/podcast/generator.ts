@@ -1,6 +1,6 @@
 import { Context } from 'effect';
-import type { DatabaseError } from '@repo/effect/db';
 import type { PodcastFull } from './service';
+import type { DatabaseError } from '@repo/effect/db';
 import type {
   PodcastNotFound,
   ScriptNotFound,
@@ -109,4 +109,4 @@ export interface PodcastGeneratorService {
  */
 export class PodcastGenerator extends Context.Tag(
   '@repo/media/PodcastGenerator',
-)<PodcastGenerator, PodcastGeneratorService>() { }
+)<PodcastGenerator, PodcastGeneratorService>() {}

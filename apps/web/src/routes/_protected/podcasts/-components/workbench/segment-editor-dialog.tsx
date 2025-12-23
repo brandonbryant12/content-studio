@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { BaseDialog } from '@/components/base-dialog';
 import { Input } from '@repo/ui/components/input';
-import { Textarea } from '@repo/ui/components/textarea';
 import { Label } from '@repo/ui/components/label';
+import { Textarea } from '@repo/ui/components/textarea';
+import { useState, useEffect } from 'react';
 import type { ScriptSegment } from '@/hooks/use-script-editor';
+import { BaseDialog } from '@/components/base-dialog';
 
 interface SegmentEditorDialogProps {
   open: boolean;

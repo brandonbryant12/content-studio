@@ -1,10 +1,10 @@
-import { CurrentUser, requireOwnership } from '@repo/auth-policy';
-import { Documents } from '../document';
-import { Db } from '@repo/effect/db';
 import { LLM } from '@repo/ai/llm';
-import { Storage } from '@repo/storage';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
+import { CurrentUser, requireOwnership } from '@repo/auth-policy';
+import { Db } from '@repo/effect/db';
+import { Storage } from '@repo/storage';
 import { Context, Effect, Layer, Schema } from 'effect';
+import { Documents } from '../document';
 import { PodcastGenerator, type PodcastGeneratorService } from './generator';
 import { buildSystemPrompt, buildUserPrompt } from './prompts';
 import * as Repo from './repository';

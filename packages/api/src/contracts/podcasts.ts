@@ -166,7 +166,9 @@ const podcastContract = oc
       })
       .input(
         v.object({
-          limit: v.optional(v.pipe(coerceNumber, v.minValue(1), v.maxValue(100))),
+          limit: v.optional(
+            v.pipe(coerceNumber, v.minValue(1), v.maxValue(100)),
+          ),
           offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
           status: v.optional(
             v.picklist([
@@ -350,7 +352,8 @@ const podcastContract = oc
         method: 'GET',
         path: '/{id}/scripts',
         summary: 'List script versions',
-        description: 'List all script versions for a podcast (for version history)',
+        description:
+          'List all script versions for a podcast (for version history)',
       })
       .errors(podcastErrors)
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
@@ -372,7 +375,8 @@ const podcastContract = oc
         method: 'POST',
         path: '/{id}/scripts/{scriptId}/restore',
         summary: 'Restore script version',
-        description: 'Restore a previous script version (creates a new version)',
+        description:
+          'Restore a previous script version (creates a new version)',
       })
       .errors(podcastErrors)
       .input(

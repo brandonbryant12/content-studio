@@ -112,8 +112,12 @@ export function usePodcastGeneration({
     documentIds: selectedDocumentIds,
     hostVoice: config.hostVoice || undefined,
     hostVoiceName: config.hostVoiceName,
-    coHostVoice: config.format === 'conversation' ? config.coHostVoice || undefined : undefined,
-    coHostVoiceName: config.format === 'conversation' ? config.coHostVoiceName : undefined,
+    coHostVoice:
+      config.format === 'conversation'
+        ? config.coHostVoice || undefined
+        : undefined,
+    coHostVoiceName:
+      config.format === 'conversation' ? config.coHostVoiceName : undefined,
     promptInstructions: config.instructions.trim() || undefined,
     targetDurationMinutes: config.targetDuration,
   });
@@ -195,10 +199,15 @@ export function usePodcastGeneration({
 
   return {
     generateFull: (podcastId: string) =>
-      handleActionWithUpdate(podcastId, (id) => generateMutation.mutate({ id })),
+      handleActionWithUpdate(podcastId, (id) =>
+        generateMutation.mutate({ id }),
+      ),
     generateScript: (podcastId: string) =>
       handleActionWithUpdate(podcastId, (id) =>
-        generateScriptMutation.mutate({ id, promptInstructions: config.instructions.trim() || undefined }),
+        generateScriptMutation.mutate({
+          id,
+          promptInstructions: config.instructions.trim() || undefined,
+        }),
       ),
     generateAudio: (podcastId: string) =>
       handleActionWithUpdate(podcastId, (id) =>
