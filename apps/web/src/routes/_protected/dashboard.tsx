@@ -13,8 +13,8 @@ import { DocumentItem } from './documents/-components/document-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
 import { PodcastItem } from './podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
+import { podcastUtils } from '@/db';
 
 export const Route = createFileRoute('/_protected/dashboard')({
   loader: async () => {
@@ -48,9 +48,9 @@ function Dashboard() {
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },
-          search: { scriptId: undefined },
+          search: { version: undefined },
         });
-        await invalidateQueries('podcasts');
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');

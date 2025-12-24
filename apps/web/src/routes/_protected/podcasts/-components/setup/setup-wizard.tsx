@@ -9,7 +9,7 @@ import { StepBasics } from './steps/step-basics';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { podcastUtils } from '@/db';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 type PodcastFormat = 'conversation' | 'voiceover';
@@ -58,7 +58,7 @@ export function SetupWizard({ podcast, onSkip }: SetupWizardProps) {
     apiClient.podcasts.generate.mutationOptions({
       onSuccess: async () => {
         toast.success('Generation started');
-        await invalidateQueries('podcasts');
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to start generation');

@@ -1,11 +1,12 @@
+import { SpeakerLoudIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
 
 interface VersionHistoryProps {
   podcastId: string;
-  selectedScriptId?: string;
-  onSelectVersion: (scriptId: string) => void;
+  selectedVersion?: number;
+  onSelectVersion: (version: number) => void;
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -25,14 +26,15 @@ function formatTimeAgo(dateStr: string): string {
 
 export function VersionHistory({
   podcastId,
-  selectedScriptId,
+  selectedVersion,
   onSelectVersion,
 }: VersionHistoryProps) {
-  const { data: versions, isPending } = useQuery(
-    apiClient.podcasts.listScriptVersions.queryOptions({
+  const { data: versions, isPending } = useQuery({
+    ...apiClient.podcasts.listScriptVersions.queryOptions({
       input: { id: podcastId },
     }),
-  );
+    refetchOnMount: 'always',
+  });
 
   if (isPending) {
     return (
@@ -55,21 +57,21 @@ export function VersionHistory({
   }
 
   // Determine which version is selected - default to active if none specified
-  const effectiveSelectedId =
-    selectedScriptId ?? versions.find((v) => v.isActive)?.id;
+  const effectiveSelectedVersion =
+    selectedVersion ?? versions.find((v) => v.isActive)?.version;
 
   return (
     <div className="timeline-section">
       <div className="timeline-list">
         {versions.map((v) => {
-          const isSelected = v.id === effectiveSelectedId;
+          const isSelected = v.version === effectiveSelectedVersion;
           const isViewing = isSelected && !v.isActive;
 
           return (
             <button
               key={v.id}
               type="button"
-              onClick={() => onSelectVersion(v.id)}
+              onClick={() => onSelectVersion(v.version)}
               className={`timeline-item ${v.isActive ? 'current' : ''} ${isSelected ? 'selected' : ''}`}
             >
               {/* Timeline node */}
@@ -93,7 +95,14 @@ export function VersionHistory({
                   </div>
                 </div>
                 <p className="timeline-meta">
-                  {v.segmentCount} segments · {formatTimeAgo(v.createdAt)}
+                  {v.segmentCount} segments
+                  {v.hasAudio && (
+                    <>
+                      {' '}
+                      · <SpeakerLoudIcon className="inline w-3 h-3" />
+                    </>
+                  )}{' '}
+                  · {formatTimeAgo(v.createdAt)}
                 </p>
               </div>
             </button>

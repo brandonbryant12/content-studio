@@ -5,7 +5,9 @@ import { createDb } from '@repo/db/client';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { streamSSE } from 'hono/streaming';
 import { env } from './env';
+import { sseManager } from './sse';
 import { generateRootHtml } from './utils';
 
 // ========================================================================= //
@@ -119,6 +121,67 @@ app.use(
 app.on(['POST', 'GET'], `${env.PUBLIC_SERVER_API_PATH}/auth/*`, (c) =>
   auth.handler(c.req.raw),
 );
+
+// ========================================================================= //
+// SSE Events Endpoint
+// ========================================================================= //
+
+app.use(
+  `${env.PUBLIC_SERVER_API_PATH}/events`,
+  cors({
+    origin: trustedOrigins,
+    credentials: true,
+  }),
+);
+
+app.get(`${env.PUBLIC_SERVER_API_PATH}/events`, async (c) => {
+  // Verify session
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.text('Unauthorized', 401);
+  }
+
+  return streamSSE(c, async (stream) => {
+    // Send connection confirmation
+    await stream.writeSSE({
+      data: JSON.stringify({ type: 'connected', userId: session.user.id }),
+    });
+
+    // Subscribe to SSE events for this user
+    const unsubscribe = sseManager.subscribe(session.user.id, {
+      write: async (data: Uint8Array) => {
+        const text = new TextDecoder().decode(data);
+        // The data already includes "data: " prefix and newlines from sseManager
+        // We need to extract just the JSON part for writeSSE
+        const match = text.match(/^data: (.+)\n\n$/);
+        if (match?.[1]) {
+          await stream.writeSSE({ data: match[1] });
+        }
+      },
+    });
+
+    // Send heartbeat every 30 seconds to keep connection alive
+    const heartbeat = setInterval(async () => {
+      try {
+        await stream.writeSSE({ data: ':heartbeat' });
+      } catch {
+        // Stream closed, cleanup will happen on abort
+      }
+    }, 30000);
+
+    // Cleanup on disconnect
+    stream.onAbort(() => {
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+
+    // Keep the stream open
+     
+    while (true) {
+      await stream.sleep(60000);
+    }
+  });
+});
 
 // ========================================================================= //
 

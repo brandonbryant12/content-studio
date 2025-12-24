@@ -256,6 +256,38 @@ export const updatePodcastAudio = (
   );
 
 /**
+ * Update script audio after generation.
+ * Each script version stores its own audio.
+ */
+export const updateScriptAudio = (
+  scriptId: string,
+  data: { audioUrl: string; duration: number },
+) =>
+  withDb('podcast.updateScriptAudio', async (db) => {
+    const [script] = await db
+      .update(podcastScript)
+      .set({
+        audioUrl: data.audioUrl,
+        duration: data.duration,
+        updatedAt: new Date(),
+      })
+      .where(eq(podcastScript.id, scriptId))
+      .returning();
+    return script;
+  }).pipe(
+    Effect.flatMap((script) =>
+      script
+        ? Effect.succeed(script)
+        : Effect.fail(
+            new ScriptNotFound({
+              podcastId: 'unknown',
+              message: 'Script not found',
+            }),
+          ),
+    ),
+  );
+
+/**
  * Delete podcast by ID (cascade deletes scripts).
  */
 export const deletePodcast = (id: string) =>
@@ -387,6 +419,7 @@ export interface ScriptVersionSummary {
   version: number;
   isActive: boolean;
   segmentCount: number;
+  hasAudio: boolean;
   createdAt: Date;
 }
 
@@ -401,6 +434,7 @@ export const listScriptVersions = (podcastId: string) =>
         version: podcastScript.version,
         isActive: podcastScript.isActive,
         segments: podcastScript.segments,
+        audioUrl: podcastScript.audioUrl,
         createdAt: podcastScript.createdAt,
       })
       .from(podcastScript)
@@ -412,6 +446,7 @@ export const listScriptVersions = (podcastId: string) =>
       version: s.version,
       isActive: s.isActive,
       segmentCount: s.segments?.length ?? 0,
+      hasAudio: s.audioUrl !== null,
       createdAt: s.createdAt,
     }));
   });

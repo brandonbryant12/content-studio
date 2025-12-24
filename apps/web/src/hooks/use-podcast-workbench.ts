@@ -16,7 +16,7 @@ type WorkbenchMode =
 interface UsePodcastWorkbenchOptions {
   podcastId: string;
   podcast: PodcastFull | undefined;
-  selectedScriptId: string | undefined;
+  selectedVersion: number | undefined;
 }
 
 export interface UsePodcastWorkbenchReturn {
@@ -29,6 +29,7 @@ export interface UsePodcastWorkbenchReturn {
   // Display state (always correct for current mode)
   displaySegments: ScriptSegment[];
   displaySummary: string | null;
+  displayAudio: { url: string; duration: number | null } | null;
 
   // The script being viewed (active or historical)
   viewedScript: PodcastScript | null;
@@ -50,7 +51,7 @@ export interface UsePodcastWorkbenchReturn {
   };
 
   // Version navigation
-  selectVersion: (scriptId: string | null) => void;
+  selectVersion: (version: number | null) => void;
   clearSelection: () => void;
   isLoadingHistoricalScript: boolean;
 }
@@ -67,13 +68,13 @@ export interface UsePodcastWorkbenchReturn {
 export function usePodcastWorkbench({
   podcastId,
   podcast,
-  selectedScriptId,
+  selectedVersion,
 }: UsePodcastWorkbenchOptions): UsePodcastWorkbenchReturn {
   // Compose existing hooks
   const versionViewer = useVersionViewer({
     podcastId,
     activeScript: podcast?.script ?? null,
-    selectedScriptId,
+    selectedVersion,
   });
 
   const scriptEditor = useScriptEditor({
@@ -89,12 +90,13 @@ export function usePodcastWorkbench({
   const prevStatus = usePrevious(podcast?.status);
 
   // Determine the current mode
-  const isGeneratingStatus =
-    podcast?.status === 'generating_script' ||
-    podcast?.status === 'generating_audio';
+  // Note: generating_audio keeps script visible; only generating_script hides it
+  const isGeneratingScript = podcast?.status === 'generating_script';
+  const isGeneratingAudio = podcast?.status === 'generating_audio';
 
   const mode: WorkbenchMode = useMemo(() => {
-    if (isGeneratingStatus) {
+    // Only hide script during script generation, not audio generation
+    if (isGeneratingScript) {
       return { type: 'generating' };
     }
     if (versionViewer.isViewingHistory && versionViewer.viewedScript) {
@@ -103,9 +105,10 @@ export function usePodcastWorkbench({
         version: versionViewer.viewedScript.version,
       };
     }
+    // 'editing' mode during normal editing OR while generating audio
     return { type: 'editing' };
   }, [
-    isGeneratingStatus,
+    isGeneratingScript,
     versionViewer.isViewingHistory,
     versionViewer.viewedScript,
   ]);
@@ -175,10 +178,41 @@ export function usePodcastWorkbench({
     podcast?.script?.summary,
   ]);
 
+  // Derive display audio based on mode
+  const displayAudio = useMemo((): {
+    url: string;
+    duration: number | null;
+  } | null => {
+    let audioUrl: string | null | undefined;
+    let duration: number | null | undefined;
+
+    switch (mode.type) {
+      case 'viewing_history':
+        audioUrl = versionViewer.viewedScript?.audioUrl;
+        duration = versionViewer.viewedScript?.duration;
+        break;
+      case 'editing':
+        audioUrl = podcast?.script?.audioUrl;
+        duration = podcast?.script?.duration;
+        break;
+      case 'generating':
+        return null;
+    }
+
+    return audioUrl ? { url: audioUrl, duration: duration ?? null } : null;
+  }, [
+    mode.type,
+    versionViewer.viewedScript?.audioUrl,
+    versionViewer.viewedScript?.duration,
+    podcast?.script?.audioUrl,
+    podcast?.script?.duration,
+  ]);
+
   // Convenience booleans
   const isEditing = mode.type === 'editing';
   const isViewingHistory = mode.type === 'viewing_history';
-  const isGenerating = mode.type === 'generating';
+  // isGenerating is true for both script and audio generation (for disabling buttons)
+  const isGenerating = isGeneratingScript || isGeneratingAudio;
 
   // Get viewed version number
   const viewedVersion =
@@ -194,6 +228,7 @@ export function usePodcastWorkbench({
     // Display state
     displaySegments,
     displaySummary,
+    displayAudio,
 
     // Viewed script
     viewedScript: versionViewer.viewedScript,

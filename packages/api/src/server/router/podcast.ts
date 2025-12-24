@@ -263,6 +263,9 @@ const podcastRouter = {
             };
           }
 
+          // Update status to generating_script so frontend can start polling
+          yield* podcasts.setStatus(podcast.id, 'generating_script');
+
           // Enqueue the combined generation job
           const payload: GeneratePodcastPayload = {
             podcastId: podcast.id,
@@ -346,6 +349,9 @@ const podcastRouter = {
             };
           }
 
+          // Update status to generating_script so frontend can start polling
+          yield* podcasts.setStatus(podcast.id, 'generating_script');
+
           // Enqueue the script-only generation job
           const payload: GenerateScriptPayload = {
             podcastId: podcast.id,
@@ -411,6 +417,9 @@ const podcastRouter = {
             };
           }
 
+          // Update status to generating_audio so frontend can start polling
+          yield* podcasts.setStatus(podcast.id, 'generating_audio');
+
           // Enqueue the audio-only generation job
           const payload: GenerateAudioPayload = {
             podcastId: podcast.id,
@@ -460,6 +469,7 @@ const podcastRouter = {
             version: v.version,
             isActive: v.isActive,
             segmentCount: v.segmentCount,
+            hasAudio: v.hasAudio,
             createdAt: v.createdAt.toISOString(),
           }));
         }).pipe(Effect.provide(context.layers)),

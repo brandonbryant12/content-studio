@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { podcastUtils } from '@/db';
 
 export interface ScriptSegment {
   speaker: string;
@@ -54,7 +54,7 @@ export function useScriptEditor({
       onSuccess: async () => {
         toast.success('Script saved');
         setOriginalSegments(segments);
-        await invalidateQueries('podcasts');
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to save script');

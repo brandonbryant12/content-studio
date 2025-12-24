@@ -118,6 +118,8 @@ const podcastScriptSchema = v.object({
   segments: v.array(scriptSegmentSchema),
   summary: v.nullable(v.string()),
   generationPrompt: v.nullable(v.string()),
+  audioUrl: v.nullable(v.string()),
+  duration: v.nullable(v.number()),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -385,6 +387,7 @@ const podcastContract = oc
             version: v.number(),
             isActive: v.boolean(),
             segmentCount: v.number(),
+            hasAudio: v.boolean(),
             createdAt: v.string(),
           }),
         ),

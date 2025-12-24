@@ -2,14 +2,14 @@ import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PodcastItem } from './-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
+import { podcastCollection, podcastUtils, useLiveQuery } from '@/db';
 
 export const Route = createFileRoute('/_protected/podcasts/')({
   loader: () =>
@@ -67,9 +67,11 @@ function EmptyState({
 function PodcastsPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: podcasts, isPending } = useQuery(
-    apiClient.podcasts.list.queryOptions({ input: {} }),
+  // Use TanStack DB live query for reactive updates
+  const { data: podcasts, isLoading: isPending } = useLiveQuery((q) =>
+    q.from({ podcast: podcastCollection }),
   );
 
   const createMutation = useMutation(
@@ -78,9 +80,10 @@ function PodcastsPage() {
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },
-          search: { scriptId: undefined },
+          search: { version: undefined },
         });
-        await invalidateQueries('podcasts');
+        // Refresh the podcast collection
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
@@ -88,17 +91,21 @@ function PodcastsPage() {
     }),
   );
 
-  const deleteMutation = useMutation(
-    apiClient.podcasts.delete.mutationOptions({
-      onSuccess: async () => {
-        await invalidateQueries('podcasts');
-        toast.success('Podcast deleted');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete podcast');
-      },
-    }),
-  );
+  // Handle podcast deletion with optimistic update
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      // Optimistic delete - removes from collection immediately
+      podcastCollection.delete(id);
+      toast.success('Podcast deleted');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete podcast',
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleCreate = () => {
     createMutation.mutate({
@@ -169,11 +176,8 @@ function PodcastsPage() {
             <PodcastItem
               key={podcast.id}
               podcast={podcast}
-              onDelete={() => deleteMutation.mutate({ id: podcast.id })}
-              isDeleting={
-                deleteMutation.isPending &&
-                deleteMutation.variables?.id === podcast.id
-              }
+              onDelete={() => handleDelete(podcast.id)}
+              isDeleting={deletingId === podcast.id}
             />
           ))}
         </div>

@@ -351,6 +351,8 @@ docker compose -f docker-compose.test.yml down
 - Create test data via API/factories, not by navigating UI
 - Use specific selectors (exact button names > regex patterns)
 - Clean up created resources in `afterEach`
+- Wait for specific mock content in assertions (e.g., `"Welcome to the show!"` from `MockLLMLive`)
+- Write longer, comprehensive tests that cover multiple related features in sequence
 
 ### Don't
 
@@ -359,6 +361,24 @@ docker compose -f docker-compose.test.yml down
 - Don't use `test.only` in committed code
 - Don't hardcode waits - use Playwright's auto-waiting
 - Don't test external services (mock them)
+- Don't create many small helper functions - prefer longer, sequential tests
+
+### Waiting for Background Jobs
+
+Background jobs (podcast generation, audio generation) are processed by a worker that polls every 3 seconds. The frontend automatically polls for updates when the podcast status is `generating_script` or `generating_audio`.
+
+```typescript
+// Trigger the job
+await page.getByRole('button', { name: /generate/i }).click();
+
+// Wait for the generated content to appear
+// The UI polls every 2s when status is generating, so it auto-updates
+await expect(page.getByText('Welcome to the show!')).toBeVisible({
+  timeout: 60000, // Allow time for worker + UI polling
+});
+```
+
+**Why use specific content**: Generic patterns like `/segment/i` may match UI elements that exist before generation completes (e.g., "add segments manually"). Using exact mock output (`"Welcome to the show!"`) ensures you're asserting on generated content.
 
 ## Troubleshooting
 
@@ -407,3 +427,16 @@ test.afterEach(async ({ page }) => {
   }
 });
 ```
+
+### E2E tests fail with "API key not valid"
+
+**Symptom**: Tests fail because the worker is calling real Google AI APIs.
+
+**Cause**: The server's `.env.test` file doesn't have `USE_MOCK_AI=true`, or the worker wasn't updated to respect this flag.
+
+**Fix**: Ensure `apps/server/.env.test` contains:
+```bash
+USE_MOCK_AI=true
+```
+
+The worker reads this via `env.USE_MOCK_AI` and uses `MockLLMLive`/`MockTTSLive` instead of real AI services.

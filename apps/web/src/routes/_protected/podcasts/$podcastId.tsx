@@ -6,20 +6,22 @@ import {
   useNavigate,
   useBlocker,
 } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
   WorkbenchLayout,
   ScriptPanel,
   ConfigPanel,
+  GlobalActionBar,
 } from './-components/workbench';
 import { isGeneratingStatus } from './-constants/status';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
+import { podcastUtils } from '@/db';
 import {
   usePodcastWorkbench,
+  usePodcastSettings,
   useOptimisticScriptGeneration,
   useOptimisticAudioGeneration,
   useOptimisticFullGeneration,
@@ -27,7 +29,12 @@ import {
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
   validateSearch: (search: Record<string, unknown>) => ({
-    scriptId: typeof search.scriptId === 'string' ? search.scriptId : undefined,
+    version:
+      typeof search.version === 'string' && !isNaN(Number(search.version))
+        ? Number(search.version)
+        : typeof search.version === 'number'
+          ? search.version
+          : undefined,
   }),
   loader: ({ params }) =>
     queryClient.ensureQueryData(
@@ -38,28 +45,62 @@ export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
 
 function PodcastWorkbench() {
   const { podcastId } = Route.useParams();
-  const { scriptId: selectedScriptId } = Route.useSearch();
+  const { version: selectedVersion } = Route.useSearch();
   const navigate = useNavigate();
   const [setupSkipped, setSetupSkipped] = useState(false);
 
-  const { data: podcast, isPending } = useQuery({
-    ...apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
-    refetchInterval: (query) => {
-      // Poll during generation
-      const status = query.state.data?.status;
-      if (status === 'generating_script' || status === 'generating_audio') {
-        return 2000;
-      }
-      return false;
-    },
-  });
+  // No polling needed - SSE will trigger refetch when job completes
+  const { data: podcast, isPending } = useQuery(
+    apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
+  );
 
   // Unified workbench state management
   const workbench = usePodcastWorkbench({
     podcastId,
     podcast,
-    selectedScriptId,
+    selectedVersion,
   });
+
+  // Settings state management (lifted from PodcastSettings)
+  const settings = usePodcastSettings({ podcast });
+
+  // Track the active script version to detect when a new version is created
+  const prevActiveScriptVersionRef = useRef<number | undefined>(undefined);
+
+  // Auto-navigate to new version when script generation completes
+  useEffect(() => {
+    const currentVersion = podcast?.script?.version;
+    const prevVersion = prevActiveScriptVersionRef.current;
+
+    // Only navigate when:
+    // 1. We have a new version
+    // 2. The version increased (new script was generated)
+    // 3. Status is script_ready (generation just completed)
+    // 4. We're not already viewing that version
+    if (
+      currentVersion !== undefined &&
+      prevVersion !== undefined &&
+      currentVersion > prevVersion &&
+      podcast?.status === 'script_ready' &&
+      selectedVersion !== currentVersion
+    ) {
+      navigate({
+        to: '/podcasts/$podcastId',
+        params: { podcastId },
+        search: { version: currentVersion },
+        replace: true,
+      });
+    }
+
+    // Update the ref after checking
+    prevActiveScriptVersionRef.current = currentVersion;
+  }, [
+    podcast?.script?.version,
+    podcast?.status,
+    selectedVersion,
+    podcastId,
+    navigate,
+  ]);
 
   // Restore mutation for "Set as Current" action
   const restoreMutation = useMutation(
@@ -67,7 +108,8 @@ function PodcastWorkbench() {
       onSuccess: async () => {
         toast.success('Script version restored');
         workbench.clearSelection();
-        await invalidateQueries('podcasts');
+        // Refresh the podcast collection
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to restore version');
@@ -130,7 +172,8 @@ function PodcastWorkbench() {
       onSuccess: async () => {
         toast.success('Podcast deleted');
         navigate({ to: '/podcasts' });
-        await invalidateQueries('podcasts');
+        // Refresh the podcast collection
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to delete podcast');
@@ -185,6 +228,22 @@ function PodcastWorkbench() {
     );
   }
 
+  // Generation handlers that clear selection first
+  const handleGenerateScript = () => {
+    workbench.clearSelection();
+    generateScriptMutation.mutate({ id: podcast.id });
+  };
+
+  const handleGenerateAudio = () => {
+    workbench.clearSelection();
+    generateAudioMutation.mutate({ id: podcast.id });
+  };
+
+  const handleGenerateAll = () => {
+    workbench.clearSelection();
+    generateAllMutation.mutate({ id: podcast.id });
+  };
+
   return (
     <WorkbenchLayout
       podcast={podcast}
@@ -202,7 +261,6 @@ function PodcastWorkbench() {
           onRemoveSegment={workbench.editState.removeSegment}
           onReorderSegments={workbench.editState.reorderSegments}
           onAddSegment={workbench.editState.addSegment}
-          onSave={workbench.editState.saveChanges}
           onDiscard={workbench.editState.discardChanges}
           onSetAsCurrent={handleSetAsCurrent}
           isRestoring={restoreMutation.isPending}
@@ -211,35 +269,37 @@ function PodcastWorkbench() {
       rightPanel={
         <ConfigPanel
           podcast={podcast}
-          hasUnsavedChanges={workbench.editState.hasChanges}
-          isSaving={workbench.editState.isSaving}
-          onSave={workbench.editState.saveChanges}
-          onGenerateScript={() => {
-            workbench.clearSelection();
-            generateScriptMutation.mutate({ id: podcast.id });
-          }}
-          onGenerateAudio={() => {
-            workbench.clearSelection();
-            generateAudioMutation.mutate({ id: podcast.id });
-          }}
-          onGenerateAll={() => {
-            workbench.clearSelection();
-            generateAllMutation.mutate({ id: podcast.id });
-          }}
+          displayAudio={workbench.displayAudio}
           isGenerating={isGenerating || generateAllMutation.isPending}
           pendingAction={pendingAction}
-          selectedScriptId={selectedScriptId}
+          selectedVersion={selectedVersion}
           onSelectVersion={workbench.selectVersion}
-          onRegenerate={() => {
-            workbench.clearSelection();
-            generateAllMutation.mutate({ id: podcast.id });
-          }}
-          isRegenerating={generateAllMutation.isPending}
           isViewingHistory={workbench.isViewingHistory}
           viewingVersion={workbench.viewedVersion}
           onSetAsCurrent={handleSetAsCurrent}
           isRestoring={restoreMutation.isPending}
+          settings={settings}
         />
+      }
+      actionBar={
+        !workbench.isViewingHistory && (
+          <GlobalActionBar
+            status={podcast.status}
+            hasScript={!!podcast.script}
+            isGenerating={isGenerating}
+            pendingAction={pendingAction}
+            hasScriptChanges={workbench.editState.hasChanges}
+            isScriptSaving={workbench.editState.isSaving}
+            onSaveScript={workbench.editState.saveChanges}
+            hasSettingsChanges={settings.hasChanges}
+            isSettingsSaving={settings.isSaving}
+            onSaveSettings={settings.saveSettings}
+            onGenerateScript={handleGenerateScript}
+            onGenerateAudio={handleGenerateAudio}
+            onGenerateAll={handleGenerateAll}
+            disabled={isGenerating}
+          />
+        )
       }
     />
   );

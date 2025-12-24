@@ -209,6 +209,7 @@ export interface ScriptVersionSummary {
   version: number;
   isActive: boolean;
   segmentCount: number;
+  hasAudio: boolean;
   createdAt: Date;
 }
 

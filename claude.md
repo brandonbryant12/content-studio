@@ -227,6 +227,14 @@ apps/web/e2e/
 
 ### E2E Test Patterns
 
+**Write comprehensive tests** - prefer longer sequential tests over many small helpers:
+```typescript
+test('full podcast workflow', async ({ page }) => {
+  // Create document → go through wizard → generate → verify → regenerate → check history
+  // All in one test, asserting at each step
+});
+```
+
 **Authentication** - use `login` fixture in `beforeEach`:
 ```typescript
 import { login } from '../fixtures';
@@ -243,6 +251,18 @@ const doc = await createDocument(page.request, { title: 'Test' });
 
 // ❌ Wrong - no authentication
 const doc = await createDocument(request, { title: 'Test' });
+```
+
+**Wait for background jobs** - UI auto-polls during generation:
+```typescript
+// Trigger generation
+await page.getByRole('button', { name: /generate/i }).click();
+
+// Wait for generated content to appear
+// UI polls every 2s when status is generating_script/generating_audio
+await expect(page.getByText('Welcome to the show!')).toBeVisible({
+  timeout: 60000, // Allow time for worker + UI polling
+});
 ```
 
 **Flexible selectors** - handle different UI states:
@@ -518,3 +538,5 @@ All component styles MUST be centralized in the global CSS file using `@layer co
 - [ ] No `test.only` in committed code
 - [ ] Critical user flows have E2E coverage
 - [ ] Mock layers used for external services (AI, storage)
+- [ ] Assertions use specific mock content (e.g., `"Welcome to the show!"`) not generic patterns
+- [ ] Prefer longer comprehensive tests over many small helper functions

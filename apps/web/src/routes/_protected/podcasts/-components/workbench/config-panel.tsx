@@ -9,13 +9,14 @@ import {
 } from '@radix-ui/react-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import type { UsePodcastSettingsReturn } from '@/hooks';
 import type { RouterOutput } from '@repo/api/client';
 import { AudioPlayer } from '../audio-player';
 import { DocumentManager } from './document-manager';
 import { ErrorDisplay } from './error-display';
+import { GenerationStatus } from './generation-status';
 import { PodcastSettings } from './podcast-settings';
 import { PromptViewerPanel } from './prompt-viewer';
-import { SmartActions } from './smart-actions';
 import { VersionHistory } from './version-history';
 import { apiClient } from '@/clients/apiClient';
 import { BaseDialog } from '@/components/base-dialog';
@@ -26,42 +27,30 @@ type TabId = 'produce' | 'mix';
 
 interface ConfigPanelProps {
   podcast: PodcastFull;
-  hasUnsavedChanges: boolean;
-  isSaving: boolean;
-  onSave: () => void;
-  onGenerateScript: () => void;
-  onGenerateAudio: () => void;
-  onGenerateAll: () => void;
+  displayAudio: { url: string; duration: number | null } | null;
   isGenerating: boolean;
   pendingAction: PendingAction;
-  selectedScriptId?: string;
-  onSelectVersion: (scriptId: string) => void;
-  onRegenerate: () => void;
-  isRegenerating: boolean;
+  selectedVersion?: number;
+  onSelectVersion: (version: number) => void;
   isViewingHistory: boolean;
   viewingVersion?: number;
   onSetAsCurrent: () => void;
   isRestoring: boolean;
+  settings: UsePodcastSettingsReturn;
 }
 
 export function ConfigPanel({
   podcast,
-  hasUnsavedChanges,
-  isSaving,
-  onSave,
-  onGenerateScript,
-  onGenerateAudio,
-  onGenerateAll,
+  displayAudio,
   isGenerating,
   pendingAction,
-  selectedScriptId,
+  selectedVersion,
   onSelectVersion,
-  onRegenerate,
-  isRegenerating,
   isViewingHistory,
   viewingVersion,
   onSetAsCurrent,
   isRestoring,
+  settings,
 }: ConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('produce');
   const [showHistory, setShowHistory] = useState(false);
@@ -76,11 +65,12 @@ export function ConfigPanel({
   };
 
   // Fetch version count for the badge
-  const { data: versions } = useQuery(
-    apiClient.podcasts.listScriptVersions.queryOptions({
+  const { data: versions } = useQuery({
+    ...apiClient.podcasts.listScriptVersions.queryOptions({
       input: { id: podcast.id },
     }),
-  );
+    refetchOnMount: 'always',
+  });
 
   const versionCount = versions?.length ?? 0;
 
@@ -149,22 +139,17 @@ export function ConfigPanel({
 
         {activeTab === 'produce' && (
           <div key="produce" className="control-panel">
-            {/* Smart Actions - Always at top */}
-            <SmartActions
-              status={podcast.status}
-              hasScript={!!podcast.script}
-              hasUnsavedChanges={hasUnsavedChanges}
-              isSaving={isSaving}
-              isGenerating={isGenerating}
-              pendingAction={pendingAction}
-              onSave={onSave}
-              onGenerateScript={onGenerateScript}
-              onGenerateAudio={onGenerateAudio}
-              onGenerateAll={onGenerateAll}
-            />
+            {/* Generation Progress - shown only during generation */}
+            {(pendingAction !== null || isGenerating) && (
+              <GenerationStatus
+                status={podcast.status}
+                isSavingSettings={false}
+                isPendingGeneration={pendingAction !== null}
+              />
+            )}
 
             {/* Audio Player */}
-            {podcast.audioUrl && (
+            {displayAudio?.url && (
               <div className="audio-section">
                 <div className="audio-section-header">
                   <div className="audio-section-icon">
@@ -172,7 +157,7 @@ export function ConfigPanel({
                   </div>
                   <span className="audio-section-title">Audio Preview</span>
                 </div>
-                <AudioPlayer url={podcast.audioUrl} />
+                <AudioPlayer url={displayAudio.url} />
               </div>
             )}
 
@@ -203,8 +188,7 @@ export function ConfigPanel({
             <PodcastSettings
               podcast={podcast}
               disabled={isGenerating || isViewingHistory}
-              onRegenerate={onRegenerate}
-              isRegenerating={isRegenerating}
+              settings={settings}
             />
           </div>
         )}
@@ -254,7 +238,7 @@ export function ConfigPanel({
             <div className="history-panel-content">
               <VersionHistory
                 podcastId={podcast.id}
-                selectedScriptId={selectedScriptId}
+                selectedVersion={selectedVersion}
                 onSelectVersion={onSelectVersion}
               />
             </div>

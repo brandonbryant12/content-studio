@@ -10,7 +10,7 @@ type PodcastScript = RouterOutput['podcasts']['getScript'];
 interface UseVersionViewerOptions {
   podcastId: string;
   activeScript: PodcastScript | null;
-  selectedScriptId: string | undefined;
+  selectedVersion: number | undefined;
 }
 
 export interface UseVersionViewerReturn {
@@ -23,7 +23,7 @@ export interface UseVersionViewerReturn {
   /** Loading state for fetching historical script */
   isLoadingScript: boolean;
   /** Select a specific script version to view */
-  selectVersion: (scriptId: string | null) => void;
+  selectVersion: (version: number | null) => void;
   /** Clear selection and go back to active version */
   clearSelection: () => void;
 }
@@ -31,13 +31,37 @@ export interface UseVersionViewerReturn {
 export function useVersionViewer({
   podcastId,
   activeScript,
-  selectedScriptId,
+  selectedVersion,
 }: UseVersionViewerOptions): UseVersionViewerReturn {
   const navigate = useNavigate();
 
+  // Fetch versions list to resolve version number -> scriptId
+  const { data: versions } = useQuery({
+    ...apiClient.podcasts.listScriptVersions.queryOptions({
+      input: { id: podcastId },
+    }),
+    // Only enable when we need to look up a version
+    enabled: selectedVersion !== undefined,
+    refetchOnMount: 'always',
+  });
+
+  // Resolve version number to scriptId
+  const resolvedScriptId = useMemo(() => {
+    if (selectedVersion === undefined) return undefined;
+
+    // If selected version matches active script, use that
+    if (activeScript && activeScript.version === selectedVersion) {
+      return activeScript.id;
+    }
+
+    // Look up in versions list
+    const versionEntry = versions?.find((v) => v.version === selectedVersion);
+    return versionEntry?.id;
+  }, [selectedVersion, activeScript, versions]);
+
   // Determine if we need to fetch a historical script
   const shouldFetchHistorical =
-    selectedScriptId && activeScript && selectedScriptId !== activeScript.id;
+    resolvedScriptId && activeScript && resolvedScriptId !== activeScript.id;
 
   // Fetch the selected historical script if not the active one
   const {
@@ -46,33 +70,39 @@ export function useVersionViewer({
     error: scriptError,
   } = useQuery({
     ...apiClient.podcasts.getScriptVersion.queryOptions({
-      input: { id: podcastId, scriptId: selectedScriptId! },
+      input: { id: podcastId, scriptId: resolvedScriptId! },
     }),
     enabled: !!shouldFetchHistorical,
   });
 
-  // Clear selection if script fetch fails
+  // Clear selection if script fetch fails or version not found
   useEffect(() => {
-    if (scriptError && selectedScriptId) {
-      toast.error('Script version not found');
-      navigate({
-        to: '/podcasts/$podcastId',
-        params: { podcastId },
-        search: { scriptId: undefined },
-        replace: true,
-      });
+    if (selectedVersion !== undefined) {
+      // Version not found in list (and list is loaded)
+      const versionNotFound =
+        versions && !versions.find((v) => v.version === selectedVersion);
+
+      if (scriptError || versionNotFound) {
+        toast.error('Script version not found');
+        navigate({
+          to: '/podcasts/$podcastId',
+          params: { podcastId },
+          search: { version: undefined },
+          replace: true,
+        });
+      }
     }
-  }, [scriptError, selectedScriptId, navigate, podcastId]);
+  }, [scriptError, selectedVersion, versions, navigate, podcastId]);
 
   const viewedScript = useMemo(() => {
-    if (!selectedScriptId || !activeScript) {
+    if (selectedVersion === undefined || !activeScript) {
       return activeScript;
     }
-    if (selectedScriptId === activeScript.id) {
+    if (activeScript.version === selectedVersion) {
       return activeScript;
     }
     return historicalScript ?? null;
-  }, [selectedScriptId, activeScript, historicalScript]);
+  }, [selectedVersion, activeScript, historicalScript]);
 
   const isViewingHistory = !!(
     viewedScript &&
@@ -83,11 +113,11 @@ export function useVersionViewer({
   const isEditable = !isViewingHistory;
 
   const selectVersion = useCallback(
-    (scriptId: string | null) => {
+    (version: number | null) => {
       navigate({
         to: '/podcasts/$podcastId',
         params: { podcastId },
-        search: { scriptId: scriptId ?? undefined },
+        search: { version: version ?? undefined },
         replace: true,
       });
     },

@@ -132,10 +132,7 @@ export const createMockTTS = (
 
     previewVoice: ({
       voiceId,
-    }): Effect.Effect<
-      PreviewVoiceResult,
-      TTSError | TTSQuotaExceededError
-    > =>
+    }): Effect.Effect<PreviewVoiceResult, TTSError | TTSQuotaExceededError> =>
       Effect.gen(function* () {
         if (options.delay) {
           yield* Effect.sleep(options.delay);

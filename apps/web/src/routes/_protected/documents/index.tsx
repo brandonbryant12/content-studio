@@ -6,15 +6,14 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { DocumentItem } from './-components/document-item';
 import UploadDocumentDialog from './-components/upload-document';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 import { queryClient } from '@/clients/queryClient';
+import { documentCollection, useLiveQuery } from '@/db';
 
 export const Route = createFileRoute('/_protected/documents/')({
   loader: () =>
@@ -57,22 +56,28 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
 function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: documents, isPending } = useQuery(
-    apiClient.documents.list.queryOptions({ input: {} }),
+  // Use TanStack DB live query for reactive updates
+  const { data: documents, isLoading: isPending } = useLiveQuery((q) =>
+    q.from({ doc: documentCollection }),
   );
 
-  const deleteMutation = useMutation(
-    apiClient.documents.delete.mutationOptions({
-      onSuccess: async () => {
-        await invalidateQueries('documents', 'podcasts');
-        toast.success('Document deleted');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete document');
-      },
-    }),
-  );
+  // Handle document deletion with optimistic update
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      // Optimistic delete - removes from collection immediately
+      documentCollection.delete(id);
+      toast.success('Document deleted');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete document',
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filteredDocuments = documents?.filter((doc) =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -124,11 +129,8 @@ function DocumentsPage() {
             <DocumentItem
               key={doc.id}
               document={doc}
-              onDelete={() => deleteMutation.mutate({ id: doc.id })}
-              isDeleting={
-                deleteMutation.isPending &&
-                deleteMutation.variables?.id === doc.id
-              }
+              onDelete={() => handleDelete(doc.id)}
+              isDeleting={deletingId === doc.id}
             />
           ))}
         </div>

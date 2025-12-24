@@ -61,6 +61,7 @@ const startServer = async () => {
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     geminiApiKey: env.GEMINI_API_KEY,
     storageConfig,
+    useMockAI: env.USE_MOCK_AI,
   });
 
   worker.start().catch((error) => {

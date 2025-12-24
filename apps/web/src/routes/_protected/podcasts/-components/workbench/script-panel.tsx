@@ -25,7 +25,6 @@ interface ScriptPanelProps {
     afterIndex: number,
     data: Omit<ScriptSegment, 'index'>,
   ) => void;
-  onSave: () => void;
   onDiscard: () => void;
   onSetAsCurrent?: () => void;
   isRestoring?: boolean;
@@ -42,7 +41,6 @@ export function ScriptPanel({
   onRemoveSegment,
   onReorderSegments,
   onAddSegment,
-  onSave,
   onDiscard,
   onSetAsCurrent,
   isRestoring,
@@ -102,21 +100,6 @@ export function ScriptPanel({
               disabled={isSaving}
             >
               Discard
-            </Button>
-            <Button
-              size="sm"
-              onClick={onSave}
-              disabled={isSaving}
-              className="script-panel-save-btn"
-            >
-              {isSaving ? (
-                <>
-                  <Spinner className="w-3 h-3 mr-1.5" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
             </Button>
           </div>
         )}

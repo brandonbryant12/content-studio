@@ -10,7 +10,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { documentUtils } from '@/db';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -48,7 +48,7 @@ export function StepDocuments({
         setUploadFile(null);
         setUploadTitle('');
         setActiveTab('existing');
-        await invalidateQueries('documents');
+        await documentUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to upload document');

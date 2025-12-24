@@ -4,6 +4,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
+import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../-constants/status';
 import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/lib/formatters';
@@ -12,8 +13,9 @@ type PodcastFull = RouterOutput['podcasts']['get'];
 
 interface WorkbenchLayoutProps {
   podcast: PodcastFull;
-  leftPanel: React.ReactNode;
-  rightPanel: React.ReactNode;
+  leftPanel: ReactNode;
+  rightPanel: ReactNode;
+  actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
 }
@@ -22,6 +24,7 @@ export function WorkbenchLayout({
   podcast,
   leftPanel,
   rightPanel,
+  actionBar,
   onDelete,
   isDeleting,
 }: WorkbenchLayoutProps) {
@@ -113,6 +116,9 @@ export function WorkbenchLayout({
         {/* Right panel - Config */}
         <div className="workbench-panel-right">{rightPanel}</div>
       </div>
+
+      {/* Global Action Bar */}
+      {actionBar}
     </div>
   );
 }

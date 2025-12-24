@@ -3,6 +3,8 @@ import documentContract from './documents';
 import podcastContract from './podcasts';
 import voicesContract from './voices';
 
+export * from './events';
+
 /**
  * Base errors available to all routes.
  * These map to Effect errors at the API boundary:

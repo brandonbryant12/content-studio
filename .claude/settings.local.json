@@ -64,7 +64,11 @@
       "Bash(docker rm:*)",
       "Bash(PGPASSWORD=test psql:*)",
       "Bash(DB_POSTGRES_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm --filter @repo/db exec drizzle-kit push:*)",
-      "Bash(pnpm:*)"
+      "Bash(pnpm:*)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:frontendatscale.com)",
+      "Bash(npm view:*)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []

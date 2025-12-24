@@ -127,7 +127,7 @@ export const PodcastGeneratorLive: Layer.Layer<
           fullGenerationPrompt,
         ).pipe(Effect.provide(repoContext));
 
-        // 7b. Store generation context for reproducibility
+        // 7a. Store generation context for reproducibility
         yield* Repo.updatePodcastGenerationContext(podcastId, {
           systemPromptTemplate: systemPrompt,
           userInstructions: options?.promptInstructions ?? '',
@@ -194,15 +194,21 @@ export const PodcastGeneratorLive: Layer.Layer<
           voiceConfigs,
         });
 
-        // 7. Upload to storage
-        const audioKey = `podcasts/${podcastId}/audio.wav`;
+        // 7. Upload to storage with versioned filename
+        const audioKey = `podcasts/${podcastId}/audio-v${script.version}.wav`;
         yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
         const audioUrl = yield* storage.getUrl(audioKey);
 
         // 8. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
         const duration = Math.round(ttsResult.audioContent.length / 48000);
 
-        // 9. Update podcast with audio details and final status
+        // 9. Update script with audio details
+        yield* Repo.updateScriptAudio(script.id, {
+          audioUrl,
+          duration,
+        }).pipe(Effect.provide(repoContext));
+
+        // 10. Update podcast status to ready (also cache audio URL for quick access)
         yield* Repo.updatePodcastAudio(podcastId, {
           audioUrl,
           duration,

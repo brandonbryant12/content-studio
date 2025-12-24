@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -42,9 +41,7 @@ export function useOptimisticScriptGeneration(podcastId: string) {
         }
         toast.error('Failed to start script generation');
       },
-      onSettled: () => {
-        invalidateQueries('podcasts');
-      },
+      // No onSettled needed - SSE will trigger refetch when job completes
     }),
   );
 }
@@ -80,9 +77,7 @@ export function useOptimisticAudioGeneration(podcastId: string) {
         }
         toast.error('Failed to start audio generation');
       },
-      onSettled: () => {
-        invalidateQueries('podcasts');
-      },
+      // No onSettled needed - SSE will trigger refetch when job completes
     }),
   );
 }
@@ -119,9 +114,7 @@ export function useOptimisticFullGeneration(podcastId: string) {
         }
         toast.error('Failed to start generation');
       },
-      onSettled: () => {
-        invalidateQueries('podcasts');
-      },
+      // No onSettled needed - SSE will trigger refetch when job completes
     }),
   );
 }

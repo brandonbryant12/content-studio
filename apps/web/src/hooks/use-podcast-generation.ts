@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { invalidateQueries } from '@/clients/query-helpers';
+import { podcastUtils } from '@/db';
 
 interface PodcastConfig {
   format: 'conversation' | 'voice_over';
@@ -56,7 +56,7 @@ export function usePodcastGeneration({
   const generateMutation = useMutation(
     apiClient.podcasts.generate.mutationOptions({
       onSuccess: () => {
-        invalidateQueries('podcasts');
+        podcastUtils.refetch();
         toast.success('Generation started!');
       },
       onError: (error) => {
@@ -69,7 +69,7 @@ export function usePodcastGeneration({
   const generateScriptMutation = useMutation(
     apiClient.podcasts.generateScript.mutationOptions({
       onSuccess: () => {
-        invalidateQueries('podcasts');
+        podcastUtils.refetch();
         toast.success('Script generation started!');
       },
       onError: (error) => {
@@ -82,7 +82,7 @@ export function usePodcastGeneration({
   const generateAudioMutation = useMutation(
     apiClient.podcasts.generateAudio.mutationOptions({
       onSuccess: () => {
-        invalidateQueries('podcasts');
+        podcastUtils.refetch();
         toast.success('Audio generation started!');
       },
       onError: (error) => {
@@ -104,7 +104,7 @@ export function usePodcastGeneration({
     navigate({
       to: '/podcasts/$podcastId',
       params: { podcastId },
-      search: { scriptId: undefined },
+      search: { version: undefined },
     });
   };
 
@@ -130,7 +130,7 @@ export function usePodcastGeneration({
         generateMutation.mutate({ id: newPodcast.id });
         toast.success('Podcast created! Starting generation...');
         navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts');
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
@@ -148,7 +148,7 @@ export function usePodcastGeneration({
         });
         toast.success('Podcast created! Generating script preview...');
         navigateToPodcast(newPodcast.id);
-        await invalidateQueries('podcasts');
+        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');

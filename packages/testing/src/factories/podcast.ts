@@ -49,6 +49,8 @@ export interface CreateTestPodcastScriptOptions {
   segments?: ScriptSegment[];
   summary?: string | null;
   generationPrompt?: string | null;
+  audioUrl?: string | null;
+  duration?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -120,6 +122,8 @@ export const createTestPodcastScript = (
     segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
     summary: options.summary ?? 'A test podcast about interesting topics.',
     generationPrompt: options.generationPrompt ?? null,
+    audioUrl: options.audioUrl ?? null,
+    duration: options.duration ?? null,
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };

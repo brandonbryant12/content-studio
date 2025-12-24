@@ -133,6 +133,8 @@ export const podcastScript = pgTable(
     segments: jsonb('segments').$type<ScriptSegment[]>().notNull(),
     summary: text('summary'),
     generationPrompt: text('generation_prompt'),
+    audioUrl: text('audio_url'),
+    duration: integer('duration'), // seconds
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -272,6 +274,8 @@ export const PodcastScriptOutputSchema = v.object({
   ),
   summary: v.nullable(v.string()),
   generationPrompt: v.nullable(v.string()),
+  audioUrl: v.nullable(v.string()),
+  duration: v.nullable(v.number()),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -349,6 +353,8 @@ export const serializePodcastScript = (
   segments: script.segments,
   summary: script.summary,
   generationPrompt: script.generationPrompt,
+  audioUrl: script.audioUrl,
+  duration: script.duration,
   createdAt: script.createdAt.toISOString(),
   updatedAt: script.updatedAt.toISOString(),
 });

@@ -16,8 +16,14 @@ import {
   type Job,
   type JobType,
 } from '@repo/queue';
+import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
 import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
+import type {
+  EntityChangeEvent,
+  JobCompletionEvent,
+} from '@repo/api/contracts';
 import { WORKER_DEFAULTS } from '../constants';
+import { sseManager } from '../sse';
 import {
   handleGeneratePodcast,
   handleGenerateScript,
@@ -47,12 +53,14 @@ export interface PodcastWorkerConfig {
   databaseUrl: string;
   /** Polling interval in milliseconds */
   pollInterval?: number;
-  /** Google API key for LLM and TTS - required */
+  /** Google API key for LLM and TTS - required unless useMockAI is true */
   geminiApiKey: string;
   /** Storage configuration */
   storageConfig: StorageConfig;
   /** Max consecutive errors before exiting */
   maxConsecutiveErrors?: number;
+  /** Use mock AI services instead of real ones (for testing) */
+  useMockAI?: boolean;
 }
 
 /**
@@ -71,9 +79,19 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const dbLayer = DbLive(db);
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
-  const ttsLayer = GoogleTTSLive({ apiKey: config.geminiApiKey });
   const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
-  const llmLayer = GoogleLive({ apiKey: config.geminiApiKey });
+
+  // Use mock AI layers for testing, real Google layers for production
+  const ttsLayer = config.useMockAI
+    ? MockTTSLive
+    : GoogleTTSLive({ apiKey: config.geminiApiKey });
+  const llmLayer = config.useMockAI
+    ? MockLLMLive
+    : GoogleLive({ apiKey: config.geminiApiKey });
+
+  if (config.useMockAI) {
+    console.log('[Worker] Using mock AI layers for testing');
+  }
   // Runtime for queue polling (doesn't need user context or documents)
   // Include pretty logger so Effect.logInfo etc. output to console
   const loggerLayer = Logger.pretty;
@@ -213,6 +231,39 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         yield* Effect.logInfo(
           `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
         );
+
+        // Emit SSE events for job completion
+        const { userId, podcastId } = job.payload as WorkerPayload;
+
+        // Emit job completion event
+        const jobCompletionEvent: JobCompletionEvent = {
+          type: 'job_completion',
+          jobId: job.id,
+          jobType: job.type as
+            | 'generate-podcast'
+            | 'generate-script'
+            | 'generate-audio',
+          status: job.status === 'completed' ? 'completed' : 'failed',
+          podcastId,
+          error: job.error ?? undefined,
+        };
+        sseManager.emit(userId, jobCompletionEvent);
+
+        // Emit entity change event for the podcast
+        const entityChangeEvent: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: podcastId,
+          userId,
+          timestamp: new Date().toISOString(),
+        };
+        sseManager.emit(userId, entityChangeEvent);
+
+        yield* Effect.logInfo(
+          `Emitted SSE events for job ${job.id} to user ${userId}`,
+        );
+
         return job;
       }
     }

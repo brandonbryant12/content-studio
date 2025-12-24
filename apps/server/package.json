@@ -27,6 +27,7 @@
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
+    "@repo/testing": "workspace:*",
     "effect": "^3.16.0",
     "hono": "catalog:",
     "valibot": "catalog:"

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-router';
 import { authClient } from '@/clients/authClient';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { useSSESubscription } from '@/db';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,
@@ -77,6 +78,9 @@ function Sidebar() {
 
 function Layout() {
   const { data: session, isPending } = authClient.useSession();
+
+  // Subscribe to SSE for real-time updates (only when authenticated)
+  useSSESubscription();
 
   if (isPending) {
     return (
