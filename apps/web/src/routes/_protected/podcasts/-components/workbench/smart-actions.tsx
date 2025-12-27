@@ -13,13 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { PodcastStatus } from '../../-constants/status';
+import type { VersionStatus } from '../../-constants/status';
 import { GenerationStatus } from './generation-status';
 
 type PendingAction = 'script' | 'audio' | 'all' | null;
 
 interface SmartActionsProps {
-  status: PodcastStatus;
+  status: VersionStatus | undefined;
   hasScript: boolean;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
@@ -112,7 +112,7 @@ export function SmartActions({
         </div>
       );
 
-    case 'ready':
+    case 'audio_ready':
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

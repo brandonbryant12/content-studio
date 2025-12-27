@@ -7,4 +7,5 @@ export default defineWorkspace([
   'packages/queue/vitest.config.ts',
   'packages/auth-policy/vitest.config.ts',
   'packages/testing/vitest.config.ts',
+  'packages/media/vitest.config.ts',
 ]);

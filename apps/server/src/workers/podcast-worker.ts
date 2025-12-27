@@ -5,7 +5,11 @@ import { CurrentUserLive, Role } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { createDb } from '@repo/db/client';
 import { DbLive } from '@repo/effect/db';
-import { DocumentsLive, PodcastsLive, PodcastGeneratorLive } from '@repo/media';
+import {
+  DocumentsLive,
+  PodcastRepoLive,
+  ScriptVersionRepoLive,
+} from '@repo/media';
 import {
   Queue,
   QueueLive,
@@ -47,6 +51,18 @@ const isGenerateScriptJob = (
 const isGenerateAudioJob = (
   job: Job<WorkerPayload>,
 ): job is Job<GenerateAudioPayload> => job.type === 'generate-audio';
+
+/**
+ * Extract podcast ID from any job payload type.
+ */
+const getPodcastIdFromPayload = (payload: WorkerPayload): string | undefined => {
+  if ('podcastId' in payload) {
+    return payload.podcastId;
+  }
+  // GenerateAudioPayload has versionId, not podcastId
+  // For SSE events, we may not have the podcastId directly
+  return undefined;
+};
 
 export interface PodcastWorkerConfig {
   /** Database URL */
@@ -92,6 +108,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   if (config.useMockAI) {
     console.log('[Worker] Using mock AI layers for testing');
   }
+
   // Runtime for queue polling (doesn't need user context or documents)
   // Include pretty logger so Effect.logInfo etc. output to console
   const loggerLayer = Logger.pretty;
@@ -123,27 +140,13 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
     );
 
-    // PodcastsLive requires Db, CurrentUser (CRUD only)
-    const podcastsLayer = PodcastsLive.pipe(
-      Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
+    // Repos only need Db
+    const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(dbLayer));
+    const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(
+      Layer.provide(dbLayer),
     );
 
-    // PodcastGeneratorLive uses Layer.effect - requires all deps at layer construction
-    // This ensures compile-time verification that all dependencies are provided
-    const generatorLayer = PodcastGeneratorLive.pipe(
-      Layer.provide(
-        Layer.mergeAll(
-          dbLayer,
-          userLayer,
-          documentsLayerWithUser,
-          llmLayer,
-          ttsLayer,
-          storageLayer,
-        ),
-      ),
-    );
-
-    // Combine all layers needed for the handler
+    // Combine all layers needed for the handlers
     const allLayers = Layer.mergeAll(
       dbLayer,
       userLayer,
@@ -152,8 +155,10 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
       llmLayer,
       documentsLayerWithUser,
       queueLayer,
-      podcastsLayer,
-      generatorLayer,
+      policyLayer,
+      podcastRepoLayer,
+      scriptVersionRepoLayer,
+      loggerLayer,
     );
 
     return ManagedRuntime.make(allLayers);
@@ -164,8 +169,12 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
    */
   const processJob = (job: Job<WorkerPayload>) =>
     Effect.gen(function* () {
+      const jobDescription =
+        'podcastId' in job.payload
+          ? `podcast ${job.payload.podcastId}`
+          : `version ${job.payload.versionId}`;
       yield* Effect.logInfo(
-        `Processing ${job.type} job ${job.id} for podcast ${job.payload.podcastId}`,
+        `Processing ${job.type} job ${job.id} for ${jobDescription}`,
       );
 
       // Create a dedicated runtime for this job with user context
@@ -182,11 +191,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         if (isGenerateAudioJob(job)) {
           return jobRuntime.runPromise(handleGenerateAudio(job));
         }
-        // Exhaustive check - this should never be reached
-        const _exhaustiveCheck: never = job;
-        throw new Error(
-          `Unknown job type: ${(_exhaustiveCheck as Job<WorkerPayload>).type}`,
-        );
+        throw new Error(`Unknown job type: ${job.type}`);
       };
 
       // Run the handler with the job-specific runtime
@@ -233,7 +238,9 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         );
 
         // Emit SSE events for job completion
-        const { userId, podcastId } = job.payload as WorkerPayload;
+        const payload = job.payload as WorkerPayload;
+        const { userId } = payload;
+        const podcastId = getPodcastIdFromPayload(payload);
 
         // Emit job completion event
         const jobCompletionEvent: JobCompletionEvent = {
@@ -244,21 +251,23 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
             | 'generate-script'
             | 'generate-audio',
           status: job.status === 'completed' ? 'completed' : 'failed',
-          podcastId,
+          podcastId: podcastId ?? '', // May be empty for audio-only jobs
           error: job.error ?? undefined,
         };
         sseManager.emit(userId, jobCompletionEvent);
 
-        // Emit entity change event for the podcast
-        const entityChangeEvent: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'podcast',
-          changeType: 'update',
-          entityId: podcastId,
-          userId,
-          timestamp: new Date().toISOString(),
-        };
-        sseManager.emit(userId, entityChangeEvent);
+        // Emit entity change event for the podcast (if we have podcast ID)
+        if (podcastId) {
+          const entityChangeEvent: EntityChangeEvent = {
+            type: 'entity_change',
+            entityType: 'podcast',
+            changeType: 'update',
+            entityId: podcastId,
+            userId,
+            timestamp: new Date().toISOString(),
+          };
+          sseManager.emit(userId, entityChangeEvent);
+        }
 
         yield* Effect.logInfo(
           `Emitted SSE events for job ${job.id} to user ${userId}`,

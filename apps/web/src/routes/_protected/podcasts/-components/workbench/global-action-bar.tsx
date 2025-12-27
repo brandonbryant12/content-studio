@@ -14,13 +14,13 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { PodcastStatus } from '../../-constants/status';
+import type { VersionStatus } from '../../-constants/status';
 
 type PendingAction = 'script' | 'audio' | 'all' | null;
 
 interface GlobalActionBarProps {
   // Status
-  status: PodcastStatus;
+  status: VersionStatus | undefined;
   hasScript: boolean;
   isGenerating: boolean;
   pendingAction: PendingAction;
@@ -91,7 +91,7 @@ export function GlobalActionBar({
           <div className="global-action-bar-status">
             <Spinner className="w-4 h-4 text-warning" />
             <span className="global-action-bar-status-text">
-              {status === 'generating_script'
+              {status === 'draft'
                 ? 'Generating script...'
                 : status === 'generating_audio'
                   ? 'Generating audio...'
@@ -169,7 +169,7 @@ export function GlobalActionBar({
         <div className="global-action-bar-status ready">
           <CheckIcon className="w-4 h-4" />
           <span className="global-action-bar-status-text">
-            {status === 'ready'
+            {status === 'audio_ready'
               ? 'Ready to publish'
               : status === 'script_ready'
                 ? 'Script ready'
@@ -251,7 +251,7 @@ export function GlobalActionBar({
           </>
         );
 
-      case 'ready':
+      case 'audio_ready':
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

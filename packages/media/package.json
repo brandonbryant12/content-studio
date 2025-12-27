@@ -43,6 +43,7 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@repo/testing": "workspace:*",
     "@types/node": "catalog:",
     "@types/pdf-parse": "^1.1.5",
     "eslint": "catalog:",

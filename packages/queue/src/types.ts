@@ -41,7 +41,7 @@ export interface GenerateScriptResult {
 }
 
 export interface GenerateAudioPayload {
-  readonly podcastId: string;
+  readonly versionId: string;
   readonly userId: string;
 }
 

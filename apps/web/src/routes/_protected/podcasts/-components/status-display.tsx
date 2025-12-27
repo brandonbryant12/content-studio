@@ -1,18 +1,13 @@
 import { Spinner } from '@repo/ui/components/spinner';
-import type { PodcastStatus } from '../-constants/status';
+import type { VersionStatus } from '../-constants/status';
 import { getStatusConfig, isGeneratingStatus } from '../-constants/status';
 
 // Panel styling for StatusDisplay (different from Badge variants)
 const statusPanelStyles: Record<
-  PodcastStatus,
+  VersionStatus,
   { color: string; bgColor: string; borderColor: string }
 > = {
   draft: {
-    color: 'text-gray-700 dark:text-gray-300',
-    bgColor: 'bg-gray-50 dark:bg-gray-900',
-    borderColor: 'border-gray-200 dark:border-gray-800',
-  },
-  generating_script: {
     color: 'text-blue-700 dark:text-blue-300',
     bgColor: 'bg-blue-50 dark:bg-blue-950/50',
     borderColor: 'border-blue-200 dark:border-blue-800',
@@ -27,7 +22,7 @@ const statusPanelStyles: Record<
     bgColor: 'bg-violet-50 dark:bg-violet-950/50',
     borderColor: 'border-violet-200 dark:border-violet-800',
   },
-  ready: {
+  audio_ready: {
     color: 'text-emerald-700 dark:text-emerald-300',
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/50',
     borderColor: 'border-emerald-200 dark:border-emerald-800',
@@ -39,17 +34,23 @@ const statusPanelStyles: Record<
   },
 };
 
+const defaultPanelStyle = {
+  color: 'text-gray-700 dark:text-gray-300',
+  bgColor: 'bg-gray-50 dark:bg-gray-900',
+  borderColor: 'border-gray-200 dark:border-gray-800',
+};
+
 export function StatusDisplay({
   status,
   errorMessage,
 }: {
-  status: PodcastStatus;
+  status: VersionStatus | undefined;
   errorMessage?: string | null;
 }) {
-  const panelStyle = statusPanelStyles[status];
+  const panelStyle = status ? statusPanelStyles[status] : defaultPanelStyle;
   const statusConfig = getStatusConfig(status);
   const isGenerating = isGeneratingStatus(status);
-  const isReady = status === 'ready';
+  const isReady = status === 'audio_ready';
   const isFailed = status === 'failed';
 
   return (
@@ -98,7 +99,7 @@ export function StatusDisplay({
         )}
         <div>
           <p className={`font-medium ${panelStyle.color}`}>
-            {statusConfig.message}
+            {statusConfig?.message ?? 'Unknown status'}
           </p>
           {errorMessage && (
             <p className="text-sm text-red-600 dark:text-red-400 mt-1">

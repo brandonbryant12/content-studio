@@ -272,8 +272,8 @@ test.describe('Podcast Generation', () => {
       timeout: 5000,
     });
 
-    // Click Save Changes button (use first() as there may be multiple in the UI)
-    await page.getByRole('button', { name: 'Save Changes' }).first().click();
+    // Click Save button (use first() as there may be multiple in the UI)
+    await page.getByRole('button', { name: 'Save' }).first().click();
 
     // Wait for save to complete (toast appears)
     await expect(page.getByText('Script saved')).toBeVisible({
@@ -291,7 +291,7 @@ test.describe('Podcast Generation', () => {
 
       // Wait for v2 or higher to appear (indicates new version was created)
       await expect(
-        page.locator('.timeline-version-number').filter({ hasText: /v[2-9]/ }),
+        page.locator('.timeline-version-number').filter({ hasText: /v[2-9]/ }).first(),
       ).toBeVisible({ timeout: 10000 });
 
       // Should see the new version marked as Current

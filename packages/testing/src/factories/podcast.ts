@@ -3,7 +3,7 @@ import type {
   Podcast,
   PodcastScript,
   PodcastFormat,
-  PodcastStatus,
+  VersionStatus,
   PublishStatus,
   ScriptSegment,
   GenerationContext,
@@ -17,16 +17,12 @@ export interface CreateTestPodcastOptions {
   title?: string;
   description?: string | null;
   format?: PodcastFormat;
-  status?: PodcastStatus;
   hostVoice?: string | null;
   hostVoiceName?: string | null;
   coHostVoice?: string | null;
   coHostVoiceName?: string | null;
   promptInstructions?: string | null;
   targetDurationMinutes?: number | null;
-  audioUrl?: string | null;
-  duration?: number | null;
-  errorMessage?: string | null;
   tags?: string[];
   sourceDocumentIds?: string[];
   generationContext?: GenerationContext | null;
@@ -39,18 +35,24 @@ export interface CreateTestPodcastOptions {
 }
 
 /**
- * Options for creating a test podcast script.
+ * Options for creating a test podcast script (version).
  */
 export interface CreateTestPodcastScriptOptions {
   id?: string;
   podcastId?: string;
   version?: number;
   isActive?: boolean;
-  segments?: ScriptSegment[];
+  status?: VersionStatus;
+  errorMessage?: string | null;
+  segments?: ScriptSegment[] | null;
   summary?: string | null;
   generationPrompt?: string | null;
   audioUrl?: string | null;
   duration?: number | null;
+  hostVoice?: string | null;
+  coHostVoice?: string | null;
+  sourceDocumentIds?: string[];
+  promptInstructions?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -70,6 +72,7 @@ export const DEFAULT_TEST_SEGMENTS: ScriptSegment[] = [
 
 /**
  * Create a test podcast with default values.
+ * Note: Status is now tracked at the version (PodcastScript) level.
  */
 export const createTestPodcast = (
   options: CreateTestPodcastOptions = {},
@@ -83,16 +86,12 @@ export const createTestPodcast = (
     description:
       options.description ?? `Description for test podcast ${podcastCounter}`,
     format: options.format ?? 'conversation',
-    status: options.status ?? 'draft',
     hostVoice: options.hostVoice ?? 'Charon',
     hostVoiceName: options.hostVoiceName ?? 'Charon',
     coHostVoice: options.coHostVoice ?? 'Kore',
     coHostVoiceName: options.coHostVoiceName ?? 'Kore',
     promptInstructions: options.promptInstructions ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
-    audioUrl: options.audioUrl ?? null,
-    duration: options.duration ?? null,
-    errorMessage: options.errorMessage ?? null,
     tags: options.tags ?? [],
     sourceDocumentIds: options.sourceDocumentIds ?? [],
     generationContext: options.generationContext ?? null,
@@ -106,7 +105,7 @@ export const createTestPodcast = (
 };
 
 /**
- * Create a test podcast script with default values.
+ * Create a test podcast script (version) with default values.
  */
 export const createTestPodcastScript = (
   options: CreateTestPodcastScriptOptions = {},
@@ -119,43 +118,82 @@ export const createTestPodcastScript = (
     podcastId: options.podcastId ?? randomUUID(),
     version: options.version ?? 1,
     isActive: options.isActive ?? true,
+    status: options.status ?? 'draft',
+    errorMessage: options.errorMessage ?? null,
     segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
     summary: options.summary ?? 'A test podcast about interesting topics.',
     generationPrompt: options.generationPrompt ?? null,
     audioUrl: options.audioUrl ?? null,
     duration: options.duration ?? null,
+    hostVoice: options.hostVoice ?? 'Charon',
+    coHostVoice: options.coHostVoice ?? 'Kore',
+    sourceDocumentIds: options.sourceDocumentIds ?? [],
+    promptInstructions: options.promptInstructions ?? null,
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
 };
 
 /**
- * Create a test podcast that is ready with audio.
+ * Create a test podcast script with audio ready.
  */
-export const createReadyPodcast = (
-  options: Omit<
-    CreateTestPodcastOptions,
-    'status' | 'audioUrl' | 'duration'
-  > = {},
-): Podcast => {
-  return createTestPodcast({
+export const createAudioReadyScript = (
+  options: Omit<CreateTestPodcastScriptOptions, 'status' | 'audioUrl' | 'duration'> = {},
+): PodcastScript => {
+  return createTestPodcastScript({
     ...options,
-    status: 'ready',
-    audioUrl: `https://storage.example.com/podcasts/${options.id ?? randomUUID()}/audio.wav`,
+    status: 'audio_ready',
+    audioUrl: `https://storage.example.com/podcasts/${options.podcastId ?? randomUUID()}/audio.wav`,
     duration: 300, // 5 minutes
   });
 };
 
 /**
- * Create a test podcast with script ready (no audio yet).
+ * Create a test podcast script with script ready (no audio yet).
  */
-export const createScriptReadyPodcast = (
-  options: Omit<CreateTestPodcastOptions, 'status'> = {},
-): Podcast => {
-  return createTestPodcast({
+export const createScriptReadyScript = (
+  options: Omit<CreateTestPodcastScriptOptions, 'status'> = {},
+): PodcastScript => {
+  return createTestPodcastScript({
     ...options,
     status: 'script_ready',
   });
+};
+
+/**
+ * Create a test podcast with an active audio-ready version.
+ * Returns both the podcast and its version.
+ */
+export const createReadyPodcastWithVersion = (
+  podcastOptions: CreateTestPodcastOptions = {},
+): { podcast: Podcast; version: PodcastScript } => {
+  const podcast = createTestPodcast(podcastOptions);
+  const version = createAudioReadyScript({
+    podcastId: podcast.id,
+    hostVoice: podcast.hostVoice,
+    coHostVoice: podcast.coHostVoice,
+    sourceDocumentIds: podcast.sourceDocumentIds,
+    promptInstructions: podcast.promptInstructions,
+  });
+  return { podcast, version };
+};
+
+/**
+ * Create a test podcast with an active script-ready version.
+ * Returns both the podcast and its version.
+ */
+export const createScriptReadyPodcastWithVersion = (
+  podcastOptions: CreateTestPodcastOptions = {},
+): { podcast: Podcast; version: PodcastScript } => {
+  const podcast = createTestPodcast(podcastOptions);
+  const version = createScriptReadyScript({
+    podcastId: podcast.id,
+    hostVoice: podcast.hostVoice,
+    coHostVoice: podcast.coHostVoice,
+    sourceDocumentIds: podcast.sourceDocumentIds,
+    promptInstructions: podcast.promptInstructions,
+  });
+  return { podcast, version };
 };
 
 /**

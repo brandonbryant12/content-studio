@@ -71,28 +71,27 @@ const generationContextSchema = v.object({
   generatedAt: v.string(),
 });
 
+// Version status - status is now on the version (script), not the podcast
+const versionStatusSchema = v.picklist([
+  'draft',
+  'script_ready',
+  'generating_audio',
+  'audio_ready',
+  'failed',
+]);
+
+// Podcast output - status fields moved to version level
 const podcastOutputSchema = v.object({
   id: v.string(),
   title: v.string(),
   description: v.nullable(v.string()),
   format: v.picklist(['voice_over', 'conversation']),
-  status: v.picklist([
-    'draft',
-    'generating_script',
-    'script_ready',
-    'generating_audio',
-    'ready',
-    'failed',
-  ]),
   hostVoice: v.nullable(v.string()),
   hostVoiceName: v.nullable(v.string()),
   coHostVoice: v.nullable(v.string()),
   coHostVoiceName: v.nullable(v.string()),
   promptInstructions: v.nullable(v.string()),
   targetDurationMinutes: v.nullable(v.number()),
-  audioUrl: v.nullable(v.string()),
-  duration: v.nullable(v.number()),
-  errorMessage: v.nullable(v.string()),
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
   generationContext: v.nullable(generationContextSchema),
@@ -104,30 +103,52 @@ const podcastOutputSchema = v.object({
   updatedAt: v.string(),
 });
 
+// Active version summary - lightweight info for list views
+const activeVersionSummarySchema = v.object({
+  id: v.string(),
+  version: v.number(),
+  status: versionStatusSchema,
+  duration: v.nullable(v.number()),
+});
+
+// Podcast with active version summary for list views
+const podcastListItemSchema = v.object({
+  ...podcastOutputSchema.entries,
+  activeVersion: v.nullable(activeVersionSummarySchema),
+});
+
 const scriptSegmentSchema = v.object({
   speaker: v.string(),
   line: v.string(),
   index: v.number(),
 });
 
+// Podcast script (version) - now includes status and voice/prompt snapshots
 const podcastScriptSchema = v.object({
   id: v.string(),
   podcastId: v.string(),
   version: v.number(),
   isActive: v.boolean(),
-  segments: v.array(scriptSegmentSchema),
+  status: versionStatusSchema,
+  errorMessage: v.nullable(v.string()),
+  segments: v.nullable(v.array(scriptSegmentSchema)),
   summary: v.nullable(v.string()),
   generationPrompt: v.nullable(v.string()),
   audioUrl: v.nullable(v.string()),
   duration: v.nullable(v.number()),
+  hostVoice: v.nullable(v.string()),
+  coHostVoice: v.nullable(v.string()),
+  sourceDocumentIds: v.array(v.string()),
+  promptInstructions: v.nullable(v.string()),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
 
+// Full podcast with documents and active version
 const podcastFullSchema = v.object({
   ...podcastOutputSchema.entries,
   documents: v.array(DocumentOutputSchema),
-  script: v.nullable(podcastScriptSchema),
+  activeVersion: v.nullable(podcastScriptSchema),
 });
 
 const jobStatusSchema = v.picklist([
@@ -193,19 +214,9 @@ const podcastContract = oc
             v.pipe(coerceNumber, v.minValue(1), v.maxValue(100)),
           ),
           offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
-          status: v.optional(
-            v.picklist([
-              'draft',
-              'generating_script',
-              'script_ready',
-              'generating_audio',
-              'ready',
-              'failed',
-            ]),
-          ),
         }),
       )
-      .output(v.array(podcastOutputSchema)),
+      .output(v.array(podcastListItemSchema)),
 
     // Get a single podcast by ID
     get: oc
@@ -213,7 +224,7 @@ const podcastContract = oc
         method: 'GET',
         path: '/{id}',
         summary: 'Get podcast',
-        description: 'Retrieve a podcast with its documents and script',
+        description: 'Retrieve a podcast with its documents and active version',
       })
       .errors(podcastErrors)
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
@@ -260,19 +271,19 @@ const podcastContract = oc
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
       .output(v.object({})),
 
-    // Get podcast script
+    // Get podcast script (active version)
     getScript: oc
       .route({
         method: 'GET',
         path: '/{id}/script',
         summary: 'Get script',
-        description: 'Get the active script for a podcast',
+        description: 'Get the active script version for a podcast',
       })
       .errors(podcastErrors)
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
       .output(podcastScriptSchema),
 
-    // Update podcast script
+    // Update podcast script (creates new version)
     updateScript: oc
       .route({
         method: 'PUT',
@@ -342,7 +353,7 @@ const podcastContract = oc
         path: '/{id}/generate-audio',
         summary: 'Generate audio from script',
         description:
-          'Generate audio from an existing approved script. Podcast must be in script_ready status.',
+          'Generate audio from an existing approved script. Version must be in script_ready status.',
       })
       .errors({ ...podcastErrors, ...jobErrors })
       .input(
@@ -386,6 +397,7 @@ const podcastContract = oc
             id: v.string(),
             version: v.number(),
             isActive: v.boolean(),
+            status: versionStatusSchema,
             segmentCount: v.number(),
             hasAudio: v.boolean(),
             createdAt: v.string(),
@@ -417,7 +429,7 @@ const podcastContract = oc
         path: '/{id}/scripts/{scriptId}/restore',
         summary: 'Restore script version',
         description:
-          'Restore a previous script version (creates a new version)',
+          'Restore a previous script version (makes it active)',
       })
       .errors(podcastErrors)
       .input(

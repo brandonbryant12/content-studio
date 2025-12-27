@@ -44,3 +44,6 @@ export * from './factories';
 
 // Re-export all setup utilities
 export * from './setup';
+
+// Re-export testcontainers utilities
+export * from './testcontainers';

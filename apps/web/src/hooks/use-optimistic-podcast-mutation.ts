@@ -25,11 +25,17 @@ export function useOptimisticScriptGeneration(podcastId: string) {
         const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
 
         if (previousPodcast) {
+          // Update activeVersion status to draft (generating script)
           qc.setQueryData<PodcastFull>(podcastQueryKey, {
             ...previousPodcast,
-            status: 'generating_script',
-            script: null,
-            audioUrl: null,
+            activeVersion: previousPodcast.activeVersion
+              ? {
+                  ...previousPodcast.activeVersion,
+                  status: 'draft',
+                  segments: null,
+                  audioUrl: null,
+                }
+              : null,
           });
         }
         return { previousPodcast } as OptimisticContext;
@@ -62,10 +68,16 @@ export function useOptimisticAudioGeneration(podcastId: string) {
         const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
 
         if (previousPodcast) {
+          // Update activeVersion status to generating_audio
           qc.setQueryData<PodcastFull>(podcastQueryKey, {
             ...previousPodcast,
-            status: 'generating_audio',
-            audioUrl: null,
+            activeVersion: previousPodcast.activeVersion
+              ? {
+                  ...previousPodcast.activeVersion,
+                  status: 'generating_audio',
+                  audioUrl: null,
+                }
+              : null,
           });
         }
         return { previousPodcast } as OptimisticContext;
@@ -98,11 +110,17 @@ export function useOptimisticFullGeneration(podcastId: string) {
         const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
 
         if (previousPodcast) {
+          // Update activeVersion status to draft (generating script first)
           qc.setQueryData<PodcastFull>(podcastQueryKey, {
             ...previousPodcast,
-            status: 'generating_script',
-            script: null,
-            audioUrl: null,
+            activeVersion: previousPodcast.activeVersion
+              ? {
+                  ...previousPodcast.activeVersion,
+                  status: 'draft',
+                  segments: null,
+                  audioUrl: null,
+                }
+              : null,
           });
         }
         return { previousPodcast } as OptimisticContext;

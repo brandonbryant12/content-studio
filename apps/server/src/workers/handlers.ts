@@ -1,4 +1,10 @@
-import { Podcasts, PodcastGenerator, type PodcastFull } from '@repo/media';
+import {
+  generateScript,
+  generateAudio,
+  ScriptVersionRepo,
+  type GenerateScriptResult as UseCaseScriptResult,
+  type GenerateAudioResult as UseCaseAudioResult,
+} from '@repo/media';
 import { JobProcessingError } from '@repo/queue';
 import { Effect } from 'effect';
 import type {
@@ -33,47 +39,55 @@ const formatError = (error: unknown): string => {
 
 /**
  * Handler for generate-podcast jobs.
- * Calls the PodcastGenerator service to generate script, synthesize audio, upload to storage, and update the record.
+ * Generates both script and audio in sequence (full podcast generation).
  *
- * Context requirements are inferred from the Effect - do NOT manually annotate the return type
- * as that can hide missing dependencies at runtime.
- *
- * Requires: PodcastGenerator (for generation), Podcasts (for setStatus on error)
+ * Requires: All dependencies for generateScript and generateAudio
  */
 export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
   Effect.gen(function* () {
-    const generator = yield* PodcastGenerator;
     const { podcastId, promptInstructions } = job.payload;
 
-    // Generate podcast (Script + Audio - all handled by the generator service)
-    const podcast: PodcastFull = yield* generator.generate(podcastId, {
+    // Phase 1: Generate script
+    const scriptResult: UseCaseScriptResult = yield* generateScript({
+      podcastId,
       promptInstructions,
     });
 
+    // Phase 2: Generate audio from the new script
+    const audioResult: UseCaseAudioResult = yield* generateAudio({
+      versionId: scriptResult.version.id,
+    });
+
     return {
-      scriptId: podcast.script?.id ?? '',
-      segmentCount: podcast.script?.segments.length ?? 0,
-      audioUrl: podcast.audioUrl ?? '',
-      duration: podcast.duration ?? 0,
+      scriptId: scriptResult.version.id,
+      segmentCount: scriptResult.segmentCount,
+      audioUrl: audioResult.audioUrl,
+      duration: audioResult.duration,
     } satisfies GeneratePodcastResult;
   }).pipe(
     Effect.catchAll((error) =>
       Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
+        const scriptVersionRepo = yield* ScriptVersionRepo;
         const { podcastId } = job.payload;
 
-        // Try to mark podcast as failed
-        yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll((statusError) =>
-            Effect.sync(() => {
-              console.error('[Worker] Failed to update podcast status:', {
-                podcastId,
-                originalError: formatError(error),
-                statusError: formatError(statusError),
-              });
-            }),
-          ),
-        );
+        // Try to find and mark the active version as failed
+        const activeVersion =
+          yield* scriptVersionRepo.findActiveByPodcastId(podcastId);
+        if (activeVersion) {
+          yield* scriptVersionRepo
+            .updateStatus(activeVersion.id, 'failed', formatError(error))
+            .pipe(
+              Effect.catchAll((statusError) =>
+                Effect.sync(() => {
+                  console.error('[Worker] Failed to update version status:', {
+                    podcastId,
+                    originalError: formatError(error),
+                    statusError: formatError(statusError),
+                  });
+                }),
+              ),
+            );
+        }
 
         const errorMessage = formatError(error);
         console.error('[Worker] Generation failed:', errorMessage, error);
@@ -98,42 +112,48 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
 
 /**
  * Handler for generate-script jobs (Phase 1).
- * Calls the PodcastGenerator service to generate script only.
+ * Generates script only - stops at script_ready status.
  *
- * Requires: PodcastGenerator (for generation), Podcasts (for setStatus on error)
+ * Requires: All dependencies for generateScript
  */
 export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
   Effect.gen(function* () {
-    const generator = yield* PodcastGenerator;
     const { podcastId, promptInstructions } = job.payload;
 
     // Generate script only
-    const podcast: PodcastFull = yield* generator.generateScript(podcastId, {
+    const result: UseCaseScriptResult = yield* generateScript({
+      podcastId,
       promptInstructions,
     });
 
     return {
-      scriptId: podcast.script?.id ?? '',
-      segmentCount: podcast.script?.segments.length ?? 0,
+      scriptId: result.version.id,
+      segmentCount: result.segmentCount,
     } satisfies GenerateScriptResult;
   }).pipe(
     Effect.catchAll((error) =>
       Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
+        const scriptVersionRepo = yield* ScriptVersionRepo;
         const { podcastId } = job.payload;
 
-        // Try to mark podcast as failed
-        yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll((statusError) =>
-            Effect.sync(() => {
-              console.error('[Worker] Failed to update podcast status:', {
-                podcastId,
-                originalError: formatError(error),
-                statusError: formatError(statusError),
-              });
-            }),
-          ),
-        );
+        // Try to find and mark the active version as failed
+        const activeVersion =
+          yield* scriptVersionRepo.findActiveByPodcastId(podcastId);
+        if (activeVersion) {
+          yield* scriptVersionRepo
+            .updateStatus(activeVersion.id, 'failed', formatError(error))
+            .pipe(
+              Effect.catchAll((statusError) =>
+                Effect.sync(() => {
+                  console.error('[Worker] Failed to update version status:', {
+                    podcastId,
+                    originalError: formatError(error),
+                    statusError: formatError(statusError),
+                  });
+                }),
+              ),
+            );
+        }
 
         const errorMessage = formatError(error);
         console.error(
@@ -162,40 +182,43 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
 
 /**
  * Handler for generate-audio jobs (Phase 2).
- * Calls the PodcastGenerator service to generate audio from existing script.
+ * Generates audio from existing script.
  *
- * Requires: PodcastGenerator (for generation), Podcasts (for setStatus on error)
+ * Requires: All dependencies for generateAudio
  */
 export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
   Effect.gen(function* () {
-    const generator = yield* PodcastGenerator;
-    const { podcastId } = job.payload;
+    const { versionId } = job.payload;
 
     // Generate audio from existing script
-    const podcast: PodcastFull = yield* generator.generateAudio(podcastId);
+    const result: UseCaseAudioResult = yield* generateAudio({
+      versionId,
+    });
 
     return {
-      audioUrl: podcast.audioUrl ?? '',
-      duration: podcast.duration ?? 0,
+      audioUrl: result.audioUrl,
+      duration: result.duration,
     } satisfies GenerateAudioResult;
   }).pipe(
     Effect.catchAll((error) =>
       Effect.gen(function* () {
-        const podcasts = yield* Podcasts;
-        const { podcastId } = job.payload;
+        const scriptVersionRepo = yield* ScriptVersionRepo;
+        const { versionId } = job.payload;
 
-        // Try to mark podcast as failed
-        yield* podcasts.setStatus(podcastId, 'failed', String(error)).pipe(
-          Effect.catchAll((statusError) =>
-            Effect.sync(() => {
-              console.error('[Worker] Failed to update podcast status:', {
-                podcastId,
-                originalError: formatError(error),
-                statusError: formatError(statusError),
-              });
-            }),
-          ),
-        );
+        // Mark version as failed
+        yield* scriptVersionRepo
+          .updateStatus(versionId, 'failed', formatError(error))
+          .pipe(
+            Effect.catchAll((statusError) =>
+              Effect.sync(() => {
+                console.error('[Worker] Failed to update version status:', {
+                  versionId,
+                  originalError: formatError(error),
+                  statusError: formatError(statusError),
+                });
+              }),
+            ),
+          );
 
         const errorMessage = formatError(error);
         console.error('[Worker] Audio generation failed:', errorMessage, error);
@@ -213,7 +236,7 @@ export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
       attributes: {
         'job.id': job.id,
         'job.type': job.type,
-        'podcast.id': job.payload.podcastId,
+        'version.id': job.payload.versionId,
       },
     }),
   );

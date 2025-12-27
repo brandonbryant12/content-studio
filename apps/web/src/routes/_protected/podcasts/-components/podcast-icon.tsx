@@ -1,13 +1,13 @@
-import type { PodcastStatus } from '../-constants/status';
+import type { VersionStatus } from '../-constants/status';
 
 export function PodcastIcon({
   format,
   status,
 }: {
   format: 'voice_over' | 'conversation';
-  status: PodcastStatus;
+  status: VersionStatus | undefined;
 }) {
-  const isReady = status === 'ready';
+  const isReady = status === 'audio_ready';
   const containerClass = isReady ? 'icon-box-primary' : 'icon-box-lg';
   const iconClass = isReady
     ? 'text-primary-foreground'

@@ -15,7 +15,9 @@ export {
   serializePodcast,
   serializePodcastScript,
   serializePodcastFull,
+  serializePodcastListItem,
   type PodcastOutput,
   type PodcastScriptOutput,
   type PodcastFullOutput,
+  type PodcastListItemOutput,
 } from '@repo/db/schema';

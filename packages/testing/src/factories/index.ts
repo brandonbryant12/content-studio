@@ -21,8 +21,10 @@ import { resetDocumentCounter as _resetDocumentCounter } from './document';
 export {
   createTestPodcast,
   createTestPodcastScript,
-  createReadyPodcast,
-  createScriptReadyPodcast,
+  createAudioReadyScript,
+  createScriptReadyScript,
+  createReadyPodcastWithVersion,
+  createScriptReadyPodcastWithVersion,
   resetPodcastCounters,
   DEFAULT_TEST_SEGMENTS,
   type CreateTestPodcastOptions,

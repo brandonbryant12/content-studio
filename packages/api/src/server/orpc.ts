@@ -6,11 +6,11 @@ import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { DbLive } from '@repo/effect/db';
 import {
   DocumentsLive,
-  PodcastsLive,
-  PodcastGeneratorLive,
+  PodcastRepoLive,
+  ScriptVersionRepoLive,
   type Documents,
-  type Podcasts,
-  type PodcastGenerator,
+  type PodcastRepo,
+  type ScriptVersionRepo,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
 import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
@@ -34,8 +34,8 @@ export type AuthenticatedServices =
   | PublicServices
   | CurrentUser
   | Documents
-  | Podcasts
-  | PodcastGenerator;
+  | PodcastRepo
+  | ScriptVersionRepo;
 
 /** All services provided by the API context (alias for AuthenticatedServices) */
 export type ApiServices = AuthenticatedServices;
@@ -116,21 +116,9 @@ const createAuthenticatedLayers = (
   const documentsLayer = DocumentsLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
   );
-  const podcastsLayer = PodcastsLive.pipe(
-    Layer.provide(Layer.mergeAll(dbLayer, userLayer)),
-  );
-  const generatorLayer = PodcastGeneratorLive.pipe(
-    Layer.provide(
-      Layer.mergeAll(
-        dbLayer,
-        userLayer,
-        documentsLayer,
-        llmLayer,
-        ttsLayer,
-        storageLayer,
-      ),
-    ),
-  );
+  // Podcast repos only need DB access
+  const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(dbLayer));
+  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(Layer.provide(dbLayer));
 
   return Layer.mergeAll(
     dbLayer,
@@ -138,8 +126,8 @@ const createAuthenticatedLayers = (
     policyLayer,
     documentsLayer,
     storageLayer,
-    podcastsLayer,
-    generatorLayer,
+    podcastRepoLayer,
+    scriptVersionRepoLayer,
     queueLayer,
     ttsLayer,
     llmLayer,

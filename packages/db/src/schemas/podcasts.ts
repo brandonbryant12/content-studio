@@ -24,14 +24,19 @@ export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
   'conversation',
 ]);
-export const podcastStatusEnum = pgEnum('podcast_status', [
-  'draft',
-  'generating_script',
-  'script_ready',
-  'generating_audio',
-  'ready',
-  'failed',
+
+/**
+ * Version-level status enum.
+ * Each script version tracks its own generation state.
+ */
+export const versionStatusEnum = pgEnum('version_status', [
+  'draft', // No script content yet
+  'script_ready', // Has script segments, needs audio
+  'generating_audio', // Audio generation in progress
+  'audio_ready', // Complete with script and audio
+  'failed', // Generation failed
 ]);
+
 export const publishStatusEnum = pgEnum('publish_status', [
   'draft',
   'ready',
@@ -67,16 +72,14 @@ export const podcast = pgTable(
     title: text('title').notNull(),
     description: text('description'),
     format: podcastFormatEnum('format').notNull(),
-    status: podcastStatusEnum('status').notNull().default('draft'),
+    // Note: status moved to version level (podcast_script.status)
     hostVoice: text('host_voice'),
     hostVoiceName: text('host_voice_name'),
     coHostVoice: text('co_host_voice'),
     coHostVoiceName: text('co_host_voice_name'),
     promptInstructions: text('prompt_instructions'),
     targetDurationMinutes: integer('target_duration_minutes').default(5),
-    audioUrl: text('audio_url'),
-    duration: integer('duration'),
-    errorMessage: text('error_message'),
+    // Note: audioUrl/duration moved to version level
     tags: jsonb('tags').$type<string[]>().default([]),
 
     // Source documents used to generate this podcast
@@ -110,7 +113,6 @@ export const podcast = pgTable(
   },
   (table) => [
     index('podcast_created_by_idx').on(table.createdBy),
-    index('podcast_status_idx').on(table.status),
     index('podcast_publish_status_idx').on(table.publishStatus),
   ],
 );
@@ -130,11 +132,27 @@ export const podcastScript = pgTable(
       .references(() => podcast.id, { onDelete: 'cascade' }),
     version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(true),
-    segments: jsonb('segments').$type<ScriptSegment[]>().notNull(),
+
+    // Version-level status
+    status: versionStatusEnum('status').notNull().default('draft'),
+    errorMessage: text('error_message'),
+
+    // Script content (nullable for draft state)
+    segments: jsonb('segments').$type<ScriptSegment[]>(),
     summary: text('summary'),
     generationPrompt: text('generation_prompt'),
+
+    // Audio (generated in Phase 2)
     audioUrl: text('audio_url'),
     duration: integer('duration'), // seconds
+
+    // Snapshot of podcast settings at version creation time
+    // Enables change detection for smart transitions
+    hostVoice: text('host_voice'),
+    coHostVoice: text('co_host_voice'),
+    sourceDocumentIds: uuid('source_document_ids').array().notNull().default([]),
+    promptInstructions: text('prompt_instructions'),
+
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -142,7 +160,10 @@ export const podcastScript = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index('podcast_script_podcast_id_idx').on(table.podcastId)],
+  (table) => [
+    index('podcast_script_podcast_id_idx').on(table.podcastId),
+    index('podcast_script_status_idx').on(table.status),
+  ],
 );
 
 export const CreatePodcastSchema = v.object({
@@ -195,14 +216,18 @@ export const PodcastScriptSchema = createSelectSchema(podcastScript);
 // =============================================================================
 
 export const PodcastFormatSchema = v.picklist(['voice_over', 'conversation']);
-export const PodcastStatusSchema = v.picklist([
+
+/**
+ * Version-level status schema.
+ */
+export const VersionStatusSchema = v.picklist([
   'draft',
-  'generating_script',
   'script_ready',
   'generating_audio',
-  'ready',
+  'audio_ready',
   'failed',
 ]);
+
 export const PublishStatusSchema = v.picklist([
   'draft',
   'ready',
@@ -239,16 +264,14 @@ export const PodcastOutputSchema = v.object({
   title: v.string(),
   description: v.nullable(v.string()),
   format: PodcastFormatSchema,
-  status: PodcastStatusSchema,
+  // Note: status moved to version level (activeVersion.status)
   hostVoice: v.nullable(v.string()),
   hostVoiceName: v.nullable(v.string()),
   coHostVoice: v.nullable(v.string()),
   coHostVoiceName: v.nullable(v.string()),
   promptInstructions: v.nullable(v.string()),
   targetDurationMinutes: v.nullable(v.number()),
-  audioUrl: v.nullable(v.string()),
-  duration: v.nullable(v.number()),
-  errorMessage: v.nullable(v.string()),
+  // Note: audioUrl/duration moved to version level
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
   generationContext: v.nullable(GenerationContextOutputSchema),
@@ -265,17 +288,34 @@ export const PodcastScriptOutputSchema = v.object({
   podcastId: v.string(),
   version: v.number(),
   isActive: v.boolean(),
-  segments: v.array(
-    v.object({
-      speaker: v.string(),
-      line: v.string(),
-      index: v.number(),
-    }),
+
+  // Version-level status
+  status: VersionStatusSchema,
+  errorMessage: v.nullable(v.string()),
+
+  // Script content (nullable for draft state)
+  segments: v.nullable(
+    v.array(
+      v.object({
+        speaker: v.string(),
+        line: v.string(),
+        index: v.number(),
+      }),
+    ),
   ),
   summary: v.nullable(v.string()),
   generationPrompt: v.nullable(v.string()),
+
+  // Audio
   audioUrl: v.nullable(v.string()),
   duration: v.nullable(v.number()),
+
+  // Snapshot of settings at version creation
+  hostVoice: v.nullable(v.string()),
+  coHostVoice: v.nullable(v.string()),
+  sourceDocumentIds: v.array(v.string()),
+  promptInstructions: v.nullable(v.string()),
+
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -283,7 +323,7 @@ export const PodcastScriptOutputSchema = v.object({
 export const PodcastFullOutputSchema = v.object({
   ...PodcastOutputSchema.entries,
   documents: v.array(DocumentOutputSchema),
-  script: v.nullable(PodcastScriptOutputSchema),
+  activeVersion: v.nullable(PodcastScriptOutputSchema),
 });
 
 // =============================================================================
@@ -293,7 +333,7 @@ export const PodcastFullOutputSchema = v.object({
 export type Podcast = typeof podcast.$inferSelect;
 export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
-export type PodcastStatus = Podcast['status'];
+export type VersionStatus = PodcastScript['status'];
 export type PublishStatus = Podcast['publishStatus'];
 export type GenerationContextOutput = v.InferOutput<
   typeof GenerationContextOutputSchema
@@ -319,16 +359,12 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
   title: podcast.title,
   description: podcast.description,
   format: podcast.format,
-  status: podcast.status,
   hostVoice: podcast.hostVoice,
   hostVoiceName: podcast.hostVoiceName,
   coHostVoice: podcast.coHostVoice,
   coHostVoiceName: podcast.coHostVoiceName,
   promptInstructions: podcast.promptInstructions,
   targetDurationMinutes: podcast.targetDurationMinutes,
-  audioUrl: podcast.audioUrl,
-  duration: podcast.duration,
-  errorMessage: podcast.errorMessage,
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
   generationContext: podcast.generationContext ?? null,
@@ -350,22 +386,62 @@ export const serializePodcastScript = (
   podcastId: script.podcastId,
   version: script.version,
   isActive: script.isActive,
+  status: script.status,
+  errorMessage: script.errorMessage,
   segments: script.segments,
   summary: script.summary,
   generationPrompt: script.generationPrompt,
   audioUrl: script.audioUrl,
   duration: script.duration,
+  hostVoice: script.hostVoice,
+  coHostVoice: script.coHostVoice,
+  sourceDocumentIds: script.sourceDocumentIds ?? [],
+  promptInstructions: script.promptInstructions,
   createdAt: script.createdAt.toISOString(),
   updatedAt: script.updatedAt.toISOString(),
 });
 
 /**
- * Serialize a full Podcast with documents and script.
+ * Serialize a full Podcast with documents and active version.
  */
 export const serializePodcastFull = (
-  podcast: Podcast & { documents: Document[]; script: PodcastScript | null },
+  podcast: Podcast & {
+    documents: Document[];
+    activeVersion: PodcastScript | null;
+  },
 ): PodcastFullOutput => ({
   ...serializePodcast(podcast),
   documents: podcast.documents.map(serializeDocument),
-  script: podcast.script ? serializePodcastScript(podcast.script) : null,
+  activeVersion: podcast.activeVersion
+    ? serializePodcastScript(podcast.activeVersion)
+    : null,
+});
+
+/**
+ * Active version summary for list views.
+ */
+export interface ActiveVersionSummary {
+  id: string;
+  version: number;
+  status: VersionStatus;
+  duration: number | null;
+}
+
+/**
+ * Podcast list item output type.
+ */
+export interface PodcastListItemOutput extends PodcastOutput {
+  activeVersion: ActiveVersionSummary | null;
+}
+
+/**
+ * Serialize a Podcast for list views (with active version summary).
+ */
+export const serializePodcastListItem = (
+  podcast: Podcast & {
+    activeVersion: ActiveVersionSummary | null;
+  },
+): PodcastListItemOutput => ({
+  ...serializePodcast(podcast),
+  activeVersion: podcast.activeVersion,
 });

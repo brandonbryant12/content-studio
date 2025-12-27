@@ -51,19 +51,12 @@ export const podcastCollection = createCollection(
 export const podcastUtils = {
   ...podcastCollection.utils,
   /**
-   * Refetch podcast data and invalidate all podcast queries.
+   * Refetch podcast data and refetch all podcast queries.
    * Use this after mutations that affect podcast data.
    */
   refetch: async () => {
-    await Promise.all([
-      podcastCollection.utils.refetch(),
-      // Invalidate all podcast detail queries
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey;
-          return Array.isArray(key) && key[0] === 'podcasts';
-        },
-      }),
-    ]);
+    // Force refetch all active queries to ensure UI updates
+    await queryClient.refetchQueries();
+    await podcastCollection.utils.refetch();
   },
 };

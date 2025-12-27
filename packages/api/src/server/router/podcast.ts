@@ -1,4 +1,14 @@
-import { Podcasts } from '@repo/media';
+import {
+  PodcastRepo,
+  ScriptVersionRepo,
+  listPodcasts,
+  getPodcast,
+  createPodcast,
+  updatePodcast,
+  deletePodcast,
+  editScript,
+  restoreVersion,
+} from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { Job } from '@repo/db/schema';
@@ -16,6 +26,7 @@ import {
   serializePodcast,
   serializePodcastScript,
   serializePodcastFull,
+  serializePodcastListItem,
 } from '../serializers';
 
 /**
@@ -74,11 +85,14 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.list(input);
-          return result.map(serializePodcast);
-        }).pipe(Effect.provide(context.layers)),
+        listPodcasts({
+          userId: context.session.user.id,
+          limit: input.limit,
+          offset: input.offset,
+        }).pipe(
+          Effect.map((result) => result.podcasts.map(serializePodcastListItem)),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -91,11 +105,15 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.findById(input.id);
-          return serializePodcastFull(result);
-        }).pipe(Effect.provide(context.layers)),
+        getPodcast({ podcastId: input.id, includeVersion: true }).pipe(
+          Effect.map((podcast) =>
+            serializePodcastFull({
+              ...podcast,
+              activeVersion: 'activeVersion' in podcast ? podcast.activeVersion : null,
+            }),
+          ),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -114,12 +132,13 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.create(input);
-          // Return full podcast shape with script (null for new podcasts)
-          return serializePodcastFull({ ...result, script: null });
-        }).pipe(Effect.provide(context.layers)),
+        createPodcast({
+          ...input,
+          userId: context.session.user.id,
+        }).pipe(
+          Effect.map((podcastFull) => serializePodcastFull(podcastFull)),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -141,11 +160,10 @@ const podcastRouter = {
       const { id, ...data } = input;
 
       return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.update(id, data);
-          return serializePodcast(result);
-        }).pipe(Effect.provide(context.layers)),
+        updatePodcast({ podcastId: id, data }).pipe(
+          Effect.map((result) => serializePodcast(result.podcast)),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -155,10 +173,10 @@ const podcastRouter = {
               data: { podcastId: e.id },
             });
           },
-          DocumentNotFound: (e) => {
-            throw errors.NOT_FOUND({
-              message: e.message ?? `Document ${e.id} not found`,
-              data: { documentId: e.id },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'No active script found',
+              data: { podcastId: e.podcastId },
             });
           },
         },
@@ -170,11 +188,10 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          yield* podcasts.delete(input.id);
-          return {};
-        }).pipe(Effect.provide(context.layers)),
+        deletePodcast({ podcastId: input.id }).pipe(
+          Effect.map(() => ({})),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -194,10 +211,37 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.getScript(input.id);
-          return serializePodcastScript(result);
+          const scriptVersionRepo = yield* ScriptVersionRepo;
+          const version = yield* scriptVersionRepo.findActiveByPodcastId(input.id);
+          if (!version) {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: 'No active script found',
+              data: { podcastId: input.id },
+            });
+          }
+          return serializePodcastScript(version);
         }).pipe(Effect.provide(context.layers)),
+        {
+          ...handlers.common,
+          ...handlers.database,
+        },
+      );
+    },
+  ),
+
+  updateScript: protectedProcedure.podcasts.updateScript.handler(
+    async ({ context, input, errors }) => {
+      const handlers = createErrorHandlers(errors);
+      const { id, segments } = input;
+
+      return handleEffect(
+        editScript({
+          podcastId: id,
+          segments,
+        }).pipe(
+          Effect.map((result) => serializePodcastScript(result.version)),
+          Effect.provide(context.layers),
+        ),
         {
           ...handlers.common,
           ...handlers.database,
@@ -209,33 +253,8 @@ const podcastRouter = {
           },
           ScriptNotFound: (e) => {
             throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'Script not found',
+              message: e.message ?? 'No active script found',
               data: { podcastId: e.podcastId },
-            });
-          },
-        },
-      );
-    },
-  ),
-
-  updateScript: protectedProcedure.podcasts.updateScript.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      const { id, ...data } = input;
-
-      return handleEffect(
-        Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const result = yield* podcasts.updateScript(id, data);
-          return serializePodcastScript(result);
-        }).pipe(Effect.provide(context.layers)),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e) => {
-            throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
             });
           },
         },
@@ -248,11 +267,12 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
+          const podcastRepo = yield* PodcastRepo;
+          const scriptVersionRepo = yield* ScriptVersionRepo;
           const queue = yield* Queue;
 
           // Verify podcast exists and user has access
-          const podcast = yield* podcasts.findById(input.id);
+          const podcast = yield* podcastRepo.findById(input.id);
 
           // Check for existing pending/processing job (idempotency)
           const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
@@ -263,8 +283,23 @@ const podcastRouter = {
             };
           }
 
-          // Update status to generating_script so frontend can start polling
-          yield* podcasts.setStatus(podcast.id, 'generating_script');
+          // Get active version and update its status, or create a new draft version
+          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
+          if (activeVersion) {
+            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'draft');
+          } else {
+            // Create a new draft version for brand new podcasts
+            // This ensures isSetupMode() returns false after generate is called
+            yield* scriptVersionRepo.insert({
+              podcastId: podcast.id,
+              status: 'draft',
+              segments: null,
+              sourceDocumentIds: podcast.sourceDocumentIds,
+              hostVoice: podcast.hostVoice,
+              coHostVoice: podcast.coHostVoice,
+              promptInstructions: podcast.promptInstructions,
+            });
+          }
 
           // Enqueue the combined generation job
           const payload: GeneratePodcastPayload = {
@@ -278,8 +313,6 @@ const podcastRouter = {
             payload,
             podcast.createdBy,
           );
-
-          // Job will be picked up by the polling worker
 
           return {
             jobId: job.id,
@@ -299,6 +332,12 @@ const podcastRouter = {
             throw errors.PODCAST_NOT_FOUND({
               message: e.message ?? `Podcast ${e.id} not found`,
               data: { podcastId: e.id },
+            });
+          },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'No active script found',
+              data: { podcastId: e.podcastId },
             });
           },
         },
@@ -334,11 +373,12 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
+          const podcastRepo = yield* PodcastRepo;
+          const scriptVersionRepo = yield* ScriptVersionRepo;
           const queue = yield* Queue;
 
           // Verify podcast exists and user has access
-          const podcast = yield* podcasts.findById(input.id);
+          const podcast = yield* podcastRepo.findById(input.id);
 
           // Check for existing pending/processing job (idempotency)
           const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
@@ -349,8 +389,11 @@ const podcastRouter = {
             };
           }
 
-          // Update status to generating_script so frontend can start polling
-          yield* podcasts.setStatus(podcast.id, 'generating_script');
+          // Get active version and update its status
+          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
+          if (activeVersion) {
+            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'draft');
+          }
 
           // Enqueue the script-only generation job
           const payload: GenerateScriptPayload = {
@@ -385,6 +428,12 @@ const podcastRouter = {
               data: { podcastId: e.id },
             });
           },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'No active script found',
+              data: { podcastId: e.podcastId },
+            });
+          },
         },
       );
     },
@@ -395,16 +444,25 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
+          const podcastRepo = yield* PodcastRepo;
+          const scriptVersionRepo = yield* ScriptVersionRepo;
           const queue = yield* Queue;
 
           // Verify podcast exists and user has access
-          const podcast = yield* podcasts.findById(input.id);
+          const podcast = yield* podcastRepo.findById(input.id);
 
-          // Verify podcast is in script_ready status
-          if (podcast.status !== 'script_ready') {
+          // Get active version and verify status
+          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
+          if (!activeVersion) {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: 'No active script version found',
+              data: { podcastId: podcast.id },
+            });
+          }
+
+          if (activeVersion.status !== 'script_ready') {
             throw errors.FORBIDDEN({
-              message: `Podcast must be in script_ready status to generate audio. Current status: ${podcast.status}`,
+              message: `Script must be in script_ready status to generate audio. Current status: ${activeVersion.status}`,
             });
           }
 
@@ -417,12 +475,12 @@ const podcastRouter = {
             };
           }
 
-          // Update status to generating_audio so frontend can start polling
-          yield* podcasts.setStatus(podcast.id, 'generating_audio');
+          // Update version status to generating_audio
+          yield* scriptVersionRepo.updateStatus(activeVersion.id, 'generating_audio');
 
           // Enqueue the audio-only generation job
           const payload: GenerateAudioPayload = {
-            podcastId: podcast.id,
+            versionId: activeVersion.id,
             userId: podcast.createdBy,
           };
 
@@ -452,6 +510,12 @@ const podcastRouter = {
               data: { podcastId: e.id },
             });
           },
+          ScriptNotFound: (e) => {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: e.message ?? 'No active script found',
+              data: { podcastId: e.podcastId },
+            });
+          },
         },
       );
     },
@@ -462,12 +526,18 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const versions = yield* podcasts.listScriptVersions(input.id);
+          const podcastRepo = yield* PodcastRepo;
+          const scriptVersionRepo = yield* ScriptVersionRepo;
+
+          // Verify podcast exists
+          yield* podcastRepo.findById(input.id);
+
+          const versions = yield* scriptVersionRepo.listByPodcastId(input.id);
           return versions.map((v) => ({
             id: v.id,
             version: v.version,
             isActive: v.isActive,
+            status: v.status,
             segmentCount: v.segmentCount,
             hasAudio: v.hasAudio,
             createdAt: v.createdAt.toISOString(),
@@ -492,11 +562,22 @@ const podcastRouter = {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
-          const podcasts = yield* Podcasts;
-          const script = yield* podcasts.getScriptById(
-            input.id,
-            input.scriptId,
-          );
+          const podcastRepo = yield* PodcastRepo;
+          const scriptVersionRepo = yield* ScriptVersionRepo;
+
+          // Verify podcast exists
+          yield* podcastRepo.findById(input.id);
+
+          const script = yield* scriptVersionRepo.findById(input.scriptId);
+
+          // Verify script belongs to the podcast
+          if (script.podcastId !== input.id) {
+            throw errors.SCRIPT_NOT_FOUND({
+              message: 'Script version not found for this podcast',
+              data: { podcastId: input.id },
+            });
+          }
+
           return serializePodcastScript(script);
         }).pipe(Effect.provide(context.layers)),
         {
@@ -524,14 +605,13 @@ const podcastRouter = {
       async ({ context, input, errors }) => {
         const handlers = createErrorHandlers(errors);
         return handleEffect(
-          Effect.gen(function* () {
-            const podcasts = yield* Podcasts;
-            const script = yield* podcasts.restoreScriptVersion(
-              input.id,
-              input.scriptId,
-            );
-            return serializePodcastScript(script);
-          }).pipe(Effect.provide(context.layers)),
+          restoreVersion({
+            podcastId: input.id,
+            versionId: input.scriptId,
+          }).pipe(
+            Effect.map((result) => serializePodcastScript(result.restoredVersion)),
+            Effect.provide(context.layers),
+          ),
           {
             ...handlers.common,
             ...handlers.database,

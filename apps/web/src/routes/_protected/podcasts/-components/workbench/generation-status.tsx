@@ -1,9 +1,9 @@
 import { CheckIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { PodcastStatus } from '../../-constants/status';
+import type { VersionStatus } from '../../-constants/status';
 
 interface GenerationStatusProps {
-  status: PodcastStatus;
+  status: VersionStatus | undefined;
   isSavingSettings: boolean;
   isPendingGeneration: boolean;
 }
@@ -23,14 +23,14 @@ const STEPS: Record<Step, StepConfig> = {
 };
 
 function getActiveStep(
-  status: PodcastStatus,
+  status: VersionStatus | undefined,
   isSavingSettings: boolean,
   isPendingGeneration: boolean,
 ): Step {
   if (isSavingSettings) return 'saving';
-  if (isPendingGeneration || status === 'generating_script') return 'script';
+  if (isPendingGeneration || status === 'draft') return 'script';
   if (status === 'generating_audio') return 'audio';
-  if (status === 'ready') return 'complete';
+  if (status === 'audio_ready') return 'complete';
   return 'script';
 }
 

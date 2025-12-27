@@ -28,8 +28,8 @@ export function WorkbenchLayout({
   onDelete,
   isDeleting,
 }: WorkbenchLayoutProps) {
-  const statusConfig = getStatusConfig(podcast.status);
-  const isGenerating = isGeneratingStatus(podcast.status);
+  const statusConfig = getStatusConfig(podcast.activeVersion?.status);
+  const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
 
   return (
     <div className="workbench">
@@ -48,7 +48,7 @@ export function WorkbenchLayout({
 
             {/* Podcast icon and title */}
             <div className="workbench-title-group">
-              <PodcastIcon format={podcast.format} status={podcast.status} />
+              <PodcastIcon format={podcast.format} status={podcast.activeVersion?.status} />
               <div className="min-w-0">
                 <h1 className="workbench-title">{podcast.title}</h1>
                 {podcast.description && (
@@ -59,15 +59,17 @@ export function WorkbenchLayout({
 
             {/* Status badges and metadata */}
             <div className="workbench-meta">
-              <Badge
-                variant={statusConfig.badgeVariant}
-                className="gap-1.5 px-2.5 py-1 font-medium"
-              >
-                {isGenerating && <Spinner className="w-3 h-3" />}
-                {statusConfig.label}
-              </Badge>
+              {statusConfig && (
+                <Badge
+                  variant={statusConfig.badgeVariant}
+                  className="gap-1.5 px-2.5 py-1 font-medium"
+                >
+                  {isGenerating && <Spinner className="w-3 h-3" />}
+                  {statusConfig.label}
+                </Badge>
+              )}
 
-              {podcast.duration && (
+              {podcast.activeVersion?.duration && (
                 <div className="workbench-duration">
                   <svg
                     className="w-4 h-4"
@@ -82,7 +84,7 @@ export function WorkbenchLayout({
                       d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {formatDuration(podcast.duration)}
+                  {formatDuration(podcast.activeVersion.duration)}
                 </div>
               )}
 

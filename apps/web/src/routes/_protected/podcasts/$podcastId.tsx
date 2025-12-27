@@ -69,8 +69,9 @@ function PodcastWorkbench() {
 
   // Auto-navigate to new version when script generation completes
   useEffect(() => {
-    const currentVersion = podcast?.script?.version;
+    const currentVersion = podcast?.activeVersion?.version;
     const prevVersion = prevActiveScriptVersionRef.current;
+    const versionStatus = podcast?.activeVersion?.status;
 
     // Only navigate when:
     // 1. We have a new version
@@ -81,7 +82,7 @@ function PodcastWorkbench() {
       currentVersion !== undefined &&
       prevVersion !== undefined &&
       currentVersion > prevVersion &&
-      podcast?.status === 'script_ready' &&
+      versionStatus === 'script_ready' &&
       selectedVersion !== currentVersion
     ) {
       navigate({
@@ -95,8 +96,8 @@ function PodcastWorkbench() {
     // Update the ref after checking
     prevActiveScriptVersionRef.current = currentVersion;
   }, [
-    podcast?.script?.version,
-    podcast?.status,
+    podcast?.activeVersion?.version,
+    podcast?.activeVersion?.status,
     selectedVersion,
     podcastId,
     navigate,
@@ -210,7 +211,7 @@ function PodcastWorkbench() {
     );
   }
 
-  const isGenerating = isGeneratingStatus(podcast.status);
+  const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
 
   // Track which specific generation action is pending
   const pendingAction = generateScriptMutation.isPending
@@ -284,8 +285,8 @@ function PodcastWorkbench() {
       actionBar={
         !workbench.isViewingHistory && (
           <GlobalActionBar
-            status={podcast.status}
-            hasScript={!!podcast.script}
+            status={podcast.activeVersion?.status}
+            hasScript={!!podcast.activeVersion}
             isGenerating={isGenerating}
             pendingAction={pendingAction}
             hasScriptChanges={workbench.editState.hasChanges}

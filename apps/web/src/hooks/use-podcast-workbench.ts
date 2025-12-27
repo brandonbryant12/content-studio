@@ -73,26 +73,27 @@ export function usePodcastWorkbench({
   // Compose existing hooks
   const versionViewer = useVersionViewer({
     podcastId,
-    activeScript: podcast?.script ?? null,
+    activeScript: podcast?.activeVersion ?? null,
     selectedVersion,
   });
 
   const scriptEditor = useScriptEditor({
     podcastId,
-    initialSegments: podcast?.script?.segments ?? [],
+    initialSegments: podcast?.activeVersion?.segments ?? [],
   });
 
   // Track the active script ID to detect real changes
-  const activeScriptId = podcast?.script?.id;
+  const activeScriptId = podcast?.activeVersion?.id;
   const prevActiveScriptIdRef = useRef<string | undefined>(activeScriptId);
 
-  // Track previous status for detecting transitions
-  const prevStatus = usePrevious(podcast?.status);
+  // Track previous status for detecting transitions (now on activeVersion)
+  const versionStatus = podcast?.activeVersion?.status;
+  const prevStatus = usePrevious(versionStatus);
 
   // Determine the current mode
-  // Note: generating_audio keeps script visible; only generating_script hides it
-  const isGeneratingScript = podcast?.status === 'generating_script';
-  const isGeneratingAudio = podcast?.status === 'generating_audio';
+  // Note: generating_audio keeps script visible; only draft hides it during script generation
+  const isGeneratingScript = versionStatus === 'draft';
+  const isGeneratingAudio = versionStatus === 'generating_audio';
 
   const mode: WorkbenchMode = useMemo(() => {
     // Only hide script during script generation, not audio generation
@@ -119,36 +120,35 @@ export function usePodcastWorkbench({
       mode.type === 'editing' &&
       activeScriptId !== undefined &&
       activeScriptId !== prevActiveScriptIdRef.current &&
-      podcast?.script?.segments
+      podcast?.activeVersion?.segments
     ) {
-      scriptEditor.resetToSegments(podcast.script.segments);
+      scriptEditor.resetToSegments(podcast.activeVersion.segments);
       prevActiveScriptIdRef.current = activeScriptId;
     }
-  }, [mode.type, activeScriptId, podcast?.script?.segments, scriptEditor]);
+  }, [mode.type, activeScriptId, podcast?.activeVersion?.segments, scriptEditor]);
 
   // Handle initial load - sync editor on first render with valid data
   useEffect(() => {
     if (
       prevActiveScriptIdRef.current === undefined &&
       activeScriptId !== undefined &&
-      podcast?.script?.segments
+      podcast?.activeVersion?.segments
     ) {
-      scriptEditor.resetToSegments(podcast.script.segments);
+      scriptEditor.resetToSegments(podcast.activeVersion.segments);
       prevActiveScriptIdRef.current = activeScriptId;
     }
-  }, [activeScriptId, podcast?.script?.segments, scriptEditor]);
+  }, [activeScriptId, podcast?.activeVersion?.segments, scriptEditor]);
 
-  // Mode-aware generation start reset: Only clear when transitioning INTO generating
+  // Mode-aware generation start reset: Only clear when transitioning INTO draft (generating script)
   // AND not viewing history
   useEffect(() => {
     const isTransitioningToGenerating =
-      prevStatus !== 'generating_script' &&
-      podcast?.status === 'generating_script';
+      prevStatus !== 'draft' && versionStatus === 'draft';
 
     if (mode.type !== 'viewing_history' && isTransitioningToGenerating) {
       scriptEditor.resetToSegments([]);
     }
-  }, [mode.type, podcast?.status, prevStatus, scriptEditor]);
+  }, [mode.type, versionStatus, prevStatus, scriptEditor]);
 
   // Derive display segments based on mode
   const displaySegments = useMemo((): ScriptSegment[] => {
@@ -168,14 +168,14 @@ export function usePodcastWorkbench({
       case 'viewing_history':
         return versionViewer.viewedScript?.summary ?? null;
       case 'editing':
-        return podcast?.script?.summary ?? null;
+        return podcast?.activeVersion?.summary ?? null;
       case 'generating':
         return null;
     }
   }, [
     mode.type,
     versionViewer.viewedScript?.summary,
-    podcast?.script?.summary,
+    podcast?.activeVersion?.summary,
   ]);
 
   // Derive display audio based on mode
@@ -192,8 +192,8 @@ export function usePodcastWorkbench({
         duration = versionViewer.viewedScript?.duration;
         break;
       case 'editing':
-        audioUrl = podcast?.script?.audioUrl;
-        duration = podcast?.script?.duration;
+        audioUrl = podcast?.activeVersion?.audioUrl;
+        duration = podcast?.activeVersion?.duration;
         break;
       case 'generating':
         return null;
@@ -204,8 +204,8 @@ export function usePodcastWorkbench({
     mode.type,
     versionViewer.viewedScript?.audioUrl,
     versionViewer.viewedScript?.duration,
-    podcast?.script?.audioUrl,
-    podcast?.script?.duration,
+    podcast?.activeVersion?.audioUrl,
+    podcast?.activeVersion?.duration,
   ]);
 
   // Convenience booleans

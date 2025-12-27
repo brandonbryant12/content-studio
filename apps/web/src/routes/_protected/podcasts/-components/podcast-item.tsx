@@ -5,15 +5,16 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import {
-  type PodcastStatus,
+  type VersionStatus,
   getStatusConfig,
   isGeneratingStatus,
 } from '../-constants/status';
 import { PodcastIcon } from './podcast-icon';
 import { formatDuration } from '@/lib/formatters';
 
-function StatusBadge({ status }: { status: PodcastStatus }) {
+function StatusBadge({ status }: { status: VersionStatus | undefined }) {
   const config = getStatusConfig(status);
+  if (!config) return null;
 
   return (
     <Badge variant={config.badgeVariant} className="gap-1.5">
@@ -48,15 +49,15 @@ export function PodcastItem({
         search={{ version: undefined }}
         className="flex items-start gap-4 flex-1"
       >
-        <PodcastIcon format={podcast.format} status={podcast.status} />
+        <PodcastIcon format={podcast.format} status={podcast.activeVersion?.status} />
         <div className="flex-1 min-w-0">
           <h3 className="list-card-title">{podcast.title}</h3>
           <div className="list-card-meta gap-2 flex-wrap">
-            <StatusBadge status={podcast.status} />
+            <StatusBadge status={podcast.activeVersion?.status} />
             <FormatBadge format={podcast.format} />
-            {podcast.duration && (
+            {podcast.activeVersion?.duration && (
               <span className="text-meta">
-                {formatDuration(podcast.duration)}
+                {formatDuration(podcast.activeVersion.duration)}
               </span>
             )}
           </div>
