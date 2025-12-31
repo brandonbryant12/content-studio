@@ -6,7 +6,7 @@ import {
   useNavigate,
   useBlocker,
 } from '@tanstack/react-router';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
@@ -20,7 +20,7 @@ import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { podcastUtils } from '@/db';
 import {
-  usePodcastWorkbench,
+  useScriptEditor,
   usePodcastSettings,
   useOptimisticScriptGeneration,
   useOptimisticAudioGeneration,
@@ -28,14 +28,6 @@ import {
 } from '@/hooks';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    version:
-      typeof search.version === 'string' && !isNaN(Number(search.version))
-        ? Number(search.version)
-        : typeof search.version === 'number'
-          ? search.version
-          : undefined,
-  }),
   loader: ({ params }) =>
     queryClient.ensureQueryData(
       apiClient.podcasts.get.queryOptions({ input: { id: params.podcastId } }),
@@ -45,7 +37,6 @@ export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
 
 function PodcastWorkbench() {
   const { podcastId } = Route.useParams();
-  const { version: selectedVersion } = Route.useSearch();
   const navigate = useNavigate();
   const [setupSkipped, setSetupSkipped] = useState(false);
 
@@ -54,95 +45,26 @@ function PodcastWorkbench() {
     apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
   );
 
-  // Unified workbench state management
-  const workbench = usePodcastWorkbench({
+  // Script editing state
+  const scriptEditor = useScriptEditor({
     podcastId,
-    podcast,
-    selectedVersion,
+    initialSegments: podcast?.activeVersion?.segments ?? [],
   });
 
-  // Settings state management (lifted from PodcastSettings)
+  // Settings state management
   const settings = usePodcastSettings({ podcast });
 
-  // Track the active script version to detect when a new version is created
-  const prevActiveScriptVersionRef = useRef<number | undefined>(undefined);
-
-  // Auto-navigate to new version when script generation completes
-  useEffect(() => {
-    const currentVersion = podcast?.activeVersion?.version;
-    const prevVersion = prevActiveScriptVersionRef.current;
-    const versionStatus = podcast?.activeVersion?.status;
-
-    // Only navigate when:
-    // 1. We have a new version
-    // 2. The version increased (new script was generated)
-    // 3. Status is script_ready (generation just completed)
-    // 4. We're not already viewing that version
-    if (
-      currentVersion !== undefined &&
-      prevVersion !== undefined &&
-      currentVersion > prevVersion &&
-      versionStatus === 'script_ready' &&
-      selectedVersion !== currentVersion
-    ) {
-      navigate({
-        to: '/podcasts/$podcastId',
-        params: { podcastId },
-        search: { version: currentVersion },
-        replace: true,
-      });
-    }
-
-    // Update the ref after checking
-    prevActiveScriptVersionRef.current = currentVersion;
-  }, [
-    podcast?.activeVersion?.version,
-    podcast?.activeVersion?.status,
-    selectedVersion,
-    podcastId,
-    navigate,
-  ]);
-
-  // Restore mutation for "Set as Current" action
-  const restoreMutation = useMutation(
-    apiClient.podcasts.restoreScriptVersion.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Script version restored');
-        workbench.clearSelection();
-        // Refresh the podcast collection
-        await podcastUtils.refetch();
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to restore version');
-      },
-    }),
-  );
-
-  const handleSetAsCurrent = () => {
-    if (workbench.viewedScript && workbench.isViewingHistory) {
-      restoreMutation.mutate({
-        id: podcastId,
-        scriptId: workbench.viewedScript.id,
-      });
-    }
-  };
-
-  // Keyboard shortcut: Cmd/Ctrl+S to save (only when editable)
+  // Keyboard shortcut: Cmd/Ctrl+S to save
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        // Only save if in editing mode
-        if (
-          workbench.isEditing &&
-          workbench.editState.hasChanges &&
-          !workbench.editState.isSaving
-        ) {
-          workbench.editState.saveChanges();
+        if (scriptEditor.hasChanges && !scriptEditor.isSaving) {
+          scriptEditor.saveChanges();
         }
       }
     },
-    [workbench],
+    [scriptEditor],
   );
 
   useEffect(() => {
@@ -150,30 +72,29 @@ function PodcastWorkbench() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Block navigation if there are unsaved changes (only when editing)
+  // Block navigation if there are unsaved changes
   useBlocker({
-    shouldBlockFn: () => workbench.isEditing && workbench.editState.hasChanges,
+    shouldBlockFn: () => scriptEditor.hasChanges,
     withResolver: true,
   });
 
   // Browser beforeunload warning for unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (workbench.isEditing && workbench.editState.hasChanges) {
+      if (scriptEditor.hasChanges) {
         e.preventDefault();
         e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [workbench.editState.hasChanges, workbench.isEditing]);
+  }, [scriptEditor.hasChanges]);
 
   const deleteMutation = useMutation(
     apiClient.podcasts.delete.mutationOptions({
       onSuccess: async () => {
         toast.success('Podcast deleted');
         navigate({ to: '/podcasts' });
-        // Refresh the podcast collection
         await podcastUtils.refetch();
       },
       onError: (error) => {
@@ -229,21 +150,13 @@ function PodcastWorkbench() {
     );
   }
 
-  // Generation handlers that clear selection first
-  const handleGenerateScript = () => {
-    workbench.clearSelection();
-    generateScriptMutation.mutate({ id: podcast.id });
-  };
-
-  const handleGenerateAudio = () => {
-    workbench.clearSelection();
-    generateAudioMutation.mutate({ id: podcast.id });
-  };
-
-  const handleGenerateAll = () => {
-    workbench.clearSelection();
-    generateAllMutation.mutate({ id: podcast.id });
-  };
+  // Audio from active version
+  const displayAudio = podcast.activeVersion?.audioUrl
+    ? {
+        url: podcast.activeVersion.audioUrl,
+        duration: podcast.activeVersion.duration ?? null,
+      }
+    : null;
 
   return (
     <WorkbenchLayout
@@ -252,55 +165,43 @@ function PodcastWorkbench() {
       isDeleting={deleteMutation.isPending}
       leftPanel={
         <ScriptPanel
-          segments={workbench.displaySegments}
-          summary={workbench.displaySummary}
-          hasChanges={workbench.editState.hasChanges}
-          isSaving={workbench.editState.isSaving}
-          readOnly={!workbench.isEditing}
-          viewingVersion={workbench.viewedVersion}
-          onUpdateSegment={workbench.editState.updateSegment}
-          onRemoveSegment={workbench.editState.removeSegment}
-          onReorderSegments={workbench.editState.reorderSegments}
-          onAddSegment={workbench.editState.addSegment}
-          onDiscard={workbench.editState.discardChanges}
-          onSetAsCurrent={handleSetAsCurrent}
-          isRestoring={restoreMutation.isPending}
+          segments={scriptEditor.segments}
+          summary={podcast.activeVersion?.summary ?? null}
+          hasChanges={scriptEditor.hasChanges}
+          isSaving={scriptEditor.isSaving}
+          onUpdateSegment={scriptEditor.updateSegment}
+          onRemoveSegment={scriptEditor.removeSegment}
+          onReorderSegments={scriptEditor.reorderSegments}
+          onAddSegment={scriptEditor.addSegment}
+          onDiscard={scriptEditor.discardChanges}
         />
       }
       rightPanel={
         <ConfigPanel
           podcast={podcast}
-          displayAudio={workbench.displayAudio}
+          displayAudio={displayAudio}
           isGenerating={isGenerating || generateAllMutation.isPending}
           pendingAction={pendingAction}
-          selectedVersion={selectedVersion}
-          onSelectVersion={workbench.selectVersion}
-          isViewingHistory={workbench.isViewingHistory}
-          viewingVersion={workbench.viewedVersion}
-          onSetAsCurrent={handleSetAsCurrent}
-          isRestoring={restoreMutation.isPending}
           settings={settings}
         />
       }
       actionBar={
-        !workbench.isViewingHistory && (
-          <GlobalActionBar
-            status={podcast.activeVersion?.status}
-            hasScript={!!podcast.activeVersion}
-            isGenerating={isGenerating}
-            pendingAction={pendingAction}
-            hasScriptChanges={workbench.editState.hasChanges}
-            isScriptSaving={workbench.editState.isSaving}
-            onSaveScript={workbench.editState.saveChanges}
-            hasSettingsChanges={settings.hasChanges}
-            isSettingsSaving={settings.isSaving}
-            onSaveSettings={settings.saveSettings}
-            onGenerateScript={handleGenerateScript}
-            onGenerateAudio={handleGenerateAudio}
-            onGenerateAll={handleGenerateAll}
-            disabled={isGenerating}
-          />
-        )
+        <GlobalActionBar
+          status={podcast.activeVersion?.status}
+          hasScript={!!podcast.activeVersion}
+          isGenerating={isGenerating}
+          pendingAction={pendingAction}
+          hasScriptChanges={scriptEditor.hasChanges}
+          isScriptSaving={scriptEditor.isSaving}
+          onSaveScript={scriptEditor.saveChanges}
+          hasSettingsChanges={settings.hasChanges}
+          isSettingsSaving={settings.isSaving}
+          onSaveSettings={settings.saveSettings}
+          onGenerateScript={() => generateScriptMutation.mutate({ id: podcast.id })}
+          onGenerateAudio={() => generateAudioMutation.mutate({ id: podcast.id })}
+          onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
+          disabled={isGenerating}
+        />
       }
     />
   );

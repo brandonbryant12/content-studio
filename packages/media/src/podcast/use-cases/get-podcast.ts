@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/effect/db';
-import { PodcastNotFound } from '@repo/effect/errors';
+import type { Db, DatabaseError } from '@repo/db/effect';
+import { PodcastNotFound } from '@repo/db/errors';
 import { PodcastRepo, type PodcastFull, type PodcastWithDocuments } from '../repos/podcast-repo';
 
 // =============================================================================

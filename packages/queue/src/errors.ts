@@ -3,4 +3,4 @@ export {
   QueueError,
   JobNotFoundError,
   JobProcessingError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';

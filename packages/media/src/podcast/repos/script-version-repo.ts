@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from 'effect';
 import { podcastScript, type PodcastScript, type ScriptSegment } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/effect/db';
-import { ScriptNotFound } from '@repo/effect/errors';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { ScriptNotFound } from '@repo/db/errors';
 import { eq, desc, and } from 'drizzle-orm';
 
 /**
@@ -22,10 +22,6 @@ export interface CreateScriptVersion {
   segments?: ScriptSegment[] | null;
   summary?: string | null;
   generationPrompt?: string | null;
-  hostVoice?: string | null;
-  coHostVoice?: string | null;
-  sourceDocumentIds: string[];
-  promptInstructions?: string | null;
 }
 
 /**
@@ -39,19 +35,6 @@ export interface UpdateScriptVersion {
   duration?: number | null;
   errorMessage?: string | null;
   generationPrompt?: string | null;
-}
-
-/**
- * Script version summary for version history listing.
- */
-export interface ScriptVersionSummary {
-  id: string;
-  version: number;
-  isActive: boolean;
-  status: VersionStatus;
-  segmentCount: number;
-  hasAudio: boolean;
-  createdAt: Date;
 }
 
 // =============================================================================
@@ -111,32 +94,11 @@ export interface ScriptVersionRepoService {
   ) => Effect.Effect<void, DatabaseError, Db>;
 
   /**
-   * Activate a specific version (deactivates others).
-   */
-  readonly activate: (
-    id: string,
-  ) => Effect.Effect<PodcastScript, ScriptNotFound | DatabaseError, Db>;
-
-  /**
-   * List all versions for a podcast (summary view).
-   */
-  readonly listByPodcastId: (
-    podcastId: string,
-  ) => Effect.Effect<readonly ScriptVersionSummary[], DatabaseError, Db>;
-
-  /**
    * Get the next version number for a podcast.
    */
   readonly getNextVersion: (
     podcastId: string,
   ) => Effect.Effect<number, DatabaseError, Db>;
-
-  /**
-   * Restore a version by ID (deactivates others, activates this one).
-   */
-  readonly restore: (
-    id: string,
-  ) => Effect.Effect<PodcastScript, ScriptNotFound | DatabaseError, Db>;
 }
 
 // =============================================================================
@@ -181,10 +143,6 @@ const make: ScriptVersionRepoService = {
           segments: data.segments ?? null,
           summary: data.summary ?? null,
           generationPrompt: data.generationPrompt ?? null,
-          hostVoice: data.hostVoice ?? null,
-          coHostVoice: data.coHostVoice ?? null,
-          sourceDocumentIds: data.sourceDocumentIds,
-          promptInstructions: data.promptInstructions ?? null,
         })
         .returning();
 
@@ -284,71 +242,6 @@ const make: ScriptVersionRepoService = {
         .where(eq(podcastScript.podcastId, podcastId));
     }),
 
-  activate: (id) =>
-    withDb('scriptVersionRepo.activate', async (db) => {
-      // First, get the script to find its podcastId
-      const [script] = await db
-        .select()
-        .from(podcastScript)
-        .where(eq(podcastScript.id, id))
-        .limit(1);
-
-      if (!script) return null;
-
-      // Deactivate all versions for this podcast
-      await db
-        .update(podcastScript)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(podcastScript.podcastId, script.podcastId));
-
-      // Activate the target version
-      const [activated] = await db
-        .update(podcastScript)
-        .set({ isActive: true, updatedAt: new Date() })
-        .where(eq(podcastScript.id, id))
-        .returning();
-
-      return activated;
-    }).pipe(
-      Effect.flatMap((script) =>
-        script
-          ? Effect.succeed(script)
-          : Effect.fail(
-              new ScriptNotFound({
-                podcastId: 'unknown',
-                message: 'Script version not found',
-              }),
-            ),
-      ),
-    ),
-
-  listByPodcastId: (podcastId) =>
-    withDb('scriptVersionRepo.list', async (db) => {
-      const scripts = await db
-        .select({
-          id: podcastScript.id,
-          version: podcastScript.version,
-          isActive: podcastScript.isActive,
-          status: podcastScript.status,
-          segments: podcastScript.segments,
-          audioUrl: podcastScript.audioUrl,
-          createdAt: podcastScript.createdAt,
-        })
-        .from(podcastScript)
-        .where(eq(podcastScript.podcastId, podcastId))
-        .orderBy(desc(podcastScript.version));
-
-      return scripts.map((s) => ({
-        id: s.id,
-        version: s.version,
-        isActive: s.isActive,
-        status: s.status,
-        segmentCount: s.segments?.length ?? 0,
-        hasAudio: s.audioUrl !== null,
-        createdAt: s.createdAt,
-      }));
-    }),
-
   getNextVersion: (podcastId) =>
     withDb('scriptVersionRepo.getNextVersion', async (db) => {
       const [current] = await db
@@ -360,44 +253,6 @@ const make: ScriptVersionRepoService = {
 
       return (current?.version ?? 0) + 1;
     }),
-
-  restore: (id) =>
-    withDb('scriptVersionRepo.restore', async (db) => {
-      // Get the script to restore
-      const [script] = await db
-        .select()
-        .from(podcastScript)
-        .where(eq(podcastScript.id, id))
-        .limit(1);
-
-      if (!script) return null;
-
-      // Deactivate all existing versions for this podcast
-      await db
-        .update(podcastScript)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(podcastScript.podcastId, script.podcastId));
-
-      // Activate the target version
-      const [activated] = await db
-        .update(podcastScript)
-        .set({ isActive: true, updatedAt: new Date() })
-        .where(eq(podcastScript.id, id))
-        .returning();
-
-      return activated;
-    }).pipe(
-      Effect.flatMap((script) =>
-        script
-          ? Effect.succeed(script)
-          : Effect.fail(
-              new ScriptNotFound({
-                podcastId: 'unknown',
-                message: 'Script version not found',
-              }),
-            ),
-      ),
-    ),
 };
 
 // =============================================================================

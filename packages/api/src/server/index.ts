@@ -20,7 +20,6 @@ export { createStorageLayer } from './storage-factory';
 export {
   handleEffect,
   createErrorHandlers,
-  createCommonErrorHandlers,
   type ErrorMapper,
   type EffectErrors,
   type EffectSuccess,

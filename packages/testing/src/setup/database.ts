@@ -1,9 +1,9 @@
 import * as schema from '@repo/db/schema';
-import { DbLive } from '@repo/effect/db';
+import { DbLive } from '@repo/db/effect';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import type { DatabaseInstance } from '@repo/db/client';
-import type { Db } from '@repo/effect/db';
+import type { Db } from '@repo/db/effect';
 import type { Layer } from 'effect';
 
 /**

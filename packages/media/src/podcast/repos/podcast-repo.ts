@@ -9,9 +9,10 @@ import {
   type UpdatePodcast,
   type GenerationContext,
   type Document,
+  type ActiveVersionSummary,
 } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/effect/db';
-import { PodcastNotFound, DocumentNotFound } from '@repo/effect/errors';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { PodcastNotFound, DocumentNotFound } from '@repo/db/errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================
@@ -30,16 +31,6 @@ export interface PodcastWithDocuments extends Podcast {
  */
 export interface PodcastFull extends PodcastWithDocuments {
   activeVersion: PodcastScript | null;
-}
-
-/**
- * Lightweight version summary for list views.
- */
-export interface ActiveVersionSummary {
-  id: string;
-  version: number;
-  status: PodcastScript['status'];
-  duration: number | null;
 }
 
 /**

@@ -7,7 +7,6 @@ import {
   updatePodcast,
   deletePodcast,
   editScript,
-  restoreVersion,
 } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
@@ -161,7 +160,7 @@ const podcastRouter = {
 
       return handleEffect(
         updatePodcast({ podcastId: id, data }).pipe(
-          Effect.map((result) => serializePodcast(result.podcast)),
+          Effect.map((podcast) => serializePodcast(podcast)),
           Effect.provide(context.layers),
         ),
         {
@@ -171,12 +170,6 @@ const podcastRouter = {
             throw errors.PODCAST_NOT_FOUND({
               message: e.message ?? `Podcast ${e.id} not found`,
               data: { podcastId: e.id },
-            });
-          },
-          ScriptNotFound: (e) => {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'No active script found',
-              data: { podcastId: e.podcastId },
             });
           },
         },
@@ -294,10 +287,6 @@ const podcastRouter = {
               podcastId: podcast.id,
               status: 'draft',
               segments: null,
-              sourceDocumentIds: podcast.sourceDocumentIds,
-              hostVoice: podcast.hostVoice,
-              coHostVoice: podcast.coHostVoice,
-              promptInstructions: podcast.promptInstructions,
             });
           }
 
@@ -520,117 +509,6 @@ const podcastRouter = {
       );
     },
   ),
-
-  listScriptVersions: protectedProcedure.podcasts.listScriptVersions.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
-        Effect.gen(function* () {
-          const podcastRepo = yield* PodcastRepo;
-          const scriptVersionRepo = yield* ScriptVersionRepo;
-
-          // Verify podcast exists
-          yield* podcastRepo.findById(input.id);
-
-          const versions = yield* scriptVersionRepo.listByPodcastId(input.id);
-          return versions.map((v) => ({
-            id: v.id,
-            version: v.version,
-            isActive: v.isActive,
-            status: v.status,
-            segmentCount: v.segmentCount,
-            hasAudio: v.hasAudio,
-            createdAt: v.createdAt.toISOString(),
-          }));
-        }).pipe(Effect.provide(context.layers)),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e) => {
-            throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
-            });
-          },
-        },
-      );
-    },
-  ),
-
-  getScriptVersion: protectedProcedure.podcasts.getScriptVersion.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
-        Effect.gen(function* () {
-          const podcastRepo = yield* PodcastRepo;
-          const scriptVersionRepo = yield* ScriptVersionRepo;
-
-          // Verify podcast exists
-          yield* podcastRepo.findById(input.id);
-
-          const script = yield* scriptVersionRepo.findById(input.scriptId);
-
-          // Verify script belongs to the podcast
-          if (script.podcastId !== input.id) {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: 'Script version not found for this podcast',
-              data: { podcastId: input.id },
-            });
-          }
-
-          return serializePodcastScript(script);
-        }).pipe(Effect.provide(context.layers)),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e) => {
-            throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
-            });
-          },
-          ScriptNotFound: (e) => {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'Script version not found',
-              data: { podcastId: e.podcastId },
-            });
-          },
-        },
-      );
-    },
-  ),
-
-  restoreScriptVersion:
-    protectedProcedure.podcasts.restoreScriptVersion.handler(
-      async ({ context, input, errors }) => {
-        const handlers = createErrorHandlers(errors);
-        return handleEffect(
-          restoreVersion({
-            podcastId: input.id,
-            versionId: input.scriptId,
-          }).pipe(
-            Effect.map((result) => serializePodcastScript(result.restoredVersion)),
-            Effect.provide(context.layers),
-          ),
-          {
-            ...handlers.common,
-            ...handlers.database,
-            PodcastNotFound: (e) => {
-              throw errors.PODCAST_NOT_FOUND({
-                message: e.message ?? `Podcast ${e.id} not found`,
-                data: { podcastId: e.id },
-              });
-            },
-            ScriptNotFound: (e) => {
-              throw errors.SCRIPT_NOT_FOUND({
-                message: e.message ?? 'Script version not found',
-                data: { podcastId: e.podcastId },
-              });
-            },
-          },
-        );
-      },
-    ),
 };
 
 export default podcastRouter;

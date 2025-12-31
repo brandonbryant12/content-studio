@@ -5,7 +5,7 @@ import {
   type SynthesizeResult,
   type PreviewVoiceResult,
 } from '@repo/ai';
-import { TTSError, type TTSQuotaExceededError } from '@repo/effect/errors';
+import { TTSError, type TTSQuotaExceededError } from '@repo/db/errors';
 import { Layer, Effect } from 'effect';
 
 /**

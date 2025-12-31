@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from 'effect';
-import type { DatabaseInstance } from '@repo/db/client';
+import type { DatabaseInstance } from './client';
 import {
   DbError,
   ConstraintViolationError,
@@ -23,7 +23,7 @@ export interface DbService {
   readonly db: DatabaseInstance;
 }
 
-export class Db extends Context.Tag('@repo/effect/Db')<Db, DbService>() {}
+export class Db extends Context.Tag('@repo/db/Db')<Db, DbService>() {}
 
 /**
  * PostgreSQL error with optional code, constraint, and table fields.

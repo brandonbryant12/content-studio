@@ -6,7 +6,6 @@
  * Architecture:
  * - Repos (Context.Tag): Database operations with dependency injection
  * - Use Cases (pure functions): Business logic that yields dependencies
- * - Utils: State machine for version transitions
  */
 
 // =============================================================================
@@ -42,7 +41,6 @@ export {
   listPodcasts,
   // Script operations
   editScript,
-  restoreVersion,
   // Generation
   generateScript,
   generateAudio,
@@ -54,14 +52,11 @@ export {
   type CreatePodcastInput,
   type GetPodcastInput,
   type UpdatePodcastInput,
-  type UpdatePodcastResult,
   type DeletePodcastInput,
   type ListPodcastsInput,
   type ListPodcastsResult,
   type EditScriptInput,
   type EditScriptResult,
-  type RestoreVersionInput,
-  type RestoreVersionResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
   type GenerateAudioInput,
@@ -70,26 +65,6 @@ export {
   type ProgressToResult,
   type ScriptSegment,
 } from './use-cases';
-
-// =============================================================================
-// State Machine Utils
-// =============================================================================
-
-export {
-  calculateSteps,
-  isValidTransition,
-  determineNewVersionStatus,
-  detectEditType,
-  canRegenerate,
-  isTerminalState,
-  isGenerating,
-  getStatusDescription,
-  STATUS_ORDER,
-  GENERATING_STATES,
-  FAILED_STATE,
-  type GenerationStep,
-  type EditType,
-} from './utils';
 
 // =============================================================================
 // Prompts

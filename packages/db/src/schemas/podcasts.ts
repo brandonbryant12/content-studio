@@ -146,13 +146,6 @@ export const podcastScript = pgTable(
     audioUrl: text('audio_url'),
     duration: integer('duration'), // seconds
 
-    // Snapshot of podcast settings at version creation time
-    // Enables change detection for smart transitions
-    hostVoice: text('host_voice'),
-    coHostVoice: text('co_host_voice'),
-    sourceDocumentIds: uuid('source_document_ids').array().notNull().default([]),
-    promptInstructions: text('prompt_instructions'),
-
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -310,12 +303,6 @@ export const PodcastScriptOutputSchema = v.object({
   audioUrl: v.nullable(v.string()),
   duration: v.nullable(v.number()),
 
-  // Snapshot of settings at version creation
-  hostVoice: v.nullable(v.string()),
-  coHostVoice: v.nullable(v.string()),
-  sourceDocumentIds: v.array(v.string()),
-  promptInstructions: v.nullable(v.string()),
-
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -393,10 +380,6 @@ export const serializePodcastScript = (
   generationPrompt: script.generationPrompt,
   audioUrl: script.audioUrl,
   duration: script.duration,
-  hostVoice: script.hostVoice,
-  coHostVoice: script.coHostVoice,
-  sourceDocumentIds: script.sourceDocumentIds ?? [],
-  promptInstructions: script.promptInstructions,
   createdAt: script.createdAt.toISOString(),
   updatedAt: script.updatedAt.toISOString(),
 });

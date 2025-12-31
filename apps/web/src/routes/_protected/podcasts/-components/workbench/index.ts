@@ -8,7 +8,6 @@ export { AddSegmentDialog } from './add-segment-dialog';
 export { SmartActions } from './smart-actions';
 export { GenerationStatus } from './generation-status';
 export { ErrorDisplay } from './error-display';
-export { VersionHistory } from './version-history';
 export { DocumentManager } from './document-manager';
 export { PodcastSettings } from './podcast-settings';
 export { GlobalActionBar } from './global-action-bar';

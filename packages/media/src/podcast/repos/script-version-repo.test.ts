@@ -10,8 +10,7 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { podcast, podcastScript, user } from '@repo/db/schema';
-import { ScriptNotFound } from '@repo/effect/errors';
-import { Db } from '@repo/effect/db';
+import { Db } from '@repo/db/effect';
 
 // Valid UUID that doesn't exist in the database
 const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
@@ -86,7 +85,6 @@ describe('ScriptVersionRepo', () => {
         repo.insert({
           podcastId: testPodcast.id,
           status: 'draft',
-          sourceDocumentIds: [],
         }),
       );
 
@@ -102,7 +100,6 @@ describe('ScriptVersionRepo', () => {
         repo.insert({
           podcastId: testPodcast.id,
           status: 'draft',
-          sourceDocumentIds: [],
         }),
       );
 
@@ -111,7 +108,6 @@ describe('ScriptVersionRepo', () => {
           podcastId: testPodcast.id,
           status: 'script_ready',
           segments: [{ speaker: 'host', line: 'Hello', index: 0 }],
-          sourceDocumentIds: [],
         }),
       );
 
@@ -125,7 +121,6 @@ describe('ScriptVersionRepo', () => {
         repo.insert({
           podcastId: testPodcast.id,
           status: 'draft',
-          sourceDocumentIds: [],
         }),
       );
 
@@ -133,7 +128,6 @@ describe('ScriptVersionRepo', () => {
         repo.insert({
           podcastId: testPodcast.id,
           status: 'script_ready',
-          sourceDocumentIds: [],
         }),
       );
 
@@ -286,59 +280,6 @@ describe('ScriptVersionRepo', () => {
     });
   });
 
-  describe('activate', () => {
-    it('should activate a specific version and deactivate others', async () => {
-      const script1 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 1,
-        isActive: true,
-      });
-      const script2 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 2,
-        isActive: false,
-      });
-      await ctx.db.insert(podcastScript).values([script1, script2]);
-
-      const repo = await runEffect(Effect.map(ScriptVersionRepo, (r) => r));
-      const result = await runEffect(repo.activate(script2.id));
-
-      expect(result.isActive).toBe(true);
-
-      // Verify script1 is now inactive
-      const script1Updated = await runEffect(repo.findById(script1.id));
-      expect(script1Updated.isActive).toBe(false);
-    });
-  });
-
-  describe('listByPodcastId', () => {
-    it('should list all versions with summary', async () => {
-      const script1 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 1,
-        status: 'script_ready',
-        segments: [{ speaker: 'host', line: 'Hello', index: 0 }],
-      });
-      const script2 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 2,
-        status: 'audio_ready',
-        audioUrl: 'https://example.com/audio.wav',
-      });
-      await ctx.db.insert(podcastScript).values([script1, script2]);
-
-      const repo = await runEffect(Effect.map(ScriptVersionRepo, (r) => r));
-      const result = await runEffect(repo.listByPodcastId(testPodcast.id));
-
-      expect(result).toHaveLength(2);
-      // Should be ordered by version desc
-      expect(result[0]?.version).toBe(2);
-      expect(result[0]?.hasAudio).toBe(true);
-      expect(result[1]?.version).toBe(1);
-      expect(result[1]?.segmentCount).toBe(1);
-    });
-  });
-
   describe('getNextVersion', () => {
     it('should return 1 for podcast with no versions', async () => {
       const repo = await runEffect(Effect.map(ScriptVersionRepo, (r) => r));
@@ -358,45 +299,6 @@ describe('ScriptVersionRepo', () => {
       const result = await runEffect(repo.getNextVersion(testPodcast.id));
 
       expect(result).toBe(4);
-    });
-  });
-
-  describe('restore', () => {
-    it('should restore a version (activate it)', async () => {
-      const script1 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 1,
-        isActive: false,
-        status: 'script_ready',
-      });
-      const script2 = createTestPodcastScript({
-        podcastId: testPodcast.id,
-        version: 2,
-        isActive: true,
-        status: 'audio_ready',
-      });
-      await ctx.db.insert(podcastScript).values([script1, script2]);
-
-      const repo = await runEffect(Effect.map(ScriptVersionRepo, (r) => r));
-      const result = await runEffect(repo.restore(script1.id));
-
-      expect(result.isActive).toBe(true);
-      expect(result.version).toBe(1);
-
-      // Verify script2 is now inactive
-      const script2Updated = await runEffect(repo.findById(script2.id));
-      expect(script2Updated.isActive).toBe(false);
-    });
-
-    it('should fail with ScriptNotFound for non-existent version', async () => {
-      const repo = await runEffect(Effect.map(ScriptVersionRepo, (r) => r));
-
-      await expectToFail(
-        repo.restore(NON_EXISTENT_ID),
-        ScriptVersionRepoLive,
-        ctx.dbLayer,
-        'ScriptNotFound',
-      );
     });
   });
 });

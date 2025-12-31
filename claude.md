@@ -26,11 +26,10 @@ packages/
   api/                 # oRPC contracts and API handlers
     src/contracts/     # API shape definitions (Valibot schemas)
     src/server/router/ # Handler implementations
-  db/                  # Drizzle schemas and database client
+  db/                  # Drizzle schemas, database client, and Effect utilities
     src/schemas/       # Table definitions
-  effect/              # Effect utilities
+    src/effect.ts      # Database Effect wrapper (withDb, Db, DbLive)
     src/errors.ts      # All error type definitions
-    src/db.ts          # Database Effect wrapper
   media/               # Document and Podcast services
   ai/                  # LLM and TTS providers
   storage/             # File storage (filesystem, S3, database)
@@ -75,7 +74,7 @@ return handleEffect(effect, {
 **Always use `withDb` wrapper:**
 
 ```typescript
-import { withDb } from '@repo/effect/db';
+import { withDb } from '@repo/db/effect';
 
 const findById = (id: string) =>
   withDb('entity.findById', (db) =>
@@ -154,7 +153,7 @@ const handler = protectedProcedure.entity.action.handler(
 ### Adding a New Entity
 
 1. **Schema**: `packages/db/src/schemas/[entity].ts`
-2. **Errors**: `packages/effect/src/errors.ts` (add NotFound, etc.)
+2. **Errors**: `packages/db/src/errors.ts` (add NotFound, etc.)
 3. **Service**: `packages/[domain]/src/[entity]/`
 4. **Contract**: `packages/api/src/contracts/[entity].ts`
 5. **Handler**: `packages/api/src/server/router/[entity].ts`
@@ -162,7 +161,7 @@ const handler = protectedProcedure.entity.action.handler(
 
 ### Adding Error Types
 
-1. Define in `packages/effect/src/errors.ts` extending `Schema.TaggedError`
+1. Define in `packages/db/src/errors.ts` extending `Schema.TaggedError`
 2. Add to `ApiError` union type
 3. Add handler to `createErrorHandlers` in `effect-handler.ts`
 

@@ -20,6 +20,5 @@ export {
   type ScriptVersionRepoService,
   type CreateScriptVersion,
   type UpdateScriptVersion,
-  type ScriptVersionSummary,
   type VersionStatus,
 } from './script-version-repo';

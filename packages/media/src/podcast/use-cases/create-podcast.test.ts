@@ -11,7 +11,7 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { document, user } from '@repo/db/schema';
-import { DocumentNotFound } from '@repo/effect/errors';
+import { DocumentNotFound } from '@repo/db/errors';
 
 // Valid UUID that doesn't exist in the database
 const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
@@ -94,30 +94,21 @@ describe('createPodcast use case', () => {
       expect(result.activeVersion?.version).toBe(1);
     });
 
-    it('should set voice settings on version', async () => {
+    it('should set voice and prompt settings on podcast', async () => {
       const result = await runEffect(
         createPodcast({
           format: 'conversation',
           hostVoice: 'voice-1',
           coHostVoice: 'voice-2',
-          userId: testUser.id,
-        }),
-      );
-
-      expect(result.activeVersion?.hostVoice).toBe('voice-1');
-      expect(result.activeVersion?.coHostVoice).toBe('voice-2');
-    });
-
-    it('should set prompt instructions on version', async () => {
-      const result = await runEffect(
-        createPodcast({
-          format: 'conversation',
           promptInstructions: 'Make it casual',
           userId: testUser.id,
         }),
       );
 
-      expect(result.activeVersion?.promptInstructions).toBe('Make it casual');
+      // Voice and prompt settings are now on the podcast, not the version
+      expect(result.hostVoice).toBe('voice-1');
+      expect(result.coHostVoice).toBe('voice-2');
+      expect(result.promptInstructions).toBe('Make it casual');
     });
   });
 
@@ -138,7 +129,8 @@ describe('createPodcast use case', () => {
       expect(result.documents).toHaveLength(2);
       expect(result.documents.map((d) => d.id)).toContain(doc1.id);
       expect(result.documents.map((d) => d.id)).toContain(doc2.id);
-      expect(result.activeVersion?.sourceDocumentIds).toEqual([doc1.id, doc2.id]);
+      // Documents are linked to podcast, not version
+      expect(result.sourceDocumentIds).toEqual([doc1.id, doc2.id]);
     });
 
     it('should fail with DocumentNotFound for non-existent document', async () => {

@@ -1,7 +1,7 @@
 import { CurrentUser, requireOwnership, Role } from '@repo/auth-policy';
 import { Storage } from '@repo/storage';
 import { Effect, Layer } from 'effect';
-import type { Db } from '@repo/effect/db';
+import type { Db } from '@repo/db/effect';
 import { DocumentNotFound } from './errors';
 import {
   parseUploadedFile,

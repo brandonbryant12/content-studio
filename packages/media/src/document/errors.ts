@@ -5,4 +5,4 @@ export {
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
   DocumentParseError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';

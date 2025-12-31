@@ -18,7 +18,5 @@ export {
   withImpersonation,
 } from './policies';
 
-// Providers exported via subpath imports:
+// Provider exported via subpath import:
 // - @repo/auth-policy/providers/database
-// - @repo/auth-policy/providers/graph
-// - @repo/auth-policy/providers/composite

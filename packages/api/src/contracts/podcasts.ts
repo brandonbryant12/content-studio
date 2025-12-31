@@ -123,7 +123,7 @@ const scriptSegmentSchema = v.object({
   index: v.number(),
 });
 
-// Podcast script (version) - now includes status and voice/prompt snapshots
+// Podcast script (version)
 const podcastScriptSchema = v.object({
   id: v.string(),
   podcastId: v.string(),
@@ -136,10 +136,6 @@ const podcastScriptSchema = v.object({
   generationPrompt: v.nullable(v.string()),
   audioUrl: v.nullable(v.string()),
   duration: v.nullable(v.number()),
-  hostVoice: v.nullable(v.string()),
-  coHostVoice: v.nullable(v.string()),
-  sourceDocumentIds: v.array(v.string()),
-  promptInstructions: v.nullable(v.string()),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -379,66 +375,6 @@ const podcastContract = oc
       .errors(jobErrors)
       .input(v.object({ jobId: v.pipe(v.string(), v.uuid()) }))
       .output(jobOutputSchema),
-
-    // List script versions
-    listScriptVersions: oc
-      .route({
-        method: 'GET',
-        path: '/{id}/scripts',
-        summary: 'List script versions',
-        description:
-          'List all script versions for a podcast (for version history)',
-      })
-      .errors(podcastErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(
-        v.array(
-          v.object({
-            id: v.string(),
-            version: v.number(),
-            isActive: v.boolean(),
-            status: versionStatusSchema,
-            segmentCount: v.number(),
-            hasAudio: v.boolean(),
-            createdAt: v.string(),
-          }),
-        ),
-      ),
-
-    // Get specific script version
-    getScriptVersion: oc
-      .route({
-        method: 'GET',
-        path: '/{id}/scripts/{scriptId}',
-        summary: 'Get script version',
-        description: 'Get a specific script version by ID',
-      })
-      .errors(podcastErrors)
-      .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          scriptId: v.pipe(v.string(), v.uuid()),
-        }),
-      )
-      .output(podcastScriptSchema),
-
-    // Restore script version
-    restoreScriptVersion: oc
-      .route({
-        method: 'POST',
-        path: '/{id}/scripts/{scriptId}/restore',
-        summary: 'Restore script version',
-        description:
-          'Restore a previous script version (makes it active)',
-      })
-      .errors(podcastErrors)
-      .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          scriptId: v.pipe(v.string(), v.uuid()),
-        }),
-      )
-      .output(podcastScriptSchema),
   });
 
 export default podcastContract;

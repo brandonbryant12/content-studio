@@ -3,7 +3,7 @@ import { Layer } from 'effect';
 import type { TestUser } from '../factories/user';
 import type { LLM, TTS } from '@repo/ai';
 import type { CurrentUser } from '@repo/auth-policy';
-import type { Db } from '@repo/effect/db';
+import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 import { MockLLMLive, createMockLLM, type MockLLMOptions } from '../mocks/llm';
 import {

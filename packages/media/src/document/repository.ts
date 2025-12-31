@@ -4,8 +4,8 @@ import {
   type UpdateDocument,
   type DocumentSource,
 } from '@repo/db/schema';
-import { withDb } from '@repo/effect/db';
-import { DocumentNotFound } from '@repo/effect/errors';
+import { withDb } from '@repo/db/effect';
+import { DocumentNotFound } from '@repo/db/errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
 

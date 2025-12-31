@@ -16,7 +16,6 @@ export { getPodcast, type GetPodcastInput, type GetPodcastError } from './get-po
 export {
   updatePodcast,
   type UpdatePodcastInput,
-  type UpdatePodcastResult,
   type UpdatePodcastError,
 } from './update-podcast';
 
@@ -40,13 +39,6 @@ export {
   type EditScriptError,
   type ScriptSegment,
 } from './edit-script';
-
-export {
-  restoreVersion,
-  type RestoreVersionInput,
-  type RestoreVersionResult,
-  type RestoreVersionError,
-} from './restore-version';
 
 // =============================================================================
 // Generation Operations

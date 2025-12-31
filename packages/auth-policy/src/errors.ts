@@ -3,4 +3,4 @@ export {
   UnauthorizedError as Unauthorized,
   ForbiddenError as Forbidden,
   PolicyError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';

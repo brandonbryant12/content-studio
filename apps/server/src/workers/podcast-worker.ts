@@ -4,7 +4,7 @@ import { createStorageLayer, type StorageConfig } from '@repo/api/server';
 import { CurrentUserLive, Role } from '@repo/auth-policy';
 import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
 import { createDb } from '@repo/db/client';
-import { DbLive } from '@repo/effect/db';
+import { DbLive } from '@repo/db/effect';
 import {
   DocumentsLive,
   PodcastRepoLive,

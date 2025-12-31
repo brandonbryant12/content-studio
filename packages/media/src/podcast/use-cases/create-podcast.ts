@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
-import { DocumentNotFound } from '@repo/effect/errors';
+import type { Db, DatabaseError } from '@repo/db/effect';
+import { DocumentNotFound } from '@repo/db/errors';
 import { PodcastRepo, type PodcastFull } from '../repos/podcast-repo';
 import { ScriptVersionRepo } from '../repos/script-version-repo';
 
@@ -60,10 +60,6 @@ export const createPodcast = (
       podcastId: podcastWithDocs.id,
       status: 'draft',
       segments: null,
-      sourceDocumentIds: documentIds ?? [],
-      hostVoice: data.hostVoice ?? null,
-      coHostVoice: data.coHostVoice ?? null,
-      promptInstructions: data.promptInstructions ?? null,
     });
 
     // 4. Return full podcast with active version

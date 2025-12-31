@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/db/effect';
 import {
   PodcastNotFound,
   ScriptNotFound,
@@ -8,7 +8,7 @@ import {
   TTSQuotaExceededError,
   StorageError,
   StorageUploadError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { PodcastRepo } from '../repos/podcast-repo';
@@ -110,9 +110,9 @@ export const generateAudio = (
     // 3. Update status to generating
     yield* scriptVersionRepo.updateStatus(input.versionId, 'generating_audio');
 
-    // 4. Determine voices
-    const hostVoice = version.hostVoice ?? podcast.hostVoice ?? 'Charon';
-    const coHostVoice = version.coHostVoice ?? podcast.coHostVoice ?? 'Kore';
+    // 4. Determine voices (from podcast config)
+    const hostVoice = podcast.hostVoice ?? 'Charon';
+    const coHostVoice = podcast.coHostVoice ?? 'Kore';
 
     // 5. Convert segments to TTS format
     const turns: SpeakerTurn[] = version.segments.map((segment) => ({

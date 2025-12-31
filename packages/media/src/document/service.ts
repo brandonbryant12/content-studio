@@ -1,7 +1,7 @@
 import { Context } from 'effect';
 import type { CurrentUser } from '@repo/auth-policy';
 import type { Document, CreateDocument, UpdateDocument } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/db/effect';
 import type {
   DocumentNotFound,
   ForbiddenError,
@@ -12,7 +12,7 @@ import type {
   StorageError,
   StorageNotFoundError,
   StorageUploadError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';
 import type { Storage } from '@repo/storage';
 import type { Effect } from 'effect';
 

@@ -22,7 +22,6 @@
     "@repo/auth": "workspace:*",
     "@repo/auth-policy": "workspace:*",
     "@repo/db": "workspace:*",
-    "@repo/effect": "workspace:*",
     "@repo/ai": "workspace:*",
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",

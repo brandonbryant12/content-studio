@@ -17,7 +17,7 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { document, podcast, podcastScript, user } from '@repo/db/schema';
-import { PodcastNotFound, ScriptNotFound } from '@repo/effect/errors';
+import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
 
 // Valid UUID that doesn't exist in the database
 const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
@@ -116,28 +116,7 @@ describe('generateScript use case', () => {
       expect(result.segmentCount).toBeGreaterThan(0);
     });
 
-    it('should copy podcast settings to new version', async () => {
-      // Update podcast with specific settings
-      await ctx.db
-        .update(podcast)
-        .set({
-          hostVoice: 'custom-host',
-          coHostVoice: 'custom-cohost',
-          promptInstructions: 'Be funny',
-        })
-        .where(eq(podcast.id, testPodcast.id));
-
-      const result = await runEffect(
-        generateScript({
-          podcastId: testPodcast.id,
-        }),
-      );
-
-      expect(result.version.hostVoice).toBe('custom-host');
-      expect(result.version.coHostVoice).toBe('custom-cohost');
-    });
-
-    it('should use provided promptInstructions over podcast settings', async () => {
+    it('should use promptInstructions in generation', async () => {
       const result = await runEffect(
         generateScript({
           podcastId: testPodcast.id,
@@ -145,7 +124,8 @@ describe('generateScript use case', () => {
         }),
       );
 
-      expect(result.version.promptInstructions).toBe('Override instructions');
+      // Prompt instructions should be captured in generationPrompt
+      expect(result.version.generationPrompt).toContain('Override instructions');
     });
 
     it('should update podcast metadata from LLM output', async () => {

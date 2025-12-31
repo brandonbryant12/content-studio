@@ -1,6 +1,6 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
 import { job } from '@repo/db/schema';
-import { Db } from '@repo/effect';
+import { Db } from '@repo/db/effect';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType, JobStatus } from './types';
 import { QueueError, JobNotFoundError, JobProcessingError } from './errors';

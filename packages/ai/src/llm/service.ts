@@ -1,5 +1,5 @@
 import { Context } from 'effect';
-import type { LLMError, LLMRateLimitError } from '@repo/effect/errors';
+import type { LLMError, LLMRateLimitError } from '@repo/db/errors';
 import type { Schema, Effect } from 'effect';
 
 /**

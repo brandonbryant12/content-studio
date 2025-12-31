@@ -33,7 +33,6 @@
   "prettier": "@repo/prettier-config",
   "dependencies": {
     "@repo/db": "workspace:*",
-    "@repo/effect": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "^3.16.0"
   },

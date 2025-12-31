@@ -3,4 +3,4 @@ export {
   StorageError,
   StorageNotFoundError,
   StorageUploadError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';

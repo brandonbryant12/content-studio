@@ -28,7 +28,6 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
-    "@repo/effect": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/auth-policy": "workspace:*",
     "@repo/ai": "workspace:*",

@@ -10,7 +10,7 @@ export {
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';
 
 // Document module
 export {
@@ -59,7 +59,6 @@ export {
   deletePodcast,
   listPodcasts,
   editScript,
-  restoreVersion,
   generateScript,
   generateAudio,
   progressTo,
@@ -68,14 +67,11 @@ export {
   type CreatePodcastInput,
   type GetPodcastInput,
   type UpdatePodcastInput,
-  type UpdatePodcastResult,
   type DeletePodcastInput,
   type ListPodcastsInput,
   type ListPodcastsResult,
   type EditScriptInput,
   type EditScriptResult,
-  type RestoreVersionInput,
-  type RestoreVersionResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
   type GenerateAudioInput,
@@ -85,21 +81,8 @@ export {
   type ScriptSegment,
 } from './podcast';
 
-// Podcast module - Utils & Types
+// Podcast module - Types
 export {
-  calculateSteps,
-  isValidTransition,
-  determineNewVersionStatus,
-  detectEditType,
-  canRegenerate,
-  isTerminalState,
-  isGenerating,
-  getStatusDescription,
-  STATUS_ORDER,
-  GENERATING_STATES,
-  FAILED_STATE,
-  type GenerationStep,
-  type EditType,
   type Podcast,
   type PodcastScript,
   type PodcastFormat,

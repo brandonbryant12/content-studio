@@ -1,6 +1,6 @@
 import { Effect, Schema } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/db/effect';
 import type { CurrentUser } from '@repo/auth-policy';
 import {
   PodcastNotFound,
@@ -13,7 +13,7 @@ import {
   DocumentParseError,
   PolicyError,
   ForbiddenError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';
 import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
 import { Documents } from '../../document';
@@ -117,10 +117,6 @@ export const generateScript = (
         podcastId: input.podcastId,
         status: 'draft',
         segments: null,
-        sourceDocumentIds: podcast.sourceDocumentIds,
-        hostVoice: podcast.hostVoice,
-        coHostVoice: podcast.coHostVoice,
-        promptInstructions: input.promptInstructions ?? podcast.promptInstructions,
       });
     }
 

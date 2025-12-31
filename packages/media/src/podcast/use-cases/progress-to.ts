@@ -1,10 +1,34 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
-import { PodcastNotFound, ScriptNotFound } from '@repo/effect/errors';
+import type { Db, DatabaseError } from '@repo/db/effect';
+import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
-import { calculateSteps, type GenerationStep } from '../utils/state-machine';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export type GenerationStep = 'generate-script' | 'generate-audio';
+
+/**
+ * Calculate the steps needed to progress from current to target status.
+ */
+const calculateSteps = (
+  current: VersionStatus,
+  target: 'script_ready' | 'audio_ready',
+): GenerationStep[] => {
+  if (current === 'draft' && target === 'script_ready') {
+    return ['generate-script'];
+  }
+  if (current === 'draft' && target === 'audio_ready') {
+    return ['generate-script', 'generate-audio'];
+  }
+  if (current === 'script_ready' && target === 'audio_ready') {
+    return ['generate-audio'];
+  }
+  return [];
+};
 
 // =============================================================================
 // Types
@@ -75,15 +99,10 @@ export const progressTo = (
 
     if (!version) {
       // Create initial draft version
-      const podcast = yield* podcastRepo.findByIdFull(input.podcastId);
       version = yield* scriptVersionRepo.insert({
         podcastId: input.podcastId,
         status: 'draft',
         segments: null,
-        sourceDocumentIds: podcast.sourceDocumentIds,
-        hostVoice: podcast.hostVoice,
-        coHostVoice: podcast.coHostVoice,
-        promptInstructions: podcast.promptInstructions,
       });
     }
 

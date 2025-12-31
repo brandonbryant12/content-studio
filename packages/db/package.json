@@ -14,6 +14,26 @@
     "./schema": {
       "types": "./dist/src/schema.d.ts",
       "default": "./src/schema.ts"
+    },
+    "./effect": {
+      "types": "./dist/src/effect.d.ts",
+      "default": "./src/effect.ts"
+    },
+    "./errors": {
+      "types": "./dist/src/errors.d.ts",
+      "default": "./src/errors.ts"
+    },
+    "./runtime": {
+      "types": "./dist/src/runtime.d.ts",
+      "default": "./src/runtime.ts"
+    },
+    "./logging": {
+      "types": "./dist/src/logging.d.ts",
+      "default": "./src/logging.ts"
+    },
+    "./telemetry": {
+      "types": "./dist/src/telemetry.d.ts",
+      "default": "./src/telemetry.ts"
     }
   },
   "scripts": {
@@ -31,8 +51,14 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
+    "@opentelemetry/api": "catalog:",
+    "@opentelemetry/resources": "catalog:",
+    "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
+    "@opentelemetry/semantic-conventions": "catalog:",
     "drizzle-orm": "catalog:",
     "drizzle-valibot": "catalog:",
+    "effect": "^3.16.0",
     "pg": "catalog:",
     "valibot": "catalog:"
   },

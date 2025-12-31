@@ -68,7 +68,10 @@
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:frontendatscale.com)",
       "Bash(npm view:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(done)",
+      "Bash(xargs:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

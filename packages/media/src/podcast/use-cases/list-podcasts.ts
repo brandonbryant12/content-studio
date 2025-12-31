@@ -1,5 +1,5 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/effect/db';
+import type { Db, DatabaseError } from '@repo/db/effect';
 import {
   PodcastRepo,
   type ListOptions,

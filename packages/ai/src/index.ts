@@ -4,7 +4,7 @@ export {
   LLMRateLimitError,
   TTSError,
   TTSQuotaExceededError,
-} from '@repo/effect/errors';
+} from '@repo/db/errors';
 
 // LLM
 export {

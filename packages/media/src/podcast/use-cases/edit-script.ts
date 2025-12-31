@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/effect/db';
-import { PodcastNotFound, ScriptNotFound } from '@repo/effect/errors';
+import type { Db, DatabaseError } from '@repo/db/effect';
+import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 
@@ -81,10 +81,6 @@ export const editScript = (
       podcastId: input.podcastId,
       status: 'script_ready' as VersionStatus,
       segments: input.segments,
-      sourceDocumentIds: currentVersion.sourceDocumentIds,
-      hostVoice: currentVersion.hostVoice,
-      coHostVoice: currentVersion.coHostVoice,
-      promptInstructions: currentVersion.promptInstructions,
       summary: currentVersion.summary,
       generationPrompt: currentVersion.generationPrompt,
     });

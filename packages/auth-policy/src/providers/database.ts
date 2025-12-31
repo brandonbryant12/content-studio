@@ -1,6 +1,6 @@
 import { eq } from '@repo/db';
 import { user } from '@repo/db/schema';
-import { Db } from '@repo/effect/db';
+import { Db } from '@repo/db/effect';
 import { Effect, Layer } from 'effect';
 import { PolicyError } from '../errors';
 import { Policy, type PolicyService } from '../service';

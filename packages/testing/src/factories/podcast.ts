@@ -49,10 +49,6 @@ export interface CreateTestPodcastScriptOptions {
   generationPrompt?: string | null;
   audioUrl?: string | null;
   duration?: number | null;
-  hostVoice?: string | null;
-  coHostVoice?: string | null;
-  sourceDocumentIds?: string[];
-  promptInstructions?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -125,10 +121,6 @@ export const createTestPodcastScript = (
     generationPrompt: options.generationPrompt ?? null,
     audioUrl: options.audioUrl ?? null,
     duration: options.duration ?? null,
-    hostVoice: options.hostVoice ?? 'Charon',
-    coHostVoice: options.coHostVoice ?? 'Kore',
-    sourceDocumentIds: options.sourceDocumentIds ?? [],
-    promptInstructions: options.promptInstructions ?? null,
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
@@ -170,10 +162,6 @@ export const createReadyPodcastWithVersion = (
   const podcast = createTestPodcast(podcastOptions);
   const version = createAudioReadyScript({
     podcastId: podcast.id,
-    hostVoice: podcast.hostVoice,
-    coHostVoice: podcast.coHostVoice,
-    sourceDocumentIds: podcast.sourceDocumentIds,
-    promptInstructions: podcast.promptInstructions,
   });
   return { podcast, version };
 };
@@ -188,10 +176,6 @@ export const createScriptReadyPodcastWithVersion = (
   const podcast = createTestPodcast(podcastOptions);
   const version = createScriptReadyScript({
     podcastId: podcast.id,
-    hostVoice: podcast.hostVoice,
-    coHostVoice: podcast.coHostVoice,
-    sourceDocumentIds: podcast.sourceDocumentIds,
-    promptInstructions: podcast.promptInstructions,
   });
   return { podcast, version };
 };

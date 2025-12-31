@@ -12,7 +12,6 @@ type PodcastFull = RouterOutput['podcasts']['get'];
  * A podcast is in setup mode if it's a brand new podcast that hasn't been configured yet:
  * - No documents linked
  * - No generation has ever been started (no generationContext)
- * - Not currently generating (status is not draft with an active version from generate)
  * - No script content yet
  */
 export function isSetupMode(podcast: PodcastFull): boolean {
@@ -22,13 +21,8 @@ export function isSetupMode(podcast: PodcastFull): boolean {
   const hasGenerationContext = podcast.generationContext !== null;
   // Has script content?
   const hasScript = Boolean(podcast.activeVersion?.segments?.length);
-  // Is generation in progress? (version status is 'draft' but there's source docs on version)
-  // This indicates generate was triggered and a version was created with documents
-  const isGenerating =
-    podcast.activeVersion?.status === 'draft' &&
-    (podcast.activeVersion?.sourceDocumentIds?.length ?? 0) > 0;
 
   // Show setup wizard only for completely unconfigured podcasts
   // Exit setup mode as soon as ANY of these conditions is true
-  return !hasDocuments && !hasGenerationContext && !hasScript && !isGenerating;
+  return !hasDocuments && !hasGenerationContext && !hasScript;
 }

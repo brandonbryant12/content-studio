@@ -6,7 +6,7 @@ import {
 } from '@repo/storage';
 import { Layer } from 'effect';
 import type { StorageConfig } from './orpc';
-import type { Db } from '@repo/effect/db';
+import type { Db } from '@repo/db/effect';
 
 /**
  * Creates a storage layer based on the provided configuration.

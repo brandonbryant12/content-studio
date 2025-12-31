@@ -10,8 +10,8 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { document, podcast, podcastScript, user } from '@repo/db/schema';
-import { PodcastNotFound, DocumentNotFound } from '@repo/effect/errors';
-import { Db } from '@repo/effect/db';
+import { PodcastNotFound, DocumentNotFound } from '@repo/db/errors';
+import { Db } from '@repo/db/effect';
 
 // Valid UUID that doesn't exist in the database
 const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
@@ -152,7 +152,6 @@ describe('PodcastRepo', () => {
         isActive: true,
         status: 'script_ready',
         segments: [{ speaker: 'host', line: 'Hello!', index: 0 }],
-        sourceDocumentIds: [],
       });
 
       const repo = await runEffect(Effect.map(PodcastRepo, (r) => r));
@@ -288,7 +287,6 @@ describe('PodcastRepo', () => {
         isActive: true,
         status: 'audio_ready',
         duration: 300,
-        sourceDocumentIds: [],
       });
 
       const repo = await runEffect(Effect.map(PodcastRepo, (r) => r));
