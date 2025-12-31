@@ -6,7 +6,7 @@ import {
   createPodcast,
   updatePodcast,
   deletePodcast,
-  editScript,
+  saveChanges,
 } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
@@ -14,8 +14,6 @@ import type { Job } from '@repo/db/schema';
 import type {
   GeneratePodcastPayload,
   GeneratePodcastResult,
-  GenerateScriptPayload,
-  GenerateScriptResult,
   GenerateAudioPayload,
   GenerateAudioResult,
 } from '@repo/queue';
@@ -31,10 +29,7 @@ import {
 /**
  * Job result union type - matches contract schema.
  */
-type JobResult =
-  | GeneratePodcastResult
-  | GenerateScriptResult
-  | GenerateAudioResult;
+type JobResult = GeneratePodcastResult | GenerateAudioResult;
 
 /**
  * Serialized job output type.
@@ -222,39 +217,6 @@ const podcastRouter = {
     },
   ),
 
-  updateScript: protectedProcedure.podcasts.updateScript.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      const { id, segments } = input;
-
-      return handleEffect(
-        editScript({
-          podcastId: id,
-          segments,
-        }).pipe(
-          Effect.map((result) => serializePodcastScript(result.version)),
-          Effect.provide(context.layers),
-        ),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e) => {
-            throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
-            });
-          },
-          ScriptNotFound: (e) => {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'No active script found',
-              data: { podcastId: e.podcastId },
-            });
-          },
-        },
-      );
-    },
-  ),
-
   generate: protectedProcedure.podcasts.generate.handler(
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
@@ -276,16 +238,16 @@ const podcastRouter = {
             };
           }
 
-          // Get active version and update its status, or create a new draft version
+          // Get active version and update its status, or create a new drafting version
           const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
           if (activeVersion) {
-            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'draft');
+            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'drafting');
           } else {
-            // Create a new draft version for brand new podcasts
+            // Create a new drafting version for brand new podcasts
             // This ensures isSetupMode() returns false after generate is called
             yield* scriptVersionRepo.insert({
               podcastId: podcast.id,
-              status: 'draft',
+              status: 'drafting',
               segments: null,
             });
           }
@@ -357,101 +319,32 @@ const podcastRouter = {
     },
   ),
 
-  generateScript: protectedProcedure.podcasts.generateScript.handler(
+  saveChanges: protectedProcedure.podcasts.saveChanges.handler(
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
         Effect.gen(function* () {
           const podcastRepo = yield* PodcastRepo;
-          const scriptVersionRepo = yield* ScriptVersionRepo;
           const queue = yield* Queue;
 
-          // Verify podcast exists and user has access
+          // Verify podcast exists
           const podcast = yield* podcastRepo.findById(input.id);
 
-          // Check for existing pending/processing job (idempotency)
-          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
-          if (existingJob) {
-            return {
-              jobId: existingJob.id,
-              status: existingJob.status,
-            };
-          }
+          // Call saveChanges use case
+          const result = yield* saveChanges({
+            podcastId: input.id,
+            segments: input.segments,
+            hostVoice: input.hostVoice,
+            hostVoiceName: input.hostVoiceName,
+            coHostVoice: input.coHostVoice,
+            coHostVoiceName: input.coHostVoiceName,
+          });
 
-          // Get active version and update its status
-          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
-          if (activeVersion) {
-            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'draft');
-          }
-
-          // Enqueue the script-only generation job
-          const payload: GenerateScriptPayload = {
-            podcastId: podcast.id,
-            userId: podcast.createdBy,
-            promptInstructions: input.promptInstructions,
-          };
-
-          const job = yield* queue.enqueue(
-            'generate-script',
-            payload,
-            podcast.createdBy,
-          );
-
-          return {
-            jobId: job.id,
-            status: job.status,
-          };
-        }).pipe(
-          Effect.withSpan('api.podcasts.generateScript', {
-            attributes: { 'podcast.id': input.id },
-          }),
-          Effect.provide(context.layers),
-        ),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.queue,
-          PodcastNotFound: (e) => {
+          if (!result.hasChanges) {
+            // No changes, return a dummy response
             throw errors.PODCAST_NOT_FOUND({
-              message: e.message ?? `Podcast ${e.id} not found`,
-              data: { podcastId: e.id },
-            });
-          },
-          ScriptNotFound: (e) => {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: e.message ?? 'No active script found',
-              data: { podcastId: e.podcastId },
-            });
-          },
-        },
-      );
-    },
-  ),
-
-  generateAudio: protectedProcedure.podcasts.generateAudio.handler(
-    async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
-        Effect.gen(function* () {
-          const podcastRepo = yield* PodcastRepo;
-          const scriptVersionRepo = yield* ScriptVersionRepo;
-          const queue = yield* Queue;
-
-          // Verify podcast exists and user has access
-          const podcast = yield* podcastRepo.findById(input.id);
-
-          // Get active version and verify status
-          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
-          if (!activeVersion) {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: 'No active script version found',
-              data: { podcastId: podcast.id },
-            });
-          }
-
-          if (activeVersion.status !== 'script_ready') {
-            throw errors.FORBIDDEN({
-              message: `Script must be in script_ready status to generate audio. Current status: ${activeVersion.status}`,
+              message: 'No changes to save',
+              data: { podcastId: input.id },
             });
           }
 
@@ -464,12 +357,9 @@ const podcastRouter = {
             };
           }
 
-          // Update version status to generating_audio
-          yield* scriptVersionRepo.updateStatus(activeVersion.id, 'generating_audio');
-
-          // Enqueue the audio-only generation job
+          // Enqueue audio regeneration job
           const payload: GenerateAudioPayload = {
-            versionId: activeVersion.id,
+            versionId: result.version.id,
             userId: podcast.createdBy,
           };
 
@@ -484,7 +374,7 @@ const podcastRouter = {
             status: job.status,
           };
         }).pipe(
-          Effect.withSpan('api.podcasts.generateAudio', {
+          Effect.withSpan('api.podcasts.saveChanges', {
             attributes: { 'podcast.id': input.id },
           }),
           Effect.provide(context.layers),
@@ -503,6 +393,12 @@ const podcastRouter = {
             throw errors.SCRIPT_NOT_FOUND({
               message: e.message ?? 'No active script found',
               data: { podcastId: e.podcastId },
+            });
+          },
+          InvalidSaveError: (e) => {
+            throw errors.PODCAST_NOT_FOUND({
+              message: e.message,
+              data: { podcastId: input.id },
             });
           },
         },

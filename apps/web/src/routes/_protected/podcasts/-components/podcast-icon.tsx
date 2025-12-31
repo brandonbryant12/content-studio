@@ -7,7 +7,7 @@ export function PodcastIcon({
   format: 'voice_over' | 'conversation';
   status: VersionStatus | undefined;
 }) {
-  const isReady = status === 'audio_ready';
+  const isReady = status === 'ready';
   const containerClass = isReady ? 'icon-box-primary' : 'icon-box-lg';
   const iconClass = isReady
     ? 'text-primary-foreground'

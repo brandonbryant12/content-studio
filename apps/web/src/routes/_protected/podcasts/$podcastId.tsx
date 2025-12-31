@@ -22,9 +22,8 @@ import { podcastUtils } from '@/db';
 import {
   useScriptEditor,
   usePodcastSettings,
-  useOptimisticScriptGeneration,
-  useOptimisticAudioGeneration,
   useOptimisticFullGeneration,
+  useOptimisticSaveChanges,
 } from '@/hooks';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
@@ -54,17 +53,50 @@ function PodcastWorkbench() {
   // Settings state management
   const settings = usePodcastSettings({ podcast });
 
+  // Generation and save mutations with optimistic updates
+  const generateMutation = useOptimisticFullGeneration(podcastId);
+  const saveChangesMutation = useOptimisticSaveChanges(podcastId);
+
+  const hasAnyChanges = scriptEditor.hasChanges || settings.hasChanges;
+
+  // Combined save handler for script and voice changes
+  const handleSave = useCallback(() => {
+    if (!podcast || saveChangesMutation.isPending) return;
+
+    const segmentsToSave = scriptEditor.hasChanges ? scriptEditor.segments : undefined;
+    saveChangesMutation.mutate(
+      {
+        id: podcast.id,
+        segments: segmentsToSave,
+        hostVoice: settings.hasChanges ? settings.hostVoice : undefined,
+        coHostVoice: settings.hasChanges ? settings.coHostVoice : undefined,
+      },
+      {
+        onSuccess: () => {
+          // Reset state after successful save
+          if (segmentsToSave) {
+            scriptEditor.resetToSegments(segmentsToSave);
+          }
+          if (settings.hasChanges) {
+            settings.discardChanges();
+          }
+          toast.success('Saving changes and regenerating audio...');
+        },
+      },
+    );
+  }, [podcast, scriptEditor, settings, saveChangesMutation]);
+
   // Keyboard shortcut: Cmd/Ctrl+S to save
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        if (scriptEditor.hasChanges && !scriptEditor.isSaving) {
-          scriptEditor.saveChanges();
+        if (hasAnyChanges) {
+          handleSave();
         }
       }
     },
-    [scriptEditor],
+    [hasAnyChanges, handleSave],
   );
 
   useEffect(() => {
@@ -74,21 +106,21 @@ function PodcastWorkbench() {
 
   // Block navigation if there are unsaved changes
   useBlocker({
-    shouldBlockFn: () => scriptEditor.hasChanges,
+    shouldBlockFn: () => hasAnyChanges,
     withResolver: true,
   });
 
   // Browser beforeunload warning for unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (scriptEditor.hasChanges) {
+      if (hasAnyChanges) {
         e.preventDefault();
         e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [scriptEditor.hasChanges]);
+  }, [hasAnyChanges]);
 
   const deleteMutation = useMutation(
     apiClient.podcasts.delete.mutationOptions({
@@ -102,11 +134,6 @@ function PodcastWorkbench() {
       },
     }),
   );
-
-  // Generation mutations with optimistic updates
-  const generateScriptMutation = useOptimisticScriptGeneration(podcastId);
-  const generateAudioMutation = useOptimisticAudioGeneration(podcastId);
-  const generateAllMutation = useOptimisticFullGeneration(podcastId);
 
   if (isPending) {
     return (
@@ -133,15 +160,7 @@ function PodcastWorkbench() {
   }
 
   const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
-
-  // Track which specific generation action is pending
-  const pendingAction = generateScriptMutation.isPending
-    ? 'script'
-    : generateAudioMutation.isPending
-      ? 'audio'
-      : generateAllMutation.isPending
-        ? 'all'
-        : null;
+  const isPendingGeneration = generateMutation.isPending;
 
   // Show setup wizard for new podcasts that haven't been configured yet
   if (isSetupMode(podcast) && !setupSkipped) {
@@ -180,26 +199,19 @@ function PodcastWorkbench() {
         <ConfigPanel
           podcast={podcast}
           displayAudio={displayAudio}
-          isGenerating={isGenerating || generateAllMutation.isPending}
-          pendingAction={pendingAction}
+          isGenerating={isGenerating || isPendingGeneration}
+          isPendingGeneration={isPendingGeneration}
           settings={settings}
         />
       }
       actionBar={
         <GlobalActionBar
           status={podcast.activeVersion?.status}
-          hasScript={!!podcast.activeVersion}
           isGenerating={isGenerating}
-          pendingAction={pendingAction}
-          hasScriptChanges={scriptEditor.hasChanges}
-          isScriptSaving={scriptEditor.isSaving}
-          onSaveScript={scriptEditor.saveChanges}
-          hasSettingsChanges={settings.hasChanges}
-          isSettingsSaving={settings.isSaving}
-          onSaveSettings={settings.saveSettings}
-          onGenerateScript={() => generateScriptMutation.mutate({ id: podcast.id })}
-          onGenerateAudio={() => generateAudioMutation.mutate({ id: podcast.id })}
-          onGenerateAll={() => generateAllMutation.mutate({ id: podcast.id })}
+          hasChanges={hasAnyChanges}
+          isSaving={saveChangesMutation.isPending}
+          onSave={handleSave}
+          onGenerate={() => generateMutation.mutate({ id: podcast.id })}
           disabled={isGenerating}
         />
       }

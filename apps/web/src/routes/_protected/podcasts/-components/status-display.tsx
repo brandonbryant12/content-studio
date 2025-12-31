@@ -7,10 +7,15 @@ const statusPanelStyles: Record<
   VersionStatus,
   { color: string; bgColor: string; borderColor: string }
 > = {
-  draft: {
+  drafting: {
     color: 'text-blue-700 dark:text-blue-300',
     bgColor: 'bg-blue-50 dark:bg-blue-950/50',
     borderColor: 'border-blue-200 dark:border-blue-800',
+  },
+  generating_script: {
+    color: 'text-violet-700 dark:text-violet-300',
+    bgColor: 'bg-violet-50 dark:bg-violet-950/50',
+    borderColor: 'border-violet-200 dark:border-violet-800',
   },
   script_ready: {
     color: 'text-amber-700 dark:text-amber-300',
@@ -22,7 +27,7 @@ const statusPanelStyles: Record<
     bgColor: 'bg-violet-50 dark:bg-violet-950/50',
     borderColor: 'border-violet-200 dark:border-violet-800',
   },
-  audio_ready: {
+  ready: {
     color: 'text-emerald-700 dark:text-emerald-300',
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/50',
     borderColor: 'border-emerald-200 dark:border-emerald-800',
@@ -50,7 +55,7 @@ export function StatusDisplay({
   const panelStyle = status ? statusPanelStyles[status] : defaultPanelStyle;
   const statusConfig = getStatusConfig(status);
   const isGenerating = isGeneratingStatus(status);
-  const isReady = status === 'audio_ready';
+  const isReady = status === 'ready';
   const isFailed = status === 'failed';
 
   return (

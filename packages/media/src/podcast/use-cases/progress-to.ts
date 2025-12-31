@@ -13,18 +13,19 @@ export type GenerationStep = 'generate-script' | 'generate-audio';
 
 /**
  * Calculate the steps needed to progress from current to target status.
+ * Flow: drafting → generating_script → script_ready → generating_audio → ready
  */
 const calculateSteps = (
   current: VersionStatus,
-  target: 'script_ready' | 'audio_ready',
+  target: 'script_ready' | 'ready',
 ): GenerationStep[] => {
-  if (current === 'draft' && target === 'script_ready') {
+  if (current === 'drafting' && target === 'script_ready') {
     return ['generate-script'];
   }
-  if (current === 'draft' && target === 'audio_ready') {
+  if (current === 'drafting' && target === 'ready') {
     return ['generate-script', 'generate-audio'];
   }
-  if (current === 'script_ready' && target === 'audio_ready') {
+  if (current === 'script_ready' && target === 'ready') {
     return ['generate-audio'];
   }
   return [];
@@ -36,7 +37,7 @@ const calculateSteps = (
 
 export interface ProgressToInput {
   podcastId: string;
-  targetStatus: 'script_ready' | 'audio_ready';
+  targetStatus: 'script_ready' | 'ready';
 }
 
 export interface ProgressToResult {
@@ -76,12 +77,12 @@ export class InvalidProgressionError {
  * 3. Returns the steps required (actual execution is done by the worker)
  *
  * @example
- * // Progress from draft to audio_ready
- * const result = yield* progressTo({ podcastId, targetStatus: 'audio_ready' });
+ * // Progress from drafting to ready
+ * const result = yield* progressTo({ podcastId, targetStatus: 'ready' });
  * // result.stepsRequired = ['generate-script', 'generate-audio']
  *
- * // Progress from script_ready to audio_ready
- * const result = yield* progressTo({ podcastId, targetStatus: 'audio_ready' });
+ * // Progress from script_ready to ready
+ * const result = yield* progressTo({ podcastId, targetStatus: 'ready' });
  * // result.stepsRequired = ['generate-audio']
  */
 export const progressTo = (
@@ -98,10 +99,10 @@ export const progressTo = (
     let version = yield* scriptVersionRepo.findActiveByPodcastId(input.podcastId);
 
     if (!version) {
-      // Create initial draft version
+      // Create initial drafting version
       version = yield* scriptVersionRepo.insert({
         podcastId: input.podcastId,
-        status: 'draft',
+        status: 'drafting',
         segments: null,
       });
     }
@@ -123,6 +124,16 @@ export const progressTo = (
           currentStatus,
           input.targetStatus,
           'Cannot progress from failed state. Create a new version or retry.',
+        ),
+      );
+    }
+
+    if (currentStatus === 'generating_script') {
+      return yield* Effect.fail(
+        new InvalidProgressionError(
+          currentStatus,
+          input.targetStatus,
+          'Script generation in progress. Please wait for completion.',
         ),
       );
     }

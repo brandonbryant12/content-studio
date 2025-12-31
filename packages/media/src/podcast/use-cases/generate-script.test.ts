@@ -151,7 +151,7 @@ describe('generateScript use case', () => {
       // Create a draft version first
       const draftScript = createTestPodcastScript({
         podcastId: testPodcast.id,
-        status: 'draft',
+        status: 'drafting',
         segments: null,
       });
       await ctx.db.insert(podcastScript).values(draftScript);

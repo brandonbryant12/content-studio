@@ -63,7 +63,7 @@ export class InvalidAudioGenerationError {
  * 3. Converts segments to TTS turns format
  * 4. Synthesizes audio via multi-speaker TTS
  * 5. Uploads to storage
- * 6. Updates version with audio URL and 'audio_ready' status
+ * 6. Updates version with audio URL and 'ready' status
  *
  * @example
  * const result = yield* generateAudio({ versionId: 'version-123' });
@@ -141,7 +141,7 @@ export const generateAudio = (
 
     // 9. Update version with audio URL and ready status
     const updatedVersion = yield* scriptVersionRepo.update(input.versionId, {
-      status: 'audio_ready' as VersionStatus,
+      status: 'ready' as VersionStatus,
       audioUrl,
       duration,
     });

@@ -21,24 +21,15 @@ interface UsePodcastGenerationOptions {
 
 export interface UsePodcastGenerationReturn {
   /** Generate full podcast (script + audio) for existing podcast */
-  generateFull: (podcastId: string) => void;
-  /** Generate script only for existing podcast */
-  generateScript: (podcastId: string) => void;
-  /** Generate audio only for existing podcast with script_ready status */
-  generateAudio: (podcastId: string) => void;
+  generate: (podcastId: string) => void;
   /** Create new podcast and start full generation */
   createAndGenerate: () => void;
-  /** Create new podcast and generate script only for preview */
-  createAndPreview: () => void;
   /** True if any mutation is pending */
   isLoading: boolean;
   /** Individual loading states */
   loadingStates: {
-    generateFull: boolean;
-    generateScript: boolean;
-    generateAudio: boolean;
+    generate: boolean;
     createAndGenerate: boolean;
-    createAndPreview: boolean;
   };
 }
 
@@ -61,32 +52,6 @@ export function usePodcastGeneration({
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to start generation');
-      },
-    }),
-  );
-
-  // Script-only generation mutation
-  const generateScriptMutation = useMutation(
-    apiClient.podcasts.generateScript.mutationOptions({
-      onSuccess: () => {
-        podcastUtils.refetch();
-        toast.success('Script generation started!');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start script generation');
-      },
-    }),
-  );
-
-  // Audio-only generation mutation
-  const generateAudioMutation = useMutation(
-    apiClient.podcasts.generateAudio.mutationOptions({
-      onSuccess: () => {
-        podcastUtils.refetch();
-        toast.success('Audio generation started!');
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to start audio generation');
       },
     }),
   );
@@ -138,38 +103,12 @@ export function usePodcastGeneration({
     }),
   );
 
-  // Create podcast and trigger script-only generation
-  const createAndPreviewMutation = useMutation(
-    apiClient.podcasts.create.mutationOptions({
-      onSuccess: async (newPodcast) => {
-        generateScriptMutation.mutate({
-          id: newPodcast.id,
-          promptInstructions: config.instructions.trim() || undefined,
-        });
-        toast.success('Podcast created! Generating script preview...');
-        navigateToPodcast(newPodcast.id);
-        await podcastUtils.refetch();
-      },
-      onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
-      },
-    }),
-  );
-
   const createAndGenerate = () => {
     if (selectedDocumentIds.length === 0) {
       toast.error('Please select at least one document');
       return;
     }
     createAndGenerateMutation.mutate(getCreatePayload());
-  };
-
-  const createAndPreview = () => {
-    if (selectedDocumentIds.length === 0) {
-      toast.error('Please select at least one document');
-      return;
-    }
-    createAndPreviewMutation.mutate(getCreatePayload());
   };
 
   const handleActionWithUpdate = async (
@@ -190,32 +129,17 @@ export function usePodcastGeneration({
   };
 
   const loadingStates = {
-    generateFull: generateMutation.isPending,
-    generateScript: generateScriptMutation.isPending,
-    generateAudio: generateAudioMutation.isPending,
+    generate: generateMutation.isPending,
     createAndGenerate: createAndGenerateMutation.isPending,
-    createAndPreview: createAndPreviewMutation.isPending,
     update: updateMutation.isPending,
   };
 
   return {
-    generateFull: (podcastId: string) =>
+    generate: (podcastId: string) =>
       handleActionWithUpdate(podcastId, (id) =>
         generateMutation.mutate({ id }),
       ),
-    generateScript: (podcastId: string) =>
-      handleActionWithUpdate(podcastId, (id) =>
-        generateScriptMutation.mutate({
-          id,
-          promptInstructions: config.instructions.trim() || undefined,
-        }),
-      ),
-    generateAudio: (podcastId: string) =>
-      handleActionWithUpdate(podcastId, (id) =>
-        generateAudioMutation.mutate({ id }),
-      ),
     createAndGenerate,
-    createAndPreview,
     isLoading: Object.values(loadingStates).some(Boolean),
     loadingStates,
   };

@@ -84,13 +84,13 @@ describe('ScriptVersionRepo', () => {
       const result = await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
-          status: 'draft',
+          status: 'drafting',
         }),
       );
 
       expect(result.version).toBe(1);
       expect(result.isActive).toBe(true);
-      expect(result.status).toBe('draft');
+      expect(result.status).toBe('drafting');
     });
 
     it('should auto-increment version number', async () => {
@@ -99,7 +99,7 @@ describe('ScriptVersionRepo', () => {
       await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
-          status: 'draft',
+          status: 'drafting',
         }),
       );
 
@@ -120,7 +120,7 @@ describe('ScriptVersionRepo', () => {
       const v1 = await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
-          status: 'draft',
+          status: 'drafting',
         }),
       );
 
@@ -227,7 +227,7 @@ describe('ScriptVersionRepo', () => {
     it('should update status', async () => {
       const script = createTestPodcastScript({
         podcastId: testPodcast.id,
-        status: 'draft',
+        status: 'drafting',
       });
       await ctx.db.insert(podcastScript).values(script);
 

@@ -15,14 +15,13 @@ import { PodcastSettings } from './podcast-settings';
 import { PromptViewerPanel } from './prompt-viewer';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
-type PendingAction = 'script' | 'audio' | 'all' | null;
 type TabId = 'produce' | 'mix';
 
 interface ConfigPanelProps {
   podcast: PodcastFull;
   displayAudio: { url: string; duration: number | null } | null;
   isGenerating: boolean;
-  pendingAction: PendingAction;
+  isPendingGeneration: boolean;
   settings: UsePodcastSettingsReturn;
 }
 
@@ -30,7 +29,7 @@ export function ConfigPanel({
   podcast,
   displayAudio,
   isGenerating,
-  pendingAction,
+  isPendingGeneration,
   settings,
 }: ConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('produce');
@@ -74,11 +73,11 @@ export function ConfigPanel({
         {activeTab === 'produce' && (
           <div key="produce" className="control-panel">
             {/* Generation Progress - shown only during generation */}
-            {(pendingAction !== null || isGenerating) && (
+            {(isPendingGeneration || isGenerating) && (
               <GenerationStatus
                 status={podcast.activeVersion?.status}
                 isSavingSettings={false}
-                isPendingGeneration={pendingAction !== null}
+                isPendingGeneration={isPendingGeneration}
               />
             )}
 

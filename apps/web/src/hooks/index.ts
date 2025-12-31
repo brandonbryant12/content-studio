@@ -11,9 +11,8 @@ export {
   type UseScriptEditorReturn,
 } from './use-script-editor';
 export {
-  useOptimisticScriptGeneration,
-  useOptimisticAudioGeneration,
   useOptimisticFullGeneration,
+  useOptimisticSaveChanges,
 } from './use-optimistic-podcast-mutation';
 export {
   usePodcastSettings,

@@ -285,7 +285,7 @@ describe('PodcastRepo', () => {
         podcastId: testPodcast.id,
         version: 1,
         isActive: true,
-        status: 'audio_ready',
+        status: 'ready',
         duration: 300,
       });
 
@@ -296,7 +296,7 @@ describe('PodcastRepo', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.activeVersion).not.toBeNull();
-      expect(result[0]?.activeVersion?.status).toBe('audio_ready');
+      expect(result[0]?.activeVersion?.status).toBe('ready');
       expect(result[0]?.activeVersion?.duration).toBe(300);
     });
   });

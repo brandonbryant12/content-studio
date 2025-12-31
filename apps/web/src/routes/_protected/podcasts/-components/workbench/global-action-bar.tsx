@@ -1,44 +1,20 @@
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  LightningBoltIcon,
-  PlayIcon,
-  ReloadIcon,
-} from '@radix-ui/react-icons';
+import { CheckIcon, LightningBoltIcon, ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { VersionStatus } from '../../-constants/status';
-
-type PendingAction = 'script' | 'audio' | 'all' | null;
 
 interface GlobalActionBarProps {
   // Status
   status: VersionStatus | undefined;
-  hasScript: boolean;
   isGenerating: boolean;
-  pendingAction: PendingAction;
 
-  // Script changes
-  hasScriptChanges: boolean;
-  isScriptSaving: boolean;
-  onSaveScript: () => void;
+  // Unsaved changes (script or settings)
+  hasChanges: boolean;
+  isSaving: boolean;
+  onSave: () => void;
 
-  // Settings changes (voice, duration, instructions)
-  hasSettingsChanges: boolean;
-  isSettingsSaving: boolean;
-  onSaveSettings: () => Promise<void>;
-
-  // Generation actions
-  onGenerateScript: () => void;
-  onGenerateAudio: () => void;
-  onGenerateAll: () => void;
+  // Generation action
+  onGenerate: () => void;
 
   // Disabled state (e.g., viewing history)
   disabled?: boolean;
@@ -46,54 +22,24 @@ interface GlobalActionBarProps {
 
 export function GlobalActionBar({
   status,
-  hasScript,
   isGenerating,
-  pendingAction,
-  hasScriptChanges,
-  isScriptSaving,
-  onSaveScript,
-  hasSettingsChanges,
-  isSettingsSaving,
-  onSaveSettings,
-  onGenerateScript,
-  onGenerateAudio,
-  onGenerateAll,
+  hasChanges,
+  isSaving,
+  onSave,
+  onGenerate,
   disabled,
 }: GlobalActionBarProps) {
-  const hasAnyChanges = hasScriptChanges || hasSettingsChanges;
-  const isAnySaving = isScriptSaving || isSettingsSaving;
-  const showBar = hasAnyChanges || !disabled;
-
-  if (!showBar) return null;
-
-  // Handle unified save - saves both script and settings if needed
-  const handleSaveAll = async () => {
-    if (hasScriptChanges) {
-      onSaveScript();
-    }
-    if (hasSettingsChanges) {
-      await onSaveSettings();
-    }
-  };
-
-  // Handle save and regenerate
-  const handleSaveAndRegenerate = async () => {
-    await handleSaveAll();
-    // Trigger regeneration after save
-    onGenerateAll();
-  };
-
   // During generation, show progress state
-  if (pendingAction !== null || isGenerating) {
+  if (isGenerating) {
     return (
       <div className="global-action-bar">
         <div className="global-action-bar-content">
           <div className="global-action-bar-status">
             <Spinner className="w-4 h-4 text-warning" />
             <span className="global-action-bar-status-text">
-              {status === 'draft'
+              {status === 'drafting' || status === 'generating_script'
                 ? 'Generating script...'
-                : status === 'generating_audio'
+                : status === 'generating_audio' || status === 'script_ready'
                   ? 'Generating audio...'
                   : 'Processing...'}
             </span>
@@ -103,48 +49,23 @@ export function GlobalActionBar({
     );
   }
 
-  // If there are unsaved changes, show save options
-  if (hasAnyChanges) {
+  // If there are unsaved changes (only possible when ready), show save action
+  if (hasChanges && status === 'ready') {
     return (
       <div className="global-action-bar has-changes">
         <div className="global-action-bar-content">
           <div className="global-action-bar-changes">
             <div className="global-action-bar-indicator" />
-            <span className="global-action-bar-changes-text">
-              {hasScriptChanges && hasSettingsChanges
-                ? 'Script & settings changed'
-                : hasScriptChanges
-                  ? 'Script changed'
-                  : 'Settings changed'}
-            </span>
+            <span className="global-action-bar-changes-text">Unsaved changes</span>
           </div>
           <div className="global-action-bar-actions">
             <Button
-              variant="ghost"
               size="sm"
-              onClick={handleSaveAll}
-              disabled={isAnySaving || disabled}
-              className="global-action-bar-btn-secondary"
-            >
-              {isAnySaving ? (
-                <>
-                  <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckIcon className="w-3.5 h-3.5 mr-1.5" />
-                  Save
-                </>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSaveAndRegenerate}
-              disabled={isAnySaving || disabled}
+              onClick={onSave}
+              disabled={isSaving || disabled}
               className="global-action-bar-btn-primary"
             >
-              {isAnySaving ? (
+              {isSaving ? (
                 <>
                   <Spinner className="w-3.5 h-3.5 mr-1.5" />
                   Saving...
@@ -162,167 +83,65 @@ export function GlobalActionBar({
     );
   }
 
-  // No changes - show context-aware generation actions
+  // No changes - show context-aware actions
   return (
     <div className="global-action-bar">
       <div className="global-action-bar-content">
         <div className="global-action-bar-status ready">
           <CheckIcon className="w-4 h-4" />
           <span className="global-action-bar-status-text">
-            {status === 'audio_ready'
-              ? 'Ready to publish'
-              : status === 'script_ready'
-                ? 'Script ready'
-                : status === 'failed'
-                  ? 'Generation failed'
-                  : 'Draft'}
+            {status === 'ready'
+              ? 'Ready'
+              : status === 'failed'
+                ? 'Generation failed'
+                : 'Draft'}
           </span>
         </div>
-        <div className="global-action-bar-actions">
-          {renderContextActions()}
-        </div>
+        <div className="global-action-bar-actions">{renderContextActions()}</div>
       </div>
     </div>
   );
 
   function renderContextActions() {
     switch (status) {
-      case 'draft':
+      case 'drafting':
         return (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGenerateScript}
-              disabled={disabled}
-              className="global-action-bar-btn-secondary"
-            >
-              <PlayIcon className="w-3.5 h-3.5 mr-1.5" />
-              Generate Script
-            </Button>
-            <Button
-              size="sm"
-              onClick={onGenerateAll}
-              disabled={disabled}
-              className="global-action-bar-btn-primary"
-            >
-              <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-              Generate All
-            </Button>
-          </>
+          <Button
+            size="sm"
+            onClick={onGenerate}
+            disabled={disabled}
+            className="global-action-bar-btn-primary"
+          >
+            <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
+            Generate Podcast
+          </Button>
         );
 
-      case 'script_ready':
+      case 'ready':
         return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={disabled}
-                  className="global-action-bar-btn-secondary"
-                >
-                  <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-                  Regenerate
-                  <ChevronDownIcon className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onGenerateScript}>
-                  <ReloadIcon className="w-4 h-4 mr-2" />
-                  Regenerate Script
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onGenerateAll}>
-                  <LightningBoltIcon className="w-4 h-4 mr-2" />
-                  Regenerate All
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              size="sm"
-              onClick={onGenerateAudio}
-              disabled={disabled}
-              className="global-action-bar-btn-primary"
-            >
-              <PlayIcon className="w-3.5 h-3.5 mr-1.5" />
-              Generate Audio
-            </Button>
-          </>
-        );
-
-      case 'audio_ready':
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={disabled}
-                className="global-action-bar-btn-secondary"
-              >
-                <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-                Regenerate
-                <ChevronDownIcon className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onGenerateScript}>
-                <ReloadIcon className="w-4 h-4 mr-2" />
-                Regenerate Script
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onGenerateAudio}>
-                <ReloadIcon className="w-4 h-4 mr-2" />
-                Regenerate Audio
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onGenerateAll}>
-                <LightningBoltIcon className="w-4 h-4 mr-2" />
-                Regenerate All
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onGenerate}
+            disabled={disabled}
+            className="global-action-bar-btn-secondary"
+          >
+            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+            Regenerate
+          </Button>
         );
 
       case 'failed':
         return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={disabled}
-                  className="global-action-bar-btn-secondary"
-                >
-                  <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-                  Options
-                  <ChevronDownIcon className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onGenerateScript}>
-                  <ReloadIcon className="w-4 h-4 mr-2" />
-                  Regenerate Script
-                </DropdownMenuItem>
-                {hasScript && (
-                  <DropdownMenuItem onClick={onGenerateAudio}>
-                    <ReloadIcon className="w-4 h-4 mr-2" />
-                    Regenerate Audio
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              size="sm"
-              onClick={hasScript ? onGenerateAudio : onGenerateScript}
-              disabled={disabled}
-              className="global-action-bar-btn-primary"
-            >
-              <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-              Retry
-            </Button>
-          </>
+          <Button
+            size="sm"
+            onClick={onGenerate}
+            disabled={disabled}
+            className="global-action-bar-btn-primary"
+          >
+            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+            Retry
+          </Button>
         );
 
       default:

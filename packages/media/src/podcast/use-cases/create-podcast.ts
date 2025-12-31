@@ -25,7 +25,7 @@ export type CreatePodcastError = DatabaseError | DocumentNotFound;
  * This use case:
  * 1. Validates document ownership if documentIds provided
  * 2. Creates the podcast record
- * 3. Creates an initial draft version (no script content)
+ * 3. Creates an initial drafting version (no script content)
  * 4. Returns the full podcast with active version
  *
  * @example
@@ -55,10 +55,10 @@ export const createPodcast = (
       documentIds ?? [],
     );
 
-    // 3. Create initial draft version
+    // 3. Create initial drafting version
     const draftVersion = yield* scriptVersionRepo.insert({
       podcastId: podcastWithDocs.id,
-      status: 'draft',
+      status: 'drafting',
       segments: null,
     });
 

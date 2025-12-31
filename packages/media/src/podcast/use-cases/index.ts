@@ -40,6 +40,14 @@ export {
   type ScriptSegment,
 } from './edit-script';
 
+export {
+  saveChanges,
+  type SaveChangesInput,
+  type SaveChangesResult,
+  type SaveChangesError,
+  InvalidSaveError,
+} from './save-changes';
+
 // =============================================================================
 // Generation Operations
 // =============================================================================

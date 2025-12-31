@@ -4,7 +4,6 @@ import type {
   PodcastScript,
   PodcastFormat,
   VersionStatus,
-  PublishStatus,
   ScriptSegment,
   GenerationContext,
 } from '@repo/db/schema';
@@ -26,9 +25,6 @@ export interface CreateTestPodcastOptions {
   tags?: string[];
   sourceDocumentIds?: string[];
   generationContext?: GenerationContext | null;
-  publishStatus?: PublishStatus;
-  publishedAt?: Date | null;
-  publishedBy?: string | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -91,9 +87,6 @@ export const createTestPodcast = (
     tags: options.tags ?? [],
     sourceDocumentIds: options.sourceDocumentIds ?? [],
     generationContext: options.generationContext ?? null,
-    publishStatus: options.publishStatus ?? 'draft',
-    publishedAt: options.publishedAt ?? null,
-    publishedBy: options.publishedBy ?? null,
     createdBy: options.createdBy ?? randomUUID(),
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
@@ -114,7 +107,7 @@ export const createTestPodcastScript = (
     podcastId: options.podcastId ?? randomUUID(),
     version: options.version ?? 1,
     isActive: options.isActive ?? true,
-    status: options.status ?? 'draft',
+    status: options.status ?? 'drafting',
     errorMessage: options.errorMessage ?? null,
     segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
     summary: options.summary ?? 'A test podcast about interesting topics.',
@@ -127,14 +120,14 @@ export const createTestPodcastScript = (
 };
 
 /**
- * Create a test podcast script with audio ready.
+ * Create a test podcast script with ready status.
  */
-export const createAudioReadyScript = (
+export const createReadyScript = (
   options: Omit<CreateTestPodcastScriptOptions, 'status' | 'audioUrl' | 'duration'> = {},
 ): PodcastScript => {
   return createTestPodcastScript({
     ...options,
-    status: 'audio_ready',
+    status: 'ready',
     audioUrl: `https://storage.example.com/podcasts/${options.podcastId ?? randomUUID()}/audio.wav`,
     duration: 300, // 5 minutes
   });
@@ -153,14 +146,14 @@ export const createScriptReadyScript = (
 };
 
 /**
- * Create a test podcast with an active audio-ready version.
+ * Create a test podcast with an active ready version.
  * Returns both the podcast and its version.
  */
 export const createReadyPodcastWithVersion = (
   podcastOptions: CreateTestPodcastOptions = {},
 ): { podcast: Podcast; version: PodcastScript } => {
   const podcast = createTestPodcast(podcastOptions);
-  const version = createAudioReadyScript({
+  const version = createReadyScript({
     podcastId: podcast.id,
   });
   return { podcast, version };
@@ -187,3 +180,6 @@ export const resetPodcastCounters = () => {
   podcastCounter = 0;
   scriptCounter = 0;
 };
+
+// Keep backwards compatible alias
+export const createAudioReadyScript = createReadyScript;

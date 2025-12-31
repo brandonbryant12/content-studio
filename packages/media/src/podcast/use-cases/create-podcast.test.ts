@@ -90,7 +90,7 @@ describe('createPodcast use case', () => {
       expect(result.format).toBe('conversation');
       expect(result.documents).toEqual([]);
       expect(result.activeVersion).not.toBeNull();
-      expect(result.activeVersion?.status).toBe('draft');
+      expect(result.activeVersion?.status).toBe('drafting');
       expect(result.activeVersion?.version).toBe(1);
     });
 

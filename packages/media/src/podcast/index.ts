@@ -41,6 +41,7 @@ export {
   listPodcasts,
   // Script operations
   editScript,
+  saveChanges,
   // Generation
   generateScript,
   generateAudio,
@@ -48,6 +49,7 @@ export {
   // Error types
   InvalidAudioGenerationError,
   InvalidProgressionError,
+  InvalidSaveError,
   // Input/Output types
   type CreatePodcastInput,
   type GetPodcastInput,
@@ -57,6 +59,8 @@ export {
   type ListPodcastsResult,
   type EditScriptInput,
   type EditScriptResult,
+  type SaveChangesInput,
+  type SaveChangesResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
   type GenerateAudioInput,

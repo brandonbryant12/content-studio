@@ -28,20 +28,16 @@ export const podcastFormatEnum = pgEnum('podcast_format', [
 /**
  * Version-level status enum.
  * Each script version tracks its own generation state.
+ *
+ * Flow: drafting → generating_script → script_ready → generating_audio → ready
  */
 export const versionStatusEnum = pgEnum('version_status', [
-  'draft', // No script content yet
-  'script_ready', // Has script segments, needs audio
-  'generating_audio', // Audio generation in progress
-  'audio_ready', // Complete with script and audio
+  'drafting', // Initial state, no content yet
+  'generating_script', // LLM is generating the script
+  'script_ready', // Script generated, awaiting audio generation
+  'generating_audio', // TTS is generating audio
+  'ready', // Fully generated, can edit settings
   'failed', // Generation failed
-]);
-
-export const publishStatusEnum = pgEnum('publish_status', [
-  'draft',
-  'ready',
-  'published',
-  'rejected',
 ]);
 
 /**
@@ -91,16 +87,6 @@ export const podcast = pgTable(
     // Generation context for audit trail
     generationContext: jsonb('generation_context').$type<GenerationContext>(),
 
-    // Publishing/compliance fields
-    publishStatus: publishStatusEnum('publish_status')
-      .notNull()
-      .default('draft'),
-    publishedAt: timestamp('published_at', {
-      mode: 'date',
-      withTimezone: true,
-    }),
-    publishedBy: text('published_by').references(() => user.id),
-
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -111,10 +97,7 @@ export const podcast = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [
-    index('podcast_created_by_idx').on(table.createdBy),
-    index('podcast_publish_status_idx').on(table.publishStatus),
-  ],
+  (table) => [index('podcast_created_by_idx').on(table.createdBy)],
 );
 
 export interface ScriptSegment {
@@ -134,7 +117,7 @@ export const podcastScript = pgTable(
     isActive: boolean('is_active').notNull().default(true),
 
     // Version-level status
-    status: versionStatusEnum('status').notNull().default('draft'),
+    status: versionStatusEnum('status').notNull().default('drafting'),
     errorMessage: text('error_message'),
 
     // Script content (nullable for draft state)
@@ -212,20 +195,15 @@ export const PodcastFormatSchema = v.picklist(['voice_over', 'conversation']);
 
 /**
  * Version-level status schema.
+ * Flow: drafting → generating_script → script_ready → generating_audio → ready
  */
 export const VersionStatusSchema = v.picklist([
-  'draft',
+  'drafting',
+  'generating_script',
   'script_ready',
   'generating_audio',
-  'audio_ready',
-  'failed',
-]);
-
-export const PublishStatusSchema = v.picklist([
-  'draft',
   'ready',
-  'published',
-  'rejected',
+  'failed',
 ]);
 
 // =============================================================================
@@ -268,9 +246,6 @@ export const PodcastOutputSchema = v.object({
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
   generationContext: v.nullable(GenerationContextOutputSchema),
-  publishStatus: PublishStatusSchema,
-  publishedAt: v.nullable(v.string()),
-  publishedBy: v.nullable(v.string()),
   createdBy: v.string(),
   createdAt: v.string(),
   updatedAt: v.string(),
@@ -321,7 +296,6 @@ export type Podcast = typeof podcast.$inferSelect;
 export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
 export type VersionStatus = PodcastScript['status'];
-export type PublishStatus = Podcast['publishStatus'];
 export type GenerationContextOutput = v.InferOutput<
   typeof GenerationContextOutputSchema
 >;
@@ -355,9 +329,6 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
   generationContext: podcast.generationContext ?? null,
-  publishStatus: podcast.publishStatus,
-  publishedAt: podcast.publishedAt?.toISOString() ?? null,
-  publishedBy: podcast.publishedBy,
   createdBy: podcast.createdBy,
   createdAt: podcast.createdAt.toISOString(),
   updatedAt: podcast.updatedAt.toISOString(),

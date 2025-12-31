@@ -72,11 +72,13 @@ const generationContextSchema = v.object({
 });
 
 // Version status - status is now on the version (script), not the podcast
+// Flow: drafting → generating_script → script_ready → generating_audio → ready
 const versionStatusSchema = v.picklist([
-  'draft',
+  'drafting',
+  'generating_script',
   'script_ready',
   'generating_audio',
-  'audio_ready',
+  'ready',
   'failed',
 ]);
 
@@ -95,9 +97,6 @@ const podcastOutputSchema = v.object({
   tags: v.array(v.string()),
   sourceDocumentIds: v.array(v.string()),
   generationContext: v.nullable(generationContextSchema),
-  publishStatus: v.picklist(['draft', 'ready', 'published', 'rejected']),
-  publishedAt: v.nullable(v.string()),
-  publishedBy: v.nullable(v.string()),
   createdBy: v.string(),
   createdAt: v.string(),
   updatedAt: v.string(),
@@ -279,23 +278,6 @@ const podcastContract = oc
       .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
       .output(podcastScriptSchema),
 
-    // Update podcast script (creates new version)
-    updateScript: oc
-      .route({
-        method: 'PUT',
-        path: '/{id}/script',
-        summary: 'Update script',
-        description: 'Update the script segments (creates a new version)',
-      })
-      .errors(podcastErrors)
-      .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          ...UpdateScriptSchema.entries,
-        }),
-      )
-      .output(podcastScriptSchema),
-
     // Trigger full podcast generation (script + audio in one job)
     generate: oc
       .route({
@@ -319,42 +301,24 @@ const podcastContract = oc
         }),
       ),
 
-    // Trigger script-only generation (Phase 1)
-    generateScript: oc
+    // Save changes and regenerate audio (requires ready status)
+    saveChanges: oc
       .route({
         method: 'POST',
-        path: '/{id}/generate-script',
-        summary: 'Generate script only',
+        path: '/{id}/save-changes',
+        summary: 'Save changes and regenerate audio',
         description:
-          'Generate podcast script without audio. Stops at script_ready status. Use this to preview/edit script before generating audio.',
+          'Update script segments and/or voice settings, then regenerate audio. Only allowed when podcast is in ready status.',
       })
       .errors({ ...podcastErrors, ...jobErrors })
       .input(
         v.object({
           id: v.pipe(v.string(), v.uuid()),
-          promptInstructions: v.optional(v.string()),
-        }),
-      )
-      .output(
-        v.object({
-          jobId: v.string(),
-          status: jobStatusSchema,
-        }),
-      ),
-
-    // Trigger audio generation from existing script (Phase 2)
-    generateAudio: oc
-      .route({
-        method: 'POST',
-        path: '/{id}/generate-audio',
-        summary: 'Generate audio from script',
-        description:
-          'Generate audio from an existing approved script. Version must be in script_ready status.',
-      })
-      .errors({ ...podcastErrors, ...jobErrors })
-      .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
+          segments: v.optional(v.array(scriptSegmentSchema)),
+          hostVoice: v.optional(v.string()),
+          hostVoiceName: v.optional(v.string()),
+          coHostVoice: v.optional(v.string()),
+          coHostVoiceName: v.optional(v.string()),
         }),
       )
       .output(

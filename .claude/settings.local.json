@@ -71,7 +71,8 @@
       "Bash(xargs cat:*)",
       "Bash(done)",
       "Bash(xargs:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(PGPASSWORD=postgres psql:*)"
     ],
     "deny": [],
     "ask": []

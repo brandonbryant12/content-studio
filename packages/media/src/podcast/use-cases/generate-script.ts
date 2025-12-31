@@ -78,10 +78,11 @@ const ScriptOutputSchema = Schema.Struct({
  *
  * This use case:
  * 1. Loads the podcast and its documents
- * 2. Creates or updates a version in 'draft' status
- * 3. Fetches document content
- * 4. Calls LLM to generate script
- * 5. Updates version with script content and 'script_ready' status
+ * 2. Creates or updates a version in 'drafting' status
+ * 3. Sets status to 'generating_script'
+ * 4. Fetches document content
+ * 5. Calls LLM to generate script
+ * 6. Updates version with script content and 'script_ready' status
  *
  * @example
  * const result = yield* generateScript({
@@ -112,21 +113,24 @@ export const generateScript = (
       // Update existing version
       version = yield* scriptVersionRepo.findById(input.versionId);
     } else {
-      // Create new draft version
+      // Create new version in drafting status
       version = yield* scriptVersionRepo.insert({
         podcastId: input.podcastId,
-        status: 'draft',
+        status: 'drafting',
         segments: null,
       });
     }
 
-    // 3. Fetch document content
+    // 3. Set status to generating_script
+    yield* scriptVersionRepo.updateStatus(version.id, 'generating_script');
+
+    // 4. Fetch document content
     const documentContents = yield* Effect.all(
       podcast.documents.map((doc) => documents.getContent(doc.id)),
     );
     const combinedContent = documentContents.join('\n\n---\n\n');
 
-    // 4. Build prompts
+    // 5. Build prompts
     const effectivePrompt = input.promptInstructions ?? podcast.promptInstructions ?? '';
     const systemPrompt = buildSystemPrompt(podcast.format, effectivePrompt);
     const userPrompt = buildUserPrompt(
@@ -137,7 +141,7 @@ export const generateScript = (
       combinedContent,
     );
 
-    // 5. Call LLM
+    // 6. Call LLM
     const llmResult = yield* llm.generate({
       system: systemPrompt,
       prompt: userPrompt,
@@ -145,17 +149,17 @@ export const generateScript = (
       temperature: 0.7,
     });
 
-    // 6. Process segments with indices
+    // 7. Process segments with indices
     const segments = llmResult.object.segments.map((s, i) => ({
       speaker: s.speaker,
       line: s.line,
       index: i,
     }));
 
-    // 7. Build generation prompt for audit
+    // 8. Build generation prompt for audit
     const generationPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
-    // 8. Update version with script content
+    // 9. Update version with script content (script_ready status)
     const updatedVersion = yield* scriptVersionRepo.update(version.id, {
       status: 'script_ready' as VersionStatus,
       segments,
@@ -163,7 +167,7 @@ export const generateScript = (
       generationPrompt,
     });
 
-    // 9. Update podcast metadata from LLM output
+    // 10. Update podcast metadata from LLM output
     yield* podcastRepo.update(input.podcastId, {
       title: llmResult.object.title,
       description: llmResult.object.description,

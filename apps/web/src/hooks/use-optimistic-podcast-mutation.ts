@@ -10,28 +10,28 @@ interface OptimisticContext {
 }
 
 /**
- * Creates optimistic mutation for podcast script generation.
+ * Creates optimistic mutation for full podcast generation.
  */
-export function useOptimisticScriptGeneration(podcastId: string) {
+export function useOptimisticFullGeneration(podcastId: string) {
   const qc = useQueryClient();
   const podcastQueryKey = apiClient.podcasts.get.queryOptions({
     input: { id: podcastId },
   }).queryKey;
 
   return useMutation(
-    apiClient.podcasts.generateScript.mutationOptions({
+    apiClient.podcasts.generate.mutationOptions({
       onMutate: async () => {
         await qc.cancelQueries({ queryKey: podcastQueryKey });
         const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
 
         if (previousPodcast) {
-          // Update activeVersion status to draft (generating script)
+          // Update activeVersion status to drafting (generating script first)
           qc.setQueryData<PodcastFull>(podcastQueryKey, {
             ...previousPodcast,
             activeVersion: previousPodcast.activeVersion
               ? {
                   ...previousPodcast.activeVersion,
-                  status: 'draft',
+                  status: 'drafting',
                   segments: null,
                   audioUrl: null,
                 }
@@ -45,7 +45,7 @@ export function useOptimisticScriptGeneration(podcastId: string) {
         if (ctx?.previousPodcast) {
           qc.setQueryData(podcastQueryKey, ctx.previousPodcast);
         }
-        toast.error('Failed to start script generation');
+        toast.error('Failed to start generation');
       },
       // No onSettled needed - SSE will trigger refetch when job completes
     }),
@@ -53,16 +53,16 @@ export function useOptimisticScriptGeneration(podcastId: string) {
 }
 
 /**
- * Creates optimistic mutation for podcast audio generation.
+ * Creates optimistic mutation for saving changes and regenerating audio.
  */
-export function useOptimisticAudioGeneration(podcastId: string) {
+export function useOptimisticSaveChanges(podcastId: string) {
   const qc = useQueryClient();
   const podcastQueryKey = apiClient.podcasts.get.queryOptions({
     input: { id: podcastId },
   }).queryKey;
 
   return useMutation(
-    apiClient.podcasts.generateAudio.mutationOptions({
+    apiClient.podcasts.saveChanges.mutationOptions({
       onMutate: async () => {
         await qc.cancelQueries({ queryKey: podcastQueryKey });
         const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
@@ -87,50 +87,7 @@ export function useOptimisticAudioGeneration(podcastId: string) {
         if (ctx?.previousPodcast) {
           qc.setQueryData(podcastQueryKey, ctx.previousPodcast);
         }
-        toast.error('Failed to start audio generation');
-      },
-      // No onSettled needed - SSE will trigger refetch when job completes
-    }),
-  );
-}
-
-/**
- * Creates optimistic mutation for full podcast generation.
- */
-export function useOptimisticFullGeneration(podcastId: string) {
-  const qc = useQueryClient();
-  const podcastQueryKey = apiClient.podcasts.get.queryOptions({
-    input: { id: podcastId },
-  }).queryKey;
-
-  return useMutation(
-    apiClient.podcasts.generate.mutationOptions({
-      onMutate: async () => {
-        await qc.cancelQueries({ queryKey: podcastQueryKey });
-        const previousPodcast = qc.getQueryData<PodcastFull>(podcastQueryKey);
-
-        if (previousPodcast) {
-          // Update activeVersion status to draft (generating script first)
-          qc.setQueryData<PodcastFull>(podcastQueryKey, {
-            ...previousPodcast,
-            activeVersion: previousPodcast.activeVersion
-              ? {
-                  ...previousPodcast.activeVersion,
-                  status: 'draft',
-                  segments: null,
-                  audioUrl: null,
-                }
-              : null,
-          });
-        }
-        return { previousPodcast } as OptimisticContext;
-      },
-      onError: (_err, _vars, context) => {
-        const ctx = context as OptimisticContext | undefined;
-        if (ctx?.previousPodcast) {
-          qc.setQueryData(podcastQueryKey, ctx.previousPodcast);
-        }
-        toast.error('Failed to start generation');
+        toast.error('Failed to save changes');
       },
       // No onSettled needed - SSE will trigger refetch when job completes
     }),

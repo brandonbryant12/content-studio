@@ -49,14 +49,14 @@ export function useScriptEditor({
     });
   }, [segments, originalSegments]);
 
-  const updateScriptMutation = useMutation(
-    apiClient.podcasts.updateScript.mutationOptions({
+  const saveChangesMutation = useMutation(
+    apiClient.podcasts.saveChanges.mutationOptions({
       onSuccess: async () => {
-        toast.success('Script saved');
+        toast.success('Script saved. Regenerating audio...');
         setOriginalSegments(segments);
         await podcastUtils.refetch();
       },
-      onError: (error) => {
+      onError: (error: { message?: string }) => {
         toast.error(error.message ?? 'Failed to save script');
       },
     }),
@@ -118,7 +118,7 @@ export function useScriptEditor({
   }, []);
 
   const saveChanges = useCallback(() => {
-    updateScriptMutation.mutate({
+    saveChangesMutation.mutate({
       id: podcastId,
       segments: segments.map((seg) => ({
         speaker: seg.speaker,
@@ -126,7 +126,7 @@ export function useScriptEditor({
         index: seg.index,
       })),
     });
-  }, [podcastId, segments, updateScriptMutation]);
+  }, [podcastId, segments, saveChangesMutation]);
 
   const discardChanges = useCallback(() => {
     setSegments(originalSegments);
@@ -140,7 +140,7 @@ export function useScriptEditor({
   return {
     segments,
     hasChanges,
-    isSaving: updateScriptMutation.isPending,
+    isSaving: saveChangesMutation.isPending,
     updateSegment,
     addSegment,
     removeSegment,
