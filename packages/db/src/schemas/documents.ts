@@ -8,7 +8,7 @@ import {
   index,
   pgEnum,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-valibot';
+import { createSelectSchema } from 'drizzle-valibot';
 import * as v from 'valibot';
 import { user } from './auth';
 

@@ -50,7 +50,7 @@ function RootComponent() {
         <Toaster position="bottom-right" />
         <Outlet />
         <React.Suspense>
-          <TanStackRouterDevtools position="bottom-right" />
+          <TanStackRouterDevtools position="top-right" />
         </React.Suspense>
       </div>
     </ErrorBoundary>
