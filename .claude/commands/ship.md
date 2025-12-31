@@ -1,0 +1,185 @@
+---
+description: Create feature branch, commit, push, create PR, and run code review
+allowed-tools: Bash, Read, Glob, Grep, SlashCommand, Skill, Edit, Write, AskUserQuestion
+---
+
+# Ship Current Work
+
+Create a feature branch from current changes, commit, push, create a PR, and run a code review.
+
+## Instructions
+
+1. First, check git status to see what changes exist
+2. Run `pnpm format:fix` to fix formatting issues
+3. Run `pnpm lint:fix` to fix linting issues
+4. **Run Effect Pattern Pre-flight Checks** (see below)
+5. **Run Targeted Tech Debt Analysis** (see below)
+6. If not on a feature branch, create one with a descriptive name based on the changes (e.g., `feat/add-logout-button`, `fix/search-pagination`)
+7. Stage all changes with `git add -A`
+8. Create a commit with a descriptive message based on the changes
+9. Push the branch to origin with `-u` flag
+10. Create a pull request using `gh pr create` with a descriptive title and body
+11. After successful PR creation, run `/code-review:code-review` to review the changes
+12. If the code review finds issues, handle them as described in "Handling Code Review Issues" below
+13. After code review is complete, add a **Deployment Assessment** comment to the PR (see below)
+
+## Effect Pattern Pre-flight Checks
+
+Run the automated pattern validation script:
+
+```bash
+.claude/scripts/validate-patterns.sh
+```
+
+This script checks:
+1. **Error classes** use `Data.TaggedError`, not plain `Error`
+2. **No `new Error()`** in Effect code - use `Effect.fail(DomainErrors.X())`
+3. **No raw SQL** in repos without documented exception
+4. **No `any` types** - use proper types
+5. **Tests use `it.effect()`** and provide `DbTestLayer`
+6. **No `extractErrorCode`** pattern in routers - use `Effect.catchTags()`
+
+### If Violations Found
+
+The script will output violations with file:line references.
+
+**For errors (must fix):**
+- Use AskUserQuestion to clarify if the fix approach is unclear
+- Help fix the violations, then continue
+
+**For warnings (can proceed):**
+- Show the warnings to the user
+- Allow proceeding after acknowledgment
+
+**For ambiguous cases (e.g., raw SQL that might be intentional):**
+- Ask user: "Is this intentional?"
+  - If yes: Add `// eslint-disable-next-line` with justification
+  - If no: Refactor to use Drizzle query builder
+
+## Targeted Tech Debt Analysis
+
+Analyze tech debt in packages that were modified to ensure we don't introduce new issues.
+
+### Step 1: Identify Changed Packages
+
+From `git status`, extract which `packages/*` directories have modified files:
+
+```bash
+git diff --name-only HEAD | grep '^packages/' | cut -d'/' -f2 | sort -u
+```
+
+### Step 2: Run Tech Debt Analysis
+
+For each modified package, spawn a Task agent with subagent_type='general-purpose' to analyze it:
+
+```
+Analyze tech debt for @repo/PACKAGE_NAME at packages/PACKAGE_NAME.
+
+Focus on NEW issues introduced by recent changes. Check:
+1. Error handling uses Data.TaggedError (not plain Error)
+2. Use cases use Effect.gen pattern
+3. Repos use Drizzle query builder (not raw SQL)
+4. No any types
+5. Tests use it.effect() and provide layers
+
+Return a brief assessment:
+- Score: X/5
+- Issues found: [list]
+- Recommendations: [list]
+
+If score is 4/5 or higher with no critical issues, output: "TECH DEBT OK"
+If score is below 4/5 or has critical issues, list what needs fixing.
+```
+
+### Step 3: Handle Results
+
+**If all packages report "TECH DEBT OK":**
+- Proceed to next step
+
+**If any package has issues:**
+1. Show the issues to the user
+2. Use AskUserQuestion: "Would you like to fix these tech debt issues before shipping?"
+   - If yes: Fix the issues, re-run tests/typecheck, then continue
+   - If no: Proceed with a note in the PR about known tech debt
+
+### Skipping Tech Debt Analysis
+
+Skip this step if:
+- Only non-package files changed (e.g., `.claude/`, `apps/`, config files)
+- The changes are purely documentation or configuration
+
+## Handling Code Review Issues
+
+If the code review finds issues:
+
+1. For each issue found, propose a specific fix
+2. Ask the user if they accept the proposed solution using AskUserQuestion
+3. If accepted, implement the fix
+4. If rejected, ask user how they'd like to proceed (skip, alternative fix, etc.)
+5. After all issues are addressed, amend the commit and force push
+6. Re-run the code review to verify fixes
+
+## Deployment Assessment Comment
+
+After the code review is complete (and any issues resolved), post a comment on the PR with a deployment assessment:
+
+```bash
+gh pr comment --body "$(cat <<'EOF'
+## 🚀 Deployment Assessment
+
+### Merge Confidence: [HIGH/MEDIUM/LOW]
+[Brief explanation of confidence level]
+
+### Production Risks
+- [Risk 1 and mitigation]
+- [Risk 2 and mitigation]
+- Or "No significant risks identified"
+
+### Manual Verification Steps
+1. [Step to verify change 1]
+2. [Step to verify change 2]
+3. [Step to verify change N]
+
+---
+*Assessment generated by Claude Code*
+EOF
+)"
+```
+
+### Confidence Levels
+
+- **HIGH**: Well-tested, isolated changes, no database migrations, clear rollback path
+- **MEDIUM**: Moderate complexity, some dependencies, adequate test coverage
+- **LOW**: Complex changes, database migrations, external service dependencies, limited testing
+
+### Risk Categories to Consider
+
+- Database migrations or schema changes
+- External API integrations
+- Authentication/authorization changes
+- Payment or financial logic
+- Performance-sensitive code paths
+- Breaking API changes
+
+### Verification Steps Guidelines
+
+- Focus on user-facing behavior that can be manually tested
+- Include specific URLs/pages to check if applicable
+- Mention edge cases that should be verified
+- Keep steps actionable and clear
+
+## Commit Message Format
+
+Use conventional commits style:
+- feat: for new features
+- fix: for bug fixes
+- refactor: for code restructuring
+- chore: for maintenance tasks
+
+End the commit message with:
+```
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
