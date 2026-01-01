@@ -1,6 +1,6 @@
 import type { PodcastFullOutput } from '@repo/db/schema';
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
@@ -17,11 +17,18 @@ const TOTAL_STEPS = 4;
 
 interface SetupWizardProps {
   podcast: PodcastFull;
-  onSkip: () => void;
 }
 
-export function SetupWizard({ podcast, onSkip }: SetupWizardProps) {
+export function SetupWizard({ podcast }: SetupWizardProps) {
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Prefetch documents on mount so they're ready for step 2
+  useEffect(() => {
+    queryClient.prefetchQuery(
+      apiClient.documents.list.queryOptions({ input: {} }),
+    );
+  }, [queryClient]);
 
   // Format is set at creation and read-only during setup
   const format = (podcast.format as PodcastFormat) ?? 'conversation';
@@ -56,6 +63,12 @@ export function SetupWizard({ podcast, onSkip }: SetupWizardProps) {
   const generateMutation = useMutation(
     apiClient.podcasts.generate.mutationOptions({
       onSuccess: () => {
+        // Invalidate podcast query so parent detects exit from setup mode
+        queryClient.invalidateQueries({
+          queryKey: apiClient.podcasts.get.queryOptions({
+            input: { id: podcast.id },
+          }).queryKey,
+        });
         toast.success('Generation started');
       },
       onError: (error) => {
@@ -176,8 +189,6 @@ export function SetupWizard({ podcast, onSkip }: SetupWizardProps) {
           continueDisabled={!canProceedFromStep(currentStep)}
           isLoading={isLoading}
           isFinalStep={currentStep === TOTAL_STEPS}
-          showSkip={currentStep <= 2}
-          onSkip={onSkip}
         />
       </div>
     </div>

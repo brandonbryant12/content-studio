@@ -21,3 +21,8 @@ export {
   MAX_DURATION,
   type UsePodcastSettingsReturn,
 } from './use-podcast-settings';
+export {
+  useDocumentSelection,
+  type UseDocumentSelectionReturn,
+  type DocumentInfo,
+} from './use-document-selection';

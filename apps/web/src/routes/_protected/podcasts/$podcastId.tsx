@@ -6,7 +6,7 @@ import {
   useNavigate,
   useBlocker,
 } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
@@ -23,6 +23,7 @@ import {
   usePodcastSettings,
   useOptimisticFullGeneration,
   useOptimisticSaveChanges,
+  useDocumentSelection,
 } from '@/hooks';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
@@ -36,7 +37,6 @@ export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
 function PodcastWorkbench() {
   const { podcastId } = Route.useParams();
   const navigate = useNavigate();
-  const [setupSkipped, setSetupSkipped] = useState(false);
 
   const { data: podcast, isPending } = useQuery(
     apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
@@ -51,16 +51,60 @@ function PodcastWorkbench() {
   // Settings state management
   const settings = usePodcastSettings({ podcast });
 
+  // Document selection state management
+  const documentSelection = useDocumentSelection({
+    initialDocuments: [...(podcast?.documents ?? [])],
+  });
+
   // Generation and save mutations with optimistic updates
   const generateMutation = useOptimisticFullGeneration(podcastId);
   const saveChangesMutation = useOptimisticSaveChanges(podcastId);
 
-  const hasAnyChanges = scriptEditor.hasChanges || settings.hasChanges;
+  // Update mutation for saving documents before full regeneration
+  const updateMutation = useMutation(
+    apiClient.podcasts.update.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to update podcast');
+      },
+    }),
+  );
 
-  // Combined save handler for script and voice changes
-  const handleSave = useCallback(() => {
-    if (!podcast || saveChangesMutation.isPending) return;
+  const hasAnyChanges =
+    scriptEditor.hasChanges || settings.hasChanges || documentSelection.hasChanges;
 
+  // Combined save handler for script, voice, and document changes
+  const handleSave = useCallback(async () => {
+    if (!podcast || saveChangesMutation.isPending || updateMutation.isPending || generateMutation.isPending) return;
+
+    // If documents changed, we need full regeneration (script + audio)
+    if (documentSelection.hasChanges) {
+      try {
+        // First, save documents and any settings changes
+        await updateMutation.mutateAsync({
+          id: podcast.id,
+          documentIds: documentSelection.documentIds,
+          hostVoice: settings.hostVoice,
+          coHostVoice: settings.coHostVoice,
+          targetDurationMinutes: settings.targetDuration,
+          promptInstructions: settings.instructions || undefined,
+        });
+
+        // Then trigger full regeneration
+        generateMutation.mutate(
+          { id: podcast.id },
+          {
+            onSuccess: () => {
+              toast.success('Regenerating podcast with new sources...');
+            },
+          },
+        );
+      } catch {
+        // Error already handled by mutation
+      }
+      return;
+    }
+
+    // No document changes - just save script/voice and regenerate audio
     const segmentsToSave = scriptEditor.hasChanges ? scriptEditor.segments : undefined;
     saveChangesMutation.mutate(
       {
@@ -71,18 +115,17 @@ function PodcastWorkbench() {
       },
       {
         onSuccess: () => {
-          // Reset state after successful save
+          // Reset script editor to saved segments so hasChanges becomes false
           if (segmentsToSave) {
             scriptEditor.resetToSegments(segmentsToSave);
           }
-          if (settings.hasChanges) {
-            settings.discardChanges();
-          }
+          // Don't call settings.discardChanges() - local state already has correct values
+          // When podcast refetches, hasChanges will be false since local matches server
           toast.success('Saving changes and regenerating audio...');
         },
       },
     );
-  }, [podcast, scriptEditor, settings, saveChangesMutation]);
+  }, [podcast, scriptEditor, settings, documentSelection, saveChangesMutation, updateMutation, generateMutation]);
 
   // Keyboard shortcut: Cmd/Ctrl+S to save
   const handleKeyDown = useCallback(
@@ -123,6 +166,7 @@ function PodcastWorkbench() {
   const deleteMutation = useMutation(
     apiClient.podcasts.delete.mutationOptions({
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['podcasts'] });
         toast.success('Podcast deleted');
         navigate({ to: '/podcasts' });
       },
@@ -160,10 +204,8 @@ function PodcastWorkbench() {
   const isPendingGeneration = generateMutation.isPending;
 
   // Show setup wizard for new podcasts that haven't been configured yet
-  if (isSetupMode(podcast) && !setupSkipped) {
-    return (
-      <SetupWizard podcast={podcast} onSkip={() => setSetupSkipped(true)} />
-    );
+  if (isSetupMode(podcast)) {
+    return <SetupWizard podcast={podcast} />;
   }
 
   // Audio from active version
@@ -200,6 +242,7 @@ function PodcastWorkbench() {
           isGenerating={isGenerating || isPendingGeneration}
           isPendingGeneration={isPendingGeneration}
           settings={settings}
+          documentSelection={documentSelection}
         />
       }
       actionBar={
@@ -207,7 +250,7 @@ function PodcastWorkbench() {
           status={podcast.activeVersion?.status}
           isGenerating={isGenerating}
           hasChanges={hasAnyChanges}
-          isSaving={saveChangesMutation.isPending}
+          isSaving={saveChangesMutation.isPending || updateMutation.isPending}
           onSave={handleSave}
           onGenerate={() => generateMutation.mutate({ id: podcast.id })}
           disabled={isGenerating}

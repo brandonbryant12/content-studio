@@ -11,7 +11,7 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
@@ -34,6 +34,7 @@ export default function UploadDocumentDialog({
   open,
   onOpenChange,
 }: UploadDocumentDialogProps) {
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -41,6 +42,7 @@ export default function UploadDocumentDialog({
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['documents'] });
         toast.success('Document uploaded successfully');
         handleClose();
       },

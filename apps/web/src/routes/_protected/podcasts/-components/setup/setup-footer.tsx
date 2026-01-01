@@ -7,8 +7,6 @@ interface SetupFooterProps {
   continueDisabled?: boolean;
   isLoading?: boolean;
   isFinalStep?: boolean;
-  showSkip?: boolean;
-  onSkip?: () => void;
 }
 
 export function SetupFooter({
@@ -18,8 +16,6 @@ export function SetupFooter({
   continueDisabled = false,
   isLoading = false,
   isFinalStep = false,
-  showSkip = false,
-  onSkip,
 }: SetupFooterProps) {
   return (
     <div className="setup-footer">
@@ -32,11 +28,6 @@ export function SetupFooter({
             className="setup-back-btn"
           >
             Back
-          </button>
-        )}
-        {showSkip && onSkip && (
-          <button type="button" onClick={onSkip} className="setup-skip-link">
-            Skip to workbench
           </button>
         )}
       </div>

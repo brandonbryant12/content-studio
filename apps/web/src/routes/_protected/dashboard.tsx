@@ -5,7 +5,7 @@ import {
   PlusIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ export const Route = createFileRoute('/_protected/dashboard')({
 
 function Dashboard() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const { data: documents, isLoading: docsLoading } = useDocumentsOrdered({
@@ -36,6 +37,7 @@ function Dashboard() {
   const createPodcastMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
       onSuccess: async (data) => {
+        queryClient.invalidateQueries({ queryKey: ['podcasts'] });
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },

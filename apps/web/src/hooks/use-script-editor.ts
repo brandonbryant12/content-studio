@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 
@@ -34,6 +34,20 @@ export function useScriptEditor({
   const [segments, setSegments] = useState<ScriptSegment[]>(initialSegments);
   const [originalSegments, setOriginalSegments] =
     useState<ScriptSegment[]>(initialSegments);
+  const hasUserEdits = useRef(false);
+  const prevInitialSegmentsRef = useRef<string>('');
+
+  // Sync with server data when it changes (e.g., after generation completes)
+  // Only sync if user hasn't made local edits
+  // Use JSON comparison to avoid infinite loops from array reference changes
+  useEffect(() => {
+    const serialized = JSON.stringify(initialSegments);
+    if (serialized !== prevInitialSegmentsRef.current && !hasUserEdits.current) {
+      prevInitialSegmentsRef.current = serialized;
+      setSegments(initialSegments);
+      setOriginalSegments(initialSegments);
+    }
+  }, [initialSegments]);
 
   const hasChanges = useMemo(() => {
     if (segments.length !== originalSegments.length) return true;
@@ -62,6 +76,7 @@ export function useScriptEditor({
 
   const updateSegment = useCallback(
     (index: number, data: Partial<ScriptSegment>) => {
+      hasUserEdits.current = true;
       setSegments((prev) =>
         prev.map((seg) => (seg.index === index ? { ...seg, ...data } : seg)),
       );
@@ -71,6 +86,7 @@ export function useScriptEditor({
 
   const addSegment = useCallback(
     (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => {
+      hasUserEdits.current = true;
       setSegments((prev) => {
         // Find position to insert
         const insertPosition =
@@ -97,6 +113,7 @@ export function useScriptEditor({
   );
 
   const removeSegment = useCallback((index: number) => {
+    hasUserEdits.current = true;
     setSegments((prev) => {
       const filtered = prev.filter((seg) => seg.index !== index);
       // Re-index to maintain continuous order
@@ -105,6 +122,7 @@ export function useScriptEditor({
   }, []);
 
   const reorderSegments = useCallback((fromIndex: number, toIndex: number) => {
+    hasUserEdits.current = true;
     setSegments((prev) => {
       const newSegments = [...prev];
       const [removed] = newSegments.splice(fromIndex, 1);
@@ -127,10 +145,12 @@ export function useScriptEditor({
   }, [podcastId, segments, saveChangesMutation]);
 
   const discardChanges = useCallback(() => {
+    hasUserEdits.current = false;
     setSegments(originalSegments);
   }, [originalSegments]);
 
   const resetToSegments = useCallback((newSegments: ScriptSegment[]) => {
+    hasUserEdits.current = false;
     setSegments(newSegments);
     setOriginalSegments(newSegments);
   }, []);

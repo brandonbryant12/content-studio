@@ -118,18 +118,9 @@ export function GlobalActionBar({
         );
 
       case 'ready':
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onGenerate}
-            disabled={disabled}
-            className="global-action-bar-btn-secondary"
-          >
-            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-            Regenerate
-          </Button>
-        );
+        // No regenerate button when ready with no changes
+        // User must make changes to script/settings first
+        return null;
 
       case 'failed':
         return (

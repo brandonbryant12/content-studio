@@ -1,72 +1,51 @@
 import { PlusIcon, Cross2Icon, FileTextIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
 import { BaseDialog } from '@/components/base-dialog';
 import { useDocuments } from '@/db';
-
-/** Document data for the manager */
-interface DocumentData {
-  id: string;
-  title: string;
-  mimeType: string;
-  wordCount: number;
-}
+import type { DocumentInfo } from '@/hooks';
 
 interface DocumentManagerProps {
-  podcastId: string;
-  documents: DocumentData[];
-  allDocuments?: DocumentData[];
+  documents: DocumentInfo[];
+  onAddDocuments: (docs: DocumentInfo[]) => void;
+  onRemoveDocument: (docId: string) => void;
   disabled?: boolean;
 }
 
 export function DocumentManager({
-  podcastId,
   documents,
-  allDocuments: allDocumentsProp,
+  onAddDocuments,
+  onRemoveDocument,
   disabled,
 }: DocumentManagerProps) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Use live query for documents when dialog is open and no prop provided
-  const { data: liveDocuments, isLoading: loadingDocs } = useDocuments({
-    enabled: addDialogOpen && !allDocumentsProp,
+  // Fetch all available documents when dialog is open
+  const { data: allDocuments, isLoading: loadingDocs } = useDocuments({
+    enabled: addDialogOpen,
   });
-
-  const allDocuments = allDocumentsProp ?? liveDocuments;
-
-  const updateMutation = useMutation(
-    apiClient.podcasts.update.mutationOptions({
-      onError: () => {
-        toast.error('Failed to update documents');
-      },
-      onSuccess: () => {
-        toast.success('Documents updated');
-        setAddDialogOpen(false);
-      },
-    }),
-  );
 
   const currentIds = documents.map((d) => d.id);
 
   const handleRemove = (docId: string) => {
-    const newIds = currentIds.filter((id) => id !== docId);
-    if (newIds.length === 0) {
+    if (documents.length <= 1) {
       toast.error('Podcast must have at least one document');
       return;
     }
-    updateMutation.mutate({ id: podcastId, documentIds: newIds });
+    onRemoveDocument(docId);
   };
 
   const handleAddDocuments = () => {
     if (selectedIds.length === 0) return;
-    const newIds = [...new Set([...currentIds, ...selectedIds])];
-    updateMutation.mutate({ id: podcastId, documentIds: newIds });
+
+    // Find the full document info for selected IDs
+    const docsToAdd = allDocuments?.filter((d) => selectedIds.includes(d.id)) ?? [];
+    onAddDocuments(docsToAdd);
     setSelectedIds([]);
+    setAddDialogOpen(false);
   };
 
   const availableDocuments = allDocuments?.filter(
@@ -102,7 +81,6 @@ export function DocumentManager({
                 size="icon"
                 variant="ghost"
                 onClick={() => handleRemove(doc.id)}
-                disabled={updateMutation.isPending}
                 className="doc-manager-item-remove"
                 aria-label="Remove document"
               >
@@ -139,7 +117,7 @@ export function DocumentManager({
           loadingText: 'Adding...',
           submitDisabled: selectedIds.length === 0,
           onSubmit: handleAddDocuments,
-          isLoading: updateMutation.isPending,
+          isLoading: false,
         }}
       >
         {loadingDocs ? (

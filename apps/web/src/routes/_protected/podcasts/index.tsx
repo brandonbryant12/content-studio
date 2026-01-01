@@ -70,6 +70,7 @@ function PodcastsPage() {
   const createMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
       onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ['podcasts'] });
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },

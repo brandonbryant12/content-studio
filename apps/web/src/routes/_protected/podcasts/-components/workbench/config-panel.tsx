@@ -5,7 +5,7 @@ import {
   FileTextIcon,
 } from '@radix-ui/react-icons';
 import { useState } from 'react';
-import type { UsePodcastSettingsReturn } from '@/hooks';
+import type { UsePodcastSettingsReturn, UseDocumentSelectionReturn } from '@/hooks';
 import type { RouterOutput } from '@repo/api/client';
 import { AudioPlayer } from '../audio-player';
 import { DocumentManager } from './document-manager';
@@ -23,6 +23,7 @@ interface ConfigPanelProps {
   isGenerating: boolean;
   isPendingGeneration: boolean;
   settings: UsePodcastSettingsReturn;
+  documentSelection: UseDocumentSelectionReturn;
 }
 
 export function ConfigPanel({
@@ -31,6 +32,7 @@ export function ConfigPanel({
   isGenerating,
   isPendingGeneration,
   settings,
+  documentSelection,
 }: ConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('produce');
   const [showPromptViewer, setShowPromptViewer] = useState(false);
@@ -104,12 +106,13 @@ export function ConfigPanel({
               <div className="docs-header">
                 <h3 className="docs-title">
                   Source Documents
-                  <span className="docs-count">{podcast.documents.length}</span>
+                  <span className="docs-count">{documentSelection.documents.length}</span>
                 </h3>
               </div>
               <DocumentManager
-                podcastId={podcast.id}
-                documents={[...podcast.documents]}
+                documents={documentSelection.documents}
+                onAddDocuments={documentSelection.addDocuments}
+                onRemoveDocument={documentSelection.removeDocument}
                 disabled={isGenerating}
               />
             </div>
