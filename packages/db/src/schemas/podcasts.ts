@@ -2,15 +2,14 @@ import {
   pgTable,
   text,
   timestamp,
-  uuid,
+  varchar,
   integer,
   jsonb,
   index,
   pgEnum,
   boolean,
 } from 'drizzle-orm/pg-core';
-import { createSelectSchema } from 'drizzle-valibot';
-import * as v from 'valibot';
+import { Schema } from 'effect';
 import { user } from './auth';
 import {
   document,
@@ -19,6 +18,21 @@ import {
   type Document,
   type DocumentOutput,
 } from './documents';
+import {
+  createEffectSerializer,
+  createBatchEffectSerializer,
+  createSyncSerializer,
+} from './serialization';
+import {
+  type PodcastId,
+  type ScriptVersionId,
+  type DocumentId,
+  PodcastIdSchema,
+  ScriptVersionIdSchema,
+  DocumentIdSchema,
+  generatePodcastId,
+  generateScriptVersionId,
+} from './brands';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
@@ -64,40 +78,44 @@ export interface GenerationContext {
 export const podcast = pgTable(
   'podcast',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: varchar('id', { length: 20 })
+      .$type<PodcastId>()
+      .$default(generatePodcastId)
+      .primaryKey(),
     title: text('title').notNull(),
     description: text('description'),
     format: podcastFormatEnum('format').notNull(),
-    // Note: status moved to version level (podcast_script.status)
-    hostVoice: text('host_voice'),
-    hostVoiceName: text('host_voice_name'),
-    coHostVoice: text('co_host_voice'),
-    coHostVoiceName: text('co_host_voice_name'),
-    promptInstructions: text('prompt_instructions'),
-    targetDurationMinutes: integer('target_duration_minutes').default(5),
+    // Note: status moved to version level (podcastScript.status)
+    hostVoice: text('hostVoice'),
+    hostVoiceName: text('hostVoiceName'),
+    coHostVoice: text('coHostVoice'),
+    coHostVoiceName: text('coHostVoiceName'),
+    promptInstructions: text('promptInstructions'),
+    targetDurationMinutes: integer('targetDurationMinutes').default(5),
     // Note: audioUrl/duration moved to version level
     tags: jsonb('tags').$type<string[]>().default([]),
 
     // Source documents used to generate this podcast
-    sourceDocumentIds: uuid('source_document_ids')
+    sourceDocumentIds: varchar('sourceDocumentIds', { length: 20 })
       .array()
+      .$type<DocumentId[]>()
       .notNull()
       .default([]),
 
     // Generation context for audit trail
-    generationContext: jsonb('generation_context').$type<GenerationContext>(),
+    generationContext: jsonb('generationContext').$type<GenerationContext>(),
 
-    createdBy: text('created_by')
+    createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    updatedAt: timestamp('updatedAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
   },
-  (table) => [index('podcast_created_by_idx').on(table.createdBy)],
+  (table) => [index('podcast_createdBy_idx').on(table.createdBy)],
 );
 
 export interface ScriptSegment {
@@ -107,185 +125,242 @@ export interface ScriptSegment {
 }
 
 export const podcastScript = pgTable(
-  'podcast_script',
+  'podcastScript',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    podcastId: uuid('podcast_id')
+    id: varchar('id', { length: 20 })
+      .$type<ScriptVersionId>()
+      .$default(generateScriptVersionId)
+      .primaryKey(),
+    podcastId: varchar('podcastId', { length: 20 })
+      .$type<PodcastId>()
       .notNull()
       .references(() => podcast.id, { onDelete: 'cascade' }),
     version: integer('version').notNull().default(1),
-    isActive: boolean('is_active').notNull().default(true),
+    isActive: boolean('isActive').notNull().default(true),
 
     // Version-level status
     status: versionStatusEnum('status').notNull().default('drafting'),
-    errorMessage: text('error_message'),
+    errorMessage: text('errorMessage'),
 
     // Script content (nullable for draft state)
     segments: jsonb('segments').$type<ScriptSegment[]>(),
     summary: text('summary'),
-    generationPrompt: text('generation_prompt'),
+    generationPrompt: text('generationPrompt'),
 
     // Audio (generated in Phase 2)
-    audioUrl: text('audio_url'),
+    audioUrl: text('audioUrl'),
     duration: integer('duration'), // seconds
 
-    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    // Denormalized from podcast for Electric sync filtering
+    createdBy: text('createdBy')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    updatedAt: timestamp('updatedAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
-    index('podcast_script_podcast_id_idx').on(table.podcastId),
-    index('podcast_script_status_idx').on(table.status),
+    index('podcastScript_podcastId_idx').on(table.podcastId),
+    index('podcastScript_status_idx').on(table.status),
+    index('podcastScript_createdBy_idx').on(table.createdBy),
   ],
 );
 
-export const CreatePodcastSchema = v.object({
-  title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(256))),
-  description: v.optional(v.string()),
-  format: v.picklist(['voice_over', 'conversation']),
-  documentIds: v.optional(v.array(v.pipe(v.string(), v.uuid()))),
-  promptInstructions: v.optional(v.string()),
-  targetDurationMinutes: v.optional(
-    v.pipe(v.number(), v.minValue(1), v.maxValue(60)),
+export const CreatePodcastSchema = Schema.Struct({
+  title: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
-  hostVoice: v.optional(v.string()),
-  hostVoiceName: v.optional(v.string()),
-  coHostVoice: v.optional(v.string()),
-  coHostVoiceName: v.optional(v.string()),
+  description: Schema.optional(Schema.String),
+  format: Schema.Union(
+    Schema.Literal('voice_over'),
+    Schema.Literal('conversation'),
+  ),
+  documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+  promptInstructions: Schema.optional(Schema.String),
+  targetDurationMinutes: Schema.optional(
+    Schema.Number.pipe(
+      Schema.greaterThanOrEqualTo(1),
+      Schema.lessThanOrEqualTo(60),
+    ),
+  ),
+  hostVoice: Schema.optional(Schema.String),
+  hostVoiceName: Schema.optional(Schema.String),
+  coHostVoice: Schema.optional(Schema.String),
+  coHostVoiceName: Schema.optional(Schema.String),
 });
 
-export const UpdatePodcastSchema = v.partial(
-  v.object({
-    title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
-    description: v.optional(v.string()),
-    promptInstructions: v.optional(v.string()),
-    targetDurationMinutes: v.optional(
-      v.pipe(v.number(), v.minValue(1), v.maxValue(60)),
+/**
+ * Base fields for podcast updates.
+ * Exported separately for use in API contracts that need to spread fields.
+ */
+export const UpdatePodcastFields = {
+  title: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+  ),
+  description: Schema.optional(Schema.String),
+  promptInstructions: Schema.optional(Schema.String),
+  targetDurationMinutes: Schema.optional(
+    Schema.Number.pipe(
+      Schema.greaterThanOrEqualTo(1),
+      Schema.lessThanOrEqualTo(60),
     ),
-    hostVoice: v.optional(v.string()),
-    hostVoiceName: v.optional(v.string()),
-    coHostVoice: v.optional(v.string()),
-    coHostVoiceName: v.optional(v.string()),
-    tags: v.optional(v.array(v.string())),
-    documentIds: v.optional(v.array(v.string())),
-  }),
-);
+  ),
+  hostVoice: Schema.optional(Schema.String),
+  hostVoiceName: Schema.optional(Schema.String),
+  coHostVoice: Schema.optional(Schema.String),
+  coHostVoiceName: Schema.optional(Schema.String),
+  tags: Schema.optional(Schema.Array(Schema.String)),
+  documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+};
 
-export const UpdateScriptSchema = v.object({
-  segments: v.array(
-    v.object({
-      speaker: v.string(),
-      line: v.string(),
-      index: v.number(),
+export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
+
+export const UpdateScriptSchema = Schema.Struct({
+  segments: Schema.Array(
+    Schema.Struct({
+      speaker: Schema.String,
+      line: Schema.String,
+      index: Schema.Number,
     }),
   ),
 });
-
-export const PodcastSchema = createSelectSchema(podcast);
-export const PodcastScriptSchema = createSelectSchema(podcastScript);
 
 // =============================================================================
 // Enum Schemas - for API contracts
 // =============================================================================
 
-export const PodcastFormatSchema = v.picklist(['voice_over', 'conversation']);
+export const PodcastFormatSchema = Schema.Union(
+  Schema.Literal('voice_over'),
+  Schema.Literal('conversation'),
+);
 
 /**
  * Version-level status schema.
  * Flow: drafting → generating_script → script_ready → generating_audio → ready
  */
-export const VersionStatusSchema = v.picklist([
-  'drafting',
-  'generating_script',
-  'script_ready',
-  'generating_audio',
-  'ready',
-  'failed',
-]);
+export const VersionStatusSchema = Schema.Union(
+  Schema.Literal('drafting'),
+  Schema.Literal('generating_script'),
+  Schema.Literal('script_ready'),
+  Schema.Literal('generating_audio'),
+  Schema.Literal('ready'),
+  Schema.Literal('failed'),
+);
 
 // =============================================================================
 // Output Schemas - for API responses (Date → string)
 // =============================================================================
 
-export const GenerationContextOutputSchema = v.object({
-  systemPromptTemplate: v.string(),
-  userInstructions: v.string(),
-  sourceDocuments: v.array(
-    v.object({
-      id: v.string(),
-      title: v.string(),
-      contentHash: v.optional(v.string()),
+export const GenerationContextOutputSchema = Schema.Struct({
+  systemPromptTemplate: Schema.String,
+  userInstructions: Schema.String,
+  sourceDocuments: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      title: Schema.String,
+      contentHash: Schema.optional(Schema.String),
     }),
   ),
-  modelId: v.string(),
-  modelParams: v.optional(
-    v.object({
-      temperature: v.optional(v.number()),
-      maxTokens: v.optional(v.number()),
+  modelId: Schema.String,
+  modelParams: Schema.optional(
+    Schema.Struct({
+      temperature: Schema.optional(Schema.Number),
+      maxTokens: Schema.optional(Schema.Number),
     }),
   ),
-  generatedAt: v.string(),
+  generatedAt: Schema.String,
 });
 
-export const PodcastOutputSchema = v.object({
-  id: v.string(),
-  title: v.string(),
-  description: v.nullable(v.string()),
+export const PodcastOutputSchema = Schema.Struct({
+  id: PodcastIdSchema,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String),
   format: PodcastFormatSchema,
   // Note: status moved to version level (activeVersion.status)
-  hostVoice: v.nullable(v.string()),
-  hostVoiceName: v.nullable(v.string()),
-  coHostVoice: v.nullable(v.string()),
-  coHostVoiceName: v.nullable(v.string()),
-  promptInstructions: v.nullable(v.string()),
-  targetDurationMinutes: v.nullable(v.number()),
+  hostVoice: Schema.NullOr(Schema.String),
+  hostVoiceName: Schema.NullOr(Schema.String),
+  coHostVoice: Schema.NullOr(Schema.String),
+  coHostVoiceName: Schema.NullOr(Schema.String),
+  promptInstructions: Schema.NullOr(Schema.String),
+  targetDurationMinutes: Schema.NullOr(Schema.Number),
   // Note: audioUrl/duration moved to version level
-  tags: v.array(v.string()),
-  sourceDocumentIds: v.array(v.string()),
-  generationContext: v.nullable(GenerationContextOutputSchema),
-  createdBy: v.string(),
-  createdAt: v.string(),
-  updatedAt: v.string(),
+  tags: Schema.Array(Schema.String),
+  sourceDocumentIds: Schema.Array(DocumentIdSchema),
+  generationContext: Schema.NullOr(GenerationContextOutputSchema),
+  createdBy: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 });
 
-export const PodcastScriptOutputSchema = v.object({
-  id: v.string(),
-  podcastId: v.string(),
-  version: v.number(),
-  isActive: v.boolean(),
+export const PodcastScriptOutputSchema = Schema.Struct({
+  id: ScriptVersionIdSchema,
+  podcastId: PodcastIdSchema,
+  version: Schema.Number,
+  isActive: Schema.Boolean,
 
   // Version-level status
   status: VersionStatusSchema,
-  errorMessage: v.nullable(v.string()),
+  errorMessage: Schema.NullOr(Schema.String),
 
   // Script content (nullable for draft state)
-  segments: v.nullable(
-    v.array(
-      v.object({
-        speaker: v.string(),
-        line: v.string(),
-        index: v.number(),
+  segments: Schema.NullOr(
+    Schema.Array(
+      Schema.Struct({
+        speaker: Schema.String,
+        line: Schema.String,
+        index: Schema.Number,
       }),
     ),
   ),
-  summary: v.nullable(v.string()),
-  generationPrompt: v.nullable(v.string()),
+  summary: Schema.NullOr(Schema.String),
+  generationPrompt: Schema.NullOr(Schema.String),
 
   // Audio
-  audioUrl: v.nullable(v.string()),
-  duration: v.nullable(v.number()),
+  audioUrl: Schema.NullOr(Schema.String),
+  duration: Schema.NullOr(Schema.Number),
 
-  createdAt: v.string(),
-  updatedAt: v.string(),
+  // Denormalized from podcast for Electric sync filtering
+  createdBy: Schema.String,
+
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 });
 
-export const PodcastFullOutputSchema = v.object({
-  ...PodcastOutputSchema.entries,
-  documents: v.array(DocumentOutputSchema),
-  activeVersion: v.nullable(PodcastScriptOutputSchema),
+export const PodcastFullOutputSchema = Schema.Struct({
+  ...PodcastOutputSchema.fields,
+  documents: Schema.Array(DocumentOutputSchema),
+  activeVersion: Schema.NullOr(PodcastScriptOutputSchema),
+});
+
+/**
+ * Active version summary schema for list views (lightweight).
+ */
+export const ActiveVersionSummarySchema = Schema.Struct({
+  id: ScriptVersionIdSchema,
+  version: Schema.Number,
+  status: VersionStatusSchema,
+  duration: Schema.NullOr(Schema.Number),
+});
+
+/**
+ * Podcast list item output schema (podcast + active version summary).
+ */
+export const PodcastListItemOutputSchema = Schema.Struct({
+  ...PodcastOutputSchema.fields,
+  activeVersion: Schema.NullOr(ActiveVersionSummarySchema),
+});
+
+/**
+ * Script segment schema for API contracts.
+ */
+export const ScriptSegmentSchema = Schema.Struct({
+  speaker: Schema.String,
+  line: Schema.String,
+  index: Schema.Number,
 });
 
 // =============================================================================
@@ -296,26 +371,22 @@ export type Podcast = typeof podcast.$inferSelect;
 export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
 export type VersionStatus = PodcastScript['status'];
-export type GenerationContextOutput = v.InferOutput<
-  typeof GenerationContextOutputSchema
->;
-export type PodcastOutput = v.InferOutput<typeof PodcastOutputSchema>;
-export type PodcastScriptOutput = v.InferOutput<
-  typeof PodcastScriptOutputSchema
->;
-export type PodcastFullOutput = v.InferOutput<typeof PodcastFullOutputSchema>;
-export type CreatePodcast = v.InferInput<typeof CreatePodcastSchema>;
-export type UpdatePodcast = v.InferInput<typeof UpdatePodcastSchema>;
-export type UpdateScript = v.InferInput<typeof UpdateScriptSchema>;
+export type GenerationContextOutput = typeof GenerationContextOutputSchema.Type;
+export type PodcastOutput = typeof PodcastOutputSchema.Type;
+export type PodcastScriptOutput = typeof PodcastScriptOutputSchema.Type;
+export type PodcastFullOutput = typeof PodcastFullOutputSchema.Type;
+export type CreatePodcast = typeof CreatePodcastSchema.Type;
+export type UpdatePodcast = typeof UpdatePodcastSchema.Type;
+export type UpdateScript = typeof UpdateScriptSchema.Type;
 
 // =============================================================================
-// Serializers - co-located with entity
+// Transform Functions - pure DB → API output conversion
 // =============================================================================
 
 /**
- * Serialize a Podcast to API output format.
+ * Pure transform for Podcast → PodcastOutput.
  */
-export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
+const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   id: podcast.id,
   title: podcast.title,
   description: podcast.description,
@@ -335,11 +406,9 @@ export const serializePodcast = (podcast: Podcast): PodcastOutput => ({
 });
 
 /**
- * Serialize a PodcastScript to API output format.
+ * Pure transform for PodcastScript → PodcastScriptOutput.
  */
-export const serializePodcastScript = (
-  script: PodcastScript,
-): PodcastScriptOutput => ({
+const podcastScriptTransform = (script: PodcastScript): PodcastScriptOutput => ({
   id: script.id,
   podcastId: script.podcastId,
   version: script.version,
@@ -351,31 +420,16 @@ export const serializePodcastScript = (
   generationPrompt: script.generationPrompt,
   audioUrl: script.audioUrl,
   duration: script.duration,
+  createdBy: script.createdBy,
   createdAt: script.createdAt.toISOString(),
   updatedAt: script.updatedAt.toISOString(),
-});
-
-/**
- * Serialize a full Podcast with documents and active version.
- */
-export const serializePodcastFull = (
-  podcast: Podcast & {
-    documents: Document[];
-    activeVersion: PodcastScript | null;
-  },
-): PodcastFullOutput => ({
-  ...serializePodcast(podcast),
-  documents: podcast.documents.map(serializeDocument),
-  activeVersion: podcast.activeVersion
-    ? serializePodcastScript(podcast.activeVersion)
-    : null,
 });
 
 /**
  * Active version summary for list views.
  */
 export interface ActiveVersionSummary {
-  id: string;
+  id: ScriptVersionId;
   version: number;
   status: VersionStatus;
   duration: number | null;
@@ -389,13 +443,95 @@ export interface PodcastListItemOutput extends PodcastOutput {
 }
 
 /**
- * Serialize a Podcast for list views (with active version summary).
+ * Input type for full podcast serialization.
  */
-export const serializePodcastListItem = (
-  podcast: Podcast & {
-    activeVersion: ActiveVersionSummary | null;
-  },
-): PodcastListItemOutput => ({
-  ...serializePodcast(podcast),
+type PodcastWithRelations = Podcast & {
+  documents: Document[];
+  activeVersion: PodcastScript | null;
+};
+
+/**
+ * Input type for list item serialization.
+ */
+type PodcastWithVersion = Podcast & {
+  activeVersion: ActiveVersionSummary | null;
+};
+
+/**
+ * Pure transform for full Podcast with documents and active version.
+ */
+const podcastFullTransform = (podcast: PodcastWithRelations): PodcastFullOutput => ({
+  ...podcastTransform(podcast),
+  documents: podcast.documents.map(serializeDocument),
+  activeVersion: podcast.activeVersion
+    ? podcastScriptTransform(podcast.activeVersion)
+    : null,
+});
+
+/**
+ * Pure transform for Podcast list item with active version summary.
+ */
+const podcastListItemTransform = (podcast: PodcastWithVersion): PodcastListItemOutput => ({
+  ...podcastTransform(podcast),
   activeVersion: podcast.activeVersion,
 });
+
+// =============================================================================
+// Serializers - Effect-based and sync variants
+// =============================================================================
+
+// --- Podcast ---
+
+/** Effect-based serializer with tracing. */
+export const serializePodcastEffect = createEffectSerializer('podcast', podcastTransform);
+
+/** Batch serializer for multiple podcasts. */
+export const serializePodcastsEffect = createBatchEffectSerializer('podcast', podcastTransform);
+
+/** Sync serializer for simple cases. */
+export const serializePodcast = createSyncSerializer(podcastTransform);
+
+// --- PodcastScript ---
+
+/** Effect-based serializer with tracing. */
+export const serializePodcastScriptEffect = createEffectSerializer(
+  'podcastScript',
+  podcastScriptTransform,
+);
+
+/** Batch serializer for multiple scripts. */
+export const serializePodcastScriptsEffect = createBatchEffectSerializer(
+  'podcastScript',
+  podcastScriptTransform,
+);
+
+/** Sync serializer for simple cases. */
+export const serializePodcastScript = createSyncSerializer(podcastScriptTransform);
+
+// --- PodcastFull (with documents and active version) ---
+
+/** Effect-based serializer with tracing. */
+export const serializePodcastFullEffect = createEffectSerializer(
+  'podcastFull',
+  podcastFullTransform,
+);
+
+/** Sync serializer for simple cases. */
+export const serializePodcastFull = createSyncSerializer(podcastFullTransform);
+
+// --- PodcastListItem (with active version summary) ---
+
+/** Effect-based serializer with tracing. */
+export const serializePodcastListItemEffect = createEffectSerializer(
+  'podcastListItem',
+  podcastListItemTransform,
+);
+
+/** Batch serializer for podcast lists. */
+export const serializePodcastListItemsEffect = createBatchEffectSerializer(
+  'podcastListItem',
+  podcastListItemTransform,
+);
+
+/** Sync serializer for simple cases. */
+export const serializePodcastListItem = createSyncSerializer(podcastListItemTransform);

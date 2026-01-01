@@ -19,9 +19,17 @@ export interface APIClientOptions {
 // Oddly, this is needed for better-auth to not complain
 export type { AppRouter } from '../server';
 
-export type RouterOutput = InferContractRouterOutputs<typeof appContract>;
+export type AppContract = typeof appContract;
+export type APIClient = ContractRouterClient<AppContract>;
+export type RouterOutput = InferContractRouterOutputs<AppContract>;
+export type TanstackQueryAPIClient = ReturnType<
+  typeof createTanstackQueryUtils<APIClient>
+>;
 
-export const createAPIClient = ({ serverUrl, apiPath }: APIClientOptions) => {
+export const createAPIClient = ({
+  serverUrl,
+  apiPath,
+}: APIClientOptions): APIClient => {
   const link = new OpenAPILink(appContract, {
     url: urlJoin(serverUrl, apiPath),
     plugins: [new ResponseValidationPlugin(appContract)],
@@ -32,13 +40,14 @@ export const createAPIClient = ({ serverUrl, apiPath }: APIClientOptions) => {
       });
     },
   });
-  const client: ContractRouterClient<typeof appContract> =
-    createORPCClient(link);
+  const client: APIClient = createORPCClient(link);
 
   return client;
 };
 
-export const createTanstackQueryAPIClient = (opts: APIClientOptions) => {
+export const createTanstackQueryAPIClient = (
+  opts: APIClientOptions,
+): TanstackQueryAPIClient => {
   const apiClient = createAPIClient(opts);
   return createTanstackQueryUtils(apiClient);
 };

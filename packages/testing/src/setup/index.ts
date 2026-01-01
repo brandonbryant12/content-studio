@@ -12,7 +12,7 @@ export {
 // Layer composition
 export {
   createMockAILayers,
-  createTestUserLayer,
+  withTestUser,
   createIntegrationTestLayers,
   type TestLayersOptions,
 } from './layers';

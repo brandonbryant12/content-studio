@@ -3,7 +3,6 @@ import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import type { RouterOutput } from '@repo/api/client';
 import {
   type VersionStatus,
   getStatusConfig,
@@ -11,6 +10,19 @@ import {
 } from '../-constants/status';
 import { PodcastIcon } from './podcast-icon';
 import { formatDuration } from '@/lib/formatters';
+
+/** Podcast data for list display */
+interface PodcastListItem {
+  id: string;
+  title: string;
+  description: string | null;
+  format: 'voice_over' | 'conversation';
+  createdAt: string;
+  activeVersion?: {
+    status: VersionStatus;
+    duration: number | null;
+  } | null;
+}
 
 function StatusBadge({ status }: { status: VersionStatus | undefined }) {
   const config = getStatusConfig(status);
@@ -37,7 +49,7 @@ export function PodcastItem({
   onDelete,
   isDeleting,
 }: {
-  podcast: RouterOutput['podcasts']['list'][number];
+  podcast: PodcastListItem;
   onDelete: () => void;
   isDeleting: boolean;
 }) {

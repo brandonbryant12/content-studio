@@ -18,7 +18,6 @@ import {
 import { isGeneratingStatus } from './-constants/status';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
-import { podcastUtils } from '@/db';
 import {
   useScriptEditor,
   usePodcastSettings,
@@ -39,7 +38,6 @@ function PodcastWorkbench() {
   const navigate = useNavigate();
   const [setupSkipped, setSetupSkipped] = useState(false);
 
-  // No polling needed - SSE will trigger refetch when job completes
   const { data: podcast, isPending } = useQuery(
     apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
   );
@@ -47,7 +45,7 @@ function PodcastWorkbench() {
   // Script editing state
   const scriptEditor = useScriptEditor({
     podcastId,
-    initialSegments: podcast?.activeVersion?.segments ?? [],
+    initialSegments: [...(podcast?.activeVersion?.segments ?? [])],
   });
 
   // Settings state management
@@ -124,10 +122,9 @@ function PodcastWorkbench() {
 
   const deleteMutation = useMutation(
     apiClient.podcasts.delete.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: () => {
         toast.success('Podcast deleted');
         navigate({ to: '/podcasts' });
-        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to delete podcast');
@@ -188,6 +185,7 @@ function PodcastWorkbench() {
           summary={podcast.activeVersion?.summary ?? null}
           hasChanges={scriptEditor.hasChanges}
           isSaving={scriptEditor.isSaving}
+          disabled={podcast.activeVersion?.status !== 'ready'}
           onUpdateSegment={scriptEditor.updateSegment}
           onRemoveSegment={scriptEditor.removeSegment}
           onReorderSegments={scriptEditor.reorderSegments}

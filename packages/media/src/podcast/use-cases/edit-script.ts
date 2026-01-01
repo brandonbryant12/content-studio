@@ -79,6 +79,7 @@ export const editScript = (
     // 3. Create new version with updated segments
     const newVersion = yield* scriptVersionRepo.insert({
       podcastId: input.podcastId,
+      createdBy: podcast.createdBy,
       status: 'script_ready' as VersionStatus,
       segments: input.segments,
       summary: currentVersion.summary,

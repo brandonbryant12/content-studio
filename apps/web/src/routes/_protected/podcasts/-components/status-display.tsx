@@ -52,7 +52,8 @@ export function StatusDisplay({
   status: VersionStatus | undefined;
   errorMessage?: string | null;
 }) {
-  const panelStyle = status ? statusPanelStyles[status] : defaultPanelStyle;
+  const panelStyle =
+    (status ? statusPanelStyles[status] : undefined) ?? defaultPanelStyle;
   const statusConfig = getStatusConfig(status);
   const isGenerating = isGeneratingStatus(status);
   const isReady = status === 'ready';

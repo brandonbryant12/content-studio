@@ -1,8 +1,7 @@
 import {
   document,
-  type Document,
-  type UpdateDocument,
   type DocumentSource,
+  type DocumentId,
 } from '@repo/db/schema';
 import { withDb } from '@repo/db/effect';
 import { DocumentNotFound } from '@repo/db/errors';
@@ -57,7 +56,7 @@ export const findDocumentById = (id: string) =>
     db
       .select()
       .from(document)
-      .where(eq(document.id, id))
+      .where(eq(document.id, id as DocumentId))
       .limit(1)
       .then((rows) => rows[0]),
   ).pipe(
@@ -118,7 +117,7 @@ export const updateDocument = (id: string, data: UpdateDocumentInput) =>
     const [doc] = await db
       .update(document)
       .set(updates)
-      .where(eq(document.id, id))
+      .where(eq(document.id, id as DocumentId))
       .returning();
     return doc;
   }).pipe(
@@ -134,7 +133,7 @@ export const deleteDocument = (id: string) =>
   withDb('documents.delete', async (db) => {
     const result = await db
       .delete(document)
-      .where(eq(document.id, id))
+      .where(eq(document.id, id as DocumentId))
       .returning({ id: document.id });
     return result.length > 0;
   });

@@ -3,7 +3,6 @@ import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
-import { podcastUtils } from '@/db';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -135,9 +134,6 @@ export function usePodcastSettings({
     apiClient.podcasts.update.mutationOptions({
       onError: (error) => {
         toast.error(error.message ?? 'Failed to save settings');
-      },
-      onSuccess: () => {
-        podcastUtils.refetch();
       },
     }),
   );

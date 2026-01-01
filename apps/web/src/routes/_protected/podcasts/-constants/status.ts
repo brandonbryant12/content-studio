@@ -1,10 +1,8 @@
-import type { RouterOutput } from '@repo/api/client';
+import type { VersionStatus as DbVersionStatus } from '@repo/db/schema';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
 // Version-level status (status is on activeVersion, not podcast)
-export type VersionStatus = NonNullable<
-  RouterOutput['podcasts']['get']['activeVersion']
->['status'];
+export type VersionStatus = DbVersionStatus;
 
 interface StatusConfig {
   label: string;

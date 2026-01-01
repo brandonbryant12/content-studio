@@ -6,11 +6,11 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { documentUtils } from '@/db';
+import { useDocuments } from '@/db';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -30,25 +30,23 @@ export function StepDocuments({
   selectedIds,
   onSelectionChange,
 }: StepDocumentsProps) {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
-  const { data: documents, isPending: loadingDocs } = useQuery(
-    apiClient.documents.list.queryOptions({ input: {} }),
-  );
+  const { data: documents, isLoading: loadingDocs } = useDocuments();
 
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
-      onSuccess: async (data) => {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ['documents'] });
         toast.success('Document uploaded');
-        // Auto-select the newly uploaded document
         onSelectionChange([...selectedIds, data.id]);
         setUploadFile(null);
         setUploadTitle('');
         setActiveTab('existing');
-        await documentUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to upload document');

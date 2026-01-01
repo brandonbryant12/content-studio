@@ -5,7 +5,7 @@ import {
   PlusIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -13,20 +13,9 @@ import { DocumentItem } from './documents/-components/document-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
 import { PodcastItem } from './podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
-import { podcastUtils } from '@/db';
+import { usePodcastsOrdered, useDocumentsOrdered } from '@/db';
 
 export const Route = createFileRoute('/_protected/dashboard')({
-  loader: async () => {
-    await Promise.all([
-      queryClient.ensureQueryData(
-        apiClient.documents.list.queryOptions({ input: { limit: 5 } }),
-      ),
-      queryClient.ensureQueryData(
-        apiClient.podcasts.list.queryOptions({ input: { limit: 5 } }),
-      ),
-    ]);
-  },
   component: Dashboard,
 });
 
@@ -34,13 +23,15 @@ function Dashboard() {
   const navigate = useNavigate();
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const { data: documents, isPending: docsPending } = useQuery(
-    apiClient.documents.list.queryOptions({ input: { limit: 5 } }),
-  );
+  const { data: documents, isLoading: docsLoading } = useDocumentsOrdered({
+    limit: 5,
+    orderBy: 'desc',
+  });
 
-  const { data: podcasts, isPending: podcastsPending } = useQuery(
-    apiClient.podcasts.list.queryOptions({ input: { limit: 5 } }),
-  );
+  const { data: podcasts, isLoading: podcastsLoading } = usePodcastsOrdered({
+    limit: 5,
+    orderBy: 'desc',
+  });
 
   const createPodcastMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
@@ -50,7 +41,6 @@ function Dashboard() {
           params: { podcastId: data.id },
           search: { version: undefined },
         });
-        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');
@@ -118,7 +108,7 @@ function Dashboard() {
           </Link>
         </div>
 
-        {docsPending ? (
+        {docsLoading ? (
           <div className="loading-center">
             <Spinner className="w-5 h-5" />
           </div>
@@ -128,7 +118,7 @@ function Dashboard() {
           </div>
         ) : (
           <div className="space-y-2">
-            {documents?.slice(0, 3).map((doc) => (
+            {documents?.map((doc) => (
               <DocumentItem
                 key={doc.id}
                 document={doc}
@@ -152,7 +142,7 @@ function Dashboard() {
           </Link>
         </div>
 
-        {podcastsPending ? (
+        {podcastsLoading ? (
           <div className="loading-center">
             <Spinner className="w-5 h-5" />
           </div>
@@ -162,7 +152,7 @@ function Dashboard() {
           </div>
         ) : (
           <div className="space-y-2">
-            {podcasts?.slice(0, 3).map((podcast) => (
+            {podcasts?.map((podcast) => (
               <PodcastItem
                 key={podcast.id}
                 podcast={podcast}

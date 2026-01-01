@@ -1,4 +1,6 @@
 import { Effect } from 'effect';
+import { withCurrentUser, type User } from '@repo/auth/policy';
+import type { ServerRuntime, SharedServices } from './runtime';
 
 /**
  * Error mapper type - must handle ALL errors the Effect can produce.
@@ -9,47 +11,69 @@ export type ErrorMapper<E extends { _tag: string }> = {
 };
 
 /**
- * Run an Effect with STRICT error handling.
+ * Options for handleEffect.
+ */
+export interface HandleEffectOptions {
+  /** Optional span name for tracing (e.g., 'api.documents.get') */
+  span?: string;
+  /** Optional span attributes */
+  attributes?: Record<string, string | number | boolean>;
+}
+
+/**
+ * Run an Effect with STRICT error handling using the shared server runtime.
+ *
+ * This function:
+ * 1. Scopes the user context via FiberRef.locally if user is provided
+ * 2. Optionally wraps the effect with a span for tracing
+ * 3. Runs the effect using the shared runtime
+ * 4. Maps all errors using the error mapper
  *
  * TypeScript will error if any error type returned by the Effect is not
  * explicitly mapped in the errorMapper. This ensures exhaustive error handling
  * at the API boundary.
  *
- * **Important**: The Effect must have all requirements satisfied.
- * Use `Effect.provide(layers)` before passing to handleEffect.
- *
- * @param effect - The Effect to run (with all requirements provided)
+ * @param runtime - The shared server runtime
+ * @param user - The authenticated user (or null for public routes)
+ * @param effect - The Effect to run (requirements must be SharedServices)
  * @param errorMapper - Object mapping each error tag to a handler that throws an oRPC error
+ * @param options - Optional configuration (span name, attributes)
  *
  * @example
  * ```typescript
  * // In an oRPC handler:
- * const effect = Effect.gen(function* () {
- *   const docs = yield* Documents;
- *   return yield* docs.findById(input.id);
- * }).pipe(Effect.provide(context.layers));
- *
- * return handleEffect(effect, {
- *   // TypeScript enforces handling ALL possible errors!
- *   DocumentNotFound: (e) => {
- *     throw errors.MISSING_DOCUMENT({
- *       message: `Document ${e.id} not found`,
- *       data: { documentId: e.id },
- *     });
+ * return handleEffect(
+ *   context.runtime,
+ *   context.user,
+ *   Effect.gen(function* () {
+ *     const docs = yield* Documents;
+ *     return yield* docs.findById(input.id);
+ *   }),
+ *   {
+ *     DocumentNotFound: (e) => { throw errors.DOCUMENT_NOT_FOUND(...) },
+ *     DbError: (e) => { throw errors.INTERNAL_ERROR(...) },
  *   },
- *   DbError: (e) => {
- *     console.error('Database error:', e);
- *     throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
- *   },
- * });
+ *   { span: 'api.documents.get', attributes: { 'document.id': input.id } },
+ * );
  * ```
  */
 export const handleEffect = <A, E extends { _tag: string }>(
-  effect: Effect.Effect<A, E, never>,
+  runtime: ServerRuntime,
+  user: User | null,
+  effect: Effect.Effect<A, E, SharedServices>,
   errorMapper: ErrorMapper<E>,
+  options?: HandleEffectOptions,
 ): Promise<A> => {
-  return Effect.runPromise(
-    effect.pipe(
+  // Apply span if provided
+  let tracedEffect = options?.span
+    ? effect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
+    : effect;
+
+  // Scope user context via FiberRef if authenticated
+  const scopedEffect = user ? withCurrentUser(user)(tracedEffect) : tracedEffect;
+
+  return runtime.runPromise(
+    scopedEffect.pipe(
       Effect.catchAll((error: E) =>
         Effect.sync(() => {
           const handler = errorMapper[error._tag as E['_tag']];
@@ -126,20 +150,26 @@ const logAndThrowInternal = (
  * Eliminates duplication while preserving stack traces in logs.
  *
  * Returns grouped handlers that can be spread into handleEffect:
- * - common: DbError, PolicyError, ForbiddenError, etc.
+ * - common: DbError, PolicyError, ForbiddenError, UnauthorizedError, NotFoundError
  * - database: ConstraintViolationError, DeadlockError, ConnectionError
  * - storage: StorageError, StorageUploadError, StorageNotFoundError
  * - queue: QueueError, JobNotFoundError, JobProcessingError
  * - tts: TTSError, TTSQuotaExceededError
+ * - llm: LLMError, LLMRateLimitError
  *
  * @example
  * ```typescript
  * const handlers = createErrorHandlers(errors);
- * return handleEffect(effect, {
- *   ...handlers.common,
- *   ...handlers.database,
- *   DocumentNotFound: (e) => { throw errors.DOCUMENT_NOT_FOUND(...) },
- * });
+ * return handleEffect(
+ *   context.runtime,
+ *   context.user,
+ *   effect,
+ *   {
+ *     ...handlers.common,
+ *     ...handlers.database,
+ *     DocumentNotFound: (e) => { throw errors.DOCUMENT_NOT_FOUND(...) },
+ *   },
+ * );
  * ```
  */
 export const createErrorHandlers = <T extends ErrorFactoryConfig>(

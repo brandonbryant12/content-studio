@@ -84,6 +84,7 @@ describe('ScriptVersionRepo', () => {
       const result = await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
+          createdBy: testUser.id,
           status: 'drafting',
         }),
       );
@@ -99,6 +100,7 @@ describe('ScriptVersionRepo', () => {
       await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
+          createdBy: testUser.id,
           status: 'drafting',
         }),
       );
@@ -106,6 +108,7 @@ describe('ScriptVersionRepo', () => {
       const result = await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
+          createdBy: testUser.id,
           status: 'script_ready',
           segments: [{ speaker: 'host', line: 'Hello', index: 0 }],
         }),
@@ -120,6 +123,7 @@ describe('ScriptVersionRepo', () => {
       const v1 = await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
+          createdBy: testUser.id,
           status: 'drafting',
         }),
       );
@@ -127,6 +131,7 @@ describe('ScriptVersionRepo', () => {
       await runEffect(
         repo.insert({
           podcastId: testPodcast.id,
+          createdBy: testUser.id,
           status: 'script_ready',
         }),
       );

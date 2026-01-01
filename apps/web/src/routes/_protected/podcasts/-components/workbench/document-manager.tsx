@@ -1,21 +1,25 @@
 import { PlusIcon, Cross2Icon, FileTextIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 import { BaseDialog } from '@/components/base-dialog';
-import { podcastUtils } from '@/db';
+import { useDocuments } from '@/db';
 
-type PodcastFull = RouterOutput['podcasts']['get'];
-type Document = PodcastFull['documents'][number];
+/** Document data for the manager */
+interface DocumentData {
+  id: string;
+  title: string;
+  mimeType: string;
+  wordCount: number;
+}
 
 interface DocumentManagerProps {
   podcastId: string;
-  documents: Document[];
-  allDocuments?: RouterOutput['documents']['list'];
+  documents: DocumentData[];
+  allDocuments?: DocumentData[];
   disabled?: boolean;
 }
 
@@ -25,60 +29,24 @@ export function DocumentManager({
   allDocuments: allDocumentsProp,
   disabled,
 }: DocumentManagerProps) {
-  const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Get the query key for this specific podcast
-  const podcastQueryKey = apiClient.podcasts.get.queryOptions({
-    input: { id: podcastId },
-  }).queryKey;
-
-  const { data: fetchedDocuments, isPending: loadingDocs } = useQuery({
-    ...apiClient.documents.list.queryOptions({ input: {} }),
+  // Use live query for documents when dialog is open and no prop provided
+  const { data: liveDocuments, isLoading: loadingDocs } = useDocuments({
     enabled: addDialogOpen && !allDocumentsProp,
   });
 
-  const allDocuments = allDocumentsProp ?? fetchedDocuments;
+  const allDocuments = allDocumentsProp ?? liveDocuments;
 
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
-      onMutate: async (input) => {
-        // Cancel outgoing refetches
-        await queryClient.cancelQueries({ queryKey: podcastQueryKey });
-
-        // Snapshot previous data
-        const previousPodcast =
-          queryClient.getQueryData<PodcastFull>(podcastQueryKey);
-
-        // Optimistically update the document list
-        if (previousPodcast && input.documentIds && allDocuments) {
-          const newDocs = input.documentIds
-            .map((id) => allDocuments.find((d) => d.id === id))
-            .filter((d): d is Document => d !== undefined);
-
-          queryClient.setQueryData<PodcastFull>(podcastQueryKey, {
-            ...previousPodcast,
-            documents: newDocs,
-          });
-        }
-
-        return { previousPodcast };
-      },
-      onError: (_err, _vars, context) => {
-        // Roll back on error
-        if (context?.previousPodcast) {
-          queryClient.setQueryData(podcastQueryKey, context.previousPodcast);
-        }
+      onError: () => {
         toast.error('Failed to update documents');
       },
       onSuccess: () => {
         toast.success('Documents updated');
         setAddDialogOpen(false);
-      },
-      onSettled: () => {
-        // Always refetch to ensure we have fresh data
-        podcastUtils.refetch();
       },
     }),
   );

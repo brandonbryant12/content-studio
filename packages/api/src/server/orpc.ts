@@ -1,44 +1,14 @@
 import { os, implement } from '@orpc/server';
-import { GoogleLive, type LLM } from '@repo/ai/llm';
-import { GoogleTTSLive, type TTS } from '@repo/ai/tts';
-import { CurrentUserLive, Role, type User } from '@repo/auth-policy';
-import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
-import { DbLive } from '@repo/db/effect';
 import {
-  DocumentsLive,
-  PodcastRepoLive,
-  ScriptVersionRepoLive,
-  type Documents,
-  type PodcastRepo,
-  type ScriptVersionRepo,
-} from '@repo/media';
-import { QueueLive, type Queue } from '@repo/queue';
-import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
-import { Layer, ManagedRuntime, Logger } from 'effect';
-import type { AuthInstance } from '@repo/auth/server';
-import type { CurrentUser, Policy } from '@repo/auth-policy';
-import type { DatabaseInstance } from '@repo/db/client';
-import type { Db } from '@repo/db/effect';
-import type { Storage } from '@repo/storage';
-import type { Effect } from 'effect';
+  type AuthInstance,
+  getSessionWithRole,
+} from '@repo/auth/server';
+import type { User } from '@repo/auth/policy';
+import { Effect } from 'effect';
 import { appContract } from '../contracts';
-import { createStorageLayer } from './storage-factory';
+import type { ServerRuntime } from './runtime';
 
 type Session = AuthInstance['$Infer']['Session'];
-
-/** Services available without authentication */
-export type PublicServices = Db | Policy | Storage | Queue | TTS | LLM;
-
-/** Services that require authentication */
-export type AuthenticatedServices =
-  | PublicServices
-  | CurrentUser
-  | Documents
-  | PodcastRepo
-  | ScriptVersionRepo;
-
-/** All services provided by the API context (alias for AuthenticatedServices) */
-export type ApiServices = AuthenticatedServices;
 
 /** Storage configuration for different providers */
 export type StorageConfig =
@@ -54,190 +24,58 @@ export type StorageConfig =
     };
 
 /**
- * Creates base layers available to all requests (authenticated or not).
+ * oRPC context passed to all handlers.
+ *
+ * Contains:
+ * - session: The auth session (null if unauthenticated)
+ * - user: The user with role loaded from DB (null if unauthenticated)
+ * - runtime: Shared server runtime with all services
  */
-const createBaseLayers = (
-  db: DatabaseInstance,
-  geminiApiKey: string,
-  storageConfig: StorageConfig,
-  useMockAI: boolean = false,
-) => {
-  const dbLayer = DbLive(db);
-  const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
-  const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = createStorageLayer(storageConfig, dbLayer);
-
-  // Use mock AI layers for testing, real Google layers for production
-  const ttsLayer = useMockAI
-    ? MockTTSLive
-    : GoogleTTSLive({ apiKey: geminiApiKey });
-  const llmLayer = useMockAI
-    ? MockLLMLive
-    : GoogleLive({ apiKey: geminiApiKey });
-
-  const loggerLayer = Logger.pretty;
-
-  if (useMockAI) {
-    console.log('[API] Using mock AI layers for testing');
-  }
-
-  return {
-    dbLayer,
-    policyLayer,
-    queueLayer,
-    storageLayer,
-    ttsLayer,
-    llmLayer,
-    loggerLayer,
-  };
-};
-
-/**
- * Creates an Effect Layer with services for authenticated requests.
- */
-const createAuthenticatedLayers = (
-  db: DatabaseInstance,
-  currentUser: User,
-  geminiApiKey: string,
-  storageConfig: StorageConfig,
-  useMockAI: boolean = false,
-): Layer.Layer<AuthenticatedServices, never, never> => {
-  const {
-    dbLayer,
-    policyLayer,
-    queueLayer,
-    storageLayer,
-    ttsLayer,
-    llmLayer,
-    loggerLayer,
-  } = createBaseLayers(db, geminiApiKey, storageConfig, useMockAI);
-
-  const userLayer = CurrentUserLive(currentUser);
-  const documentsLayer = DocumentsLive.pipe(
-    Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
-  );
-  // Podcast repos only need DB access
-  const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(dbLayer));
-  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(Layer.provide(dbLayer));
-
-  return Layer.mergeAll(
-    dbLayer,
-    userLayer,
-    policyLayer,
-    documentsLayer,
-    storageLayer,
-    podcastRepoLayer,
-    scriptVersionRepoLayer,
-    queueLayer,
-    ttsLayer,
-    llmLayer,
-    loggerLayer,
-  );
-};
-
-/**
- * Creates an Effect Layer with services for unauthenticated requests.
- */
-const createPublicLayers = (
-  db: DatabaseInstance,
-  geminiApiKey: string,
-  storageConfig: StorageConfig,
-  useMockAI: boolean = false,
-): Layer.Layer<PublicServices, never, never> => {
-  const {
-    dbLayer,
-    policyLayer,
-    queueLayer,
-    storageLayer,
-    ttsLayer,
-    llmLayer,
-    loggerLayer,
-  } = createBaseLayers(db, geminiApiKey, storageConfig, useMockAI);
-
-  return Layer.mergeAll(
-    dbLayer,
-    policyLayer,
-    storageLayer,
-    queueLayer,
-    ttsLayer,
-    llmLayer,
-    loggerLayer,
-  );
-};
-
-interface BaseORPCContext {
-  db: DatabaseInstance;
+export interface ORPCContext {
   session: Session | null;
+  user: User | null;
+  runtime: ServerRuntime;
 }
 
-export interface PublicORPCContext extends BaseORPCContext {
-  session: null;
-  layers: Layer.Layer<PublicServices, never, never>;
-  runEffect: <A, E>(effect: Effect.Effect<A, E, PublicServices>) => Promise<A>;
-}
-
-export interface AuthenticatedORPCContext extends BaseORPCContext {
+/**
+ * Authenticated context type - used after protectedProcedure middleware.
+ * Guarantees session and user are non-null.
+ */
+export interface AuthenticatedORPCContext extends ORPCContext {
   session: Session;
-  layers: Layer.Layer<AuthenticatedServices, never, never>;
-  runEffect: <A, E>(
-    effect: Effect.Effect<A, E, AuthenticatedServices>,
-  ) => Promise<A>;
+  user: User;
 }
 
-export type ORPCContext = PublicORPCContext | AuthenticatedORPCContext;
-
+/**
+ * Creates the oRPC context for a request.
+ *
+ * This is called once per request and:
+ * 1. Uses the shared runtime to look up the session
+ * 2. Loads the user's role from the database
+ * 3. Returns a lightweight context with runtime reference
+ *
+ * Note: No layer creation happens here - that's done once at startup.
+ */
 export const createORPCContext = async ({
   auth,
-  db,
+  runtime,
   headers,
-  geminiApiKey,
-  storageConfig,
-  useMockAI = false,
 }: {
   auth: AuthInstance;
-  db: DatabaseInstance;
+  runtime: ServerRuntime;
   headers: Headers;
-  geminiApiKey: string;
-  storageConfig: StorageConfig;
-  useMockAI?: boolean;
 }): Promise<ORPCContext> => {
-  const session = await auth.api.getSession({ headers });
-
-  if (session?.user) {
-    const currentUser: User = {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-      role: Role.USER,
-    };
-
-    const layers = createAuthenticatedLayers(
-      db,
-      currentUser,
-      geminiApiKey,
-      storageConfig,
-      useMockAI,
-    );
-    const runtime = ManagedRuntime.make(layers);
-
-    return {
-      db,
-      session,
-      layers,
-      runEffect: <A, E>(effect: Effect.Effect<A, E, AuthenticatedServices>) =>
-        runtime.runPromise(effect),
-    };
-  }
-
-  const layers = createPublicLayers(db, geminiApiKey, storageConfig, useMockAI);
-  const runtime = ManagedRuntime.make(layers);
+  // Use the shared runtime to get session with role
+  const result = await runtime.runPromise(
+    getSessionWithRole(auth, headers).pipe(
+      Effect.catchAll(() => Effect.succeed(null)),
+    ),
+  );
 
   return {
-    db,
-    session: null,
-    layers,
-    runEffect: <A, E>(effect: Effect.Effect<A, E, PublicServices>) =>
-      runtime.runPromise(effect),
+    session: result?.session ?? null,
+    user: result?.user ?? null,
+    runtime,
   };
 };
 
@@ -262,23 +100,23 @@ const timingMiddleware = os.middleware(async ({ next, path }) => {
 const base = implement(appContract);
 
 export const publicProcedure = base
-  .$context<Awaited<ReturnType<typeof createORPCContext>>>()
+  .$context<ORPCContext>()
   .use(timingMiddleware);
 
 export const protectedProcedure = publicProcedure.use(
   ({ context, next, errors }) => {
-    if (!context.session?.user) {
+    if (!context.session?.user || !context.user) {
       throw errors.UNAUTHORIZED({
         message: 'Missing user session. Please log in!',
       });
     }
-    // Type narrowing: session exists means we have AuthenticatedORPCContext
-    const authenticatedContext = context as AuthenticatedORPCContext;
+    // Type narrowing: session and user exist
     return next({
       context: {
-        session: authenticatedContext.session,
-        layers: authenticatedContext.layers,
-      },
+        session: context.session,
+        user: context.user,
+        runtime: context.runtime,
+      } as AuthenticatedORPCContext,
     });
   },
 );

@@ -1,5 +1,5 @@
 import { serveStatic } from '@hono/node-server/serve-static';
-import { createApi, type StorageConfig } from '@repo/api/server';
+import { createApi, createServerRuntime, type StorageConfig } from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { Hono } from 'hono';
@@ -58,14 +58,20 @@ const auth = createAuth({
   authSecret: env.SERVER_AUTH_SECRET,
   db,
 });
-const api = createApi({
-  auth,
+
+// Create shared server runtime ONCE at startup
+const serverRuntime = createServerRuntime({
   db,
-  serverUrl: env.PUBLIC_SERVER_URL,
-  apiPath: env.PUBLIC_SERVER_API_PATH,
   geminiApiKey: env.GEMINI_API_KEY,
   storageConfig,
   useMockAI: env.USE_MOCK_AI,
+});
+
+const api = createApi({
+  auth,
+  serverRuntime,
+  serverUrl: env.PUBLIC_SERVER_URL,
+  apiPath: env.PUBLIC_SERVER_API_PATH,
 });
 
 const app = new Hono<{
@@ -123,7 +129,73 @@ app.on(['POST', 'GET'], `${env.PUBLIC_SERVER_API_PATH}/auth/*`, (c) =>
 );
 
 // ========================================================================= //
-// SSE Events Endpoint
+// ElectricSQL Proxy Endpoint
+// ========================================================================= //
+
+app.use(
+  `${env.PUBLIC_SERVER_API_PATH}/electric/*`,
+  cors({
+    origin: trustedOrigins,
+    credentials: true,
+  }),
+);
+
+app.all(`${env.PUBLIC_SERVER_API_PATH}/electric/:table`, async (c) => {
+  // Verify session
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.text('Unauthorized', 401);
+  }
+
+  const table = c.req.param('table');
+  const url = new URL(c.req.url);
+
+  // Build Electric shape URL with user filtering
+  const electricUrl = new URL(`${env.ELECTRIC_URL}/v1/shape`);
+  electricUrl.searchParams.set('table', table);
+
+  // Add user filtering for multi-tenant isolation
+  // Documents, podcasts, and podcastScript are filtered by createdBy (camelCase column names)
+  if (table === 'document' || table === 'podcast' || table === 'podcastScript') {
+    electricUrl.searchParams.set('where', `"createdBy" = '${session.user.id}'`);
+  }
+
+  // Forward pagination params from client
+  const offset = url.searchParams.get('offset');
+  const shapeHandle = url.searchParams.get('handle');
+  const live = url.searchParams.get('live');
+
+  if (offset) electricUrl.searchParams.set('offset', offset);
+  if (shapeHandle) electricUrl.searchParams.set('handle', shapeHandle);
+  if (live) electricUrl.searchParams.set('live', live);
+
+  // Proxy to Electric
+  const response = await fetch(electricUrl.toString(), {
+    method: c.req.method,
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
+
+  // Forward response headers for shape handling
+  const headers = new Headers();
+  const electricHandle = response.headers.get('electric-handle');
+  const electricOffset = response.headers.get('electric-offset');
+  const electricSchema = response.headers.get('electric-schema');
+
+  if (electricHandle) headers.set('electric-handle', electricHandle);
+  if (electricOffset) headers.set('electric-offset', electricOffset);
+  if (electricSchema) headers.set('electric-schema', electricSchema);
+  headers.set('content-type', response.headers.get('content-type') || 'application/json');
+
+  return new Response(response.body, {
+    status: response.status,
+    headers,
+  });
+});
+
+// ========================================================================= //
+// SSE Events Endpoint (deprecated - Electric handles sync)
 // ========================================================================= //
 
 app.use(
@@ -176,7 +248,7 @@ app.get(`${env.PUBLIC_SERVER_API_PATH}/events`, async (c) => {
     });
 
     // Keep the stream open
-     
+
     while (true) {
       await stream.sleep(60000);
     }

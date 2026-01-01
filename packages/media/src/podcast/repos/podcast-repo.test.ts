@@ -148,6 +148,7 @@ describe('PodcastRepo', () => {
       // Create an active version
       await ctx.db.insert(podcastScript).values({
         podcastId: testPodcast.id,
+        createdBy: testUser.id,
         version: 1,
         isActive: true,
         status: 'script_ready',
@@ -283,6 +284,7 @@ describe('PodcastRepo', () => {
 
       await ctx.db.insert(podcastScript).values({
         podcastId: testPodcast.id,
+        createdBy: testUser.id,
         version: 1,
         isActive: true,
         status: 'ready',

@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from 'effect';
-import { podcastScript, type PodcastScript, type ScriptSegment } from '@repo/db/schema';
+import { podcastScript, type PodcastScript, type ScriptSegment, type ScriptVersionId, type PodcastId } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { ScriptNotFound } from '@repo/db/errors';
 import { eq, desc, and } from 'drizzle-orm';
@@ -18,6 +18,7 @@ export type VersionStatus = PodcastScript['status'];
  */
 export interface CreateScriptVersion {
   podcastId: string;
+  createdBy: string;
   status: VersionStatus;
   segments?: ScriptSegment[] | null;
   summary?: string | null;
@@ -116,11 +117,12 @@ export class ScriptVersionRepo extends Context.Tag(
 const make: ScriptVersionRepoService = {
   insert: (data) =>
     withDb('scriptVersionRepo.insert', async (db) => {
+      const podId = data.podcastId as PodcastId;
       // Get current max version
       const [current] = await db
         .select({ version: podcastScript.version })
         .from(podcastScript)
-        .where(eq(podcastScript.podcastId, data.podcastId))
+        .where(eq(podcastScript.podcastId, podId))
         .orderBy(desc(podcastScript.version))
         .limit(1);
 
@@ -130,13 +132,14 @@ const make: ScriptVersionRepoService = {
       await db
         .update(podcastScript)
         .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(podcastScript.podcastId, data.podcastId));
+        .where(eq(podcastScript.podcastId, podId));
 
       // Insert new active version
       const [script] = await db
         .insert(podcastScript)
         .values({
-          podcastId: data.podcastId,
+          podcastId: podId,
+          createdBy: data.createdBy,
           version: nextVersion,
           isActive: true,
           status: data.status,
@@ -154,7 +157,7 @@ const make: ScriptVersionRepoService = {
       db
         .select()
         .from(podcastScript)
-        .where(eq(podcastScript.id, id))
+        .where(eq(podcastScript.id, id as ScriptVersionId))
         .limit(1)
         .then((rows) => rows[0]),
     ).pipe(
@@ -177,7 +180,7 @@ const make: ScriptVersionRepoService = {
         .from(podcastScript)
         .where(
           and(
-            eq(podcastScript.podcastId, podcastId),
+            eq(podcastScript.podcastId, podcastId as PodcastId),
             eq(podcastScript.isActive, true),
           ),
         )
@@ -193,7 +196,7 @@ const make: ScriptVersionRepoService = {
           ...data,
           updatedAt: new Date(),
         })
-        .where(eq(podcastScript.id, id))
+        .where(eq(podcastScript.id, id as ScriptVersionId))
         .returning();
       return script;
     }).pipe(
@@ -218,7 +221,7 @@ const make: ScriptVersionRepoService = {
           errorMessage: errorMessage ?? null,
           updatedAt: new Date(),
         })
-        .where(eq(podcastScript.id, id))
+        .where(eq(podcastScript.id, id as ScriptVersionId))
         .returning();
       return script;
     }).pipe(
@@ -239,7 +242,7 @@ const make: ScriptVersionRepoService = {
       await db
         .update(podcastScript)
         .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(podcastScript.podcastId, podcastId));
+        .where(eq(podcastScript.podcastId, podcastId as PodcastId));
     }),
 
   getNextVersion: (podcastId) =>
@@ -247,7 +250,7 @@ const make: ScriptVersionRepoService = {
       const [current] = await db
         .select({ version: podcastScript.version })
         .from(podcastScript)
-        .where(eq(podcastScript.podcastId, podcastId))
+        .where(eq(podcastScript.podcastId, podcastId as PodcastId))
         .orderBy(desc(podcastScript.version))
         .limit(1);
 

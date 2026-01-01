@@ -203,13 +203,17 @@ const parsePptx = (
 ): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
-      const pptxParser = await import('pptx-parser');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pptxParser = require('pptx-parser') as {
+        default?: (data: Buffer) => Promise<{ slides: Array<{ text: string }> }>;
+        (data: Buffer): Promise<{ slides: Array<{ text: string }> }>;
+      };
       const parse = pptxParser.default || pptxParser;
-      const slides = await parse(data);
+      const result = await parse(data);
 
       // Extract text from all slides
-      const content = slides
-        .map((slide: { text?: string }, index: number) => {
+      const content = result.slides
+        .map((slide, index) => {
           const slideText = slide.text || '';
           return `--- Slide ${index + 1} ---\n${slideText}`;
         })
@@ -220,7 +224,7 @@ const parsePptx = (
         title: extractTitleFromFileName(fileName),
         source: 'upload_pptx' as const,
         metadata: {
-          slideCount: slides.length,
+          slideCount: result.slides.length,
         },
       };
     },

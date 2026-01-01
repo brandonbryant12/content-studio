@@ -1,7 +1,6 @@
 import { Effect, Schema } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
 import type { Db, DatabaseError } from '@repo/db/effect';
-import type { CurrentUser } from '@repo/auth-policy';
 import {
   PodcastNotFound,
   DocumentNotFound,
@@ -13,6 +12,7 @@ import {
   DocumentParseError,
   PolicyError,
   ForbiddenError,
+  UnauthorizedError,
 } from '@repo/db/errors';
 import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
@@ -47,6 +47,7 @@ export type GenerateScriptError =
   | DocumentParseError
   | PolicyError
   | ForbiddenError
+  | UnauthorizedError
   | DatabaseError;
 
 // =============================================================================
@@ -95,7 +96,7 @@ export const generateScript = (
 ): Effect.Effect<
   GenerateScriptResult,
   GenerateScriptError,
-  PodcastRepo | ScriptVersionRepo | Documents | LLM | Storage | Db | CurrentUser
+  PodcastRepo | ScriptVersionRepo | Documents | LLM | Storage | Db
 > =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
@@ -116,6 +117,7 @@ export const generateScript = (
       // Create new version in drafting status
       version = yield* scriptVersionRepo.insert({
         podcastId: input.podcastId,
+        createdBy: podcast.createdBy,
         status: 'drafting',
         segments: null,
       });

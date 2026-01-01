@@ -10,11 +10,11 @@ import {
   resetAllFactories,
   type TestContext,
 } from '@repo/testing';
-import { document, user } from '@repo/db/schema';
+import { document, user, type DocumentId } from '@repo/db/schema';
 import { DocumentNotFound } from '@repo/db/errors';
 
-// Valid UUID that doesn't exist in the database
-const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
+// Valid branded ID that doesn't exist in the database
+const NON_EXISTENT_ID = 'doc_0000000000000000' as DocumentId;
 
 /** Helper to check if an Effect fails with a specific error type */
 const expectEffectToFailWith = async (

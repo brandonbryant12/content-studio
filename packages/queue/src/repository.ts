@@ -1,5 +1,5 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
-import { job } from '@repo/db/schema';
+import { job, type JobId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType, JobStatus } from './types';
@@ -274,7 +274,7 @@ export const QueueLive: Layer.Layer<Queue, never, Db> = Layer.effect(
 );
 
 function mapRowToJob(row: {
-  id: string;
+  id: JobId;
   type: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   payload: Record<string, unknown>;

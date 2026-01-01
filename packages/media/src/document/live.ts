@@ -1,4 +1,4 @@
-import { CurrentUser, requireOwnership, Role } from '@repo/auth-policy';
+import { getCurrentUser, requireOwnership, Role } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect, Layer } from 'effect';
 import type { Db } from '@repo/db/effect';
@@ -39,13 +39,13 @@ const generateContentKey = (extension: string = '.txt'): string =>
 /**
  * Create live document service implementation.
  *
- * Returns Effects that require Db, CurrentUser, and Storage contexts.
- * These requirements are satisfied when composing the final layer.
+ * Returns Effects that require Db and Storage contexts.
+ * User context is obtained via FiberRef at runtime.
  */
 const makeDocumentService: DocumentService = {
   create: (data) =>
     Effect.gen(function* () {
-      const user = yield* CurrentUser;
+      const user = yield* getCurrentUser;
       const storage = yield* Storage;
 
       // Generate storage key for the content
@@ -75,7 +75,7 @@ const makeDocumentService: DocumentService = {
 
   upload: (input) =>
     Effect.gen(function* () {
-      const user = yield* CurrentUser;
+      const user = yield* getCurrentUser;
       const storage = yield* Storage;
 
       const mimeType = getMimeType(input.fileName, input.mimeType);
@@ -168,7 +168,7 @@ const makeDocumentService: DocumentService = {
 
   list: (options) =>
     Effect.gen(function* () {
-      const user = yield* CurrentUser;
+      const user = yield* getCurrentUser;
 
       // Non-admins can only see their own documents
       const isAdmin = user.role === Role.ADMIN;
@@ -246,7 +246,7 @@ const makeDocumentService: DocumentService = {
 
   count: () =>
     Effect.gen(function* () {
-      const user = yield* CurrentUser;
+      const user = yield* getCurrentUser;
 
       // Non-admins only count their own documents
       const isAdmin = user.role === Role.ADMIN;
@@ -261,25 +261,25 @@ const makeDocumentService: DocumentService = {
  *
  * Requires:
  * - Db: Database connection
- * - CurrentUser: Authenticated user context
  * - Storage: File storage backend (S3, filesystem, etc.)
+ *
+ * Note: CurrentUser is obtained via FiberRef at runtime,
+ * not via layer composition. Use withCurrentUser() to scope
+ * user context before running effects.
  *
  * @example
  * ```typescript
- * // Compose with other layers - choose storage backend
- * const StorageLive = process.env.STORAGE_PROVIDER === 's3'
- *   ? S3StorageLive({ bucket: 'my-bucket', region: 'us-east-1' })
- *   : FilesystemStorageLive({ basePath: './uploads' });
- *
+ * // Compose with other layers
  * const AppLive = DocumentsLive.pipe(
  *   Layer.provide(DbLive(database)),
- *   Layer.provide(CurrentUserLive(user)),
  *   Layer.provide(StorageLive),
+ * );
+ *
+ * // Run with user context
+ * runtime.runPromise(
+ *   withCurrentUser(user)(documents.create(data))
  * );
  * ```
  */
-export const DocumentsLive: Layer.Layer<
-  Documents,
-  never,
-  Db | CurrentUser | Storage
-> = Layer.succeed(Documents, makeDocumentService);
+export const DocumentsLive: Layer.Layer<Documents, never, Db | Storage> =
+  Layer.succeed(Documents, makeDocumentService);

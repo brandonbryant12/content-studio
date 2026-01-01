@@ -1,9 +1,18 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { RouterOutput } from '@repo/api/client';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/lib/formatters';
+
+/** Document data for list display */
+interface DocumentListItem {
+  id: string;
+  title: string;
+  source: string;
+  wordCount: number;
+  originalFileSize: number | null;
+  createdAt: string;
+}
 
 function getFileBadgeClass(source: string): string {
   if (source.includes('txt')) return 'file-badge-txt';
@@ -27,7 +36,7 @@ export function DocumentItem({
   onDelete,
   isDeleting,
 }: {
-  document: RouterOutput['documents']['list'][number];
+  document: DocumentListItem;
   onDelete: () => void;
   isDeleting: boolean;
 }) {

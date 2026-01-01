@@ -1,4 +1,9 @@
-import { ChevronDownIcon, FileTextIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  ChevronDownIcon,
+  FileTextIcon,
+  LockClosedIcon,
+  PlusIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { useState } from 'react';
@@ -10,6 +15,7 @@ interface ScriptPanelProps {
   summary: string | null;
   hasChanges: boolean;
   isSaving: boolean;
+  disabled?: boolean;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
@@ -25,6 +31,7 @@ export function ScriptPanel({
   summary,
   hasChanges,
   isSaving,
+  disabled,
   onUpdateSegment,
   onRemoveSegment,
   onReorderSegments,
@@ -44,8 +51,15 @@ export function ScriptPanel({
           </div>
           <div>
             <h2 className="script-panel-title">Script</h2>
-            {segments.length > 0 && (
-              <span className="script-edit-hint">Click any line to edit</span>
+            {disabled ? (
+              <span className="script-edit-hint locked">
+                <LockClosedIcon className="w-3 h-3 mr-1" />
+                Editing locked during generation
+              </span>
+            ) : (
+              segments.length > 0 && (
+                <span className="script-edit-hint">Click any line to edit</span>
+              )
             )}
           </div>
         </div>
@@ -102,6 +116,7 @@ export function ScriptPanel({
               variant="outline"
               onClick={() => onAddSegment(-1, { speaker: 'host', line: '' })}
               className="script-empty-btn"
+              disabled={disabled}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add First Segment
@@ -110,6 +125,7 @@ export function ScriptPanel({
         ) : (
           <ScriptEditor
             segments={segments}
+            disabled={disabled}
             onUpdateSegment={onUpdateSegment}
             onRemoveSegment={onRemoveSegment}
             onReorderSegments={onReorderSegments}

@@ -18,14 +18,13 @@ const voicesRouter = {
   list: protectedProcedure.voices.list.handler(async ({ context, errors }) => {
     const handlers = createErrorHandlers(errors);
     return handleEffect(
+      context.runtime,
+      context.user,
       Effect.gen(function* () {
         const tts = yield* TTS;
         const voices = yield* tts.listVoices({});
         return [...voices];
-      }).pipe(
-        Effect.withSpan('api.voices.list'),
-        Effect.provide(context.layers),
-      ),
+      }).pipe(Effect.withSpan('api.voices.list')),
       {
         ...handlers.tts,
       },
@@ -45,6 +44,8 @@ const voicesRouter = {
       }
 
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const tts = yield* TTS;
           const result = yield* tts.previewVoice({
@@ -62,7 +63,6 @@ const voicesRouter = {
           Effect.withSpan('api.voices.preview', {
             attributes: { 'voices.voiceId': input.voiceId },
           }),
-          Effect.provide(context.layers),
         ),
         {
           ...handlers.tts,

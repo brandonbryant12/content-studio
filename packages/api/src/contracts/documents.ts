@@ -1,55 +1,70 @@
 import { oc } from '@orpc/contract';
+import { Schema } from 'effect';
 import {
   CreateDocumentSchema,
-  UpdateDocumentSchema,
+  UpdateDocumentFields,
   DocumentOutputSchema,
 } from '@repo/db/schema';
-import * as v from 'valibot';
+
+// Helper to convert Effect Schema to Standard Schema for oRPC
+const std = Schema.standardSchemaV1;
 
 // Helper for query params that may come in as strings
-const coerceNumber = v.pipe(
-  v.union([v.number(), v.pipe(v.string(), v.transform(Number))]),
-  v.number(),
-);
+const CoerceNumber = Schema.Union(
+  Schema.Number,
+  Schema.String.pipe(Schema.transform(Schema.Number, { decode: Number, encode: String })),
+).pipe(Schema.compose(Schema.Number));
 
 const documentErrors = {
   DOCUMENT_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      documentId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        documentId: Schema.String,
+      }),
+    ),
   },
   DOCUMENT_TOO_LARGE: {
     status: 413,
-    data: v.object({
-      fileName: v.string(),
-      fileSize: v.number(),
-      maxSize: v.number(),
-    }),
+    data: std(
+      Schema.Struct({
+        fileName: Schema.String,
+        fileSize: Schema.Number,
+        maxSize: Schema.Number,
+      }),
+    ),
   },
   UNSUPPORTED_FORMAT: {
     status: 415,
-    data: v.object({
-      fileName: v.string(),
-      mimeType: v.string(),
-      supportedFormats: v.array(v.string()),
-    }),
+    data: std(
+      Schema.Struct({
+        fileName: Schema.String,
+        mimeType: Schema.String,
+        supportedFormats: Schema.Array(Schema.String),
+      }),
+    ),
   },
   DOCUMENT_PARSE_ERROR: {
     status: 422,
-    data: v.object({
-      fileName: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        fileName: Schema.String,
+      }),
+    ),
   },
 } as const;
 
 // Upload input schema (base64 encoded file)
-const uploadDocumentSchema = v.object({
-  fileName: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
-  mimeType: v.string(),
-  data: v.string(), // Base64 encoded file content
-  title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(256))),
-  metadata: v.optional(v.record(v.string(), v.unknown())),
+const UploadDocumentSchema = Schema.Struct({
+  fileName: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+  mimeType: Schema.String,
+  data: Schema.String, // Base64 encoded file content
+  title: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+  ),
+  metadata: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  ),
 });
 
 const documentContract = oc
@@ -65,14 +80,21 @@ const documentContract = oc
         description: 'Retrieve all documents for the current user',
       })
       .input(
-        v.object({
-          limit: v.optional(
-            v.pipe(coerceNumber, v.minValue(1), v.maxValue(100)),
-          ),
-          offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
-        }),
+        std(
+          Schema.Struct({
+            limit: Schema.optional(
+              CoerceNumber.pipe(
+                Schema.greaterThanOrEqualTo(1),
+                Schema.lessThanOrEqualTo(100),
+              ),
+            ),
+            offset: Schema.optional(
+              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
+            ),
+          }),
+        ),
       )
-      .output(v.array(DocumentOutputSchema)),
+      .output(std(Schema.Array(DocumentOutputSchema))),
 
     // Get a single document by ID
     get: oc
@@ -83,8 +105,8 @@ const documentContract = oc
         description: 'Retrieve a document by ID',
       })
       .errors(documentErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(DocumentOutputSchema),
+      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .output(std(DocumentOutputSchema)),
 
     // Get document content
     getContent: oc
@@ -95,8 +117,8 @@ const documentContract = oc
         description: 'Retrieve the parsed text content of a document',
       })
       .errors(documentErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(v.object({ content: v.string() })),
+      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .output(std(Schema.Struct({ content: Schema.String }))),
 
     // Create a document from text content
     create: oc
@@ -107,8 +129,8 @@ const documentContract = oc
         description: 'Create a new document from text content',
       })
       .errors(documentErrors)
-      .input(CreateDocumentSchema)
-      .output(DocumentOutputSchema),
+      .input(std(CreateDocumentSchema))
+      .output(std(DocumentOutputSchema)),
 
     // Upload a document file
     upload: oc
@@ -119,8 +141,8 @@ const documentContract = oc
         description: 'Upload a document file (TXT, PDF, DOCX, PPTX). Max 10MB.',
       })
       .errors(documentErrors)
-      .input(uploadDocumentSchema)
-      .output(DocumentOutputSchema),
+      .input(std(UploadDocumentSchema))
+      .output(std(DocumentOutputSchema)),
 
     // Update a document
     update: oc
@@ -132,12 +154,14 @@ const documentContract = oc
       })
       .errors(documentErrors)
       .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          ...UpdateDocumentSchema.entries,
-        }),
+        std(
+          Schema.Struct({
+            id: Schema.UUID,
+            ...UpdateDocumentFields,
+          }),
+        ),
       )
-      .output(DocumentOutputSchema),
+      .output(std(DocumentOutputSchema)),
 
     // Delete a document
     delete: oc
@@ -148,8 +172,8 @@ const documentContract = oc
         description: 'Permanently delete a document',
       })
       .errors(documentErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(v.object({})),
+      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .output(std(Schema.Struct({}))),
   });
 
 export default documentContract;

@@ -1,11 +1,15 @@
-import { randomUUID } from 'crypto';
-import type { Document, DocumentSource } from '@repo/db/schema';
+import {
+  generateDocumentId,
+  type DocumentId,
+  type Document,
+  type DocumentSource,
+} from '@repo/db/schema';
 
 /**
  * Options for creating a test document.
  */
 export interface CreateTestDocumentOptions {
-  id?: string;
+  id?: DocumentId;
   title?: string;
   contentKey?: string;
   mimeType?: string;
@@ -31,7 +35,7 @@ export const createTestDocument = (
   const now = new Date();
 
   return {
-    id: options.id ?? randomUUID(),
+    id: options.id ?? generateDocumentId(),
     title: options.title ?? `Test Document ${documentCounter}`,
     contentKey: options.contentKey ?? `documents/test-${documentCounter}.txt`,
     mimeType: options.mimeType ?? 'text/plain',
@@ -40,7 +44,7 @@ export const createTestDocument = (
     originalFileName: options.originalFileName ?? null,
     originalFileSize: options.originalFileSize ?? null,
     metadata: options.metadata ?? null,
-    createdBy: options.createdBy ?? randomUUID(),
+    createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };

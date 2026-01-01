@@ -1,8 +1,9 @@
 {
-  "extends": "@repo/typescript-config/internal-package.json",
+  "extends": "@repo/typescript-config/base.json",
   "include": ["src"],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "noEmit": true
   }
 }

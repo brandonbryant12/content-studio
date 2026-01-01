@@ -1,16 +1,26 @@
 import { oc } from '@orpc/contract';
-import * as v from 'valibot';
+import { Schema } from 'effect';
 
-const genderSchema = v.picklist(['female', 'male']);
+// Helper to convert Effect Schema to Standard Schema for oRPC
+const std = Schema.standardSchemaV1;
 
-const voiceInfoSchema = v.object({
-  id: v.string(),
-  name: v.string(),
-  gender: genderSchema,
-  description: v.string(),
+const GenderSchema = Schema.Union(
+  Schema.Literal('female'),
+  Schema.Literal('male'),
+);
+
+const VoiceInfoSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  gender: GenderSchema,
+  description: Schema.String,
 });
 
-const audioEncodingSchema = v.picklist(['MP3', 'LINEAR16', 'OGG_OPUS']);
+const AudioEncodingSchema = Schema.Union(
+  Schema.Literal('MP3'),
+  Schema.Literal('LINEAR16'),
+  Schema.Literal('OGG_OPUS'),
+);
 
 const voicesContract = oc
   .prefix('/voices')
@@ -26,11 +36,13 @@ const voicesContract = oc
           'Retrieve all available TTS voices, optionally filtered by gender',
       })
       .input(
-        v.object({
-          gender: v.optional(genderSchema),
-        }),
+        std(
+          Schema.Struct({
+            gender: Schema.optional(GenderSchema),
+          }),
+        ),
       )
-      .output(v.array(voiceInfoSchema)),
+      .output(std(Schema.Array(VoiceInfoSchema))),
 
     // Preview a voice
     preview: oc
@@ -43,24 +55,30 @@ const voicesContract = oc
       .errors({
         VOICE_NOT_FOUND: {
           status: 404,
-          data: v.object({
-            voiceId: v.string(),
-          }),
+          data: std(
+            Schema.Struct({
+              voiceId: Schema.String,
+            }),
+          ),
         },
       })
       .input(
-        v.object({
-          voiceId: v.string(),
-          text: v.optional(v.pipe(v.string(), v.maxLength(500))),
-          audioEncoding: v.optional(audioEncodingSchema),
-        }),
+        std(
+          Schema.Struct({
+            voiceId: Schema.String,
+            text: Schema.optional(Schema.String.pipe(Schema.maxLength(500))),
+            audioEncoding: Schema.optional(AudioEncodingSchema),
+          }),
+        ),
       )
       .output(
-        v.object({
-          audioContent: v.string(), // Base64 encoded audio
-          audioEncoding: audioEncodingSchema,
-          voiceId: v.string(),
-        }),
+        std(
+          Schema.Struct({
+            audioContent: Schema.String, // Base64 encoded audio
+            audioEncoding: AudioEncodingSchema,
+            voiceId: Schema.String,
+          }),
+        ),
       ),
   });
 

@@ -57,10 +57,8 @@
     "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
     "drizzle-orm": "catalog:",
-    "drizzle-valibot": "catalog:",
     "effect": "^3.16.0",
-    "pg": "catalog:",
-    "valibot": "catalog:"
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

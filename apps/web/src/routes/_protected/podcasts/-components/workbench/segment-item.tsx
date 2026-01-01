@@ -13,6 +13,7 @@ interface SegmentItemProps {
   segment: ScriptSegment;
   lineNumber: number;
   isEditing: boolean;
+  disabled?: boolean;
   onStartEdit: () => void;
   onSaveEdit: (data: { speaker: string; line: string }) => void;
   onCancelEdit: () => void;
@@ -25,6 +26,7 @@ export function SegmentItem({
   segment,
   lineNumber,
   isEditing,
+  disabled,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -43,7 +45,7 @@ export function SegmentItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: segment.index });
+  } = useSortable({ id: segment.index, disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -97,7 +99,7 @@ export function SegmentItem({
   };
 
   const handleContentClick = () => {
-    if (!isEditing && !isDragging) {
+    if (!isEditing && !isDragging && !disabled) {
       onStartEdit();
     }
   };
@@ -109,7 +111,7 @@ export function SegmentItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group segment-item ${isDragging ? 'dragging' : ''} ${isEditing ? 'editing' : ''}`}
+      className={`group segment-item ${isDragging ? 'dragging' : ''} ${isEditing ? 'editing' : ''} ${disabled ? 'disabled' : ''}`}
     >
       {/* Line indicator */}
       <div className="segment-item-indicator" />
@@ -206,6 +208,7 @@ export function SegmentItem({
           className="segment-action-btn add"
           aria-label="Add segment after"
           tabIndex={-1}
+          disabled={disabled}
         >
           <PlusIcon className="w-4 h-4" />
         </Button>
@@ -216,6 +219,7 @@ export function SegmentItem({
           className="segment-action-btn delete"
           aria-label="Remove segment"
           tabIndex={-1}
+          disabled={disabled}
         >
           <TrashIcon className="w-4 h-4" />
         </Button>

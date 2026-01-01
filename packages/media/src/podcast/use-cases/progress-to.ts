@@ -93,7 +93,7 @@ export const progressTo = (
     const scriptVersionRepo = yield* ScriptVersionRepo;
 
     // 1. Verify podcast exists
-    yield* podcastRepo.findById(input.podcastId);
+    const podcast = yield* podcastRepo.findById(input.podcastId);
 
     // 2. Get active version (or create draft if none exists)
     let version = yield* scriptVersionRepo.findActiveByPodcastId(input.podcastId);
@@ -102,6 +102,7 @@ export const progressTo = (
       // Create initial drafting version
       version = yield* scriptVersionRepo.insert({
         podcastId: input.podcastId,
+        createdBy: podcast.createdBy,
         status: 'drafting',
         segments: null,
       });

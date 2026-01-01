@@ -3,15 +3,50 @@ import { ValidationError } from '@orpc/contract';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins';
 import { StrictGetMethodPlugin } from '@orpc/server/plugins';
-import { experimental_ValibotToJsonSchemaConverter as ValibotToJsonSchemaConverter } from '@orpc/valibot';
 import urlJoin from 'url-join';
-import * as v from 'valibot';
 import type { AuthInstance } from '@repo/auth/server';
-import type { DatabaseInstance } from '@repo/db/client';
-import { createORPCContext, type StorageConfig } from './orpc';
+import { createORPCContext } from './orpc';
 import { appRouter } from './router';
+import type { ServerRuntime } from './runtime';
+
+/** Helper to extract cause from ORPCError since TypeScript doesn't type it */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getErrorCause(error: ORPCError<any, any>): unknown {
+  return (error as Error & { cause?: unknown }).cause;
+}
+
+/**
+ * Standard Schema issue type (common format for Effect Schema, Zod, Valibot, etc.)
+ */
+interface StandardSchemaIssue {
+  message: string;
+  path?: Array<{ key: string | number | symbol }>;
+}
+
+/**
+ * Format validation issues from Standard Schema format to a readable summary.
+ */
+const formatValidationIssues = (
+  issues: readonly StandardSchemaIssue[],
+): string => {
+  return issues
+    .map((issue) => {
+      const path = issue.path?.map((p) => String(p.key)).join('.') || 'root';
+      return `${path}: ${issue.message}`;
+    })
+    .join('; ');
+};
 
 export type { StorageConfig } from './orpc';
+
+// Export runtime types and factory
+export {
+  createServerRuntime,
+  createSharedLayers,
+  type ServerRuntime,
+  type ServerRuntimeConfig,
+  type SharedServices,
+} from './runtime';
 
 // Export storage factory for worker reuse
 export { createStorageLayer } from './storage-factory';
@@ -60,20 +95,14 @@ const formatStackTrace = (error: Error): string => {
 
 export const createApi = ({
   auth,
-  db,
+  serverRuntime,
   serverUrl,
   apiPath,
-  geminiApiKey,
-  storageConfig,
-  useMockAI = false,
 }: {
   auth: AuthInstance;
-  db: DatabaseInstance;
+  serverRuntime: ServerRuntime;
   serverUrl: string;
   apiPath: `/${string}`;
-  geminiApiKey: string;
-  storageConfig: StorageConfig;
-  useMockAI?: boolean;
 }) => {
   const handler = new OpenAPIHandler(appRouter, {
     plugins: [
@@ -81,7 +110,6 @@ export const createApi = ({
       new OpenAPIReferencePlugin({
         docsTitle: 'RT Stack | API Reference',
         docsProvider: 'scalar',
-        schemaConverters: [new ValibotToJsonSchemaConverter()],
         specGenerateOptions: {
           info: {
             title: 'RT Stack API',
@@ -99,54 +127,45 @@ export const createApi = ({
         }
 
         // Handle input validation errors (BAD_REQUEST)
-        if (
-          error instanceof ORPCError &&
-          error.code === 'BAD_REQUEST' &&
-          error.cause instanceof ValidationError
-        ) {
-          const valiIssues = error.cause.issues as [
-            v.BaseIssue<unknown>,
-            ...v.BaseIssue<unknown>[],
-          ];
-          console.error('[INPUT_VALIDATION]', v.flatten(valiIssues));
-          throw new ORPCError('INPUT_VALIDATION_FAILED', {
-            status: 422,
-            message: v.summarize(valiIssues),
-            cause: error.cause,
-          });
+        if (error instanceof ORPCError && error.code === 'BAD_REQUEST') {
+          const cause = getErrorCause(error);
+          if (cause instanceof ValidationError) {
+            const issues = cause.issues as readonly StandardSchemaIssue[];
+            const summary = formatValidationIssues(issues);
+            console.error('[INPUT_VALIDATION]', summary);
+            throw new ORPCError('INPUT_VALIDATION_FAILED', {
+              status: 422,
+              message: summary,
+              cause,
+            });
+          }
         }
 
         // Handle output validation errors (INTERNAL_SERVER_ERROR)
         // These indicate a bug in the API - response doesn't match contract
-        if (
-          error instanceof ORPCError &&
-          error.code === 'INTERNAL_SERVER_ERROR' &&
-          error.cause instanceof ValidationError
-        ) {
-          const valiIssues = error.cause.issues as [
-            v.BaseIssue<unknown>,
-            ...v.BaseIssue<unknown>[],
-          ];
-          console.error(
-            '[OUTPUT_VALIDATION] Response does not match contract:',
-          );
-          console.error(
-            '  Issues:',
-            JSON.stringify(v.flatten(valiIssues), null, 2),
-          );
-          // Log the actual data that failed validation (helpful for debugging)
-          if (error.cause.data !== undefined) {
+        if (error instanceof ORPCError && error.code === 'INTERNAL_SERVER_ERROR') {
+          const cause = getErrorCause(error);
+          if (cause instanceof ValidationError) {
+            const issues = cause.issues as readonly StandardSchemaIssue[];
+            const summary = formatValidationIssues(issues);
             console.error(
-              '  Data:',
-              JSON.stringify(error.cause.data, null, 2).slice(0, 1000),
+              '[OUTPUT_VALIDATION] Response does not match contract:',
             );
+            console.error('  Issues:', summary);
+            // Log the actual data that failed validation (helpful for debugging)
+            if (cause.data !== undefined) {
+              console.error(
+                '  Data:',
+                JSON.stringify(cause.data, null, 2).slice(0, 1000),
+              );
+            }
+            // Re-throw with the same code but better message for debugging
+            throw new ORPCError('INTERNAL_SERVER_ERROR', {
+              status: 500,
+              message: `Output validation failed: ${summary}`,
+              cause,
+            });
           }
-          // Re-throw with the same code but better message for debugging
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            status: 500,
-            message: `Output validation failed: ${v.summarize(valiIssues)}`,
-            cause: error.cause,
-          });
         }
       }),
     ],
@@ -156,12 +175,9 @@ export const createApi = ({
       return handler.handle(request, {
         prefix: apiPath,
         context: await createORPCContext({
-          db,
+          runtime: serverRuntime,
           auth,
           headers: request.headers,
-          geminiApiKey,
-          storageConfig,
-          useMockAI,
         }),
       });
     },

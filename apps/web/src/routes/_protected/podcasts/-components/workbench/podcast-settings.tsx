@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import { Slider } from '@repo/ui/components/slider';
 import { useState, useEffect, useRef } from 'react';
 import type { RouterOutput } from '@repo/api/client';
@@ -102,10 +102,16 @@ export function PodcastSettings({
   const isConversation = podcast.format === 'conversation';
 
   return (
-    <div className="mixer-section">
+    <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
       {/* Header */}
       <div className="mixer-header">
         <h3 className="mixer-title">Voice Mixer</h3>
+        {disabled && (
+          <span className="mixer-locked-hint">
+            <LockClosedIcon className="w-3 h-3" />
+            Locked during generation
+          </span>
+        )}
       </div>
 
       {/* Channel Strips */}

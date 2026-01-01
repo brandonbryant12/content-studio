@@ -21,6 +21,7 @@ import { SegmentItem } from './segment-item';
 
 interface ScriptEditorProps {
   segments: ScriptSegment[];
+  disabled?: boolean;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
@@ -32,6 +33,7 @@ interface ScriptEditorProps {
 
 export function ScriptEditor({
   segments,
+  disabled,
   onUpdateSegment,
   onRemoveSegment,
   onReorderSegments,
@@ -130,6 +132,7 @@ export function ScriptEditor({
                 segment={segment}
                 lineNumber={idx + 1}
                 isEditing={editingIndex === segment.index}
+                disabled={disabled}
                 onStartEdit={() => handleStartEdit(segment.index)}
                 onSaveEdit={(data) => handleSaveEdit(segment.index, data)}
                 onCancelEdit={handleCancelEdit}
@@ -153,6 +156,7 @@ export function ScriptEditor({
             setAddAfterIndex(segments[segments.length - 1]?.index ?? -1)
           }
           className="script-add-segment-btn"
+          disabled={disabled}
         >
           <PlusIcon className="w-4 h-4 mr-1.5" />
           Add Segment

@@ -4,6 +4,7 @@ export default defineConfig({
   entry: './src/server.ts',
   format: 'esm',
   noExternal: [/.*/],
+  external: [/\.node$/],
   platform: 'node',
   unbundle: false,
   outDir: './dist',

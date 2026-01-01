@@ -1,18 +1,21 @@
-import { randomUUID } from 'crypto';
-import type {
-  Podcast,
-  PodcastScript,
-  PodcastFormat,
-  VersionStatus,
-  ScriptSegment,
-  GenerationContext,
+import {
+  generatePodcastId,
+  generateScriptVersionId,
+  type PodcastId,
+  type ScriptVersionId,
+  type Podcast,
+  type PodcastScript,
+  type PodcastFormat,
+  type VersionStatus,
+  type ScriptSegment,
+  type GenerationContext,
 } from '@repo/db/schema';
 
 /**
  * Options for creating a test podcast.
  */
 export interface CreateTestPodcastOptions {
-  id?: string;
+  id?: PodcastId;
   title?: string;
   description?: string | null;
   format?: PodcastFormat;
@@ -35,7 +38,7 @@ export interface CreateTestPodcastOptions {
  */
 export interface CreateTestPodcastScriptOptions {
   id?: string;
-  podcastId?: string;
+  podcastId?: PodcastId;
   version?: number;
   isActive?: boolean;
   status?: VersionStatus;
@@ -45,6 +48,7 @@ export interface CreateTestPodcastScriptOptions {
   generationPrompt?: string | null;
   audioUrl?: string | null;
   duration?: number | null;
+  createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -73,7 +77,7 @@ export const createTestPodcast = (
   const now = new Date();
 
   return {
-    id: options.id ?? randomUUID(),
+    id: options.id ?? generatePodcastId(),
     title: options.title ?? `Test Podcast ${podcastCounter}`,
     description:
       options.description ?? `Description for test podcast ${podcastCounter}`,
@@ -85,9 +89,9 @@ export const createTestPodcast = (
     promptInstructions: options.promptInstructions ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
     tags: options.tags ?? [],
-    sourceDocumentIds: options.sourceDocumentIds ?? [],
+    sourceDocumentIds: (options.sourceDocumentIds ?? []) as Podcast['sourceDocumentIds'],
     generationContext: options.generationContext ?? null,
-    createdBy: options.createdBy ?? randomUUID(),
+    createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
@@ -103,8 +107,8 @@ export const createTestPodcastScript = (
   const now = new Date();
 
   return {
-    id: options.id ?? randomUUID(),
-    podcastId: options.podcastId ?? randomUUID(),
+    id: (options.id ?? generateScriptVersionId()) as ScriptVersionId,
+    podcastId: options.podcastId ?? generatePodcastId(),
     version: options.version ?? 1,
     isActive: options.isActive ?? true,
     status: options.status ?? 'drafting',
@@ -114,6 +118,7 @@ export const createTestPodcastScript = (
     generationPrompt: options.generationPrompt ?? null,
     audioUrl: options.audioUrl ?? null,
     duration: options.duration ?? null,
+    createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
@@ -125,10 +130,12 @@ export const createTestPodcastScript = (
 export const createReadyScript = (
   options: Omit<CreateTestPodcastScriptOptions, 'status' | 'audioUrl' | 'duration'> = {},
 ): PodcastScript => {
+  const podcastId = options.podcastId ?? generatePodcastId();
   return createTestPodcastScript({
     ...options,
+    podcastId,
     status: 'ready',
-    audioUrl: `https://storage.example.com/podcasts/${options.podcastId ?? randomUUID()}/audio.wav`,
+    audioUrl: `https://storage.example.com/podcasts/${podcastId}/audio.wav`,
     duration: 300, // 5 minutes
   });
 };
@@ -155,6 +162,7 @@ export const createReadyPodcastWithVersion = (
   const podcast = createTestPodcast(podcastOptions);
   const version = createReadyScript({
     podcastId: podcast.id,
+    createdBy: podcast.createdBy,
   });
   return { podcast, version };
 };
@@ -169,6 +177,7 @@ export const createScriptReadyPodcastWithVersion = (
   const podcast = createTestPodcast(podcastOptions);
   const version = createScriptReadyScript({
     podcastId: podcast.id,
+    createdBy: podcast.createdBy,
   });
   return { podcast, version };
 };

@@ -1,27 +1,20 @@
 /**
- * TanStack DB Store
+ * Data fetching hooks using TanStack Query.
  *
- * This module provides reactive collections for podcasts and documents,
- * backed by TanStack Query for server synchronization.
- *
- * Collections provide:
- * - Automatic data fetching and caching
- * - Optimistic updates with automatic rollback
- * - Live queries that update when data changes
- * - SSE integration for real-time updates
+ * All data is fetched from the API server - no local sync layer.
  */
 
 export {
-  podcastCollection,
-  podcastUtils,
-  documentCollection,
-  documentUtils,
+  // Podcast hooks
+  usePodcasts,
+  usePodcastsOrdered,
+  usePodcast,
+  // Document hooks
+  useDocuments,
+  useDocumentsOrdered,
+  useDocument,
+  // Types
   type Podcast,
   type PodcastFull,
   type Document,
-} from './collections';
-
-export { useSSESubscription } from './use-sse-subscription';
-
-// Re-export useLiveQuery for convenience
-export { useLiveQuery } from '@tanstack/react-db';
+} from './hooks';

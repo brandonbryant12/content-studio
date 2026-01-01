@@ -1,0 +1,131 @@
+/**
+ * Branded ID Types
+ *
+ * Provides type-safe, readable ID types for domain entities.
+ * IDs use prefixes (e.g., `pod_xxx`, `doc_xxx`) for better debugging
+ * and API ergonomics.
+ *
+ * Pattern: {prefix}_{base32-encoded-random}
+ * - Prefixes: pod_, doc_, ver_, job_, usr_, prj_
+ * - Base32 encoding (lowercase, no padding) for URL-safe, readable IDs
+ */
+import { Schema } from 'effect';
+
+// =============================================================================
+// ID Generation Helper
+// =============================================================================
+
+/**
+ * Generate a random base32 string (16 chars = 80 bits of entropy).
+ * Uses Crockford's base32 alphabet (lowercase) for readability.
+ * Uses Web Crypto API for cross-platform compatibility (Node.js + browser).
+ */
+const generateRandomBase32 = (length: number = 16): string => {
+  const alphabet = '0123456789abcdefghjkmnpqrstvwxyz'; // Crockford's base32 (no i, l, o, u)
+  const bytes = new Uint8Array(Math.ceil((length * 5) / 8));
+  globalThis.crypto.getRandomValues(bytes);
+  let result = '';
+
+  let buffer = 0;
+  let bitsLeft = 0;
+
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte;
+    bitsLeft += 8;
+
+    while (bitsLeft >= 5) {
+      bitsLeft -= 5;
+      result += alphabet[(buffer >> bitsLeft) & 0x1f];
+    }
+  }
+
+  return result.slice(0, length);
+};
+
+// =============================================================================
+// Podcast ID
+// =============================================================================
+
+export const PodcastIdSchema = Schema.String.pipe(
+  Schema.pattern(/^pod_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid podcast ID format',
+  }),
+  Schema.brand('PodcastId'),
+);
+
+export type PodcastId = typeof PodcastIdSchema.Type;
+
+export const generatePodcastId = (): PodcastId =>
+  `pod_${generateRandomBase32()}` as PodcastId;
+
+// =============================================================================
+// Document ID
+// =============================================================================
+
+export const DocumentIdSchema = Schema.String.pipe(
+  Schema.pattern(/^doc_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid document ID format',
+  }),
+  Schema.brand('DocumentId'),
+);
+
+export type DocumentId = typeof DocumentIdSchema.Type;
+
+export const generateDocumentId = (): DocumentId =>
+  `doc_${generateRandomBase32()}` as DocumentId;
+
+// =============================================================================
+// Script Version ID
+// =============================================================================
+
+export const ScriptVersionIdSchema = Schema.String.pipe(
+  Schema.pattern(/^ver_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid script version ID format',
+  }),
+  Schema.brand('ScriptVersionId'),
+);
+
+export type ScriptVersionId = typeof ScriptVersionIdSchema.Type;
+
+export const generateScriptVersionId = (): ScriptVersionId =>
+  `ver_${generateRandomBase32()}` as ScriptVersionId;
+
+// =============================================================================
+// Job ID
+// =============================================================================
+
+export const JobIdSchema = Schema.String.pipe(
+  Schema.pattern(/^job_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid job ID format',
+  }),
+  Schema.brand('JobId'),
+);
+
+export type JobId = typeof JobIdSchema.Type;
+
+export const generateJobId = (): JobId =>
+  `job_${generateRandomBase32()}` as JobId;
+
+// =============================================================================
+// User ID (from auth - likely stays as UUID from better-auth)
+// =============================================================================
+
+export const UserIdSchema = Schema.String.pipe(Schema.brand('UserId'));
+
+export type UserId = typeof UserIdSchema.Type;
+
+// =============================================================================
+// Project ID
+// =============================================================================
+
+export const ProjectIdSchema = Schema.String.pipe(
+  Schema.pattern(/^prj_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid project ID format',
+  }),
+  Schema.brand('ProjectId'),
+);
+
+export type ProjectId = typeof ProjectIdSchema.Type;
+
+export const generateProjectId = (): ProjectId =>
+  `prj_${generateRandomBase32()}` as ProjectId;

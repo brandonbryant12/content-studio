@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { podcastUtils } from '@/db';
 
 export interface ScriptSegment {
   speaker: string;
@@ -51,10 +50,9 @@ export function useScriptEditor({
 
   const saveChangesMutation = useMutation(
     apiClient.podcasts.saveChanges.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: () => {
         toast.success('Script saved. Regenerating audio...');
         setOriginalSegments(segments);
-        await podcastUtils.refetch();
       },
       onError: (error: { message?: string }) => {
         toast.error(error.message ?? 'Failed to save script');

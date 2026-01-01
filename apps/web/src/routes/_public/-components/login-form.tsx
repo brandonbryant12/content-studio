@@ -5,19 +5,25 @@ import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
+import { Schema } from 'effect';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import * as v from 'valibot';
 import { authClient } from '@/clients/authClient';
 import FormFieldInfo from '@/routes/-components/common/form-field-info';
 
-const FormSchema = v.object({
-  email: v.pipe(v.string(), v.email('Please enter a valid email address')),
-  password: v.pipe(
-    v.string(),
-    v.minLength(8, 'Password must be at least 8 characters'),
-  ),
-});
+const FormSchema = Schema.standardSchemaV1(
+  Schema.Struct({
+    email: Schema.String.pipe(
+      Schema.filter(
+        (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s),
+        { message: () => 'Please enter a valid email address' },
+      ),
+    ),
+    password: Schema.String.pipe(
+      Schema.minLength(8, { message: () => 'Password must be at least 8 characters' }),
+    ),
+  }),
+);
 
 export default function LoginCredentialsForm() {
   const navigate = useNavigate();

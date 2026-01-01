@@ -1016,6 +1016,23 @@
     @apply px-1 py-0.5 rounded bg-muted font-medium;
   }
 
+  .script-edit-hint.locked {
+    @apply text-warning;
+  }
+
+  /* Segment item disabled state */
+  .segment-item.disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .segment-item.disabled .segment-item-content {
+    @apply cursor-not-allowed;
+  }
+
+  .segment-item.disabled .segment-item-drag-handle {
+    @apply cursor-not-allowed opacity-50;
+  }
+
   /* -----------------------------------------
      CONFIG PANEL
      ----------------------------------------- */
@@ -1537,6 +1554,15 @@
 
   .mixer-header {
     @apply flex items-center justify-between;
+  }
+
+  .mixer-locked-hint {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] text-warning flex items-center gap-1;
+  }
+
+  .mixer-section.disabled {
+    @apply opacity-70;
   }
 
   .mixer-title {

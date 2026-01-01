@@ -1,195 +1,88 @@
 import { oc } from '@orpc/contract';
+import { Schema } from 'effect';
 import {
+  // Input schemas
   CreatePodcastSchema,
-  UpdatePodcastSchema,
-  UpdateScriptSchema,
-  DocumentOutputSchema,
+  UpdatePodcastFields,
+  // Output schemas (single source of truth from db)
+  PodcastOutputSchema,
+  PodcastFullOutputSchema,
+  PodcastListItemOutputSchema,
+  PodcastScriptOutputSchema,
+  ScriptSegmentSchema,
+  // Job schemas
+  JobOutputSchema,
+  JobStatusSchema,
+  // Branded ID schemas
+  PodcastIdSchema,
+  JobIdSchema,
 } from '@repo/db/schema';
-import * as v from 'valibot';
+
+// Helper to convert Effect Schema to Standard Schema for oRPC
+const std = Schema.standardSchemaV1;
 
 // Helper for query params that may come in as strings
-const coerceNumber = v.pipe(
-  v.union([v.number(), v.pipe(v.string(), v.transform(Number))]),
-  v.number(),
-);
+const CoerceNumber = Schema.Union(
+  Schema.Number,
+  Schema.String.pipe(
+    Schema.transform(Schema.Number, { decode: Number, encode: String }),
+  ),
+).pipe(Schema.compose(Schema.Number));
+
+// =============================================================================
+// Error Definitions
+// =============================================================================
 
 const podcastErrors = {
   PODCAST_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      podcastId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+      }),
+    ),
   },
   SCRIPT_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      podcastId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+      }),
+    ),
   },
   DOCUMENT_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      documentId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        documentId: Schema.String,
+      }),
+    ),
   },
   MEDIA_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      mediaType: v.string(),
-      mediaId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        mediaType: Schema.String,
+        mediaId: Schema.String,
+      }),
+    ),
   },
 } as const;
 
 const jobErrors = {
   JOB_NOT_FOUND: {
     status: 404,
-    data: v.object({
-      jobId: v.string(),
-    }),
+    data: std(
+      Schema.Struct({
+        jobId: Schema.String,
+      }),
+    ),
   },
 } as const;
 
-// Output schemas
-const generationContextSchema = v.object({
-  systemPromptTemplate: v.string(),
-  userInstructions: v.string(),
-  sourceDocuments: v.array(
-    v.object({
-      id: v.string(),
-      title: v.string(),
-      contentHash: v.optional(v.string()),
-    }),
-  ),
-  modelId: v.string(),
-  modelParams: v.optional(
-    v.object({
-      temperature: v.optional(v.number()),
-      maxTokens: v.optional(v.number()),
-    }),
-  ),
-  generatedAt: v.string(),
-});
-
-// Version status - status is now on the version (script), not the podcast
-// Flow: drafting → generating_script → script_ready → generating_audio → ready
-const versionStatusSchema = v.picklist([
-  'drafting',
-  'generating_script',
-  'script_ready',
-  'generating_audio',
-  'ready',
-  'failed',
-]);
-
-// Podcast output - status fields moved to version level
-const podcastOutputSchema = v.object({
-  id: v.string(),
-  title: v.string(),
-  description: v.nullable(v.string()),
-  format: v.picklist(['voice_over', 'conversation']),
-  hostVoice: v.nullable(v.string()),
-  hostVoiceName: v.nullable(v.string()),
-  coHostVoice: v.nullable(v.string()),
-  coHostVoiceName: v.nullable(v.string()),
-  promptInstructions: v.nullable(v.string()),
-  targetDurationMinutes: v.nullable(v.number()),
-  tags: v.array(v.string()),
-  sourceDocumentIds: v.array(v.string()),
-  generationContext: v.nullable(generationContextSchema),
-  createdBy: v.string(),
-  createdAt: v.string(),
-  updatedAt: v.string(),
-});
-
-// Active version summary - lightweight info for list views
-const activeVersionSummarySchema = v.object({
-  id: v.string(),
-  version: v.number(),
-  status: versionStatusSchema,
-  duration: v.nullable(v.number()),
-});
-
-// Podcast with active version summary for list views
-const podcastListItemSchema = v.object({
-  ...podcastOutputSchema.entries,
-  activeVersion: v.nullable(activeVersionSummarySchema),
-});
-
-const scriptSegmentSchema = v.object({
-  speaker: v.string(),
-  line: v.string(),
-  index: v.number(),
-});
-
-// Podcast script (version)
-const podcastScriptSchema = v.object({
-  id: v.string(),
-  podcastId: v.string(),
-  version: v.number(),
-  isActive: v.boolean(),
-  status: versionStatusSchema,
-  errorMessage: v.nullable(v.string()),
-  segments: v.nullable(v.array(scriptSegmentSchema)),
-  summary: v.nullable(v.string()),
-  generationPrompt: v.nullable(v.string()),
-  audioUrl: v.nullable(v.string()),
-  duration: v.nullable(v.number()),
-  createdAt: v.string(),
-  updatedAt: v.string(),
-});
-
-// Full podcast with documents and active version
-const podcastFullSchema = v.object({
-  ...podcastOutputSchema.entries,
-  documents: v.array(DocumentOutputSchema),
-  activeVersion: v.nullable(podcastScriptSchema),
-});
-
-const jobStatusSchema = v.picklist([
-  'pending',
-  'processing',
-  'completed',
-  'failed',
-]);
-
-// Job result schemas - matches queue result types
-const generatePodcastResultSchema = v.object({
-  scriptId: v.string(),
-  segmentCount: v.number(),
-  audioUrl: v.string(),
-  duration: v.number(),
-});
-
-const generateScriptResultSchema = v.object({
-  scriptId: v.string(),
-  segmentCount: v.number(),
-});
-
-const generateAudioResultSchema = v.object({
-  audioUrl: v.string(),
-  duration: v.number(),
-});
-
-// Union of all possible job results
-const jobResultSchema = v.union([
-  generatePodcastResultSchema,
-  generateScriptResultSchema,
-  generateAudioResultSchema,
-]);
-
-const jobOutputSchema = v.object({
-  id: v.string(),
-  type: v.string(),
-  status: jobStatusSchema,
-  result: v.nullable(jobResultSchema),
-  error: v.nullable(v.string()),
-  createdBy: v.string(),
-  createdAt: v.string(),
-  updatedAt: v.string(),
-  startedAt: v.nullable(v.string()),
-  completedAt: v.nullable(v.string()),
-});
+// =============================================================================
+// Contract Definition
+// =============================================================================
 
 const podcastContract = oc
   .prefix('/podcasts')
@@ -204,14 +97,21 @@ const podcastContract = oc
         description: 'Retrieve all podcasts for the current user',
       })
       .input(
-        v.object({
-          limit: v.optional(
-            v.pipe(coerceNumber, v.minValue(1), v.maxValue(100)),
-          ),
-          offset: v.optional(v.pipe(coerceNumber, v.minValue(0))),
-        }),
+        std(
+          Schema.Struct({
+            limit: Schema.optional(
+              CoerceNumber.pipe(
+                Schema.greaterThanOrEqualTo(1),
+                Schema.lessThanOrEqualTo(100),
+              ),
+            ),
+            offset: Schema.optional(
+              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
+            ),
+          }),
+        ),
       )
-      .output(v.array(podcastListItemSchema)),
+      .output(std(Schema.Array(PodcastListItemOutputSchema))),
 
     // Get a single podcast by ID
     get: oc
@@ -222,8 +122,8 @@ const podcastContract = oc
         description: 'Retrieve a podcast with its documents and active version',
       })
       .errors(podcastErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(podcastFullSchema),
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(std(PodcastFullOutputSchema)),
 
     // Create a new podcast
     create: oc
@@ -234,8 +134,8 @@ const podcastContract = oc
         description: 'Create a new podcast from documents',
       })
       .errors(podcastErrors)
-      .input(CreatePodcastSchema)
-      .output(podcastFullSchema),
+      .input(std(CreatePodcastSchema))
+      .output(std(PodcastFullOutputSchema)),
 
     // Update a podcast
     update: oc
@@ -247,12 +147,14 @@ const podcastContract = oc
       })
       .errors(podcastErrors)
       .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          ...UpdatePodcastSchema.entries,
-        }),
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            ...UpdatePodcastFields,
+          }),
+        ),
       )
-      .output(podcastOutputSchema),
+      .output(std(PodcastOutputSchema)),
 
     // Delete a podcast
     delete: oc
@@ -263,8 +165,8 @@ const podcastContract = oc
         description: 'Permanently delete a podcast and all associated data',
       })
       .errors(podcastErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(v.object({})),
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(std(Schema.Struct({}))),
 
     // Get podcast script (active version)
     getScript: oc
@@ -275,8 +177,8 @@ const podcastContract = oc
         description: 'Get the active script version for a podcast',
       })
       .errors(podcastErrors)
-      .input(v.object({ id: v.pipe(v.string(), v.uuid()) }))
-      .output(podcastScriptSchema),
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(std(PodcastScriptOutputSchema)),
 
     // Trigger full podcast generation (script + audio in one job)
     generate: oc
@@ -289,16 +191,20 @@ const podcastContract = oc
       })
       .errors({ ...podcastErrors, ...jobErrors })
       .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          promptInstructions: v.optional(v.string()),
-        }),
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            promptInstructions: Schema.optional(Schema.String),
+          }),
+        ),
       )
       .output(
-        v.object({
-          jobId: v.string(),
-          status: jobStatusSchema,
-        }),
+        std(
+          Schema.Struct({
+            jobId: Schema.String,
+            status: JobStatusSchema,
+          }),
+        ),
       ),
 
     // Save changes and regenerate audio (requires ready status)
@@ -312,20 +218,24 @@ const podcastContract = oc
       })
       .errors({ ...podcastErrors, ...jobErrors })
       .input(
-        v.object({
-          id: v.pipe(v.string(), v.uuid()),
-          segments: v.optional(v.array(scriptSegmentSchema)),
-          hostVoice: v.optional(v.string()),
-          hostVoiceName: v.optional(v.string()),
-          coHostVoice: v.optional(v.string()),
-          coHostVoiceName: v.optional(v.string()),
-        }),
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            segments: Schema.optional(Schema.Array(ScriptSegmentSchema)),
+            hostVoice: Schema.optional(Schema.String),
+            hostVoiceName: Schema.optional(Schema.String),
+            coHostVoice: Schema.optional(Schema.String),
+            coHostVoiceName: Schema.optional(Schema.String),
+          }),
+        ),
       )
       .output(
-        v.object({
-          jobId: v.string(),
-          status: jobStatusSchema,
-        }),
+        std(
+          Schema.Struct({
+            jobId: JobIdSchema,
+            status: JobStatusSchema,
+          }),
+        ),
       ),
 
     // Get job status
@@ -337,8 +247,8 @@ const podcastContract = oc
         description: 'Get the status of a generation job',
       })
       .errors(jobErrors)
-      .input(v.object({ jobId: v.pipe(v.string(), v.uuid()) }))
-      .output(jobOutputSchema),
+      .input(std(Schema.Struct({ jobId: JobIdSchema })))
+      .output(std(JobOutputSchema)),
   });
 
 export default podcastContract;

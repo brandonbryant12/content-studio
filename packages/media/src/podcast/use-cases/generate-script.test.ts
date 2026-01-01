@@ -13,7 +13,7 @@ import {
   createTestPodcastScript,
   resetAllFactories,
   createMockAILayers,
-  createTestUserLayer,
+  withTestUser,
   type TestContext,
 } from '@repo/testing';
 import { document, podcast, podcastScript, user } from '@repo/db/schema';
@@ -25,18 +25,10 @@ const NON_EXISTENT_ID = '00000000-0000-0000-0000-000000000000';
 /** Helper to check if an Effect fails with a specific error type */
 const expectEffectToFailWith = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  effect: Effect.Effect<any, any, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  layers: Layer.Layer<any, any, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dbLayer: Layer.Layer<any, any, any>,
+  wrappedEffect: Effect.Effect<any, any, never>,
   errorTag: string,
 ) => {
-  const provided = effect.pipe(
-    Effect.provide(layers),
-    Effect.provide(dbLayer),
-  ) as Effect.Effect<unknown, unknown, never>;
-  const exit = await Effect.runPromiseExit(provided);
+  const exit = await Effect.runPromiseExit(wrappedEffect);
   expect(Exit.isFailure(exit)).toBe(true);
   if (Exit.isFailure(exit)) {
     const error = Cause.failureOption(exit.cause);
@@ -87,15 +79,14 @@ describe('generateScript use case', () => {
   const createLayers = () => {
     const repoLayers = Layer.mergeAll(PodcastRepoLive, ScriptVersionRepoLive);
     const aiLayers = createMockAILayers();
-    const userLayer = createTestUserLayer(testUser);
     const documentsLayer = DocumentsLive;
 
-    return Layer.mergeAll(repoLayers, aiLayers, userLayer, documentsLayer);
+    return Layer.mergeAll(repoLayers, aiLayers, documentsLayer);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const runEffect = <A, E>(effect: Effect.Effect<A, E, any>): Promise<A> => {
-    const provided = effect.pipe(
+    const provided = withTestUser(testUser)(effect).pipe(
       Effect.provide(createLayers()),
       Effect.provide(ctx.dbLayer),
     ) as Effect.Effect<A, E, never>;
@@ -169,28 +160,24 @@ describe('generateScript use case', () => {
     });
 
     it('should fail with ScriptNotFound for non-existent versionId', async () => {
-      await expectEffectToFailWith(
+      const effect = withTestUser(testUser)(
         generateScript({
           podcastId: testPodcast.id,
           versionId: NON_EXISTENT_ID,
         }),
-        createLayers(),
-        ctx.dbLayer,
-        'ScriptNotFound',
-      );
+      ).pipe(Effect.provide(createLayers()), Effect.provide(ctx.dbLayer));
+      await expectEffectToFailWith(effect as Effect.Effect<unknown, unknown, never>, 'ScriptNotFound');
     });
   });
 
   describe('error handling', () => {
     it('should fail with PodcastNotFound for non-existent podcast', async () => {
-      await expectEffectToFailWith(
+      const effect = withTestUser(testUser)(
         generateScript({
           podcastId: NON_EXISTENT_ID,
         }),
-        createLayers(),
-        ctx.dbLayer,
-        'PodcastNotFound',
-      );
+      ).pipe(Effect.provide(createLayers()), Effect.provide(ctx.dbLayer));
+      await expectEffectToFailWith(effect as Effect.Effect<unknown, unknown, never>, 'PodcastNotFound');
     });
   });
 

@@ -79,14 +79,13 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         listPodcasts({
           userId: context.session.user.id,
           limit: input.limit,
           offset: input.offset,
-        }).pipe(
-          Effect.map((result) => result.podcasts.map(serializePodcastListItem)),
-          Effect.provide(context.layers),
-        ),
+        }).pipe(Effect.map((result) => result.podcasts.map(serializePodcastListItem))),
         {
           ...handlers.common,
           ...handlers.database,
@@ -99,6 +98,8 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         getPodcast({ podcastId: input.id, includeVersion: true }).pipe(
           Effect.map((podcast) =>
             serializePodcastFull({
@@ -106,7 +107,6 @@ const podcastRouter = {
               activeVersion: 'activeVersion' in podcast ? podcast.activeVersion : null,
             }),
           ),
-          Effect.provide(context.layers),
         ),
         {
           ...handlers.common,
@@ -126,13 +126,12 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         createPodcast({
           ...input,
           userId: context.session.user.id,
-        }).pipe(
-          Effect.map((podcastFull) => serializePodcastFull(podcastFull)),
-          Effect.provide(context.layers),
-        ),
+        }).pipe(Effect.map((podcastFull) => serializePodcastFull(podcastFull))),
         {
           ...handlers.common,
           ...handlers.database,
@@ -154,9 +153,10 @@ const podcastRouter = {
       const { id, ...data } = input;
 
       return handleEffect(
-        updatePodcast({ podcastId: id, data }).pipe(
+        context.runtime,
+        context.user,
+        updatePodcast({ podcastId: id as string, data }).pipe(
           Effect.map((podcast) => serializePodcast(podcast)),
-          Effect.provide(context.layers),
         ),
         {
           ...handlers.common,
@@ -176,10 +176,9 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
-        deletePodcast({ podcastId: input.id }).pipe(
-          Effect.map(() => ({})),
-          Effect.provide(context.layers),
-        ),
+        context.runtime,
+        context.user,
+        deletePodcast({ podcastId: input.id }).pipe(Effect.map(() => ({}))),
         {
           ...handlers.common,
           ...handlers.database,
@@ -198,6 +197,8 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const scriptVersionRepo = yield* ScriptVersionRepo;
           const version = yield* scriptVersionRepo.findActiveByPodcastId(input.id);
@@ -208,7 +209,7 @@ const podcastRouter = {
             });
           }
           return serializePodcastScript(version);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -221,6 +222,8 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const podcastRepo = yield* PodcastRepo;
           const scriptVersionRepo = yield* ScriptVersionRepo;
@@ -247,6 +250,7 @@ const podcastRouter = {
             // This ensures isSetupMode() returns false after generate is called
             yield* scriptVersionRepo.insert({
               podcastId: podcast.id,
+              createdBy: podcast.createdBy,
               status: 'drafting',
               segments: null,
             });
@@ -269,12 +273,7 @@ const podcastRouter = {
             jobId: job.id,
             status: job.status,
           };
-        }).pipe(
-          Effect.withSpan('api.podcasts.generate', {
-            attributes: { 'podcast.id': input.id },
-          }),
-          Effect.provide(context.layers),
-        ),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -292,6 +291,7 @@ const podcastRouter = {
             });
           },
         },
+        { span: 'api.podcasts.generate', attributes: { 'podcast.id': input.id } },
       );
     },
   ),
@@ -300,21 +300,19 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const queue = yield* Queue;
           const job = yield* queue.getJob(input.jobId);
           return serializeJob(job);
-        }).pipe(
-          Effect.withSpan('api.podcasts.getJob', {
-            attributes: { 'job.id': input.jobId },
-          }),
-          Effect.provide(context.layers),
-        ),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
           ...handlers.queue,
         },
+        { span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
       );
     },
   ),
@@ -323,6 +321,8 @@ const podcastRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const podcastRepo = yield* PodcastRepo;
           const queue = yield* Queue;
@@ -332,8 +332,8 @@ const podcastRouter = {
 
           // Call saveChanges use case
           const result = yield* saveChanges({
-            podcastId: input.id,
-            segments: input.segments,
+            podcastId: input.id as string,
+            segments: input.segments ? [...input.segments] : undefined,
             hostVoice: input.hostVoice,
             hostVoiceName: input.hostVoiceName,
             coHostVoice: input.coHostVoice,
@@ -373,12 +373,7 @@ const podcastRouter = {
             jobId: job.id,
             status: job.status,
           };
-        }).pipe(
-          Effect.withSpan('api.podcasts.saveChanges', {
-            attributes: { 'podcast.id': input.id },
-          }),
-          Effect.provide(context.layers),
-        ),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -402,6 +397,7 @@ const podcastRouter = {
             });
           },
         },
+        { span: 'api.podcasts.saveChanges', attributes: { 'podcast.id': input.id } },
       );
     },
   ),

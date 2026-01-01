@@ -1,4 +1,5 @@
 import { Context } from 'effect';
+import type { JobId } from '@repo/db/schema';
 import type {
   QueueError,
   JobNotFoundError,
@@ -15,7 +16,7 @@ export interface QueueService {
   ) => Effect.Effect<Job, QueueError>;
 
   readonly getJob: (
-    jobId: string,
+    jobId: JobId,
   ) => Effect.Effect<Job, QueueError | JobNotFoundError>;
 
   readonly getJobsByUser: (
@@ -24,31 +25,32 @@ export interface QueueService {
   ) => Effect.Effect<Job[], QueueError>;
 
   readonly updateJobStatus: (
-    jobId: string,
+    jobId: JobId,
     status: JobStatus,
     result?: unknown,
     error?: string,
   ) => Effect.Effect<Job, QueueError | JobNotFoundError>;
 
-  readonly processNextJob: (
+  readonly processNextJob: <R = never>(
     type: JobType,
-    handler: (job: Job) => Effect.Effect<unknown, JobProcessingError>,
+    handler: (job: Job) => Effect.Effect<unknown, JobProcessingError, R>,
   ) => Effect.Effect<
     Job | null,
-    QueueError | JobProcessingError | JobNotFoundError
+    QueueError | JobProcessingError | JobNotFoundError,
+    R
   >;
 
-  readonly processJobById: (
-    jobId: string,
-    handler: (job: Job) => Effect.Effect<unknown, JobProcessingError>,
-  ) => Effect.Effect<Job, QueueError | JobProcessingError | JobNotFoundError>;
+  readonly processJobById: <R = never>(
+    jobId: JobId,
+    handler: (job: Job) => Effect.Effect<unknown, JobProcessingError, R>,
+  ) => Effect.Effect<Job, QueueError | JobProcessingError | JobNotFoundError, R>;
 
   readonly findPendingJobForPodcast: (
     podcastId: string,
   ) => Effect.Effect<Job | null, QueueError>;
 
   readonly deleteJob: (
-    jobId: string,
+    jobId: JobId,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;
 }
 

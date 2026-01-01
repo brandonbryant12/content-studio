@@ -109,7 +109,7 @@ export function ConfigPanel({
               </div>
               <DocumentManager
                 podcastId={podcast.id}
-                documents={podcast.documents}
+                documents={[...podcast.documents]}
                 disabled={isGenerating}
               />
             </div>

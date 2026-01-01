@@ -1,11 +1,11 @@
 import { Context } from 'effect';
-import type { CurrentUser } from '@repo/auth-policy';
 import type { Document, CreateDocument, UpdateDocument } from '@repo/db/schema';
 import type { Db, DatabaseError } from '@repo/db/effect';
 import type {
   DocumentNotFound,
   ForbiddenError,
   PolicyError,
+  UnauthorizedError,
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
   DocumentParseError,
@@ -21,10 +21,13 @@ import type { Effect } from 'effect';
  * These will be provided via layer composition at runtime.
  *
  * - Db: Database connection for metadata
- * - CurrentUser: Authenticated user context
  * - Storage: File storage backend (S3, filesystem, etc.)
+ *
+ * Note: CurrentUser is obtained via FiberRef at runtime,
+ * not via layer dependencies. Use withCurrentUser() to scope
+ * user context before running effects.
  */
-type DocumentContext = Db | CurrentUser | Storage;
+type DocumentContext = Db | Storage;
 
 /**
  * Input for uploading a document file.
@@ -46,7 +49,8 @@ export interface UploadDocumentInput {
  * Document service interface.
  *
  * All methods return Effects with explicit error types for strict error handling.
- * Context requirements: Db (database), CurrentUser (auth), Storage (file storage).
+ * Context requirements: Db (database), Storage (file storage).
+ * User context is obtained via FiberRef at runtime (use withCurrentUser).
  *
  * Documents store original files in Storage (S3, filesystem, etc.) and metadata in DB.
  * Content is parsed on-demand via getContent().
@@ -60,7 +64,11 @@ export interface DocumentService {
     data: CreateDocument,
   ) => Effect.Effect<
     Document,
-    DatabaseError | PolicyError | ForbiddenError | StorageUploadError,
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError
+    | UnauthorizedError
+    | StorageUploadError,
     DocumentContext
   >;
 
@@ -81,6 +89,7 @@ export interface DocumentService {
     | DatabaseError
     | PolicyError
     | ForbiddenError
+    | UnauthorizedError
     | StorageUploadError
     | DocumentTooLargeError
     | UnsupportedDocumentFormat
@@ -97,7 +106,11 @@ export interface DocumentService {
     id: string,
   ) => Effect.Effect<
     Document,
-    DocumentNotFound | DatabaseError | PolicyError | ForbiddenError,
+    | DocumentNotFound
+    | DatabaseError
+    | PolicyError
+    | ForbiddenError
+    | UnauthorizedError,
     DocumentContext
   >;
 
@@ -114,6 +127,7 @@ export interface DocumentService {
     | DatabaseError
     | PolicyError
     | ForbiddenError
+    | UnauthorizedError
     | StorageError
     | StorageNotFoundError
     | DocumentParseError,
@@ -129,7 +143,7 @@ export interface DocumentService {
     offset?: number;
   }) => Effect.Effect<
     readonly Document[],
-    DatabaseError | PolicyError,
+    DatabaseError | PolicyError | UnauthorizedError,
     DocumentContext
   >;
 
@@ -147,6 +161,7 @@ export interface DocumentService {
     | DatabaseError
     | PolicyError
     | ForbiddenError
+    | UnauthorizedError
     | StorageUploadError
     | StorageError,
     DocumentContext
@@ -164,6 +179,7 @@ export interface DocumentService {
     | DatabaseError
     | PolicyError
     | ForbiddenError
+    | UnauthorizedError
     | StorageError,
     DocumentContext
   >;
@@ -173,7 +189,7 @@ export interface DocumentService {
    */
   readonly count: () => Effect.Effect<
     number,
-    DatabaseError | PolicyError,
+    DatabaseError | PolicyError | UnauthorizedError,
     DocumentContext
   >;
 }

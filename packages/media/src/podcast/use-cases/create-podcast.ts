@@ -58,6 +58,7 @@ export const createPodcast = (
     // 3. Create initial drafting version
     const draftVersion = yield* scriptVersionRepo.insert({
       podcastId: podcastWithDocs.id,
+      createdBy: userId,
       status: 'drafting',
       segments: null,
     });

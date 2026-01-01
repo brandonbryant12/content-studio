@@ -10,6 +10,8 @@ import {
   type GenerationContext,
   type Document,
   type ActiveVersionSummary,
+  type PodcastId,
+  type DocumentId,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { PodcastNotFound, DocumentNotFound } from '@repo/db/errors';
@@ -70,7 +72,7 @@ export interface PodcastRepoService {
    */
   readonly insert: (
     data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string },
-    documentIds: string[],
+    documentIds: readonly string[],
   ) => Effect.Effect<PodcastWithDocuments, DatabaseError | DocumentNotFound, Db>;
 
   /**
@@ -121,7 +123,7 @@ export interface PodcastRepoService {
    * Verify all document IDs exist and are owned by the specified user.
    */
   readonly verifyDocumentsExist: (
-    documentIds: string[],
+    documentIds: readonly string[],
     userId: string,
   ) => Effect.Effect<Document[], DatabaseError | DocumentNotFound, Db>;
 
@@ -150,6 +152,7 @@ export class PodcastRepo extends Context.Tag('@repo/media/PodcastRepo')<
 const make: PodcastRepoService = {
   insert: (data, documentIds) =>
     withDb('podcastRepo.insert', async (db) => {
+      const docIds = [...documentIds] as DocumentId[];
       const [pod] = await db
         .insert(podcast)
         .values({
@@ -162,21 +165,21 @@ const make: PodcastRepoService = {
           hostVoiceName: data.hostVoiceName,
           coHostVoice: data.coHostVoice,
           coHostVoiceName: data.coHostVoiceName,
-          sourceDocumentIds: documentIds,
+          sourceDocumentIds: docIds,
           createdBy: data.createdBy,
         })
         .returning();
 
       const docs =
-        documentIds.length > 0
+        docIds.length > 0
           ? await db
               .select()
               .from(document)
-              .where(inArray(document.id, documentIds))
+              .where(inArray(document.id, docIds))
           : [];
 
       const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = documentIds
+      const sortedDocs = docIds
         .map((id) => docMap.get(id))
         .filter((d): d is Document => d !== undefined);
 
@@ -188,7 +191,7 @@ const make: PodcastRepoService = {
       const [pod] = await db
         .select()
         .from(podcast)
-        .where(eq(podcast.id, id))
+        .where(eq(podcast.id, id as PodcastId))
         .limit(1);
 
       if (!pod) return null;
@@ -217,10 +220,11 @@ const make: PodcastRepoService = {
 
   findByIdFull: (id) =>
     withDb('podcastRepo.findByIdFull', async (db) => {
+      const podcastId = id as PodcastId;
       const [pod] = await db
         .select()
         .from(podcast)
-        .where(eq(podcast.id, id))
+        .where(eq(podcast.id, podcastId))
         .limit(1);
 
       if (!pod) return null;
@@ -243,7 +247,7 @@ const make: PodcastRepoService = {
         .from(podcastScript)
         .where(
           and(
-            eq(podcastScript.podcastId, id),
+            eq(podcastScript.podcastId, podcastId),
             eq(podcastScript.isActive, true),
           ),
         )
@@ -264,20 +268,23 @@ const make: PodcastRepoService = {
 
   update: (id, data) =>
     withDb('podcastRepo.update', async (db) => {
-      const { documentIds, ...rest } = data;
+      const { documentIds, tags, ...rest } = data;
       const updateValues: Partial<Podcast> = {
         ...rest,
         updatedAt: new Date(),
       };
 
       if (documentIds) {
-        updateValues.sourceDocumentIds = documentIds;
+        updateValues.sourceDocumentIds = [...documentIds] as DocumentId[];
+      }
+      if (tags) {
+        updateValues.tags = [...tags];
       }
 
       const [pod] = await db
         .update(podcast)
         .set(updateValues)
-        .where(eq(podcast.id, id))
+        .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
     }).pipe(
@@ -290,7 +297,7 @@ const make: PodcastRepoService = {
     withDb('podcastRepo.delete', async (db) => {
       const result = await db
         .delete(podcast)
-        .where(eq(podcast.id, id))
+        .where(eq(podcast.id, id as PodcastId))
         .returning({ id: podcast.id });
       return result.length > 0;
     }),
@@ -383,21 +390,22 @@ const make: PodcastRepoService = {
 
   verifyDocumentsExist: (documentIds, userId) =>
     withDb('podcastRepo.verifyDocuments', async (db) => {
-      if (documentIds.length === 0) {
-        return { docs: [] as Document[], missingId: undefined, notOwnedId: undefined };
+      const docIds = [...documentIds] as DocumentId[];
+      if (docIds.length === 0) {
+        return { docs: [] as Document[], missingId: undefined as string | undefined, notOwnedId: undefined as string | undefined };
       }
 
       const docs = await db
         .select()
         .from(document)
-        .where(inArray(document.id, documentIds));
+        .where(inArray(document.id, docIds));
 
-      const foundIds = new Set(docs.map((d) => d.id));
-      const missingId = documentIds.find((id) => !foundIds.has(id));
+      const foundIds = new Set(docs.map((d) => d.id as string));
+      const missingId = docIds.find((id) => !foundIds.has(id as string));
 
       const notOwned = docs.find((d) => d.createdBy !== userId);
 
-      return { docs, missingId, notOwnedId: notOwned?.id };
+      return { docs, missingId: missingId as string | undefined, notOwnedId: notOwned?.id as string | undefined };
     }).pipe(
       Effect.flatMap((result) => {
         if (result.missingId) {
@@ -423,7 +431,7 @@ const make: PodcastRepoService = {
           generationContext,
           updatedAt: new Date(),
         })
-        .where(eq(podcast.id, id))
+        .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
     }).pipe(

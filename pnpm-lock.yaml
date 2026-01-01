@@ -45,9 +45,6 @@ catalogs:
     '@orpc/tanstack-query':
       specifier: ^1.11.3
       version: 1.11.3
-    '@orpc/valibot':
-      specifier: ^1.11.3
-      version: 1.11.3
     '@playwright/test':
       specifier: ^1.52.0
       version: 1.57.0
@@ -75,6 +72,9 @@ catalogs:
     '@radix-ui/react-tooltip':
       specifier: ^1.2.8
       version: 1.2.8
+    '@standard-schema/spec':
+      specifier: ^1.1.0
+      version: 1.1.0
     '@tailwindcss/vite':
       specifier: ^4.1.17
       version: 4.1.17
@@ -129,9 +129,6 @@ catalogs:
     drizzle-orm:
       specifier: ^0.44.7
       version: 0.44.7
-    drizzle-valibot:
-      specifier: ^0.4.2
-      version: 0.4.2
     effect:
       specifier: ^3.16.0
       version: 3.19.8
@@ -216,9 +213,6 @@ catalogs:
     url-join:
       specifier: ^5.0.0
       version: 5.0.0
-    valibot:
-      specifier: ^1.1.0
-      version: 1.1.0
     vite:
       specifier: ^7.2.4
       version: 7.2.4
@@ -258,9 +252,6 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@repo/auth-policy':
-        specifier: workspace:*
-        version: link:../../packages/auth-policy
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -282,9 +273,6 @@ importers:
       hono:
         specifier: 'catalog:'
         version: 4.10.6
-      valibot:
-        specifier: 'catalog:'
-        version: 1.1.0(typescript@5.9.3)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -337,21 +325,15 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.1.17(vite@7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
-      '@tanstack/db':
-        specifier: ^0.5.16
-        version: 0.5.16(typescript@5.9.3)
-      '@tanstack/query-db-collection':
-        specifier: ^1.0.12
-        version: 1.0.12(@tanstack/query-core@5.90.10)(typescript@5.9.3)
-      '@tanstack/react-db':
-        specifier: ^0.1.60
-        version: 0.1.60(react@19.2.0)(typescript@5.9.3)
       '@tanstack/react-form':
         specifier: 'catalog:'
         version: 1.25.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -367,6 +349,9 @@ importers:
       dotenv-cli:
         specifier: 'catalog:'
         version: 11.0.0
+      effect:
+        specifier: ^3.16.0
+        version: 3.19.8
       framer-motion:
         specifier: ^12.23.26
         version: 12.23.26(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -388,9 +373,6 @@ importers:
       url-join:
         specifier: 'catalog:'
         version: 5.0.0
-      valibot:
-        specifier: 'catalog:'
-        version: 1.1.0(typescript@5.9.3)
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -507,18 +489,12 @@ importers:
       '@orpc/tanstack-query':
         specifier: 'catalog:'
         version: 1.11.3(@opentelemetry/api@1.9.0)(@orpc/client@1.11.3(@opentelemetry/api@1.9.0))(@tanstack/query-core@5.90.10)
-      '@orpc/valibot':
-        specifier: 'catalog:'
-        version: 1.11.3(@opentelemetry/api@1.9.0)(@orpc/contract@1.11.3(@opentelemetry/api@1.9.0))(@orpc/server@1.11.3(@opentelemetry/api@1.9.0))(valibot@1.1.0(typescript@5.9.3))
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
       '@repo/auth':
         specifier: workspace:*
         version: link:../auth
-      '@repo/auth-policy':
-        specifier: workspace:*
-        version: link:../auth-policy
       '@repo/db':
         specifier: workspace:*
         version: link:../db
@@ -534,15 +510,15 @@ importers:
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
+      '@standard-schema/spec':
+        specifier: 'catalog:'
+        version: 1.1.0
       effect:
         specifier: ^3.16.0
         version: 3.19.8
       url-join:
         specifier: 'catalog:'
         version: 5.0.0
-      valibot:
-        specifier: 'catalog:'
-        version: 1.1.0(typescript@5.9.3)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -574,40 +550,12 @@ importers:
       better-auth:
         specifier: 'catalog:'
         version: 1.3.33
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.8
       url-join:
         specifier: 'catalog:'
         version: 5.0.0
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../tools/eslint
-      '@repo/prettier-config':
-        specifier: workspace:*
-        version: link:../../tools/prettier
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../tools/typescript
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.10.1
-      eslint:
-        specifier: 'catalog:'
-        version: 9.39.1(jiti@2.6.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.6.2
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-
-  packages/auth-policy:
-    dependencies:
-      '@repo/db':
-        specifier: workspace:*
-        version: link:../db
-      effect:
-        specifier: ^3.16.0
-        version: 3.19.8
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -654,18 +602,12 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(better-sqlite3@11.10.0)(kysely@0.28.5)(pg@8.16.3)
-      drizzle-valibot:
-        specifier: 'catalog:'
-        version: 0.4.2(drizzle-orm@0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(better-sqlite3@11.10.0)(kysely@0.28.5)(pg@8.16.3))(valibot@1.1.0(typescript@5.9.3))
       effect:
         specifier: ^3.16.0
         version: 3.19.8
       pg:
         specifier: 'catalog:'
         version: 8.16.3
-      valibot:
-        specifier: 'catalog:'
-        version: 1.1.0(typescript@5.9.3)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -706,9 +648,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
-      '@repo/auth-policy':
+      '@repo/auth':
         specifier: workspace:*
-        version: link:../auth-policy
+        version: link:../auth
       '@repo/db':
         specifier: workspace:*
         version: link:../db
@@ -838,9 +780,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
-      '@repo/auth-policy':
+      '@repo/auth':
         specifier: workspace:*
-        version: link:../auth-policy
+        version: link:../auth
       '@repo/db':
         specifier: workspace:*
         version: link:../db
@@ -968,28 +910,6 @@ importers:
         version: 19.2.0
       typescript:
         specifier: 'catalog:'
-        version: 5.9.3
-
-  tools/continuous-agent:
-    dependencies:
-      better-sqlite3:
-        specifier: ^11.7.0
-        version: 11.10.0
-      chalk:
-        specifier: ^5.3.0
-        version: 5.6.2
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
-    devDependencies:
-      '@types/better-sqlite3':
-        specifier: ^7.6.12
-        version: 7.6.13
-      tsx:
-        specifier: ^4.19.2
-        version: 4.20.6
-      typescript:
-        specifier: ^5.7.2
         version: 5.9.3
 
   tools/eslint:
@@ -1784,13 +1704,6 @@ packages:
     peerDependencies:
       '@orpc/client': 1.11.3
       '@tanstack/query-core': '>=5.80.2'
-
-  '@orpc/valibot@1.11.3':
-    resolution: {integrity: sha512-lAdtdijun215XEXywZOuYv2gi3PFcfg6H8kfMGjZ8QVjG02LMSEvUQWyKnm+OBnIRaFFHdsYsFETIxXGaskLpQ==}
-    peerDependencies:
-      '@orpc/contract': 1.11.3
-      '@orpc/server': 1.11.3
-      valibot: '>=1.0.0'
 
   '@oxc-project/runtime@0.96.0':
     resolution: {integrity: sha512-34lh4o9CcSw09Hx6fKihPu85+m+4pmDlkXwJrLvN5nMq5JrcGhhihVM415zDqT8j8IixO1PYYdQZRN4SwQCncg==}
@@ -2834,8 +2747,8 @@ packages:
     resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
     engines: {node: '>=20.0.0'}
 
-  '@standard-schema/spec@1.0.0':
-    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
   '@swc/core-darwin-arm64@1.13.19':
     resolution: {integrity: sha512-NxDyte9tCJSJ8+R62WDtqwg8eI57lubD52sHyGOfezpJBOPr36bUSGGLyO3Vod9zTGlOu2CpkuzA/2iVw92u1g==}
@@ -3002,16 +2915,6 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
-  '@tanstack/db-ivm@0.1.14':
-    resolution: {integrity: sha512-GluhFsd/Z1E/MZTf60l9dZpKNpmdxtV4izPRnj1RK6TYrhC9LMndN+ywk1VDFBrjtBq/CTShz4CilECLwVlTGg==}
-    peerDependencies:
-      typescript: '>=4.7'
-
-  '@tanstack/db@0.5.16':
-    resolution: {integrity: sha512-V4oCsGlighwgKGWldw1umaXaVYiDR0sK/1fCWictrx2lqxqmBMUEfmNtWnt0CFJXEbyRA/LF8TyFn1ooXtyZ3w==}
-    peerDependencies:
-      typescript: '>=4.7'
-
   '@tanstack/devtools-event-client@0.3.5':
     resolution: {integrity: sha512-RL1f5ZlfZMpghrCIdzl6mLOFLTuhqmPNblZgBaeKfdtk5rfbjykurv+VfYydOFXj0vxVIoA2d/zT7xfD7Ph8fw==}
     engines: {node: '>=18'}
@@ -3023,27 +2926,12 @@ packages:
     resolution: {integrity: sha512-l6wcxwDBeh/7Dhles23U1O8lp9kNJmAb2yNjekR6olZwCRNAVA8TCXlVCrueELyFlYZqvQkh0ofxnzG62A1Kkg==}
     engines: {node: '>=12'}
 
-  '@tanstack/pacer-lite@0.1.1':
-    resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
-    engines: {node: '>=18'}
-
   '@tanstack/pacer@0.15.4':
     resolution: {integrity: sha512-vGY+CWsFZeac3dELgB6UZ4c7OacwsLb8hvL2gLS6hTgy8Fl0Bm/aLokHaeDIP+q9F9HUZTnp360z9uv78eg8pg==}
     engines: {node: '>=18'}
 
   '@tanstack/query-core@5.90.10':
     resolution: {integrity: sha512-EhZVFu9rl7GfRNuJLJ3Y7wtbTnENsvzp+YpcAV7kCYiXni1v8qZh++lpw4ch4rrwC0u/EZRnBHIehzCGzwXDSQ==}
-
-  '@tanstack/query-db-collection@1.0.12':
-    resolution: {integrity: sha512-kwE9lfGhbnRbRHut1k4yrshoTSDNqP/uY7Brr0l1HbOJZuW7V8Q1zQ1GN4TMAtsLohKaSsL/XDxZULCi6MGngg==}
-    peerDependencies:
-      '@tanstack/query-core': ^5.0.0
-      typescript: '>=4.7'
-
-  '@tanstack/react-db@0.1.60':
-    resolution: {integrity: sha512-Pz3pwH4vgRxlS/L3+BszINjNlIUXahJ6EqSEsYBMBT19G36GzTzyd5Qq98JaOXuu8V0dkiFWEoyEoTv3BiHcrg==}
-    peerDependencies:
-      react: '>=16.8.0'
 
   '@tanstack/react-form@1.25.0':
     resolution: {integrity: sha512-SjKpBkjegNVW9WU+qlO8+/+kSbSEwo2zwHnrQz/yOnnJRhtdgubUt50LfeUtdzkMsbbptQ5MSZrXH03kidQjyw==}
@@ -3282,11 +3170,6 @@ packages:
   '@typescript-eslint/visitor-keys@8.47.0':
     resolution: {integrity: sha512-SIV3/6eftCy1bNzCQoPmbWsRLujS8t5iDIZ4spZOBHqrM+yfX2ogg8Tt3PDTAVKw3sSCiUgg30uOAvK2r9zGjQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@valibot/to-json-schema@1.3.0':
-    resolution: {integrity: sha512-82Vv6x7sOYhv5YmTRgSppSqj1nn2pMCk5BqCMGWYp0V/fq+qirrbGncqZAtZ09/lrO40ne/7z8ejwE728aVreg==}
-    peerDependencies:
-      valibot: ^1.1.0
 
   '@vercel/oidc@3.0.5':
     resolution: {integrity: sha512-fnYhv671l+eTTp48gB4zEsTW/YtRgRPnkI2nT7x6qw5rkI1Lq2hTmQIpHPgyThI0znLK+vX2n9XxKdXZ7BUbbw==}
@@ -3774,10 +3657,6 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
-  chalk@5.6.2:
-    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
-    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
     engines: {node: '>= 16'}
@@ -3901,9 +3780,6 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
-
-  date-fns@4.1.0:
-    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -4101,12 +3977,6 @@ packages:
         optional: true
       sqlite3:
         optional: true
-
-  drizzle-valibot@0.4.2:
-    resolution: {integrity: sha512-tzjT7g0Di/HX7426marIy8IDtWODjPgrwvgscdevLQRUe5rzYzRhx6bDsYLdDFF9VI/eaYgnjNeF/fznWJoUjg==}
-    peerDependencies:
-      drizzle-orm: '>=0.36.0'
-      valibot: '>=1.0.0-beta.7'
 
   dts-resolver@2.1.3:
     resolution: {integrity: sha512-bihc7jPC90VrosXNzK0LTE2cuLP6jr0Ro8jk+kMugHReJVLIpHz/xadeq3MhuwyO4TD4OA3L1Q8pBBFRc08Tsw==}
@@ -4438,10 +4308,6 @@ packages:
   foreground-child@3.3.1:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
     engines: {node: '>=14'}
-
-  fractional-indexing@3.2.0:
-    resolution: {integrity: sha512-PcOxmqwYCW7O2ovKRU8OoQQj2yqTfEB/yeTYk4gPid6dN5ODRfU1hXd9tTVZzax/0NkO7AxpHykvZnT1aYp/BQ==}
-    engines: {node: ^14.13.1 || >=16.0.0}
 
   framer-motion@12.23.26:
     resolution: {integrity: sha512-cPcIhgR42xBn1Uj+PzOyheMtZ73H927+uWPDVhUMqxy8UHt6Okavb6xIz9J/phFUHUj0OncR6UvMfJTXoc/LKA==}
@@ -5828,9 +5694,6 @@ packages:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
 
-  sorted-btree@1.8.1:
-    resolution: {integrity: sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==}
-
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -6330,14 +6193,6 @@ packages:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
 
-  valibot@1.1.0:
-    resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
-    peerDependencies:
-      typescript: '>=5'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
@@ -6569,7 +6424,7 @@ snapshots:
   '@ai-sdk/provider-utils@3.0.18(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
       zod: 4.1.12
 
@@ -7209,7 +7064,7 @@ snapshots:
     dependencies:
       '@orpc/client': 1.11.3(@opentelemetry/api@1.9.0)
       '@orpc/shared': 1.11.3(@opentelemetry/api@1.9.0)
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - '@opentelemetry/api'
@@ -7317,19 +7172,6 @@ snapshots:
       '@tanstack/query-core': 5.90.10
     transitivePeerDependencies:
       - '@opentelemetry/api'
-
-  '@orpc/valibot@1.11.3(@opentelemetry/api@1.9.0)(@orpc/contract@1.11.3(@opentelemetry/api@1.9.0))(@orpc/server@1.11.3(@opentelemetry/api@1.9.0))(valibot@1.1.0(typescript@5.9.3))':
-    dependencies:
-      '@orpc/contract': 1.11.3(@opentelemetry/api@1.9.0)
-      '@orpc/openapi': 1.11.3(@opentelemetry/api@1.9.0)
-      '@orpc/server': 1.11.3(@opentelemetry/api@1.9.0)
-      '@valibot/to-json-schema': 1.3.0(valibot@1.1.0(typescript@5.9.3))
-      valibot: 1.1.0(typescript@5.9.3)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - crossws
-      - fastify
-      - ws
 
   '@oxc-project/runtime@0.96.0': {}
 
@@ -8386,7 +8228,7 @@ snapshots:
       '@peculiar/asn1-x509': 2.6.0
       '@peculiar/x509': 1.14.2
 
-  '@standard-schema/spec@1.0.0': {}
+  '@standard-schema/spec@1.1.0': {}
 
   '@swc/core-darwin-arm64@1.13.19':
     optional: true
@@ -8508,19 +8350,6 @@ snapshots:
       tailwindcss: 4.1.17
       vite: 7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2)
 
-  '@tanstack/db-ivm@0.1.14(typescript@5.9.3)':
-    dependencies:
-      fractional-indexing: 3.2.0
-      sorted-btree: 1.8.1
-      typescript: 5.9.3
-
-  '@tanstack/db@0.5.16(typescript@5.9.3)':
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      '@tanstack/db-ivm': 0.1.14(typescript@5.9.3)
-      '@tanstack/pacer-lite': 0.1.1
-      typescript: 5.9.3
-
   '@tanstack/devtools-event-client@0.3.5': {}
 
   '@tanstack/form-core@1.25.0':
@@ -8531,29 +8360,12 @@ snapshots:
 
   '@tanstack/history@1.139.0': {}
 
-  '@tanstack/pacer-lite@0.1.1': {}
-
   '@tanstack/pacer@0.15.4':
     dependencies:
       '@tanstack/devtools-event-client': 0.3.5
       '@tanstack/store': 0.7.7
 
   '@tanstack/query-core@5.90.10': {}
-
-  '@tanstack/query-db-collection@1.0.12(@tanstack/query-core@5.90.10)(typescript@5.9.3)':
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      '@tanstack/db': 0.5.16(typescript@5.9.3)
-      '@tanstack/query-core': 5.90.10
-      typescript: 5.9.3
-
-  '@tanstack/react-db@0.1.60(react@19.2.0)(typescript@5.9.3)':
-    dependencies:
-      '@tanstack/db': 0.5.16(typescript@5.9.3)
-      react: 19.2.0
-      use-sync-external-store: 1.6.0(react@19.2.0)
-    transitivePeerDependencies:
-      - typescript
 
   '@tanstack/react-form@1.25.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
@@ -8748,6 +8560,7 @@ snapshots:
   '@types/better-sqlite3@7.6.13':
     dependencies:
       '@types/node': 24.10.1
+    optional: true
 
   '@types/chai@5.2.3':
     dependencies:
@@ -8916,10 +8729,6 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.47.0
       eslint-visitor-keys: 4.2.1
-
-  '@valibot/to-json-schema@1.3.0(valibot@1.1.0(typescript@5.9.3))':
-    dependencies:
-      valibot: 1.1.0(typescript@5.9.3)
 
   '@vercel/oidc@3.0.5': {}
 
@@ -9401,6 +9210,7 @@ snapshots:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.3
+    optional: true
 
   big.js@5.2.2: {}
 
@@ -9409,6 +9219,7 @@ snapshots:
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
+    optional: true
 
   birpc@2.8.0: {}
 
@@ -9501,8 +9312,6 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-
-  chalk@5.6.2: {}
 
   check-error@2.1.1: {}
 
@@ -9645,8 +9454,6 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
-  date-fns@4.1.0: {}
-
   debug@3.2.7:
     dependencies:
       ms: 2.1.3
@@ -9658,10 +9465,12 @@ snapshots:
   decompress-response@6.0.0:
     dependencies:
       mimic-response: 3.1.0
+    optional: true
 
   deep-eql@5.0.2: {}
 
-  deep-extend@0.6.0: {}
+  deep-extend@0.6.0:
+    optional: true
 
   deep-is@0.1.4: {}
 
@@ -9758,11 +9567,6 @@ snapshots:
       kysely: 0.28.5
       pg: 8.16.3
 
-  drizzle-valibot@0.4.2(drizzle-orm@0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(better-sqlite3@11.10.0)(kysely@0.28.5)(pg@8.16.3))(valibot@1.1.0(typescript@5.9.3)):
-    dependencies:
-      drizzle-orm: 0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(better-sqlite3@11.10.0)(kysely@0.28.5)(pg@8.16.3)
-      valibot: 1.1.0(typescript@5.9.3)
-
   dts-resolver@2.1.3: {}
 
   duck@0.1.12:
@@ -9786,7 +9590,7 @@ snapshots:
 
   effect@3.19.8:
     dependencies:
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
   electron-to-chromium@1.5.211: {}
@@ -10158,7 +9962,8 @@ snapshots:
       signal-exit: 3.0.7
       strip-eof: 1.0.0
 
-  expand-template@2.0.3: {}
+  expand-template@2.0.3:
+    optional: true
 
   expect-type@1.3.0: {}
 
@@ -10196,7 +10001,8 @@ snapshots:
     dependencies:
       flat-cache: 4.0.1
 
-  file-uri-to-path@1.0.0: {}
+  file-uri-to-path@1.0.0:
+    optional: true
 
   fill-range@7.1.1:
     dependencies:
@@ -10222,8 +10028,6 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
-
-  fractional-indexing@3.2.0: {}
 
   framer-motion@12.23.26(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
@@ -10305,7 +10109,8 @@ snapshots:
 
   get-value@2.0.6: {}
 
-  github-from-package@0.0.0: {}
+  github-from-package@0.0.0:
+    optional: true
 
   glob-parent@5.1.2:
     dependencies:
@@ -10843,7 +10648,8 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  mimic-response@3.1.0: {}
+  mimic-response@3.1.0:
+    optional: true
 
   minimatch@3.1.2:
     dependencies:
@@ -10884,7 +10690,8 @@ snapshots:
 
   nanostores@1.0.1: {}
 
-  napi-build-utils@2.0.0: {}
+  napi-build-utils@2.0.0:
+    optional: true
 
   natural-compare@1.4.0: {}
 
@@ -10900,6 +10707,7 @@ snapshots:
   node-abi@3.85.0:
     dependencies:
       semver: 7.7.3
+    optional: true
 
   node-ensure@0.0.0: {}
 
@@ -11180,6 +10988,7 @@ snapshots:
       simple-get: 4.0.1
       tar-fs: 2.1.4
       tunnel-agent: 0.6.0
+    optional: true
 
   prelude-ls@1.2.1: {}
 
@@ -11333,6 +11142,7 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
+    optional: true
 
   react-dom@19.2.0(react@19.2.0):
     dependencies:
@@ -11686,13 +11496,15 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  simple-concat@1.0.1: {}
+  simple-concat@1.0.1:
+    optional: true
 
   simple-get@4.0.1:
     dependencies:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
+    optional: true
 
   solid-js@1.9.6:
     dependencies:
@@ -11704,8 +11516,6 @@ snapshots:
     dependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
-
-  sorted-btree@1.8.1: {}
 
   source-map-js@1.2.1: {}
 
@@ -11831,7 +11641,8 @@ snapshots:
 
   strip-eof@1.0.0: {}
 
-  strip-json-comments@2.0.1: {}
+  strip-json-comments@2.0.1:
+    optional: true
 
   strip-json-comments@3.1.1: {}
 
@@ -12071,6 +11882,7 @@ snapshots:
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
+    optional: true
 
   turbo-darwin-64@2.6.1:
     optional: true
@@ -12251,10 +12063,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@10.0.0: {}
-
-  valibot@1.1.0(typescript@5.9.3):
-    optionalDependencies:
-      typescript: 5.9.3
 
   vite-node@3.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2):
     dependencies:

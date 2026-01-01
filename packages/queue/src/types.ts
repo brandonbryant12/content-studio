@@ -1,9 +1,11 @@
+import type { JobId } from '@repo/db/schema';
+
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export type JobType = 'generate-podcast' | 'generate-script' | 'generate-audio';
 
 export interface Job<TPayload = unknown, TResult = unknown> {
-  readonly id: string;
+  readonly id: JobId;
   readonly type: JobType;
   readonly status: JobStatus;
   readonly payload: TPayload;

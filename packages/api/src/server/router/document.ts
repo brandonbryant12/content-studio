@@ -9,11 +9,13 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           const result = yield* documents.list(input);
           return result.map(serializeDocument);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -26,11 +28,13 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           const result = yield* documents.findById(input.id);
           return serializeDocument(result);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -49,11 +53,13 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           const content = yield* documents.getContent(input.id);
           return { content };
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -79,11 +85,13 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           const result = yield* documents.create(input);
           return serializeDocument(result);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -97,6 +105,8 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
 
@@ -112,7 +122,7 @@ const documentRouter = {
           });
 
           return serializeDocument(result);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -154,11 +164,13 @@ const documentRouter = {
       const { id, ...data } = input;
 
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           const result = yield* documents.update(id, data);
           return serializeDocument(result);
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,
@@ -178,11 +190,13 @@ const documentRouter = {
     async ({ context, input, errors }) => {
       const handlers = createErrorHandlers(errors);
       return handleEffect(
+        context.runtime,
+        context.user,
         Effect.gen(function* () {
           const documents = yield* Documents;
           yield* documents.delete(input.id);
           return {};
-        }).pipe(Effect.provide(context.layers)),
+        }),
         {
           ...handlers.common,
           ...handlers.database,

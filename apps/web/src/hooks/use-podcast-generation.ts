@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { podcastUtils } from '@/db';
 
 interface PodcastConfig {
   format: 'conversation' | 'voice_over';
@@ -47,7 +46,6 @@ export function usePodcastGeneration({
   const generateMutation = useMutation(
     apiClient.podcasts.generate.mutationOptions({
       onSuccess: () => {
-        podcastUtils.refetch();
         toast.success('Generation started!');
       },
       onError: (error) => {
@@ -91,11 +89,10 @@ export function usePodcastGeneration({
   // Create podcast and trigger full generation
   const createAndGenerateMutation = useMutation(
     apiClient.podcasts.create.mutationOptions({
-      onSuccess: async (newPodcast) => {
+      onSuccess: (newPodcast) => {
         generateMutation.mutate({ id: newPodcast.id });
         toast.success('Podcast created! Starting generation...');
         navigateToPodcast(newPodcast.id);
-        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to create podcast');

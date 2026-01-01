@@ -2,15 +2,24 @@ import {
   pgTable,
   text,
   timestamp,
-  uuid,
+  varchar,
   integer,
   jsonb,
   index,
   pgEnum,
 } from 'drizzle-orm/pg-core';
-import { createSelectSchema } from 'drizzle-valibot';
-import * as v from 'valibot';
+import { Schema } from 'effect';
 import { user } from './auth';
+import {
+  type DocumentId,
+  DocumentIdSchema,
+  generateDocumentId,
+} from './brands';
+import {
+  createEffectSerializer,
+  createBatchEffectSerializer,
+  createSyncSerializer,
+} from './serialization';
 
 export const documentSourceEnum = pgEnum('document_source', [
   'manual',
@@ -23,30 +32,33 @@ export const documentSourceEnum = pgEnum('document_source', [
 export const document = pgTable(
   'document',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: varchar('id', { length: 20 })
+      .$type<DocumentId>()
+      .$default(generateDocumentId)
+      .primaryKey(),
     title: text('title').notNull(),
     /** Storage key/path where the original file is stored (e.g., S3 path) */
-    contentKey: text('content_key').notNull(),
+    contentKey: text('contentKey').notNull(),
     /** MIME type of the stored file */
-    mimeType: text('mime_type').notNull(),
-    wordCount: integer('word_count').notNull().default(0),
+    mimeType: text('mimeType').notNull(),
+    wordCount: integer('wordCount').notNull().default(0),
     source: documentSourceEnum('source').notNull().default('manual'),
-    originalFileName: text('original_file_name'),
-    originalFileSize: integer('original_file_size'),
+    originalFileName: text('originalFileName'),
+    originalFileSize: integer('originalFileSize'),
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
-    createdBy: text('created_by')
+    createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    updatedAt: timestamp('updatedAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
-    index('document_created_by_idx').on(table.createdBy),
-    index('document_created_at_idx').on(table.createdAt),
+    index('document_createdBy_idx').on(table.createdBy),
+    index('document_createdAt_idx').on(table.createdAt),
   ],
 );
 
@@ -54,56 +66,66 @@ export const document = pgTable(
  * Schema for creating a document via API (manual text creation).
  * Content is provided directly and will be stored in storage.
  */
-export const CreateDocumentSchema = v.object({
-  title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
-  content: v.pipe(v.string(), v.minLength(1)),
-  metadata: v.optional(v.record(v.string(), v.unknown())),
+export const CreateDocumentSchema = Schema.Struct({
+  title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+  content: Schema.String.pipe(Schema.minLength(1)),
+  metadata: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  ),
 });
+
+/**
+ * Base fields for document updates.
+ * Exported separately for use in API contracts that need to spread fields.
+ */
+export const UpdateDocumentFields = {
+  title: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+  ),
+  content: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
+  metadata: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  ),
+};
 
 /**
  * Schema for updating a document.
  * Note: content updates require re-uploading to storage.
  */
-export const UpdateDocumentSchema = v.partial(
-  v.object({
-    title: v.pipe(v.string(), v.minLength(1), v.maxLength(256)),
-    content: v.pipe(v.string(), v.minLength(1)),
-    metadata: v.optional(v.record(v.string(), v.unknown())),
-  }),
-);
-
-export const DocumentSchema = createSelectSchema(document);
+export const UpdateDocumentSchema = Schema.Struct(UpdateDocumentFields);
 
 /**
- * Document source enum values as a Valibot picklist.
+ * Document source enum values.
  * DERIVED from documentSourceEnum - update both if adding new sources!
  */
-export const DocumentSourceSchema = v.picklist([
-  'manual',
-  'upload_txt',
-  'upload_pdf',
-  'upload_docx',
-  'upload_pptx',
-]);
+export const DocumentSourceSchema = Schema.Union(
+  Schema.Literal('manual'),
+  Schema.Literal('upload_txt'),
+  Schema.Literal('upload_pdf'),
+  Schema.Literal('upload_docx'),
+  Schema.Literal('upload_pptx'),
+);
 
 /**
  * API output schema for documents.
  * Dates are serialized as ISO strings for JSON transport.
  * Used by API contracts to ensure consistency with DB schema.
  */
-export const DocumentOutputSchema = v.object({
-  id: v.string(),
-  title: v.string(),
-  contentKey: v.string(),
-  mimeType: v.string(),
-  wordCount: v.number(),
+export const DocumentOutputSchema = Schema.Struct({
+  id: DocumentIdSchema,
+  title: Schema.String,
+  contentKey: Schema.String,
+  mimeType: Schema.String,
+  wordCount: Schema.Number,
   source: DocumentSourceSchema,
-  originalFileName: v.nullable(v.string()),
-  originalFileSize: v.nullable(v.number()),
-  metadata: v.nullable(v.record(v.string(), v.unknown())),
-  createdBy: v.string(),
-  createdAt: v.string(),
-  updatedAt: v.string(),
+  originalFileName: Schema.NullOr(Schema.String),
+  originalFileSize: Schema.NullOr(Schema.Number),
+  metadata: Schema.NullOr(
+    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  ),
+  createdBy: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 });
 
 // =============================================================================
@@ -112,23 +134,19 @@ export const DocumentOutputSchema = v.object({
 
 export type Document = typeof document.$inferSelect;
 export type DocumentSource = Document['source'];
-export type DocumentOutput = v.InferOutput<typeof DocumentOutputSchema>;
-export type CreateDocument = v.InferInput<typeof CreateDocumentSchema>;
-export type UpdateDocument = v.InferInput<typeof UpdateDocumentSchema>;
+export type DocumentOutput = typeof DocumentOutputSchema.Type;
+export type CreateDocument = typeof CreateDocumentSchema.Type;
+export type UpdateDocument = typeof UpdateDocumentSchema.Type;
 
 // =============================================================================
-// Serializer - co-located with entity so changes can't be missed
+// Transform Function - pure DB → API output conversion
 // =============================================================================
 
 /**
- * Serialize a Document to API output format.
- *
- * Co-located with entity definition so that:
- * 1. Adding a field to `document` table → TypeScript errors here
- * 2. Updating serializer → must update DocumentOutputSchema (same file)
- * 3. Contracts import DocumentOutputSchema → automatically in sync
+ * Pure transform function that converts a Document to DocumentOutput.
+ * This is the core serialization logic, used by both sync and Effect variants.
  */
-export const serializeDocument = (doc: Document): DocumentOutput => ({
+const documentTransform = (doc: Document): DocumentOutput => ({
   id: doc.id,
   title: doc.title,
   contentKey: doc.contentKey,
@@ -142,3 +160,49 @@ export const serializeDocument = (doc: Document): DocumentOutput => ({
   createdAt: doc.createdAt.toISOString(),
   updatedAt: doc.updatedAt.toISOString(),
 });
+
+// =============================================================================
+// Serializers - Effect-based and sync variants
+// =============================================================================
+
+/**
+ * Effect-based serializer with tracing support.
+ * Use this in Effect.gen handlers for observability and error handling.
+ *
+ * @example
+ * ```typescript
+ * const handler = Effect.gen(function* () {
+ *   const doc = yield* getDocument(id);
+ *   return yield* serializeDocumentEffect(doc);
+ * });
+ * ```
+ */
+export const serializeDocumentEffect = createEffectSerializer(
+  'document',
+  documentTransform,
+);
+
+/**
+ * Batch serializer for multiple documents.
+ * Runs serialization in parallel for better performance.
+ *
+ * @example
+ * ```typescript
+ * const outputs = yield* serializeDocumentsEffect(documents);
+ * ```
+ */
+export const serializeDocumentsEffect = createBatchEffectSerializer(
+  'document',
+  documentTransform,
+);
+
+/**
+ * Synchronous serializer for simple cases.
+ * Use when Effect overhead is not needed (e.g., in map callbacks).
+ *
+ * @example
+ * ```typescript
+ * const outputs = documents.map(serializeDocument);
+ * ```
+ */
+export const serializeDocument = createSyncSerializer(documentTransform);

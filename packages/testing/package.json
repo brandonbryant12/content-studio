@@ -33,7 +33,7 @@
   "prettier": "@repo/prettier-config",
   "dependencies": {
     "@repo/ai": "workspace:*",
-    "@repo/auth-policy": "workspace:*",
+    "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",

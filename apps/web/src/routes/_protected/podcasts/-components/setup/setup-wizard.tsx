@@ -1,7 +1,7 @@
+import type { PodcastFullOutput } from '@repo/db/schema';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { RouterOutput } from '@repo/api/client';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
@@ -9,9 +9,8 @@ import { StepBasics } from './steps/step-basics';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
-import { podcastUtils } from '@/db';
 
-type PodcastFull = RouterOutput['podcasts']['get'];
+type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';
 
 const TOTAL_STEPS = 4;
@@ -56,9 +55,8 @@ export function SetupWizard({ podcast, onSkip }: SetupWizardProps) {
   // Generate mutation for final step
   const generateMutation = useMutation(
     apiClient.podcasts.generate.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: () => {
         toast.success('Generation started');
-        await podcastUtils.refetch();
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to start generation');

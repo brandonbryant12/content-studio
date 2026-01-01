@@ -1,18 +1,12 @@
-import { GoogleLive } from '@repo/ai/llm';
-import { GoogleTTSLive } from '@repo/ai/tts';
-import { createStorageLayer, type StorageConfig } from '@repo/api/server';
-import { CurrentUserLive, Role } from '@repo/auth-policy';
-import { DatabasePolicyLive } from '@repo/auth-policy/providers/database';
-import { createDb } from '@repo/db/client';
-import { DbLive } from '@repo/db/effect';
 import {
-  DocumentsLive,
-  PodcastRepoLive,
-  ScriptVersionRepoLive,
-} from '@repo/media';
+  createServerRuntime,
+  type StorageConfig,
+  type ServerRuntime,
+} from '@repo/api/server';
+import { withCurrentUser, Role, type User } from '@repo/auth/policy';
+import { createDb } from '@repo/db/client';
 import {
   Queue,
-  QueueLive,
   JobProcessingError,
   type GeneratePodcastPayload,
   type GenerateScriptPayload,
@@ -20,8 +14,7 @@ import {
   type Job,
   type JobType,
 } from '@repo/queue';
-import { MockLLMLive, MockTTSLive } from '@repo/testing/mocks';
-import { Effect, Layer, Schedule, ManagedRuntime, Logger } from 'effect';
+import { Effect, Schedule } from 'effect';
 import type {
   EntityChangeEvent,
   JobCompletionEvent,
@@ -82,6 +75,9 @@ export interface PodcastWorkerConfig {
 /**
  * Create and start the podcast generation worker.
  * Polls the queue for generate-podcast jobs and processes them.
+ *
+ * Uses a single shared ManagedRuntime created at startup.
+ * User context is scoped per job via FiberRef (withCurrentUser).
  */
 export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const pollInterval = config.pollInterval ?? WORKER_DEFAULTS.POLL_INTERVAL_MS;
@@ -91,81 +87,32 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   // Create database connection
   const db = createDb({ databaseUrl: config.databaseUrl });
 
-  // Build base layers for worker (without user-specific context)
-  const dbLayer = DbLive(db);
-  const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
-
-  // Use mock AI layers for testing, real Google layers for production
-  const ttsLayer = config.useMockAI
-    ? MockTTSLive
-    : GoogleTTSLive({ apiKey: config.geminiApiKey });
-  const llmLayer = config.useMockAI
-    ? MockLLMLive
-    : GoogleLive({ apiKey: config.geminiApiKey });
+  // Create single shared runtime at worker startup
+  // All layers (Db, Queue, TTS, LLM, Storage, Documents, etc.) are built once
+  const runtime: ServerRuntime = createServerRuntime({
+    db,
+    geminiApiKey: config.geminiApiKey,
+    storageConfig: config.storageConfig,
+    useMockAI: config.useMockAI,
+  });
 
   if (config.useMockAI) {
     console.log('[Worker] Using mock AI layers for testing');
   }
 
-  // Runtime for queue polling (doesn't need user context or documents)
-  // Include pretty logger so Effect.logInfo etc. output to console
-  const loggerLayer = Logger.pretty;
-  const workerLayers = Layer.mergeAll(
-    dbLayer,
-    queueLayer,
-    ttsLayer,
-    storageLayer,
-    policyLayer,
-    llmLayer,
-    loggerLayer,
-  );
-  const runtime = ManagedRuntime.make(workerLayers);
-
   /**
-   * Build full layer stack for job processing with job-specific user context.
-   * Returns a complete, self-contained layer.
+   * Create a User object for job processing.
    */
-  const makeJobRuntime = (userId: string) => {
-    const userLayer = CurrentUserLive({
-      id: userId,
-      email: '', // Not needed for job processing
-      name: 'Worker',
-      role: Role.USER,
-    });
-
-    // DocumentsLive requires Db, CurrentUser, Storage
-    const documentsLayerWithUser = DocumentsLive.pipe(
-      Layer.provide(Layer.mergeAll(dbLayer, userLayer, storageLayer)),
-    );
-
-    // Repos only need Db
-    const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(dbLayer));
-    const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(
-      Layer.provide(dbLayer),
-    );
-
-    // Combine all layers needed for the handlers
-    const allLayers = Layer.mergeAll(
-      dbLayer,
-      userLayer,
-      ttsLayer,
-      storageLayer,
-      llmLayer,
-      documentsLayerWithUser,
-      queueLayer,
-      policyLayer,
-      podcastRepoLayer,
-      scriptVersionRepoLayer,
-      loggerLayer,
-    );
-
-    return ManagedRuntime.make(allLayers);
-  };
+  const makeJobUser = (userId: string): User => ({
+    id: userId,
+    email: '', // Not needed for job processing
+    name: 'Worker',
+    role: Role.USER,
+  });
 
   /**
    * Process a single job based on its type.
+   * User context is scoped via FiberRef for the duration of the job.
    */
   const processJob = (job: Job<WorkerPayload>) =>
     Effect.gen(function* () {
@@ -177,41 +124,42 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         `Processing ${job.type} job ${job.id} for ${jobDescription}`,
       );
 
-      // Create a dedicated runtime for this job with user context
-      const jobRuntime = makeJobRuntime(job.payload.userId);
+      // Create user context for this job
+      const user = makeJobUser(job.payload.userId);
 
-      // Run the appropriate handler based on job type using type guards
-      const runHandler = async (): Promise<unknown> => {
-        if (isGeneratePodcastJob(job)) {
-          return jobRuntime.runPromise(handleGeneratePodcast(job));
-        }
-        if (isGenerateScriptJob(job)) {
-          return jobRuntime.runPromise(handleGenerateScript(job));
-        }
-        if (isGenerateAudioJob(job)) {
-          return jobRuntime.runPromise(handleGenerateAudio(job));
-        }
-        throw new Error(`Unknown job type: ${job.type}`);
-      };
-
-      // Run the handler with the job-specific runtime
-      // Use tryPromise to properly convert rejections into Effect failures
-      const result = yield* Effect.tryPromise({
-        try: runHandler,
-        catch: (error) =>
+      // Run the appropriate handler with user context scoped via FiberRef
+      // Each handler returns a different result type, so we type as unknown
+      if (isGeneratePodcastJob(job)) {
+        yield* withCurrentUser(user)(handleGeneratePodcast(job));
+      } else if (isGenerateScriptJob(job)) {
+        yield* withCurrentUser(user)(handleGenerateScript(job));
+      } else if (isGenerateAudioJob(job)) {
+        yield* withCurrentUser(user)(handleGenerateAudio(job));
+      } else {
+        yield* Effect.fail(
           new JobProcessingError({
             jobId: job.id,
-            message: error instanceof Error ? error.message : String(error),
-            cause: error,
+            message: `Unknown job type: ${job.type}`,
           }),
-      }).pipe(
-        // Always clean up the job runtime, whether success or failure
-        Effect.ensuring(Effect.promise(() => jobRuntime.dispose())),
-      );
+        );
+      }
 
       yield* Effect.logInfo(`Job ${job.id} completed`);
-      return result;
-    }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
+    }).pipe(
+      // Catch any unexpected errors and wrap as JobProcessingError
+      Effect.catchAll((error) =>
+        Effect.fail(
+          error instanceof JobProcessingError
+            ? error
+            : new JobProcessingError({
+                jobId: job.id,
+                message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+                cause: error,
+              }),
+        ),
+      ),
+      Effect.annotateLogs('worker', 'PodcastWorker'),
+    );
 
   // Job types this worker handles
   const JOB_TYPES: JobType[] = [
@@ -329,11 +277,11 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   const processJobById = async (jobId: string) => {
     const effect = Effect.gen(function* () {
       const queue = yield* Queue;
-      const job = yield* queue.getJob(jobId);
+      // Cast to JobId - the queue.getJob will validate and fail if invalid
+      const job = yield* queue.getJob(jobId as import('@repo/db/schema').JobId);
       return yield* processJob(job as Job<WorkerPayload>);
     });
 
-    // Use the worker runtime which has queue access
     return runtime.runPromise(effect);
   };
 
