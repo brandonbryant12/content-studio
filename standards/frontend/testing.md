@@ -1,11 +1,35 @@
 # Testing
 
-This document defines integration testing patterns with MSW for Content Studio.
+This document defines testing patterns for Content Studio frontend.
 
 ## Overview
 
-Frontend tests are **integration-first**, testing features from the user's perspective. We use:
+We use two types of tests:
 
+| Type | Tools | Speed | Use Case |
+|------|-------|-------|----------|
+| **Component** | Vitest + RTL + MSW | Fast (~seconds) | Isolated component logic, hooks, user interactions |
+| **E2E** | Playwright | Slow (~minutes) | Full user flows, auth, real API integration |
+
+### When to Use Each
+
+**Use Component Tests when:**
+- Testing a single component's behavior
+- Testing hooks in isolation
+- Testing form validation
+- Testing loading/error states
+- You need fast feedback during development
+
+**Use E2E Tests when:**
+- Testing complete user flows (login → create → edit → delete)
+- Testing auth and protected routes
+- Testing real API integration
+- Testing navigation between pages
+- Verifying critical paths work end-to-end
+
+## Component Testing
+
+Component tests use:
 - **Vitest** - Test runner
 - **React Testing Library** - Component testing
 - **MSW (Mock Service Worker)** - API mocking
