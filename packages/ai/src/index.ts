@@ -1,12 +1,16 @@
 import { Layer } from 'effect';
 
-// Re-export AI errors from centralized error catalog
+// Re-export AI errors from package errors
 export {
   LLMError,
   LLMRateLimitError,
   TTSError,
   TTSQuotaExceededError,
-} from '@repo/db/errors';
+  VoiceNotFoundError,
+  AudioError,
+  AudioProcessingError,
+  type AIError,
+} from './errors';
 
 // LLM
 export {
@@ -44,8 +48,7 @@ export {
   DEFAULT_PREVIEW_TEXT,
   GoogleTTSLive,
   type GoogleTTSConfig,
-  // Use Cases - Error types are inferred by Effect
-  VoiceNotFoundError,
+  // Use Cases
   listVoices,
   previewVoice,
   type ListVoicesInput,

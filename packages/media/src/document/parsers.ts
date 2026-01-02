@@ -2,7 +2,7 @@ import {
   DocumentParseError,
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
-} from '@repo/db/errors';
+} from '../errors';
 import { Effect } from 'effect';
 import type { DocumentSource } from '@repo/db/schema';
 

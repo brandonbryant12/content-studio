@@ -14,7 +14,7 @@ import {
   type DocumentId,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound, DocumentNotFound } from '@repo/db/errors';
+import { PodcastNotFound, DocumentNotFound } from '../../errors';
 import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================

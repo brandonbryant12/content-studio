@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from 'effect';
 import { document, type Document, type DocumentId } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { DocumentNotFound } from '@repo/db/errors';
+import { DocumentNotFound } from '../../errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 import type {
   InsertDocumentInput,

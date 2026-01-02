@@ -9,6 +9,82 @@ Errors in this codebase use a **protocol-based** approach:
 2. A generic handler reads these properties automatically
 3. No boilerplate error mapping in handlers
 
+## Error Location
+
+Errors are defined in the package that owns the domain. Each package has an `errors.ts` file.
+
+### Location Rules
+
+| Error Type | Location | Examples |
+|------------|----------|----------|
+| Base/infrastructure errors | `@repo/db/src/errors.ts` | `DbError`, `ForbiddenError`, `ValidationError` |
+| Document/Podcast domain | `@repo/media/src/errors.ts` | `DocumentNotFound`, `PodcastNotFound` |
+| AI/LLM/TTS services | `@repo/ai/src/errors.ts` | `LLMError`, `TTSError` |
+| Storage operations | `@repo/storage/src/errors.ts` | `StorageError`, `StorageNotFoundError` |
+| Queue/job operations | `@repo/queue/src/errors.ts` | `QueueError`, `JobNotFoundError` |
+| Auth/policy | `@repo/auth/src/errors.ts` | `PolicyError` |
+
+### Base Errors (`@repo/db`)
+
+Only infrastructure-level errors that are truly shared:
+
+```typescript
+// @repo/db/src/errors.ts - ONLY these errors
+NotFoundError      // Generic fallback (prefer domain-specific)
+ForbiddenError     // Authorization failure
+UnauthorizedError  // Authentication required
+ValidationError    // Input validation
+DbError            // Database operation failure
+ConstraintViolationError
+DeadlockError
+ConnectionError
+ExternalServiceError
+```
+
+### Domain Errors (Package-Specific)
+
+Each package defines its own domain errors:
+
+```typescript
+// @repo/media/src/errors.ts
+export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
+  'DocumentNotFound',
+  { id: Schema.String, message: Schema.optional(Schema.String) },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'DOCUMENT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: DocumentNotFound) =>
+    e.message ?? `Document ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+}
+
+export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()(
+  'PodcastNotFound',
+  { id: Schema.String, message: Schema.optional(Schema.String) },
+) { /* ... */ }
+
+// Export union for the package
+export type MediaError =
+  | DocumentNotFound
+  | DocumentTooLargeError
+  | PodcastNotFound
+  | ScriptNotFound;
+```
+
+### Importing Errors
+
+Import from the owning package:
+
+```typescript
+// CORRECT - import from owning package
+import { DocumentNotFound, PodcastNotFound } from '@repo/media/errors';
+import { LLMError, TTSError } from '@repo/ai/errors';
+import { DbError, ForbiddenError } from '@repo/db/errors';
+
+// WRONG - all errors from db
+import { DocumentNotFound, LLMError } from '@repo/db/errors';
+```
+
 ## Error Definition
 
 Every error extends `Schema.TaggedError` with HTTP protocol properties.
@@ -31,11 +107,11 @@ Every error extends `Schema.TaggedError` with HTTP protocol properties.
 ### Standard Template
 
 ```typescript
-// packages/db/src/errors.ts
+// packages/{package}/src/errors.ts
 import { Schema } from 'effect';
 
-export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
-  'DocumentNotFound',
+export class EntityNotFound extends Schema.TaggedError<EntityNotFound>()(
+  'EntityNotFound',
   {
     id: Schema.String,
     message: Schema.optional(Schema.String)
@@ -43,14 +119,14 @@ export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
 ) {
   // HTTP Protocol - co-located with error definition
   static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'DOCUMENT_NOT_FOUND' as const;
-  static readonly httpMessage = (e: DocumentNotFound) =>
-    e.message ?? `Document ${e.id} not found`;
+  static readonly httpCode = 'ENTITY_NOT_FOUND' as const;
+  static readonly httpMessage = (e: EntityNotFound) =>
+    e.message ?? `Entity ${e.id} not found`;
   static readonly logLevel = 'silent' as const;
 
   // Optional: extract data for response body
-  static getData(e: DocumentNotFound) {
-    return { documentId: e.id };
+  static getData(e: EntityNotFound) {
+    return { entityId: e.id };
   }
 }
 ```

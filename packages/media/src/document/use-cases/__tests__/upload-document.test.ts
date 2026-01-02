@@ -3,7 +3,7 @@ import { Effect, Layer } from 'effect';
 import { Storage, StorageUploadError } from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Document, DocumentId } from '@repo/db/schema';
-import { DocumentParseError, UnsupportedDocumentFormat } from '@repo/db/errors';
+import { DocumentParseError, UnsupportedDocumentFormat } from '../../../errors';
 import {
   createTestUser,
   createTestDocument,

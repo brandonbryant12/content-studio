@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { Storage, type StorageService } from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
-import { DocumentNotFound, ForbiddenError } from '@repo/db/errors';
+import { DocumentNotFound } from '../../../errors';
+import { ForbiddenError } from '@repo/db/errors';
 import type { Document } from '@repo/db/schema';
 import {
   createTestUser,

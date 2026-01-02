@@ -9,7 +9,8 @@ import {
 } from '@repo/testing';
 import { Storage, type StorageService, StorageError } from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
-import { DocumentNotFound, ForbiddenError } from '@repo/db/errors';
+import { DocumentNotFound } from '../../../errors';
+import { ForbiddenError } from '@repo/db/errors';
 import type { Document } from '@repo/db/schema';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { deleteDocument } from '../delete-document';

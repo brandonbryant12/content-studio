@@ -1,6 +1,33 @@
-// Re-export auth-related errors from centralized error catalog
-export {
-  UnauthorizedError,
-  ForbiddenError,
-  PolicyError,
-} from '@repo/db/errors';
+import { Schema } from 'effect';
+
+// Re-export base auth errors from @repo/db (shared across packages)
+export { UnauthorizedError, ForbiddenError } from '@repo/db/errors';
+
+// =============================================================================
+// Auth-Specific Errors
+// =============================================================================
+
+/**
+ * Policy service error (e.g., failed to fetch permissions).
+ */
+export class PolicyError extends Schema.TaggedError<PolicyError>()(
+  'PolicyError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Authorization check failed';
+  static readonly logLevel = 'error-with-stack' as const;
+}
+
+// =============================================================================
+// Error Union Types
+// =============================================================================
+
+/**
+ * All auth package errors.
+ */
+export type AuthError = PolicyError;

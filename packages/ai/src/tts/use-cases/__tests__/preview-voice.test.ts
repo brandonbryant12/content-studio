@@ -1,6 +1,6 @@
 import { Effect, Layer, Exit } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { TTSError, TTSQuotaExceededError } from '@repo/db/errors';
+import { TTSError, TTSQuotaExceededError, VoiceNotFoundError } from '../../../errors';
 import {
   TTS,
   type TTSService,
@@ -8,7 +8,6 @@ import {
   type GeminiVoiceId,
 } from '../../index';
 import { previewVoice } from '../preview-voice';
-import { VoiceNotFoundError } from '../errors';
 
 // =============================================================================
 // Mock TTS Service

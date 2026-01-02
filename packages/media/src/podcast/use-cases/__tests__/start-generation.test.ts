@@ -8,7 +8,7 @@ import {
 } from '@repo/testing';
 import type { Podcast, PodcastScript, JobId, JobStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { PodcastNotFound } from '@repo/db/errors';
+import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import {
   PodcastRepo,

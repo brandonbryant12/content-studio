@@ -4,7 +4,7 @@ import {
   type DocumentId,
 } from '@repo/db/schema';
 import { withDb } from '@repo/db/effect';
-import { DocumentNotFound } from '@repo/db/errors';
+import { DocumentNotFound } from '../errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 import { Effect } from 'effect';
 

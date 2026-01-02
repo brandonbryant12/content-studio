@@ -1,4 +1,4 @@
-import { TTSError, TTSQuotaExceededError } from '@repo/db/errors';
+import { TTSError, TTSQuotaExceededError } from '../../errors';
 import { Effect, Layer } from 'effect';
 import {
   TTS,

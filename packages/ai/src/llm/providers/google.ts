@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { LLMError, LLMRateLimitError } from '@repo/db/errors';
+import { LLMError, LLMRateLimitError } from '../../errors';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
 import {

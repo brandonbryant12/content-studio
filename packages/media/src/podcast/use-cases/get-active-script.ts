@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import { ScriptNotFound } from '@repo/db/errors';
+import { ScriptNotFound } from '../../errors';
 import { ScriptVersionRepo } from '../repos/script-version-repo';
 
 // =============================================================================

@@ -10,7 +10,7 @@ import {
 } from '@repo/testing';
 import type { Podcast, PodcastScript, Document, CreatePodcast, DocumentId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { DocumentNotFound } from '@repo/db/errors';
+import { DocumentNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,

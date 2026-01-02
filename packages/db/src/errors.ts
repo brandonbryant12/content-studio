@@ -1,5 +1,4 @@
 import { Schema } from 'effect';
-import type { HttpErrorProtocol } from './error-protocol';
 
 // =============================================================================
 // Base HTTP Errors
@@ -79,6 +78,10 @@ export class ValidationError extends Schema.TaggedError<ValidationError>()(
   }
 }
 
+// =============================================================================
+// Database Errors
+// =============================================================================
+
 /**
  * Database operation failure.
  */
@@ -148,6 +151,10 @@ export class ConnectionError extends Schema.TaggedError<ConnectionError>()(
   static readonly logLevel = 'error-with-stack' as const;
 }
 
+// =============================================================================
+// External Service Errors
+// =============================================================================
+
 /**
  * External service failure (generic).
  */
@@ -170,475 +177,19 @@ export class ExternalServiceError extends Schema.TaggedError<ExternalServiceErro
 }
 
 // =============================================================================
-// Domain: Auth Policy
-// =============================================================================
-
-/**
- * Policy service error (e.g., failed to fetch permissions).
- */
-export class PolicyError extends Schema.TaggedError<PolicyError>()(
-  'PolicyError',
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Authorization check failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-// =============================================================================
-// Domain: Documents
-// =============================================================================
-
-/**
- * Document not found.
- */
-export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
-  'DocumentNotFound',
-  {
-    id: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'DOCUMENT_NOT_FOUND' as const;
-  static readonly httpMessage = (e: DocumentNotFound) =>
-    e.message ?? `Document ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: DocumentNotFound) {
-    return { documentId: e.id };
-  }
-}
-
-/**
- * Document operation failure.
- */
-export class DocumentError extends Schema.TaggedError<DocumentError>()(
-  'DocumentError',
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Document operation failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-/**
- * Document file size exceeds limit.
- */
-export class DocumentTooLargeError extends Schema.TaggedError<DocumentTooLargeError>()(
-  'DocumentTooLargeError',
-  {
-    fileName: Schema.String,
-    fileSize: Schema.Number,
-    maxSize: Schema.Number,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 413 as const;
-  static readonly httpCode = 'DOCUMENT_TOO_LARGE' as const;
-  static readonly httpMessage = (e: DocumentTooLargeError) =>
-    e.message ?? `File ${e.fileName} exceeds maximum size`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: DocumentTooLargeError) {
-    return { fileName: e.fileName, fileSize: e.fileSize, maxSize: e.maxSize };
-  }
-}
-
-/**
- * Document format not supported.
- */
-export class UnsupportedDocumentFormat extends Schema.TaggedError<UnsupportedDocumentFormat>()(
-  'UnsupportedDocumentFormat',
-  {
-    fileName: Schema.String,
-    mimeType: Schema.String,
-    supportedFormats: Schema.Array(Schema.String),
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 415 as const;
-  static readonly httpCode = 'UNSUPPORTED_FORMAT' as const;
-  static readonly httpMessage = (e: UnsupportedDocumentFormat) =>
-    e.message ?? `Format ${e.mimeType} is not supported`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: UnsupportedDocumentFormat) {
-    return {
-      fileName: e.fileName,
-      mimeType: e.mimeType,
-      supportedFormats: [...e.supportedFormats],
-    };
-  }
-}
-
-/**
- * Document parsing failure.
- */
-export class DocumentParseError extends Schema.TaggedError<DocumentParseError>()(
-  'DocumentParseError',
-  {
-    fileName: Schema.String,
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 422 as const;
-  static readonly httpCode = 'DOCUMENT_PARSE_ERROR' as const;
-  static readonly httpMessage = (e: DocumentParseError) => e.message;
-  static readonly logLevel = 'warn' as const;
-  static getData(e: DocumentParseError) {
-    return { fileName: e.fileName };
-  }
-}
-
-// =============================================================================
-// Domain: Podcasts
-// =============================================================================
-
-/**
- * Podcast not found.
- */
-export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()(
-  'PodcastNotFound',
-  {
-    id: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'PODCAST_NOT_FOUND' as const;
-  static readonly httpMessage = (e: PodcastNotFound) =>
-    e.message ?? `Podcast ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: PodcastNotFound) {
-    return { podcastId: e.id };
-  }
-}
-
-/**
- * Podcast script not found.
- */
-export class ScriptNotFound extends Schema.TaggedError<ScriptNotFound>()(
-  'ScriptNotFound',
-  {
-    podcastId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'SCRIPT_NOT_FOUND' as const;
-  static readonly httpMessage = (e: ScriptNotFound) =>
-    e.message ?? `Script for podcast ${e.podcastId} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: ScriptNotFound) {
-    return { podcastId: e.podcastId };
-  }
-}
-
-/**
- * Podcast operation failure.
- */
-export class PodcastError extends Schema.TaggedError<PodcastError>()(
-  'PodcastError',
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Podcast operation failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-// =============================================================================
-// Domain: Projects / Media
-// =============================================================================
-
-/**
- * Project not found.
- */
-export class ProjectNotFound extends Schema.TaggedError<ProjectNotFound>()(
-  'ProjectNotFound',
-  {
-    id: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'PROJECT_NOT_FOUND' as const;
-  static readonly httpMessage = (e: ProjectNotFound) =>
-    e.message ?? `Project ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: ProjectNotFound) {
-    return { projectId: e.id };
-  }
-}
-
-/**
- * Media item not found or inaccessible.
- * Used when resolving polymorphic media references.
- */
-export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
-  'MediaNotFound',
-  {
-    mediaType: Schema.String,
-    mediaId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'MEDIA_NOT_FOUND' as const;
-  static readonly httpMessage = (e: MediaNotFound) =>
-    e.message ?? `${e.mediaType} ${e.mediaId} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: MediaNotFound) {
-    return { mediaType: e.mediaType, mediaId: e.mediaId };
-  }
-}
-
-// =============================================================================
-// Domain: LLM
-// =============================================================================
-
-/**
- * LLM service failure.
- */
-export class LLMError extends Schema.TaggedError<LLMError>()('LLMError', {
-  message: Schema.String,
-  model: Schema.optional(Schema.String),
-  cause: Schema.optional(Schema.Unknown),
-}) {
-  static readonly httpStatus = 502 as const;
-  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
-  static readonly httpMessage = 'AI service unavailable';
-  static readonly logLevel = 'error' as const;
-  static getData(e: LLMError) {
-    return e.model ? { model: e.model } : {};
-  }
-}
-
-/**
- * LLM rate limit exceeded.
- */
-export class LLMRateLimitError extends Schema.TaggedError<LLMRateLimitError>()(
-  'LLMRateLimitError',
-  {
-    message: Schema.String,
-    retryAfter: Schema.optional(Schema.Number),
-  },
-) {
-  static readonly httpStatus = 429 as const;
-  static readonly httpCode = 'RATE_LIMITED' as const;
-  static readonly httpMessage = 'AI rate limit exceeded';
-  static readonly logLevel = 'warn' as const;
-  static getData(e: LLMRateLimitError) {
-    return e.retryAfter !== undefined ? { retryAfter: e.retryAfter } : {};
-  }
-}
-
-// =============================================================================
-// Domain: TTS
-// =============================================================================
-
-/**
- * TTS service failure.
- */
-export class TTSError extends Schema.TaggedError<TTSError>()('TTSError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
-  static readonly httpStatus = 502 as const;
-  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
-  static readonly httpMessage = 'Text-to-speech service unavailable';
-  static readonly logLevel = 'error' as const;
-}
-
-/**
- * TTS quota exceeded.
- */
-export class TTSQuotaExceededError extends Schema.TaggedError<TTSQuotaExceededError>()(
-  'TTSQuotaExceededError',
-  {
-    message: Schema.String,
-  },
-) {
-  static readonly httpStatus = 429 as const;
-  static readonly httpCode = 'RATE_LIMITED' as const;
-  static readonly httpMessage = 'TTS quota exceeded';
-  static readonly logLevel = 'warn' as const;
-}
-
-// =============================================================================
-// Domain: Audio
-// =============================================================================
-
-/**
- * Audio processing failure.
- */
-export class AudioError extends Schema.TaggedError<AudioError>()('AudioError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Audio processing failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-/**
- * FFmpeg/audio processing failure.
- */
-export class AudioProcessingError extends Schema.TaggedError<AudioProcessingError>()(
-  'AudioProcessingError',
-  {
-    message: Schema.String,
-    operation: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Audio processing failed';
-  static readonly logLevel = 'error-with-stack' as const;
-  static getData(e: AudioProcessingError) {
-    return e.operation ? { operation: e.operation } : {};
-  }
-}
-
-// =============================================================================
-// Domain: Storage
-// =============================================================================
-
-/**
- * Storage operation failure.
- */
-export class StorageError extends Schema.TaggedError<StorageError>()(
-  'StorageError',
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Storage operation failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-/**
- * Storage file not found.
- */
-export class StorageNotFoundError extends Schema.TaggedError<StorageNotFoundError>()(
-  'StorageNotFoundError',
-  {
-    key: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'NOT_FOUND' as const;
-  static readonly httpMessage = (e: StorageNotFoundError) =>
-    e.message ?? `File not found: ${e.key}`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: StorageNotFoundError) {
-    return { key: e.key };
-  }
-}
-
-/**
- * Storage upload failure.
- */
-export class StorageUploadError extends Schema.TaggedError<StorageUploadError>()(
-  'StorageUploadError',
-  {
-    key: Schema.String,
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'File upload failed';
-  static readonly logLevel = 'error-with-stack' as const;
-  static getData(e: StorageUploadError) {
-    return { key: e.key };
-  }
-}
-
-// =============================================================================
-// Domain: Queue
-// =============================================================================
-
-/**
- * Queue operation failure.
- */
-export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Job queue operation failed';
-  static readonly logLevel = 'error-with-stack' as const;
-}
-
-/**
- * Job not found.
- */
-export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(
-  'JobNotFoundError',
-  {
-    jobId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'JOB_NOT_FOUND' as const;
-  static readonly httpMessage = (e: JobNotFoundError) =>
-    e.message ?? `Job ${e.jobId} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: JobNotFoundError) {
-    return { jobId: e.jobId };
-  }
-}
-
-/**
- * Job processing failure.
- */
-export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()(
-  'JobProcessingError',
-  {
-    jobId: Schema.String,
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {
-  static readonly httpStatus = 500 as const;
-  static readonly httpCode = 'INTERNAL_ERROR' as const;
-  static readonly httpMessage = 'Job processing failed';
-  static readonly logLevel = 'error-with-stack' as const;
-  static getData(e: JobProcessingError) {
-    return { jobId: e.jobId };
-  }
-}
-
-// =============================================================================
 // Error Union Types
 // =============================================================================
 
 /**
- * All API errors that can be returned from services.
- * Used by handleEffect for exhaustive error handling.
+ * Base infrastructure errors.
+ * Domain-specific errors are defined in their respective packages:
+ * - @repo/media/errors: DocumentNotFound, PodcastNotFound, etc.
+ * - @repo/ai/errors: LLMError, TTSError, etc.
+ * - @repo/storage/errors: StorageError, StorageNotFoundError, etc.
+ * - @repo/queue/errors: QueueError, JobNotFoundError, etc.
+ * - @repo/auth/errors: PolicyError
  */
-export type ApiError =
-  // Base errors
+export type BaseError =
   | NotFoundError
   | ForbiddenError
   | UnauthorizedError
@@ -647,41 +198,9 @@ export type ApiError =
   | ConstraintViolationError
   | DeadlockError
   | ConnectionError
-  | ExternalServiceError
-  // Auth Policy
-  | PolicyError
-  // Documents
-  | DocumentNotFound
-  | DocumentError
-  | DocumentTooLargeError
-  | UnsupportedDocumentFormat
-  | DocumentParseError
-  // Podcasts
-  | PodcastNotFound
-  | ScriptNotFound
-  | PodcastError
-  // Projects / Media
-  | ProjectNotFound
-  | MediaNotFound
-  // LLM
-  | LLMError
-  | LLMRateLimitError
-  // TTS
-  | TTSError
-  | TTSQuotaExceededError
-  // Audio
-  | AudioError
-  | AudioProcessingError
-  // Storage
-  | StorageError
-  | StorageNotFoundError
-  | StorageUploadError
-  // Queue
-  | QueueError
-  | JobNotFoundError
-  | JobProcessingError;
+  | ExternalServiceError;
 
 /**
  * Error tags for discriminated union matching.
  */
-export type ApiErrorTag = ApiError['_tag'];
+export type BaseErrorTag = BaseError['_tag'];

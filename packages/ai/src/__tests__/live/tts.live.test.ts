@@ -13,7 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { Effect } from 'effect';
 import { GoogleTTSLive, TTS } from '../../tts';
 import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
-import { TTSError, TTSQuotaExceededError } from '@repo/db/errors';
+import { TTSError, TTSQuotaExceededError } from '../../errors';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import { Effect, Schema } from 'effect';
 import { GoogleLive, LLM } from '../../llm';
-import { LLMError, LLMRateLimitError } from '@repo/db/errors';
+import { LLMError, LLMRateLimitError } from '../../errors';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

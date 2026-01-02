@@ -10,7 +10,7 @@ import {
 } from '@repo/testing';
 import type { Podcast, PodcastScript } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { ScriptNotFound } from '@repo/db/errors';
+import { ScriptNotFound } from '../../../errors';
 import {
   ScriptVersionRepo,
   type ScriptVersionRepoService,

@@ -2,7 +2,7 @@ import { Layer } from 'effect';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 
-// Re-export media errors from centralized error catalog
+// Re-export media errors from package errors
 export {
   // Document errors
   DocumentNotFound,
@@ -14,7 +14,12 @@ export {
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
-} from '@repo/db/errors';
+  // Project/Media errors
+  ProjectNotFound,
+  MediaNotFound,
+  // Error union
+  type MediaError,
+} from './errors';
 
 // Document module - Repository
 export {

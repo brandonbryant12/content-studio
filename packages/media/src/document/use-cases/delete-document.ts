@@ -2,7 +2,7 @@ import { Effect } from 'effect';
 import type { Db } from '@repo/db/effect';
 import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import { DocumentNotFound } from '@repo/db/errors';
+import { DocumentNotFound } from '../../errors';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================

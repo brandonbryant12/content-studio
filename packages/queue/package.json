@@ -6,6 +6,10 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./errors": {
+      "types": "./dist/src/errors.d.ts",
+      "default": "./src/errors.ts"
     }
   },
   "scripts": {
