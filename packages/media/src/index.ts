@@ -24,14 +24,6 @@ export {
   type ListOptions as DocumentListOptions,
 } from './document';
 
-// Document module - Service (legacy - will be deprecated)
-export {
-  Documents,
-  DocumentsLive,
-  type DocumentService,
-  type UploadDocumentInput as ServiceUploadDocumentInput,
-} from './document';
-
 // Document module - Use cases
 export {
   listDocuments,
@@ -95,7 +87,7 @@ export {
 } from './podcast';
 
 // Import for combined layer
-import { Documents, DocumentsLive, DocumentRepo, DocumentRepoLive } from './document';
+import { DocumentRepo, DocumentRepoLive } from './document';
 import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive } from './podcast';
 
 // =============================================================================
@@ -106,14 +98,13 @@ import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive 
  * All media services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
  */
-export type Media = Documents | DocumentRepo | PodcastRepo | ScriptVersionRepo;
+export type Media = DocumentRepo | PodcastRepo | ScriptVersionRepo;
 
 /**
  * Combined layer for all media services.
  *
  * Provides:
- * - Documents: Document CRUD operations (legacy service)
- * - DocumentRepo: Document repository operations (new pattern)
+ * - DocumentRepo: Document repository operations
  * - PodcastRepo: Podcast repository operations
  * - ScriptVersionRepo: Script version repository operations
  *
@@ -130,7 +121,6 @@ export type Media = Documents | DocumentRepo | PodcastRepo | ScriptVersionRepo;
  * ```
  */
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
-  DocumentsLive,
   DocumentRepoLive,
   PodcastRepoLive,
   ScriptVersionRepoLive,

@@ -1,7 +1,7 @@
 // Errors
 export * from './errors';
 
-// Repository (new Context.Tag pattern)
+// Repository (Context.Tag pattern)
 export {
   DocumentRepo,
   DocumentRepoLive,
@@ -9,18 +9,8 @@ export {
   type ListOptions,
 } from './repos';
 
-// Service interface (legacy - will be deprecated)
-export {
-  Documents,
-  type DocumentService,
-  type UploadDocumentInput,
-} from './service';
-
 // Use cases
 export * from './use-cases';
-
-// Live implementation
-export { DocumentsLive } from './live';
 
 // Parsers (for direct use if needed)
 export {

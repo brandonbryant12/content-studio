@@ -26,10 +26,12 @@ export { createStorageLayer } from './storage-factory';
 
 // Export effect handler utilities
 export {
-  handleEffect,
+  handleEffectWithProtocol,
+  handleTaggedError,
   handleORPCError,
-  createErrorHandlers,
-  type ErrorMapper,
+  type ErrorFactory,
+  type HandleEffectOptions,
+  type CustomErrorHandler,
   type EffectErrors,
   type EffectSuccess,
 } from './effect-handler';

@@ -76,26 +76,28 @@ Each entity has three serializer variants:
 - `serializeXxxsEffect` - Batch with parallel execution
 - `serializeXxx` - Sync for map callbacks
 
-#### 5. Handler Pattern
+#### 5. Handler Pattern (Protocol-Based)
 
-API handlers follow this structure:
+API handlers use `handleEffectWithProtocol()` which automatically maps errors based on HTTP protocol properties defined on error classes:
 
 ```typescript
-return handleEffect(
-  context.runtime,      // Shared runtime
-  context.user,         // User (or null for public routes)
-  Effect.gen(function* () {
-    // Business logic - no Effect.provide needed
-    const doc = yield* documents.get(id);
-    return yield* serializeDocumentEffect(doc);
-  }),
-  {
-    // Error mapping - return ORPCError, don't throw
-    DocumentNotFound: () => new ORPCError('NOT_FOUND'),
-    DatabaseError: () => new ORPCError('INTERNAL_SERVER_ERROR'),
-  },
+return handleEffectWithProtocol(
+  context.runtime,
+  context.user,
+  getDocument({ id: input.id }).pipe(
+    Effect.flatMap(serializeDocumentEffect)
+  ),
+  errors,
+  { span: 'api.documents.get', attributes: { 'document.id': input.id } },
 );
 ```
+
+**Key points:**
+- Call ONE use case per handler (no direct repo access from handlers)
+- Use Effect-based serializers via `Effect.flatMap()` or `Effect.map()`
+- Always provide tracing span and attributes
+- Errors are handled automatically via HTTP protocol on error classes
+- Custom error overrides are RARE - only for business logic (e.g., upsell)
 
 ### Branded ID Types
 
@@ -116,19 +118,82 @@ const job = yield* queue.getJob(jobId as JobId);
 
 ### Error Handling
 
-Use tagged errors extending `Data.TaggedError`:
+#### Error Definition with HTTP Protocol
+
+Errors extend `Schema.TaggedError` and include static HTTP protocol properties:
 
 ```typescript
-export class DocumentNotFound extends Data.TaggedError('DocumentNotFound')<{
-  documentId: string;
-}> {}
+export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
+  'DocumentNotFound',
+  { id: Schema.String, message: Schema.optional(Schema.String) },
+) {
+  // HTTP Protocol - co-located with error definition
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'DOCUMENT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: DocumentNotFound) =>
+    e.message || `Document ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+
+  // Optional: extract data for response body
+  static getData(e: DocumentNotFound) {
+    return { documentId: e.id };
+  }
+}
 ```
+
+**Required properties:**
+- `httpStatus` - HTTP status code (404, 500, etc.)
+- `httpCode` - Error code for clients (DOCUMENT_NOT_FOUND, etc.)
+- `httpMessage` - Message string or function
+- `logLevel` - 'silent' | 'warn' | 'error' | 'error-with-stack'
+
+**Optional:**
+- `getData()` - Extract structured data for response body
 
 Error channels must be explicit in Effect types:
 
 ```typescript
 Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>
 ```
+
+#### Use Case Pattern
+
+Use cases follow this structure:
+
+```typescript
+// packages/media/src/{domain}/use-cases/{action}.ts
+
+export interface ActionInput {
+  id: string;
+}
+
+export interface ActionResult {
+  // Raw domain data, NOT serialized
+}
+
+export type ActionError =
+  | DomainNotFound
+  | DatabaseError;
+
+export const actionName = (
+  input: ActionInput
+): Effect.Effect<ActionResult, ActionError, Dependencies> =>
+  Effect.gen(function* () {
+    const repo = yield* DomainRepo;
+    const result = yield* repo.findById(input.id);
+    return result;
+  }).pipe(
+    Effect.withSpan('useCase.action', {
+      attributes: { 'domain.id': input.id }
+    })
+  );
+```
+
+**Rules:**
+1. One file per use case
+2. Explicit error type union
+3. Return raw domain data (serialization happens in handler)
+4. Always add tracing span
 
 ## Package Structure
 
@@ -201,9 +266,11 @@ const doc = DocumentFactory.build({ title: 'Test Doc' });
 1. **Don't create ManagedRuntime per request** - use shared runtime
 2. **Don't use CurrentUserLive layer** - use `withCurrentUser` FiberRef
 3. **Don't include CurrentUser in service deps** - read from FiberRef
-4. **Don't throw in error handlers** - return ORPCError
-5. **Don't use plain serializer functions in handlers** - use Effect variants for tracing
+4. **Don't use plain serializer functions in handlers** - use Effect variants for tracing
+5. **Don't access repos directly from handlers** - call use cases instead
+6. **Don't use legacy `handleEffect()` with manual error mapping** - use `handleEffectWithProtocol()`
 
 ## Documentation
 
 - `docs/retrospective.md` - Detailed explanation of patterns with before/after examples
+- `IMPLEMENTATION_PLAN.md` - Router pattern standardization plan with detailed patterns

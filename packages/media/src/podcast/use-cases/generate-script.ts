@@ -16,7 +16,7 @@ import {
 } from '@repo/db/errors';
 import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
-import { Documents } from '../../document';
+import { DocumentRepo, getDocumentContent } from '../../document';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
@@ -96,12 +96,11 @@ export const generateScript = (
 ): Effect.Effect<
   GenerateScriptResult,
   GenerateScriptError,
-  PodcastRepo | ScriptVersionRepo | Documents | LLM | Storage | Db
+  PodcastRepo | ScriptVersionRepo | DocumentRepo | LLM | Storage | Db
 > =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;
-    const documents = yield* Documents;
     const llm = yield* LLM;
 
     // 1. Load podcast with documents
@@ -126,9 +125,11 @@ export const generateScript = (
     // 3. Set status to generating_script
     yield* scriptVersionRepo.updateStatus(version.id, 'generating_script');
 
-    // 4. Fetch document content
+    // 4. Fetch document content using the use case
     const documentContents = yield* Effect.all(
-      podcast.documents.map((doc) => documents.getContent(doc.id)),
+      podcast.documents.map((doc) =>
+        getDocumentContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
+      ),
     );
     const combinedContent = documentContents.join('\n\n---\n\n');
 

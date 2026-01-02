@@ -821,21 +821,37 @@ packages/api/src/server/effect-handler.ts:
    - Validate: `pnpm --filter @repo/api test` ✅
    - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
-### Sprint 4: Documentation & Cleanup
+### Sprint 4: Documentation & Cleanup ✅ COMPLETED
 
 > ⚠️ **Cleanup Reminder:** By this point, ALL routers should be using `handleEffectWithProtocol()`. Legacy code should be dead and ready to delete.
 
-1. Update CLAUDE.md with standardized patterns (including error handling)
-2. Remove deprecated Documents service files
-3. **Delete legacy error handling code** from `effect-handler.ts`:
-   - Remove `createErrorHandlers()` factory function entirely
-   - Remove `getErrorProp()` helper (should have no usages)
-   - Remove `logAndThrowInternal()` helper
-   - Remove `LegacyErrorFactoryConfig` interface
-   - Keep only: `handleEffectWithProtocol()`, `handleTaggedError()`, `handleORPCError()`
-4. Update Media type export (remove Documents, add DocumentRepo)
-5. Verify no imports of removed functions across codebase
-   - **Final validation**: `pnpm typecheck && pnpm test && pnpm build`
+1. ✅ Update CLAUDE.md with standardized patterns (including error handling)
+   - Added protocol-based handler pattern documentation
+   - Added use case pattern documentation
+   - Added error handling with HTTP protocol documentation
+   - Updated "What NOT to Do" section with new rules
+2. ✅ Update `generate-script.ts` to use `getDocumentContent` use case
+   - Replaced `Documents` service dependency with `DocumentRepo`
+   - Changed from `documents.getContent()` to `getDocumentContent()` use case
+3. ✅ Remove deprecated Documents service files
+   - Deleted `packages/media/src/document/service.ts`
+   - Deleted `packages/media/src/document/live.ts`
+   - Updated `packages/media/src/document/index.ts` to remove legacy exports
+4. ✅ **Delete legacy error handling code** from `effect-handler.ts`:
+   - Removed `createErrorHandlers()` factory function entirely
+   - Removed `getErrorProp()` helper
+   - Removed `logAndThrowInternal()` helper
+   - Removed `LegacyErrorFactoryConfig` interface
+   - Removed `ErrorHandler` type
+   - Removed legacy `handleEffect()` (replaced by `handleEffectWithProtocol()`)
+   - Removed `ErrorMapper` type
+   - Kept: `handleEffectWithProtocol()`, `handleTaggedError()`, `handleORPCError()`, `ErrorFactory`, `HandleEffectOptions`
+5. ✅ Update Media type export (remove Documents, add DocumentRepo)
+   - Updated `Media` type to exclude `Documents`
+   - Updated `MediaLive` layer to exclude `DocumentsLive`
+   - Updated API index to export new handlers instead of legacy ones
+6. ✅ Verify no imports of removed functions across codebase
+   - **Final validation**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
 ### Sprint 5: Frontend Typed Error Handling
 
