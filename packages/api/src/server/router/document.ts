@@ -1,24 +1,39 @@
-import { serializeDocument } from '@repo/db/schema';
-import { Documents } from '@repo/media';
+import {
+  serializeDocumentEffect,
+  serializeDocumentsEffect,
+  type Document,
+} from '@repo/db/schema';
+import {
+  listDocuments,
+  getDocument,
+  getDocumentContent,
+  createDocument,
+  uploadDocument,
+  updateDocument,
+  deleteDocument,
+} from '@repo/media';
 import { Effect } from 'effect';
-import { createErrorHandlers, handleEffect, getErrorProp } from '../effect-handler';
+import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const documentRouter = {
   list: protectedProcedure.documents.list.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          const result = yield* documents.list(input);
-          return result.map(serializeDocument);
-        }),
+        listDocuments(input).pipe(
+          Effect.flatMap((result) =>
+            serializeDocumentsEffect(result.documents as readonly Document[]),
+          ),
+        ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
+          span: 'api.documents.list',
+          attributes: {
+            'pagination.limit': input.limit ?? 50,
+            'pagination.offset': input.offset ?? 0,
+          },
         },
       );
     },
@@ -26,26 +41,16 @@ const documentRouter = {
 
   get: protectedProcedure.documents.get.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          const result = yield* documents.findById(input.id);
-          return serializeDocument(result);
-        }),
+        getDocument({ id: input.id }).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+        ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          DocumentNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: message ?? `Document ${id} not found`,
-              data: { documentId: id },
-            });
-          },
+          span: 'api.documents.get',
+          attributes: { 'document.id': input.id },
         },
       );
     },
@@ -53,35 +58,14 @@ const documentRouter = {
 
   getContent: protectedProcedure.documents.getContent.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          const content = yield* documents.getContent(input.id);
-          return { content };
-        }),
+        getDocumentContent({ id: input.id }),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.storage,
-          DocumentNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: message ?? `Document ${id} not found`,
-              data: { documentId: id },
-            });
-          },
-          DocumentParseError: (e: unknown) => {
-            const message = getErrorProp(e, 'message', 'Failed to parse document content');
-            const fileName = getErrorProp(e, 'fileName', 'unknown');
-            throw errors.DOCUMENT_PARSE_ERROR({
-              message,
-              data: { fileName },
-            });
-          },
+          span: 'api.documents.getContent',
+          attributes: { 'document.id': input.id },
         },
       );
     },
@@ -89,19 +73,14 @@ const documentRouter = {
 
   create: protectedProcedure.documents.create.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          const result = yield* documents.create(input);
-          return serializeDocument(result);
-        }),
+        createDocument(input).pipe(Effect.flatMap(serializeDocumentEffect)),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.storage,
+          span: 'api.documents.create',
+          attributes: { 'document.title': input.title },
         },
       );
     },
@@ -109,57 +88,25 @@ const documentRouter = {
 
   upload: protectedProcedure.documents.upload.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      // Decode base64 to Buffer
+      const data = Buffer.from(input.data, 'base64');
+
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-
-          // Decode base64 to Buffer
-          const data = Buffer.from(input.data, 'base64');
-
-          const result = yield* documents.upload({
-            fileName: input.fileName,
-            mimeType: input.mimeType,
-            data,
-            title: input.title,
-            metadata: input.metadata,
-          });
-
-          return serializeDocument(result);
-        }),
+        uploadDocument({
+          fileName: input.fileName,
+          mimeType: input.mimeType,
+          data,
+          title: input.title,
+          metadata: input.metadata,
+        }).pipe(Effect.flatMap(serializeDocumentEffect)),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.storage,
-          DocumentTooLargeError: (e: unknown) => {
-            const message = getErrorProp(e, 'message', 'File too large');
-            const fileName = getErrorProp(e, 'fileName', 'unknown');
-            const fileSize = getErrorProp(e, 'fileSize', 0);
-            const maxSize = getErrorProp(e, 'maxSize', 0);
-            throw errors.DOCUMENT_TOO_LARGE({
-              message,
-              data: { fileName, fileSize, maxSize },
-            });
-          },
-          UnsupportedDocumentFormat: (e: unknown) => {
-            const message = getErrorProp(e, 'message', 'Unsupported format');
-            const fileName = getErrorProp(e, 'fileName', 'unknown');
-            const mimeType = getErrorProp(e, 'mimeType', 'unknown');
-            const supportedFormats = getErrorProp<readonly string[]>(e, 'supportedFormats', []);
-            throw errors.UNSUPPORTED_FORMAT({
-              message,
-              data: { fileName, mimeType, supportedFormats: [...supportedFormats] },
-            });
-          },
-          DocumentParseError: (e: unknown) => {
-            const message = getErrorProp(e, 'message', 'Failed to parse document');
-            const fileName = getErrorProp(e, 'fileName', 'unknown');
-            throw errors.DOCUMENT_PARSE_ERROR({
-              message,
-              data: { fileName },
-            });
+          span: 'api.documents.upload',
+          attributes: {
+            'file.name': input.fileName,
+            'file.size': data.length,
           },
         },
       );
@@ -168,29 +115,18 @@ const documentRouter = {
 
   update: protectedProcedure.documents.update.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
       const { id, ...data } = input;
 
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          const result = yield* documents.update(id, data);
-          return serializeDocument(result);
-        }),
+        updateDocument({ id, ...data }).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+        ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.storage,
-          DocumentNotFound: (e: unknown) => {
-            const docId = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: message ?? `Document ${docId} not found`,
-              data: { documentId: docId },
-            });
-          },
+          span: 'api.documents.update',
+          attributes: { 'document.id': id },
         },
       );
     },
@@ -198,27 +134,14 @@ const documentRouter = {
 
   delete: protectedProcedure.documents.delete.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const documents = yield* Documents;
-          yield* documents.delete(input.id);
-          return {};
-        }),
+        deleteDocument({ id: input.id }).pipe(Effect.map(() => ({}))),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.storage,
-          DocumentNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: message ?? `Document ${id} not found`,
-              data: { documentId: id },
-            });
-          },
+          span: 'api.documents.delete',
+          attributes: { 'document.id': input.id },
         },
       );
     },

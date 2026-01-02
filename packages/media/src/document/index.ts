@@ -1,12 +1,23 @@
-// Types and errors
+// Errors
 export * from './errors';
 
-// Service interface
+// Repository (new Context.Tag pattern)
+export {
+  DocumentRepo,
+  DocumentRepoLive,
+  type DocumentRepoService,
+  type ListOptions,
+} from './repos';
+
+// Service interface (legacy - will be deprecated)
 export {
   Documents,
   type DocumentService,
   type UploadDocumentInput,
 } from './service';
+
+// Use cases
+export * from './use-cases';
 
 // Live implementation
 export { DocumentsLive } from './live';

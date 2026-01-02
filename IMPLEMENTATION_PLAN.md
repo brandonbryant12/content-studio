@@ -63,6 +63,41 @@ pnpm --filter @repo/media build
 | **Pattern** | Mixed `Effect.pipe()` vs `Effect.gen()` in same router |
 | **Testing** | No integration tests for routers exist |
 
+### Error Handling Gap (Post-Phase 0 Audit)
+
+> **Grade: 68/100** - Excellent architecture, incomplete adoption.
+
+**Infrastructure Ready (Phase 0 Complete):**
+- ✅ `HttpErrorProtocol` interface defined
+- ✅ `handleTaggedError()` generic handler implemented
+- ✅ `handleEffectWithProtocol()` ready to use
+- ✅ All 30+ errors have static HTTP metadata
+
+**Routers NOT Migrated (Current State):**
+- ❌ All routers still use deprecated `createErrorHandlers()` + `handleEffect()`
+- ❌ Manual `getErrorProp()` extraction duplicates what error classes already define
+- ❌ Document router has **zero tracing spans**
+- ❌ ~200 lines of boilerplate error mapping that protocol should eliminate
+
+**Example of Current Waste:**
+```typescript
+// document.ts:41-48 - This is redundant!
+DocumentNotFound: (e: unknown) => {
+  const id = getErrorProp(e, 'id', 'unknown');           // Already on class
+  const message = getErrorProp(e, 'message', undefined); // Already on class
+  throw errors.DOCUMENT_NOT_FOUND({
+    message: message ?? `Document ${id} not found`,      // Class has httpMessage
+    data: { documentId: id },                            // Class has getData()
+  });
+},
+```
+
+**Target State:**
+```typescript
+// Zero error mapping - protocol handles it
+return handleEffectWithProtocol(context.runtime, context.user, effect, errors, { span });
+```
+
 ### Current Files
 
 **Routers:**
@@ -83,39 +118,44 @@ pnpm --filter @repo/media build
 
 ### 1. Router Handler Pattern
 
+> ⚠️ **REMINDER:** Use `handleEffectWithProtocol()`, NOT the legacy `handleEffect()` + `createErrorHandlers()` pattern. The infrastructure is ready (Phase 0 complete) but routers haven't been migrated yet.
+
 Every handler MUST follow this structure:
 
 ```typescript
 handlerName: protectedProcedure.domain.action.handler(
   async ({ context, input, errors }) => {
-    const handlers = createErrorHandlers(errors);
-
-    return handleEffect(
+    // ✅ USE THIS - protocol handles all error mapping automatically
+    return handleEffectWithProtocol(
       context.runtime,
       context.user,
       useCaseName(input).pipe(
         Effect.flatMap(serializeResultEffect)  // Effect-based serializer
       ),
-      {
-        ...handlers.common,
-        ...handlers.database,
-        // Domain-specific handlers
-        DomainNotFound: (e) => { throw errors.DOMAIN_NOT_FOUND({ ... }); },
-      },
-      {
-        span: 'api.domain.action',
-        attributes: { 'domain.id': input.id }
-      }
+      errors,
+      { span: 'api.domain.action', attributes: { 'domain.id': input.id } },
+      // Optional: custom overrides only when truly needed
     );
   }
 )
+```
+
+**❌ DO NOT USE (Legacy Pattern):**
+```typescript
+// This is the OLD pattern - creates unnecessary boilerplate
+const handlers = createErrorHandlers(errors);
+return handleEffect(runtime, user, effect, {
+  ...handlers.common,
+  ...handlers.database,
+  DocumentNotFound: (e) => { /* redundant extraction */ },
+}, { span });
 ```
 
 **Rules:**
 1. Call ONE use case per handler (no direct repo access)
 2. Use Effect-based serializers via `Effect.flatMap()` or `Effect.map()`
 3. Always provide tracing span and attributes
-4. Spread common error handlers, add domain-specific overrides
+4. Use `handleEffectWithProtocol()` - only add custom handlers for truly special cases
 
 ### 2. Use Case Pattern
 
@@ -293,28 +333,28 @@ export const handleTaggedError = <E extends { _tag: string }>(
 };
 ```
 
-#### Handler Usage (Simplified)
+#### Handler Usage
 
 ```typescript
-// Most handlers - no error mapping needed!
+// Standard handler - protocol handles all error mapping automatically
 get: protectedProcedure.documents.get.handler(
   async ({ context, input, errors }) => {
-    return handleEffect(
+    return handleEffectWithProtocol(
       context.runtime,
       context.user,
       getDocument({ id: input.id }).pipe(
         Effect.flatMap(serializeDocumentEffect)
       ),
-      errors,  // Just pass errors factory, generic handler does the rest
+      errors,
       { span: 'api.documents.get', attributes: { 'document.id': input.id } },
     );
   },
 ),
 
-// Complex cases - override specific errors
+// Rare case - custom override for business logic (e.g., upsell)
 create: protectedProcedure.documents.create.handler(
   async ({ context, input, errors }) => {
-    return handleEffect(
+    return handleEffectWithProtocol(
       context.runtime,
       context.user,
       createDocument(input).pipe(
@@ -323,7 +363,7 @@ create: protectedProcedure.documents.create.handler(
       errors,
       { span: 'api.documents.create' },
       {
-        // Override only errors needing custom logic
+        // Override ONLY when business logic requires different response
         DocumentQuotaExceeded: (e) => {
           throw errors.PAYMENT_REQUIRED({
             message: 'Upgrade to create more documents',
@@ -339,18 +379,26 @@ create: protectedProcedure.documents.create.handler(
 **Rules:**
 1. Every error class MUST have static `httpStatus`, `httpCode`, `httpMessage`, and `logLevel`
 2. Use `getData()` for errors that need to return structured data
-3. Default to generic handler - only add custom handlers for special cases
-4. Keep error definitions and HTTP behavior co-located
+3. Use `handleEffectWithProtocol()` - NEVER use legacy `handleEffect()` + `createErrorHandlers()`
+4. Custom overrides are RARE - only for business logic (e.g., upsell, special redirects)
+5. ALWAYS include `{ span, attributes }` for tracing
 
 **Benefits:**
 - Add new error = 1 file change (error definition with static props)
-- No need to update central handler factory
-- Custom overrides still available when needed
+- Zero boilerplate error handlers in routers
+- Consistent tracing across all endpoints
 - Type-safe via protocol interface
 
 ---
 
 ## Implementation Plan
+
+> ⚠️ **FULL REFACTOR - NO BACKWARDS COMPATIBILITY REQUIRED**
+>
+> This is a clean migration. Delete legacy code immediately - do not maintain both patterns.
+> - Remove `createErrorHandlers()` usage as you migrate each router
+> - Remove `getErrorProp()` calls - protocol handles property extraction
+> - Delete deprecated files, don't deprecate-and-keep 
 
 ### Phase 0: Error Handling Infrastructure
 
@@ -527,10 +575,12 @@ export const createMockErrors = () => ({
 - [ ] No direct repository access from handlers
 
 ### Error Handling
+- [ ] All routers use `handleEffectWithProtocol()` (NOT legacy `handleEffect()`)
+- [ ] Zero `createErrorHandlers()` calls remain in codebase
+- [ ] Zero `getErrorProp()` calls remain in codebase
 - [ ] All errors have static HTTP protocol properties (`httpStatus`, `httpCode`, `httpMessage`, `logLevel`)
-- [ ] `handleEffect` uses generic handler by default
-- [ ] Custom error overrides only used when necessary
-- [ ] No need to update central handler factory when adding new errors
+- [ ] Custom error overrides only used when truly necessary (rare)
+- [ ] Legacy error handling code deleted from `effect-handler.ts`
 
 ### Test Coverage
 - [ ] Every use case has unit tests covering:
@@ -611,9 +661,20 @@ packages/media/src/document/service.ts        # Documents service → replaced b
 packages/media/src/document/live.ts           # DocumentsLive layer → replaced by DocumentRepoLive
 packages/media/src/document/repository.ts     # Rename to repos/document-repo.ts with Context.Tag
 
-# Error handling (replaced by generic handler + HTTP protocol)
+# Legacy error handling code to DELETE from effect-handler.ts:
 packages/api/src/server/effect-handler.ts:
-  - createErrorHandlers()                     # Replaced by handleTaggedError + HTTP protocol on errors
+  - createErrorHandlers()                     # DELETE - replaced by handleEffectWithProtocol
+  - getErrorProp()                            # DELETE - unsafe, protocol handles property extraction
+  - logAndThrowInternal()                     # DELETE - protocol handles logging
+  - LegacyErrorFactoryConfig interface        # DELETE - not needed
+  - ErrorHandler type                         # DELETE - not needed
+
+# KEEP in effect-handler.ts:
+  - handleEffectWithProtocol()                # Main API handler
+  - handleTaggedError()                       # Generic protocol handler
+  - handleORPCError()                         # Validation error handler
+  - ErrorFactory interface                    # Used by handlers
+  - HandleEffectOptions interface             # Used by handlers
 ```
 
 ---
@@ -627,25 +688,43 @@ packages/api/src/server/effect-handler.ts:
 3. ✅ Add static HTTP props to ALL errors (httpStatus, httpCode, httpMessage, logLevel, getData)
    - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
-### Sprint 1: Document Module (Foundation)
-1. Create `DocumentRepo` as Context.Tag service (convert from repository.ts)
-   - Validate: `pnpm --filter @repo/media typecheck`
-2. Create document use cases (7 files)
-   - Validate after each: `pnpm --filter @repo/media typecheck`
-3. Add HTTP protocol props to document-related errors (DocumentNotFound, etc.)
-   - Validate: `pnpm --filter @repo/db typecheck`
-4. Write document use case unit tests
+### Sprint 1: Document Module (Foundation) ✅ PARTIALLY COMPLETED
+
+> ⚠️ **Error Handling Reminder:** Document router currently has **zero tracing** and uses legacy pattern. When refactoring (step 5), use `handleEffectWithProtocol()` and add spans to ALL handlers.
+
+1. ✅ Create `DocumentRepo` as Context.Tag service (convert from repository.ts)
+   - Created `packages/media/src/document/repos/document-repo.ts`
+   - Created `packages/media/src/document/repos/index.ts`
+   - Validate: `pnpm --filter @repo/media typecheck` ✅
+2. ✅ Create document use cases (7 files)
+   - Created `list-documents.ts`, `get-document.ts`, `get-document-content.ts`
+   - Created `create-document.ts`, `upload-document.ts`, `update-document.ts`, `delete-document.ts`
+   - Created `packages/media/src/document/use-cases/index.ts`
+   - Validate: `pnpm --filter @repo/media typecheck` ✅
+3. ~~Add HTTP protocol props to document-related errors~~ ✅ Already done in Phase 0
+4. Write document use case unit tests (PENDING)
    - Validate: `pnpm --filter @repo/media test`
-5. Refactor document router to use use cases (using new simplified error handling)
-   - Validate: `pnpm --filter @repo/api typecheck`
-6. Write document router integration tests
+5. ✅ **Refactor document router** - CRITICAL migration point:
+   - Replaced `handleEffect()` → `handleEffectWithProtocol()`
+   - Removed all `createErrorHandlers(errors)` calls
+   - Removed all `getErrorProp()` calls
+   - Added `{ span: 'api.documents.X', attributes: {...} }` to ALL handlers
+   - Uses Effect-based serializers (`serializeDocumentEffect`, `serializeDocumentsEffect`)
+   - Validate: `pnpm --filter @repo/api typecheck` ✅
+6. Write document router integration tests (PENDING)
    - Validate: `pnpm --filter @repo/api test`
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build`
+   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
 ### Sprint 2: Podcast Module (Standardize)
-1. Add HTTP protocol props to podcast-related errors (PodcastNotFound, ScriptNotFound, etc.)
-   - Validate: `pnpm --filter @repo/db typecheck`
-2. Standardize podcast router (using new simplified error handling)
+
+> ⚠️ **Error Handling Reminder:** Podcast router has inconsistent tracing (some handlers have spans, some don't) and uses legacy error handlers. Migrate ALL handlers to protocol-based pattern.
+
+1. ~~Add HTTP protocol props to podcast-related errors~~ ✅ Already done in Phase 0
+2. **Refactor podcast router** - Full migration:
+   - Replace `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
+   - Remove all `createErrorHandlers(errors)` calls
+   - Remove all `getErrorProp()` calls
+   - Ensure ALL handlers have `{ span, attributes }` (currently inconsistent)
    - Validate: `pnpm --filter @repo/api typecheck`
 3. Add missing podcast use case tests
    - Validate: `pnpm --filter @repo/media test`
@@ -654,21 +733,35 @@ packages/api/src/server/effect-handler.ts:
    - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build`
 
 ### Sprint 3: Voices Module (Complete)
+
+> ⚠️ **Error Handling Reminder:** Voices router uses legacy pattern. Migrate to `handleEffectWithProtocol()` and add consistent tracing.
+
 1. Create TTS use cases (listVoices, previewVoice)
    - Validate: `pnpm --filter @repo/ai typecheck`
-2. Add HTTP protocol props to TTS-related errors (TTSError, TTSQuotaExceededError, etc.)
-   - Validate: `pnpm --filter @repo/db typecheck`
+2. ~~Add HTTP protocol props to TTS-related errors~~ ✅ Already done in Phase 0
 3. Write TTS use case tests
    - Validate: `pnpm --filter @repo/ai test`
-4. Refactor voices router to use use cases (using new simplified error handling)
+4. **Refactor voices router** - Full migration:
+   - Replace `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
+   - Remove all `createErrorHandlers(errors)` calls
+   - Add `{ span, attributes }` to ALL handlers
    - Validate: `pnpm --filter @repo/api typecheck`
 5. Write voices router integration tests
    - Validate: `pnpm --filter @repo/api test`
    - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build`
 
 ### Sprint 4: Documentation & Cleanup
+
+> ⚠️ **Cleanup Reminder:** By this point, ALL routers should be using `handleEffectWithProtocol()`. Legacy code should be dead and ready to delete.
+
 1. Update CLAUDE.md with standardized patterns (including error handling)
 2. Remove deprecated Documents service files
-3. Remove deprecated `createErrorHandlers` factory (replaced by generic handler)
+3. **Delete legacy error handling code** from `effect-handler.ts`:
+   - Remove `createErrorHandlers()` factory function entirely
+   - Remove `getErrorProp()` helper (should have no usages)
+   - Remove `logAndThrowInternal()` helper
+   - Remove `LegacyErrorFactoryConfig` interface
+   - Keep only: `handleEffectWithProtocol()`, `handleTaggedError()`, `handleORPCError()`
 4. Update Media type export (remove Documents, add DocumentRepo)
+5. Verify no imports of removed functions across codebase
    - **Final validation**: `pnpm typecheck && pnpm test && pnpm build`

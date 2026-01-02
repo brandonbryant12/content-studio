@@ -16,12 +16,51 @@ export {
   ScriptNotFound,
 } from '@repo/db/errors';
 
-// Document module
+// Document module - Repository
+export {
+  DocumentRepo,
+  DocumentRepoLive,
+  type DocumentRepoService,
+  type ListOptions as DocumentListOptions,
+} from './document';
+
+// Document module - Service (legacy - will be deprecated)
 export {
   Documents,
   DocumentsLive,
   type DocumentService,
+  type UploadDocumentInput as ServiceUploadDocumentInput,
+} from './document';
+
+// Document module - Use cases
+export {
+  listDocuments,
+  getDocument,
+  getDocumentContent,
+  createDocument,
+  uploadDocument,
+  updateDocument,
+  deleteDocument,
+  type ListDocumentsInput,
+  type ListDocumentsResult,
+  type ListDocumentsError,
+  type GetDocumentInput,
+  type GetDocumentError,
+  type GetDocumentContentInput,
+  type GetDocumentContentResult,
+  type GetDocumentContentError,
+  type CreateDocumentInput,
+  type CreateDocumentError,
   type UploadDocumentInput,
+  type UploadDocumentError,
+  type UpdateDocumentInput,
+  type UpdateDocumentError,
+  type DeleteDocumentInput,
+  type DeleteDocumentError,
+} from './document';
+
+// Document module - Parsers and types
+export {
   parseUploadedFile,
   parseDocumentContent,
   validateFileSize,
@@ -34,7 +73,7 @@ export {
   type ParsedDocument,
   type FileUploadInput,
   type InsertDocumentInput,
-  type UpdateDocumentInput,
+  type UpdateDocumentInput as RepoUpdateDocumentInput,
   type Document,
   type CreateDocument,
   type UpdateDocument,
@@ -56,7 +95,7 @@ export {
 } from './podcast';
 
 // Import for combined layer
-import { Documents, DocumentsLive } from './document';
+import { Documents, DocumentsLive, DocumentRepo, DocumentRepoLive } from './document';
 import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive } from './podcast';
 
 // =============================================================================
@@ -67,13 +106,14 @@ import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive 
  * All media services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
  */
-export type Media = Documents | PodcastRepo | ScriptVersionRepo;
+export type Media = Documents | DocumentRepo | PodcastRepo | ScriptVersionRepo;
 
 /**
  * Combined layer for all media services.
  *
  * Provides:
- * - Documents: Document CRUD operations
+ * - Documents: Document CRUD operations (legacy service)
+ * - DocumentRepo: Document repository operations (new pattern)
  * - PodcastRepo: Podcast repository operations
  * - ScriptVersionRepo: Script version repository operations
  *
@@ -91,6 +131,7 @@ export type Media = Documents | PodcastRepo | ScriptVersionRepo;
  */
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
   DocumentsLive,
+  DocumentRepoLive,
   PodcastRepoLive,
   ScriptVersionRepoLive,
 );
