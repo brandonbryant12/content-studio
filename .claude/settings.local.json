@@ -76,7 +76,20 @@
       "Bash(git stash:*)",
       "WebFetch(domain:orpc.unnoq.com)",
       "WebFetch(domain:orpc.dev)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(packages/ai/package.json packages/ai/src/index.ts packages/ai/src/llm/providers/google.ts packages/ai/src/llm/service.ts )",
+      "Bash(packages/ai/src/tts/providers/google.ts packages/ai/src/tts/service.ts packages/ai/src/tts/use-cases/errors.ts )",
+      "Bash(packages/ai/src/tts/use-cases/__tests__/preview-voice.test.ts packages/ai/src/__tests__/live/llm.live.test.ts )",
+      "Bash(packages/ai/src/__tests__/live/tts.live.test.ts packages/auth/src/errors.ts packages/db/src/errors.ts )",
+      "Bash(packages/media/package.json packages/media/src/index.ts packages/media/src/document/errors.ts )",
+      "Bash(packages/media/src/document/parsers.ts packages/media/src/document/repos/document-repo.ts )",
+      "Bash(packages/media/src/document/repository.ts packages/media/src/document/use-cases/delete-document.ts )",
+      "Bash(packages/media/src/document/use-cases/__tests__/*.ts)",
+      "Bash(packages/media/src/podcast/repos/*.ts)",
+      "Bash(packages/media/src/podcast/use-cases/*.ts)",
+      "Bash(packages/media/src/podcast/use-cases/__tests__/*.ts)",
+      "Bash(packages/queue/package.json packages/queue/src/errors.ts packages/storage/package.json packages/storage/src/errors.ts )",
+      "Bash(packages/testing/src/mocks/llm.ts packages/testing/src/mocks/tts.ts)"
     ],
     "deny": [],
     "ask": []

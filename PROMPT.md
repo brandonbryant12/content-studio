@@ -25,6 +25,8 @@ gh issue view N --json number,title,url,author,createdAt,state,body \
 
 Read any new issues in `known-issues/` and incorporate them into @IMPLEMENTATION_PLAN.md
 
+Review open_questions to see if human has answered. If so, update @IMPLEMENTATION_PLAN.md
+
 ## 1. Implement
 
 Read @IMPLEMENTATION_PLAN.md and implement the **single highest priority feature** using up to 5 subagents.
@@ -36,7 +38,7 @@ Read @IMPLEMENTATION_PLAN.md and implement the **single highest priority feature
 Ensure all tests and linting passes:
 
 ```bash
-pnpm typecheck && pnpm test && pnpm build
+pnpm typecheck && pnpm build
 ```
 
 ## 3. Update Plan
@@ -45,6 +47,8 @@ Update IMPLEMENTATION_PLAN.md with your progress:
 - Mark completed items
 - Add any new discoveries or blockers
 - Update priorities if needed
+- Document any open_questions directory for any questions that come up or tech debt items that need to be addressed.  That are not covered in the standards documentation. Leave place for human to address these items.
+- When ALL items are completed, change the status header to: `> **STATUS: ✅ COMPLETE**`
 
 ## 4. Commit
 

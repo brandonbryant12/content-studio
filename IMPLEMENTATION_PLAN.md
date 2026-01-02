@@ -1,1006 +1,314 @@
-# PRD: Router Pattern Standardization
+# Frontend Refactoring Implementation Plan
 
-> **STATUS: ✅ COMPLETE** - All 8 sprints completed. All success criteria met.
-> - 300 tests passing (278 unit + 22 skipped live tests)
-> - 21 handlers across 3 routers standardized
-> - 20 use cases with comprehensive unit tests
-> - Frontend typed error handling implemented
+> **STATUS: IN PROGRESS** - Sprint 1 starting
+> - Backend refactoring complete (previous plan archived)
+> - Frontend refactoring to match backend standards
 
 ## Overview
 
-Standardize the oRPC router pattern across all routers to ensure consistent architecture, testability, and maintainability. Each router handler should call a single use case, use Effect-based serialization, and have comprehensive unit and integration tests.
-
-## Key Decisions
-
-| Decision | Choice |
-|----------|--------|
-| Documents architecture | Convert service to use cases + DocumentRepo (like podcast) |
-| Voices router | Create use cases for full consistency |
-| Integration tests | Direct handler calls (faster than HTTP) |
-| Error handling | Hybrid approach: HTTP protocol on errors + optional custom overrides |
+Refactor the Content Studio frontend to follow documented standards with feature-based organization, Container/Presenter pattern, Suspense-first data fetching, and optimistic mutation factory.
 
 ## Validation Commands
 
 After each change, run these commands to validate:
 
 ```bash
-# Type check all packages
-pnpm typecheck
+# Type check and build
+pnpm --filter web typecheck
+pnpm --filter web build
 
-# Run all tests
-pnpm test
+# Run tests
+pnpm --filter web test
 
-# Build all packages
-pnpm build
+# Full validation
+pnpm typecheck && pnpm test && pnpm build
 ```
-
-**Per-package validation:**
-```bash
-# Type check specific package
-pnpm --filter @repo/media typecheck
-pnpm --filter @repo/api typecheck
-pnpm --filter @repo/ai typecheck
-
-# Run tests for specific package
-pnpm --filter @repo/media test
-pnpm --filter @repo/api test
-
-# Build specific package
-pnpm --filter @repo/media build
-```
-
-**Validation checkpoints:**
-- After creating DocumentRepo: `pnpm --filter @repo/media typecheck`
-- After each use case: `pnpm --filter @repo/media test`
-- After router refactor: `pnpm --filter @repo/api typecheck && pnpm --filter @repo/api test`
-- Before committing: `pnpm typecheck && pnpm test && pnpm build`
 
 ---
 
-## Current State Analysis
+## Target Architecture
 
-### Inconsistencies Found
-
-| Area | Issue |
-|------|-------|
-| **Use Cases** | Some handlers call use cases, others access repos directly |
-| **Serialization** | Sync serializers used instead of Effect-based (loses tracing) |
-| **Tracing** | Inconsistent - some handlers have `{ span, attributes }`, others don't |
-| **Pattern** | Mixed `Effect.pipe()` vs `Effect.gen()` in same router |
-| **Testing** | No integration tests for routers exist |
-
-### Error Handling Gap (Post-Phase 0 Audit)
-
-> **Grade: 68/100** - Excellent architecture, incomplete adoption.
-
-**Infrastructure Ready (Phase 0 Complete):**
-- ✅ `HttpErrorProtocol` interface defined
-- ✅ `handleTaggedError()` generic handler implemented
-- ✅ `handleEffectWithProtocol()` ready to use
-- ✅ All 30+ errors have static HTTP metadata
-
-**Routers NOT Migrated (Current State):**
-- ❌ All routers still use deprecated `createErrorHandlers()` + `handleEffect()`
-- ❌ Manual `getErrorProp()` extraction duplicates what error classes already define
-- ❌ Document router has **zero tracing spans**
-- ❌ ~200 lines of boilerplate error mapping that protocol should eliminate
-
-**Example of Current Waste:**
-```typescript
-// document.ts:41-48 - This is redundant!
-DocumentNotFound: (e: unknown) => {
-  const id = getErrorProp(e, 'id', 'unknown');           // Already on class
-  const message = getErrorProp(e, 'message', undefined); // Already on class
-  throw errors.DOCUMENT_NOT_FOUND({
-    message: message ?? `Document ${id} not found`,      // Class has httpMessage
-    data: { documentId: id },                            // Class has getData()
-  });
-},
 ```
-
-**Target State:**
-```typescript
-// Zero error mapping - protocol handles it
-return handleEffectWithProtocol(context.runtime, context.user, effect, errors, { span });
+apps/web/src/
+├── features/
+│   ├── podcasts/
+│   │   ├── components/
+│   │   │   ├── podcast-detail-container.tsx    # Container
+│   │   │   ├── podcast-detail.tsx              # Presenter
+│   │   │   ├── podcast-list-container.tsx
+│   │   │   ├── podcast-list.tsx
+│   │   │   └── workbench/                      # Sub-components
+│   │   ├── hooks/
+│   │   │   ├── use-podcast.ts                  # useSuspenseQuery
+│   │   │   ├── use-podcast-list.ts
+│   │   │   ├── use-optimistic-generation.ts    # Uses factory
+│   │   │   └── use-script-editor.ts            # Local state
+│   │   └── lib/status.ts
+│   └── documents/
+│       ├── components/
+│       └── hooks/
+├── shared/
+│   ├── components/
+│   │   ├── suspense-boundary.tsx               # New
+│   │   └── error-boundary/                     # Moved
+│   ├── hooks/
+│   │   ├── use-optimistic-mutation.ts          # Factory hook
+│   │   └── use-navigation-block.ts             # Extracted
+│   └── lib/
+│       └── errors.ts                           # Moved
+└── routes/                                     # Thin route files
+    └── _protected/podcasts/$podcastId.tsx      # < 30 lines
 ```
-
-### Current Files
-
-**Routers:**
-- `packages/api/src/server/router/document.ts` - 6 handlers, accesses Documents service directly
-- `packages/api/src/server/router/podcast.ts` - 8 handlers, mixed patterns
-- `packages/api/src/server/router/voices.ts` - 2 handlers, accesses TTS directly
-
-**Use Cases (good examples):**
-- `packages/media/src/podcast/use-cases/*.ts` - 12 use cases, well-structured
-
-**Missing:**
-- Document use cases (handlers access service directly)
-- Router integration tests
 
 ---
 
-## Standardized Pattern
+## Step 0: Familiarize with Standards
 
-### 1. Router Handler Pattern
+**Goal**: Read and understand all frontend standards before implementation
 
-> ⚠️ **REMINDER:** Use `handleEffectWithProtocol()`, NOT the legacy `handleEffect()` + `createErrorHandlers()` pattern. The infrastructure is ready (Phase 0 complete) but routers haven't been migrated yet.
+### Read Core Standards
+- [ ] `/standards/frontend/components.md` - Container/Presenter pattern
+- [ ] `/standards/frontend/data-fetching.md` - TanStack Query with useSuspenseQuery
+- [ ] `/standards/frontend/mutations.md` - Optimistic mutation factory pattern
+- [ ] `/standards/frontend/error-handling.md` - Error formatting with isDefinedError
 
-Every handler MUST follow this structure:
+### Read Supporting Standards
+- [ ] `/standards/frontend/forms.md` - TanStack Form patterns
+- [ ] `/standards/frontend/real-time.md` - SSE and query invalidation
+- [ ] `/standards/frontend/styling.md` - Design system patterns
+- [ ] `/standards/frontend/testing.md` - Integration testing with MSW
 
+### Review Current Implementation
+- [ ] `apps/web/src/routes/_protected/podcasts/$podcastId.tsx` - Main file to refactor
+- [ ] `apps/web/src/hooks/` - Current hook patterns
+- [ ] `apps/web/src/lib/errors.ts` - Existing error handling (already follows standards)
+
+**No code changes in this sprint** - understanding only.
+
+---
+
+## Sprint 1: Foundation
+
+**Goal**: Create shared infrastructure
+
+### 1.1 Create `shared/hooks/use-optimistic-mutation.ts`
+Factory hook that all feature mutations will use:
+- `queryKey`, `mutationFn`, `getOptimisticData`
+- Auto rollback on error
+- Toast integration
+- `showSuccessToast` option
+
+### 1.2 Create `shared/components/suspense-boundary.tsx`
+Combines ErrorBoundary + Suspense with default spinner fallback
+
+### 1.3 Create `shared/hooks/use-navigation-block.ts`
+Extract from `$podcastId.tsx`:
+- TanStack Router `useBlocker`
+- Browser `beforeunload` handling
+
+### 1.4 Create `shared/hooks/use-keyboard-shortcut.ts`
+Generic keyboard shortcut hook
+
+### 1.5 Move shared code to `/shared/`
+| From | To |
+|------|-----|
+| `src/components/error-boundary/` | `src/shared/components/error-boundary/` |
+| `src/components/confirmation-dialog/` | `src/shared/components/confirmation-dialog/` |
+| `src/components/base-dialog/` | `src/shared/components/base-dialog/` |
+| `src/lib/errors.ts` | `src/shared/lib/errors.ts` |
+| `src/lib/formatters.ts` | `src/shared/lib/formatters.ts` |
+
+### 1.6 Create `shared/index.ts` barrel export
+
+**Validation**: `pnpm --filter web typecheck`
+
+---
+
+## Sprint 2: Podcasts Feature - Hooks
+
+**Goal**: Create feature-based hooks
+
+### 2.1 Create `features/podcasts/hooks/use-podcast.ts`
 ```typescript
-handlerName: protectedProcedure.domain.action.handler(
-  async ({ context, input, errors }) => {
-    // ✅ USE THIS - protocol handles all error mapping automatically
-    return handleEffectWithProtocol(
-      context.runtime,
-      context.user,
-      useCaseName(input).pipe(
-        Effect.flatMap(serializeResultEffect)  // Effect-based serializer
-      ),
-      errors,
-      { span: 'api.domain.action', attributes: { 'domain.id': input.id } },
-      // Optional: custom overrides only when truly needed
-    );
-  }
-)
-```
-
-**❌ DO NOT USE (Legacy Pattern):**
-```typescript
-// This is the OLD pattern - creates unnecessary boilerplate
-const handlers = createErrorHandlers(errors);
-return handleEffect(runtime, user, effect, {
-  ...handlers.common,
-  ...handlers.database,
-  DocumentNotFound: (e) => { /* redundant extraction */ },
-}, { span });
-```
-
-**Rules:**
-1. Call ONE use case per handler (no direct repo access)
-2. Use Effect-based serializers via `Effect.flatMap()` or `Effect.map()`
-3. Always provide tracing span and attributes
-4. Use `handleEffectWithProtocol()` - only add custom handlers for truly special cases
-
-### 2. Use Case Pattern
-
-Every use case MUST follow this structure:
-
-```typescript
-// packages/media/src/{domain}/use-cases/{action}.ts
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface ActionInput {
-  // Input fields (validated by oRPC schema before reaching here)
-}
-
-export interface ActionResult {
-  // Output fields (raw domain data, NOT serialized)
-}
-
-export type ActionError =
-  | DomainNotFound
-  | DatabaseError
-  // ... explicit error union
-
-// ============================================================================
-// Use Case
-// ============================================================================
-
-export const actionName = (
-  input: ActionInput
-): Effect.Effect<ActionResult, ActionError, Dependencies> =>
-  Effect.gen(function* () {
-    // 1. Yield dependencies
-    const repo = yield* DomainRepo;
-
-    // 2. Business logic
-    const result = yield* repo.findById(input.id);
-
-    // 3. Return raw domain data
-    return result;
-  }).pipe(
-    Effect.withSpan('useCase.action', {
-      attributes: { 'domain.id': input.id }
-    })
+export function usePodcast(podcastId: string) {
+  return useSuspenseQuery(
+    apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
   );
-```
-
-**Rules:**
-1. One file per use case
-2. Explicit error type union
-3. Return raw domain data (serialization happens in handler)
-4. Always add tracing span
-5. Dependencies explicit in Effect type signature
-
-### 3. Serialization Pattern
-
-Use Effect-based serializers for tracing:
-
-```typescript
-// In handler - batch serialization
-useCase(input).pipe(
-  Effect.flatMap((items) => serializeItemsEffect(items))
-)
-
-// In handler - single item
-useCase(input).pipe(
-  Effect.flatMap((item) => serializeItemEffect(item))
-)
-```
-
-**Never use:**
-```typescript
-// BAD - loses tracing
-useCase(input).pipe(
-  Effect.map((items) => items.map(serializeItem))
-)
-```
-
-### 4. Error Handling Pattern (Hybrid Protocol + Overrides)
-
-**Problem:** Currently, adding a new error requires updating two places:
-1. Error definition in `packages/db/src/errors.ts`
-2. Error handler in `packages/api/src/server/effect-handler.ts` (`createErrorHandlers`)
-
-**Solution:** Each error defines its HTTP behavior via static properties. A generic handler reads these properties automatically. Custom handlers can override when needed.
-
-#### Error Definition with HTTP Protocol
-
-Every error MUST include static HTTP metadata:
-
-```typescript
-// packages/db/src/errors.ts (or domain-specific error file)
-export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
-  'DocumentNotFound',
-  { id: Schema.String, message: Schema.optional(Schema.String) },
-) {
-  // HTTP Protocol - co-located with error definition
-  static readonly httpStatus = 404;
-  static readonly httpCode = 'DOCUMENT_NOT_FOUND';
-  static readonly httpMessage = (e: DocumentNotFound) =>
-    e.message ?? `Document ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-
-  // Optional: extract data for response body
-  static getData(e: DocumentNotFound) {
-    return { documentId: e.id };
-  }
 }
 ```
 
-#### HTTP Protocol Interface
+### 2.2 Create `features/podcasts/hooks/use-podcast-list.ts`
+Both `useQuery` and `useSuspenseQuery` variants
 
-```typescript
-// packages/db/src/error-protocol.ts
-export interface HttpErrorProtocol {
-  readonly httpStatus: number;
-  readonly httpCode: string;
-  readonly httpMessage: string | ((error: any) => string);
-  readonly logLevel: 'silent' | 'warn' | 'error' | 'error-with-stack';
-  getData?: (error: any) => Record<string, unknown>;
-}
+### 2.3 Create mutation hooks using factory
+- `use-optimistic-generation.ts`
+- `use-optimistic-save-changes.ts`
+- `use-optimistic-delete.ts`
 
-// Log levels:
-// - 'silent': No logging (expected errors like NotFound)
-// - 'warn': Warning level (unusual but not critical)
-// - 'error': Error level (unexpected errors)
-// - 'error-with-stack': Error with full stack trace (internal errors)
-```
+### 2.4 Move existing hooks
+| From | To |
+|------|-----|
+| `src/hooks/use-script-editor.ts` | `features/podcasts/hooks/use-script-editor.ts` |
+| `src/hooks/use-podcast-settings.ts` | `features/podcasts/hooks/use-podcast-settings.ts` |
+| `src/hooks/use-document-selection.ts` | `features/podcasts/hooks/use-document-selection.ts` |
 
-#### Generic Handler
+### 2.5 Create `features/podcasts/hooks/index.ts` barrel
 
-```typescript
-// packages/api/src/server/effect-handler.ts
-
-/**
- * Generic error handler that reads HTTP protocol from error class.
- * Works with any error that implements HttpErrorProtocol.
- */
-export const handleTaggedError = <E extends { _tag: string }>(
-  error: E,
-  errors: ErrorFactory,
-): never => {
-  const ErrorClass = error.constructor as { new (...args: any[]): E } & Partial<HttpErrorProtocol>;
-
-  // Log based on level
-  const logLevel = ErrorClass.logLevel ?? 'error';
-  switch (logLevel) {
-    case 'error-with-stack':
-      console.error(`[${error._tag}]`, error.message, { stack: error.cause?.stack });
-      break;
-    case 'error':
-      console.error(`[${error._tag}]`, error.message);
-      break;
-    case 'warn':
-      console.warn(`[${error._tag}]`, error.message);
-      break;
-  }
-
-  // Get message
-  const httpMessage = ErrorClass.httpMessage;
-  const message = typeof httpMessage === 'function'
-    ? httpMessage(error)
-    : httpMessage ?? 'An error occurred';
-
-  // Get data and throw
-  const data = ErrorClass.getData?.(error);
-  const code = ErrorClass.httpCode ?? 'INTERNAL_ERROR';
-  const factory = errors[code as keyof typeof errors];
-
-  if (factory) {
-    throw factory({ message, data });
-  }
-  throw errors.INTERNAL_ERROR({ message });
-};
-```
-
-#### Handler Usage
-
-```typescript
-// Standard handler - protocol handles all error mapping automatically
-get: protectedProcedure.documents.get.handler(
-  async ({ context, input, errors }) => {
-    return handleEffectWithProtocol(
-      context.runtime,
-      context.user,
-      getDocument({ id: input.id }).pipe(
-        Effect.flatMap(serializeDocumentEffect)
-      ),
-      errors,
-      { span: 'api.documents.get', attributes: { 'document.id': input.id } },
-    );
-  },
-),
-
-// Rare case - custom override for business logic (e.g., upsell)
-create: protectedProcedure.documents.create.handler(
-  async ({ context, input, errors }) => {
-    return handleEffectWithProtocol(
-      context.runtime,
-      context.user,
-      createDocument(input).pipe(
-        Effect.flatMap(serializeDocumentEffect)
-      ),
-      errors,
-      { span: 'api.documents.create' },
-      {
-        // Override ONLY when business logic requires different response
-        DocumentQuotaExceeded: (e) => {
-          throw errors.PAYMENT_REQUIRED({
-            message: 'Upgrade to create more documents',
-            data: { currentCount: e.count, limit: e.limit },
-          });
-        },
-      },
-    );
-  },
-),
-```
-
-**Rules:**
-1. Every error class MUST have static `httpStatus`, `httpCode`, `httpMessage`, and `logLevel`
-2. Use `getData()` for errors that need to return structured data
-3. Use `handleEffectWithProtocol()` - NEVER use legacy `handleEffect()` + `createErrorHandlers()`
-4. Custom overrides are RARE - only for business logic (e.g., upsell, special redirects)
-5. ALWAYS include `{ span, attributes }` for tracing
-
-**Benefits:**
-- Add new error = 1 file change (error definition with static props)
-- Zero boilerplate error handlers in routers
-- Consistent tracing across all endpoints
-- Type-safe via protocol interface
+**Validation**: `pnpm --filter web typecheck`
 
 ---
 
-## Implementation Plan
+## Sprint 3: Podcasts - Container/Presenter Split
 
-> ⚠️ **FULL REFACTOR - NO BACKWARDS COMPATIBILITY REQUIRED**
->
-> This is a clean migration. Delete legacy code immediately - do not maintain both patterns.
-> - Remove `createErrorHandlers()` usage as you migrate each router
-> - Remove `getErrorProp()` calls - protocol handles property extraction
-> - Delete deprecated files, don't deprecate-and-keep 
+**Goal**: Split `$podcastId.tsx` (263 lines) into Container + Presenter
 
-### Phase 0: Error Handling Infrastructure
+### 3.1 Create `features/podcasts/components/podcast-detail-container.tsx`
+**Container responsibilities**:
+- `usePodcast(podcastId)` with Suspense
+- Coordinate hooks: `useScriptEditor`, `usePodcastSettings`, `useDocumentSelection`
+- Mutation handlers: `handleSave`, `handleGenerate`, `handleDelete`
+- `useKeyboardShortcut` for Cmd+S
+- `useNavigationBlock` for unsaved changes
+- Show `SetupWizardContainer` if `isSetupMode(podcast)`
 
-**Goal:** Implement the hybrid error handling pattern before refactoring routers.
-
-1. Create `HttpErrorProtocol` interface in `packages/db/src/error-protocol.ts`
-2. Add `handleTaggedError` generic handler to `packages/api/src/server/effect-handler.ts`
-3. Update `handleEffect` signature to support optional custom overrides
-4. Migrate existing errors to include static HTTP properties (can be done incrementally)
-
-**Files to create/modify:**
-- `packages/db/src/error-protocol.ts` (new)
-- `packages/db/src/errors.ts` (add static props to existing errors)
-- `packages/api/src/server/effect-handler.ts` (add generic handler, update handleEffect)
-
-**Validation:** `pnpm --filter @repo/db typecheck && pnpm --filter @repo/api typecheck`
-
-### Phase 1: Create Document Use Cases (Convert from Service Pattern)
-
-**Decision:** Convert Documents service to individual use cases that access DocumentRepo directly (matching podcast pattern).
-
-Create use cases in `packages/media/src/document/use-cases/`:
-
-| Use Case | File | Description |
-|----------|------|-------------|
-| `listDocuments` | `list-documents.ts` | List with pagination |
-| `getDocument` | `get-document.ts` | Get single document |
-| `getDocumentContent` | `get-document-content.ts` | Get document text content |
-| `createDocument` | `create-document.ts` | Create from manual input |
-| `uploadDocument` | `upload-document.ts` | Upload file |
-| `updateDocument` | `update-document.ts` | Update metadata/content |
-| `deleteDocument` | `delete-document.ts` | Delete document |
-
-**Note:** The existing `packages/media/src/document/repository.ts` will become `DocumentRepo` (Context.Tag service like PodcastRepo). The Documents service will be deprecated.
-
-### Phase 2: Refactor Document Router
-
-Update `packages/api/src/server/router/document.ts`:
-- Replace direct `Documents` service calls with use cases
-- Add tracing to all handlers
-- Use Effect-based serializers
-
-### Phase 3: Standardize Podcast Router
-
-Update `packages/api/src/server/router/podcast.ts`:
-- Ensure all handlers use use cases (some already do)
-- Add tracing to handlers missing it
-- Use Effect-based serializers consistently
-
-### Phase 4: Create TTS Use Cases & Standardize Voices Router
-
-**Decision:** Create full use cases for consistency across all routers.
-
-Create use cases in `packages/ai/src/tts/use-cases/`:
-
-| Use Case | File | Description |
-|----------|------|-------------|
-| `listVoices` | `list-voices.ts` | List available voices with optional gender filter |
-| `previewVoice` | `preview-voice.ts` | Generate voice preview audio |
-
-Update `packages/api/src/server/router/voices.ts`:
-- Replace direct TTS service calls with use cases
-- Add consistent tracing spans
-- Standardize error handling pattern
-
-### Phase 5: Unit Tests for Use Cases
-
-Add comprehensive tests in `packages/media/src/document/use-cases/*.test.ts`:
-
+### 3.2 Create `features/podcasts/components/podcast-detail.tsx`
+**Presenter responsibilities** (pure UI):
 ```typescript
-describe('listDocuments', () => {
-  it('returns paginated documents for user', async () => { ... });
-  it('returns empty list when no documents', async () => { ... });
-  it('respects limit and offset', async () => { ... });
-  it('fails with DatabaseError on db failure', async () => { ... });
-});
+interface PodcastDetailProps {
+  podcast: Podcast;
+  scriptEditor: UseScriptEditorReturn;
+  settings: UsePodcastSettingsReturn;
+  documentSelection: UseDocumentSelectionReturn;
+  hasChanges: boolean;
+  isGenerating: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+  onSave: () => void;
+  onGenerate: () => void;
+  onDelete: () => void;
+}
 ```
 
-**Test pattern:**
-- Use `createTestContext()` for DB isolation
-- Use `withTestUser()` for user context
-- Use factories for test data
-- Test success paths AND error paths
-
-### Phase 6: Integration Tests for Routers
-
-**Decision:** Use direct handler calls (faster, simpler than HTTP testing).
-
-Create `packages/api/src/server/router/__tests__/`:
-
+### 3.3 Update route file to be thin
 ```typescript
-// document.integration.test.ts
-import { createTestContext } from '@repo/testing';
-import { createServerRuntime } from '../runtime';
-import { documentRouter } from '../document';
-
-describe('Document Router Integration', () => {
-  let ctx: TestContext;
-  let runtime: ServerRuntime;
-
-  beforeEach(async () => {
-    ctx = await createTestContext();
-    runtime = createServerRuntime({
-      db: ctx.db,
-      geminiApiKey: 'test-key',
-      storageConfig: { type: 'memory' },
-      useMockAI: true,
-    });
-  });
-
-  afterEach(async () => {
-    await ctx.rollback();
-  });
-
-  describe('documents.create', () => {
-    it('creates document and returns serialized response', async () => {
-      const testUser = createTestUser();
-      const mockContext = createMockContext(runtime, testUser);
-      const mockErrors = createMockErrors();
-
-      const result = await documentRouter.create.handler({
-        context: mockContext,
-        input: { title: 'Test', content: 'Hello world' },
-        errors: mockErrors,
-      });
-
-      expect(result.id).toMatch(/^doc_/);
-      expect(result.title).toBe('Test');
-      expect(result.createdAt).toBeDefined(); // Serialized format
-    });
-
-    it('throws UNAUTHORIZED when user is null', async () => {
-      const mockContext = createMockContext(runtime, null);
-      // ... test unauthorized error
-    });
-  });
-});
+// routes/_protected/podcasts/$podcastId.tsx (< 30 lines)
+function PodcastPage() {
+  const { podcastId } = Route.useParams();
+  return (
+    <SuspenseBoundary resetKeys={[podcastId]}>
+      <PodcastDetailContainer />
+    </SuspenseBoundary>
+  );
+}
 ```
 
-**Test helper utilities to create:**
-```typescript
-// packages/api/src/server/router/__tests__/helpers.ts
-export const createMockContext = (runtime: ServerRuntime, user: User | null) => ({
-  runtime,
-  user,
-  session: user ? { user } : null,
-});
+### 3.4 Move workbench components
+Move `routes/_protected/podcasts/-components/workbench/` → `features/podcasts/components/workbench/`
 
-export const createMockErrors = () => ({
-  DOCUMENT_NOT_FOUND: (opts) => new ORPCError('NOT_FOUND', opts),
-  INTERNAL_ERROR: (opts) => new ORPCError('INTERNAL_SERVER_ERROR', opts),
-  // ... other error factories
-});
+### 3.5 Create `features/podcasts/lib/status.ts`
+- `isGeneratingStatus(status)`
+- `isSetupMode(podcast)`
+
+**Validation**: `pnpm --filter web typecheck && pnpm --filter web build`
+
+---
+
+## Sprint 4: Podcast List Page
+
+**Goal**: Apply Container/Presenter to list page
+
+### 4.1 Create `PodcastListContainer`
+- `usePodcastList()` for data
+- Search state management
+- Create/delete mutation handlers
+
+### 4.2 Create `PodcastList` presenter
+Pure UI with props:
+```typescript
+interface PodcastListProps {
+  podcasts: Podcast[];
+  searchQuery: string;
+  isLoading: boolean;
+  isCreating: boolean;
+  deletingId: string | null;
+  onSearch: (query: string) => void;
+  onCreate: () => void;
+  onDelete: (id: string) => void;
+}
 ```
 
-**Test patterns:**
-- Direct handler function calls (no HTTP overhead)
-- Mock AI services via `useMockAI: true`
-- Use in-memory storage
-- Test authentication (null user)
-- Test authorization (wrong user)
-- Test error responses (not found, validation)
-- Verify serialized output format matches API contract
+### 4.3 Update `routes/_protected/podcasts/index.tsx`
+
+**Validation**: `pnpm --filter web typecheck && pnpm --filter web build`
+
+---
+
+## Sprint 5: Documents Feature
+
+**Goal**: Apply same patterns to documents
+
+### 5.1 Create `features/documents/hooks/`
+- `use-documents.ts` (query + suspense variants)
+- `use-optimistic-delete.ts` (using factory)
+
+### 5.2 Create Container/Presenter
+- `DocumentListContainer`
+- `DocumentList`
+
+### 5.3 Update `routes/_protected/documents/index.tsx`
+
+**Validation**: `pnpm --filter web typecheck && pnpm --filter web build`
+
+---
+
+## Sprint 6: Dashboard and Cleanup
+
+**Goal**: Update dashboard, remove old code
+
+### 6.1 Create `DashboardContainer`
+Uses hooks from both features
+
+### 6.2 Remove old directories
+After verification:
+- Delete `src/hooks/` (moved to features)
+- Delete `src/db/` (replaced by feature hooks)
+- Delete `src/components/` (moved to shared)
+- Delete route `-components/` directories
+
+### 6.3 Update all import paths
+
+**Final Validation**: `pnpm typecheck && pnpm test && pnpm build`
+
+---
+
+## Key Files to Modify
+
+| File | Action |
+|------|--------|
+| `apps/web/src/routes/_protected/podcasts/$podcastId.tsx` | Replace 263-line god component with thin route |
+| `apps/web/src/hooks/use-optimistic-podcast-mutation.ts` | Refactor to use factory |
+| `apps/web/src/hooks/use-script-editor.ts` | Move to features |
+| `apps/web/src/hooks/use-podcast-settings.ts` | Move to features |
+| `apps/web/src/db/hooks.ts` | Replace with feature hooks |
 
 ---
 
 ## Success Criteria
 
-### Code Quality
-- [x] All routers follow the standardized handler pattern
-- [x] All handlers call exactly one use case
-- [x] All handlers use Effect-based serializers
-- [x] All handlers have tracing spans with attributes
-- [x] No direct repository access from handlers
+- [ ] **Sprint 1**: Factory hook + SuspenseBoundary + shared structure
+- [ ] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
+- [ ] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
+- [ ] **Sprint 4**: Podcast list page refactored
+- [ ] **Sprint 5**: Documents feature follows same patterns
+- [ ] **Sprint 6**: Old code removed, all imports updated
 
-### Error Handling
-- [x] All routers use `handleEffectWithProtocol()` (NOT legacy `handleEffect()`)
-- [x] Zero `createErrorHandlers()` calls remain in codebase
-- [x] Zero `getErrorProp()` calls remain in codebase
-- [x] All errors have static HTTP protocol properties (`httpStatus`, `httpCode`, `httpMessage`, `logLevel`)
-- [x] Custom error overrides only used when truly necessary (rare)
-- [x] Legacy error handling code deleted from `effect-handler.ts`
-
-### Test Coverage
-- [x] Every use case has unit tests covering:
-  - [x] Success path
-  - [x] All error conditions
-  - [x] Edge cases (empty results, pagination)
-- [x] Every router has integration tests covering:
-  - [x] All endpoints
-  - [x] Authentication/authorization
-  - [x] Input validation
-  - [x] Error responses
-  - [x] Response serialization format
-
-### Documentation
-- [x] Pattern documented in CLAUDE.md
-- [x] Example use case template available
-- [x] Example test template available
-
-### Frontend Error Handling
-- [x] All `onError` handlers use `isDefinedError` or centralized error utility
-- [x] Document errors show structured data (`DOCUMENT_TOO_LARGE` shows file size details)
-- [x] Format errors show supported formats list (`UNSUPPORTED_FORMAT`)
-- [x] Rate limit errors show retry timing when available (`RATE_LIMITED`)
-- [x] No `error.message ?? 'fallback'` patterns remain in codebase
-- [x] Error formatting utility created with tests (`apps/web/src/lib/errors.ts`)
+Each sprint maintains working functionality with passing build.
 
 ---
 
-## Files to Create/Modify
+## Standards Reference
 
-### New Files
-```
-packages/db/src/error-protocol.ts     # HttpErrorProtocol interface
-
-packages/media/src/document/use-cases/
-├── index.ts
-├── list-documents.ts
-├── list-documents.test.ts
-├── get-document.ts
-├── get-document.test.ts
-├── get-document-content.ts
-├── get-document-content.test.ts
-├── create-document.ts
-├── create-document.test.ts
-├── upload-document.ts
-├── upload-document.test.ts
-├── update-document.ts
-├── update-document.test.ts
-├── delete-document.ts
-└── delete-document.test.ts
-
-packages/ai/src/tts/use-cases/
-├── index.ts
-├── list-voices.ts
-├── list-voices.test.ts
-├── preview-voice.ts
-└── preview-voice.test.ts
-
-packages/media/src/document/repos/
-├── index.ts
-├── document-repo.ts              # Convert from repository.ts to Context.Tag pattern
-└── document-repo.test.ts
-
-packages/api/src/server/router/__tests__/
-├── document.integration.test.ts
-├── podcast.integration.test.ts
-└── voices.integration.test.ts
-```
-
-### Modified Files
-```
-packages/db/src/errors.ts (add static HTTP protocol props to all errors)
-packages/api/src/server/effect-handler.ts (add handleTaggedError, update handleEffect)
-packages/api/src/server/router/document.ts
-packages/api/src/server/router/podcast.ts
-packages/api/src/server/router/voices.ts
-packages/media/src/index.ts (export new use cases)
-packages/media/src/document/index.ts (export use cases)
-packages/ai/src/index.ts (export TTS use cases)
-CLAUDE.md (document pattern)
-```
-
-### Frontend Files (Sprint 5)
-```
-apps/web/src/lib/errors.ts                    # Error formatting utilities (new)
-apps/web/src/lib/errors.test.ts               # Tests for error formatting (new)
-
-# Files to modify (add isDefinedError usage):
-apps/web/src/routes/_protected/documents/-components/upload-document.tsx
-apps/web/src/routes/_protected/documents/index.tsx
-apps/web/src/routes/_protected/podcasts/index.tsx
-apps/web/src/routes/_protected/podcasts/$podcastId.tsx
-apps/web/src/routes/_protected/podcasts/-components/setup/setup-wizard.tsx
-apps/web/src/routes/_protected/podcasts/-components/setup/steps/step-documents.tsx
-apps/web/src/routes/_protected/dashboard.tsx
-apps/web/src/hooks/use-podcast-generation.ts
-apps/web/src/hooks/use-podcast-settings.ts
-apps/web/src/hooks/use-script-editor.ts
-apps/web/src/hooks/use-optimistic-podcast-mutation.ts
-```
-
-### Deprecated/Removed Files
-```
-packages/media/src/document/service.ts        # Documents service → replaced by use cases
-packages/media/src/document/live.ts           # DocumentsLive layer → replaced by DocumentRepoLive
-packages/media/src/document/repository.ts     # Rename to repos/document-repo.ts with Context.Tag
-
-# Legacy error handling code to DELETE from effect-handler.ts:
-packages/api/src/server/effect-handler.ts:
-  - createErrorHandlers()                     # DELETE - replaced by handleEffectWithProtocol
-  - getErrorProp()                            # DELETE - unsafe, protocol handles property extraction
-  - logAndThrowInternal()                     # DELETE - protocol handles logging
-  - LegacyErrorFactoryConfig interface        # DELETE - not needed
-  - ErrorHandler type                         # DELETE - not needed
-
-# KEEP in effect-handler.ts:
-  - handleEffectWithProtocol()                # Main API handler
-  - handleTaggedError()                       # Generic protocol handler
-  - handleORPCError()                         # Validation error handler
-  - ErrorFactory interface                    # Used by handlers
-  - HandleEffectOptions interface             # Used by handlers
-```
-
----
-
-## Execution Order
-
-### Sprint 0: Error Handling Infrastructure (Foundation) ✅ COMPLETED
-0. ✅ Create `HttpErrorProtocol` interface in `packages/db/src/error-protocol.ts`
-1. ✅ Add `handleTaggedError` to `packages/api/src/server/effect-handler.ts`
-2. ✅ Add `handleEffectWithProtocol` (new protocol-based handler, keeps `handleEffect` for backward compatibility)
-3. ✅ Add static HTTP props to ALL errors (httpStatus, httpCode, httpMessage, logLevel, getData)
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
-
-### Sprint 1: Document Module (Foundation) ✅ COMPLETED
-
-> ⚠️ **Error Handling Reminder:** Document router currently has **zero tracing** and uses legacy pattern. When refactoring (step 5), use `handleEffectWithProtocol()` and add spans to ALL handlers.
-
-1. ✅ Create `DocumentRepo` as Context.Tag service (convert from repository.ts)
-   - Created `packages/media/src/document/repos/document-repo.ts`
-   - Created `packages/media/src/document/repos/index.ts`
-   - Validate: `pnpm --filter @repo/media typecheck` ✅
-2. ✅ Create document use cases (7 files)
-   - Created `list-documents.ts`, `get-document.ts`, `get-document-content.ts`
-   - Created `create-document.ts`, `upload-document.ts`, `update-document.ts`, `delete-document.ts`
-   - Created `packages/media/src/document/use-cases/index.ts`
-   - Validate: `pnpm --filter @repo/media typecheck` ✅
-3. ~~Add HTTP protocol props to document-related errors~~ ✅ Already done in Phase 0
-3a. ✅ Create shared utilities module (Issue #5)
-   - Created `packages/media/src/shared/text-utils.ts` with `calculateWordCount`
-   - Created `packages/media/src/shared/index.ts` barrel export
-   - Updated `create-document.ts`, `update-document.ts`, `upload-document.ts` to import from shared
-   - Note: `live.ts` still has duplicate (will be removed in Sprint 4)
-   - Validate: `pnpm --filter @repo/media typecheck` ✅
-4. ✅ Write document use case unit tests
-   - Created `packages/media/src/document/use-cases/__tests__/` directory
-   - Created test files for all 7 use cases:
-     - `list-documents.test.ts` (9 tests)
-     - `get-document.test.ts` (5 tests)
-     - `get-document-content.test.ts` (6 tests)
-     - `create-document.test.ts` (7 tests)
-     - `update-document.test.ts` (11 tests)
-     - `delete-document.test.ts` (5 tests)
-     - `upload-document.test.ts` (12 tests)
-   - Total: 55 tests passing
-   - Validate: `pnpm --filter @repo/media test` ✅
-5. ✅ **Refactor document router** - CRITICAL migration point:
-   - Replaced `handleEffect()` → `handleEffectWithProtocol()`
-   - Removed all `createErrorHandlers(errors)` calls
-   - Removed all `getErrorProp()` calls
-   - Added `{ span: 'api.documents.X', attributes: {...} }` to ALL handlers
-   - Uses Effect-based serializers (`serializeDocumentEffect`, `serializeDocumentsEffect`)
-   - Validate: `pnpm --filter @repo/api typecheck` ✅
-6. ✅ Write document router integration tests
-   - Created `packages/api/src/server/router/__tests__/document.integration.test.ts` (47 tests)
-   - Created `packages/api/src/server/router/__tests__/helpers.ts` (test utilities)
-   - Added `test` script to `packages/api/package.json`
-   - Created `packages/api/vitest.config.ts`
-   - Tests cover all 7 handlers: list, get, getContent, create, upload, update, delete
-   - Tests include: success paths, error handling, authorization, serialization format
-   - Validate: `pnpm --filter @repo/api test` ✅
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
-6a. ✅ Export shared `toUser` utility (Issue #6)
-   - Exported `toUser` from `@repo/testing/setup/layers.ts`
-   - Updated document integration tests to use shared utility
-   - Validate: `pnpm --filter @repo/api test` ✅
-
-### Sprint 2: Podcast Module (Standardize) ✅ COMPLETED
-
-> ⚠️ **Error Handling Reminder:** Podcast router has inconsistent tracing (some handlers have spans, some don't) and uses legacy error handlers. Migrate ALL handlers to protocol-based pattern.
-
-1. ~~Add HTTP protocol props to podcast-related errors~~ ✅ Already done in Phase 0
-2. ✅ **Refactor podcast router** - Full migration:
-   - Replaced `handleEffect()` → `handleEffectWithProtocol()` in ALL 9 handlers
-   - Removed all `createErrorHandlers(errors)` calls
-   - Added `{ span: 'api.podcasts.X', attributes: {...} }` to ALL handlers
-   - Created `getActiveScript` use case (extracted from getScript handler)
-   - Updated `getScript` handler to use `getActiveScript` use case
-   - Validate: `pnpm --filter @repo/api typecheck` ✅
-3. ✅ Add missing podcast use case tests
-   - Created test files for 6 use cases: list-podcasts, get-podcast, create-podcast, update-podcast, delete-podcast, get-active-script
-   - Total: 52 tests for podcast use cases
-   - Validate: `pnpm --filter @repo/media test` ✅
-4. ✅ Write podcast router integration tests
-   - Created `packages/api/src/server/router/__tests__/podcast.integration.test.ts`
-   - Total: 52 tests covering all 9 handlers (list, get, create, update, delete, getScript, generate, getJob, saveChanges)
-   - Validate: `pnpm --filter @repo/api test` ✅
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
-
-### Sprint 3: Voices Module (Complete) ✅ COMPLETED
-
-1. ✅ Create TTS use cases (listVoices, previewVoice)
-   - Created `packages/ai/src/tts/use-cases/list-voices.ts`
-   - Created `packages/ai/src/tts/use-cases/preview-voice.ts`
-   - Created `packages/ai/src/tts/use-cases/errors.ts` with `VoiceNotFoundError`
-   - Created `packages/ai/src/tts/use-cases/index.ts`
-   - Exported use cases from `@repo/ai/tts` and `@repo/ai`
-   - Validate: `pnpm --filter @repo/ai typecheck` ✅
-2. ~~Add HTTP protocol props to TTS-related errors~~ ✅ Already done in Phase 0
-3. ✅ Write TTS use case tests
-   - Created `packages/ai/src/tts/use-cases/__tests__/list-voices.test.ts` (4 tests)
-   - Created `packages/ai/src/tts/use-cases/__tests__/preview-voice.test.ts` (14 tests)
-   - Created `packages/ai/vitest.config.ts`
-   - Total: 18 tests passing
-   - Validate: `pnpm --filter @repo/ai test` ✅
-4. ✅ **Refactored voices router** - Full migration:
-   - Replaced `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
-   - Removed all `createErrorHandlers(errors)` calls
-   - Replaced direct TTS service calls with use cases (`listVoices`, `previewVoice`)
-   - Added `{ span: 'api.voices.X', attributes: {...} }` to ALL handlers
-   - Validate: `pnpm --filter @repo/api typecheck` ✅
-5. ✅ Write voices router integration tests
-   - Created `packages/api/src/server/router/__tests__/voices.integration.test.ts` (13 tests)
-   - Updated `helpers.ts` with `VOICE_NOT_FOUND` error code
-   - Tests cover: list handler, preview handler, error cases, response format
-   - Validate: `pnpm --filter @repo/api test` ✅
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
-
-### Sprint 4: Documentation & Cleanup ✅ COMPLETED
-
-> ⚠️ **Cleanup Reminder:** By this point, ALL routers should be using `handleEffectWithProtocol()`. Legacy code should be dead and ready to delete.
-
-1. ✅ Update CLAUDE.md with standardized patterns (including error handling)
-   - Added protocol-based handler pattern documentation
-   - Added use case pattern documentation
-   - Added error handling with HTTP protocol documentation
-   - Updated "What NOT to Do" section with new rules
-2. ✅ Update `generate-script.ts` to use `getDocumentContent` use case
-   - Replaced `Documents` service dependency with `DocumentRepo`
-   - Changed from `documents.getContent()` to `getDocumentContent()` use case
-3. ✅ Remove deprecated Documents service files
-   - Deleted `packages/media/src/document/service.ts`
-   - Deleted `packages/media/src/document/live.ts`
-   - Updated `packages/media/src/document/index.ts` to remove legacy exports
-4. ✅ **Delete legacy error handling code** from `effect-handler.ts`:
-   - Removed `createErrorHandlers()` factory function entirely
-   - Removed `getErrorProp()` helper
-   - Removed `logAndThrowInternal()` helper
-   - Removed `LegacyErrorFactoryConfig` interface
-   - Removed `ErrorHandler` type
-   - Removed legacy `handleEffect()` (replaced by `handleEffectWithProtocol()`)
-   - Removed `ErrorMapper` type
-   - Kept: `handleEffectWithProtocol()`, `handleTaggedError()`, `handleORPCError()`, `ErrorFactory`, `HandleEffectOptions`
-5. ✅ Update Media type export (remove Documents, add DocumentRepo)
-   - Updated `Media` type to exclude `Documents`
-   - Updated `MediaLive` layer to exclude `DocumentsLive`
-   - Updated API index to export new handlers instead of legacy ones
-6. ✅ Verify no imports of removed functions across codebase
-   - **Final validation**: `pnpm typecheck && pnpm test && pnpm build` ✅
-
-### Sprint 5: Frontend Typed Error Handling ✅ COMPLETED
-
-> **Goal:** Leverage oRPC's typed error system on the frontend to provide rich, context-aware error messages instead of generic fallbacks.
-
-1. ✅ Created `apps/web/src/lib/errors.ts` with `getErrorMessage()` utility
-   - Handles 13+ error codes with contextual formatting
-   - Uses structured error data (fileName, fileSize, retryAfter, etc.)
-   - Falls back gracefully for unknown errors
-2. ✅ Created `apps/web/src/lib/errors.test.ts` with 25 tests
-   - Added vitest config for web app (`apps/web/vitest.config.ts`)
-   - Added `test` script to `apps/web/package.json`
-3. ✅ Updated all 17 error handlers to use `getErrorMessage()`:
-   - `apps/web/src/routes/_protected/documents/-components/upload-document.tsx`
-   - `apps/web/src/routes/_protected/documents/index.tsx`
-   - `apps/web/src/routes/_protected/podcasts/index.tsx`
-   - `apps/web/src/routes/_protected/podcasts/$podcastId.tsx`
-   - `apps/web/src/routes/_protected/podcasts/-components/setup/setup-wizard.tsx`
-   - `apps/web/src/routes/_protected/podcasts/-components/setup/steps/step-documents.tsx`
-   - `apps/web/src/routes/_protected/dashboard.tsx`
-   - `apps/web/src/hooks/use-podcast-generation.ts`
-   - `apps/web/src/hooks/use-podcast-settings.ts`
-   - `apps/web/src/hooks/use-script-editor.ts`
-   - `apps/web/src/hooks/use-optimistic-podcast-mutation.ts`
-4. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
-
-#### Success Criteria
-
-- [x] All `onError` handlers use `getErrorMessage` utility
-- [x] Document upload errors show file size details (`DOCUMENT_TOO_LARGE`)
-- [x] Format errors show supported formats (`UNSUPPORTED_FORMAT`)
-- [x] Rate limit errors show retry timing when available (`RATE_LIMITED`)
-- [x] No `error.message ?? 'fallback'` patterns remain (use centralized utility)
-- [x] Error utility has tests covering all defined error codes
-
-### Sprint 6: Live Integration Tests (Issue #8) ✅ COMPLETED
-
-> **Goal:** Add integration tests that verify external services (LLM, TTS, Storage) work correctly. Tests are skipped by default but easily enabled for deployment verification.
-
-1. ✅ Created LLM live integration tests (`packages/ai/src/__tests__/live/llm.live.test.ts`)
-   - Tests: generate text, structured JSON, token usage, system prompt, temperature
-   - Error handling: invalid API key
-   - Skipped when `GEMINI_API_KEY` not set
-2. ✅ Created TTS live integration tests (`packages/ai/src/__tests__/live/tts.live.test.ts`)
-   - Tests: list voices, filter by gender, generate audio, WAV/MP3 formats
-   - Multi-speaker synthesis
-   - Error handling: invalid API key
-   - Skipped when `GEMINI_API_KEY` not set
-3. ✅ Created Storage live integration tests (`packages/storage/src/__tests__/live/s3.live.test.ts`)
-   - Tests: upload, download, delete, exists, getUrl
-   - Roundtrip verification, file overwrite
-   - Error handling: missing file (404), invalid credentials
-   - Automatic cleanup of test files
-   - Skipped when S3 env vars not set
-4. ✅ Added npm scripts for running live tests
-   - Root: `pnpm test:live`, `pnpm test:live:llm`, `pnpm test:live:tts`, `pnpm test:live:storage`
-   - Per-package: `pnpm --filter @repo/ai test:live`, `pnpm --filter @repo/storage test:live`
-5. ✅ Created documentation (`standards/testing/live-tests.md`)
-   - Environment variable reference
-   - Usage examples
-   - CI integration guidance
-6. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
-
-#### Success Criteria
-
-- [x] Live tests are skipped when env vars are missing
-- [x] Live tests are NOT run in CI by default (use `describe.skipIf`)
-- [x] Each service has basic connectivity test
-- [x] Each service has error handling tests
-- [x] Documentation in `standards/testing/live-tests.md`
-
-### Sprint 7: Remove Explicit Error Types (Issue #7) ✅ COMPLETED
-
-> **Goal:** Remove explicit error type declarations from use cases. Effect infers error types automatically - explicit declarations are redundant and add maintenance overhead.
-
-1. ✅ Removed explicit error types from document use cases (7 files)
-   - Removed `export type XxxError = ...` declarations
-   - Removed error type from function signatures
-   - Updated index.ts to remove error type exports
-2. ✅ Removed explicit error types from podcast use cases (11 files)
-   - Removed `export type XxxError = ...` declarations
-   - Removed error type from function signatures
-   - Updated index.ts to remove error type exports
-3. ✅ Removed explicit error types from TTS use cases (2 files)
-   - Removed `export type XxxError = ...` declarations
-   - Removed error type from function signatures
-   - Updated index.ts to remove error type exports
-4. ✅ Updated barrel exports across packages
-   - `packages/media/src/index.ts`
-   - `packages/media/src/document/index.ts`
-   - `packages/media/src/podcast/index.ts`
-   - `packages/ai/src/index.ts`
-   - `packages/ai/src/tts/index.ts`
-5. ✅ Fixed podcast router readonly array type issue
-   - Used spread operator to convert readonly to mutable array
-6. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
-
-#### Success Criteria
-
-- [x] No explicit `export type XxxError` declarations in use case files
-- [x] No error types in function signatures (Effect infers them)
-- [x] All barrel exports updated to remove error type exports
-- [x] All tests passing
-- [x] All packages building successfully
-
-### Sprint 8: Router Handler Use Case Extraction (Issue #9) ✅ COMPLETED
-
-> **Goal:** Extract inline Effect logic from `generate`, `saveChanges`, and `getJob` handlers into proper use cases, following the standardized router pattern.
-
-1. ✅ Created `startGeneration` use case (`packages/media/src/podcast/use-cases/start-generation.ts`)
-   - Extracts all logic from `generate` handler
-   - Handles podcast verification, version creation/update, job idempotency
-   - Enqueues `generate-podcast` job
-   - Added to barrel exports
-2. ✅ Created `saveAndQueueAudio` use case (`packages/media/src/podcast/use-cases/save-and-queue-audio.ts`)
-   - Composes with existing `saveChanges` use case
-   - Handles job idempotency check
-   - Enqueues `generate-audio` job
-   - Created `NoChangesToSaveError` with HTTP protocol
-   - Added to barrel exports
-3. ✅ Created `getJob` use case (`packages/media/src/podcast/use-cases/get-job.ts`)
-   - Simple use case wrapping Queue.getJob
-   - Returns raw job data for serialization in handler
-   - Added to barrel exports
-4. ✅ Updated HTTP protocol on `InvalidSaveError`
-   - Added `httpStatus`, `httpCode`, `httpMessage`, `logLevel`, `getData`
-5. ✅ Refactored podcast router
-   - `generate` handler now calls `startGeneration` use case
-   - `saveChanges` handler now calls `saveAndQueueAudio` use case
-   - `getJob` handler now calls `getJob` use case
-   - Removed inline `Effect.gen` blocks
-   - Removed direct repo access from handlers
-6. ✅ Added `@repo/queue` dependency to `@repo/media` package
-7. ✅ Added unit tests for new use cases
-   - `start-generation.test.ts` (7 tests)
-   - `save-and-queue-audio.test.ts` (8 tests)
-   - `get-job.test.ts` (7 tests)
-   - Total: 22 new tests
-8. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
-
-#### Success Criteria
-
-- [x] All podcast router handlers call use cases (no inline Effect.gen blocks)
-- [x] No direct repo access from handlers
-- [x] New errors have HTTP protocol properties
-- [x] Unit tests cover new use cases
-- [x] All 112 API tests passing
-- [x] All 129 media tests passing
+- `/standards/frontend/components.md` - Container/Presenter pattern
+- `/standards/frontend/data-fetching.md` - useSuspenseQuery patterns
+- `/standards/frontend/mutations.md` - Optimistic mutation factory
+- `/standards/frontend/error-handling.md` - Error formatting
