@@ -59,26 +59,29 @@ export interface HandleEffectOptions {
  * );
  * ```
  */
-export const handleEffect = <A, E extends { _tag: string }>(
+export const handleEffect = <A>(
   runtime: ServerRuntime,
   user: User | null,
-  effect: Effect.Effect<A, E, SharedServices>,
-  errorMapper: ErrorMapper<E>,
+  effect: Effect.Effect<A, unknown, unknown>,
+  errorMapper: Record<string, (error: unknown) => never>,
   options?: HandleEffectOptions,
 ): Promise<A> => {
+  // Cast to the expected types - runtime will provide SharedServices
+  const typedEffect = effect as Effect.Effect<A, { _tag: string }, SharedServices>;
+
   let tracedEffect = options?.span
-    ? effect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
-    : effect;
+    ? typedEffect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
+    : typedEffect;
 
   const scopedEffect = user ? withCurrentUser(user)(tracedEffect) : tracedEffect;
 
   return runtime.runPromise(
     scopedEffect.pipe(
-      Effect.catchAll((error: E) =>
+      Effect.catchAll((error: { _tag: string }) =>
         Effect.sync(() => {
-          const handler = errorMapper[error._tag as E['_tag']];
+          const handler = errorMapper[error._tag];
           if (handler) {
-            return handler(error as Extract<E, { _tag: E['_tag'] }>);
+            return handler(error);
           }
           throw new Error(`Unhandled error type: ${error._tag}`);
         }),
@@ -131,16 +134,33 @@ interface ErrorFactoryConfig {
 }
 
 /**
+ * Error handler type - accepts unknown and returns never (throws).
+ */
+type ErrorHandler = (error: unknown) => never;
+
+/**
+ * Helper to safely get a property from an unknown error.
+ */
+export const getErrorProp = <T>(error: unknown, key: string, defaultValue: T): T => {
+  if (error && typeof error === 'object' && key in error) {
+    return (error as Record<string, unknown>)[key] as T;
+  }
+  return defaultValue;
+};
+
+/**
  * Log an error with its stack trace and throw an internal error.
  */
 const logAndThrowInternal = (
   tag: string,
-  e: { message: string; cause?: unknown },
+  e: unknown,
   errors: { INTERNAL_ERROR: (opts: { message: string }) => unknown },
   publicMessage: string,
 ): never => {
-  const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-  console.error(`[${tag}]`, e.message, { cause: e.cause, stack });
+  const message = getErrorProp(e, 'message', 'Unknown error');
+  const cause = getErrorProp<unknown>(e, 'cause', undefined);
+  const stack = cause instanceof Error ? cause.stack : undefined;
+  console.error(`[${tag}]`, message, { cause, stack });
   throw errors.INTERNAL_ERROR({ message: publicMessage });
 };
 
@@ -179,31 +199,34 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Includes: DbError, PolicyError, ForbiddenError, UnauthorizedError, NotFoundError
    */
   common: {
-    DbError: (e: { message: string; cause?: unknown }) =>
-      logAndThrowInternal('DbError', e, errors, 'Database operation failed'),
+    DbError: ((e: unknown) =>
+      logAndThrowInternal('DbError', e, errors, 'Database operation failed')) as ErrorHandler,
 
-    PolicyError: (e: { message: string; cause?: unknown }) =>
+    PolicyError: ((e: unknown) =>
       logAndThrowInternal(
         'PolicyError',
         e,
         errors,
         'Authorization check failed',
-      ),
+      )) as ErrorHandler,
 
-    ForbiddenError: (e: { message: string }) => {
-      throw errors.FORBIDDEN({ message: e.message });
-    },
+    ForbiddenError: ((e: unknown) => {
+      throw errors.FORBIDDEN({ message: getErrorProp(e, 'message', 'Access forbidden') });
+    }) as ErrorHandler,
 
-    UnauthorizedError: (e: { message: string }) => {
-      throw errors.UNAUTHORIZED({ message: e.message });
-    },
+    UnauthorizedError: ((e: unknown) => {
+      throw errors.UNAUTHORIZED({ message: getErrorProp(e, 'message', 'Unauthorized') });
+    }) as ErrorHandler,
 
-    NotFoundError: (e: { entity: string; id: string; message?: string }) => {
+    NotFoundError: ((e: unknown) => {
+      const entity = getErrorProp(e, 'entity', 'Resource');
+      const id = getErrorProp(e, 'id', 'unknown');
+      const message = getErrorProp<string | undefined>(e, 'message', undefined);
       throw errors.NOT_FOUND({
-        message: e.message ?? `${e.entity} with id ${e.id} not found`,
-        data: { entity: e.entity, id: e.id },
+        message: message ?? `${entity} with id ${id} not found`,
+        data: { entity, id },
       });
-    },
+    }) as ErrorHandler,
   },
 
   /**
@@ -211,48 +234,50 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Use when your Effect can produce ConstraintViolationError, DeadlockError, or ConnectionError.
    */
   database: {
-    ConstraintViolationError: (e: {
-      constraint: string;
-      table?: string;
-      message: string;
-      cause?: unknown;
-    }) => {
-      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-      console.error('[ConstraintViolationError]', e.message, {
-        constraint: e.constraint,
-        table: e.table,
+    ConstraintViolationError: ((e: unknown) => {
+      const constraint = getErrorProp(e, 'constraint', 'unknown');
+      const table = getErrorProp<string | undefined>(e, 'table', undefined);
+      const message = getErrorProp(e, 'message', 'Constraint violation');
+      const cause = getErrorProp<unknown>(e, 'cause', undefined);
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error('[ConstraintViolationError]', message, {
+        constraint,
+        table,
         stack,
       });
-      // Use CONFLICT if available, otherwise INTERNAL_ERROR
       if (errors.CONFLICT) {
         throw errors.CONFLICT({
           message: 'A conflict occurred with existing data',
         });
       }
       throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-    },
+    }) as ErrorHandler,
 
-    DeadlockError: (e: { message: string; cause?: unknown }) => {
-      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-      console.error('[DeadlockError]', e.message, { stack });
+    DeadlockError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'Deadlock detected');
+      const cause = getErrorProp<unknown>(e, 'cause', undefined);
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error('[DeadlockError]', message, { stack });
       if (errors.SERVICE_UNAVAILABLE) {
         throw errors.SERVICE_UNAVAILABLE({
           message: 'Database temporarily unavailable, please retry',
         });
       }
       throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-    },
+    }) as ErrorHandler,
 
-    ConnectionError: (e: { message: string; cause?: unknown }) => {
-      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-      console.error('[ConnectionError]', e.message, { stack });
+    ConnectionError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'Connection error');
+      const cause = getErrorProp<unknown>(e, 'cause', undefined);
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error('[ConnectionError]', message, { stack });
       if (errors.SERVICE_UNAVAILABLE) {
         throw errors.SERVICE_UNAVAILABLE({
           message: 'Database connection failed',
         });
       }
       throw errors.INTERNAL_ERROR({ message: 'Database operation failed' });
-    },
+    }) as ErrorHandler,
   },
 
   /**
@@ -260,32 +285,30 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Use when your Effect interacts with StorageService.
    */
   storage: {
-    StorageError: (e: { message: string; cause?: unknown }) =>
+    StorageError: ((e: unknown) =>
       logAndThrowInternal(
         'StorageError',
         e,
         errors,
         'Storage operation failed',
-      ),
+      )) as ErrorHandler,
 
-    StorageUploadError: (e: {
-      key: string;
-      message: string;
-      cause?: unknown;
-    }) =>
+    StorageUploadError: ((e: unknown) =>
       logAndThrowInternal(
         'StorageUploadError',
         e,
         errors,
         'File upload failed',
-      ),
+      )) as ErrorHandler,
 
-    StorageNotFoundError: (e: { key: string; message?: string }) => {
+    StorageNotFoundError: ((e: unknown) => {
+      const key = getErrorProp(e, 'key', 'unknown');
+      const message = getErrorProp<string | undefined>(e, 'message', undefined);
       throw errors.NOT_FOUND({
-        message: e.message ?? `File not found: ${e.key}`,
-        data: { key: e.key },
+        message: message ?? `File not found: ${key}`,
+        data: { key },
       });
-    },
+    }) as ErrorHandler,
   },
 
   /**
@@ -293,32 +316,30 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Use when your Effect interacts with the job queue.
    */
   queue: {
-    QueueError: (e: { message: string; cause?: unknown }) =>
+    QueueError: ((e: unknown) =>
       logAndThrowInternal(
         'QueueError',
         e,
         errors,
         'Job queue operation failed',
-      ),
+      )) as ErrorHandler,
 
-    JobNotFoundError: (e: { jobId: string; message?: string }) => {
+    JobNotFoundError: ((e: unknown) => {
+      const jobId = getErrorProp(e, 'jobId', 'unknown');
+      const message = getErrorProp<string | undefined>(e, 'message', undefined);
       throw errors.NOT_FOUND({
-        message: e.message ?? `Job ${e.jobId} not found`,
-        data: { jobId: e.jobId },
+        message: message ?? `Job ${jobId} not found`,
+        data: { jobId },
       });
-    },
+    }) as ErrorHandler,
 
-    JobProcessingError: (e: {
-      jobId: string;
-      message: string;
-      cause?: unknown;
-    }) =>
+    JobProcessingError: ((e: unknown) =>
       logAndThrowInternal(
         'JobProcessingError',
         e,
         errors,
         'Job processing failed',
-      ),
+      )) as ErrorHandler,
   },
 
   /**
@@ -326,9 +347,11 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Use when your Effect interacts with TTS service.
    */
   tts: {
-    TTSError: (e: { message: string; cause?: unknown }) => {
-      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-      console.error('[TTSError]', e.message, { stack });
+    TTSError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'TTS error');
+      const cause = getErrorProp<unknown>(e, 'cause', undefined);
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error('[TTSError]', message, { stack });
       if (errors.SERVICE_UNAVAILABLE) {
         throw errors.SERVICE_UNAVAILABLE({
           message: 'Text-to-speech service unavailable',
@@ -337,15 +360,16 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
       throw errors.INTERNAL_ERROR({
         message: 'Text-to-speech operation failed',
       });
-    },
+    }) as ErrorHandler,
 
-    TTSQuotaExceededError: (e: { message: string }) => {
-      console.error('[TTSQuotaExceededError]', e.message);
+    TTSQuotaExceededError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'TTS quota exceeded');
+      console.error('[TTSQuotaExceededError]', message);
       if (errors.RATE_LIMITED) {
         throw errors.RATE_LIMITED({ message: 'TTS quota exceeded' });
       }
       throw errors.INTERNAL_ERROR({ message: 'Text-to-speech quota exceeded' });
-    },
+    }) as ErrorHandler,
   },
 
   /**
@@ -353,24 +377,27 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
    * Use when your Effect interacts with LLM service.
    */
   llm: {
-    LLMError: (e: { message: string; model?: string; cause?: unknown }) => {
-      const stack = e.cause instanceof Error ? e.cause.stack : undefined;
-      console.error('[LLMError]', e.message, { model: e.model, stack });
+    LLMError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'LLM error');
+      const model = getErrorProp<string | undefined>(e, 'model', undefined);
+      const cause = getErrorProp<unknown>(e, 'cause', undefined);
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error('[LLMError]', message, { model, stack });
       if (errors.SERVICE_UNAVAILABLE) {
         throw errors.SERVICE_UNAVAILABLE({ message: 'AI service unavailable' });
       }
       throw errors.INTERNAL_ERROR({ message: 'AI operation failed' });
-    },
+    }) as ErrorHandler,
 
-    LLMRateLimitError: (e: { message: string; retryAfter?: number }) => {
-      console.error('[LLMRateLimitError]', e.message, {
-        retryAfter: e.retryAfter,
-      });
+    LLMRateLimitError: ((e: unknown) => {
+      const message = getErrorProp(e, 'message', 'LLM rate limit exceeded');
+      const retryAfter = getErrorProp<number | undefined>(e, 'retryAfter', undefined);
+      console.error('[LLMRateLimitError]', message, { retryAfter });
       if (errors.RATE_LIMITED) {
         throw errors.RATE_LIMITED({ message: 'AI rate limit exceeded' });
       }
       throw errors.INTERNAL_ERROR({ message: 'AI rate limit exceeded' });
-    },
+    }) as ErrorHandler,
   },
 });
 

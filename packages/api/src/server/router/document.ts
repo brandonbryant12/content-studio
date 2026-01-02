@@ -1,7 +1,7 @@
 import { serializeDocument } from '@repo/db/schema';
 import { Documents } from '@repo/media';
 import { Effect } from 'effect';
-import { createErrorHandlers, handleEffect } from '../effect-handler';
+import { createErrorHandlers, handleEffect, getErrorProp } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const documentRouter = {
@@ -38,10 +38,12 @@ const documentRouter = {
         {
           ...handlers.common,
           ...handlers.database,
-          DocumentNotFound: (e) => {
+          DocumentNotFound: (e: unknown) => {
+            const id = getErrorProp(e, 'id', 'unknown');
+            const message = getErrorProp<string | undefined>(e, 'message', undefined);
             throw errors.DOCUMENT_NOT_FOUND({
-              message: e.message ?? `Document ${e.id} not found`,
-              data: { documentId: e.id },
+              message: message ?? `Document ${id} not found`,
+              data: { documentId: id },
             });
           },
         },
@@ -64,16 +66,20 @@ const documentRouter = {
           ...handlers.common,
           ...handlers.database,
           ...handlers.storage,
-          DocumentNotFound: (e) => {
+          DocumentNotFound: (e: unknown) => {
+            const id = getErrorProp(e, 'id', 'unknown');
+            const message = getErrorProp<string | undefined>(e, 'message', undefined);
             throw errors.DOCUMENT_NOT_FOUND({
-              message: e.message ?? `Document ${e.id} not found`,
-              data: { documentId: e.id },
+              message: message ?? `Document ${id} not found`,
+              data: { documentId: id },
             });
           },
-          DocumentParseError: (e) => {
+          DocumentParseError: (e: unknown) => {
+            const message = getErrorProp(e, 'message', 'Failed to parse document content');
+            const fileName = getErrorProp(e, 'fileName', 'unknown');
             throw errors.DOCUMENT_PARSE_ERROR({
-              message: e.message ?? 'Failed to parse document content',
-              data: { fileName: e.fileName },
+              message,
+              data: { fileName },
             });
           },
         },
@@ -127,30 +133,32 @@ const documentRouter = {
           ...handlers.common,
           ...handlers.database,
           ...handlers.storage,
-          DocumentTooLargeError: (e) => {
+          DocumentTooLargeError: (e: unknown) => {
+            const message = getErrorProp(e, 'message', 'File too large');
+            const fileName = getErrorProp(e, 'fileName', 'unknown');
+            const fileSize = getErrorProp(e, 'fileSize', 0);
+            const maxSize = getErrorProp(e, 'maxSize', 0);
             throw errors.DOCUMENT_TOO_LARGE({
-              message: e.message,
-              data: {
-                fileName: e.fileName,
-                fileSize: e.fileSize,
-                maxSize: e.maxSize,
-              },
+              message,
+              data: { fileName, fileSize, maxSize },
             });
           },
-          UnsupportedDocumentFormat: (e) => {
+          UnsupportedDocumentFormat: (e: unknown) => {
+            const message = getErrorProp(e, 'message', 'Unsupported format');
+            const fileName = getErrorProp(e, 'fileName', 'unknown');
+            const mimeType = getErrorProp(e, 'mimeType', 'unknown');
+            const supportedFormats = getErrorProp<readonly string[]>(e, 'supportedFormats', []);
             throw errors.UNSUPPORTED_FORMAT({
-              message: e.message,
-              data: {
-                fileName: e.fileName,
-                mimeType: e.mimeType,
-                supportedFormats: [...e.supportedFormats],
-              },
+              message,
+              data: { fileName, mimeType, supportedFormats: [...supportedFormats] },
             });
           },
-          DocumentParseError: (e) => {
+          DocumentParseError: (e: unknown) => {
+            const message = getErrorProp(e, 'message', 'Failed to parse document');
+            const fileName = getErrorProp(e, 'fileName', 'unknown');
             throw errors.DOCUMENT_PARSE_ERROR({
-              message: e.message ?? 'Failed to parse document',
-              data: { fileName: e.fileName },
+              message,
+              data: { fileName },
             });
           },
         },
@@ -175,10 +183,12 @@ const documentRouter = {
           ...handlers.common,
           ...handlers.database,
           ...handlers.storage,
-          DocumentNotFound: (e) => {
+          DocumentNotFound: (e: unknown) => {
+            const docId = getErrorProp(e, 'id', 'unknown');
+            const message = getErrorProp<string | undefined>(e, 'message', undefined);
             throw errors.DOCUMENT_NOT_FOUND({
-              message: e.message ?? `Document ${e.id} not found`,
-              data: { documentId: e.id },
+              message: message ?? `Document ${docId} not found`,
+              data: { documentId: docId },
             });
           },
         },
@@ -201,10 +211,12 @@ const documentRouter = {
           ...handlers.common,
           ...handlers.database,
           ...handlers.storage,
-          DocumentNotFound: (e) => {
+          DocumentNotFound: (e: unknown) => {
+            const id = getErrorProp(e, 'id', 'unknown');
+            const message = getErrorProp<string | undefined>(e, 'message', undefined);
             throw errors.DOCUMENT_NOT_FOUND({
-              message: e.message ?? `Document ${e.id} not found`,
-              data: { documentId: e.id },
+              message: message ?? `Document ${id} not found`,
+              data: { documentId: id },
             });
           },
         },
