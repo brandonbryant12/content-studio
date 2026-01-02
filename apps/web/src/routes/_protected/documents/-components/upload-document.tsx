@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -47,7 +48,7 @@ export default function UploadDocumentDialog({
         handleClose();
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to upload document');
+        toast.error(getErrorMessage(error, 'Failed to upload document'));
       },
     }),
   );

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-router';
 import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/errors';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
   WorkbenchLayout,
@@ -64,7 +65,7 @@ function PodcastWorkbench() {
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to update podcast');
+        toast.error(getErrorMessage(error, 'Failed to update podcast'));
       },
     }),
   );
@@ -171,7 +172,7 @@ function PodcastWorkbench() {
         navigate({ to: '/podcasts' });
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete podcast');
+        toast.error(getErrorMessage(error, 'Failed to delete podcast'));
       },
     }),
   );

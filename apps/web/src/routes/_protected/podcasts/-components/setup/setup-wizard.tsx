@@ -9,6 +9,7 @@ import { StepBasics } from './steps/step-basics';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';
@@ -54,7 +55,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to save');
+        toast.error(getErrorMessage(error, 'Failed to save'));
       },
     }),
   );
@@ -72,7 +73,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
         toast.success('Generation started');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to start generation');
+        toast.error(getErrorMessage(error, 'Failed to start generation'));
       },
     }),
   );

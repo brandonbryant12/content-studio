@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 
 export interface ScriptSegment {
   speaker: string;
@@ -68,8 +69,8 @@ export function useScriptEditor({
         toast.success('Script saved. Regenerating audio...');
         setOriginalSegments(segments);
       },
-      onError: (error: { message?: string }) => {
-        toast.error(error.message ?? 'Failed to save script');
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to save script'));
       },
     }),
   );

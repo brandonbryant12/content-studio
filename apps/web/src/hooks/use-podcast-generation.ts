@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 
 interface PodcastConfig {
   format: 'conversation' | 'voice_over';
@@ -49,7 +50,7 @@ export function usePodcastGeneration({
         toast.success('Generation started!');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to start generation');
+        toast.error(getErrorMessage(error, 'Failed to start generation'));
       },
     }),
   );
@@ -58,7 +59,7 @@ export function usePodcastGeneration({
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to update podcast');
+        toast.error(getErrorMessage(error, 'Failed to update podcast'));
       },
     }),
   );
@@ -95,7 +96,7 @@ export function usePodcastGeneration({
         navigateToPodcast(newPodcast.id);
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
+        toast.error(getErrorMessage(error, 'Failed to create podcast'));
       },
     }),
   );

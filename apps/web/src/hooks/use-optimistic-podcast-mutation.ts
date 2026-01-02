@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -40,12 +41,12 @@ export function useOptimisticFullGeneration(podcastId: string) {
         }
         return { previousPodcast } as OptimisticContext;
       },
-      onError: (_err, _vars, context) => {
+      onError: (err, _vars, context) => {
         const ctx = context as OptimisticContext | undefined;
         if (ctx?.previousPodcast) {
           qc.setQueryData(podcastQueryKey, ctx.previousPodcast);
         }
-        toast.error('Failed to start generation');
+        toast.error(getErrorMessage(err, 'Failed to start generation'));
       },
       // No onSettled needed - SSE will trigger refetch when job completes
     }),
@@ -82,12 +83,12 @@ export function useOptimisticSaveChanges(podcastId: string) {
         }
         return { previousPodcast } as OptimisticContext;
       },
-      onError: (_err, _vars, context) => {
+      onError: (err, _vars, context) => {
         const ctx = context as OptimisticContext | undefined;
         if (ctx?.previousPodcast) {
           qc.setQueryData(podcastQueryKey, ctx.previousPodcast);
         }
-        toast.error('Failed to save changes');
+        toast.error(getErrorMessage(err, 'Failed to save changes'));
       },
       // No onSettled needed - SSE will trigger refetch when job completes
     }),

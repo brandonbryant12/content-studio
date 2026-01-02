@@ -13,6 +13,7 @@ import { DocumentItem } from './documents/-components/document-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
 import { PodcastItem } from './podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 import { usePodcastsOrdered, useDocumentsOrdered } from '@/db';
 
 export const Route = createFileRoute('/_protected/dashboard')({
@@ -45,7 +46,7 @@ function Dashboard() {
         });
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
+        toast.error(getErrorMessage(error, 'Failed to create podcast'));
       },
     }),
   );

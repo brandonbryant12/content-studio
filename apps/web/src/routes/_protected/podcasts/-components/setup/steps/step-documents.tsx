@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 import { useDocuments } from '@/db';
 
 const SUPPORTED_TYPES = [
@@ -49,7 +50,7 @@ export function StepDocuments({
         setActiveTab('existing');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to upload document');
+        toast.error(getErrorMessage(error, 'Failed to upload document'));
       },
     }),
   );

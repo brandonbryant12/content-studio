@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { DocumentItem } from './-components/document-item';
 import UploadDocumentDialog from './-components/upload-document';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 import { useDocuments } from '@/db';
 
 export const Route = createFileRoute('/_protected/documents/')({
@@ -64,7 +65,7 @@ function DocumentsPage() {
         toast.success('Document deleted');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete document');
+        toast.error(getErrorMessage(error, 'Failed to delete document'));
       },
       onSettled: () => {
         setDeletingId(null);

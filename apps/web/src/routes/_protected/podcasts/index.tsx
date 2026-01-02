@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { PodcastItem } from './-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/lib/errors';
 import { usePodcasts } from '@/db';
 
 export const Route = createFileRoute('/_protected/podcasts/')({
@@ -78,7 +79,7 @@ function PodcastsPage() {
         });
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to create podcast');
+        toast.error(getErrorMessage(error, 'Failed to create podcast'));
       },
     }),
   );
@@ -90,7 +91,7 @@ function PodcastsPage() {
         toast.success('Podcast deleted');
       },
       onError: (error) => {
-        toast.error(error.message ?? 'Failed to delete podcast');
+        toast.error(getErrorMessage(error, 'Failed to delete podcast'));
       },
       onSettled: () => {
         setDeletingId(null);

@@ -853,24 +853,18 @@ packages/api/src/server/effect-handler.ts:
 6. ✅ Verify no imports of removed functions across codebase
    - **Final validation**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
-### Sprint 5: Frontend Typed Error Handling
+### Sprint 5: Frontend Typed Error Handling ✅ COMPLETED
 
 > **Goal:** Leverage oRPC's typed error system on the frontend to provide rich, context-aware error messages instead of generic fallbacks.
 
-**Background:** The backend sends structured error data via `getData()` methods on error classes, and contracts define typed `data` schemas. The frontend currently ignores this - all `onError` handlers only use `error.message`.
-
-**Available utilities (already exported from `@repo/api/client`):**
-- `isDefinedError(error)` - Type guard that narrows error to defined oRPC errors with typed `code` and `data`
-- `safe(promise)` - Wraps call to return `[error, data, isDefined, isSuccess]` tuple (for imperative calls)
-
-#### Implementation Steps
-
-1. **Audit all TanStack Query error handlers** in `apps/web/`:
-   ```bash
-   grep -r "onError.*=>" apps/web/src --include="*.tsx" --include="*.ts"
-   ```
-
-   Files to update:
+1. ✅ Created `apps/web/src/lib/errors.ts` with `getErrorMessage()` utility
+   - Handles 13+ error codes with contextual formatting
+   - Uses structured error data (fileName, fileSize, retryAfter, etc.)
+   - Falls back gracefully for unknown errors
+2. ✅ Created `apps/web/src/lib/errors.test.ts` with 25 tests
+   - Added vitest config for web app (`apps/web/vitest.config.ts`)
+   - Added `test` script to `apps/web/package.json`
+3. ✅ Updated all 17 error handlers to use `getErrorMessage()`:
    - `apps/web/src/routes/_protected/documents/-components/upload-document.tsx`
    - `apps/web/src/routes/_protected/documents/index.tsx`
    - `apps/web/src/routes/_protected/podcasts/index.tsx`
@@ -882,110 +876,13 @@ packages/api/src/server/effect-handler.ts:
    - `apps/web/src/hooks/use-podcast-settings.ts`
    - `apps/web/src/hooks/use-script-editor.ts`
    - `apps/web/src/hooks/use-optimistic-podcast-mutation.ts`
-
-2. **Create error formatting utilities** in `apps/web/src/lib/errors.ts`:
-   ```typescript
-   import { isDefinedError } from '@repo/api/client';
-
-   export const formatBytes = (bytes: number): string => {
-     if (bytes < 1024) return `${bytes} B`;
-     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-   };
-
-   export const getErrorMessage = (error: unknown, fallback: string): string => {
-     if (!isDefinedError(error)) {
-       return (error as Error)?.message ?? fallback;
-     }
-
-     switch (error.code) {
-       case 'DOCUMENT_TOO_LARGE': {
-         const { fileName, fileSize, maxSize } = error.data as { fileName: string; fileSize: number; maxSize: number };
-         return `${fileName} (${formatBytes(fileSize)}) exceeds ${formatBytes(maxSize)} limit`;
-       }
-       case 'UNSUPPORTED_FORMAT': {
-         const { mimeType, supportedFormats } = error.data as { mimeType: string; supportedFormats: string[] };
-         return `${mimeType} not supported. Use: ${supportedFormats.join(', ')}`;
-       }
-       case 'RATE_LIMITED': {
-         const data = error.data as { retryAfter?: number } | undefined;
-         return data?.retryAfter
-           ? `Too many requests. Try again in ${data.retryAfter} seconds.`
-           : 'Too many requests. Please wait a moment.';
-       }
-       // Add more cases as needed...
-       default:
-         return error.message;
-     }
-   };
-   ```
-
-3. **Update error handlers** to use `isDefinedError`:
-   ```typescript
-   // Before
-   onError: (error) => {
-     toast.error(error.message ?? 'Failed to upload document');
-   }
-
-   // After
-   import { isDefinedError } from '@repo/api/client';
-   import { getErrorMessage } from '@/lib/errors';
-
-   onError: (error) => {
-     toast.error(getErrorMessage(error, 'Failed to upload document'));
-   }
-   ```
-
-4. **Add typed error handling for specific cases** where richer UX is needed:
-   ```typescript
-   onError: (error) => {
-     if (isDefinedError(error)) {
-       switch (error.code) {
-         case 'DOCUMENT_TOO_LARGE':
-           // Show specific UI (e.g., file size indicator, compression suggestion)
-           setFileSizeError(error.data);
-           return;
-         case 'PODCAST_NOT_FOUND':
-           // Navigate away
-           navigate({ to: '/podcasts' });
-           toast.error('Podcast no longer exists');
-           return;
-       }
-     }
-     toast.error(getErrorMessage(error, 'Operation failed'));
-   }
-   ```
-
-5. **Validate:** `pnpm --filter web typecheck && pnpm --filter web build`
+4. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
 
 #### Success Criteria
 
-- [ ] All `onError` handlers use `isDefinedError` or `getErrorMessage` utility
-- [ ] Document upload errors show file size details (`DOCUMENT_TOO_LARGE`)
-- [ ] Format errors show supported formats (`UNSUPPORTED_FORMAT`)
-- [ ] Rate limit errors show retry timing when available (`RATE_LIMITED`)
-- [ ] No `error.message ?? 'fallback'` patterns remain (use centralized utility)
-- [ ] Error utility has tests covering all defined error codes
-
-#### Files to Create
-
-```
-apps/web/src/lib/errors.ts           # Error formatting utilities
-apps/web/src/lib/errors.test.ts      # Tests for error formatting
-```
-
-#### Files to Modify
-
-```
-apps/web/src/routes/_protected/documents/-components/upload-document.tsx
-apps/web/src/routes/_protected/documents/index.tsx
-apps/web/src/routes/_protected/podcasts/index.tsx
-apps/web/src/routes/_protected/podcasts/$podcastId.tsx
-apps/web/src/routes/_protected/podcasts/-components/setup/setup-wizard.tsx
-apps/web/src/routes/_protected/podcasts/-components/setup/steps/step-documents.tsx
-apps/web/src/routes/_protected/dashboard.tsx
-apps/web/src/hooks/use-podcast-generation.ts
-apps/web/src/hooks/use-podcast-settings.ts
-apps/web/src/hooks/use-script-editor.ts
-apps/web/src/hooks/use-optimistic-podcast-mutation.ts
-```
+- [x] All `onError` handlers use `getErrorMessage` utility
+- [x] Document upload errors show file size details (`DOCUMENT_TOO_LARGE`)
+- [x] Format errors show supported formats (`UNSUPPORTED_FORMAT`)
+- [x] Rate limit errors show retry timing when available (`RATE_LIMITED`)
+- [x] No `error.message ?? 'fallback'` patterns remain (use centralized utility)
+- [x] Error utility has tests covering all defined error codes
