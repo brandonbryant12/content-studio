@@ -1,3 +1,7 @@
+import { Layer } from 'effect';
+import type { Db } from '@repo/db/effect';
+import type { Storage } from '@repo/storage';
+
 // Re-export media errors from centralized error catalog
 export {
   // Document errors
@@ -50,6 +54,46 @@ export {
   type ListOptions,
   type VersionStatus,
 } from './podcast';
+
+// Import for combined layer
+import { Documents, DocumentsLive } from './document';
+import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive } from './podcast';
+
+// =============================================================================
+// Combined Media Layer
+// =============================================================================
+
+/**
+ * All media services bundled together.
+ * Use this type in SharedServices instead of listing each service individually.
+ */
+export type Media = Documents | PodcastRepo | ScriptVersionRepo;
+
+/**
+ * Combined layer for all media services.
+ *
+ * Provides:
+ * - Documents: Document CRUD operations
+ * - PodcastRepo: Podcast repository operations
+ * - ScriptVersionRepo: Script version repository operations
+ *
+ * Requires:
+ * - Db: Database connection
+ * - Storage: File storage backend
+ *
+ * @example
+ * ```typescript
+ * // In runtime.ts
+ * const mediaLayer = MediaLive.pipe(
+ *   Layer.provide(Layer.mergeAll(dbLayer, storageLayer)),
+ * );
+ * ```
+ */
+export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
+  DocumentsLive,
+  PodcastRepoLive,
+  ScriptVersionRepoLive,
+);
 
 // Podcast module - Use Cases
 export {

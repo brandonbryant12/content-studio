@@ -1,4 +1,6 @@
-import { Effect } from 'effect';
+import { Effect, Match, pipe } from 'effect';
+import { ORPCError } from '@orpc/client';
+import { ValidationError } from '@orpc/contract';
 import { withCurrentUser, type User } from '@repo/auth/policy';
 import type { ServerRuntime, SharedServices } from './runtime';
 
@@ -64,12 +66,10 @@ export const handleEffect = <A, E extends { _tag: string }>(
   errorMapper: ErrorMapper<E>,
   options?: HandleEffectOptions,
 ): Promise<A> => {
-  // Apply span if provided
   let tracedEffect = options?.span
     ? effect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
     : effect;
 
-  // Scope user context via FiberRef if authenticated
   const scopedEffect = user ? withCurrentUser(user)(tracedEffect) : tracedEffect;
 
   return runtime.runPromise(
@@ -80,7 +80,6 @@ export const handleEffect = <A, E extends { _tag: string }>(
           if (handler) {
             return handler(error as Extract<E, { _tag: E['_tag'] }>);
           }
-          // This should never happen if types are correct
           throw new Error(`Unhandled error type: ${error._tag}`);
         }),
       ),
@@ -374,3 +373,172 @@ export const createErrorHandlers = <T extends ErrorFactoryConfig>(
     },
   },
 });
+
+// =============================================================================
+// oRPC Error Interceptor
+// =============================================================================
+
+/**
+ * Standard Schema issue type (common format for Effect Schema, Zod, Valibot, etc.)
+ */
+interface StandardSchemaIssue {
+  message: string;
+  path?: Array<{ key: string | number | symbol }>;
+}
+
+/**
+ * Discriminated union for classified validation errors.
+ */
+type ClassifiedError =
+  | {
+      readonly _tag: 'InputValidation';
+      issues: readonly StandardSchemaIssue[];
+      cause: ValidationError;
+    }
+  | {
+      readonly _tag: 'OutputValidation';
+      issues: readonly StandardSchemaIssue[];
+      data: unknown;
+      cause: ValidationError;
+    }
+  | { readonly _tag: 'Passthrough'; error: unknown };
+
+/** Helper to extract cause from ORPCError since TypeScript doesn't type it */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getErrorCause = (error: ORPCError<any, any>): unknown =>
+  (error as Error & { cause?: unknown }).cause;
+
+/**
+ * Classify an oRPC error into a discriminated union.
+ */
+const classifyError = (error: unknown): ClassifiedError => {
+  if (!(error instanceof ORPCError)) {
+    return { _tag: 'Passthrough', error };
+  }
+
+  const cause = getErrorCause(error);
+  if (!(cause instanceof ValidationError)) {
+    return { _tag: 'Passthrough', error };
+  }
+
+  const issues = cause.issues as readonly StandardSchemaIssue[];
+
+  if (error.code === 'BAD_REQUEST') {
+    return { _tag: 'InputValidation', issues, cause };
+  }
+  if (error.code === 'INTERNAL_SERVER_ERROR') {
+    return { _tag: 'OutputValidation', issues, data: cause.data, cause };
+  }
+
+  return { _tag: 'Passthrough', error };
+};
+
+/**
+ * Format validation issues from Standard Schema format to a readable summary.
+ */
+const formatValidationIssues = (
+  issues: readonly StandardSchemaIssue[],
+): string =>
+  issues
+    .map((issue) => {
+      const path = issue.path?.map((p) => String(p.key)).join('.') || 'root';
+      return `${path}: ${issue.message}`;
+    })
+    .join('; ');
+
+/**
+ * Cleans up stack traces by filtering node_modules and making paths relative.
+ */
+const formatStackTrace = (error: Error): string => {
+  if (!error.stack) return error.message;
+
+  const cwd = process.cwd();
+  const lines = error.stack.split('\n');
+  const messageLine = lines[0];
+
+  const appFrames = lines
+    .slice(1)
+    .filter((line) => !line.includes('node_modules'))
+    .map((line) => line.replace(cwd + '/', '').replace(/file:\/\//, ''))
+    .slice(0, 5);
+
+  if (appFrames.length === 0) {
+    return (
+      messageLine +
+      '\n' +
+      lines
+        .slice(1, 4)
+        .map((line) => line.replace(cwd + '/', '').replace(/file:\/\//, ''))
+        .join('\n')
+    );
+  }
+
+  return messageLine + '\n' + appFrames.join('\n');
+};
+
+/**
+ * Transform classified error to ORPCError and throw.
+ * Uses Match.exhaustive to ensure all cases are handled.
+ */
+const throwTransformed = (classified: ClassifiedError): never =>
+  pipe(
+    classified,
+    Match.value,
+    Match.tag('InputValidation', ({ issues, cause }) => {
+      const summary = formatValidationIssues(issues);
+      console.error('[INPUT_VALIDATION]', summary);
+      throw new ORPCError('INPUT_VALIDATION_FAILED', {
+        status: 422,
+        message: summary,
+        cause,
+      });
+    }),
+    Match.tag('OutputValidation', ({ issues, data, cause }) => {
+      const summary = formatValidationIssues(issues);
+      console.error('[OUTPUT_VALIDATION] Response does not match contract:');
+      console.error('  Issues:', summary);
+      if (data !== undefined) {
+        console.error('  Data:', JSON.stringify(data, null, 2).slice(0, 1000));
+      }
+      throw new ORPCError('INTERNAL_SERVER_ERROR', {
+        status: 500,
+        message: `Output validation failed: ${summary}`,
+        cause,
+      });
+    }),
+    Match.tag('Passthrough', ({ error }) => {
+      throw error;
+    }),
+    Match.exhaustive,
+  );
+
+/**
+ * Handle oRPC errors with Effect-based classification and transformation.
+ *
+ * This function:
+ * 1. Classifies the error (input validation, output validation, or passthrough)
+ * 2. Logs the error with a cleaned stack trace
+ * 3. Transforms validation errors into more descriptive ORPCErrors
+ *
+ * Use with oRPC's onError interceptor:
+ * @example
+ * ```typescript
+ * clientInterceptors: [
+ *   onError((error) => Effect.runSync(handleORPCError(error))),
+ * ],
+ * ```
+ */
+export const handleORPCError = (
+  error: unknown,
+): Effect.Effect<never, never, never> =>
+  pipe(
+    Effect.sync(() => classifyError(error)),
+    Effect.tap(() =>
+      error instanceof Error
+        ? Effect.logError(formatStackTrace(error))
+        : Effect.void,
+    ),
+    Effect.flatMap((classified) =>
+      Effect.sync(() => throwTransformed(classified)),
+    ),
+  );

@@ -1,3 +1,5 @@
+import { Layer } from 'effect';
+
 // Re-export AI errors from centralized error catalog
 export {
   LLMError,
@@ -43,3 +45,44 @@ export {
   GoogleTTSLive,
   type GoogleTTSConfig,
 } from './tts';
+
+// Import for combined layer
+import { LLM, GoogleLive } from './llm';
+import { TTS, GoogleTTSLive } from './tts';
+
+// =============================================================================
+// Combined AI Layer
+// =============================================================================
+
+/**
+ * All AI services bundled together.
+ * Use this type in SharedServices instead of listing each service individually.
+ */
+export type AI = LLM | TTS;
+
+/**
+ * Configuration for all Google AI services.
+ */
+export interface GoogleAIConfig {
+  /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
+  readonly apiKey: string;
+  /** LLM model. Default: 'gemini-2.5-flash' */
+  readonly llmModel?: string;
+  /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
+  readonly ttsModel?: string;
+}
+
+/**
+ * Combined layer for all Google AI services (LLM + TTS).
+ *
+ * @example
+ * ```typescript
+ * // In runtime.ts
+ * const aiLayer = GoogleAILive({ apiKey: env.GEMINI_API_KEY });
+ * ```
+ */
+export const GoogleAILive = (config: GoogleAIConfig): Layer.Layer<AI> =>
+  Layer.mergeAll(
+    GoogleLive({ apiKey: config.apiKey, model: config.llmModel }),
+    GoogleTTSLive({ apiKey: config.apiKey, model: config.ttsModel }),
+  );

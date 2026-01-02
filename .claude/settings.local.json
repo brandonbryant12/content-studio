@@ -72,7 +72,8 @@
       "Bash(done)",
       "Bash(xargs:*)",
       "Bash(rm:*)",
-      "Bash(PGPASSWORD=postgres psql:*)"
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

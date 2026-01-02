@@ -1,18 +1,10 @@
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import { DbLive, type Db } from '@repo/db/effect';
 import { QueueLive, type Queue } from '@repo/queue';
-import { GoogleLive, type LLM } from '@repo/ai/llm';
-import { GoogleTTSLive, type TTS } from '@repo/ai/tts';
-import { MockLLMLive, MockTTSLive } from '@repo/testing';
+import { GoogleAILive, type AI } from '@repo/ai';
+import { MockAILive } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
-import {
-  DocumentsLive,
-  PodcastRepoLive,
-  ScriptVersionRepoLive,
-  type Documents,
-  type PodcastRepo,
-  type ScriptVersionRepo,
-} from '@repo/media';
+import { MediaLive, type Media } from '@repo/media';
 import type { Storage } from '@repo/storage';
 import type { DatabaseInstance } from '@repo/db/client';
 import { createStorageLayer } from './storage-factory';
@@ -25,16 +17,7 @@ import type { StorageConfig } from './orpc';
  * Note: CurrentUser is NOT included here - it's obtained via FiberRef
  * at runtime using withCurrentUser().
  */
-export type SharedServices =
-  | Db
-  | Policy
-  | Storage
-  | Queue
-  | TTS
-  | LLM
-  | Documents
-  | PodcastRepo
-  | ScriptVersionRepo;
+export type SharedServices = Db | Policy | Storage | Queue | AI | Media;
 
 /**
  * Configuration for creating the server runtime.
@@ -55,11 +38,8 @@ export interface ServerRuntimeConfig {
  * - Policy: Authorization service (depends on Db)
  * - Queue: Job queue service (depends on Db)
  * - Storage: File storage (S3, filesystem, or database-backed)
- * - TTS: Text-to-speech service (standalone)
- * - LLM: Language model service (standalone)
- * - Documents: Document service (depends on Db, Storage)
- * - PodcastRepo: Podcast repository (depends on Db)
- * - ScriptVersionRepo: Script version repository (depends on Db)
+ * - AI: LLM + TTS services (standalone)
+ * - Media: Documents, PodcastRepo, ScriptVersionRepo (depends on Db, Storage)
  */
 export const createSharedLayers = (
   config: ServerRuntimeConfig,
@@ -69,24 +49,14 @@ export const createSharedLayers = (
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
 
-  // Use mock AI layers for testing, real Google layers for production
-  const ttsLayer = config.useMockAI
-    ? MockTTSLive
-    : GoogleTTSLive({ apiKey: config.geminiApiKey });
-  const llmLayer = config.useMockAI
-    ? MockLLMLive
-    : GoogleLive({ apiKey: config.geminiApiKey });
+  // AI layer bundles LLM and TTS
+  const aiLayer = config.useMockAI
+    ? MockAILive
+    : GoogleAILive({ apiKey: config.geminiApiKey });
 
-  // Documents no longer needs CurrentUser in layer composition
-  // User context is obtained via FiberRef at runtime
-  const documentsLayer = DocumentsLive.pipe(
+  // Media layer bundles Documents, PodcastRepo, and ScriptVersionRepo
+  const mediaLayer = MediaLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, storageLayer)),
-  );
-
-  // Podcast repos only need DB access
-  const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(dbLayer));
-  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(
-    Layer.provide(dbLayer),
   );
 
   const loggerLayer = Logger.pretty;
@@ -100,11 +70,8 @@ export const createSharedLayers = (
     policyLayer,
     queueLayer,
     storageLayer,
-    ttsLayer,
-    llmLayer,
-    documentsLayer,
-    podcastRepoLayer,
-    scriptVersionRepoLayer,
+    aiLayer,
+    mediaLayer,
     loggerLayer,
   );
 };

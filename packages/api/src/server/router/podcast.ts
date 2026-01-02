@@ -24,7 +24,7 @@ import {
   serializePodcastScript,
   serializePodcastFull,
   serializePodcastListItem,
-} from '../serializers';
+} from '@repo/db';
 
 /**
  * Job result union type - matches contract schema.

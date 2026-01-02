@@ -1,4 +1,4 @@
-import { os, implement } from '@orpc/server';
+import { implement } from '@orpc/server';
 import {
   type AuthInstance,
   getSessionWithRole,
@@ -15,13 +15,13 @@ export type StorageConfig =
   | { provider: 'database' }
   | { provider: 'filesystem'; basePath: string; baseUrl: string }
   | {
-      provider: 's3';
-      bucket: string;
-      region: string;
-      accessKeyId: string;
-      secretAccessKey: string;
-      endpoint?: string;
-    };
+    provider: 's3';
+    bucket: string;
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    endpoint?: string;
+  };
 
 /**
  * oRPC context passed to all handlers.
@@ -65,7 +65,6 @@ export const createORPCContext = async ({
   runtime: ServerRuntime;
   headers: Headers;
 }): Promise<ORPCContext> => {
-  // Use the shared runtime to get session with role
   const result = await runtime.runPromise(
     getSessionWithRole(auth, headers).pipe(
       Effect.catchAll(() => Effect.succeed(null)),
@@ -79,29 +78,11 @@ export const createORPCContext = async ({
   };
 };
 
-const timingMiddleware = os.middleware(async ({ next, path }) => {
-  const start = Date.now();
-  let waitMsDisplay = '';
-  if (process.env.NODE_ENV !== 'production') {
-    // artificial delay in dev 100-500ms
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-    waitMsDisplay = ` (artificial delay: ${waitMs}ms)`;
-  }
-  const result = await next();
-  const end = Date.now();
-
-  console.log(
-    `\t[RPC] /${path.join('/')} executed after ${end - start}ms${waitMsDisplay}`,
-  );
-  return result;
-});
 
 const base = implement(appContract);
 
 export const publicProcedure = base
   .$context<ORPCContext>()
-  .use(timingMiddleware);
 
 export const protectedProcedure = publicProcedure.use(
   ({ context, next, errors }) => {
@@ -110,7 +91,6 @@ export const protectedProcedure = publicProcedure.use(
         message: 'Missing user session. Please log in!',
       });
     }
-    // Type narrowing: session and user exist
     return next({
       context: {
         session: context.session,
