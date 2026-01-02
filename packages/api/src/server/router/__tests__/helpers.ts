@@ -111,6 +111,7 @@ export type ErrorCode =
   | 'DOCUMENT_TOO_LARGE'
   | 'DOCUMENT_PARSE_ERROR'
   | 'UNSUPPORTED_FORMAT'
+  | 'VOICE_NOT_FOUND'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'NOT_FOUND'
@@ -128,6 +129,7 @@ export interface MockErrorFactory {
   DOCUMENT_TOO_LARGE: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
   DOCUMENT_PARSE_ERROR: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
   UNSUPPORTED_FORMAT: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
+  VOICE_NOT_FOUND: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
   UNAUTHORIZED: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
   FORBIDDEN: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
   NOT_FOUND: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
@@ -146,6 +148,7 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   DOCUMENT_TOO_LARGE: 413,
   DOCUMENT_PARSE_ERROR: 422,
   UNSUPPORTED_FORMAT: 415,
+  VOICE_NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
@@ -194,6 +197,7 @@ export const createMockErrors = (): MockErrorFactory => {
     DOCUMENT_TOO_LARGE: createErrorFactory('DOCUMENT_TOO_LARGE'),
     DOCUMENT_PARSE_ERROR: createErrorFactory('DOCUMENT_PARSE_ERROR'),
     UNSUPPORTED_FORMAT: createErrorFactory('UNSUPPORTED_FORMAT'),
+    VOICE_NOT_FOUND: createErrorFactory('VOICE_NOT_FOUND'),
     UNAUTHORIZED: createErrorFactory('UNAUTHORIZED'),
     FORBIDDEN: createErrorFactory('FORBIDDEN'),
     NOT_FOUND: createErrorFactory('NOT_FOUND'),

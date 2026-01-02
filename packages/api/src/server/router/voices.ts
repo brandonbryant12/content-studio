@@ -1,11 +1,6 @@
-import {
-  TTS,
-  isValidVoiceId,
-  type GeminiVoiceId,
-  type AudioEncoding,
-} from '@repo/ai/tts';
+import { listVoices, previewVoice, type AudioEncoding } from '@repo/ai/tts';
 import { Effect } from 'effect';
-import { createErrorHandlers, handleEffect } from '../effect-handler';
+import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 interface PreviewResult {
@@ -16,56 +11,37 @@ interface PreviewResult {
 
 const voicesRouter = {
   list: protectedProcedure.voices.list.handler(async ({ context, errors }) => {
-    const handlers = createErrorHandlers(errors);
-    return handleEffect(
+    return handleEffectWithProtocol(
       context.runtime,
       context.user,
-      Effect.gen(function* () {
-        const tts = yield* TTS;
-        const voices = yield* tts.listVoices({});
-        return [...voices];
-      }).pipe(Effect.withSpan('api.voices.list')),
-      {
-        ...handlers.tts,
-      },
+      listVoices({}).pipe(Effect.map((result) => [...result.voices])),
+      errors as unknown as ErrorFactory,
+      { span: 'api.voices.list' },
     );
   }),
 
   preview: protectedProcedure.voices.preview.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-
-      // Validate voice ID
-      if (!isValidVoiceId(input.voiceId)) {
-        throw errors.VOICE_NOT_FOUND({
-          message: `Voice "${input.voiceId}" not found`,
-          data: { voiceId: input.voiceId },
-        });
-      }
-
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const tts = yield* TTS;
-          const result = yield* tts.previewVoice({
-            voiceId: input.voiceId as GeminiVoiceId,
-            text: input.text,
-            audioEncoding: input.audioEncoding,
-          });
-
-          return {
-            audioContent: result.audioContent.toString('base64'),
-            audioEncoding: result.audioEncoding,
-            voiceId: result.voiceId,
-          } satisfies PreviewResult;
+        previewVoice({
+          voiceId: input.voiceId,
+          text: input.text,
+          audioEncoding: input.audioEncoding,
         }).pipe(
-          Effect.withSpan('api.voices.preview', {
-            attributes: { 'voices.voiceId': input.voiceId },
-          }),
+          Effect.map(
+            (result): PreviewResult => ({
+              audioContent: result.audioContent.toString('base64'),
+              audioEncoding: result.audioEncoding,
+              voiceId: result.voiceId,
+            }),
+          ),
         ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.tts,
+          span: 'api.voices.preview',
+          attributes: { 'voice.id': input.voiceId },
         },
       );
     },

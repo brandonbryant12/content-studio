@@ -30,3 +30,19 @@ export {
 
 // Google provider
 export { GoogleTTSLive, type GoogleTTSConfig } from './providers/google';
+
+// Use Cases
+export {
+  // Errors
+  VoiceNotFoundError,
+  // Use cases
+  listVoices,
+  previewVoice,
+  // Types
+  type ListVoicesInput,
+  type ListVoicesResult,
+  type ListVoicesError,
+  type PreviewVoiceInput,
+  type PreviewVoiceUseCaseResult,
+  type PreviewVoiceError,
+} from './use-cases';

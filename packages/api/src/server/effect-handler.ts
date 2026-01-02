@@ -47,6 +47,7 @@ export interface ErrorFactory {
   MEDIA_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
   JOB_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
   VALIDATION_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
+  VOICE_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
   [key: string]: ((opts: { message: string; data?: unknown }) => unknown) | undefined;
 }
 

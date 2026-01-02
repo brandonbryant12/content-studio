@@ -792,23 +792,34 @@ packages/api/src/server/effect-handler.ts:
    - Validate: `pnpm --filter @repo/api test` ✅
    - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
-### Sprint 3: Voices Module (Complete)
+### Sprint 3: Voices Module (Complete) ✅ COMPLETED
 
-> ⚠️ **Error Handling Reminder:** Voices router uses legacy pattern. Migrate to `handleEffectWithProtocol()` and add consistent tracing.
-
-1. Create TTS use cases (listVoices, previewVoice)
-   - Validate: `pnpm --filter @repo/ai typecheck`
+1. ✅ Create TTS use cases (listVoices, previewVoice)
+   - Created `packages/ai/src/tts/use-cases/list-voices.ts`
+   - Created `packages/ai/src/tts/use-cases/preview-voice.ts`
+   - Created `packages/ai/src/tts/use-cases/errors.ts` with `VoiceNotFoundError`
+   - Created `packages/ai/src/tts/use-cases/index.ts`
+   - Exported use cases from `@repo/ai/tts` and `@repo/ai`
+   - Validate: `pnpm --filter @repo/ai typecheck` ✅
 2. ~~Add HTTP protocol props to TTS-related errors~~ ✅ Already done in Phase 0
-3. Write TTS use case tests
-   - Validate: `pnpm --filter @repo/ai test`
-4. **Refactor voices router** - Full migration:
-   - Replace `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
-   - Remove all `createErrorHandlers(errors)` calls
-   - Add `{ span, attributes }` to ALL handlers
-   - Validate: `pnpm --filter @repo/api typecheck`
-5. Write voices router integration tests
-   - Validate: `pnpm --filter @repo/api test`
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build`
+3. ✅ Write TTS use case tests
+   - Created `packages/ai/src/tts/use-cases/__tests__/list-voices.test.ts` (4 tests)
+   - Created `packages/ai/src/tts/use-cases/__tests__/preview-voice.test.ts` (14 tests)
+   - Created `packages/ai/vitest.config.ts`
+   - Total: 18 tests passing
+   - Validate: `pnpm --filter @repo/ai test` ✅
+4. ✅ **Refactored voices router** - Full migration:
+   - Replaced `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
+   - Removed all `createErrorHandlers(errors)` calls
+   - Replaced direct TTS service calls with use cases (`listVoices`, `previewVoice`)
+   - Added `{ span: 'api.voices.X', attributes: {...} }` to ALL handlers
+   - Validate: `pnpm --filter @repo/api typecheck` ✅
+5. ✅ Write voices router integration tests
+   - Created `packages/api/src/server/router/__tests__/voices.integration.test.ts` (13 tests)
+   - Updated `helpers.ts` with `VOICE_NOT_FOUND` error code
+   - Tests cover: list handler, preview handler, error cases, response format
+   - Validate: `pnpm --filter @repo/api test` ✅
+   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
 ### Sprint 4: Documentation & Cleanup
 
