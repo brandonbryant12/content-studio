@@ -13,9 +13,6 @@ export interface ListVoicesResult {
   readonly voices: readonly VoiceInfo[];
 }
 
-// No errors - listVoices is always successful (in-memory voice list)
-export type ListVoicesError = never;
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -33,9 +30,7 @@ export type ListVoicesError = never;
  * // List only female voices
  * const result = yield* listVoices({ gender: 'female' });
  */
-export const listVoices = (
-  input: ListVoicesInput,
-): Effect.Effect<ListVoicesResult, ListVoicesError, TTS> =>
+export const listVoices = (input: ListVoicesInput) =>
   Effect.gen(function* () {
     const tts = yield* TTS;
     const voices = yield* tts.listVoices({ gender: input.gender });

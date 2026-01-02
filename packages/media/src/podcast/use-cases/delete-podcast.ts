@@ -1,6 +1,4 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -10,8 +8,6 @@ import { PodcastRepo } from '../repos/podcast-repo';
 export interface DeletePodcastInput {
   podcastId: string;
 }
-
-export type DeletePodcastError = PodcastNotFound | DatabaseError;
 
 // =============================================================================
 // Use Case
@@ -31,9 +27,7 @@ export type DeletePodcastError = PodcastNotFound | DatabaseError;
  * @example
  * yield* deletePodcast({ podcastId: 'podcast-123' });
  */
-export const deletePodcast = (
-  input: DeletePodcastInput,
-): Effect.Effect<void, DeletePodcastError, PodcastRepo | Db> =>
+export const deletePodcast = (input: DeletePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 

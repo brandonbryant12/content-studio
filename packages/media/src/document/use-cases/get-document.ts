@@ -1,8 +1,7 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import type { Document } from '@repo/db/schema';
 import { requireOwnership } from '@repo/auth/policy';
-import type { DocumentNotFound, ForbiddenError, UnauthorizedError } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -12,12 +11,6 @@ import { DocumentRepo } from '../repos';
 export interface GetDocumentInput {
   id: string;
 }
-
-export type GetDocumentError =
-  | DocumentNotFound
-  | DatabaseError
-  | ForbiddenError
-  | UnauthorizedError;
 
 // =============================================================================
 // Use Case
@@ -32,9 +25,7 @@ export type GetDocumentError =
  * @example
  * const doc = yield* getDocument({ id: 'doc_abc123' });
  */
-export const getDocument = (
-  input: GetDocumentInput,
-): Effect.Effect<Document, GetDocumentError, Db | DocumentRepo> =>
+export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
     const documentRepo = yield* DocumentRepo;
 

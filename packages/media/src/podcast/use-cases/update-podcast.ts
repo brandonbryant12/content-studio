@@ -1,7 +1,5 @@
 import { Effect } from 'effect';
 import type { Podcast, UpdatePodcast } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -13,8 +11,6 @@ export interface UpdatePodcastInput {
   data: UpdatePodcast;
 }
 
-export type UpdatePodcastError = PodcastNotFound | DatabaseError;
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -25,9 +21,7 @@ export type UpdatePodcastError = PodcastNotFound | DatabaseError;
  * This is a simple update that only modifies podcast metadata.
  * Regeneration is done explicitly by the user via the generate endpoint.
  */
-export const updatePodcast = (
-  input: UpdatePodcastInput,
-): Effect.Effect<Podcast, UpdatePodcastError, PodcastRepo | Db> =>
+export const updatePodcast = (input: UpdatePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 

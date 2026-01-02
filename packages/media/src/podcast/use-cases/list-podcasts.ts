@@ -1,5 +1,4 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
 import {
   PodcastRepo,
   type ListOptions,
@@ -23,8 +22,6 @@ export interface ListPodcastsResult {
   hasMore: boolean;
 }
 
-export type ListPodcastsError = DatabaseError;
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -43,9 +40,7 @@ export type ListPodcastsError = DatabaseError;
  *   offset: 0,
  * });
  */
-export const listPodcasts = (
-  input: ListPodcastsInput,
-): Effect.Effect<ListPodcastsResult, ListPodcastsError, PodcastRepo | Db> =>
+export const listPodcasts = (input: ListPodcastsInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 

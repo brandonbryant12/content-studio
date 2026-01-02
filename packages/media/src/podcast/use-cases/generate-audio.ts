@@ -1,14 +1,5 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import {
-  PodcastNotFound,
-  ScriptNotFound,
-  TTSError,
-  TTSQuotaExceededError,
-  StorageError,
-  StorageUploadError,
-} from '@repo/db/errors';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { PodcastRepo } from '../repos/podcast-repo';
@@ -27,16 +18,6 @@ export interface GenerateAudioResult {
   audioUrl: string;
   duration: number;
 }
-
-export type GenerateAudioError =
-  | PodcastNotFound
-  | ScriptNotFound
-  | TTSError
-  | TTSQuotaExceededError
-  | StorageError
-  | StorageUploadError
-  | DatabaseError
-  | InvalidAudioGenerationError;
 
 /**
  * Error when audio generation is not possible from current state.
@@ -68,13 +49,7 @@ export class InvalidAudioGenerationError {
  * @example
  * const result = yield* generateAudio({ versionId: 'version-123' });
  */
-export const generateAudio = (
-  input: GenerateAudioInput,
-): Effect.Effect<
-  GenerateAudioResult,
-  GenerateAudioError,
-  PodcastRepo | ScriptVersionRepo | TTS | Storage | Db
-> =>
+export const generateAudio = (input: GenerateAudioInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

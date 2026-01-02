@@ -31,7 +31,7 @@ export {
 // Google provider
 export { GoogleTTSLive, type GoogleTTSConfig } from './providers/google';
 
-// Use Cases
+// Use Cases - Error types are inferred by Effect
 export {
   // Errors
   VoiceNotFoundError,
@@ -41,8 +41,6 @@ export {
   // Types
   type ListVoicesInput,
   type ListVoicesResult,
-  type ListVoicesError,
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,
-  type PreviewVoiceError,
 } from './use-cases';

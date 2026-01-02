@@ -1,7 +1,5 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 
@@ -46,12 +44,6 @@ export interface ProgressToResult {
   alreadyAtTarget: boolean;
 }
 
-export type ProgressToError =
-  | PodcastNotFound
-  | ScriptNotFound
-  | DatabaseError
-  | InvalidProgressionError;
-
 /**
  * Error when progression is not possible from current state.
  */
@@ -85,9 +77,7 @@ export class InvalidProgressionError {
  * const result = yield* progressTo({ podcastId, targetStatus: 'ready' });
  * // result.stepsRequired = ['generate-audio']
  */
-export const progressTo = (
-  input: ProgressToInput,
-): Effect.Effect<ProgressToResult, ProgressToError, PodcastRepo | ScriptVersionRepo | Db> =>
+export const progressTo = (input: ProgressToInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

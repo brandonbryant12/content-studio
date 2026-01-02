@@ -1,7 +1,5 @@
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { DocumentNotFound } from '@repo/db/errors';
 import { PodcastRepo, type PodcastFull } from '../repos/podcast-repo';
 import { ScriptVersionRepo } from '../repos/script-version-repo';
 
@@ -12,8 +10,6 @@ import { ScriptVersionRepo } from '../repos/script-version-repo';
 export interface CreatePodcastInput extends CreatePodcast {
   userId: string;
 }
-
-export type CreatePodcastError = DatabaseError | DocumentNotFound;
 
 // =============================================================================
 // Use Case
@@ -35,9 +31,7 @@ export type CreatePodcastError = DatabaseError | DocumentNotFound;
  *   userId: 'user-123',
  * });
  */
-export const createPodcast = (
-  input: CreatePodcastInput,
-): Effect.Effect<PodcastFull, CreatePodcastError, PodcastRepo | ScriptVersionRepo | Db> =>
+export const createPodcast = (input: CreatePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

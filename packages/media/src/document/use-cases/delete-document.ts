@@ -1,13 +1,8 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import {
-  DocumentNotFound,
-  type ForbiddenError,
-  type StorageError,
-  type UnauthorizedError,
-} from '@repo/db/errors';
+import { DocumentNotFound } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -17,13 +12,6 @@ import { DocumentRepo } from '../repos';
 export interface DeleteDocumentInput {
   id: string;
 }
-
-export type DeleteDocumentError =
-  | DocumentNotFound
-  | DatabaseError
-  | ForbiddenError
-  | UnauthorizedError
-  | StorageError;
 
 // =============================================================================
 // Use Case
@@ -41,9 +29,7 @@ export type DeleteDocumentError =
  * @example
  * yield* deleteDocument({ id: 'doc_abc123' });
  */
-export const deleteDocument = (
-  input: DeleteDocumentInput,
-): Effect.Effect<void, DeleteDocumentError, Db | Storage | DocumentRepo> =>
+export const deleteDocument = (input: DeleteDocumentInput) =>
   Effect.gen(function* () {
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;

@@ -1,7 +1,6 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
+import { ScriptNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 
@@ -24,8 +23,6 @@ export interface EditScriptResult {
   version: PodcastScript;
   previousVersionId: string | null;
 }
-
-export type EditScriptError = PodcastNotFound | ScriptNotFound | DatabaseError;
 
 // =============================================================================
 // Use Case
@@ -51,9 +48,7 @@ export type EditScriptError = PodcastNotFound | ScriptNotFound | DatabaseError;
  *   ],
  * });
  */
-export const editScript = (
-  input: EditScriptInput,
-): Effect.Effect<EditScriptResult, EditScriptError, PodcastRepo | ScriptVersionRepo | Db> =>
+export const editScript = (input: EditScriptInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

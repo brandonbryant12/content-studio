@@ -150,15 +150,9 @@ export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
 **Optional:**
 - `getData()` - Extract structured data for response body
 
-Error channels must be explicit in Effect types:
-
-```typescript
-Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>
-```
-
 #### Use Case Pattern
 
-Use cases follow this structure:
+Use cases let Effect infer error types automatically (no explicit error type declarations):
 
 ```typescript
 // packages/media/src/{domain}/use-cases/{action}.ts
@@ -171,13 +165,8 @@ export interface ActionResult {
   // Raw domain data, NOT serialized
 }
 
-export type ActionError =
-  | DomainNotFound
-  | DatabaseError;
-
-export const actionName = (
-  input: ActionInput
-): Effect.Effect<ActionResult, ActionError, Dependencies> =>
+// NO explicit error type - Effect infers it
+export const actionName = (input: ActionInput) =>
   Effect.gen(function* () {
     const repo = yield* DomainRepo;
     const result = yield* repo.findById(input.id);
@@ -191,7 +180,7 @@ export const actionName = (
 
 **Rules:**
 1. One file per use case
-2. Explicit error type union
+2. NO explicit error type declarations - Effect infers them
 3. Return raw domain data (serialization happens in handler)
 4. Always add tracing span
 
@@ -269,6 +258,7 @@ const doc = DocumentFactory.build({ title: 'Test Doc' });
 4. **Don't use plain serializer functions in handlers** - use Effect variants for tracing
 5. **Don't access repos directly from handlers** - call use cases instead
 6. **Don't use legacy `handleEffect()` with manual error mapping** - use `handleEffectWithProtocol()`
+7. **Don't declare explicit error types in use cases** - Effect infers them automatically
 
 ## Documentation
 

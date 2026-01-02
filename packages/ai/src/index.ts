@@ -44,16 +44,14 @@ export {
   DEFAULT_PREVIEW_TEXT,
   GoogleTTSLive,
   type GoogleTTSConfig,
-  // Use Cases
+  // Use Cases - Error types are inferred by Effect
   VoiceNotFoundError,
   listVoices,
   previewVoice,
   type ListVoicesInput,
   type ListVoicesResult,
-  type ListVoicesError,
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,
-  type PreviewVoiceError,
 } from './tts';
 
 // Import for combined layer

@@ -24,7 +24,7 @@ export {
   type ListOptions as DocumentListOptions,
 } from './document';
 
-// Document module - Use cases
+// Document module - Use cases (error types inferred by Effect)
 export {
   listDocuments,
   getDocument,
@@ -35,20 +35,13 @@ export {
   deleteDocument,
   type ListDocumentsInput,
   type ListDocumentsResult,
-  type ListDocumentsError,
   type GetDocumentInput,
-  type GetDocumentError,
   type GetDocumentContentInput,
   type GetDocumentContentResult,
-  type GetDocumentContentError,
   type CreateDocumentInput,
-  type CreateDocumentError,
   type UploadDocumentInput,
-  type UploadDocumentError,
   type UpdateDocumentInput,
-  type UpdateDocumentError,
   type DeleteDocumentInput,
-  type DeleteDocumentError,
 } from './document';
 
 // Document module - Parsers and types
@@ -126,7 +119,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll
   ScriptVersionRepoLive,
 );
 
-// Podcast module - Use Cases
+// Podcast module - Use Cases (error types inferred by Effect)
 export {
   createPodcast,
   getPodcast,
@@ -145,7 +138,6 @@ export {
   type CreatePodcastInput,
   type GetPodcastInput,
   type GetActiveScriptInput,
-  type GetActiveScriptError,
   type UpdatePodcastInput,
   type DeletePodcastInput,
   type ListPodcastsInput,

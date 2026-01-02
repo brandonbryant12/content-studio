@@ -1,22 +1,7 @@
 import { Effect, Schema } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import {
-  PodcastNotFound,
-  DocumentNotFound,
-  LLMError,
-  LLMRateLimitError,
-  ScriptNotFound,
-  StorageError,
-  StorageNotFoundError,
-  DocumentParseError,
-  PolicyError,
-  ForbiddenError,
-  UnauthorizedError,
-} from '@repo/db/errors';
 import { LLM } from '@repo/ai/llm';
-import { Storage } from '@repo/storage';
-import { DocumentRepo, getDocumentContent } from '../../document';
+import { getDocumentContent } from '../../document';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
@@ -35,20 +20,6 @@ export interface GenerateScriptResult {
   version: PodcastScript;
   segmentCount: number;
 }
-
-export type GenerateScriptError =
-  | PodcastNotFound
-  | DocumentNotFound
-  | ScriptNotFound
-  | LLMError
-  | LLMRateLimitError
-  | StorageError
-  | StorageNotFoundError
-  | DocumentParseError
-  | PolicyError
-  | ForbiddenError
-  | UnauthorizedError
-  | DatabaseError;
 
 // =============================================================================
 // Schema
@@ -91,13 +62,7 @@ const ScriptOutputSchema = Schema.Struct({
  *   promptInstructions: 'Make it conversational',
  * });
  */
-export const generateScript = (
-  input: GenerateScriptInput,
-): Effect.Effect<
-  GenerateScriptResult,
-  GenerateScriptError,
-  PodcastRepo | ScriptVersionRepo | DocumentRepo | LLM | Storage | Db
-> =>
+export const generateScript = (input: GenerateScriptInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

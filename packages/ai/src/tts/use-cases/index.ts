@@ -1,17 +1,11 @@
 // Errors
 export { VoiceNotFoundError } from './errors';
 
-// Use Cases
-export {
-  listVoices,
-  type ListVoicesInput,
-  type ListVoicesResult,
-  type ListVoicesError,
-} from './list-voices';
+// Use Cases - Error types are inferred by Effect
+export { listVoices, type ListVoicesInput, type ListVoicesResult } from './list-voices';
 
 export {
   previewVoice,
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,
-  type PreviewVoiceError,
 } from './preview-voice';

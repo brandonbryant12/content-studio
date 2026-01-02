@@ -1,15 +1,8 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import type { Document } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import type {
-  DocumentNotFound,
-  ForbiddenError,
-  StorageError,
-  StorageUploadError,
-  UnauthorizedError,
-} from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 import type { UpdateDocumentInput as RepoUpdateInput } from '../repository';
 import { calculateWordCount } from '../../shared';
@@ -24,14 +17,6 @@ export interface UpdateDocumentInput {
   content?: string;
   metadata?: Record<string, unknown>;
 }
-
-export type UpdateDocumentError =
-  | DocumentNotFound
-  | DatabaseError
-  | ForbiddenError
-  | UnauthorizedError
-  | StorageError
-  | StorageUploadError;
 
 // =============================================================================
 // Helpers
@@ -63,9 +48,7 @@ const generateContentKey = (extension: string = '.txt'): string =>
  *   content: 'New content...',
  * });
  */
-export const updateDocument = (
-  input: UpdateDocumentInput,
-): Effect.Effect<Document, UpdateDocumentError, Db | Storage | DocumentRepo> =>
+export const updateDocument = (input: UpdateDocumentInput) =>
   Effect.gen(function* () {
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;

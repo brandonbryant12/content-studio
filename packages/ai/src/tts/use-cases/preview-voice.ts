@@ -1,5 +1,4 @@
 import { Effect } from 'effect';
-import { TTSError, TTSQuotaExceededError } from '@repo/db/errors';
 import {
   TTS,
   type GeminiVoiceId,
@@ -24,11 +23,6 @@ export interface PreviewVoiceUseCaseResult {
   readonly voiceId: string;
 }
 
-export type PreviewVoiceError =
-  | VoiceNotFoundError
-  | TTSError
-  | TTSQuotaExceededError;
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -50,9 +44,7 @@ export type PreviewVoiceError =
  *   audioEncoding: 'MP3',
  * });
  */
-export const previewVoice = (
-  input: PreviewVoiceInput,
-): Effect.Effect<PreviewVoiceUseCaseResult, PreviewVoiceError, TTS> =>
+export const previewVoice = (input: PreviewVoiceInput) =>
   Effect.gen(function* () {
     // Validate voice ID
     if (!isValidVoiceId(input.voiceId)) {

@@ -85,7 +85,7 @@ const podcastRouter = {
           userId: context.session.user.id,
           limit: input.limit,
           offset: input.offset,
-        }).pipe(Effect.map((result) => (result as { podcasts: Parameters<typeof serializePodcastListItem>[0][] }).podcasts.map(serializePodcastListItem))),
+        }).pipe(Effect.map((result) => [...result.podcasts].map(serializePodcastListItem))),
         errors as unknown as ErrorFactory,
         {
           span: 'api.podcasts.list',

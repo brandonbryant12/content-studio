@@ -922,3 +922,37 @@ packages/api/src/server/effect-handler.ts:
 - [x] Each service has basic connectivity test
 - [x] Each service has error handling tests
 - [x] Documentation in `specs/testing/live-tests.md`
+
+### Sprint 7: Remove Explicit Error Types (Issue #7) ✅ COMPLETED
+
+> **Goal:** Remove explicit error type declarations from use cases. Effect infers error types automatically - explicit declarations are redundant and add maintenance overhead.
+
+1. ✅ Removed explicit error types from document use cases (7 files)
+   - Removed `export type XxxError = ...` declarations
+   - Removed error type from function signatures
+   - Updated index.ts to remove error type exports
+2. ✅ Removed explicit error types from podcast use cases (11 files)
+   - Removed `export type XxxError = ...` declarations
+   - Removed error type from function signatures
+   - Updated index.ts to remove error type exports
+3. ✅ Removed explicit error types from TTS use cases (2 files)
+   - Removed `export type XxxError = ...` declarations
+   - Removed error type from function signatures
+   - Updated index.ts to remove error type exports
+4. ✅ Updated barrel exports across packages
+   - `packages/media/src/index.ts`
+   - `packages/media/src/document/index.ts`
+   - `packages/media/src/podcast/index.ts`
+   - `packages/ai/src/index.ts`
+   - `packages/ai/src/tts/index.ts`
+5. ✅ Fixed podcast router readonly array type issue
+   - Used spread operator to convert readonly to mutable array
+6. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
+
+#### Success Criteria
+
+- [x] No explicit `export type XxxError` declarations in use case files
+- [x] No error types in function signatures (Effect infers them)
+- [x] All barrel exports updated to remove error type exports
+- [x] All tests passing
+- [x] All packages building successfully

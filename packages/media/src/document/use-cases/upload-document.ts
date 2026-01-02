@@ -1,15 +1,8 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import type { Document } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { getCurrentUser } from '@repo/auth/policy';
-import type {
-  DocumentParseError,
-  DocumentTooLargeError,
-  StorageUploadError,
-  UnauthorizedError,
-  UnsupportedDocumentFormat,
-} from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 import {
   getMimeType,
@@ -35,14 +28,6 @@ export interface UploadDocumentInput {
   /** Optional metadata to store with document */
   metadata?: Record<string, unknown>;
 }
-
-export type UploadDocumentError =
-  | DatabaseError
-  | StorageUploadError
-  | UnauthorizedError
-  | DocumentTooLargeError
-  | UnsupportedDocumentFormat
-  | DocumentParseError;
 
 // =============================================================================
 // Helpers
@@ -84,9 +69,7 @@ const generateContentKey = (extension: string = '.txt'): string =>
  *   title: 'Q4 Report',
  * });
  */
-export const uploadDocument = (
-  input: UploadDocumentInput,
-): Effect.Effect<Document, UploadDocumentError, Db | Storage | DocumentRepo> =>
+export const uploadDocument = (input: UploadDocumentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const storage = yield* Storage;

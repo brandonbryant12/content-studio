@@ -1,7 +1,6 @@
 import { Effect } from 'effect';
 import type { PodcastScript, ScriptSegment } from '@repo/db/schema';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound, ScriptNotFound } from '@repo/db/errors';
+import { ScriptNotFound } from '@repo/db/errors';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
 
@@ -22,12 +21,6 @@ export interface SaveChangesResult {
   version: PodcastScript;
   hasChanges: boolean;
 }
-
-export type SaveChangesError =
-  | PodcastNotFound
-  | ScriptNotFound
-  | DatabaseError
-  | InvalidSaveError;
 
 /**
  * Error when save is not possible from current state.
@@ -65,9 +58,7 @@ export class InvalidSaveError {
  * });
  * // Then queue audio generation job with result.version.id
  */
-export const saveChanges = (
-  input: SaveChangesInput,
-): Effect.Effect<SaveChangesResult, SaveChangesError, PodcastRepo | ScriptVersionRepo | Db> =>
+export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const scriptVersionRepo = yield* ScriptVersionRepo;

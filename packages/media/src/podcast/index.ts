@@ -47,15 +47,14 @@ export {
   generateScript,
   generateAudio,
   progressTo,
-  // Error types
+  // Error classes (not error type unions)
   InvalidAudioGenerationError,
   InvalidProgressionError,
   InvalidSaveError,
-  // Input/Output types
+  // Input/Output types - error types inferred by Effect
   type CreatePodcastInput,
   type GetPodcastInput,
   type GetActiveScriptInput,
-  type GetActiveScriptError,
   type UpdatePodcastInput,
   type DeletePodcastInput,
   type ListPodcastsInput,

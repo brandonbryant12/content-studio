@@ -1,15 +1,7 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import type {
-  DocumentNotFound,
-  DocumentParseError,
-  ForbiddenError,
-  StorageError,
-  StorageNotFoundError,
-  UnauthorizedError,
-} from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 import { parseDocumentContent } from '../parsers';
 
@@ -24,15 +16,6 @@ export interface GetDocumentContentInput {
 export interface GetDocumentContentResult {
   content: string;
 }
-
-export type GetDocumentContentError =
-  | DocumentNotFound
-  | DatabaseError
-  | ForbiddenError
-  | UnauthorizedError
-  | StorageError
-  | StorageNotFoundError
-  | DocumentParseError;
 
 // =============================================================================
 // Use Case
@@ -50,9 +33,7 @@ export type GetDocumentContentError =
  * @example
  * const { content } = yield* getDocumentContent({ id: 'doc_abc123' });
  */
-export const getDocumentContent = (
-  input: GetDocumentContentInput,
-): Effect.Effect<GetDocumentContentResult, GetDocumentContentError, Db | Storage | DocumentRepo> =>
+export const getDocumentContent = (input: GetDocumentContentInput) =>
   Effect.gen(function* () {
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;

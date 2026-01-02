@@ -1,8 +1,7 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import type { Document } from '@repo/db/schema';
 import { getCurrentUser, Role } from '@repo/auth/policy';
-import type { UnauthorizedError } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -21,8 +20,6 @@ export interface ListDocumentsResult {
   hasMore: boolean;
 }
 
-export type ListDocumentsError = DatabaseError | UnauthorizedError;
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -40,9 +37,7 @@ export type ListDocumentsError = DatabaseError | UnauthorizedError;
  * // List documents with pagination
  * const result = yield* listDocuments({ limit: 10, offset: 0 });
  */
-export const listDocuments = (
-  input: ListDocumentsInput,
-): Effect.Effect<ListDocumentsResult, ListDocumentsError, Db | DocumentRepo> =>
+export const listDocuments = (input: ListDocumentsInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;

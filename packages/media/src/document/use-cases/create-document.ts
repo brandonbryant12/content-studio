@@ -1,9 +1,8 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import type { CreateDocument, Document } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { getCurrentUser } from '@repo/auth/policy';
-import type { StorageUploadError, UnauthorizedError } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 import { calculateWordCount } from '../../shared';
 
@@ -14,11 +13,6 @@ import { calculateWordCount } from '../../shared';
 export interface CreateDocumentInput extends CreateDocument {
   userId?: string;
 }
-
-export type CreateDocumentError =
-  | DatabaseError
-  | StorageUploadError
-  | UnauthorizedError;
 
 // =============================================================================
 // Helpers
@@ -50,9 +44,7 @@ const generateContentKey = (extension: string = '.txt'): string =>
  *   metadata: { source: 'api' },
  * });
  */
-export const createDocument = (
-  input: CreateDocumentInput,
-): Effect.Effect<Document, CreateDocumentError, Db | Storage | DocumentRepo> =>
+export const createDocument = (input: CreateDocumentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const storage = yield* Storage;

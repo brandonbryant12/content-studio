@@ -1,6 +1,4 @@
 import { Effect } from 'effect';
-import type { Db, DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound } from '@repo/db/errors';
 import { PodcastRepo, type PodcastFull, type PodcastWithDocuments } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -11,8 +9,6 @@ export interface GetPodcastInput {
   podcastId: string;
   includeVersion?: boolean; // If true, include active version
 }
-
-export type GetPodcastError = PodcastNotFound | DatabaseError;
 
 // =============================================================================
 // Use Case
@@ -28,9 +24,7 @@ export type GetPodcastError = PodcastNotFound | DatabaseError;
  * // Get podcast with active version
  * const podcastFull = yield* getPodcast({ podcastId: 'podcast-123', includeVersion: true });
  */
-export const getPodcast = (
-  input: GetPodcastInput,
-): Effect.Effect<PodcastWithDocuments | PodcastFull, GetPodcastError, PodcastRepo | Db> =>
+export const getPodcast = (input: GetPodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
