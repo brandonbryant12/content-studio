@@ -50,8 +50,9 @@ export const createMockAILayers = (
 
 /**
  * Convert a TestUser to a User for policy context.
+ * Export for use in router integration tests.
  */
-const toUser = (testUser: TestUser): User => ({
+export const toUser = (testUser: TestUser): User => ({
   id: testUser.id,
   email: testUser.email,
   name: testUser.name,

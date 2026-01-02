@@ -74,7 +74,8 @@
       "Bash(rm:*)",
       "Bash(PGPASSWORD=postgres psql:*)",
       "Bash(git stash:*)",
-      "WebFetch(domain:orpc.unnoq.com)"
+      "WebFetch(domain:orpc.unnoq.com)",
+      "WebFetch(domain:orpc.dev)"
     ],
     "deny": [],
     "ask": []

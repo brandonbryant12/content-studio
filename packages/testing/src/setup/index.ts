@@ -13,6 +13,7 @@ export {
 export {
   createMockAILayers,
   withTestUser,
+  toUser,
   createIntegrationTestLayers,
   type TestLayersOptions,
 } from './layers';
