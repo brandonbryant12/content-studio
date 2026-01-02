@@ -660,6 +660,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
+      '@repo/queue':
+        specifier: workspace:*
+        version: link:../queue
       '@repo/storage':
         specifier: workspace:*
         version: link:../storage

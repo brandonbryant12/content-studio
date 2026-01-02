@@ -27,6 +27,17 @@ export interface SaveChangesResult {
  */
 export class InvalidSaveError {
   readonly _tag = 'InvalidSaveError';
+
+  // HTTP Protocol
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'INVALID_SAVE' as const;
+  static readonly httpMessage = (e: InvalidSaveError) => e.message;
+  static readonly logLevel = 'warn' as const;
+
+  static getData(e: InvalidSaveError) {
+    return { versionId: e.versionId, currentStatus: e.currentStatus };
+  }
+
   constructor(
     readonly versionId: string,
     readonly currentStatus: VersionStatus,

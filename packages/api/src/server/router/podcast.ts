@@ -1,23 +1,17 @@
 import {
-  PodcastRepo,
-  ScriptVersionRepo,
   listPodcasts,
   getPodcast,
   createPodcast,
   updatePodcast,
   deletePodcast,
-  saveChanges,
   getActiveScript,
+  startGeneration,
+  saveAndQueueAudio,
+  getJob,
 } from '@repo/media';
-import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { Job } from '@repo/db/schema';
-import type {
-  GeneratePodcastPayload,
-  GeneratePodcastResult,
-  GenerateAudioPayload,
-  GenerateAudioResult,
-} from '@repo/queue';
+import type { GeneratePodcastResult, GenerateAudioResult } from '@repo/queue';
 import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
@@ -193,55 +187,9 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const podcastRepo = yield* PodcastRepo;
-          const scriptVersionRepo = yield* ScriptVersionRepo;
-          const queue = yield* Queue;
-
-          // Verify podcast exists and user has access
-          const podcast = yield* podcastRepo.findById(input.id);
-
-          // Check for existing pending/processing job (idempotency)
-          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
-          if (existingJob) {
-            return {
-              jobId: existingJob.id,
-              status: existingJob.status,
-            };
-          }
-
-          // Get active version and update its status, or create a new drafting version
-          const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(podcast.id);
-          if (activeVersion) {
-            yield* scriptVersionRepo.updateStatus(activeVersion.id, 'drafting');
-          } else {
-            // Create a new drafting version for brand new podcasts
-            // This ensures isSetupMode() returns false after generate is called
-            yield* scriptVersionRepo.insert({
-              podcastId: podcast.id,
-              createdBy: podcast.createdBy,
-              status: 'drafting',
-              segments: null,
-            });
-          }
-
-          // Enqueue the combined generation job
-          const payload: GeneratePodcastPayload = {
-            podcastId: podcast.id,
-            userId: podcast.createdBy,
-            promptInstructions: input.promptInstructions,
-          };
-
-          const job = yield* queue.enqueue(
-            'generate-podcast',
-            payload,
-            podcast.createdBy,
-          );
-
-          return {
-            jobId: job.id,
-            status: job.status,
-          };
+        startGeneration({
+          podcastId: input.id,
+          promptInstructions: input.promptInstructions,
         }),
         errors as unknown as ErrorFactory,
         { span: 'api.podcasts.generate', attributes: { 'podcast.id': input.id } },
@@ -254,11 +202,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const queue = yield* Queue;
-          const job = yield* queue.getJob(input.jobId);
-          return serializeJob(job);
-        }),
+        getJob({ jobId: input.jobId }).pipe(Effect.map(serializeJob)),
         errors as unknown as ErrorFactory,
         { span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
       );
@@ -270,69 +214,16 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const podcastRepo = yield* PodcastRepo;
-          const queue = yield* Queue;
-
-          // Verify podcast exists
-          const podcast = yield* podcastRepo.findById(input.id);
-
-          // Call saveChanges use case
-          const result = yield* saveChanges({
-            podcastId: input.id as string,
-            segments: input.segments ? [...input.segments] : undefined,
-            hostVoice: input.hostVoice,
-            hostVoiceName: input.hostVoiceName,
-            coHostVoice: input.coHostVoice,
-            coHostVoiceName: input.coHostVoiceName,
-          });
-
-          if (!result.hasChanges) {
-            // No changes - throw error to indicate nothing to do
-            throw errors.NOT_FOUND({
-              message: 'No changes to save',
-              data: { podcastId: input.id },
-            });
-          }
-
-          // Check for existing pending/processing job (idempotency)
-          const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
-          if (existingJob) {
-            return {
-              jobId: existingJob.id,
-              status: existingJob.status,
-            };
-          }
-
-          // Enqueue audio regeneration job
-          const payload: GenerateAudioPayload = {
-            versionId: result.version.id,
-            userId: podcast.createdBy,
-          };
-
-          const job = yield* queue.enqueue(
-            'generate-audio',
-            payload,
-            podcast.createdBy,
-          );
-
-          return {
-            jobId: job.id,
-            status: job.status,
-          };
+        saveAndQueueAudio({
+          podcastId: input.id,
+          segments: input.segments ? [...input.segments] : undefined,
+          hostVoice: input.hostVoice,
+          hostVoiceName: input.hostVoiceName,
+          coHostVoice: input.coHostVoice,
+          coHostVoiceName: input.coHostVoiceName,
         }),
         errors as unknown as ErrorFactory,
         { span: 'api.podcasts.saveChanges', attributes: { 'podcast.id': input.id } },
-        {
-          // InvalidSaveError doesn't have HTTP protocol, so we need a custom handler
-          InvalidSaveError: (e: unknown) => {
-            const message = (e as { message?: string })?.message ?? 'Invalid save operation';
-            throw errors.NOT_FOUND({
-              message,
-              data: { podcastId: input.id },
-            });
-          },
-        },
       );
     },
   ),

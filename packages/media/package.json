@@ -31,6 +31,7 @@
     "@repo/db": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/ai": "workspace:*",
+    "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

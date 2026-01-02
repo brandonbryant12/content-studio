@@ -1,10 +1,10 @@
-# Frontend Specifications
+# Frontend Standards
 
-This directory contains the architectural patterns, coding standards, and testing guidelines for the Content Studio frontend.
+Architectural patterns, coding standards, and implementation guidelines for the Content Studio frontend.
 
 ## Quick Navigation
 
-| Spec | Description |
+| Standard | Description |
 |------|-------------|
 | [Project Structure](./project-structure.md) | Feature-based directory organization |
 | [Components](./components.md) | Container/Presenter pattern |

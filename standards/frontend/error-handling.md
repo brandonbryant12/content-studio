@@ -6,6 +6,10 @@ This document defines the standard pattern for handling API errors in the web ap
 
 The frontend leverages oRPC's typed error system to provide rich, context-aware error messages instead of generic fallbacks.
 
+**Related specs:**
+- [Suspense](./suspense.md) - Error boundary patterns and loading states
+- [Mutations](./mutations.md) - Error handling in optimistic updates
+
 ## Key Utilities
 
 ### `isDefinedError(error)`
@@ -347,3 +351,156 @@ if (error.code === 'PODCAST_NOT_FOUND') {
   toast.error('Podcast no longer exists');
 }
 ```
+
+## Error Boundaries
+
+### Route-Level Error Boundary
+
+Use TanStack Router's `errorComponent` for route-level errors:
+
+```typescript
+// routes/_protected/podcasts/$podcastId.tsx
+
+export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
+  errorComponent: ({ error, reset }) => (
+    <PodcastError error={error} onRetry={reset} />
+  ),
+  component: PodcastPage,
+});
+```
+
+### Component-Level Error Boundary
+
+Use `react-error-boundary` for component-level errors:
+
+```typescript
+import { ErrorBoundary } from 'react-error-boundary';
+
+function PodcastPage() {
+  const { podcastId } = Route.useParams();
+
+  return (
+    <ErrorBoundary
+      FallbackComponent={PodcastError}
+      resetKeys={[podcastId]}  // Reset on navigation
+      onReset={() => {
+        queryClient.invalidateQueries({ queryKey: ['podcasts', podcastId] });
+      }}
+    >
+      <Suspense fallback={<PodcastSkeleton />}>
+        <PodcastDetailContainer />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+### Error Fallback Component
+
+```typescript
+// shared/components/errors/error-fallback.tsx
+
+import { Button } from '@repo/ui/components/button';
+import { AlertCircle } from 'lucide-react';
+
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+export function ErrorFallback({
+  error,
+  resetErrorBoundary,
+}: ErrorFallbackProps) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <AlertCircle className="h-12 w-12 text-destructive" />
+      <h2 className="mt-4 text-lg font-semibold">Something went wrong</h2>
+      <p className="mt-2 text-sm text-muted-foreground max-w-md">
+        {error.message || 'An unexpected error occurred'}
+      </p>
+      <Button onClick={resetErrorBoundary} className="mt-6">
+        Try again
+      </Button>
+    </div>
+  );
+}
+```
+
+## Query Error Handling
+
+### Error State in Queries
+
+```typescript
+const { data, error, isError } = useQuery({
+  ...apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
+});
+
+if (isError) {
+  if (isDefinedError(error) && error.code === 'PODCAST_NOT_FOUND') {
+    return <PodcastNotFound />;
+  }
+  return <ErrorDisplay error={error} />;
+}
+```
+
+### Retry Configuration
+
+```typescript
+useQuery({
+  ...options,
+  retry: (failureCount, error) => {
+    // Don't retry on 404
+    if (isDefinedError(error) && error.code === 'PODCAST_NOT_FOUND') {
+      return false;
+    }
+    // Retry up to 3 times for other errors
+    return failureCount < 3;
+  },
+});
+```
+
+## Navigation on Error
+
+For errors that indicate the resource doesn't exist:
+
+```typescript
+import { isDefinedError } from '@repo/api/client';
+import { useNavigate } from '@tanstack/react-router';
+
+function PodcastError({ error }: { error: Error }) {
+  const navigate = useNavigate();
+
+  if (isDefinedError(error) && error.code === 'PODCAST_NOT_FOUND') {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-lg font-semibold">Podcast not found</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This podcast may have been deleted.
+        </p>
+        <Button
+          onClick={() => navigate({ to: '/podcasts' })}
+          className="mt-6"
+        >
+          Back to podcasts
+        </Button>
+      </div>
+    );
+  }
+
+  return <ErrorFallback error={error} resetErrorBoundary={() => {}} />;
+}
+```
+
+## Error Hierarchy
+
+Errors should be handled at the appropriate level:
+
+| Error Type | Handling Level | Example |
+|------------|----------------|---------|
+| Form validation | Field-level | Show inline error |
+| Mutation failure | Toast | Show toast, keep UI |
+| Query failure (retryable) | Component | Show retry button |
+| Not found (404) | Page | Navigate away |
+| Unauthorized (401) | App | Redirect to login |
+| Server error (500) | Component/Page | Show error with retry |

@@ -262,9 +262,7 @@ const doc = DocumentFactory.build({ title: 'Test Doc' });
 
 ## Documentation
 
-- `specs/` - Architectural patterns and coding standards (authoritative source)
-  - `specs/patterns/` - Router handler, use case, serialization, error handling patterns
-  - `specs/testing/` - Unit and integration test patterns
-  - `specs/frontend/` - Frontend error handling patterns
-- `docs/retrospective.md` - Detailed explanation of patterns with before/after examples
-- `IMPLEMENTATION_PLAN.md` - Router pattern standardization plan (execution tracker)
+- `standards/` - Architectural patterns and coding standards (authoritative source)
+  - `standards/patterns/` - Router handler, use case, serialization, error handling patterns
+  - `standards/testing/` - Unit and integration test patterns
+  - `standards/frontend/` - Frontend patterns (components, styling, data fetching, SSE, forms, testing)

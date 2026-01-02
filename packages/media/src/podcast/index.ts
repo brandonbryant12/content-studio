@@ -47,10 +47,15 @@ export {
   generateScript,
   generateAudio,
   progressTo,
+  // Job orchestration
+  startGeneration,
+  saveAndQueueAudio,
+  getJob,
   // Error classes (not error type unions)
   InvalidAudioGenerationError,
   InvalidProgressionError,
   InvalidSaveError,
+  NoChangesToSaveError,
   // Input/Output types - error types inferred by Effect
   type CreatePodcastInput,
   type GetPodcastInput,
@@ -69,6 +74,12 @@ export {
   type GenerateAudioResult,
   type ProgressToInput,
   type ProgressToResult,
+  type StartGenerationInput,
+  type StartGenerationResult,
+  type SaveAndQueueAudioInput,
+  type SaveAndQueueAudioResult,
+  type GetJobInput,
+  type GetJobResult,
   type ScriptSegment,
 } from './use-cases';
 

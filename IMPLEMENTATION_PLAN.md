@@ -909,7 +909,7 @@ packages/api/src/server/effect-handler.ts:
 4. ✅ Added npm scripts for running live tests
    - Root: `pnpm test:live`, `pnpm test:live:llm`, `pnpm test:live:tts`, `pnpm test:live:storage`
    - Per-package: `pnpm --filter @repo/ai test:live`, `pnpm --filter @repo/storage test:live`
-5. ✅ Created documentation (`specs/testing/live-tests.md`)
+5. ✅ Created documentation (`standards/testing/live-tests.md`)
    - Environment variable reference
    - Usage examples
    - CI integration guidance
@@ -921,7 +921,7 @@ packages/api/src/server/effect-handler.ts:
 - [x] Live tests are NOT run in CI by default (use `describe.skipIf`)
 - [x] Each service has basic connectivity test
 - [x] Each service has error handling tests
-- [x] Documentation in `specs/testing/live-tests.md`
+- [x] Documentation in `standards/testing/live-tests.md`
 
 ### Sprint 7: Remove Explicit Error Types (Issue #7) ✅ COMPLETED
 
@@ -956,3 +956,47 @@ packages/api/src/server/effect-handler.ts:
 - [x] All barrel exports updated to remove error type exports
 - [x] All tests passing
 - [x] All packages building successfully
+
+### Sprint 8: Router Handler Use Case Extraction (Issue #9) ✅ COMPLETED
+
+> **Goal:** Extract inline Effect logic from `generate`, `saveChanges`, and `getJob` handlers into proper use cases, following the standardized router pattern.
+
+1. ✅ Created `startGeneration` use case (`packages/media/src/podcast/use-cases/start-generation.ts`)
+   - Extracts all logic from `generate` handler
+   - Handles podcast verification, version creation/update, job idempotency
+   - Enqueues `generate-podcast` job
+   - Added to barrel exports
+2. ✅ Created `saveAndQueueAudio` use case (`packages/media/src/podcast/use-cases/save-and-queue-audio.ts`)
+   - Composes with existing `saveChanges` use case
+   - Handles job idempotency check
+   - Enqueues `generate-audio` job
+   - Created `NoChangesToSaveError` with HTTP protocol
+   - Added to barrel exports
+3. ✅ Created `getJob` use case (`packages/media/src/podcast/use-cases/get-job.ts`)
+   - Simple use case wrapping Queue.getJob
+   - Returns raw job data for serialization in handler
+   - Added to barrel exports
+4. ✅ Updated HTTP protocol on `InvalidSaveError`
+   - Added `httpStatus`, `httpCode`, `httpMessage`, `logLevel`, `getData`
+5. ✅ Refactored podcast router
+   - `generate` handler now calls `startGeneration` use case
+   - `saveChanges` handler now calls `saveAndQueueAudio` use case
+   - `getJob` handler now calls `getJob` use case
+   - Removed inline `Effect.gen` blocks
+   - Removed direct repo access from handlers
+6. ✅ Added `@repo/queue` dependency to `@repo/media` package
+7. ✅ Added unit tests for new use cases
+   - `start-generation.test.ts` (7 tests)
+   - `save-and-queue-audio.test.ts` (8 tests)
+   - `get-job.test.ts` (7 tests)
+   - Total: 22 new tests
+8. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
+
+#### Success Criteria
+
+- [x] All podcast router handlers call use cases (no inline Effect.gen blocks)
+- [x] No direct repo access from handlers
+- [x] New errors have HTTP protocol properties
+- [x] Unit tests cover new use cases
+- [x] All 112 API tests passing
+- [x] All 129 media tests passing
