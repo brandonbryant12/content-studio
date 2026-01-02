@@ -2,7 +2,7 @@ import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { DocumentIcon } from './document-icon';
-import { formatFileSize } from '@/lib/formatters';
+import { formatFileSize } from '@/shared/lib/formatters';
 
 /** Document data for list display */
 interface DocumentListItem {

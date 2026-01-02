@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { PodcastItem } from './-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { usePodcasts } from '@/db';
 
 export const Route = createFileRoute('/_protected/podcasts/')({

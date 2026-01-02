@@ -7,7 +7,7 @@ import type { RouterOutput } from '@repo/api/client';
 import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../-constants/status';
 import { PodcastIcon } from '../podcast-icon';
-import { formatDuration } from '@/lib/formatters';
+import { formatDuration } from '@/shared/lib/formatters';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 

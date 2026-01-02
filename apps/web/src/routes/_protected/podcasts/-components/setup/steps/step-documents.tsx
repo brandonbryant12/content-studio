@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { useDocuments } from '@/db';
 
 const SUPPORTED_TYPES = [

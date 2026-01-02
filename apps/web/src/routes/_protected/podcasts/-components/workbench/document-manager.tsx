@@ -3,7 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { BaseDialog } from '@/components/base-dialog';
+import { BaseDialog } from '@/shared/components/base-dialog';
 import { useDocuments } from '@/db';
 import type { DocumentInfo } from '@/hooks';
 

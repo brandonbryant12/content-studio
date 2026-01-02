@@ -3,7 +3,7 @@ import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState, useEffect } from 'react';
 import type { ScriptSegment } from '@/hooks/use-script-editor';
-import { BaseDialog } from '@/components/base-dialog';
+import { BaseDialog } from '@/shared/components/base-dialog';
 
 interface SegmentEditorDialogProps {
   open: boolean;

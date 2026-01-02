@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 1 starting
+> **STATUS: IN PROGRESS** - Sprint 1 complete, Sprint 2 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -87,29 +87,29 @@ apps/web/src/
 
 ---
 
-## Sprint 1: Foundation
+## Sprint 1: Foundation ✅ COMPLETE
 
 **Goal**: Create shared infrastructure
 
-### 1.1 Create `shared/hooks/use-optimistic-mutation.ts`
+### 1.1 Create `shared/hooks/use-optimistic-mutation.ts` ✅
 Factory hook that all feature mutations will use:
 - `queryKey`, `mutationFn`, `getOptimisticData`
 - Auto rollback on error
 - Toast integration
 - `showSuccessToast` option
 
-### 1.2 Create `shared/components/suspense-boundary.tsx`
+### 1.2 Create `shared/components/suspense-boundary.tsx` ✅
 Combines ErrorBoundary + Suspense with default spinner fallback
 
-### 1.3 Create `shared/hooks/use-navigation-block.ts`
+### 1.3 Create `shared/hooks/use-navigation-block.ts` ✅
 Extract from `$podcastId.tsx`:
 - TanStack Router `useBlocker`
 - Browser `beforeunload` handling
 
-### 1.4 Create `shared/hooks/use-keyboard-shortcut.ts`
+### 1.4 Create `shared/hooks/use-keyboard-shortcut.ts` ✅
 Generic keyboard shortcut hook
 
-### 1.5 Move shared code to `/shared/`
+### 1.5 Move shared code to `/shared/` ✅
 | From | To |
 |------|-----|
 | `src/components/error-boundary/` | `src/shared/components/error-boundary/` |
@@ -118,9 +118,9 @@ Generic keyboard shortcut hook
 | `src/lib/errors.ts` | `src/shared/lib/errors.ts` |
 | `src/lib/formatters.ts` | `src/shared/lib/formatters.ts` |
 
-### 1.6 Create `shared/index.ts` barrel export
+### 1.6 Create `shared/index.ts` barrel export ✅
 
-**Validation**: `pnpm --filter web typecheck`
+**Validation**: `pnpm --filter web typecheck` ✅ PASSED
 
 ---
 
@@ -295,7 +295,7 @@ After verification:
 
 ## Success Criteria
 
-- [ ] **Sprint 1**: Factory hook + SuspenseBoundary + shared structure
+- [x] **Sprint 1**: Factory hook + SuspenseBoundary + shared structure
 - [ ] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
 - [ ] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
 - [ ] **Sprint 4**: Podcast list page refactored

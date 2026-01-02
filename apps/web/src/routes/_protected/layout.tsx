@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router';
 import { authClient } from '@/clients/authClient';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ErrorBoundary } from '@/shared/components/error-boundary';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,

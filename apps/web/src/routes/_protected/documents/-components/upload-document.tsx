@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 const SUPPORTED_TYPES = [
   'text/plain',

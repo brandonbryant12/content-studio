@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-router';
 import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { SetupWizard, isSetupMode } from './-components/setup';
 import {
   WorkbenchLayout,

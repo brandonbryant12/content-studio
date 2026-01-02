@@ -2,7 +2,7 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState } from 'react';
-import { BaseDialog } from '@/components/base-dialog';
+import { BaseDialog } from '@/shared/components/base-dialog';
 
 interface AddSegmentDialogProps {
   open: boolean;

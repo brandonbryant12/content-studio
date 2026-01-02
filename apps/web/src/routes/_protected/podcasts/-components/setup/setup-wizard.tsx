@@ -9,7 +9,7 @@ import { StepBasics } from './steps/step-basics';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';

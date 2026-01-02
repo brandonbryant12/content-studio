@@ -13,7 +13,7 @@ import { DocumentItem } from './documents/-components/document-item';
 import UploadDocumentDialog from './documents/-components/upload-document';
 import { PodcastItem } from './podcasts/-components/podcast-item';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { usePodcastsOrdered, useDocumentsOrdered } from '@/db';
 
 export const Route = createFileRoute('/_protected/dashboard')({

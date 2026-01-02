@@ -3,7 +3,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
 import React from 'react';
 import { authClient } from '@/clients/authClient';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ErrorBoundary } from '@/shared/components/error-boundary';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
 

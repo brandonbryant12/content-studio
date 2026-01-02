@@ -9,7 +9,7 @@ import {
   isGeneratingStatus,
 } from '../-constants/status';
 import { PodcastIcon } from './podcast-icon';
-import { formatDuration } from '@/lib/formatters';
+import { formatDuration } from '@/shared/lib/formatters';
 
 /** Podcast data for list display */
 interface PodcastListItem {
