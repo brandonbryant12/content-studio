@@ -7,7 +7,7 @@ This document defines the standard pattern for business logic use cases.
 Use cases encapsulate a single business operation. They:
 1. Live in domain-specific directories
 2. Return raw domain data (not serialized)
-3. Have explicit error types
+3. Let Effect infer error types automatically
 4. Include tracing spans
 
 ## File Location
