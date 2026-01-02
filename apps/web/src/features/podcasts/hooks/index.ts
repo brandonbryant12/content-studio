@@ -13,6 +13,8 @@ export {
 export { useOptimisticGeneration } from './use-optimistic-generation';
 export { useOptimisticSaveChanges } from './use-optimistic-save-changes';
 export { useOptimisticDelete } from './use-optimistic-delete';
+export { useOptimisticCreate } from './use-optimistic-create';
+export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 
 // Local state hooks
 export {

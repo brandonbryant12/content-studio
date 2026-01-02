@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 3 complete, Sprint 4 next
+> **STATUS: IN PROGRESS** - Sprint 4 complete, Sprint 5 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -224,22 +224,21 @@ Also moved:
 
 ---
 
-## Sprint 4: Podcast List Page
+## Sprint 4: Podcast List Page ✅ COMPLETE
 
 **Goal**: Apply Container/Presenter to list page
 
-### 4.1 Create `PodcastListContainer`
+### 4.1 Create `PodcastListContainer` ✅
 - `usePodcastList()` for data
 - Search state management
-- Create/delete mutation handlers
+- Create/delete mutation handlers using new hooks
 
-### 4.2 Create `PodcastList` presenter
+### 4.2 Create `PodcastList` presenter ✅
 Pure UI with props:
 ```typescript
 interface PodcastListProps {
-  podcasts: Podcast[];
+  podcasts: readonly PodcastListItem[];
   searchQuery: string;
-  isLoading: boolean;
   isCreating: boolean;
   deletingId: string | null;
   onSearch: (query: string) => void;
@@ -248,9 +247,17 @@ interface PodcastListProps {
 }
 ```
 
-### 4.3 Update `routes/_protected/podcasts/index.tsx`
+### 4.3 Update `routes/_protected/podcasts/index.tsx` ✅
+Route file reduced from 185 lines to 10 lines.
 
-**Validation**: `pnpm --filter web typecheck && pnpm --filter web build`
+### 4.4 Create mutation hooks ✅
+- `use-optimistic-create.ts` - Create with navigation
+- `use-optimistic-delete-list.ts` - Delete with optimistic removal
+
+### 4.5 Move `PodcastItem` to features ✅
+Moved to `features/podcasts/components/podcast-item.tsx`
+
+**Validation**: `pnpm --filter web typecheck && pnpm --filter web build` ✅ PASSED
 
 ---
 
@@ -310,7 +317,7 @@ After verification:
 - [x] **Sprint 1**: Factory hook + SuspenseBoundary + shared structure
 - [x] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
 - [x] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
-- [ ] **Sprint 4**: Podcast list page refactored
+- [x] **Sprint 4**: Podcast list page refactored
 - [ ] **Sprint 5**: Documents feature follows same patterns
 - [ ] **Sprint 6**: Old code removed, all imports updated
 
