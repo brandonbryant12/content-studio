@@ -1,3 +1,6 @@
+// features/documents/components/document-item.tsx
+// Presenter: Pure UI component for document list item
+
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
@@ -5,7 +8,7 @@ import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
 
 /** Document data for list display */
-interface DocumentListItem {
+export interface DocumentListItem {
   id: string;
   title: string;
   source: string;
@@ -31,15 +34,17 @@ function getFileLabel(source: string): string {
   return source;
 }
 
+export interface DocumentItemProps {
+  document: DocumentListItem;
+  onDelete: () => void;
+  isDeleting: boolean;
+}
+
 export function DocumentItem({
   document,
   onDelete,
   isDeleting,
-}: {
-  document: DocumentListItem;
-  onDelete: () => void;
-  isDeleting: boolean;
-}) {
+}: DocumentItemProps) {
   return (
     <div className="list-card group">
       <DocumentIcon source={document.source} />

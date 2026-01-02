@@ -1,3 +1,6 @@
+// features/documents/components/upload-document-dialog.tsx
+// Presenter: Upload dialog UI with hooks extracted
+
 import { UploadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -11,11 +14,9 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
+import { useOptimisticUpload, fileToBase64 } from '../hooks';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -31,33 +32,21 @@ interface UploadDocumentDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function UploadDocumentDialog({
+export function UploadDocumentDialog({
   open,
   onOpenChange,
 }: UploadDocumentDialogProps) {
-  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-
-  const uploadMutation = useMutation(
-    apiClient.documents.upload.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['documents'] });
-        toast.success('Document uploaded successfully');
-        handleClose();
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to upload document'));
-      },
-    }),
-  );
 
   const handleClose = useCallback(() => {
     setFile(null);
     setTitle('');
     onOpenChange(false);
   }, [onOpenChange]);
+
+  const uploadMutation = useOptimisticUpload({ onSuccess: handleClose });
 
   const handleFileSelect = useCallback((selectedFile: File | null) => {
     if (!selectedFile) return;
@@ -95,14 +84,7 @@ export default function UploadDocumentDialog({
   const handleSubmit = async () => {
     if (!file) return;
 
-    // Convert file to base64
-    const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        '',
-      ),
-    );
+    const base64 = await fileToBase64(file);
 
     uploadMutation.mutate({
       fileName: file.name,

@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 4 complete, Sprint 5 next
+> **STATUS: IN PROGRESS** - Sprint 5 complete, Sprint 6 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -261,21 +261,32 @@ Moved to `features/podcasts/components/podcast-item.tsx`
 
 ---
 
-## Sprint 5: Documents Feature
+## Sprint 5: Documents Feature ✅ COMPLETE
 
 **Goal**: Apply same patterns to documents
 
-### 5.1 Create `features/documents/hooks/`
-- `use-documents.ts` (query + suspense variants)
-- `use-optimistic-delete.ts` (using factory)
+### 5.1 Create `features/documents/hooks/` ✅
+- `use-document-list.ts` - Query + suspense variants + query key helper
+- `use-optimistic-delete-document.ts` - Delete with optimistic removal using factory
+- `use-optimistic-upload.ts` - Upload mutation with query invalidation
 
-### 5.2 Create Container/Presenter
-- `DocumentListContainer`
-- `DocumentList`
+### 5.2 Create Container/Presenter ✅
+- `DocumentListContainer` - Handles data fetching, state, and mutations
+- `DocumentList` - Pure UI presenter component
+- `DocumentItem` - Document list item presenter (moved from routes)
+- `DocumentIcon` - File type icon presenter (moved from routes)
+- `UploadDocumentDialog` - Upload dialog refactored to use hook
 
-### 5.3 Update `routes/_protected/documents/index.tsx`
+### 5.3 Update `routes/_protected/documents/index.tsx` ✅
+Route file reduced from 141 lines to 10 lines.
 
-**Validation**: `pnpm --filter web typecheck && pnpm --filter web build`
+### 5.4 Update dashboard imports ✅
+Updated `routes/_protected/dashboard.tsx` to import from new feature locations.
+
+### 5.5 Remove old route components ✅
+Deleted `routes/_protected/documents/-components/` directory.
+
+**Validation**: `pnpm typecheck && pnpm build` ✅ PASSED
 
 ---
 
@@ -318,7 +329,7 @@ After verification:
 - [x] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
 - [x] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
 - [x] **Sprint 4**: Podcast list page refactored
-- [ ] **Sprint 5**: Documents feature follows same patterns
+- [x] **Sprint 5**: Documents feature follows same patterns
 - [ ] **Sprint 6**: Old code removed, all imports updated
 
 **Part 2: Frontend Testing**
