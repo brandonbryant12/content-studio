@@ -1,6 +1,11 @@
 // shared/hooks/use-optimistic-mutation.ts
 
-import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueryClient,
+  type QueryKey,
+  type MutationFunction,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/shared/lib/errors';
 
@@ -8,8 +13,8 @@ export interface OptimisticMutationOptions<TData, TVariables, TCache = TData> {
   /** Query key to apply optimistic update to */
   queryKey: QueryKey;
 
-  /** Mutation function */
-  mutationFn: (variables: TVariables) => Promise<TData>;
+  /** Mutation function - compatible with TanStack Query's MutationFunction */
+  mutationFn: MutationFunction<TData, TVariables>;
 
   /** Transform current cache to optimistic state */
   getOptimisticData: (

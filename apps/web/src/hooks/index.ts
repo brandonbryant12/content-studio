@@ -1,28 +1,36 @@
+// Re-export from features for backward compatibility
+// TODO: Update imports to use @/features/podcasts/hooks directly, then remove this file
+
 export {
   useSessionGuard,
   type UseSessionGuardReturn,
 } from './use-session-guard';
+
+// Re-export from features/podcasts/hooks
 export {
   usePodcastGeneration,
   type UsePodcastGenerationReturn,
-} from './use-podcast-generation';
-export {
   useScriptEditor,
+  type ScriptSegment,
   type UseScriptEditorReturn,
-} from './use-script-editor';
-export {
-  useOptimisticFullGeneration,
-  useOptimisticSaveChanges,
-} from './use-optimistic-podcast-mutation';
-export {
   usePodcastSettings,
   VOICES,
   MIN_DURATION,
   MAX_DURATION,
   type UsePodcastSettingsReturn,
-} from './use-podcast-settings';
-export {
   useDocumentSelection,
   type UseDocumentSelectionReturn,
   type DocumentInfo,
-} from './use-document-selection';
+  useOptimisticGeneration,
+  useOptimisticSaveChanges,
+  useOptimisticDelete,
+  usePodcast,
+  usePodcastList,
+  useSuspensePodcastList,
+} from '@/features/podcasts/hooks';
+
+// Legacy exports - these are now replaced by factory-based hooks
+export {
+  useOptimisticFullGeneration,
+  useOptimisticSaveChanges as useOptimisticSaveChangesLegacy,
+} from './use-optimistic-podcast-mutation';

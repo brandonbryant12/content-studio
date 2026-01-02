@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 1 complete, Sprint 2 next
+> **STATUS: IN PROGRESS** - Sprint 2 complete, Sprint 3 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -124,37 +124,41 @@ Generic keyboard shortcut hook
 
 ---
 
-## Sprint 2: Podcasts Feature - Hooks
+## Sprint 2: Podcasts Feature - Hooks ✅ COMPLETE
 
 **Goal**: Create feature-based hooks
 
-### 2.1 Create `features/podcasts/hooks/use-podcast.ts`
-```typescript
-export function usePodcast(podcastId: string) {
-  return useSuspenseQuery(
-    apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
-  );
-}
-```
+### 2.1 Create `features/podcasts/hooks/use-podcast.ts` ✅
+- `usePodcast(podcastId)` with useSuspenseQuery
+- `getPodcastQueryKey(podcastId)` helper for cache operations
 
-### 2.2 Create `features/podcasts/hooks/use-podcast-list.ts`
-Both `useQuery` and `useSuspenseQuery` variants
+### 2.2 Create `features/podcasts/hooks/use-podcast-list.ts` ✅
+- `usePodcastList()` with useQuery (conditional fetching)
+- `useSuspensePodcastList()` with useSuspenseQuery
+- `getPodcastListQueryKey()` helper
 
-### 2.3 Create mutation hooks using factory
-- `use-optimistic-generation.ts`
-- `use-optimistic-save-changes.ts`
-- `use-optimistic-delete.ts`
+### 2.3 Create mutation hooks using factory ✅
+- `use-optimistic-generation.ts` - Full generation with factory
+- `use-optimistic-save-changes.ts` - Save changes with factory
+- `use-optimistic-delete.ts` - Delete with factory and navigation
 
-### 2.4 Move existing hooks
+### 2.4 Move existing hooks ✅
 | From | To |
 |------|-----|
 | `src/hooks/use-script-editor.ts` | `features/podcasts/hooks/use-script-editor.ts` |
 | `src/hooks/use-podcast-settings.ts` | `features/podcasts/hooks/use-podcast-settings.ts` |
 | `src/hooks/use-document-selection.ts` | `features/podcasts/hooks/use-document-selection.ts` |
+| `src/hooks/use-podcast-generation.ts` | `features/podcasts/hooks/use-podcast-generation.ts` |
 
-### 2.5 Create `features/podcasts/hooks/index.ts` barrel
+### 2.5 Create `features/podcasts/hooks/index.ts` barrel ✅
+- Feature barrel: `features/podcasts/index.ts`
+- Root features barrel: `features/index.ts`
+- Backward compatibility: `src/hooks/index.ts` re-exports from features
 
-**Validation**: `pnpm --filter web typecheck`
+### 2.6 Update shared factory hook ✅
+- `useOptimisticMutation` now uses `MutationFunction` type for TanStack Query compatibility
+
+**Validation**: `pnpm --filter web typecheck && pnpm --filter web build` ✅ PASSED
 
 ---
 
@@ -296,7 +300,7 @@ After verification:
 ## Success Criteria
 
 - [x] **Sprint 1**: Factory hook + SuspenseBoundary + shared structure
-- [ ] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
+- [x] **Sprint 2**: All podcast hooks in `features/podcasts/hooks/`
 - [ ] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
 - [ ] **Sprint 4**: Podcast list page refactored
 - [ ] **Sprint 5**: Documents feature follows same patterns
