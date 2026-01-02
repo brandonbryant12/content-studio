@@ -28,7 +28,6 @@ Examples:
 // packages/media/src/{domain}/use-cases/{action}.ts
 import { Effect } from 'effect';
 import { DomainRepo } from '../repos';
-import { DatabaseError, DomainNotFound } from '@repo/db/errors';
 
 // ============================================================================
 // Types
@@ -39,21 +38,11 @@ export interface ActionInput {
   // Other input fields...
 }
 
-export interface ActionResult {
-  // Raw domain data, NOT serialized
-}
-
-export type ActionError =
-  | DomainNotFound
-  | DatabaseError;
-
 // ============================================================================
 // Use Case
 // ============================================================================
 
-export const actionName = (
-  input: ActionInput
-): Effect.Effect<ActionResult, ActionError, DomainRepo> =>
+export const actionName = (input: ActionInput) =>
   Effect.gen(function* () {
     const repo = yield* DomainRepo;
 
@@ -89,12 +78,20 @@ packages/media/src/document/use-cases/
 └── delete-document.ts
 ```
 
-### 2. Explicit Error Types
+### 2. Let Effect Infer Types
 
-Always define and export the error union.
+Let TypeScript infer the Effect's error and dependency types automatically.
 
 ```typescript
-// CORRECT - explicit union
+// CORRECT - inferred types
+export const createDocument = (input: CreateDocumentInput) =>
+  Effect.gen(function* () {
+    const repo = yield* DocumentRepo;
+    // Errors from repo operations are automatically tracked
+    return yield* repo.create(input);
+  }).pipe(Effect.withSpan('useCase.createDocument'));
+
+// WRONG - explicit annotations (unnecessary, can drift from reality)
 export type CreateDocumentError =
   | DocumentQuotaExceeded
   | UnsupportedFormat
@@ -103,10 +100,6 @@ export type CreateDocumentError =
 export const createDocument = (
   input: CreateDocumentInput
 ): Effect.Effect<Document, CreateDocumentError, DocumentRepo> => ...
-
-// WRONG - inferred errors
-export const createDocument = (input: CreateDocumentInput) =>
-  Effect.gen(function* () { ... });  // Error type not explicit!
 ```
 
 ### 3. Return Raw Domain Data
@@ -115,18 +108,14 @@ Serialization happens in the handler, not the use case.
 
 ```typescript
 // CORRECT - returns DB entity
-export const getDocument = (
-  input: GetDocumentInput
-): Effect.Effect<Document, GetDocumentError, DocumentRepo> =>
+export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
     const repo = yield* DocumentRepo;
     return yield* repo.findById(input.id);
   });
 
 // WRONG - returns serialized data
-export const getDocument = (
-  input: GetDocumentInput
-): Effect.Effect<SerializedDocument, GetDocumentError, DocumentRepo> =>
+export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
     const repo = yield* DocumentRepo;
     const doc = yield* repo.findById(input.id);
@@ -139,9 +128,7 @@ export const getDocument = (
 Every use case must have a span with relevant attributes.
 
 ```typescript
-export const createDocument = (
-  input: CreateDocumentInput
-): Effect.Effect<Document, CreateDocumentError, DocumentRepo> =>
+export const createDocument = (input: CreateDocumentInput) =>
   Effect.gen(function* () {
     // ... implementation
   }).pipe(
@@ -152,16 +139,6 @@ export const createDocument = (
       }
     })
   );
-```
-
-### 5. Dependencies Explicit in Effect Type
-
-```typescript
-// Dependencies listed in R position
-export const generateScript = (
-  input: GenerateScriptInput
-): Effect.Effect<Script, GenerateScriptError, PodcastRepo | LLMService | Storage> =>
-  ...
 ```
 
 ## Span Naming Convention
@@ -214,9 +191,7 @@ Use FiberRef, not Context.Tag:
 ```typescript
 import { getCurrentUser } from '@repo/auth/policy';
 
-export const createDocument = (
-  input: CreateDocumentInput
-): Effect.Effect<Document, CreateDocumentError, DocumentRepo> =>
+export const createDocument = (input: CreateDocumentInput) =>
   Effect.gen(function* () {
     // Get user from FiberRef
     const user = yield* getCurrentUser;
@@ -226,7 +201,7 @@ export const createDocument = (
       ...input,
       userId: user.id,
     });
-  });
+  }).pipe(Effect.withSpan('useCase.createDocument'));
 ```
 
 ## Composing Use Cases
@@ -234,9 +209,7 @@ export const createDocument = (
 Use cases can call other use cases:
 
 ```typescript
-export const deleteDocument = (
-  input: DeleteDocumentInput
-): Effect.Effect<void, DeleteDocumentError, DocumentRepo | PodcastRepo> =>
+export const deleteDocument = (input: DeleteDocumentInput) =>
   Effect.gen(function* () {
     // Check if document is used by podcasts
     const usages = yield* getDocumentUsages({ documentId: input.id });
@@ -249,7 +222,7 @@ export const deleteDocument = (
 
     const repo = yield* DocumentRepo;
     yield* repo.delete(input.id);
-  });
+  }).pipe(Effect.withSpan('useCase.deleteDocument'));
 ```
 
 ## Index File

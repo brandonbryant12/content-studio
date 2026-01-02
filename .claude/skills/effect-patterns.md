@@ -212,4 +212,4 @@ When validating before PR/commit:
 ## Reference
 
 - **Gold standard:** `@repo/invite` package (5.0/5 score)
-- **CLAUDE.md:** See "Effect Pattern Standards (Mandatory)" section
+- **Standards:** See `standards/patterns/` directory for authoritative patterns

@@ -178,7 +178,7 @@ started_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # $(echo "$TASK_TYPE" | awk '{print toupper(substr($0,1,1)) substr($0,2)}') Development: $DESCRIPTION
 $PLANNING_SECTION$THINKING_SECTION
-## Effect Pattern Requirements (from CLAUDE.md)
+## Effect Pattern Requirements (see standards/patterns/)
 - Use Data.TaggedError for domain errors with factory functions
 - Use Effect.gen(function* () { ... }) for use cases
 - Write tests with @effect/vitest and it.effect()
