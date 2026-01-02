@@ -5,6 +5,7 @@ import { Storage } from '@repo/storage';
 import { getCurrentUser } from '@repo/auth/policy';
 import type { StorageUploadError, UnauthorizedError } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
+import { calculateWordCount } from '../../shared';
 
 // =============================================================================
 // Types
@@ -22,15 +23,6 @@ export type CreateDocumentError =
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Calculate word count from content.
- */
-const calculateWordCount = (content: string): number =>
-  content
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0).length;
 
 /**
  * Generate a unique storage key for a document.

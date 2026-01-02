@@ -88,9 +88,7 @@ const documentRouter = {
 
   upload: protectedProcedure.documents.upload.handler(
     async ({ context, input, errors }) => {
-      // Decode base64 to Buffer
       const data = Buffer.from(input.data, 'base64');
-
       return handleEffectWithProtocol(
         context.runtime,
         context.user,

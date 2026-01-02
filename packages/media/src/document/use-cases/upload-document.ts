@@ -17,6 +17,7 @@ import {
   validateFileSize,
   validateMimeType,
 } from '../parsers';
+import { calculateWordCount } from '../../shared';
 
 // =============================================================================
 // Types
@@ -46,15 +47,6 @@ export type UploadDocumentError =
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Calculate word count from content.
- */
-const calculateWordCount = (content: string): number =>
-  content
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0).length;
 
 /**
  * Get file extension from filename.

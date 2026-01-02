@@ -12,6 +12,7 @@ import type {
 } from '@repo/db/errors';
 import { DocumentRepo } from '../repos';
 import type { UpdateDocumentInput as RepoUpdateInput } from '../repository';
+import { calculateWordCount } from '../../shared';
 
 // =============================================================================
 // Types
@@ -35,15 +36,6 @@ export type UpdateDocumentError =
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Calculate word count from content.
- */
-const calculateWordCount = (content: string): number =>
-  content
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0).length;
 
 /**
  * Generate a unique storage key for a document.

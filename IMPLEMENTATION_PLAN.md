@@ -702,8 +702,24 @@ packages/api/src/server/effect-handler.ts:
    - Created `packages/media/src/document/use-cases/index.ts`
    - Validate: `pnpm --filter @repo/media typecheck` ✅
 3. ~~Add HTTP protocol props to document-related errors~~ ✅ Already done in Phase 0
-4. Write document use case unit tests (PENDING)
-   - Validate: `pnpm --filter @repo/media test`
+3a. ✅ Create shared utilities module (Issue #5)
+   - Created `packages/media/src/shared/text-utils.ts` with `calculateWordCount`
+   - Created `packages/media/src/shared/index.ts` barrel export
+   - Updated `create-document.ts`, `update-document.ts`, `upload-document.ts` to import from shared
+   - Note: `live.ts` still has duplicate (will be removed in Sprint 4)
+   - Validate: `pnpm --filter @repo/media typecheck` ✅
+4. ✅ Write document use case unit tests
+   - Created `packages/media/src/document/use-cases/__tests__/` directory
+   - Created test files for all 7 use cases:
+     - `list-documents.test.ts` (9 tests)
+     - `get-document.test.ts` (5 tests)
+     - `get-document-content.test.ts` (6 tests)
+     - `create-document.test.ts` (7 tests)
+     - `update-document.test.ts` (11 tests)
+     - `delete-document.test.ts` (5 tests)
+     - `upload-document.test.ts` (12 tests)
+   - Total: 55 tests passing
+   - Validate: `pnpm --filter @repo/media test` ✅
 5. ✅ **Refactor document router** - CRITICAL migration point:
    - Replaced `handleEffect()` → `handleEffectWithProtocol()`
    - Removed all `createErrorHandlers(errors)` calls
