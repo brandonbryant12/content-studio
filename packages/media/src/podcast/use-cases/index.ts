@@ -33,6 +33,12 @@ export {
 // =============================================================================
 
 export {
+  getActiveScript,
+  type GetActiveScriptInput,
+  type GetActiveScriptError,
+} from './get-active-script';
+
+export {
   editScript,
   type EditScriptInput,
   type EditScriptResult,

@@ -7,6 +7,7 @@ import {
   updatePodcast,
   deletePodcast,
   saveChanges,
+  getActiveScript,
 } from '@repo/media';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
@@ -17,7 +18,7 @@ import type {
   GenerateAudioPayload,
   GenerateAudioResult,
 } from '@repo/queue';
-import { createErrorHandlers, handleEffect, getErrorProp } from '../effect-handler';
+import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
   serializePodcast,
@@ -77,8 +78,7 @@ const serializeJob = (job: {
 const podcastRouter = {
   list: protectedProcedure.podcasts.list.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         listPodcasts({
@@ -86,9 +86,13 @@ const podcastRouter = {
           limit: input.limit,
           offset: input.offset,
         }).pipe(Effect.map((result) => (result as { podcasts: Parameters<typeof serializePodcastListItem>[0][] }).podcasts.map(serializePodcastListItem))),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
+          span: 'api.podcasts.list',
+          attributes: {
+            'pagination.limit': input.limit ?? 50,
+            'pagination.offset': input.offset ?? 0,
+          },
         },
       );
     },
@@ -96,8 +100,7 @@ const podcastRouter = {
 
   get: protectedProcedure.podcasts.get.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         getPodcast({ podcastId: input.id, includeVersion: true }).pipe(
@@ -109,17 +112,10 @@ const podcastRouter = {
             });
           }),
         ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.PODCAST_NOT_FOUND({
-              message: message ?? `Podcast ${id} not found`,
-              data: { podcastId: id },
-            });
-          },
+          span: 'api.podcasts.get',
+          attributes: { 'podcast.id': input.id },
         },
       );
     },
@@ -127,25 +123,17 @@ const podcastRouter = {
 
   create: protectedProcedure.podcasts.create.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         createPodcast({
           ...input,
           userId: context.session.user.id,
         }).pipe(Effect.map((podcastFull) => serializePodcastFull(podcastFull as Parameters<typeof serializePodcastFull>[0]))),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          DocumentNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.DOCUMENT_NOT_FOUND({
-              message: message ?? `Document ${id} not found or access denied`,
-              data: { documentId: id },
-            });
-          },
+          span: 'api.podcasts.create',
+          attributes: { 'podcast.title': input.title ?? 'Untitled' },
         },
       );
     },
@@ -153,26 +141,18 @@ const podcastRouter = {
 
   update: protectedProcedure.podcasts.update.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
       const { id, ...data } = input;
 
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         updatePodcast({ podcastId: id as string, data }).pipe(
           Effect.map((podcast) => serializePodcast(podcast as Parameters<typeof serializePodcast>[0])),
         ),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e: unknown) => {
-            const podcastId = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.PODCAST_NOT_FOUND({
-              message: message ?? `Podcast ${podcastId} not found`,
-              data: { podcastId },
-            });
-          },
+          span: 'api.podcasts.update',
+          attributes: { 'podcast.id': id },
         },
       );
     },
@@ -180,22 +160,14 @@ const podcastRouter = {
 
   delete: protectedProcedure.podcasts.delete.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         deletePodcast({ podcastId: input.id }).pipe(Effect.map(() => ({}))),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
-          PodcastNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.PODCAST_NOT_FOUND({
-              message: message ?? `Podcast ${id} not found`,
-              data: { podcastId: id },
-            });
-          },
+          span: 'api.podcasts.delete',
+          attributes: { 'podcast.id': input.id },
         },
       );
     },
@@ -203,24 +175,14 @@ const podcastRouter = {
 
   getScript: protectedProcedure.podcasts.getScript.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        Effect.gen(function* () {
-          const scriptVersionRepo = yield* ScriptVersionRepo;
-          const version = yield* scriptVersionRepo.findActiveByPodcastId(input.id);
-          if (!version) {
-            throw errors.SCRIPT_NOT_FOUND({
-              message: 'No active script found',
-              data: { podcastId: input.id },
-            });
-          }
-          return serializePodcastScript(version);
-        }),
+        getActiveScript({ podcastId: input.id }).pipe(Effect.map(serializePodcastScript)),
+        errors as unknown as ErrorFactory,
         {
-          ...handlers.common,
-          ...handlers.database,
+          span: 'api.podcasts.getScript',
+          attributes: { 'podcast.id': input.id },
         },
       );
     },
@@ -228,8 +190,7 @@ const podcastRouter = {
 
   generate: protectedProcedure.podcasts.generate.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         Effect.gen(function* () {
@@ -282,27 +243,7 @@ const podcastRouter = {
             status: job.status,
           };
         }),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.queue,
-          PodcastNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.PODCAST_NOT_FOUND({
-              message: message ?? `Podcast ${id} not found`,
-              data: { podcastId: id },
-            });
-          },
-          ScriptNotFound: (e: unknown) => {
-            const podcastId = getErrorProp(e, 'podcastId', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.SCRIPT_NOT_FOUND({
-              message: message ?? 'No active script found',
-              data: { podcastId },
-            });
-          },
-        },
+        errors as unknown as ErrorFactory,
         { span: 'api.podcasts.generate', attributes: { 'podcast.id': input.id } },
       );
     },
@@ -310,8 +251,7 @@ const podcastRouter = {
 
   getJob: protectedProcedure.podcasts.getJob.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         Effect.gen(function* () {
@@ -319,11 +259,7 @@ const podcastRouter = {
           const job = yield* queue.getJob(input.jobId);
           return serializeJob(job);
         }),
-        {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.queue,
-        },
+        errors as unknown as ErrorFactory,
         { span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
       );
     },
@@ -331,8 +267,7 @@ const podcastRouter = {
 
   saveChanges: protectedProcedure.podcasts.saveChanges.handler(
     async ({ context, input, errors }) => {
-      const handlers = createErrorHandlers(errors);
-      return handleEffect(
+      return handleEffectWithProtocol(
         context.runtime,
         context.user,
         Effect.gen(function* () {
@@ -353,8 +288,8 @@ const podcastRouter = {
           });
 
           if (!result.hasChanges) {
-            // No changes, return a dummy response
-            throw errors.PODCAST_NOT_FOUND({
+            // No changes - throw error to indicate nothing to do
+            throw errors.NOT_FOUND({
               message: 'No changes to save',
               data: { podcastId: input.id },
             });
@@ -386,35 +321,18 @@ const podcastRouter = {
             status: job.status,
           };
         }),
+        errors as unknown as ErrorFactory,
+        { span: 'api.podcasts.saveChanges', attributes: { 'podcast.id': input.id } },
         {
-          ...handlers.common,
-          ...handlers.database,
-          ...handlers.queue,
-          PodcastNotFound: (e: unknown) => {
-            const id = getErrorProp(e, 'id', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.PODCAST_NOT_FOUND({
-              message: message ?? `Podcast ${id} not found`,
-              data: { podcastId: id },
-            });
-          },
-          ScriptNotFound: (e: unknown) => {
-            const podcastId = getErrorProp(e, 'podcastId', 'unknown');
-            const message = getErrorProp<string | undefined>(e, 'message', undefined);
-            throw errors.SCRIPT_NOT_FOUND({
-              message: message ?? 'No active script found',
-              data: { podcastId },
-            });
-          },
+          // InvalidSaveError doesn't have HTTP protocol, so we need a custom handler
           InvalidSaveError: (e: unknown) => {
-            const message = getErrorProp(e, 'message', 'Invalid save operation');
-            throw errors.PODCAST_NOT_FOUND({
+            const message = (e as { message?: string })?.message ?? 'Invalid save operation';
+            throw errors.NOT_FOUND({
               message,
               data: { podcastId: input.id },
             });
           },
         },
-        { span: 'api.podcasts.saveChanges', attributes: { 'podcast.id': input.id } },
       );
     },
   ),

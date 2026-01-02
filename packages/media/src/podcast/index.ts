@@ -40,6 +40,7 @@ export {
   deletePodcast,
   listPodcasts,
   // Script operations
+  getActiveScript,
   editScript,
   saveChanges,
   // Generation
@@ -53,6 +54,8 @@ export {
   // Input/Output types
   type CreatePodcastInput,
   type GetPodcastInput,
+  type GetActiveScriptInput,
+  type GetActiveScriptError,
   type UpdatePodcastInput,
   type DeletePodcastInput,
   type ListPodcastsInput,

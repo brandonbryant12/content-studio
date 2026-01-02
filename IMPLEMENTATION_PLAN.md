@@ -4,6 +4,8 @@
 
 Standardize the oRPC router pattern across all routers to ensure consistent architecture, testability, and maintainability. Each router handler should call a single use case, use Effect-based serialization, and have comprehensive unit and integration tests.
 
+UPDATE IMPLEMENTATION PLAN WITH LEARNINGS AND PATTERNS AS YOU GO
+
 ## Key Decisions
 
 | Decision | Choice |
@@ -768,22 +770,27 @@ packages/api/src/server/effect-handler.ts:
    - Updated document integration tests to use shared utility
    - Validate: `pnpm --filter @repo/api test` ✅
 
-### Sprint 2: Podcast Module (Standardize)
+### Sprint 2: Podcast Module (Standardize) ✅ COMPLETED
 
 > ⚠️ **Error Handling Reminder:** Podcast router has inconsistent tracing (some handlers have spans, some don't) and uses legacy error handlers. Migrate ALL handlers to protocol-based pattern.
 
 1. ~~Add HTTP protocol props to podcast-related errors~~ ✅ Already done in Phase 0
-2. **Refactor podcast router** - Full migration:
-   - Replace `handleEffect()` → `handleEffectWithProtocol()` in ALL handlers
-   - Remove all `createErrorHandlers(errors)` calls
-   - Remove all `getErrorProp()` calls
-   - Ensure ALL handlers have `{ span, attributes }` (currently inconsistent)
-   - Validate: `pnpm --filter @repo/api typecheck`
-3. Add missing podcast use case tests
-   - Validate: `pnpm --filter @repo/media test`
-4. Write podcast router integration tests
-   - Validate: `pnpm --filter @repo/api test`
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build`
+2. ✅ **Refactor podcast router** - Full migration:
+   - Replaced `handleEffect()` → `handleEffectWithProtocol()` in ALL 9 handlers
+   - Removed all `createErrorHandlers(errors)` calls
+   - Added `{ span: 'api.podcasts.X', attributes: {...} }` to ALL handlers
+   - Created `getActiveScript` use case (extracted from getScript handler)
+   - Updated `getScript` handler to use `getActiveScript` use case
+   - Validate: `pnpm --filter @repo/api typecheck` ✅
+3. ✅ Add missing podcast use case tests
+   - Created test files for 6 use cases: list-podcasts, get-podcast, create-podcast, update-podcast, delete-podcast, get-active-script
+   - Total: 52 tests for podcast use cases
+   - Validate: `pnpm --filter @repo/media test` ✅
+4. ✅ Write podcast router integration tests
+   - Created `packages/api/src/server/router/__tests__/podcast.integration.test.ts`
+   - Total: 52 tests covering all 9 handlers (list, get, create, update, delete, getScript, generate, getJob, saveChanges)
+   - Validate: `pnpm --filter @repo/api test` ✅
+   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
 ### Sprint 3: Voices Module (Complete)
 
