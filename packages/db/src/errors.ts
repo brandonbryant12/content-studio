@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import type { HttpErrorProtocol } from './error-protocol';
 
 // =============================================================================
 // Base HTTP Errors
@@ -16,8 +17,14 @@ export class NotFoundError extends Schema.TaggedError<NotFoundError>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'NOT_FOUND' as const;
+  static readonly httpMessage = (e: NotFoundError) =>
+    e.message ?? `${e.entity} with id ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotFoundError) {
+    return { entity: e.entity, id: e.id };
+  }
 }
 
 /**
@@ -31,8 +38,10 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
     action: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 403 as const;
-  static readonly code = 'FORBIDDEN' as const;
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'FORBIDDEN' as const;
+  static readonly httpMessage = (e: ForbiddenError) => e.message;
+  static readonly logLevel = 'silent' as const;
 }
 
 /**
@@ -44,8 +53,10 @@ export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
     message: Schema.String,
   },
 ) {
-  static readonly status = 401 as const;
-  static readonly code = 'UNAUTHORIZED' as const;
+  static readonly httpStatus = 401 as const;
+  static readonly httpCode = 'UNAUTHORIZED' as const;
+  static readonly httpMessage = (e: UnauthorizedError) => e.message;
+  static readonly logLevel = 'silent' as const;
 }
 
 /**
@@ -58,8 +69,14 @@ export class ValidationError extends Schema.TaggedError<ValidationError>()(
     message: Schema.String,
   },
 ) {
-  static readonly status = 422 as const;
-  static readonly code = 'VALIDATION_ERROR' as const;
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'VALIDATION_ERROR' as const;
+  static readonly httpMessage = (e: ValidationError) =>
+    `${e.field}: ${e.message}`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: ValidationError) {
+    return { field: e.field };
+  }
 }
 
 /**
@@ -69,8 +86,10 @@ export class DbError extends Schema.TaggedError<DbError>()('DbError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {
-  static readonly status = 500 as const;
-  static readonly code = 'DATABASE_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Database operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -86,8 +105,13 @@ export class ConstraintViolationError extends Schema.TaggedError<ConstraintViola
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 409 as const;
-  static readonly code = 'CONSTRAINT_VIOLATION' as const;
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'CONFLICT' as const;
+  static readonly httpMessage = 'A conflict occurred with existing data';
+  static readonly logLevel = 'error' as const;
+  static getData(e: ConstraintViolationError) {
+    return { constraint: e.constraint, table: e.table };
+  }
 }
 
 /**
@@ -101,8 +125,10 @@ export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 503 as const;
-  static readonly code = 'DEADLOCK' as const;
+  static readonly httpStatus = 503 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'Database temporarily unavailable, please retry';
+  static readonly logLevel = 'error' as const;
 }
 
 /**
@@ -116,8 +142,10 @@ export class ConnectionError extends Schema.TaggedError<ConnectionError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 503 as const;
-  static readonly code = 'CONNECTION_ERROR' as const;
+  static readonly httpStatus = 503 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'Database connection failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -131,8 +159,14 @@ export class ExternalServiceError extends Schema.TaggedError<ExternalServiceErro
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 502 as const;
-  static readonly code = 'EXTERNAL_SERVICE_ERROR' as const;
+  static readonly httpStatus = 502 as const;
+  static readonly httpCode = 'BAD_GATEWAY' as const;
+  static readonly httpMessage = (e: ExternalServiceError) =>
+    `External service ${e.service} failed`;
+  static readonly logLevel = 'error' as const;
+  static getData(e: ExternalServiceError) {
+    return { service: e.service };
+  }
 }
 
 // =============================================================================
@@ -149,8 +183,10 @@ export class PolicyError extends Schema.TaggedError<PolicyError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'POLICY_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Authorization check failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 // =============================================================================
@@ -167,8 +203,14 @@ export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'DOCUMENT_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'DOCUMENT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: DocumentNotFound) =>
+    e.message ?? `Document ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: DocumentNotFound) {
+    return { documentId: e.id };
+  }
 }
 
 /**
@@ -181,8 +223,10 @@ export class DocumentError extends Schema.TaggedError<DocumentError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'DOCUMENT_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Document operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -197,8 +241,14 @@ export class DocumentTooLargeError extends Schema.TaggedError<DocumentTooLargeEr
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 413 as const;
-  static readonly code = 'DOCUMENT_TOO_LARGE' as const;
+  static readonly httpStatus = 413 as const;
+  static readonly httpCode = 'DOCUMENT_TOO_LARGE' as const;
+  static readonly httpMessage = (e: DocumentTooLargeError) =>
+    e.message ?? `File ${e.fileName} exceeds maximum size`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: DocumentTooLargeError) {
+    return { fileName: e.fileName, fileSize: e.fileSize, maxSize: e.maxSize };
+  }
 }
 
 /**
@@ -213,8 +263,18 @@ export class UnsupportedDocumentFormat extends Schema.TaggedError<UnsupportedDoc
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 415 as const;
-  static readonly code = 'UNSUPPORTED_DOCUMENT_FORMAT' as const;
+  static readonly httpStatus = 415 as const;
+  static readonly httpCode = 'UNSUPPORTED_FORMAT' as const;
+  static readonly httpMessage = (e: UnsupportedDocumentFormat) =>
+    e.message ?? `Format ${e.mimeType} is not supported`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: UnsupportedDocumentFormat) {
+    return {
+      fileName: e.fileName,
+      mimeType: e.mimeType,
+      supportedFormats: [...e.supportedFormats],
+    };
+  }
 }
 
 /**
@@ -228,8 +288,13 @@ export class DocumentParseError extends Schema.TaggedError<DocumentParseError>()
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 422 as const;
-  static readonly code = 'DOCUMENT_PARSE_ERROR' as const;
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'DOCUMENT_PARSE_ERROR' as const;
+  static readonly httpMessage = (e: DocumentParseError) => e.message;
+  static readonly logLevel = 'warn' as const;
+  static getData(e: DocumentParseError) {
+    return { fileName: e.fileName };
+  }
 }
 
 // =============================================================================
@@ -246,8 +311,14 @@ export class PodcastNotFound extends Schema.TaggedError<PodcastNotFound>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'PODCAST_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'PODCAST_NOT_FOUND' as const;
+  static readonly httpMessage = (e: PodcastNotFound) =>
+    e.message ?? `Podcast ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: PodcastNotFound) {
+    return { podcastId: e.id };
+  }
 }
 
 /**
@@ -260,8 +331,14 @@ export class ScriptNotFound extends Schema.TaggedError<ScriptNotFound>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'SCRIPT_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'SCRIPT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: ScriptNotFound) =>
+    e.message ?? `Script for podcast ${e.podcastId} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: ScriptNotFound) {
+    return { podcastId: e.podcastId };
+  }
 }
 
 /**
@@ -274,8 +351,10 @@ export class PodcastError extends Schema.TaggedError<PodcastError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'PODCAST_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Podcast operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 // =============================================================================
@@ -292,8 +371,14 @@ export class ProjectNotFound extends Schema.TaggedError<ProjectNotFound>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'PROJECT_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'PROJECT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: ProjectNotFound) =>
+    e.message ?? `Project ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: ProjectNotFound) {
+    return { projectId: e.id };
+  }
 }
 
 /**
@@ -308,8 +393,14 @@ export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'MEDIA_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'MEDIA_NOT_FOUND' as const;
+  static readonly httpMessage = (e: MediaNotFound) =>
+    e.message ?? `${e.mediaType} ${e.mediaId} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: MediaNotFound) {
+    return { mediaType: e.mediaType, mediaId: e.mediaId };
+  }
 }
 
 // =============================================================================
@@ -324,8 +415,13 @@ export class LLMError extends Schema.TaggedError<LLMError>()('LLMError', {
   model: Schema.optional(Schema.String),
   cause: Schema.optional(Schema.Unknown),
 }) {
-  static readonly status = 502 as const;
-  static readonly code = 'LLM_ERROR' as const;
+  static readonly httpStatus = 502 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'AI service unavailable';
+  static readonly logLevel = 'error' as const;
+  static getData(e: LLMError) {
+    return e.model ? { model: e.model } : {};
+  }
 }
 
 /**
@@ -338,8 +434,13 @@ export class LLMRateLimitError extends Schema.TaggedError<LLMRateLimitError>()(
     retryAfter: Schema.optional(Schema.Number),
   },
 ) {
-  static readonly status = 429 as const;
-  static readonly code = 'LLM_RATE_LIMIT' as const;
+  static readonly httpStatus = 429 as const;
+  static readonly httpCode = 'RATE_LIMITED' as const;
+  static readonly httpMessage = 'AI rate limit exceeded';
+  static readonly logLevel = 'warn' as const;
+  static getData(e: LLMRateLimitError) {
+    return e.retryAfter !== undefined ? { retryAfter: e.retryAfter } : {};
+  }
 }
 
 // =============================================================================
@@ -353,8 +454,10 @@ export class TTSError extends Schema.TaggedError<TTSError>()('TTSError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {
-  static readonly status = 502 as const;
-  static readonly code = 'TTS_ERROR' as const;
+  static readonly httpStatus = 502 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'Text-to-speech service unavailable';
+  static readonly logLevel = 'error' as const;
 }
 
 /**
@@ -366,8 +469,10 @@ export class TTSQuotaExceededError extends Schema.TaggedError<TTSQuotaExceededEr
     message: Schema.String,
   },
 ) {
-  static readonly status = 429 as const;
-  static readonly code = 'TTS_QUOTA_EXCEEDED' as const;
+  static readonly httpStatus = 429 as const;
+  static readonly httpCode = 'RATE_LIMITED' as const;
+  static readonly httpMessage = 'TTS quota exceeded';
+  static readonly logLevel = 'warn' as const;
 }
 
 // =============================================================================
@@ -381,8 +486,10 @@ export class AudioError extends Schema.TaggedError<AudioError>()('AudioError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {
-  static readonly status = 500 as const;
-  static readonly code = 'AUDIO_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Audio processing failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -396,8 +503,13 @@ export class AudioProcessingError extends Schema.TaggedError<AudioProcessingErro
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'AUDIO_PROCESSING_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Audio processing failed';
+  static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: AudioProcessingError) {
+    return e.operation ? { operation: e.operation } : {};
+  }
 }
 
 // =============================================================================
@@ -414,8 +526,10 @@ export class StorageError extends Schema.TaggedError<StorageError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'STORAGE_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Storage operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -428,8 +542,14 @@ export class StorageNotFoundError extends Schema.TaggedError<StorageNotFoundErro
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'STORAGE_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'NOT_FOUND' as const;
+  static readonly httpMessage = (e: StorageNotFoundError) =>
+    e.message ?? `File not found: ${e.key}`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: StorageNotFoundError) {
+    return { key: e.key };
+  }
 }
 
 /**
@@ -443,8 +563,13 @@ export class StorageUploadError extends Schema.TaggedError<StorageUploadError>()
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'STORAGE_UPLOAD_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'File upload failed';
+  static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: StorageUploadError) {
+    return { key: e.key };
+  }
 }
 
 // =============================================================================
@@ -458,8 +583,10 @@ export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {
-  static readonly status = 500 as const;
-  static readonly code = 'QUEUE_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Job queue operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
 }
 
 /**
@@ -472,8 +599,14 @@ export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(
     message: Schema.optional(Schema.String),
   },
 ) {
-  static readonly status = 404 as const;
-  static readonly code = 'JOB_NOT_FOUND' as const;
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'JOB_NOT_FOUND' as const;
+  static readonly httpMessage = (e: JobNotFoundError) =>
+    e.message ?? `Job ${e.jobId} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: JobNotFoundError) {
+    return { jobId: e.jobId };
+  }
 }
 
 /**
@@ -487,8 +620,13 @@ export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()
     cause: Schema.optional(Schema.Unknown),
   },
 ) {
-  static readonly status = 500 as const;
-  static readonly code = 'JOB_PROCESSING_ERROR' as const;
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Job processing failed';
+  static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: JobProcessingError) {
+    return { jobId: e.jobId };
+  }
 }
 
 // =============================================================================

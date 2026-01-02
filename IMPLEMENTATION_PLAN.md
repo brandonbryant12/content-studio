@@ -620,16 +620,12 @@ packages/api/src/server/effect-handler.ts:
 
 ## Execution Order
 
-### Sprint 0: Error Handling Infrastructure (Foundation)
-0. Create `HttpErrorProtocol` interface in `packages/db/src/error-protocol.ts`
-   - Validate: `pnpm --filter @repo/db typecheck`
-1. Add `handleTaggedError` to `packages/api/src/server/effect-handler.ts`
-   - Validate: `pnpm --filter @repo/api typecheck`
-2. Update `handleEffect` to use generic handler with optional overrides
-   - Validate: `pnpm --filter @repo/api typecheck`
-3. Add static HTTP props to core errors (DbError, NotFoundError, etc.)
-   - Validate: `pnpm --filter @repo/db typecheck`
-   - **Sprint checkpoint**: `pnpm typecheck && pnpm build`
+### Sprint 0: Error Handling Infrastructure (Foundation) ✅ COMPLETED
+0. ✅ Create `HttpErrorProtocol` interface in `packages/db/src/error-protocol.ts`
+1. ✅ Add `handleTaggedError` to `packages/api/src/server/effect-handler.ts`
+2. ✅ Add `handleEffectWithProtocol` (new protocol-based handler, keeps `handleEffect` for backward compatibility)
+3. ✅ Add static HTTP props to ALL errors (httpStatus, httpCode, httpMessage, logLevel, getData)
+   - **Sprint checkpoint**: `pnpm typecheck && pnpm test && pnpm build` ✅
 
 ### Sprint 1: Document Module (Foundation)
 1. Create `DocumentRepo` as Context.Tag service (convert from repository.ts)

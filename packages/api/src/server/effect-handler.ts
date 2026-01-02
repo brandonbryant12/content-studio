@@ -2,6 +2,7 @@ import { Effect, Match, pipe } from 'effect';
 import { ORPCError } from '@orpc/client';
 import { ValidationError } from '@orpc/contract';
 import { withCurrentUser, type User } from '@repo/auth/policy';
+import { hasHttpProtocol, type LogLevel } from '@repo/db/error-protocol';
 import type { ServerRuntime, SharedServices } from './runtime';
 
 /**
@@ -21,6 +22,128 @@ export interface HandleEffectOptions {
   /** Optional span attributes */
   attributes?: Record<string, string | number | boolean>;
 }
+
+/**
+ * oRPC error factory interface.
+ * The errors object passed to handlers has factory functions for each error code.
+ */
+export interface ErrorFactory {
+  INTERNAL_ERROR: (opts: { message: string; data?: unknown }) => unknown;
+  FORBIDDEN: (opts: { message: string; data?: unknown }) => unknown;
+  UNAUTHORIZED: (opts: { message: string; data?: unknown }) => unknown;
+  NOT_FOUND: (opts: { message: string; data?: unknown }) => unknown;
+  BAD_GATEWAY?: (opts: { message: string; data?: unknown }) => unknown;
+  SERVICE_UNAVAILABLE?: (opts: { message: string; data?: unknown }) => unknown;
+  RATE_LIMITED?: (opts: { message: string; data?: unknown }) => unknown;
+  CONFLICT?: (opts: { message: string; data?: unknown }) => unknown;
+  // Domain-specific error codes
+  DOCUMENT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  DOCUMENT_TOO_LARGE?: (opts: { message: string; data?: unknown }) => unknown;
+  DOCUMENT_PARSE_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
+  UNSUPPORTED_FORMAT?: (opts: { message: string; data?: unknown }) => unknown;
+  PODCAST_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  SCRIPT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  PROJECT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  MEDIA_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  JOB_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
+  VALIDATION_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
+  [key: string]: ((opts: { message: string; data?: unknown }) => unknown) | undefined;
+}
+
+/**
+ * Custom error handler type - can override the default protocol-based handling.
+ */
+export type CustomErrorHandler = (error: unknown) => never;
+
+/**
+ * Log an error based on its log level.
+ */
+const logError = (tag: string, error: unknown, logLevel: LogLevel): void => {
+  const message =
+    error && typeof error === 'object' && 'message' in error
+      ? String((error as { message: unknown }).message)
+      : 'Unknown error';
+
+  const cause =
+    error && typeof error === 'object' && 'cause' in error
+      ? (error as { cause: unknown }).cause
+      : undefined;
+
+  switch (logLevel) {
+    case 'error-with-stack': {
+      const stack = cause instanceof Error ? cause.stack : undefined;
+      console.error(`[${tag}]`, message, { cause, stack });
+      break;
+    }
+    case 'error':
+      console.error(`[${tag}]`, message);
+      break;
+    case 'warn':
+      console.warn(`[${tag}]`, message);
+      break;
+    case 'silent':
+      // No logging
+      break;
+  }
+};
+
+/**
+ * Generic error handler that reads HTTP protocol from error class.
+ * Works with any error that implements HttpErrorProtocol via static properties.
+ *
+ * This handler:
+ * 1. Reads httpStatus, httpCode, httpMessage, logLevel from the error's class
+ * 2. Logs based on logLevel
+ * 3. Gets the message (static string or from function)
+ * 4. Gets optional data from getData()
+ * 5. Throws the appropriate oRPC error
+ *
+ * @param error - The tagged error instance
+ * @param errors - The oRPC error factory
+ * @returns never (always throws)
+ */
+export const handleTaggedError = <E extends { _tag: string }>(
+  error: E,
+  errors: ErrorFactory,
+): never => {
+  const ErrorClass = error.constructor as {
+    new (...args: unknown[]): E;
+    httpStatus?: number;
+    httpCode?: string;
+    httpMessage?: string | ((error: E) => string);
+    logLevel?: LogLevel;
+    getData?: (error: E) => Record<string, unknown>;
+  };
+
+  // Check if class implements HttpErrorProtocol
+  if (!hasHttpProtocol(ErrorClass)) {
+    // Fallback for errors without protocol - log and throw internal error
+    console.error(`[${error._tag}] Error class missing HTTP protocol`, error);
+    throw errors.INTERNAL_ERROR({ message: 'An unexpected error occurred' });
+  }
+
+  // Log based on level
+  logError(error._tag, error, ErrorClass.logLevel!);
+
+  // Get message
+  const httpMessage = ErrorClass.httpMessage!;
+  const message =
+    typeof httpMessage === 'function' ? httpMessage(error) : httpMessage;
+
+  // Get data
+  const data = ErrorClass.getData?.(error);
+
+  // Get error factory by code
+  const code = ErrorClass.httpCode!;
+  const factory = errors[code];
+
+  if (factory) {
+    throw factory({ message, data });
+  }
+
+  // Fallback to INTERNAL_ERROR if no matching factory
+  throw errors.INTERNAL_ERROR({ message });
+};
 
 /**
  * Run an Effect with STRICT error handling using the shared server runtime.
@@ -91,6 +214,87 @@ export const handleEffect = <A>(
 };
 
 /**
+ * Run an Effect with protocol-based error handling using the shared server runtime.
+ *
+ * This is an enhanced version of handleEffect that:
+ * 1. Uses the HTTP protocol defined on error classes for automatic error mapping
+ * 2. Allows custom overrides for specific error types
+ *
+ * Errors are automatically handled based on their static HTTP protocol properties
+ * (httpStatus, httpCode, httpMessage, logLevel). Custom handlers can be provided
+ * to override the default behavior for specific error types.
+ *
+ * @param runtime - The shared server runtime
+ * @param user - The authenticated user (or null for public routes)
+ * @param effect - The Effect to run (requirements must be SharedServices)
+ * @param errors - The oRPC error factory
+ * @param options - Optional configuration (span name, attributes)
+ * @param customHandlers - Optional custom handlers for specific error types
+ *
+ * @example
+ * ```typescript
+ * // Simple case - all errors handled by protocol
+ * return handleEffectWithProtocol(
+ *   context.runtime,
+ *   context.user,
+ *   getDocument({ id: input.id }).pipe(
+ *     Effect.flatMap(serializeDocumentEffect)
+ *   ),
+ *   errors,
+ *   { span: 'api.documents.get', attributes: { 'document.id': input.id } },
+ * );
+ *
+ * // Custom override for specific error
+ * return handleEffectWithProtocol(
+ *   context.runtime,
+ *   context.user,
+ *   createDocument(input),
+ *   errors,
+ *   { span: 'api.documents.create' },
+ *   {
+ *     DocumentQuotaExceeded: (e) => {
+ *       throw errors.PAYMENT_REQUIRED({ message: 'Upgrade to create more' });
+ *     },
+ *   },
+ * );
+ * ```
+ */
+export const handleEffectWithProtocol = <A>(
+  runtime: ServerRuntime,
+  user: User | null,
+  effect: Effect.Effect<A, unknown, unknown>,
+  errors: ErrorFactory,
+  options?: HandleEffectOptions,
+  customHandlers?: Record<string, CustomErrorHandler>,
+): Promise<A> => {
+  // Cast to the expected types - runtime will provide SharedServices
+  const typedEffect = effect as Effect.Effect<A, { _tag: string }, SharedServices>;
+
+  let tracedEffect = options?.span
+    ? typedEffect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
+    : typedEffect;
+
+  const scopedEffect = user ? withCurrentUser(user)(tracedEffect) : tracedEffect;
+
+  return runtime.runPromise(
+    scopedEffect.pipe(
+      Effect.catchAll((error: { _tag: string }) =>
+        Effect.sync(() => {
+          // Check for custom handler first
+          const customHandler = customHandlers?.[error._tag];
+          if (customHandler) {
+            return customHandler(error);
+          }
+
+          // Use generic protocol-based handler
+          return handleTaggedError(error, errors);
+        }),
+      ),
+    ),
+  );
+};
+
+/**
  * Helper type to extract error types from an Effect.
  * Useful for defining error mappers.
  *
@@ -116,14 +320,14 @@ export type EffectSuccess<T> =
   T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
 
 // =============================================================================
-// Error Handler Factory
+// Legacy Error Handler Factory (deprecated - use handleEffect with protocol)
 // =============================================================================
 
 /**
- * Error factory configuration for oRPC errors.
- * Uses `unknown` return type to accommodate oRPC's error throwing mechanism.
+ * @deprecated Use handleEffect with protocol-based errors instead.
+ * This factory is kept for backwards compatibility during migration.
  */
-interface ErrorFactoryConfig {
+interface LegacyErrorFactoryConfig {
   INTERNAL_ERROR: (opts: { message: string }) => unknown;
   FORBIDDEN: (opts: { message: string }) => unknown;
   UNAUTHORIZED: (opts: { message: string }) => unknown;
@@ -165,33 +369,11 @@ const logAndThrowInternal = (
 };
 
 /**
+ * @deprecated Use handleEffect with protocol-based errors instead.
  * Creates a complete set of error handlers for use with handleEffect.
- * Eliminates duplication while preserving stack traces in logs.
- *
- * Returns grouped handlers that can be spread into handleEffect:
- * - common: DbError, PolicyError, ForbiddenError, UnauthorizedError, NotFoundError
- * - database: ConstraintViolationError, DeadlockError, ConnectionError
- * - storage: StorageError, StorageUploadError, StorageNotFoundError
- * - queue: QueueError, JobNotFoundError, JobProcessingError
- * - tts: TTSError, TTSQuotaExceededError
- * - llm: LLMError, LLMRateLimitError
- *
- * @example
- * ```typescript
- * const handlers = createErrorHandlers(errors);
- * return handleEffect(
- *   context.runtime,
- *   context.user,
- *   effect,
- *   {
- *     ...handlers.common,
- *     ...handlers.database,
- *     DocumentNotFound: (e) => { throw errors.DOCUMENT_NOT_FOUND(...) },
- *   },
- * );
- * ```
+ * Kept for backwards compatibility during migration.
  */
-export const createErrorHandlers = <T extends ErrorFactoryConfig>(
+export const createErrorHandlers = <T extends LegacyErrorFactoryConfig>(
   errors: T,
 ) => ({
   /**
