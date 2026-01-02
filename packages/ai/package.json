@@ -24,6 +24,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:live": "vitest run --testPathPattern=live",
+    "test:live:llm": "vitest run src/__tests__/live/llm.live.test.ts",
+    "test:live:tts": "vitest run src/__tests__/live/tts.live.test.ts",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },
   "prettier": "@repo/prettier-config",

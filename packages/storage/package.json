@@ -28,6 +28,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:live": "vitest run --testPathPattern=live",
+    "test:live:s3": "vitest run src/__tests__/live/s3.live.test.ts",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },
   "prettier": "@repo/prettier-config",

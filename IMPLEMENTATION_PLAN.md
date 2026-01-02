@@ -886,3 +886,39 @@ packages/api/src/server/effect-handler.ts:
 - [x] Rate limit errors show retry timing when available (`RATE_LIMITED`)
 - [x] No `error.message ?? 'fallback'` patterns remain (use centralized utility)
 - [x] Error utility has tests covering all defined error codes
+
+### Sprint 6: Live Integration Tests (Issue #8) ✅ COMPLETED
+
+> **Goal:** Add integration tests that verify external services (LLM, TTS, Storage) work correctly. Tests are skipped by default but easily enabled for deployment verification.
+
+1. ✅ Created LLM live integration tests (`packages/ai/src/__tests__/live/llm.live.test.ts`)
+   - Tests: generate text, structured JSON, token usage, system prompt, temperature
+   - Error handling: invalid API key
+   - Skipped when `GEMINI_API_KEY` not set
+2. ✅ Created TTS live integration tests (`packages/ai/src/__tests__/live/tts.live.test.ts`)
+   - Tests: list voices, filter by gender, generate audio, WAV/MP3 formats
+   - Multi-speaker synthesis
+   - Error handling: invalid API key
+   - Skipped when `GEMINI_API_KEY` not set
+3. ✅ Created Storage live integration tests (`packages/storage/src/__tests__/live/s3.live.test.ts`)
+   - Tests: upload, download, delete, exists, getUrl
+   - Roundtrip verification, file overwrite
+   - Error handling: missing file (404), invalid credentials
+   - Automatic cleanup of test files
+   - Skipped when S3 env vars not set
+4. ✅ Added npm scripts for running live tests
+   - Root: `pnpm test:live`, `pnpm test:live:llm`, `pnpm test:live:tts`, `pnpm test:live:storage`
+   - Per-package: `pnpm --filter @repo/ai test:live`, `pnpm --filter @repo/storage test:live`
+5. ✅ Created documentation (`specs/testing/live-tests.md`)
+   - Environment variable reference
+   - Usage examples
+   - CI integration guidance
+6. ✅ **Validation:** `pnpm typecheck && pnpm test && pnpm build` ✅
+
+#### Success Criteria
+
+- [x] Live tests are skipped when env vars are missing
+- [x] Live tests are NOT run in CI by default (use `describe.skipIf`)
+- [x] Each service has basic connectivity test
+- [x] Each service has error handling tests
+- [x] Documentation in `specs/testing/live-tests.md`
