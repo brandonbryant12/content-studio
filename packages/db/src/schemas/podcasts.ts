@@ -54,6 +54,23 @@ export const versionStatusEnum = pgEnum('version_status', [
 ]);
 
 /**
+ * Version status values for runtime usage.
+ * Use this instead of magic strings for type-safe status comparisons.
+ *
+ * @example
+ * import { VersionStatus } from '@repo/db/schema';
+ * if (podcast.status === VersionStatus.READY) { ... }
+ */
+export const VersionStatus = {
+  DRAFTING: 'drafting',
+  GENERATING_SCRIPT: 'generating_script',
+  SCRIPT_READY: 'script_ready',
+  GENERATING_AUDIO: 'generating_audio',
+  READY: 'ready',
+  FAILED: 'failed',
+} as const;
+
+/**
  * Generation context stored with AI-generated content.
  * Tracks the exact prompts and parameters used for reproducibility.
  */

@@ -5,11 +5,11 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { VersionStatus } from '../../lib/status';
+import { VersionStatus, type VersionStatusType } from '../../lib/status';
 
 interface GlobalActionBarProps {
   // Status
-  status: VersionStatus | undefined;
+  status: VersionStatusType | undefined;
   isGenerating: boolean;
 
   // Unsaved changes (script or settings)
@@ -41,9 +41,10 @@ export function GlobalActionBar({
           <div className="global-action-bar-status">
             <Spinner className="w-4 h-4 text-warning" />
             <span className="global-action-bar-status-text">
-              {status === 'drafting' || status === 'generating_script'
+              {status === VersionStatus.GENERATING_SCRIPT
                 ? 'Generating script...'
-                : status === 'generating_audio' || status === 'script_ready'
+                : status === VersionStatus.GENERATING_AUDIO ||
+                    status === VersionStatus.SCRIPT_READY
                   ? 'Generating audio...'
                   : 'Processing...'}
             </span>
@@ -54,7 +55,7 @@ export function GlobalActionBar({
   }
 
   // If there are unsaved changes (only possible when ready), show save action
-  if (hasChanges && status === 'ready') {
+  if (hasChanges && status === VersionStatus.READY) {
     return (
       <div className="global-action-bar has-changes">
         <div className="global-action-bar-content">
@@ -96,9 +97,9 @@ export function GlobalActionBar({
         <div className="global-action-bar-status ready">
           <CheckIcon className="w-4 h-4" />
           <span className="global-action-bar-status-text">
-            {status === 'ready'
+            {status === VersionStatus.READY
               ? 'Ready'
-              : status === 'failed'
+              : status === VersionStatus.FAILED
                 ? 'Generation failed'
                 : 'Draft'}
           </span>
@@ -112,7 +113,7 @@ export function GlobalActionBar({
 
   function renderContextActions() {
     switch (status) {
-      case 'drafting':
+      case VersionStatus.DRAFTING:
         return (
           <Button
             size="sm"
@@ -125,12 +126,12 @@ export function GlobalActionBar({
           </Button>
         );
 
-      case 'ready':
+      case VersionStatus.READY:
         // No regenerate button when ready with no changes
         // User must make changes to script/settings first
         return null;
 
-      case 'failed':
+      case VersionStatus.FAILED:
         return (
           <Button
             size="sm"

@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
+import { VersionStatus } from '@repo/db/schema';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks/use-optimistic-mutation';
 import { getPodcastQueryKey } from './use-podcast';
@@ -14,7 +15,7 @@ const generateMutationFn =
 
 /**
  * Optimistic mutation for full podcast generation (script + audio).
- * Shows 'drafting' status immediately while job queues.
+ * Shows 'generating_script' status immediately while job queues.
  */
 export function useOptimisticGeneration(podcastId: string) {
   const queryClient = useQueryClient();
@@ -33,7 +34,7 @@ export function useOptimisticGeneration(podcastId: string) {
 
       return {
         ...current,
-        status: 'drafting' as const,
+        status: VersionStatus.GENERATING_SCRIPT,
         segments: null,
         audioUrl: null,
       };

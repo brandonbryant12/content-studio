@@ -2,6 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test-utils';
+import { VersionStatus } from '@repo/db/schema';
 import { PodcastList } from '../components/podcast-list';
 import type { PodcastListItem } from '../components/podcast-item';
 
@@ -37,7 +38,7 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Discussion about latest tech trends',
     format: 'conversation',
     createdAt: '2024-01-15T10:00:00Z',
-    status: 'ready',
+    status: VersionStatus.READY,
     duration: 1800,
   },
   {
@@ -46,7 +47,7 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Weekly AI news roundup',
     format: 'conversation',
     createdAt: '2024-01-16T10:00:00Z',
-    status: 'generating_script',
+    status: VersionStatus.GENERATING_SCRIPT,
     duration: null,
   },
   {
@@ -55,7 +56,7 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Voice over for product announcement',
     format: 'voice_over',
     createdAt: '2024-01-17T10:00:00Z',
-    status: 'drafting',
+    status: VersionStatus.DRAFTING,
     duration: null,
   },
 ];

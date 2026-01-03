@@ -1,11 +1,11 @@
 import { LightningBoltIcon, ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { VersionStatus } from '../../lib/status';
+import { VersionStatus, type VersionStatusType } from '../../lib/status';
 import { GenerationStatus } from './generation-status';
 
 interface SmartActionsProps {
-  status: VersionStatus | undefined;
+  status: VersionStatusType | undefined;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isGenerating: boolean;
@@ -33,7 +33,7 @@ export function SmartActions({
   }
 
   // If unsaved changes (only possible when status is 'ready'), show save button
-  if (hasUnsavedChanges && status === 'ready') {
+  if (hasUnsavedChanges && status === VersionStatus.READY) {
     return (
       <div className="smart-actions">
         <div className="smart-actions-unsaved">
@@ -56,7 +56,7 @@ export function SmartActions({
 
   // Context-aware actions based on status
   switch (status) {
-    case 'drafting':
+    case VersionStatus.DRAFTING:
       return (
         <Button onClick={onGenerate} className="w-full">
           <LightningBoltIcon className="w-4 h-4 mr-2" />
@@ -64,7 +64,7 @@ export function SmartActions({
         </Button>
       );
 
-    case 'ready':
+    case VersionStatus.READY:
       return (
         <Button variant="outline" onClick={onGenerate} className="w-full">
           <ReloadIcon className="w-4 h-4 mr-2" />
@@ -72,7 +72,7 @@ export function SmartActions({
         </Button>
       );
 
-    case 'failed':
+    case VersionStatus.FAILED:
       return (
         <Button onClick={onGenerate} className="w-full">
           <ReloadIcon className="w-4 h-4 mr-2" />
@@ -81,9 +81,9 @@ export function SmartActions({
       );
 
     // script_ready, generating_script, generating_audio - show progress
-    case 'script_ready':
-    case 'generating_script':
-    case 'generating_audio':
+    case VersionStatus.SCRIPT_READY:
+    case VersionStatus.GENERATING_SCRIPT:
+    case VersionStatus.GENERATING_AUDIO:
       return (
         <GenerationStatus
           status={status}

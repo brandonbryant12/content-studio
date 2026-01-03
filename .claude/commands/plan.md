@@ -20,6 +20,7 @@ $ARGUMENTS
 1. **Read the implementation plan standard** to understand the format:
    ```
    Read /standards/implementation-plan.md
+   Read /standards/*
    ```
 
 2. **Analyze the user's request** and identify:
@@ -27,7 +28,7 @@ $ARGUMENTS
    - Is this a new feature, refactor, bug fix, or infrastructure change?
    - What's the rough scope (small, medium, large)?
 
-3. **Explore relevant codebase areas** using Task with subagent_type='Explore':
+3. **Explore relevant codebase areas** using Task with subagent_type='Explore' up to 5 subagents:
    - Find existing patterns in the area being modified
    - Identify files that will likely need changes
    - Understand current architecture
@@ -138,16 +139,15 @@ After gathering enough information, create the implementation plan.
    ```
 
 3. **Sprint Sizing Guidelines:**
-   - Each sprint should be 1-2 hours of focused work
-   - 2-6 sub-tasks per sprint
+   - Each sprint should be a task an AI agent can do completly in a single context window 
    - One clear goal per sprint
    - Include validation command at the end of each sprint
+   - Everything should be tested
 
 4. **After writing the plan:**
    - Show the user the file path and summarize:
-     - Total number of sprints
-     - Estimated scope (small/medium/large)
      - Key architectural decisions made
+     - Standards referenced
    - Show the command to run the implementation loop:
      ```
      ./loop.sh plans/{plan-name}.md

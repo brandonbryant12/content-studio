@@ -44,25 +44,27 @@ export function BaseDialog({
 
         <div className="py-4">{children}</div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {footer.cancelText ?? 'Cancel'}
-          </Button>
-          <Button
-            onClick={footer.onSubmit}
-            disabled={footer.isLoading || footer.submitDisabled}
-            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
-          >
-            {footer.isLoading ? (
-              <>
-                <Spinner className="w-4 h-4 mr-2" />
-                {footer.loadingText}
-              </>
-            ) : (
-              footer.submitText
-            )}
-          </Button>
-        </DialogFooter>
+        {footer && (
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {footer.cancelText ?? 'Cancel'}
+            </Button>
+            <Button
+              onClick={footer.onSubmit}
+              disabled={footer.isLoading || footer.submitDisabled}
+              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
+            >
+              {footer.isLoading ? (
+                <>
+                  <Spinner className="w-4 h-4 mr-2" />
+                  {footer.loadingText}
+                </>
+              ) : (
+                footer.submitText
+              )}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -2,6 +2,7 @@
 // MSW handlers for podcast endpoint tests
 
 import { http, HttpResponse } from 'msw';
+import { VersionStatus } from '@repo/db/schema';
 import type { PodcastListItem } from '../components/podcast-item';
 
 // Base URL for API requests
@@ -17,7 +18,7 @@ export function createMockPodcastListItem(
     description: 'A test podcast description',
     format: 'conversation',
     createdAt: new Date().toISOString(),
-    status: 'ready',
+    status: VersionStatus.READY,
     duration: 300,
     ...overrides,
   };
@@ -30,7 +31,7 @@ export const mockPodcasts: PodcastListItem[] = [
     title: 'Tech Talk Episode 1',
     description: 'Discussion about latest tech trends',
     format: 'conversation',
-    status: 'ready',
+    status: VersionStatus.READY,
     duration: 1800,
   }),
   createMockPodcastListItem({
@@ -38,7 +39,7 @@ export const mockPodcasts: PodcastListItem[] = [
     title: 'AI Weekly',
     description: 'Weekly AI news roundup',
     format: 'conversation',
-    status: 'generating_script',
+    status: VersionStatus.GENERATING_SCRIPT,
     duration: null,
   }),
   createMockPodcastListItem({
@@ -46,7 +47,7 @@ export const mockPodcasts: PodcastListItem[] = [
     title: 'Product Update',
     description: 'Voice over for product announcement',
     format: 'voice_over',
-    status: 'drafting',
+    status: VersionStatus.DRAFTING,
     duration: null,
   }),
 ];
@@ -79,7 +80,7 @@ export const podcastHandlers = [
         id: `podcast-${Date.now()}`,
         title: body.title || 'Untitled Podcast',
         format: body.format || 'conversation',
-        status: 'drafting',
+        status: VersionStatus.DRAFTING,
         duration: null,
       }),
     );

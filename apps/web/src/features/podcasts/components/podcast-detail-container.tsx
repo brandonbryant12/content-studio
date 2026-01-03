@@ -121,13 +121,15 @@ export function PodcastDetailContainer({
       return;
     }
 
-    // If documents changed, we need full regeneration (script + audio)
-    if (documentSelection.hasChanges) {
+    // If documents or script-affecting settings changed, we need full regeneration (script + audio)
+    if (documentSelection.hasChanges || settings.hasScriptSettingsChanges) {
       try {
         // First, save documents and any settings changes
         await updateMutation.mutateAsync({
           id: podcast.id,
-          documentIds: documentSelection.documentIds,
+          documentIds: documentSelection.hasChanges
+            ? documentSelection.documentIds
+            : undefined,
           hostVoice: settings.hostVoice,
           coHostVoice: settings.coHostVoice,
           targetDurationMinutes: settings.targetDuration,
@@ -139,7 +141,10 @@ export function PodcastDetailContainer({
           { id: podcast.id },
           {
             onSuccess: () => {
-              toast.success('Regenerating podcast with new sources...');
+              const message = documentSelection.hasChanges
+                ? 'Regenerating podcast with new sources...'
+                : 'Regenerating script with new settings...';
+              toast.success(message);
             },
           },
         );
@@ -149,7 +154,7 @@ export function PodcastDetailContainer({
       return;
     }
 
-    // No document changes - just save script/voice and regenerate audio
+    // No document or script settings changes - just save script/voice and regenerate audio
     const segmentsToSave = scriptEditor.hasChanges
       ? scriptEditor.segments
       : undefined;

@@ -10,6 +10,7 @@ import type {
   UseDocumentSelectionReturn,
 } from '../../hooks';
 import type { RouterOutput } from '@repo/api/client';
+import { VersionStatus } from '../../lib/status';
 import { AudioPlayer } from '../audio-player';
 import { DocumentManager } from './document-manager';
 import { ErrorDisplay } from './error-display';
@@ -100,9 +101,10 @@ export function ConfigPanel({
             )}
 
             {/* Error Display */}
-            {podcast.status === 'failed' && podcast.errorMessage && (
-              <ErrorDisplay message={podcast.errorMessage} />
-            )}
+            {podcast.status === VersionStatus.FAILED &&
+              podcast.errorMessage && (
+                <ErrorDisplay message={podcast.errorMessage} />
+              )}
 
             {/* Source Documents */}
             <div className="docs-section">

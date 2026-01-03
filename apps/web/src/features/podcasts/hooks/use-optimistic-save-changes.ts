@@ -1,6 +1,7 @@
 // features/podcasts/hooks/use-optimistic-save-changes.ts
 
 import type { RouterOutput } from '@repo/api/client';
+import { VersionStatus } from '@repo/db/schema';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks/use-optimistic-mutation';
 import { getPodcastQueryKey } from './use-podcast';
@@ -46,7 +47,7 @@ export function useOptimisticSaveChanges(podcastId: string) {
 
       return {
         ...current,
-        status: 'generating_audio' as const,
+        status: VersionStatus.GENERATING_AUDIO,
         segments: variables.segments ?? current.segments,
         audioUrl: null,
       };

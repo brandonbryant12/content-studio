@@ -19,6 +19,8 @@ interface Podcast {
   title: string;
   status: string;
   format: string;
+  documents?: Document[];
+  segments?: { speaker: string; line: string; index: number }[];
 }
 
 export class ApiHelper {
@@ -114,12 +116,33 @@ export class ApiHelper {
 
   /**
    * Delete all documents (useful for test cleanup)
+   * Ignores errors for individual document deletions (race conditions)
    */
   async deleteAllDocuments(): Promise<void> {
     const documents = await this.listDocuments();
     for (const doc of documents) {
-      await this.deleteDocument(doc.id);
+      try {
+        await this.deleteDocument(doc.id);
+      } catch {
+        // Ignore errors - document may have been deleted by another test
+      }
     }
+  }
+
+  /**
+   * Upload a document with text content
+   * Creates a simple text document for testing purposes
+   */
+  async uploadDocument(title: string, content: string): Promise<Document> {
+    // Convert content to base64
+    const base64 = Buffer.from(content).toString('base64');
+
+    return this.post<Document>('/documents/upload', {
+      fileName: `${title.toLowerCase().replace(/\s+/g, '-')}.txt`,
+      mimeType: 'text/plain',
+      data: base64,
+      title,
+    });
   }
 
   // Podcasts
@@ -149,6 +172,34 @@ export class ApiHelper {
       title: data.title,
       format: data.format ?? 'conversation',
     });
+  }
+
+  /**
+   * Update a podcast
+   */
+  async updatePodcast(
+    id: string,
+    data: {
+      title?: string;
+      documentIds?: string[];
+      targetDurationMinutes?: number;
+      hostVoice?: string;
+      coHostVoice?: string;
+      promptInstructions?: string;
+    },
+  ): Promise<Podcast> {
+    return this.post<Podcast>(`/podcasts/${id}`, data);
+  }
+
+  /**
+   * Trigger podcast generation
+   */
+  async generatePodcast(
+    id: string,
+  ): Promise<{ jobId: string; status: string }> {
+    return this.post<{ jobId: string; status: string }>(
+      `/podcasts/${id}/generate`,
+    );
   }
 
   /**

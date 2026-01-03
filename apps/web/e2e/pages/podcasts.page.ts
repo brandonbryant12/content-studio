@@ -140,4 +140,110 @@ export class PodcastsPage extends BasePage {
     const items = this.getPodcastItems();
     return items.count();
   }
+
+  // ============================================================================
+  // Workbench (Podcast Detail) Methods
+  // ============================================================================
+
+  /**
+   * Get the status badge in the header (first badge in workbench-meta)
+   */
+  getStatusBadge(): Locator {
+    // The status badge is the first Badge component inside .workbench-meta
+    return this.page.locator('.workbench-meta > span').first();
+  }
+
+  /**
+   * Get the global action bar at the bottom
+   */
+  getActionBar(): Locator {
+    return this.page.locator('.global-action-bar');
+  }
+
+  /**
+   * Get the action bar status text
+   */
+  getActionBarStatus(): Locator {
+    return this.page.locator('.global-action-bar-status-text');
+  }
+
+  /**
+   * Check if status badge shows "Generating Script"
+   */
+  async expectStatusGeneratingScript(): Promise<void> {
+    // Look for badge with "Generating Script" text in the workbench meta area
+    await expect(
+      this.page.locator('.workbench-meta').getByText(/generating script/i),
+    ).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Check if status badge shows "Drafting"
+   */
+  async expectStatusDrafting(): Promise<void> {
+    await expect(
+      this.page.locator('.workbench-meta').getByText(/drafting/i),
+    ).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Check if status badge shows "Ready"
+   */
+  async expectStatusReady(): Promise<void> {
+    await expect(
+      this.page.locator('.workbench-meta').getByText(/^ready$/i),
+    ).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Check if action bar shows "Generating script..."
+   */
+  async expectActionBarGeneratingScript(): Promise<void> {
+    await expect(
+      this.page.locator('.global-action-bar').getByText(/generating script/i),
+    ).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Check if both header and action bar show consistent generating status
+   */
+  async expectGeneratingStatusSync(): Promise<void> {
+    // Both should show "Generating Script" status
+    await this.expectStatusGeneratingScript();
+    await this.expectActionBarGeneratingScript();
+  }
+
+  /**
+   * Wait for podcast to exit setup mode (shows workbench)
+   */
+  async waitForWorkbench(): Promise<void> {
+    // Workbench has a workbench-panel-left element
+    await expect(
+      this.page.locator('.workbench-panel-left').first(),
+    ).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  /**
+   * Complete the setup wizard and trigger generation
+   */
+  async completeSetupWizard(options?: {
+    documentTitle?: string;
+    skipDocumentUpload?: boolean;
+  }): Promise<void> {
+    const { documentTitle, skipDocumentUpload } = options ?? {};
+
+    // Step 1: Select document
+    if (documentTitle) {
+      await this.page.getByText(documentTitle).click();
+    }
+    await this.page.getByRole('button', { name: /continue/i }).click();
+
+    // Step 2: Audio settings (use defaults)
+    await this.page.getByRole('button', { name: /continue/i }).click();
+
+    // Step 3: Instructions (optional) - click Generate
+    await this.page.getByRole('button', { name: /generate/i }).click();
+  }
 }

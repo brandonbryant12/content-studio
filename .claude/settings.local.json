@@ -91,7 +91,10 @@
       "Bash(packages/queue/package.json packages/queue/src/errors.ts packages/storage/package.json packages/storage/src/errors.ts )",
       "Bash(packages/testing/src/mocks/llm.ts packages/testing/src/mocks/tts.ts)",
       "Bash(mkdir:*)",
-      "Bash(gh issue edit:*)"
+      "Bash(gh issue edit:*)",
+      "mcp__playwriter__execute",
+      "mcp__playwriter__reset",
+      "Bash(git -C /Users/brandon/Development/content-studio log --oneline -15)"
     ],
     "deny": [],
     "ask": []

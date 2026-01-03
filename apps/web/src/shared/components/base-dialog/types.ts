@@ -19,5 +19,5 @@ export interface BaseDialogProps {
   maxWidth?: DialogMaxWidth;
   scrollable?: boolean;
   children: ReactNode;
-  footer: DialogFooterConfig;
+  footer?: DialogFooterConfig;
 }

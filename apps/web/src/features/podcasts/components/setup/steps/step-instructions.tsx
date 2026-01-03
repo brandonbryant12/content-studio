@@ -68,7 +68,7 @@ export function StepInstructions({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 4 of 4</p>
+        <p className="setup-step-eyebrow">Step 3 of 3</p>
         <h2 className="setup-step-title">Custom Instructions</h2>
         <p className="setup-step-description">
           Add any special instructions for the AI. This step is optional.
