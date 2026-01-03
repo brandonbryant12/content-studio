@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -15,9 +15,11 @@ import {
   useVoiceover,
   useVoiceoverSettings,
   useOptimisticGeneration,
+  useCollaborators,
 } from '../hooks';
 import { isGeneratingStatus } from '../lib/status';
 import { VoiceoverDetail } from './voiceover-detail';
+import { AddCollaboratorDialog } from './collaborators';
 
 interface VoiceoverDetailContainerProps {
   voiceoverId: string;
@@ -34,6 +36,10 @@ export function VoiceoverDetailContainer({
 
   // Data fetching (Suspense handles loading)
   const { data: voiceover } = useVoiceover(voiceoverId);
+  const { data: collaborators } = useCollaborators(voiceoverId);
+
+  // Dialog state
+  const [isCollaboratorDialogOpen, setCollaboratorDialogOpen] = useState(false);
 
   // State management via custom hook
   const settings = useVoiceoverSettings({ voiceover });
@@ -57,6 +63,23 @@ export function VoiceoverDetailContainer({
   const isGenerating = isGeneratingStatus(voiceover.status);
   const isPendingGeneration = generateMutation.isPending;
   const hasText = settings.text.trim().length > 0;
+
+  // Owner info for collaborator display
+  const owner = useMemo(() => ({
+    id: voiceover.createdBy,
+    name: user?.id === voiceover.createdBy ? (user?.name ?? 'You') : 'Owner',
+    image: user?.id === voiceover.createdBy ? user?.image : undefined,
+    hasApproved: voiceover.ownerHasApproved,
+  }), [voiceover.createdBy, voiceover.ownerHasApproved, user?.id, user?.name, user?.image]);
+
+  // Check if current user has approved
+  const currentUserHasApproved = useMemo(() => {
+    if (currentUserId === voiceover.createdBy) {
+      return voiceover.ownerHasApproved;
+    }
+    const userCollaborator = collaborators.find(c => c.userId === currentUserId);
+    return userCollaborator?.hasApproved ?? false;
+  }, [currentUserId, voiceover.createdBy, voiceover.ownerHasApproved, collaborators]);
 
   // Handler to save settings
   const handleSave = useCallback(async () => {
@@ -89,6 +112,10 @@ export function VoiceoverDetailContainer({
     deleteMutation.mutate({ id: voiceover.id });
   }, [deleteMutation, voiceover.id]);
 
+  const handleManageCollaborators = useCallback(() => {
+    setCollaboratorDialogOpen(true);
+  }, []);
+
   // Keyboard shortcut: Cmd/Ctrl+S to save
   useKeyboardShortcut({
     key: 's',
@@ -110,20 +137,37 @@ export function VoiceoverDetailContainer({
       }
     : null;
 
+  const isOwner = currentUserId === voiceover.createdBy;
+
   return (
-    <VoiceoverDetail
-      voiceover={voiceover}
-      settings={settings}
-      displayAudio={displayAudio}
-      hasChanges={settings.hasChanges}
-      hasText={hasText}
-      isGenerating={isGenerating || isPendingGeneration}
-      isSaving={settings.isSaving}
-      isDeleting={deleteMutation.isPending}
-      onSave={handleSave}
-      onGenerate={handleGenerate}
-      onDelete={handleDelete}
-      currentUserId={currentUserId}
-    />
+    <>
+      <VoiceoverDetail
+        voiceover={voiceover}
+        settings={settings}
+        displayAudio={displayAudio}
+        hasChanges={settings.hasChanges}
+        hasText={hasText}
+        isGenerating={isGenerating || isPendingGeneration}
+        isSaving={settings.isSaving}
+        isDeleting={deleteMutation.isPending}
+        onSave={handleSave}
+        onGenerate={handleGenerate}
+        onDelete={handleDelete}
+        currentUserId={currentUserId}
+        owner={owner}
+        collaborators={collaborators}
+        currentUserHasApproved={currentUserHasApproved}
+        onManageCollaborators={handleManageCollaborators}
+      />
+
+      {/* Collaborator management dialog (only for owner) */}
+      {isOwner && (
+        <AddCollaboratorDialog
+          voiceoverId={voiceoverId}
+          isOpen={isCollaboratorDialogOpen}
+          onClose={() => setCollaboratorDialogOpen(false)}
+        />
+      )}
+    </>
   );
 }

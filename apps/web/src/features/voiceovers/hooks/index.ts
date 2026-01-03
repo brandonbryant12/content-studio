@@ -20,3 +20,16 @@ export {
   VOICES,
   type UseVoiceoverSettingsReturn,
 } from './use-voiceover-settings';
+
+export {
+  useCollaborators,
+  useCollaboratorsQuery,
+  getCollaboratorsQueryKey,
+  type Collaborator,
+} from './use-collaborators';
+
+export { useAddCollaborator } from './use-add-collaborator';
+
+export { useRemoveCollaborator } from './use-remove-collaborator';
+
+export { useApproveVoiceover } from './use-approve-voiceover';

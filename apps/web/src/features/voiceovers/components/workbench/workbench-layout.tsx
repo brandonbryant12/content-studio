@@ -8,17 +8,34 @@ import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
+import { CollaboratorAvatars, ApproveButton } from '../collaborators';
 
 type VoiceoverFull = RouterOutput['voiceovers']['get'];
 
 interface WorkbenchLayoutProps {
   voiceover: VoiceoverFull;
-  children: ReactNode; // Main content (simpler than left/right panels)
+  children: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
   currentUserId: string;
-  // Collaborator props (placeholder for Sprint 10)
+  owner: {
+    id: string;
+    name: string;
+    image?: string | null;
+    hasApproved: boolean;
+  };
+  collaborators: readonly {
+    id: string;
+    voiceoverId: string;
+    userId: string | null;
+    email: string;
+    userName: string | null;
+    userImage: string | null;
+    hasApproved: boolean;
+  }[];
+  currentUserHasApproved: boolean;
+  onManageCollaborators: () => void;
 }
 
 export function WorkbenchLayout({
@@ -27,10 +44,12 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  currentUserId: _currentUserId,
+  currentUserId,
+  owner,
+  collaborators,
+  currentUserHasApproved,
+  onManageCollaborators,
 }: WorkbenchLayoutProps) {
-  // currentUserId will be used for collaborator features in Sprint 10
-  void _currentUserId;
 
   const statusConfig = getStatusConfig(voiceover.status);
   const isGenerating = isGeneratingStatus(voiceover.status);
@@ -89,9 +108,18 @@ export function WorkbenchLayout({
                 </div>
               )}
 
-              {/* Collaborator avatars placeholder for Sprint 10 */}
+              {/* Collaborators and Approval */}
               <div className="flex items-center gap-3 mr-3">
-                {/* CollaboratorAvatars will be added here */}
+                <CollaboratorAvatars
+                  owner={owner}
+                  collaborators={collaborators}
+                  onManageClick={onManageCollaborators}
+                />
+                <ApproveButton
+                  voiceoverId={voiceover.id}
+                  userId={currentUserId}
+                  hasApproved={currentUserHasApproved}
+                />
               </div>
 
               {/* Delete button */}

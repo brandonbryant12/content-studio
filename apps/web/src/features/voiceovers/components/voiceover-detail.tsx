@@ -1,7 +1,7 @@
 // features/voiceovers/components/voiceover-detail.tsx
 
 import type { RouterOutput } from '@repo/api/client';
-import type { UseVoiceoverSettingsReturn } from '../hooks';
+import type { UseVoiceoverSettingsReturn, Collaborator } from '../hooks';
 import { WorkbenchLayout, TextEditor, VoiceSelector, ActionBar } from './workbench';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
@@ -9,6 +9,13 @@ type Voiceover = RouterOutput['voiceovers']['get'];
 interface DisplayAudio {
   url: string;
   duration: number | null;
+}
+
+interface Owner {
+  id: string;
+  name: string;
+  image?: string | null;
+  hasApproved: boolean;
 }
 
 export interface VoiceoverDetailProps {
@@ -24,6 +31,10 @@ export interface VoiceoverDetailProps {
   onGenerate: () => void;
   onDelete: () => void;
   currentUserId: string;
+  owner: Owner;
+  collaborators: readonly Collaborator[];
+  currentUserHasApproved: boolean;
+  onManageCollaborators: () => void;
 }
 
 export function VoiceoverDetail({
@@ -39,6 +50,10 @@ export function VoiceoverDetail({
   onGenerate,
   onDelete,
   currentUserId,
+  owner,
+  collaborators,
+  currentUserHasApproved,
+  onManageCollaborators,
 }: VoiceoverDetailProps) {
   return (
     <WorkbenchLayout
@@ -46,6 +61,10 @@ export function VoiceoverDetail({
       onDelete={onDelete}
       isDeleting={isDeleting}
       currentUserId={currentUserId}
+      owner={owner}
+      collaborators={collaborators}
+      currentUserHasApproved={currentUserHasApproved}
+      onManageCollaborators={onManageCollaborators}
       actionBar={
         <ActionBar
           status={voiceover.status}

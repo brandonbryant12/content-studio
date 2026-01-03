@@ -15,3 +15,14 @@ export { VoiceoverDetail, type VoiceoverDetailProps } from './voiceover-detail';
 
 // Reusable components
 export { VoiceoverIcon } from './voiceover-icon';
+
+// Collaborator components
+export {
+  CollaboratorAvatars,
+  type CollaboratorAvatarsProps,
+  AddCollaboratorDialog,
+  CollaboratorList,
+  type CollaboratorListProps,
+  ApproveButton,
+  type ApproveButtonProps,
+} from './collaborators';
