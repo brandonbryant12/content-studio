@@ -1,6 +1,57 @@
 # Voice Overs Implementation Plan
 
-> **STATUS: ✅ COMPLETE**
+> **STATUS: 🟡 IN PROGRESS**
+
+## Issues Found in Review
+
+### ✅ CRITICAL (Fixed)
+
+#### 1. ~~Voiceover Worker Not Started~~ ✅ FIXED
+- **File**: `apps/server/src/server.ts`
+- **Issue**: ~~`createVoiceoverWorker()` is exported but never instantiated at server startup~~
+- **Resolution**: Worker is now started alongside podcast worker in `server.ts`
+- **Sprint**: 12.1 ✅
+
+#### 2. ~~Missing Authorization in Use Cases~~ ✅ FIXED
+| Use Case | File | Status |
+|----------|------|--------|
+| `update-voiceover.ts` | `packages/media/src/voiceover/use-cases/` | ✅ Owner check added |
+| `delete-voiceover.ts` | `packages/media/src/voiceover/use-cases/` | ✅ Owner check added |
+| `generate-audio.ts` | `packages/media/src/voiceover/use-cases/` | ✅ Owner check added |
+| `start-generation.ts` | `packages/media/src/voiceover/use-cases/` | ✅ Owner check added |
+
+- **Resolution**: All use cases now verify `voiceover.createdBy === input.userId` before performing actions
+- **Sprint**: 12.2 ✅
+
+### 🟡 HIGH Priority
+
+#### 3. Zero Test Coverage
+| Layer | Status |
+|-------|--------|
+| Backend use case tests | NONE |
+| Backend integration tests | NONE |
+| Frontend component tests | NONE |
+| MSW handlers | NONE |
+| E2E tests | NONE |
+
+- **Impact**: No automated verification of functionality
+- **Sprint**: 13
+
+### 🟠 MEDIUM Priority
+
+#### 4. ApproveButton Violates Presenter Pattern
+- **File**: `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx`
+- **Issue**: Calls `useApproveVoiceover()` hook directly instead of receiving mutation as props
+- **Impact**: Component can't be tested in isolation
+- **Sprint**: 14.1
+
+#### 5. Voice Constants Duplicated
+- **Files**: `use-voiceover-settings.ts` and `voice-selector.tsx`
+- **Issue**: VOICES array defined in both files
+- **Impact**: Maintenance burden, potential inconsistency
+- **Sprint**: 14.2
+
+---
 
 ## Overview
 
@@ -411,18 +462,335 @@ POST   /voiceovers/claim-invites      # Claim pending invites
 
 ---
 
+## Sprint 12: Critical Fixes
+
+**Goal**: Fix blocking issues preventing feature from working
+
+### 12.1 Register Voiceover Worker at Server Startup
+
+**File**: `apps/server/src/server.ts`
+
+Add voiceover worker creation alongside podcast worker:
+
+```typescript
+// Create voiceover worker
+const voiceoverWorker = createVoiceoverWorker({
+  databaseUrl: env.SERVER_POSTGRES_URL,
+  pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
+  geminiApiKey: env.GEMINI_API_KEY,
+  storageConfig,
+  useMockAI: env.USE_MOCK_AI,
+});
+
+// Start both workers
+Promise.all([
+  worker.start(),
+  voiceoverWorker.start(),
+]).catch((error) => {
+  console.error('Worker error:', error);
+  process.exit(1);
+});
+```
+
+### 12.2 Add Authorization Checks to Use Cases
+
+Add owner verification to these use cases:
+
+#### 12.2.1 `update-voiceover.ts`
+```typescript
+// After findById, before update:
+const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+
+if (voiceover.createdBy !== input.userId) {
+  return yield* Effect.fail(
+    new NotVoiceoverOwner({
+      voiceoverId: input.voiceoverId,
+      userId: input.userId,
+    }),
+  );
+}
+```
+
+#### 12.2.2 `delete-voiceover.ts`
+```typescript
+// After findById, before delete:
+if (voiceover.createdBy !== input.userId) {
+  return yield* Effect.fail(
+    new NotVoiceoverOwner({
+      voiceoverId: input.voiceoverId,
+      userId: input.userId,
+    }),
+  );
+}
+```
+
+#### 12.2.3 `generate-audio.ts`
+```typescript
+// After findById, before generation:
+if (voiceover.createdBy !== input.userId) {
+  return yield* Effect.fail(
+    new NotVoiceoverOwner({
+      voiceoverId: input.voiceoverId,
+      userId: input.userId,
+    }),
+  );
+}
+```
+
+#### 12.2.4 `start-generation.ts`
+```typescript
+// After findById, before enqueue:
+if (voiceover.createdBy !== input.userId) {
+  return yield* Effect.fail(
+    new NotVoiceoverOwner({
+      voiceoverId: input.voiceoverId,
+      userId: input.userId,
+    }),
+  );
+}
+```
+
+**Validation**: `pnpm typecheck && pnpm build`
+
+---
+
+## Sprint 13: Test Coverage
+
+**Goal**: Add comprehensive test coverage
+
+### 13.1 Backend Use Case Tests
+
+**Location**: `packages/media/src/voiceover/use-cases/__tests__/`
+
+Priority order:
+1. `approve-voiceover.test.ts` - Complex owner vs collaborator logic
+2. `add-collaborator.test.ts` - 5 error conditions, validation
+3. `generate-audio.test.ts` - TTS integration, state transitions
+4. `start-generation.test.ts` - Queue integration, idempotency
+5. `update-voiceover.test.ts` - Authorization checks
+6. `delete-voiceover.test.ts` - Authorization, cascade
+7. Remaining CRUD use cases
+
+Each test file should cover:
+- Success paths (1-3 tests)
+- All error conditions (1 test per error type)
+- Edge cases (1-3 tests)
+- Authorization (1-2 tests)
+
+### 13.2 Backend Integration Tests
+
+**Location**: `packages/api/src/server/router/__tests__/voiceover.integration.test.ts`
+
+Test all 13 API handlers:
+- Success responses with correct serialization
+- Authentication (null user → UNAUTHORIZED)
+- Authorization (other user → NOT_FOUND or FORBIDDEN)
+- Error responses (specific error codes)
+- Pagination/filtering (for list operations)
+
+Reference: `packages/api/src/server/router/__tests__/podcast.integration.test.ts`
+
+### 13.3 MSW Handlers
+
+**Location**: `apps/web/src/features/voiceovers/__tests__/handlers.ts`
+
+Create handlers for:
+- Core CRUD (list, get, create, update, delete)
+- Generation (generate, getJob with pending/complete states)
+- Collaboration (listCollaborators, add, remove, approve)
+- Error scenarios
+
+### 13.4 Frontend Component Tests
+
+**Location**: `apps/web/src/features/voiceovers/__tests__/`
+
+Priority components:
+1. `voiceover-detail-container.test.tsx`
+2. `approve-button.test.tsx`
+3. `action-bar.test.tsx`
+4. `add-collaborator-dialog.test.tsx`
+
+### 13.5 E2E Tests
+
+**Location**: `apps/web/e2e/tests/voiceovers/`
+
+Critical flows:
+1. Create & edit voiceover
+2. Generate audio (with status polling)
+3. Collaboration workflow (add collaborator, approve)
+
+**Validation**: `pnpm test`
+
+---
+
+## Sprint 14: Code Quality Fixes
+
+**Goal**: Address medium priority issues
+
+### 14.1 Fix ApproveButton Presenter Pattern
+
+**File**: `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx`
+
+Refactor to receive mutations as props:
+
+```typescript
+interface ApproveButtonProps {
+  voiceoverId: string;
+  currentUserHasApproved: boolean;
+  isOwner: boolean;
+  onApprove: () => void;
+  onRevoke: () => void;
+  isPending: boolean;
+}
+
+export function ApproveButton({
+  currentUserHasApproved,
+  onApprove,
+  onRevoke,
+  isPending,
+}: ApproveButtonProps) {
+  // Pure presenter - no hooks
+}
+```
+
+Update container to pass mutations:
+```typescript
+const approveMutation = useApproveVoiceover(voiceoverId);
+const revokeMutation = useRevokeVoiceoverApproval(voiceoverId);
+
+<ApproveButton
+  currentUserHasApproved={currentUserHasApproved}
+  onApprove={() => approveMutation.mutate({ id: voiceoverId })}
+  onRevoke={() => revokeMutation.mutate({ id: voiceoverId })}
+  isPending={approveMutation.isPending || revokeMutation.isPending}
+/>
+```
+
+### 14.2 Consolidate Voice Constants
+
+**Action**: Export VOICES from single location
+
+Option A: Export from hook
+```typescript
+// use-voiceover-settings.ts
+export const VOICES = [...];
+```
+
+```typescript
+// voice-selector.tsx
+import { VOICES } from '../hooks/use-voiceover-settings';
+```
+
+Option B: Create shared constants file
+```typescript
+// lib/constants.ts
+export const VOICES = [...];
+```
+
+**Validation**: `pnpm typecheck && pnpm build`
+
+---
+
+## Sprint 15: Standards Review & Iteration
+
+**Goal**: Final validation with comprehensive subagent review
+
+### 15.1 Spawn Subagent Reviews (8 parallel agents)
+
+Run comprehensive review covering:
+
+1. **DB Schema & Serializers Agent**
+   - Verify schema completeness
+   - Check serializer patterns (Effect, Batch, Sync)
+   - Validate type exports
+
+2. **Backend Repositories Agent**
+   - Verify all required methods exist
+   - Check Effect patterns and error handling
+   - Compare with podcast repo patterns
+
+3. **Backend Use Cases Agent**
+   - Verify authorization checks added
+   - Check Effect patterns and tracing spans
+   - Validate error propagation
+
+4. **API Contract & Router Agent**
+   - Verify all endpoints defined
+   - Check error definitions match
+   - Validate handler patterns
+
+5. **Background Worker Agent**
+   - Verify worker is started at startup
+   - Check SSE event emission
+   - Validate error handling
+
+6. **Frontend Components Agent**
+   - Verify container/presenter pattern
+   - Check data fetching patterns
+   - Validate optimistic mutations
+
+7. **Test Coverage Agent**
+   - Verify use case tests exist
+   - Check integration tests
+   - Validate component tests and MSW handlers
+
+8. **Standards Compliance Agent**
+   - Cross-check all standards documents
+   - Verify consistency with podcast implementation
+   - Check for any remaining issues
+
+### 15.2 Update Implementation Plan
+
+Based on subagent findings:
+- Add any new issues to "Issues Found in Review" section
+- Create new sprints if critical issues discovered
+- Update success criteria checkboxes
+- Document lessons learned
+
+### 15.3 Final Validation
+
+```bash
+pnpm typecheck && pnpm test && pnpm build
+```
+
+All tests must pass before marking feature complete.
+
+### 15.4 Completion Criteria
+
+- [ ] All 8 subagent reviews pass with no critical issues
+- [ ] All tests pass (unit, integration, component, E2E)
+- [ ] Build succeeds
+- [ ] No open issues in "Issues Found" section
+- [ ] Implementation plan status updated to ✅ COMPLETE
+
+**Validation**: Full review + `pnpm typecheck && pnpm test && pnpm build`
+
+---
+
 ## Key Files to Modify
 
-| File | Action |
-|------|--------|
-| `packages/db/src/schemas/voiceovers.ts` | Create - new schema |
-| `packages/db/src/schema.ts` | Modify - export new tables |
-| `packages/media/src/voiceover/` | Create - entire domain |
-| `packages/api/src/contracts/voiceovers.ts` | Create - API contract |
-| `packages/api/src/server/router/voiceover.ts` | Create - route handlers |
-| `apps/server/src/workers/voiceover-worker.ts` | Create - job processor |
-| `apps/web/src/features/voiceovers/` | Create - entire feature |
-| `apps/web/src/shared/hooks/sse-handlers.ts` | Modify - add voiceover entity |
+| File | Action | Sprint |
+|------|--------|--------|
+| `packages/db/src/schemas/voiceovers.ts` | Create - new schema | 1 ✅ |
+| `packages/db/src/schema.ts` | Modify - export new tables | 1 ✅ |
+| `packages/media/src/voiceover/` | Create - entire domain | 2-4 ✅ |
+| `packages/api/src/contracts/voiceovers.ts` | Create - API contract | 5 ✅ |
+| `packages/api/src/server/router/voiceover.ts` | Create - route handlers | 5 ✅ |
+| `apps/server/src/workers/voiceover-worker.ts` | Create - job processor | 6 ✅ |
+| `apps/web/src/features/voiceovers/` | Create - entire feature | 7-10 ✅ |
+| `apps/web/src/shared/hooks/sse-handlers.ts` | Modify - add voiceover entity | 9 ✅ |
+| `apps/server/src/server.ts` | Modify - register voiceover worker | 12 ✅ |
+| `packages/media/src/voiceover/use-cases/update-voiceover.ts` | Modify - add owner check | 12 ✅ |
+| `packages/media/src/voiceover/use-cases/delete-voiceover.ts` | Modify - add owner check | 12 ✅ |
+| `packages/media/src/voiceover/use-cases/generate-audio.ts` | Modify - add owner check | 12 ✅ |
+| `packages/media/src/voiceover/use-cases/start-generation.ts` | Modify - add owner check | 12 ✅ |
+| `packages/media/src/voiceover/use-cases/__tests__/` | Create - use case tests | 13 |
+| `packages/api/src/server/router/__tests__/voiceover.integration.test.ts` | Create - integration tests | 13 |
+| `apps/web/src/features/voiceovers/__tests__/handlers.ts` | Create - MSW handlers | 13 |
+| `apps/web/src/features/voiceovers/__tests__/*.test.tsx` | Create - component tests | 13 |
+| `apps/web/e2e/tests/voiceovers/` | Create - E2E tests | 13 |
+| `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx` | Modify - presenter pattern | 14 |
+| `apps/web/src/features/voiceovers/lib/constants.ts` | Create - shared constants | 14 |
 
 ---
 
@@ -438,7 +806,11 @@ POST   /voiceovers/claim-invites      # Claim pending invites
 - [x] **Sprint 8**: Workbench edits text/voice
 - [x] **Sprint 9**: Generation triggers and updates in real-time
 - [x] **Sprint 10**: Collaborators can be added and approve
-- [x] **Sprint 11**: Tests pass, edge cases handled (edge cases complete, E2E tests deferred)
+- [ ] **Sprint 11**: Tests pass, edge cases handled (**INCOMPLETE**: no tests)
+- [x] **Sprint 12**: Critical fixes (worker startup, authorization)
+- [ ] **Sprint 13**: Test coverage (use case, integration, component, E2E)
+- [ ] **Sprint 14**: Code quality fixes (presenter pattern, constants)
+- [ ] **Sprint 15**: Standards review with 8 subagents, iterate on findings
 
 Each sprint maintains working functionality with passing build.
 

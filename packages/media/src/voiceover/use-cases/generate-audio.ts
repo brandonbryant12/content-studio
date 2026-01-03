@@ -4,7 +4,7 @@ import { TTS } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
-import { InvalidVoiceoverAudioGeneration } from '../../errors';
+import { InvalidVoiceoverAudioGeneration, NotVoiceoverOwner } from '../../errors';
 
 // =============================================================================
 // Types
@@ -12,6 +12,7 @@ import { InvalidVoiceoverAudioGeneration } from '../../errors';
 
 export interface GenerateVoiceoverAudioInput {
   voiceoverId: string;
+  userId: string;
 }
 
 export interface GenerateVoiceoverAudioResult {
@@ -48,6 +49,16 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
 
     // 1. Load voiceover and validate state
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+
+    // Verify user is the owner
+    if (voiceover.createdBy !== input.userId) {
+      return yield* Effect.fail(
+        new NotVoiceoverOwner({
+          voiceoverId: input.voiceoverId,
+          userId: input.userId,
+        }),
+      );
+    }
 
     if (
       voiceover.status !== 'drafting' &&

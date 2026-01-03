@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
+import { NotVoiceoverOwner } from '../../errors';
 
 // =============================================================================
 // Types
@@ -7,6 +8,7 @@ import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 export interface DeleteVoiceoverInput {
   voiceoverId: string;
+  userId: string;
 }
 
 // =============================================================================
@@ -31,7 +33,17 @@ export const deleteVoiceover = (input: DeleteVoiceoverInput) =>
     const voiceoverRepo = yield* VoiceoverRepo;
 
     // Verify voiceover exists before deleting
-    yield* voiceoverRepo.findById(input.voiceoverId);
+    const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+
+    // Verify user is the owner
+    if (voiceover.createdBy !== input.userId) {
+      return yield* Effect.fail(
+        new NotVoiceoverOwner({
+          voiceoverId: input.voiceoverId,
+          userId: input.userId,
+        }),
+      );
+    }
 
     // Delete (collaborators cascade)
     yield* voiceoverRepo.delete(input.voiceoverId);

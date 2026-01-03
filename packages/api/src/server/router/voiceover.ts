@@ -142,9 +142,11 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        updateVoiceover({ voiceoverId: id as string, data }).pipe(
-          Effect.map((voiceover) => serializeVoiceover(voiceover)),
-        ),
+        updateVoiceover({
+          voiceoverId: id as string,
+          userId: context.session.user.id,
+          data,
+        }).pipe(Effect.map((voiceover) => serializeVoiceover(voiceover))),
         errors as unknown as ErrorFactory,
         {
           span: 'api.voiceovers.update',
@@ -159,7 +161,10 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        deleteVoiceover({ voiceoverId: input.id }).pipe(Effect.map(() => ({}))),
+        deleteVoiceover({
+          voiceoverId: input.id,
+          userId: context.session.user.id,
+        }).pipe(Effect.map(() => ({}))),
         errors as unknown as ErrorFactory,
         {
           span: 'api.voiceovers.delete',
@@ -176,6 +181,7 @@ const voiceoverRouter = {
         context.user,
         startVoiceoverGeneration({
           voiceoverId: input.id,
+          userId: context.session.user.id,
         }),
         errors as unknown as ErrorFactory,
         {

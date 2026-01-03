@@ -1,6 +1,7 @@
 import { Effect } from 'effect';
-import type { Voiceover, UpdateVoiceover } from '@repo/db/schema';
+import type { UpdateVoiceover } from '@repo/db/schema';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
+import { NotVoiceoverOwner } from '../../errors';
 
 // =============================================================================
 // Types
@@ -8,6 +9,7 @@ import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 export interface UpdateVoiceoverInput {
   voiceoverId: string;
+  userId: string;
   data: UpdateVoiceover;
 }
 
@@ -25,7 +27,17 @@ export const updateVoiceover = (input: UpdateVoiceoverInput) =>
     const voiceoverRepo = yield* VoiceoverRepo;
 
     // Verify voiceover exists
-    yield* voiceoverRepo.findById(input.voiceoverId);
+    const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+
+    // Verify user is the owner
+    if (voiceover.createdBy !== input.userId) {
+      return yield* Effect.fail(
+        new NotVoiceoverOwner({
+          voiceoverId: input.voiceoverId,
+          userId: input.userId,
+        }),
+      );
+    }
 
     // Update voiceover metadata
     const updatedVoiceover = yield* voiceoverRepo.update(

@@ -3,6 +3,7 @@ import { createDb, verifyDbConnection } from '@repo/db/client';
 import { QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
 import { createPodcastWorker } from './workers/podcast-worker';
+import { createVoiceoverWorker } from './workers/voiceover-worker';
 import app, { storageConfig } from '.';
 
 // =============================================================================
@@ -56,7 +57,7 @@ const startServer = async () => {
   }
 
   // Start the podcast worker
-  const worker = createPodcastWorker({
+  const podcastWorker = createPodcastWorker({
     databaseUrl: env.SERVER_POSTGRES_URL,
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     geminiApiKey: env.GEMINI_API_KEY,
@@ -64,10 +65,22 @@ const startServer = async () => {
     useMockAI: env.USE_MOCK_AI,
   });
 
-  worker.start().catch((error) => {
-    console.error('Worker error:', error);
-    process.exit(1);
+  // Start the voiceover worker
+  const voiceoverWorker = createVoiceoverWorker({
+    databaseUrl: env.SERVER_POSTGRES_URL,
+    pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
+    geminiApiKey: env.GEMINI_API_KEY,
+    storageConfig,
+    useMockAI: env.USE_MOCK_AI,
   });
+
+  // Start both workers
+  Promise.all([podcastWorker.start(), voiceoverWorker.start()]).catch(
+    (error) => {
+      console.error('Worker error:', error);
+      process.exit(1);
+    },
+  );
 
   const server = serve(
     {

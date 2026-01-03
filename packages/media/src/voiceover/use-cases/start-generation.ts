@@ -4,7 +4,7 @@ import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
-import { InvalidVoiceoverAudioGeneration } from '../../errors';
+import { InvalidVoiceoverAudioGeneration, NotVoiceoverOwner } from '../../errors';
 
 // =============================================================================
 // Types
@@ -12,6 +12,7 @@ import { InvalidVoiceoverAudioGeneration } from '../../errors';
 
 export interface StartVoiceoverGenerationInput {
   voiceoverId: string;
+  userId: string;
 }
 
 export interface StartVoiceoverGenerationResult {
@@ -49,6 +50,16 @@ export const startVoiceoverGeneration = (
 
     // 1. Verify voiceover exists
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+
+    // Verify user is the owner
+    if (voiceover.createdBy !== input.userId) {
+      return yield* Effect.fail(
+        new NotVoiceoverOwner({
+          voiceoverId: input.voiceoverId,
+          userId: input.userId,
+        }),
+      );
+    }
 
     // 2. Validate text is not empty
     const text = voiceover.text.trim();

@@ -35,11 +35,12 @@ const formatError = (error: unknown): string => {
  */
 export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
   Effect.gen(function* () {
-    const { voiceoverId } = job.payload;
+    const { voiceoverId, userId } = job.payload;
 
     // Generate audio for voiceover
     const result = yield* generateVoiceoverAudio({
       voiceoverId,
+      userId,
     });
 
     return {
