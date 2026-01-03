@@ -21,6 +21,7 @@ export interface HandleEffectOptions {
  */
 export interface ErrorFactory {
   INTERNAL_ERROR: (opts: { message: string; data?: unknown }) => unknown;
+  BAD_REQUEST: (opts: { message: string; data?: unknown }) => unknown;
   FORBIDDEN: (opts: { message: string; data?: unknown }) => unknown;
   UNAUTHORIZED: (opts: { message: string; data?: unknown }) => unknown;
   NOT_FOUND: (opts: { message: string; data?: unknown }) => unknown;
