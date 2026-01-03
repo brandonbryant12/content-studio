@@ -5,3 +5,6 @@ export { useKeyboardShortcut } from './use-keyboard-shortcut';
 export { useSessionGuard } from './use-session-guard';
 export type { UseSessionGuardReturn } from './use-session-guard';
 export { usePrevious } from './use-previous';
+export { useSSE } from './use-sse';
+export type { SSEConnectionState, SSEOptions, UseSSEReturn } from './use-sse';
+export { handleJobCompletion, handleEntityChange } from './sse-handlers';
