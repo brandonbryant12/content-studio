@@ -38,7 +38,7 @@ export function PodcastDetailContainer({
   // State management via custom hooks
   const scriptEditor = useScriptEditor({
     podcastId,
-    initialSegments: [...(podcast.activeVersion?.segments ?? [])],
+    initialSegments: [...(podcast.segments ?? [])],
   });
 
   const settings = usePodcastSettings({ podcast });
@@ -77,7 +77,7 @@ export function PodcastDetailContainer({
     settings.hasChanges ||
     documentSelection.hasChanges;
 
-  const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
+  const isGenerating = isGeneratingStatus(podcast.status);
   const isPendingGeneration = generateMutation.isPending;
 
   // Combined save handler for script, voice, and document changes
@@ -175,11 +175,11 @@ export function PodcastDetailContainer({
     return <SetupWizardContainer podcast={podcast} />;
   }
 
-  // Audio from active version
-  const displayAudio = podcast.activeVersion?.audioUrl
+  // Audio from podcast
+  const displayAudio = podcast.audioUrl
     ? {
-        url: podcast.activeVersion.audioUrl,
-        duration: podcast.activeVersion.duration ?? null,
+        url: podcast.audioUrl,
+        duration: podcast.duration ?? null,
       }
     : null;
 

@@ -48,15 +48,8 @@ const isGenerateAudioJob = (
 /**
  * Extract podcast ID from any job payload type.
  */
-const getPodcastIdFromPayload = (
-  payload: WorkerPayload,
-): string | undefined => {
-  if ('podcastId' in payload) {
-    return payload.podcastId;
-  }
-  // GenerateAudioPayload has versionId, not podcastId
-  // For SSE events, we may not have the podcastId directly
-  return undefined;
+const getPodcastIdFromPayload = (payload: WorkerPayload): string => {
+  return payload.podcastId;
 };
 
 export interface PodcastWorkerConfig {
@@ -118,12 +111,8 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
    */
   const processJob = (job: Job<WorkerPayload>) =>
     Effect.gen(function* () {
-      const jobDescription =
-        'podcastId' in job.payload
-          ? `podcast ${job.payload.podcastId}`
-          : `version ${job.payload.versionId}`;
       yield* Effect.logInfo(
-        `Processing ${job.type} job ${job.id} for ${jobDescription}`,
+        `Processing ${job.type} job ${job.id} for podcast ${job.payload.podcastId}`,
       );
 
       // Create user context for this job
@@ -135,21 +124,15 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
         yield* withCurrentUser(user)(handleGeneratePodcast(job));
       } else if (isGenerateScriptJob(job)) {
         yield* withCurrentUser(user)(handleGenerateScript(job));
-      } else if (isGenerateAudioJob(job)) {
-        yield* withCurrentUser(user)(handleGenerateAudio(job));
       } else {
-        yield* Effect.fail(
-          new JobProcessingError({
-            jobId: job.id,
-            message: `Unknown job type: ${job.type}`,
-          }),
-        );
+        // Must be generate-audio job - type guards are exhaustive
+        yield* withCurrentUser(user)(handleGenerateAudio(job));
       }
 
       yield* Effect.logInfo(`Job ${job.id} completed`);
     }).pipe(
       // Catch any unexpected errors and wrap as JobProcessingError
-      Effect.catchAll((error) =>
+      Effect.catchAll((error: unknown) =>
         Effect.fail(
           error instanceof JobProcessingError
             ? error
@@ -201,23 +184,21 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
             | 'generate-script'
             | 'generate-audio',
           status: job.status === 'completed' ? 'completed' : 'failed',
-          podcastId: podcastId ?? '', // May be empty for audio-only jobs
+          podcastId,
           error: job.error ?? undefined,
         };
         sseManager.emit(userId, jobCompletionEvent);
 
-        // Emit entity change event for the podcast (if we have podcast ID)
-        if (podcastId) {
-          const entityChangeEvent: EntityChangeEvent = {
-            type: 'entity_change',
-            entityType: 'podcast',
-            changeType: 'update',
-            entityId: podcastId,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-          sseManager.emit(userId, entityChangeEvent);
-        }
+        // Emit entity change event for the podcast
+        const entityChangeEvent: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: podcastId,
+          userId,
+          timestamp: new Date().toISOString(),
+        };
+        sseManager.emit(userId, entityChangeEvent);
 
         yield* Effect.logInfo(
           `Emitted SSE events for job ${job.id} to user ${userId}`,

@@ -92,9 +92,9 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       };
     }
 
-    // 4. Enqueue audio regeneration job
+    // 4. Enqueue audio regeneration job (now uses podcastId directly)
     const payload: GenerateAudioPayload = {
-      versionId: result.version.id,
+      podcastId: podcast.id,
       userId: podcast.createdBy,
     };
 

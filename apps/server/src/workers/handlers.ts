@@ -1,7 +1,6 @@
 import {
   generateScript,
   generateAudio,
-  ScriptVersionRepo,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
@@ -55,52 +54,28 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
 
     // Phase 2: Generate audio from the new script
     const audioResult: UseCaseAudioResult = yield* generateAudio({
-      versionId: scriptResult.version.id,
+      podcastId: scriptResult.podcast.id,
     });
 
     return {
-      scriptId: scriptResult.version.id,
+      podcastId: scriptResult.podcast.id,
       segmentCount: scriptResult.segmentCount,
       audioUrl: audioResult.audioUrl,
       duration: audioResult.duration,
     } satisfies GeneratePodcastResult;
   }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        const scriptVersionRepo = yield* ScriptVersionRepo;
-        const { podcastId } = job.payload;
+    Effect.catchAll((error) => {
+      const errorMessage = formatError(error);
+      console.error('[Worker] Generation failed:', errorMessage, error);
 
-        // Try to find and mark the active version as failed
-        const activeVersion =
-          yield* scriptVersionRepo.findActiveByPodcastId(podcastId);
-        if (activeVersion) {
-          yield* scriptVersionRepo
-            .updateStatus(activeVersion.id, 'failed', formatError(error))
-            .pipe(
-              Effect.catchAll((statusError) =>
-                Effect.sync(() => {
-                  console.error('[Worker] Failed to update version status:', {
-                    podcastId,
-                    originalError: formatError(error),
-                    statusError: formatError(statusError),
-                  });
-                }),
-              ),
-            );
-        }
-
-        const errorMessage = formatError(error);
-        console.error('[Worker] Generation failed:', errorMessage, error);
-
-        return yield* Effect.fail(
-          new JobProcessingError({
-            jobId: job.id,
-            message: `Failed to generate podcast: ${errorMessage}`,
-            cause: error,
-          }),
-        );
-      }),
-    ),
+      return Effect.fail(
+        new JobProcessingError({
+          jobId: job.id,
+          message: `Failed to generate podcast: ${errorMessage}`,
+          cause: error,
+        }),
+      );
+    }),
     Effect.withSpan('worker.handleGeneratePodcast', {
       attributes: {
         'job.id': job.id,
@@ -127,50 +102,22 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
     });
 
     return {
-      scriptId: result.version.id,
+      podcastId: result.podcast.id,
       segmentCount: result.segmentCount,
     } satisfies GenerateScriptResult;
   }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        const scriptVersionRepo = yield* ScriptVersionRepo;
-        const { podcastId } = job.payload;
+    Effect.catchAll((error) => {
+      const errorMessage = formatError(error);
+      console.error('[Worker] Script generation failed:', errorMessage, error);
 
-        // Try to find and mark the active version as failed
-        const activeVersion =
-          yield* scriptVersionRepo.findActiveByPodcastId(podcastId);
-        if (activeVersion) {
-          yield* scriptVersionRepo
-            .updateStatus(activeVersion.id, 'failed', formatError(error))
-            .pipe(
-              Effect.catchAll((statusError) =>
-                Effect.sync(() => {
-                  console.error('[Worker] Failed to update version status:', {
-                    podcastId,
-                    originalError: formatError(error),
-                    statusError: formatError(statusError),
-                  });
-                }),
-              ),
-            );
-        }
-
-        const errorMessage = formatError(error);
-        console.error(
-          '[Worker] Script generation failed:',
-          errorMessage,
-          error,
-        );
-
-        return yield* Effect.fail(
-          new JobProcessingError({
-            jobId: job.id,
-            message: `Failed to generate script: ${errorMessage}`,
-            cause: error,
-          }),
-        );
-      }),
-    ),
+      return Effect.fail(
+        new JobProcessingError({
+          jobId: job.id,
+          message: `Failed to generate script: ${errorMessage}`,
+          cause: error,
+        }),
+      );
+    }),
     Effect.withSpan('worker.handleGenerateScript', {
       attributes: {
         'job.id': job.id,
@@ -188,11 +135,11 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
  */
 export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
   Effect.gen(function* () {
-    const { versionId } = job.payload;
+    const { podcastId } = job.payload;
 
     // Generate audio from existing script
     const result: UseCaseAudioResult = yield* generateAudio({
-      versionId,
+      podcastId,
     });
 
     return {
@@ -200,43 +147,23 @@ export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
       duration: result.duration,
     } satisfies GenerateAudioResult;
   }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        const scriptVersionRepo = yield* ScriptVersionRepo;
-        const { versionId } = job.payload;
+    Effect.catchAll((error) => {
+      const errorMessage = formatError(error);
+      console.error('[Worker] Audio generation failed:', errorMessage, error);
 
-        // Mark version as failed
-        yield* scriptVersionRepo
-          .updateStatus(versionId, 'failed', formatError(error))
-          .pipe(
-            Effect.catchAll((statusError) =>
-              Effect.sync(() => {
-                console.error('[Worker] Failed to update version status:', {
-                  versionId,
-                  originalError: formatError(error),
-                  statusError: formatError(statusError),
-                });
-              }),
-            ),
-          );
-
-        const errorMessage = formatError(error);
-        console.error('[Worker] Audio generation failed:', errorMessage, error);
-
-        return yield* Effect.fail(
-          new JobProcessingError({
-            jobId: job.id,
-            message: `Failed to generate audio: ${errorMessage}`,
-            cause: error,
-          }),
-        );
-      }),
-    ),
+      return Effect.fail(
+        new JobProcessingError({
+          jobId: job.id,
+          message: `Failed to generate audio: ${errorMessage}`,
+          cause: error,
+        }),
+      );
+    }),
     Effect.withSpan('worker.handleGenerateAudio', {
       attributes: {
         'job.id': job.id,
         'job.type': job.type,
-        'version.id': job.payload.versionId,
+        'podcast.id': job.payload.podcastId,
       },
     }),
   );

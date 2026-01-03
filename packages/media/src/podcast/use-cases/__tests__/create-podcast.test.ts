@@ -3,18 +3,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createTestUser,
   createTestPodcast,
-  createTestPodcastScript,
   createTestDocument,
   resetPodcastCounters,
   resetAllFactories,
 } from '@repo/testing';
-import type {
-  Podcast,
-  PodcastScript,
-  Document,
-  CreatePodcast,
-  DocumentId,
-} from '@repo/db/schema';
+import type { Podcast, Document, CreatePodcast, DocumentId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { DocumentNotFound } from '../../../errors';
 import {
@@ -22,11 +15,6 @@ import {
   type PodcastRepoService,
   type PodcastWithDocuments,
 } from '../../repos/podcast-repo';
-import {
-  ScriptVersionRepo,
-  type ScriptVersionRepoService,
-  type CreateScriptVersion,
-} from '../../repos/script-version-repo';
 import { createPodcast } from '../create-podcast';
 
 // =============================================================================
@@ -36,7 +24,6 @@ import { createPodcast } from '../create-podcast';
 interface MockRepoState {
   documents: Document[];
   insertedPodcast?: Podcast;
-  insertedVersion?: PodcastScript;
 }
 
 /**
@@ -56,11 +43,15 @@ const createMockPodcastRepo = (
     findById: () => Effect.die('not implemented'),
     findByIdFull: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
-    listWithActiveVersionSummary: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
+    updateStatus: () => Effect.die('not implemented'),
+    updateScript: () => Effect.die('not implemented'),
+    updateAudio: () => Effect.die('not implemented'),
+    clearAudio: () => Effect.die('not implemented'),
+    clearApprovals: () => Effect.die('not implemented'),
 
     insert: (data, documentIds) =>
       Effect.sync(() => {
@@ -100,43 +91,6 @@ const createMockPodcastRepo = (
 };
 
 /**
- * Create a mock ScriptVersionRepo layer.
- */
-const createMockScriptVersionRepo = (
-  state: MockRepoState,
-  options?: {
-    onInsert?: (data: CreateScriptVersion) => void;
-  },
-): Layer.Layer<ScriptVersionRepo> => {
-  const service: ScriptVersionRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findActiveByPodcastId: () => Effect.die('not implemented'),
-    update: () => Effect.die('not implemented'),
-    updateStatus: () => Effect.die('not implemented'),
-    deactivateAll: () => Effect.die('not implemented'),
-    getNextVersion: () => Effect.die('not implemented'),
-
-    insert: (data) =>
-      Effect.sync(() => {
-        options?.onInsert?.(data);
-        return (
-          state.insertedVersion ??
-          createTestPodcastScript({
-            podcastId: data.podcastId as any,
-            createdBy: data.createdBy,
-            status: data.status,
-            segments: data.segments,
-            isActive: true,
-            version: 1,
-          })
-        );
-      }),
-  };
-
-  return Layer.succeed(ScriptVersionRepo, service);
-};
-
-/**
  * Create a mock Db layer.
  */
 const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
@@ -162,14 +116,7 @@ describe('createPodcast', () => {
         { documents: [] },
         { onInsert: insertSpy },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [],
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -197,14 +144,7 @@ describe('createPodcast', () => {
         { documents: [] },
         { onInsert: insertSpy },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [],
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       await Effect.runPromise(
         createPodcast({
@@ -246,14 +186,7 @@ describe('createPodcast', () => {
         { documents: [doc1, doc2] },
         { onInsert: insertSpy },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [doc1, doc2],
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -279,14 +212,7 @@ describe('createPodcast', () => {
         { documents: [doc] },
         { verifyDocumentsError: verifyError },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [doc],
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromiseExit(
         createPodcast({
@@ -308,14 +234,7 @@ describe('createPodcast', () => {
       const user = createTestUser();
 
       const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [],
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -329,57 +248,12 @@ describe('createPodcast', () => {
     });
   });
 
-  describe('initial version creation', () => {
-    it('creates initial drafting version', async () => {
+  describe('initial status', () => {
+    it('creates podcast with drafting status', async () => {
       const user = createTestUser();
-      const versionInsertSpy = vi.fn();
 
       const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
-      const mockScriptVersionRepo = createMockScriptVersionRepo(
-        { documents: [] },
-        { onInsert: versionInsertSpy },
-      );
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
-
-      await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(versionInsertSpy).toHaveBeenCalledOnce();
-      expect(versionInsertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          createdBy: user.id,
-          status: 'drafting',
-          segments: null,
-        }),
-      );
-    });
-
-    it('returns podcast with active version', async () => {
-      const user = createTestUser();
-      const insertedVersion = createTestPodcastScript({
-        status: 'drafting',
-        isActive: true,
-        createdBy: user.id,
-      });
-
-      const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
-      const mockScriptVersionRepo = createMockScriptVersionRepo({
-        documents: [],
-        insertedVersion,
-      });
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        mockPodcastRepo,
-        mockScriptVersionRepo,
-      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -388,9 +262,8 @@ describe('createPodcast', () => {
         }).pipe(Effect.provide(layers)),
       );
 
-      expect(result.activeVersion).not.toBeNull();
-      expect(result.activeVersion?.status).toBe('drafting');
-      expect(result.activeVersion?.id).toBe(insertedVersion.id);
+      // Status is now directly on the podcast (flattened schema)
+      expect(result.status).toBe('drafting');
     });
   });
 });

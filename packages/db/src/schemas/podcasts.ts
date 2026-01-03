@@ -12,11 +12,9 @@ import {
 import { Schema } from 'effect';
 import { user } from './auth';
 import {
-  document,
   DocumentOutputSchema,
   serializeDocument,
   type Document,
-  type DocumentOutput,
 } from './documents';
 import {
   createEffectSerializer,
@@ -25,13 +23,10 @@ import {
 } from './serialization';
 import {
   type PodcastId,
-  type ScriptVersionId,
   type DocumentId,
   PodcastIdSchema,
-  ScriptVersionIdSchema,
   DocumentIdSchema,
   generatePodcastId,
-  generateScriptVersionId,
 } from './brands';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
@@ -40,8 +35,8 @@ export const podcastFormatEnum = pgEnum('podcast_format', [
 ]);
 
 /**
- * Version-level status enum.
- * Each script version tracks its own generation state.
+ * Podcast status enum.
+ * Tracks the podcast's generation state.
  *
  * Flow: drafting → generating_script → script_ready → generating_audio → ready
  */
@@ -75,6 +70,12 @@ export interface GenerationContext {
   generatedAt: string;
 }
 
+export interface ScriptSegment {
+  speaker: string;
+  line: string;
+  index: number;
+}
+
 export const podcast = pgTable(
   'podcast',
   {
@@ -85,14 +86,14 @@ export const podcast = pgTable(
     title: text('title').notNull(),
     description: text('description'),
     format: podcastFormatEnum('format').notNull(),
-    // Note: status moved to version level (podcastScript.status)
+
+    // Voice configuration
     hostVoice: text('hostVoice'),
     hostVoiceName: text('hostVoiceName'),
     coHostVoice: text('coHostVoice'),
     coHostVoiceName: text('coHostVoiceName'),
     promptInstructions: text('promptInstructions'),
     targetDurationMinutes: integer('targetDurationMinutes').default(5),
-    // Note: audioUrl/duration moved to version level
     tags: jsonb('tags').$type<string[]>().default([]),
 
     // Source documents used to generate this podcast
@@ -105,56 +106,19 @@ export const podcast = pgTable(
     // Generation context for audit trail
     generationContext: jsonb('generationContext').$type<GenerationContext>(),
 
-    createdBy: text('createdBy')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp('updatedAt', { mode: 'date', withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [index('podcast_createdBy_idx').on(table.createdBy)],
-);
-
-export interface ScriptSegment {
-  speaker: string;
-  line: string;
-  index: number;
-}
-
-export const podcastScript = pgTable(
-  'podcastScript',
-  {
-    id: varchar('id', { length: 20 })
-      .$type<ScriptVersionId>()
-      .$default(generateScriptVersionId)
-      .primaryKey(),
-    podcastId: varchar('podcastId', { length: 20 })
-      .$type<PodcastId>()
-      .notNull()
-      .references(() => podcast.id, { onDelete: 'cascade' }),
-    version: integer('version').notNull().default(1),
-    isActive: boolean('isActive').notNull().default(true),
-
-    // Version-level status
+    // === Script fields (flattened from podcastScript) ===
     status: versionStatusEnum('status').notNull().default('drafting'),
-    errorMessage: text('errorMessage'),
-
-    // Script content (nullable for draft state)
     segments: jsonb('segments').$type<ScriptSegment[]>(),
     summary: text('summary'),
     generationPrompt: text('generationPrompt'),
-
-    // Audio (generated in Phase 2)
     audioUrl: text('audioUrl'),
     duration: integer('duration'), // seconds
+    errorMessage: text('errorMessage'),
+    ownerHasApproved: boolean('ownerHasApproved').notNull().default(false),
 
     createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-
     createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -163,9 +127,8 @@ export const podcastScript = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index('podcastScript_podcastId_idx').on(table.podcastId),
-    index('podcastScript_status_idx').on(table.status),
-    index('podcastScript_createdBy_idx').on(table.createdBy),
+    index('podcast_createdBy_idx').on(table.createdBy),
+    index('podcast_status_idx').on(table.status),
   ],
 );
 
@@ -274,85 +237,6 @@ export const GenerationContextOutputSchema = Schema.Struct({
   generatedAt: Schema.String,
 });
 
-export const PodcastOutputSchema = Schema.Struct({
-  id: PodcastIdSchema,
-  title: Schema.String,
-  description: Schema.NullOr(Schema.String),
-  format: PodcastFormatSchema,
-  // Note: status moved to version level (activeVersion.status)
-  hostVoice: Schema.NullOr(Schema.String),
-  hostVoiceName: Schema.NullOr(Schema.String),
-  coHostVoice: Schema.NullOr(Schema.String),
-  coHostVoiceName: Schema.NullOr(Schema.String),
-  promptInstructions: Schema.NullOr(Schema.String),
-  targetDurationMinutes: Schema.NullOr(Schema.Number),
-  // Note: audioUrl/duration moved to version level
-  tags: Schema.Array(Schema.String),
-  sourceDocumentIds: Schema.Array(DocumentIdSchema),
-  generationContext: Schema.NullOr(GenerationContextOutputSchema),
-  createdBy: Schema.String,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-
-export const PodcastScriptOutputSchema = Schema.Struct({
-  id: ScriptVersionIdSchema,
-  podcastId: PodcastIdSchema,
-  version: Schema.Number,
-  isActive: Schema.Boolean,
-
-  // Version-level status
-  status: VersionStatusSchema,
-  errorMessage: Schema.NullOr(Schema.String),
-
-  // Script content (nullable for draft state)
-  segments: Schema.NullOr(
-    Schema.Array(
-      Schema.Struct({
-        speaker: Schema.String,
-        line: Schema.String,
-        index: Schema.Number,
-      }),
-    ),
-  ),
-  summary: Schema.NullOr(Schema.String),
-  generationPrompt: Schema.NullOr(Schema.String),
-
-  // Audio
-  audioUrl: Schema.NullOr(Schema.String),
-  duration: Schema.NullOr(Schema.Number),
-
-  // Denormalized from podcast for efficient user-scoped queries
-  createdBy: Schema.String,
-
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-
-export const PodcastFullOutputSchema = Schema.Struct({
-  ...PodcastOutputSchema.fields,
-  documents: Schema.Array(DocumentOutputSchema),
-  activeVersion: Schema.NullOr(PodcastScriptOutputSchema),
-});
-
-/**
- * Active version summary schema for list views (lightweight).
- */
-export const ActiveVersionSummarySchema = Schema.Struct({
-  id: ScriptVersionIdSchema,
-  version: Schema.Number,
-  status: VersionStatusSchema,
-  duration: Schema.NullOr(Schema.Number),
-});
-
-/**
- * Podcast list item output schema (podcast + active version summary).
- */
-export const PodcastListItemOutputSchema = Schema.Struct({
-  ...PodcastOutputSchema.fields,
-  activeVersion: Schema.NullOr(ActiveVersionSummarySchema),
-});
-
 /**
  * Script segment schema for API contracts.
  */
@@ -362,18 +246,64 @@ export const ScriptSegmentSchema = Schema.Struct({
   index: Schema.Number,
 });
 
+export const PodcastOutputSchema = Schema.Struct({
+  id: PodcastIdSchema,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  format: PodcastFormatSchema,
+
+  // Voice configuration
+  hostVoice: Schema.NullOr(Schema.String),
+  hostVoiceName: Schema.NullOr(Schema.String),
+  coHostVoice: Schema.NullOr(Schema.String),
+  coHostVoiceName: Schema.NullOr(Schema.String),
+  promptInstructions: Schema.NullOr(Schema.String),
+  targetDurationMinutes: Schema.NullOr(Schema.Number),
+  tags: Schema.Array(Schema.String),
+  sourceDocumentIds: Schema.Array(DocumentIdSchema),
+  generationContext: Schema.NullOr(GenerationContextOutputSchema),
+
+  // Script fields (flattened)
+  status: VersionStatusSchema,
+  segments: Schema.NullOr(Schema.Array(ScriptSegmentSchema)),
+  summary: Schema.NullOr(Schema.String),
+  generationPrompt: Schema.NullOr(Schema.String),
+  audioUrl: Schema.NullOr(Schema.String),
+  duration: Schema.NullOr(Schema.Number),
+  errorMessage: Schema.NullOr(Schema.String),
+  ownerHasApproved: Schema.Boolean,
+
+  createdBy: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+});
+
+/**
+ * Full podcast output schema (podcast + documents).
+ */
+export const PodcastFullOutputSchema = Schema.Struct({
+  ...PodcastOutputSchema.fields,
+  documents: Schema.Array(DocumentOutputSchema),
+});
+
+/**
+ * Podcast list item output schema (podcast with status and duration).
+ */
+export const PodcastListItemOutputSchema = Schema.Struct({
+  ...PodcastOutputSchema.fields,
+});
+
 // =============================================================================
 // Types
 // =============================================================================
 
 export type Podcast = typeof podcast.$inferSelect;
-export type PodcastScript = typeof podcastScript.$inferSelect;
 export type PodcastFormat = Podcast['format'];
-export type VersionStatus = PodcastScript['status'];
+export type VersionStatus = Podcast['status'];
 export type GenerationContextOutput = typeof GenerationContextOutputSchema.Type;
 export type PodcastOutput = typeof PodcastOutputSchema.Type;
-export type PodcastScriptOutput = typeof PodcastScriptOutputSchema.Type;
 export type PodcastFullOutput = typeof PodcastFullOutputSchema.Type;
+export type PodcastListItemOutput = typeof PodcastListItemOutputSchema.Type;
 export type CreatePodcast = typeof CreatePodcastSchema.Type;
 export type UpdatePodcast = typeof UpdatePodcastSchema.Type;
 export type UpdateScript = typeof UpdateScriptSchema.Type;
@@ -384,6 +314,7 @@ export type UpdateScript = typeof UpdateScriptSchema.Type;
 
 /**
  * Pure transform for Podcast → PodcastOutput.
+ * Includes all flattened script fields.
  */
 const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   id: podcast.id,
@@ -399,86 +330,42 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
   generationContext: podcast.generationContext ?? null,
+  // Script fields (flattened)
+  status: podcast.status,
+  segments: podcast.segments ?? null,
+  summary: podcast.summary ?? null,
+  generationPrompt: podcast.generationPrompt ?? null,
+  audioUrl: podcast.audioUrl ?? null,
+  duration: podcast.duration ?? null,
+  errorMessage: podcast.errorMessage ?? null,
+  ownerHasApproved: podcast.ownerHasApproved,
   createdBy: podcast.createdBy,
   createdAt: podcast.createdAt.toISOString(),
   updatedAt: podcast.updatedAt.toISOString(),
 });
 
 /**
- * Pure transform for PodcastScript → PodcastScriptOutput.
- */
-const podcastScriptTransform = (
-  script: PodcastScript,
-): PodcastScriptOutput => ({
-  id: script.id,
-  podcastId: script.podcastId,
-  version: script.version,
-  isActive: script.isActive,
-  status: script.status,
-  errorMessage: script.errorMessage,
-  segments: script.segments,
-  summary: script.summary,
-  generationPrompt: script.generationPrompt,
-  audioUrl: script.audioUrl,
-  duration: script.duration,
-  createdBy: script.createdBy,
-  createdAt: script.createdAt.toISOString(),
-  updatedAt: script.updatedAt.toISOString(),
-});
-
-/**
- * Active version summary for list views.
- */
-export interface ActiveVersionSummary {
-  id: ScriptVersionId;
-  version: number;
-  status: VersionStatus;
-  duration: number | null;
-}
-
-/**
- * Podcast list item output type.
- */
-export interface PodcastListItemOutput extends PodcastOutput {
-  activeVersion: ActiveVersionSummary | null;
-}
-
-/**
  * Input type for full podcast serialization.
  */
-type PodcastWithRelations = Podcast & {
+type PodcastWithDocuments = Podcast & {
   documents: Document[];
-  activeVersion: PodcastScript | null;
 };
 
 /**
- * Input type for list item serialization.
- */
-type PodcastWithVersion = Podcast & {
-  activeVersion: ActiveVersionSummary | null;
-};
-
-/**
- * Pure transform for full Podcast with documents and active version.
+ * Pure transform for full Podcast with documents.
  */
 const podcastFullTransform = (
-  podcast: PodcastWithRelations,
+  podcast: PodcastWithDocuments,
 ): PodcastFullOutput => ({
   ...podcastTransform(podcast),
   documents: podcast.documents.map(serializeDocument),
-  activeVersion: podcast.activeVersion
-    ? podcastScriptTransform(podcast.activeVersion)
-    : null,
 });
 
 /**
- * Pure transform for Podcast list item with active version summary.
+ * Pure transform for Podcast list item.
  */
-const podcastListItemTransform = (
-  podcast: PodcastWithVersion,
-): PodcastListItemOutput => ({
+const podcastListItemTransform = (podcast: Podcast): PodcastListItemOutput => ({
   ...podcastTransform(podcast),
-  activeVersion: podcast.activeVersion,
 });
 
 // =============================================================================
@@ -502,26 +389,7 @@ export const serializePodcastsEffect = createBatchEffectSerializer(
 /** Sync serializer for simple cases. */
 export const serializePodcast = createSyncSerializer(podcastTransform);
 
-// --- PodcastScript ---
-
-/** Effect-based serializer with tracing. */
-export const serializePodcastScriptEffect = createEffectSerializer(
-  'podcastScript',
-  podcastScriptTransform,
-);
-
-/** Batch serializer for multiple scripts. */
-export const serializePodcastScriptsEffect = createBatchEffectSerializer(
-  'podcastScript',
-  podcastScriptTransform,
-);
-
-/** Sync serializer for simple cases. */
-export const serializePodcastScript = createSyncSerializer(
-  podcastScriptTransform,
-);
-
-// --- PodcastFull (with documents and active version) ---
+// --- PodcastFull (with documents) ---
 
 /** Effect-based serializer with tracing. */
 export const serializePodcastFullEffect = createEffectSerializer(
@@ -532,7 +400,7 @@ export const serializePodcastFullEffect = createEffectSerializer(
 /** Sync serializer for simple cases. */
 export const serializePodcastFull = createSyncSerializer(podcastFullTransform);
 
-// --- PodcastListItem (with active version summary) ---
+// --- PodcastListItem ---
 
 /** Effect-based serializer with tracing. */
 export const serializePodcastListItemEffect = createEffectSerializer(

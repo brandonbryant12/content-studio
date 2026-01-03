@@ -33,14 +33,9 @@ export function useOptimisticGeneration(podcastId: string) {
 
       return {
         ...current,
-        activeVersion: current.activeVersion
-          ? {
-              ...current.activeVersion,
-              status: 'drafting' as const,
-              segments: null,
-              audioUrl: null,
-            }
-          : null,
+        status: 'drafting' as const,
+        segments: null,
+        audioUrl: null,
       };
     },
 

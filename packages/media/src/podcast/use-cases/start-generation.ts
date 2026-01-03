@@ -3,7 +3,6 @@ import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { ScriptVersionRepo } from '../repos/script-version-repo';
 
 // =============================================================================
 // Types
@@ -29,7 +28,7 @@ export interface StartGenerationResult {
  * This use case:
  * 1. Verifies podcast exists and user has access
  * 2. Checks for existing pending/processing job (idempotency)
- * 3. Updates or creates a drafting version
+ * 3. Updates podcast status to drafting
  * 4. Enqueues the combined generation job
  *
  * @example
@@ -42,7 +41,6 @@ export interface StartGenerationResult {
 export const startGeneration = (input: StartGenerationInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-    const scriptVersionRepo = yield* ScriptVersionRepo;
     const queue = yield* Queue;
 
     // 1. Verify podcast exists and user has access
@@ -57,22 +55,8 @@ export const startGeneration = (input: StartGenerationInput) =>
       };
     }
 
-    // 3. Get active version and update its status, or create a new drafting version
-    const activeVersion = yield* scriptVersionRepo.findActiveByPodcastId(
-      podcast.id,
-    );
-    if (activeVersion) {
-      yield* scriptVersionRepo.updateStatus(activeVersion.id, 'drafting');
-    } else {
-      // Create a new drafting version for brand new podcasts
-      // This ensures isSetupMode() returns false after generate is called
-      yield* scriptVersionRepo.insert({
-        podcastId: podcast.id,
-        createdBy: podcast.createdBy,
-        status: 'drafting',
-        segments: null,
-      });
-    }
+    // 3. Update podcast status to drafting
+    yield* podcastRepo.updateStatus(podcast.id, 'drafting');
 
     // 4. Enqueue the combined generation job
     const payload: GeneratePodcastPayload = {

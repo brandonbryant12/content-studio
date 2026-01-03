@@ -3,16 +3,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createTestUser,
   createTestPodcast,
-  createTestPodcastScript,
   resetPodcastCounters,
 } from '@repo/testing';
-import type { Podcast, PodcastScript } from '@repo/db/schema';
+import type { Podcast } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import {
   PodcastRepo,
   type PodcastRepoService,
   type ListOptions,
-  type PodcastWithActiveVersionSummary,
 } from '../../repos/podcast-repo';
 import { listPodcasts } from '../list-podcasts';
 
@@ -22,7 +20,6 @@ import { listPodcasts } from '../list-podcasts';
 
 interface MockRepoState {
   podcasts: Podcast[];
-  versions: PodcastScript[];
 }
 
 const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
@@ -31,11 +28,15 @@ const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
   findByIdFull: () => Effect.die('Not implemented in mock'),
   update: () => Effect.die('Not implemented in mock'),
   delete: () => Effect.die('Not implemented in mock'),
-  list: () => Effect.die('Not implemented in mock'),
   verifyDocumentsExist: () => Effect.die('Not implemented in mock'),
   updateGenerationContext: () => Effect.die('Not implemented in mock'),
+  updateStatus: () => Effect.die('Not implemented in mock'),
+  updateScript: () => Effect.die('Not implemented in mock'),
+  updateAudio: () => Effect.die('Not implemented in mock'),
+  clearAudio: () => Effect.die('Not implemented in mock'),
+  clearApprovals: () => Effect.die('Not implemented in mock'),
 
-  listWithActiveVersionSummary: (options: ListOptions) =>
+  list: (options: ListOptions) =>
     Effect.succeed(
       state.podcasts
         .filter((pod) => {
@@ -47,23 +48,7 @@ const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
         .slice(
           options.offset ?? 0,
           (options.offset ?? 0) + (options.limit ?? 50),
-        )
-        .map((pod): PodcastWithActiveVersionSummary => {
-          const version = state.versions.find(
-            (v) => v.podcastId === pod.id && v.isActive,
-          );
-          return {
-            ...pod,
-            activeVersion: version
-              ? {
-                  id: version.id,
-                  version: version.version,
-                  status: version.status,
-                  duration: version.duration,
-                }
-              : null,
-          };
-        }),
+        ),
     ),
 
   count: (options?: ListOptions) =>
@@ -100,25 +85,20 @@ describe('listPodcasts', () => {
   });
 
   describe('basic listing', () => {
-    it('returns paginated podcasts with active version summary', async () => {
+    it('returns paginated podcasts with status and duration', async () => {
       const user = createTestUser();
-      const podcast1 = createTestPodcast({ createdBy: user.id });
-      const podcast2 = createTestPodcast({ createdBy: user.id });
-      const version1 = createTestPodcastScript({
-        podcastId: podcast1.id,
-        isActive: true,
+      const podcast1 = createTestPodcast({
+        createdBy: user.id,
         status: 'ready',
         duration: 300,
       });
-      const version2 = createTestPodcastScript({
-        podcastId: podcast2.id,
-        isActive: true,
+      const podcast2 = createTestPodcast({
+        createdBy: user.id,
         status: 'drafting',
       });
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts: [podcast1, podcast2],
-        versions: [version1, version2],
       });
 
       const effect = listPodcasts({ userId: user.id }).pipe(
@@ -131,11 +111,10 @@ describe('listPodcasts', () => {
       expect(result.total).toBe(2);
       expect(result.hasMore).toBe(false);
 
-      // Verify active version summary is included
+      // Verify status and duration are directly on podcast
       const first = result.podcasts[0]!;
-      expect(first.activeVersion).not.toBeNull();
-      expect(first.activeVersion?.status).toBe('ready');
-      expect(first.activeVersion?.duration).toBe(300);
+      expect(first.status).toBe('ready');
+      expect(first.duration).toBe(300);
     });
 
     it('returns empty list when no podcasts exist', async () => {
@@ -143,7 +122,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts: [],
-        versions: [],
       });
 
       const effect = listPodcasts({ userId: user.id }).pipe(
@@ -157,13 +135,12 @@ describe('listPodcasts', () => {
       expect(result.hasMore).toBe(false);
     });
 
-    it('returns podcasts with null activeVersion when no active version exists', async () => {
+    it('returns podcasts with drafting status by default', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({ createdBy: user.id });
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts: [podcast],
-        versions: [], // No versions
       });
 
       const effect = listPodcasts({ userId: user.id }).pipe(
@@ -173,7 +150,7 @@ describe('listPodcasts', () => {
       const result = await Effect.runPromise(effect);
 
       expect(result.podcasts).toHaveLength(1);
-      expect(result.podcasts[0]!.activeVersion).toBeNull();
+      expect(result.podcasts[0]!.status).toBe('drafting');
     });
   });
 
@@ -186,7 +163,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts,
-        versions: [],
       });
 
       const effect = listPodcasts({
@@ -211,7 +187,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts,
-        versions: [],
       });
 
       const effect = listPodcasts({
@@ -236,7 +211,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts,
-        versions: [],
       });
 
       const effect = listPodcasts({
@@ -261,7 +235,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts,
-        versions: [],
       });
 
       const effect = listPodcasts({ userId: user.id }).pipe(
@@ -285,7 +258,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts: [podcast1, podcast2],
-        versions: [],
       });
 
       const effect = listPodcasts({ userId: user1.id }).pipe(
@@ -307,7 +279,6 @@ describe('listPodcasts', () => {
 
       const mockRepoLayer = createMockPodcastRepoLayer({
         podcasts: [podcast1, podcast2],
-        versions: [],
       });
 
       const effect = listPodcasts({}).pipe(

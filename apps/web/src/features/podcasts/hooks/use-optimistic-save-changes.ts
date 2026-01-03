@@ -46,14 +46,9 @@ export function useOptimisticSaveChanges(podcastId: string) {
 
       return {
         ...current,
-        activeVersion: current.activeVersion
-          ? {
-              ...current.activeVersion,
-              status: 'generating_audio' as const,
-              segments: variables.segments ?? current.activeVersion.segments,
-              audioUrl: null,
-            }
-          : null,
+        status: 'generating_audio' as const,
+        segments: variables.segments ?? current.segments,
+        audioUrl: null,
       };
     },
 

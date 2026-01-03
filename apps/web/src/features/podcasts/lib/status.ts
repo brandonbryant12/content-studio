@@ -6,7 +6,7 @@ import type { RouterOutput } from '@repo/api/client';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
-// Version-level status (status is on activeVersion, not podcast)
+// Podcast status (now directly on the podcast object)
 export type VersionStatus = DbVersionStatus;
 
 interface StatusConfig {
@@ -98,7 +98,7 @@ export function isSetupMode(podcast: PodcastFull): boolean {
   // Has generation ever been started?
   const hasGenerationContext = podcast.generationContext !== null;
   // Has script content?
-  const hasScript = Boolean(podcast.activeVersion?.segments?.length);
+  const hasScript = Boolean(podcast.segments?.length);
 
   // Show setup wizard only for completely unconfigured podcasts
   // Exit setup mode as soon as ANY of these conditions is true

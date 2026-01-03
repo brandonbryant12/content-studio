@@ -4,7 +4,6 @@ import {
   createPodcast,
   updatePodcast,
   deletePodcast,
-  getActiveScript,
   startGeneration,
   saveAndQueueAudio,
   getJob,
@@ -16,7 +15,6 @@ import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
   serializePodcast,
-  serializePodcastScript,
   serializePodcastFull,
   serializePodcastListItem,
 } from '@repo/db/schema';
@@ -101,16 +99,12 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getPodcast({ podcastId: input.id, includeVersion: true }).pipe(
-          Effect.map((podcast) => {
-            const p = podcast as Parameters<typeof serializePodcastFull>[0] & {
-              activeVersion?: unknown;
-            };
-            return serializePodcastFull({
-              ...p,
-              activeVersion: p.activeVersion ?? null,
-            });
-          }),
+        getPodcast({ podcastId: input.id, includeDocuments: true }).pipe(
+          Effect.map((podcast) =>
+            serializePodcastFull(
+              podcast as Parameters<typeof serializePodcastFull>[0],
+            ),
+          ),
         ),
         errors as unknown as ErrorFactory,
         {
@@ -175,23 +169,6 @@ const podcastRouter = {
         errors as unknown as ErrorFactory,
         {
           span: 'api.podcasts.delete',
-          attributes: { 'podcast.id': input.id },
-        },
-      );
-    },
-  ),
-
-  getScript: protectedProcedure.podcasts.getScript.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        getActiveScript({ podcastId: input.id }).pipe(
-          Effect.map(serializePodcastScript),
-        ),
-        errors as unknown as ErrorFactory,
-        {
-          span: 'api.podcasts.getScript',
           attributes: { 'podcast.id': input.id },
         },
       );

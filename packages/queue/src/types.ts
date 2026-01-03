@@ -25,7 +25,7 @@ export interface GeneratePodcastPayload {
 }
 
 export interface GeneratePodcastResult {
-  readonly scriptId: string;
+  readonly podcastId: string;
   readonly segmentCount: number;
   readonly audioUrl: string;
   readonly duration: number;
@@ -38,12 +38,12 @@ export interface GenerateScriptPayload {
 }
 
 export interface GenerateScriptResult {
-  readonly scriptId: string;
+  readonly podcastId: string;
   readonly segmentCount: number;
 }
 
 export interface GenerateAudioPayload {
-  readonly versionId: string;
+  readonly podcastId: string;
   readonly userId: string;
 }
 

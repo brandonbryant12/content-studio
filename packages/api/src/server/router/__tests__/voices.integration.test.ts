@@ -101,7 +101,10 @@ const createTestRuntime = (
     policyLayer,
   );
 
-  return ManagedRuntime.make(allLayers);
+  // Type assertion needed because Layer type inference doesn't perfectly match ServerRuntime
+  // The test runtime only includes the services needed for voice operations
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ManagedRuntime.make(allLayers as any) as ServerRuntime;
 };
 
 /**

@@ -3,22 +3,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createTestUser,
   createTestPodcast,
-  createTestPodcastScript,
   resetAllFactories,
 } from '@repo/testing';
-import type { Podcast, PodcastScript, JobId, JobStatus } from '@repo/db/schema';
+import type { Podcast, JobId, JobStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { PodcastNotFound, ScriptNotFound } from '../../../errors';
+import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastFull,
 } from '../../repos/podcast-repo';
-import {
-  ScriptVersionRepo,
-  type ScriptVersionRepoService,
-} from '../../repos/script-version-repo';
 import {
   saveAndQueueAudio,
   NoChangesToSaveError,
@@ -34,7 +28,6 @@ const MockDbLive = Layer.succeed(Db, { db: {} as never });
 
 interface MockState {
   podcast?: Podcast;
-  activeVersion?: PodcastScript | null;
   pendingJob?: Job | null;
 }
 
@@ -56,15 +49,9 @@ const createMockPodcastRepo = (
         if (!state.podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const full: PodcastFull = {
-          ...state.podcast,
-          documents: [],
-          activeVersion: state.activeVersion ?? null,
-        };
-        return Effect.succeed(full);
+        return Effect.succeed({ ...state.podcast, documents: [] });
       }),
     list: () => Effect.die('not implemented'),
-    listWithActiveVersionSummary: () => Effect.die('not implemented'),
     insert: () => Effect.die('not implemented'),
     update: (id, data) =>
       Effect.sync(() => {
@@ -75,37 +62,23 @@ const createMockPodcastRepo = (
     count: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     verifyDocumentsExist: () => Effect.die('not implemented'),
+    updateStatus: (id, status) =>
+      Effect.sync(() => ({ ...state.podcast!, status }) as Podcast),
+    updateScript: (id, opts) =>
+      Effect.sync(() => ({ ...state.podcast!, ...opts }) as Podcast),
+    updateAudio: (id, opts) =>
+      Effect.sync(() => ({ ...state.podcast!, ...opts }) as Podcast),
+    clearAudio: (id) =>
+      Effect.sync(
+        () => ({ ...state.podcast!, audioUrl: null, duration: null }) as Podcast,
+      ),
+    clearApprovals: (id) =>
+      Effect.sync(
+        () => ({ ...state.podcast!, ownerHasApproved: false }) as Podcast,
+      ),
   };
 
   return Layer.succeed(PodcastRepo, service);
-};
-
-const createMockScriptVersionRepo = (
-  state: MockState,
-  options?: {
-    onUpdate?: (id: string, data: Partial<PodcastScript>) => void;
-  },
-): Layer.Layer<ScriptVersionRepo> => {
-  const service: ScriptVersionRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findActiveByPodcastId: () => Effect.succeed(state.activeVersion ?? null),
-    update: (id, data) =>
-      Effect.sync(() => {
-        options?.onUpdate?.(id, data);
-        return {
-          ...state.activeVersion!,
-          ...data,
-          segments: data.segments ?? state.activeVersion!.segments,
-          status: data.status ?? state.activeVersion!.status,
-        };
-      }),
-    updateStatus: () => Effect.die('not implemented'),
-    deactivateAll: () => Effect.die('not implemented'),
-    getNextVersion: () => Effect.die('not implemented'),
-    insert: () => Effect.die('not implemented'),
-  };
-
-  return Layer.succeed(ScriptVersionRepo, service);
 };
 
 const createMockQueue = (
@@ -156,9 +129,8 @@ describe('saveAndQueueAudio', () => {
   describe('happy path', () => {
     it('saves changes and enqueues audio generation job', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
+      const podcast = createTestPodcast({
+        createdBy: user.id,
         status: 'ready',
         segments: [{ speaker: 'Host', line: 'Original line', index: 0 }],
       });
@@ -166,8 +138,7 @@ describe('saveAndQueueAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion }),
-        createMockScriptVersionRepo({ podcast, activeVersion }),
+        createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
       );
 
@@ -184,7 +155,7 @@ describe('saveAndQueueAudio', () => {
       expect(enqueueSpy).toHaveBeenCalledWith(
         'generate-audio',
         expect.objectContaining({
-          versionId: activeVersion.id,
+          podcastId: podcast.id,
           userId: user.id,
         }),
         user.id,
@@ -195,22 +166,15 @@ describe('saveAndQueueAudio', () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,
-        hostVoice: 'Kore',
-      });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
         status: 'ready',
+        hostVoice: 'Kore',
       });
       const podcastUpdateSpy = vi.fn();
       const enqueueSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo(
-          { podcast, activeVersion },
-          { onUpdate: podcastUpdateSpy },
-        ),
-        createMockScriptVersionRepo({ podcast, activeVersion }),
+        createMockPodcastRepo({ podcast }, { onUpdate: podcastUpdateSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
       );
 
@@ -236,16 +200,15 @@ describe('saveAndQueueAudio', () => {
   describe('idempotency', () => {
     it('returns existing pending job instead of creating new one', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
+      const podcast = createTestPodcast({
+        createdBy: user.id,
         status: 'ready',
       });
       const existingJob: Job = {
         id: 'job_existing' as JobId,
         type: 'generate-audio',
         status: 'pending',
-        payload: { versionId: activeVersion.id },
+        payload: { podcastId: podcast.id },
         result: null,
         error: null,
         createdBy: user.id,
@@ -258,8 +221,7 @@ describe('saveAndQueueAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion }),
-        createMockScriptVersionRepo({ podcast, activeVersion }),
+        createMockPodcastRepo({ podcast }),
         createMockQueue(
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
@@ -284,7 +246,6 @@ describe('saveAndQueueAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({}),
-        createMockScriptVersionRepo({}),
         createMockQueue({}),
       );
 
@@ -302,43 +263,16 @@ describe('saveAndQueueAudio', () => {
       }
     });
 
-    it('fails when no active version exists', async () => {
-      const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion: null }),
-        createMockScriptVersionRepo({ podcast, activeVersion: null }),
-        createMockQueue({ podcast }),
-      );
-
-      const result = await Effect.runPromiseExit(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          segments: [{ speaker: 'Host', line: 'Test', index: 0 }],
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ScriptNotFound);
-      }
-    });
-
     it('fails when status is not ready', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
+      const podcast = createTestPodcast({
+        createdBy: user.id,
         status: 'drafting', // Not 'ready'
       });
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion }),
-        createMockScriptVersionRepo({ podcast, activeVersion }),
+        createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
       );
 
@@ -359,16 +293,14 @@ describe('saveAndQueueAudio', () => {
 
     it('fails when no changes provided', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
+      const podcast = createTestPodcast({
+        createdBy: user.id,
         status: 'ready',
       });
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion }),
-        createMockScriptVersionRepo({ podcast, activeVersion }),
+        createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
       );
 

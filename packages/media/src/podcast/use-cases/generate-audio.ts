@@ -1,23 +1,19 @@
 import { Effect } from 'effect';
-import type { PodcastScript } from '@repo/db/schema';
+import type { Podcast, VersionStatus, ScriptSegment } from '@repo/db/schema';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { PodcastRepo } from '../repos/podcast-repo';
-import {
-  ScriptVersionRepo,
-  type VersionStatus,
-} from '../repos/script-version-repo';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface GenerateAudioInput {
-  versionId: string;
+  podcastId: string;
 }
 
 export interface GenerateAudioResult {
-  version: PodcastScript;
+  podcast: Podcast;
   audioUrl: string;
   duration: number;
 }
@@ -28,7 +24,7 @@ export interface GenerateAudioResult {
 export class InvalidAudioGenerationError {
   readonly _tag = 'InvalidAudioGenerationError';
   constructor(
-    readonly versionId: string,
+    readonly podcastId: string,
     readonly currentStatus: VersionStatus,
     readonly message: string,
   ) {}
@@ -39,105 +35,103 @@ export class InvalidAudioGenerationError {
 // =============================================================================
 
 /**
- * Generate audio for a podcast version.
+ * Generate audio for a podcast.
  *
  * This use case:
- * 1. Validates version is in 'script_ready' status
+ * 1. Validates podcast is in 'script_ready' status
  * 2. Updates status to 'generating_audio'
  * 3. Converts segments to TTS turns format
  * 4. Synthesizes audio via multi-speaker TTS
  * 5. Uploads to storage
- * 6. Updates version with audio URL and 'ready' status
+ * 6. Updates podcast with audio URL and 'ready' status
  *
  * @example
- * const result = yield* generateAudio({ versionId: 'version-123' });
+ * const result = yield* generateAudio({ podcastId: 'podcast-123' });
  */
 export const generateAudio = (input: GenerateAudioInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-    const scriptVersionRepo = yield* ScriptVersionRepo;
     const tts = yield* TTS;
     const storage = yield* Storage;
 
-    // 1. Load version and validate state
-    const version = yield* scriptVersionRepo.findById(input.versionId);
+    // 1. Load podcast and validate state
+    const podcast = yield* podcastRepo.findById(input.podcastId);
 
-    if (version.status !== 'script_ready') {
+    if (podcast.status !== 'script_ready') {
       return yield* Effect.fail(
         new InvalidAudioGenerationError(
-          input.versionId,
-          version.status,
-          `Cannot generate audio from status '${version.status}'. Version must be in 'script_ready' status.`,
+          input.podcastId,
+          podcast.status,
+          `Cannot generate audio from status '${podcast.status}'. Podcast must be in 'script_ready' status.`,
         ),
       );
     }
 
-    if (!version.segments || version.segments.length === 0) {
+    if (!podcast.segments || podcast.segments.length === 0) {
       return yield* Effect.fail(
         new InvalidAudioGenerationError(
-          input.versionId,
-          version.status,
-          'Version has no script segments to generate audio from.',
+          input.podcastId,
+          podcast.status,
+          'Podcast has no script segments to generate audio from.',
         ),
       );
     }
 
-    // 2. Load podcast for voice configuration
-    const podcast = yield* podcastRepo.findById(version.podcastId);
+    // 2. Update status to generating
+    yield* podcastRepo.updateStatus(input.podcastId, 'generating_audio');
 
-    // 3. Update status to generating
-    yield* scriptVersionRepo.updateStatus(input.versionId, 'generating_audio');
-
-    // 4. Determine voices (from podcast config)
+    // 3. Determine voices (from podcast config)
     const hostVoice = podcast.hostVoice ?? 'Charon';
     const coHostVoice = podcast.coHostVoice ?? 'Kore';
 
-    // 5. Convert segments to TTS format
-    const turns: SpeakerTurn[] = version.segments.map((segment) => ({
-      speaker: segment.speaker.toLowerCase().includes('host')
-        ? 'host'
-        : 'cohost',
-      text: segment.line,
-    }));
+    // 4. Convert segments to TTS format
+    const turns: SpeakerTurn[] = podcast.segments.map(
+      (segment: ScriptSegment) => ({
+        speaker: segment.speaker.toLowerCase().includes('host')
+          ? 'host'
+          : 'cohost',
+        text: segment.line,
+      }),
+    );
 
     const voiceConfigs: SpeakerVoiceConfig[] = [
       { speakerAlias: 'host', voiceId: hostVoice },
       { speakerAlias: 'cohost', voiceId: coHostVoice },
     ];
 
-    // 6. Synthesize audio
+    // 5. Synthesize audio
     const ttsResult = yield* tts.synthesize({
       turns,
       voiceConfigs,
     });
 
-    // 7. Upload to storage
-    const audioKey = `podcasts/${version.podcastId}/audio-v${version.version}.wav`;
+    // 6. Upload to storage
+    const audioKey = `podcasts/${podcast.id}/audio.wav`;
     yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
     const audioUrl = yield* storage.getUrl(audioKey);
 
-    // 8. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
+    // 7. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
     const duration = Math.round(ttsResult.audioContent.length / 48000);
 
-    // 9. Update version with audio URL and ready status
-    const updatedVersion = yield* scriptVersionRepo.update(input.versionId, {
-      status: 'ready' as VersionStatus,
-      audioUrl,
-      duration,
-    });
+    // 8. Update podcast with audio URL and ready status
+    yield* podcastRepo.updateAudio(input.podcastId, { audioUrl, duration });
+    const updatedPodcast = yield* podcastRepo.updateStatus(
+      input.podcastId,
+      'ready',
+    );
 
     return {
-      version: updatedVersion,
+      podcast: updatedPodcast,
       audioUrl,
       duration,
     };
   }).pipe(
     Effect.catchTag('TTSError', (error) =>
-      // On TTS failure, mark version as failed
+      // On TTS failure, mark podcast as failed
       Effect.gen(function* () {
-        const scriptVersionRepo = yield* ScriptVersionRepo;
-        yield* scriptVersionRepo.updateStatus(
-          input.versionId,
+        const podcastRepo = yield* PodcastRepo;
+        yield* podcastRepo.updateStatus(
+          input.podcastId,
           'failed',
           error.message,
         );
@@ -145,6 +139,6 @@ export const generateAudio = (input: GenerateAudioInput) =>
       }),
     ),
     Effect.withSpan('useCase.generateAudio', {
-      attributes: { 'version.id': input.versionId },
+      attributes: { 'podcast.id': input.podcastId },
     }),
   );

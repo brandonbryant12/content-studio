@@ -1,17 +1,16 @@
 import { Context, Effect, Layer } from 'effect';
 import {
   podcast,
-  podcastScript,
   document,
   type Podcast,
-  type PodcastScript,
   type CreatePodcast,
   type UpdatePodcast,
   type GenerationContext,
   type Document,
-  type ActiveVersionSummary,
   type PodcastId,
   type DocumentId,
+  type VersionStatus,
+  type ScriptSegment,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { PodcastNotFound, DocumentNotFound } from '../../errors';
@@ -29,24 +28,6 @@ export interface PodcastWithDocuments extends Podcast {
 }
 
 /**
- * Podcast with resolved documents and active version.
- */
-export interface PodcastFull extends PodcastWithDocuments {
-  activeVersion: PodcastScript | null;
-}
-
-/**
- * Podcast with active version summary for list views.
- */
-export interface PodcastWithActiveVersionSummary extends Podcast {
-  activeVersion: ActiveVersionSummary | null;
-}
-
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
  * Options for listing podcasts.
  */
 export interface ListOptions {
@@ -55,6 +36,23 @@ export interface ListOptions {
   createdBy?: string;
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Options for updating script content.
+ */
+export interface UpdateScriptOptions {
+  segments?: ScriptSegment[];
+  summary?: string;
+  generationPrompt?: string;
+}
+
+/**
+ * Options for updating audio.
+ */
+export interface UpdateAudioOptions {
+  audioUrl: string;
+  duration: number;
 }
 
 // =============================================================================
@@ -87,11 +85,11 @@ export interface PodcastRepoService {
   ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Find podcast by ID with resolved documents and active version.
+   * Find podcast by ID with resolved documents (full podcast data).
    */
   readonly findByIdFull: (
     id: string,
-  ) => Effect.Effect<PodcastFull, PodcastNotFound | DatabaseError, Db>;
+  ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
 
   /**
    * Update podcast by ID.
@@ -102,7 +100,7 @@ export interface PodcastRepoService {
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Delete podcast by ID (cascade deletes versions).
+   * Delete podcast by ID.
    */
   readonly delete: (id: string) => Effect.Effect<boolean, DatabaseError, Db>;
 
@@ -112,17 +110,6 @@ export interface PodcastRepoService {
   readonly list: (
     options: ListOptions,
   ) => Effect.Effect<readonly Podcast[], DatabaseError, Db>;
-
-  /**
-   * List podcasts with active version summary (for list views).
-   */
-  readonly listWithActiveVersionSummary: (
-    options: ListOptions,
-  ) => Effect.Effect<
-    readonly PodcastWithActiveVersionSummary[],
-    DatabaseError,
-    Db
-  >;
 
   /**
    * Count podcasts with optional filters.
@@ -145,6 +132,45 @@ export interface PodcastRepoService {
   readonly updateGenerationContext: (
     id: string,
     generationContext: GenerationContext,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Update podcast status.
+   */
+  readonly updateStatus: (
+    id: string,
+    status: VersionStatus,
+    errorMessage?: string,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Update script content.
+   */
+  readonly updateScript: (
+    id: string,
+    options: UpdateScriptOptions,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Update audio after generation.
+   */
+  readonly updateAudio: (
+    id: string,
+    options: UpdateAudioOptions,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Clear audio for regeneration.
+   */
+  readonly clearAudio: (
+    id: string,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Clear approvals (set ownerHasApproved to false).
+   */
+  readonly clearApprovals: (
+    id: string,
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 }
 
@@ -251,21 +277,9 @@ const make: PodcastRepoService = {
         .map((id) => docMap.get(id))
         .filter((d): d is Document => d !== undefined);
 
-      const [activeVersion] = await db
-        .select()
-        .from(podcastScript)
-        .where(
-          and(
-            eq(podcastScript.podcastId, podcastId),
-            eq(podcastScript.isActive, true),
-          ),
-        )
-        .limit(1);
-
       return {
         ...pod,
         documents: sortedDocs,
-        activeVersion: activeVersion ?? null,
       };
     }).pipe(
       Effect.flatMap((result) =>
@@ -325,62 +339,6 @@ const make: PodcastRepoService = {
         .orderBy(desc(podcast.createdAt))
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0);
-    }),
-
-  listWithActiveVersionSummary: (options) =>
-    withDb('podcastRepo.listWithActiveVersionSummary', async (db) => {
-      const conditions = [];
-      if (options.createdBy) {
-        conditions.push(eq(podcast.createdBy, options.createdBy));
-      }
-
-      const pods = await db
-        .select()
-        .from(podcast)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(podcast.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0);
-
-      if (pods.length === 0) {
-        return [];
-      }
-
-      // Get active versions for all podcasts in one query
-      const podcastIds = pods.map((p) => p.id);
-      const activeVersions = await db
-        .select({
-          podcastId: podcastScript.podcastId,
-          id: podcastScript.id,
-          version: podcastScript.version,
-          status: podcastScript.status,
-          duration: podcastScript.duration,
-        })
-        .from(podcastScript)
-        .where(
-          and(
-            inArray(podcastScript.podcastId, podcastIds),
-            eq(podcastScript.isActive, true),
-          ),
-        );
-
-      // Create a map for quick lookup
-      const versionMap = new Map(
-        activeVersions.map((v) => [
-          v.podcastId,
-          {
-            id: v.id,
-            version: v.version,
-            status: v.status,
-            duration: v.duration,
-          },
-        ]),
-      );
-
-      return pods.map((p) => ({
-        ...p,
-        activeVersion: versionMap.get(p.id) ?? null,
-      }));
     }),
 
   count: (options) =>
@@ -446,6 +404,96 @@ const make: PodcastRepoService = {
         .update(podcast)
         .set({
           generationContext,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  updateStatus: (id, status, errorMessage) =>
+    withDb('podcastRepo.updateStatus', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          status,
+          errorMessage: errorMessage ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  updateScript: (id, options) =>
+    withDb('podcastRepo.updateScript', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          segments: options.segments,
+          summary: options.summary,
+          generationPrompt: options.generationPrompt,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  updateAudio: (id, options) =>
+    withDb('podcastRepo.updateAudio', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          audioUrl: options.audioUrl,
+          duration: options.duration,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  clearAudio: (id) =>
+    withDb('podcastRepo.clearAudio', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          audioUrl: null,
+          duration: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  clearApprovals: (id) =>
+    withDb('podcastRepo.clearApprovals', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          ownerHasApproved: false,
           updatedAt: new Date(),
         })
         .where(eq(podcast.id, id as PodcastId))

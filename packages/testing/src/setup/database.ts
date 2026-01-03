@@ -147,7 +147,6 @@ export const cleanTestDatabase = async (config: TestDatabaseConfig = {}) => {
   const { db, close } = createTestDatabase(config);
 
   // Delete in reverse order of dependencies
-  await db.delete(schema.podcastScript);
   await db.delete(schema.podcast);
   await db.delete(schema.document);
   await db.delete(schema.job);

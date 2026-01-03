@@ -1,12 +1,8 @@
 import { Effect, Schema } from 'effect';
-import type { PodcastScript } from '@repo/db/schema';
+import type { Podcast } from '@repo/db/schema';
 import { LLM } from '@repo/ai/llm';
 import { getDocumentContent } from '../../document';
 import { PodcastRepo } from '../repos/podcast-repo';
-import {
-  ScriptVersionRepo,
-  type VersionStatus,
-} from '../repos/script-version-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
 
 // =============================================================================
@@ -15,12 +11,11 @@ import { buildSystemPrompt, buildUserPrompt } from '../prompts';
 
 export interface GenerateScriptInput {
   podcastId: string;
-  versionId?: string; // If provided, update this version; otherwise create new
   promptInstructions?: string;
 }
 
 export interface GenerateScriptResult {
-  version: PodcastScript;
+  podcast: Podcast;
   segmentCount: number;
 }
 
@@ -49,15 +44,14 @@ const ScriptOutputSchema = Schema.Struct({
 // =============================================================================
 
 /**
- * Generate script content for a podcast version.
+ * Generate script content for a podcast.
  *
  * This use case:
  * 1. Loads the podcast and its documents
- * 2. Creates or updates a version in 'drafting' status
- * 3. Sets status to 'generating_script'
- * 4. Fetches document content
- * 5. Calls LLM to generate script
- * 6. Updates version with script content and 'script_ready' status
+ * 2. Sets status to 'generating_script'
+ * 3. Fetches document content
+ * 4. Calls LLM to generate script
+ * 5. Updates podcast with script content and 'script_ready' status
  *
  * @example
  * const result = yield* generateScript({
@@ -68,32 +62,15 @@ const ScriptOutputSchema = Schema.Struct({
 export const generateScript = (input: GenerateScriptInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-    const scriptVersionRepo = yield* ScriptVersionRepo;
     const llm = yield* LLM;
 
     // 1. Load podcast with documents
     const podcast = yield* podcastRepo.findByIdFull(input.podcastId);
 
-    // 2. Get or create version
-    let version: PodcastScript;
+    // 2. Set status to generating_script
+    yield* podcastRepo.updateStatus(input.podcastId, 'generating_script');
 
-    if (input.versionId) {
-      // Update existing version
-      version = yield* scriptVersionRepo.findById(input.versionId);
-    } else {
-      // Create new version in drafting status
-      version = yield* scriptVersionRepo.insert({
-        podcastId: input.podcastId,
-        createdBy: podcast.createdBy,
-        status: 'drafting',
-        segments: null,
-      });
-    }
-
-    // 3. Set status to generating_script
-    yield* scriptVersionRepo.updateStatus(version.id, 'generating_script');
-
-    // 4. Fetch document content using the use case
+    // 3. Fetch document content using the use case
     const documentContents = yield* Effect.all(
       podcast.documents.map((doc) =>
         getDocumentContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
@@ -101,7 +78,7 @@ export const generateScript = (input: GenerateScriptInput) =>
     );
     const combinedContent = documentContents.join('\n\n---\n\n');
 
-    // 5. Build prompts
+    // 4. Build prompts
     const effectivePrompt =
       input.promptInstructions ?? podcast.promptInstructions ?? '';
     const systemPrompt = buildSystemPrompt(podcast.format, effectivePrompt);
@@ -113,7 +90,7 @@ export const generateScript = (input: GenerateScriptInput) =>
       combinedContent,
     );
 
-    // 6. Call LLM
+    // 5. Call LLM
     const llmResult = yield* llm.generate({
       system: systemPrompt,
       prompt: userPrompt,
@@ -121,33 +98,33 @@ export const generateScript = (input: GenerateScriptInput) =>
       temperature: 0.7,
     });
 
-    // 7. Process segments with indices
+    // 6. Process segments with indices
     const segments = llmResult.object.segments.map((s, i) => ({
       speaker: s.speaker,
       line: s.line,
       index: i,
     }));
 
-    // 8. Build generation prompt for audit
+    // 7. Build generation prompt for audit
     const generationPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
-    // 9. Update version with script content (script_ready status)
-    const updatedVersion = yield* scriptVersionRepo.update(version.id, {
-      status: 'script_ready' as VersionStatus,
+    // 8. Update podcast with script content (script_ready status)
+    yield* podcastRepo.updateScript(input.podcastId, {
       segments,
       summary: llmResult.object.summary,
       generationPrompt,
     });
+    yield* podcastRepo.updateStatus(input.podcastId, 'script_ready');
 
-    // 10. Update podcast metadata from LLM output
-    yield* podcastRepo.update(input.podcastId, {
+    // 9. Update podcast metadata from LLM output
+    const updatedPodcast = yield* podcastRepo.update(input.podcastId, {
       title: llmResult.object.title,
       description: llmResult.object.description,
       tags: [...llmResult.object.tags],
     });
 
     return {
-      version: updatedVersion,
+      podcast: updatedPodcast,
       segmentCount: segments.length,
     };
   }).pipe(

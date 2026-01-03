@@ -1,7 +1,6 @@
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
-import { PodcastRepo, type PodcastFull } from '../repos/podcast-repo';
-import { ScriptVersionRepo } from '../repos/script-version-repo';
+import { PodcastRepo, type PodcastWithDocuments } from '../repos/podcast-repo';
 
 // =============================================================================
 // Types
@@ -16,13 +15,12 @@ export interface CreatePodcastInput extends CreatePodcast {
 // =============================================================================
 
 /**
- * Create a new podcast with an initial draft version.
+ * Create a new podcast in drafting status.
  *
  * This use case:
  * 1. Validates document ownership if documentIds provided
- * 2. Creates the podcast record
- * 3. Creates an initial drafting version (no script content)
- * 4. Returns the full podcast with active version
+ * 2. Creates the podcast record (starts in drafting status)
+ * 3. Returns the podcast with resolved documents
  *
  * @example
  * const podcast = yield* createPodcast({
@@ -34,7 +32,6 @@ export interface CreatePodcastInput extends CreatePodcast {
 export const createPodcast = (input: CreatePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-    const scriptVersionRepo = yield* ScriptVersionRepo;
 
     const { userId, documentIds, ...data } = input;
 
@@ -43,25 +40,13 @@ export const createPodcast = (input: CreatePodcastInput) =>
       yield* podcastRepo.verifyDocumentsExist(documentIds, userId);
     }
 
-    // 2. Create podcast
+    // 2. Create podcast (starts in drafting status by default)
     const podcastWithDocs = yield* podcastRepo.insert(
       { ...data, createdBy: userId },
       documentIds ?? [],
     );
 
-    // 3. Create initial drafting version
-    const draftVersion = yield* scriptVersionRepo.insert({
-      podcastId: podcastWithDocs.id,
-      createdBy: userId,
-      status: 'drafting',
-      segments: null,
-    });
-
-    // 4. Return full podcast with active version
-    return {
-      ...podcastWithDocs,
-      activeVersion: draftVersion,
-    };
+    return podcastWithDocs;
   }).pipe(
     Effect.withSpan('useCase.createPodcast', {
       attributes: { 'user.id': input.userId },

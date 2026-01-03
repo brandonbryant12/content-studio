@@ -20,15 +20,11 @@ import { resetDocumentCounter as _resetDocumentCounter } from './document';
 // Podcast factories
 export {
   createTestPodcast,
-  createTestPodcastScript,
-  createAudioReadyScript,
-  createScriptReadyScript,
-  createReadyPodcastWithVersion,
-  createScriptReadyPodcastWithVersion,
+  createReadyPodcast,
+  createScriptReadyPodcast,
   resetPodcastCounters,
   DEFAULT_TEST_SEGMENTS,
   type CreateTestPodcastOptions,
-  type CreateTestPodcastScriptOptions,
 } from './podcast';
 import { resetPodcastCounters as _resetPodcastCounters } from './podcast';
 

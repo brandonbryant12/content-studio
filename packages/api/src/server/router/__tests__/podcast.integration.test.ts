@@ -5,7 +5,6 @@ import {
   createTestUser,
   createTestDocument,
   createTestPodcast,
-  createTestPodcastScript,
   resetAllFactories,
   toUser,
   DEFAULT_TEST_SEGMENTS,
@@ -20,19 +19,13 @@ import {
   user as userTable,
   document as documentTable,
   podcast as podcastTable,
-  podcastScript as podcastScriptTable,
   job as jobTable,
   type PodcastFullOutput,
   type PodcastListItemOutput,
   type PodcastOutput,
-  type PodcastScriptOutput,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
-import {
-  PodcastRepoLive,
-  ScriptVersionRepoLive,
-  DocumentRepoLive,
-} from '@repo/media';
+import { PodcastRepoLive, DocumentRepoLive } from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
@@ -111,11 +104,6 @@ const handlers = {
       podcastRouter.delete as unknown as ORPCProcedure,
       args,
     ),
-  getScript: (args: HandlerArgs): Promise<PodcastScriptOutput> =>
-    callHandler<PodcastScriptOutput>(
-      podcastRouter.getScript as unknown as ORPCProcedure,
-      args,
-    ),
   generate: (args: HandlerArgs): Promise<GenerateResponse> =>
     callHandler<GenerateResponse>(
       podcastRouter.generate as unknown as ORPCProcedure,
@@ -157,9 +145,6 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
-  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(
-    Layer.provide(ctx.dbLayer),
-  );
   const queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -168,7 +153,6 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     policyLayer,
     documentRepoLayer,
     podcastRepoLayer,
-    scriptVersionRepoLayer,
     queueLayer,
   );
 
@@ -227,28 +211,6 @@ const insertTestPodcast = async (
   return podcast;
 };
 
-/**
- * Insert a podcast script into the database for testing.
- */
-const insertTestPodcastScript = async (
-  ctx: TestContext,
-  podcastId: string,
-  userId: string,
-  options: Omit<
-    NonNullable<Parameters<typeof createTestPodcastScript>[0]>,
-    'podcastId' | 'createdBy'
-  > = {},
-) => {
-  const script = createTestPodcastScript({
-    podcastId: podcastId as NonNullable<
-      Parameters<typeof createTestPodcastScript>[0]
-    >['podcastId'],
-    createdBy: userId,
-    ...options,
-  });
-  await ctx.db.insert(podcastScriptTable).values(script);
-  return script;
-};
 
 // =============================================================================
 // Tests
@@ -413,15 +375,12 @@ describe('podcast router', () => {
       expect(() => new Date(returned.updatedAt)).not.toThrow();
     });
 
-    it('includes active version summary when present', async () => {
+    it('includes status and duration when present', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'With Version',
-      });
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
+      await insertTestPodcast(ctx, testUser.id, {
+        title: 'With Status',
         status: 'ready',
-        isActive: true,
         duration: 300,
       });
 
@@ -434,9 +393,8 @@ describe('podcast router', () => {
 
       // Assert
       expect(result).toHaveLength(1);
-      expect(result[0]!.activeVersion).not.toBeNull();
-      expect(result[0]!.activeVersion!.status).toBe('ready');
-      expect(result[0]!.activeVersion!.duration).toBe(300);
+      expect(result[0]!.status).toBe('ready');
+      expect(result[0]!.duration).toBe(300);
     });
   });
 
@@ -504,7 +462,7 @@ describe('podcast router', () => {
       expect(result.title).toBe('Other User Podcast');
     });
 
-    it('returns podcast in serialized full format with documents and active version', async () => {
+    it('returns podcast in serialized full format with documents and status', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
       const doc = await insertTestDocument(ctx, testUser.id, {
@@ -513,10 +471,8 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Full Format Test',
         sourceDocumentIds: [doc.id],
-      });
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
         status: 'ready',
-        isActive: true,
+        segments: DEFAULT_TEST_SEGMENTS,
       });
 
       // Act
@@ -532,8 +488,8 @@ describe('podcast router', () => {
       expect(result.documents).toBeDefined();
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0]!.title).toBe('Source Doc');
-      expect(result.activeVersion).not.toBeNull();
-      expect(result.activeVersion!.status).toBe('ready');
+      expect(result.status).toBe('ready');
+      expect(result.segments).toEqual(DEFAULT_TEST_SEGMENTS);
       // Dates should be ISO strings
       expect(typeof result.createdAt).toBe('string');
       expect(typeof result.updatedAt).toBe('string');
@@ -1038,135 +994,6 @@ describe('podcast router', () => {
   });
 
   // ===========================================================================
-  // Tests: getScript handler
-  // ===========================================================================
-
-  describe('getScript handler', () => {
-    it('returns active script when found', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const script = await insertTestPodcastScript(
-        ctx,
-        podcast.id,
-        testUser.id,
-        {
-          status: 'ready',
-          isActive: true,
-          segments: DEFAULT_TEST_SEGMENTS,
-        },
-      );
-
-      // Act
-      const result = await handlers.getScript({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(script.id);
-      expect(result.podcastId).toBe(podcast.id);
-      expect(result.status).toBe('ready');
-      expect(result.isActive).toBe(true);
-      expect(result.segments).toEqual(DEFAULT_TEST_SEGMENTS);
-    });
-
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_nonexistent123';
-
-      // Act & Assert - throws error (currently wrapped as ScriptNotFound)
-      await expect(
-        handlers.getScript({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
-    });
-
-    it('throws error when no active script exists', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      // No script created
-
-      // Act & Assert - throws ScriptNotFound
-      await expect(
-        handlers.getScript({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
-    });
-
-    it('allows access to any podcast script (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for getScript.
-      // This test documents the current behavior.
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id);
-      const script = await insertTestPodcastScript(
-        ctx,
-        otherPodcast.id,
-        otherTestUser.id,
-        {
-          status: 'ready',
-          isActive: true,
-        },
-      );
-
-      // Act - access as original user
-      const context = createMockContext(runtime, user);
-
-      const result = await handlers.getScript({
-        context,
-        input: { id: otherPodcast.id },
-        errors,
-      });
-
-      // Assert - can access other user's script
-      expect(result.id).toBe(script.id);
-      expect(result.podcastId).toBe(otherPodcast.id);
-    });
-
-    it('returns script in serialized format', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
-        status: 'ready',
-        isActive: true,
-        summary: 'Test summary',
-        audioUrl: 'https://example.com/audio.wav',
-        duration: 300,
-      });
-
-      // Act
-      const result = await handlers.getScript({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toMatch(/^ver_/);
-      expect(result.podcastId).toMatch(/^pod_/);
-      expect(result.summary).toBe('Test summary');
-      expect(result.audioUrl).toBe('https://example.com/audio.wav');
-      expect(result.duration).toBe(300);
-      // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
-    });
-  });
-
-  // ===========================================================================
   // Tests: generate handler
   // ===========================================================================
 
@@ -1415,10 +1242,8 @@ describe('podcast router', () => {
     it('saves segment changes and queues audio regeneration', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
-        isActive: true,
         segments: DEFAULT_TEST_SEGMENTS,
       });
 
@@ -1448,10 +1273,7 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         hostVoice: 'OldVoice',
-      });
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
         status: 'ready',
-        isActive: true,
         segments: DEFAULT_TEST_SEGMENTS,
       });
 
@@ -1495,10 +1317,8 @@ describe('podcast router', () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id);
-      await insertTestPodcastScript(ctx, otherPodcast.id, otherTestUser.id, {
+      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id, {
         status: 'ready',
-        isActive: true,
         segments: DEFAULT_TEST_SEGMENTS,
       });
 
@@ -1522,10 +1342,8 @@ describe('podcast router', () => {
     it('returns existing pending job for idempotency', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
-        isActive: true,
         segments: DEFAULT_TEST_SEGMENTS,
       });
 
@@ -1557,10 +1375,8 @@ describe('podcast router', () => {
       // It always queues an audio regeneration job.
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
-        isActive: true,
         segments: DEFAULT_TEST_SEGMENTS,
       });
 

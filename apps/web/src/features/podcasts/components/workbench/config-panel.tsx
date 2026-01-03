@@ -80,7 +80,7 @@ export function ConfigPanel({
             {/* Generation Progress - shown only during generation */}
             {(isPendingGeneration || isGenerating) && (
               <GenerationStatus
-                status={podcast.activeVersion?.status}
+                status={podcast.status}
                 isSavingSettings={false}
                 isPendingGeneration={isPendingGeneration}
               />
@@ -100,10 +100,9 @@ export function ConfigPanel({
             )}
 
             {/* Error Display */}
-            {podcast.activeVersion?.status === 'failed' &&
-              podcast.activeVersion?.errorMessage && (
-                <ErrorDisplay message={podcast.activeVersion.errorMessage} />
-              )}
+            {podcast.status === 'failed' && podcast.errorMessage && (
+              <ErrorDisplay message={podcast.errorMessage} />
+            )}
 
             {/* Source Documents */}
             <div className="docs-section">

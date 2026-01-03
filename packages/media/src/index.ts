@@ -74,24 +74,16 @@ export {
 export {
   PodcastRepo,
   PodcastRepoLive,
-  ScriptVersionRepo,
-  ScriptVersionRepoLive,
   type PodcastRepoService,
-  type ScriptVersionRepoService,
   type PodcastWithDocuments,
-  type PodcastFull,
   type ListOptions,
-  type VersionStatus,
+  type UpdateScriptOptions,
+  type UpdateAudioOptions,
 } from './podcast';
 
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
-import {
-  PodcastRepo,
-  PodcastRepoLive,
-  ScriptVersionRepo,
-  ScriptVersionRepoLive,
-} from './podcast';
+import { PodcastRepo, PodcastRepoLive } from './podcast';
 
 // =============================================================================
 // Combined Media Layer
@@ -101,7 +93,7 @@ import {
  * All media services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
  */
-export type Media = DocumentRepo | PodcastRepo | ScriptVersionRepo;
+export type Media = DocumentRepo | PodcastRepo;
 
 /**
  * Combined layer for all media services.
@@ -109,7 +101,6 @@ export type Media = DocumentRepo | PodcastRepo | ScriptVersionRepo;
  * Provides:
  * - DocumentRepo: Document repository operations
  * - PodcastRepo: Podcast repository operations
- * - ScriptVersionRepo: Script version repository operations
  *
  * Requires:
  * - Db: Database connection
@@ -124,7 +115,7 @@ export type Media = DocumentRepo | PodcastRepo | ScriptVersionRepo;
  * ```
  */
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
-  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive, ScriptVersionRepoLive);
+  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive);
 
 // Podcast module - Use Cases (error types inferred by Effect)
 export {
@@ -133,50 +124,41 @@ export {
   updatePodcast,
   deletePodcast,
   listPodcasts,
-  getActiveScript,
-  editScript,
   saveChanges,
   generateScript,
   generateAudio,
-  progressTo,
   startGeneration,
   saveAndQueueAudio,
   getJob,
   InvalidAudioGenerationError,
-  InvalidProgressionError,
   InvalidSaveError,
   NoChangesToSaveError,
   type CreatePodcastInput,
   type GetPodcastInput,
-  type GetActiveScriptInput,
   type UpdatePodcastInput,
   type DeletePodcastInput,
   type ListPodcastsInput,
   type ListPodcastsResult,
-  type EditScriptInput,
-  type EditScriptResult,
   type SaveChangesInput,
   type SaveChangesResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
   type GenerateAudioInput,
   type GenerateAudioResult,
-  type ProgressToInput,
-  type ProgressToResult,
   type StartGenerationInput,
   type StartGenerationResult,
   type SaveAndQueueAudioInput,
   type SaveAndQueueAudioResult,
   type GetJobInput,
   type GetJobResult,
-  type ScriptSegment,
 } from './podcast';
 
 // Podcast module - Types
 export {
   type Podcast,
-  type PodcastScript,
   type PodcastFormat,
   type CreatePodcast,
   type UpdatePodcast,
+  type VersionStatus,
+  type ScriptSegment,
 } from './podcast';

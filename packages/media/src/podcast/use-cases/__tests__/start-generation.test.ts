@@ -1,21 +1,11 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  createTestUser,
-  createTestPodcast,
-  createTestPodcastScript,
-  resetAllFactories,
-} from '@repo/testing';
-import type { Podcast, PodcastScript, JobId, JobStatus } from '@repo/db/schema';
+import { createTestUser, createTestPodcast, resetAllFactories } from '@repo/testing';
+import type { Podcast, JobId, JobStatus, VersionStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
-import {
-  ScriptVersionRepo,
-  type ScriptVersionRepoService,
-  type VersionStatus,
-} from '../../repos/script-version-repo';
 import { startGeneration } from '../start-generation';
 
 // =============================================================================
@@ -27,13 +17,17 @@ const MockDbLive = Layer.succeed(Db, { db: {} as never });
 
 interface MockState {
   podcast?: Podcast;
-  activeVersion?: PodcastScript | null;
   pendingJob?: Job | null;
 }
 
-const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
+const createMockPodcastRepo = (
+  state: MockState,
+  options?: {
+    onUpdateStatus?: (id: string, status: VersionStatus) => void;
+  },
+): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
-    findById: (id) =>
+    findById: (id: string) =>
       Effect.suspend(() =>
         state.podcast
           ? Effect.succeed({ ...state.podcast, documents: [] })
@@ -41,54 +35,24 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
       ),
     findByIdFull: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
-    listWithActiveVersionSummary: () => Effect.die('not implemented'),
     insert: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     verifyDocumentsExist: () => Effect.die('not implemented'),
+    updateStatus: (id: string, status: VersionStatus) =>
+      Effect.sync(() => {
+        options?.onUpdateStatus?.(id, status);
+        return { ...state.podcast!, status };
+      }),
+    updateScript: () => Effect.die('not implemented'),
+    updateAudio: () => Effect.die('not implemented'),
+    clearAudio: () => Effect.die('not implemented'),
+    clearApprovals: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(PodcastRepo, service);
-};
-
-const createMockScriptVersionRepo = (
-  state: MockState,
-  options?: {
-    onUpdateStatus?: (id: string, status: VersionStatus) => void;
-    onInsert?: (data: {
-      podcastId: string;
-      createdBy: string;
-      status: string;
-    }) => void;
-  },
-): Layer.Layer<ScriptVersionRepo> => {
-  const service: ScriptVersionRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findActiveByPodcastId: () => Effect.succeed(state.activeVersion ?? null),
-    update: () => Effect.die('not implemented'),
-    updateStatus: (id, status) =>
-      Effect.sync(() => {
-        options?.onUpdateStatus?.(id, status);
-        return createTestPodcastScript({ status });
-      }),
-    deactivateAll: () => Effect.die('not implemented'),
-    getNextVersion: () => Effect.die('not implemented'),
-    insert: (data) =>
-      Effect.sync(() => {
-        options?.onInsert?.(
-          data as { podcastId: string; createdBy: string; status: string },
-        );
-        return createTestPodcastScript({
-          podcastId: data.podcastId as any,
-          createdBy: data.createdBy,
-          status: data.status as any,
-        });
-      }),
-  };
-
-  return Layer.succeed(ScriptVersionRepo, service);
 };
 
 const createMockQueue = (
@@ -141,11 +105,11 @@ describe('startGeneration', () => {
       const user = createTestUser();
       const podcast = createTestPodcast({ createdBy: user.id });
       const enqueueSpy = vi.fn();
+      const updateStatusSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo({ podcast, activeVersion: null }),
+        createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
       );
 
@@ -174,7 +138,6 @@ describe('startGeneration', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo({ podcast, activeVersion: null }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
       );
 
@@ -195,23 +158,15 @@ describe('startGeneration', () => {
     });
   });
 
-  describe('version handling', () => {
-    it('updates existing active version to drafting status', async () => {
+  describe('status handling', () => {
+    it('updates podcast status to drafting', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const activeVersion = createTestPodcastScript({
-        podcastId: podcast.id,
-        status: 'ready',
-      });
+      const podcast = createTestPodcast({ createdBy: user.id, status: 'ready' });
       const updateStatusSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo(
-          { podcast, activeVersion },
-          { onUpdateStatus: updateStatusSpy },
-        ),
+        createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }),
       );
 
@@ -220,39 +175,7 @@ describe('startGeneration', () => {
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
-      expect(updateStatusSpy).toHaveBeenCalledWith(
-        activeVersion.id,
-        'drafting',
-      );
-    });
-
-    it('creates new drafting version when no active version exists', async () => {
-      const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const insertSpy = vi.fn();
-
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo(
-          { podcast, activeVersion: null },
-          { onInsert: insertSpy },
-        ),
-        createMockQueue({ podcast }),
-      );
-
-      await Effect.runPromise(
-        startGeneration({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
-      );
-
-      expect(insertSpy).toHaveBeenCalledOnce();
-      expect(insertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          podcastId: podcast.id,
-          createdBy: podcast.createdBy,
-          status: 'drafting',
-        }),
-      );
+      expect(updateStatusSpy).toHaveBeenCalledWith(podcast.id, 'drafting');
     });
   });
 
@@ -278,7 +201,6 @@ describe('startGeneration', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo({ podcast }),
         createMockQueue(
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
@@ -314,7 +236,6 @@ describe('startGeneration', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({ podcast }),
-        createMockScriptVersionRepo({ podcast }),
         createMockQueue({ podcast, pendingJob: existingJob }),
       );
 
@@ -332,7 +253,6 @@ describe('startGeneration', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({}),
-        createMockScriptVersionRepo({}),
         createMockQueue({}),
       );
 

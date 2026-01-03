@@ -70,10 +70,10 @@ export function PodcastDetail({
       leftPanel={
         <ScriptPanel
           segments={scriptEditor.segments}
-          summary={podcast.activeVersion?.summary ?? null}
+          summary={podcast.summary ?? null}
           hasChanges={scriptEditor.hasChanges}
           isSaving={scriptEditor.isSaving}
-          disabled={podcast.activeVersion?.status !== 'ready'}
+          disabled={podcast.status !== 'ready'}
           onUpdateSegment={scriptEditor.updateSegment}
           onRemoveSegment={scriptEditor.removeSegment}
           onReorderSegments={scriptEditor.reorderSegments}
@@ -93,7 +93,7 @@ export function PodcastDetail({
       }
       actionBar={
         <GlobalActionBar
-          status={podcast.activeVersion?.status}
+          status={podcast.status}
           isGenerating={isGenerating}
           hasChanges={hasChanges}
           isSaving={isSaving}

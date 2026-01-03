@@ -3,19 +3,17 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createTestUser,
   createTestPodcast,
-  createTestPodcastScript,
   createTestDocument,
   resetPodcastCounters,
   resetAllFactories,
 } from '@repo/testing';
-import type { Podcast, PodcastScript, Document } from '@repo/db/schema';
+import type { Podcast, Document } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
   type PodcastWithDocuments,
-  type PodcastFull,
 } from '../../repos/podcast-repo';
 import { getPodcast } from '../get-podcast';
 
@@ -26,7 +24,6 @@ import { getPodcast } from '../get-podcast';
 interface MockRepoState {
   podcasts: Podcast[];
   documents: Document[];
-  versions: PodcastScript[];
 }
 
 /**
@@ -38,12 +35,16 @@ const createMockPodcastRepo = (
   const service: PodcastRepoService = {
     insert: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
-    listWithActiveVersionSummary: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
     verifyDocumentsExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
+    updateStatus: () => Effect.die('not implemented'),
+    updateScript: () => Effect.die('not implemented'),
+    updateAudio: () => Effect.die('not implemented'),
+    clearAudio: () => Effect.die('not implemented'),
+    clearApprovals: () => Effect.die('not implemented'),
 
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -70,13 +71,9 @@ const createMockPodcastRepo = (
         const docs = state.documents.filter((d) =>
           podcast.sourceDocumentIds.includes(d.id),
         );
-        const activeVersion = state.versions.find(
-          (v) => v.podcastId === podcast.id && v.isActive,
-        );
-        const result: PodcastFull = {
+        const result: PodcastWithDocuments = {
           ...podcast,
           documents: docs,
-          activeVersion: activeVersion ?? null,
         };
         return Effect.succeed(result);
       }),
@@ -115,7 +112,6 @@ describe('getPodcast', () => {
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
         documents: [doc],
-        versions: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -129,18 +125,13 @@ describe('getPodcast', () => {
       expect(result.documents[0]!.id).toBe(doc.id);
     });
 
-    it('returns podcast without active version by default', async () => {
+    it('returns podcast without documents by default', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const version = createTestPodcastScript({
-        podcastId: podcast.id,
-        isActive: true,
-      });
+      const podcast = createTestPodcast({ createdBy: user.id, status: 'ready' });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
         documents: [],
-        versions: [version],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -148,60 +139,55 @@ describe('getPodcast', () => {
         getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
       );
 
-      // When includeVersion is false/undefined, activeVersion should not be present
       expect(result.id).toBe(podcast.id);
-      expect('activeVersion' in result).toBe(false);
+      expect(result.status).toBe('ready');
     });
 
-    it('returns podcast with active version when includeVersion is true', async () => {
+    it('returns podcast with documents when includeDocuments is true', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
-      const version = createTestPodcastScript({
-        podcastId: podcast.id,
-        isActive: true,
+      const doc = createTestDocument({ createdBy: user.id });
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        sourceDocumentIds: [doc.id],
         status: 'ready',
       });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [],
-        versions: [version],
+        documents: [doc],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id, includeVersion: true }).pipe(
+        getPodcast({ podcastId: podcast.id, includeDocuments: true }).pipe(
           Effect.provide(layers),
         ),
       );
 
       expect(result.id).toBe(podcast.id);
-      expect('activeVersion' in result).toBe(true);
-      const fullResult = result as PodcastFull;
-      expect(fullResult.activeVersion).not.toBeNull();
-      expect(fullResult.activeVersion?.status).toBe('ready');
+      expect(result.status).toBe('ready');
+      expect(result.documents).toHaveLength(1);
+      expect(result.documents[0]!.id).toBe(doc.id);
     });
 
-    it('returns podcast with null activeVersion when no active version exists', async () => {
+    it('returns podcast with status from the podcast directly', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id });
+      const podcast = createTestPodcast({ createdBy: user.id, status: 'generating_script' });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
         documents: [],
-        versions: [], // No versions
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id, includeVersion: true }).pipe(
+        getPodcast({ podcastId: podcast.id, includeDocuments: true }).pipe(
           Effect.provide(layers),
         ),
       );
 
       expect(result.id).toBe(podcast.id);
-      const fullResult = result as PodcastFull;
-      expect(fullResult.activeVersion).toBeNull();
+      expect(result.status).toBe('generating_script');
     });
   });
 
@@ -219,7 +205,6 @@ describe('getPodcast', () => {
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
         documents: [doc1, doc2, doc3],
-        versions: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -240,7 +225,6 @@ describe('getPodcast', () => {
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
         documents: [],
-        versions: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -259,7 +243,6 @@ describe('getPodcast', () => {
       const mockRepo = createMockPodcastRepo({
         podcasts: [],
         documents: [],
-        versions: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -275,18 +258,17 @@ describe('getPodcast', () => {
       }
     });
 
-    it('fails with PodcastNotFound when includeVersion is true and podcast does not exist', async () => {
+    it('fails with PodcastNotFound when includeDocuments is true and podcast does not exist', async () => {
       const nonExistentId = 'pod_nonexistent';
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [],
         documents: [],
-        versions: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        getPodcast({ podcastId: nonExistentId, includeVersion: true }).pipe(
+        getPodcast({ podcastId: nonExistentId, includeDocuments: true }).pipe(
           Effect.provide(layers),
         ),
       );

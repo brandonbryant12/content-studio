@@ -1,9 +1,6 @@
 import { Effect } from 'effect';
-import {
-  PodcastRepo,
-  type ListOptions,
-  type PodcastWithActiveVersionSummary,
-} from '../repos/podcast-repo';
+import type { Podcast } from '@repo/db/schema';
+import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
 // =============================================================================
 // Types
@@ -17,7 +14,7 @@ export interface ListPodcastsInput {
 }
 
 export interface ListPodcastsResult {
-  podcasts: readonly PodcastWithActiveVersionSummary[];
+  podcasts: readonly Podcast[];
   total: number;
   hasMore: boolean;
 }
@@ -51,9 +48,9 @@ export const listPodcasts = (input: ListPodcastsInput) =>
       offset: input.offset ?? 0,
     };
 
-    // Fetch podcasts with active version summary and count in parallel
+    // Fetch podcasts and count in parallel
     const [podcasts, total] = yield* Effect.all([
-      podcastRepo.listWithActiveVersionSummary(options),
+      podcastRepo.list(options),
       podcastRepo.count(options),
     ]);
 

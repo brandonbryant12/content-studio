@@ -1,6 +1,6 @@
 # Podcast Versioning Removal + Collaboration Implementation Plan
 
-> **STATUS: NOT STARTED**
+> **STATUS: IN PROGRESS - Versioning removal complete, collaboration pending**
 
 ## Overview
 
@@ -102,27 +102,29 @@ apps/web/src/features/podcasts/
 **Goal**: Read ALL relevant standards before implementation
 
 ### Read All Standards (Required)
-- [ ] `/standards/overview.md` - High-level architecture overview
-- [ ] `/standards/patterns/repository.md` - Repository pattern
-- [ ] `/standards/patterns/use-case.md` - Use case pattern
-- [ ] `/standards/patterns/error-handling.md` - Error handling approach
-- [ ] `/standards/patterns/router-handler.md` - API router handler pattern
-- [ ] `/standards/patterns/serialization.md` - Serialization patterns
-- [ ] `/standards/testing/use-case-tests.md` - Use case unit testing patterns
-- [ ] `/standards/testing/integration-tests.md` - Router integration testing patterns
-- [ ] `/standards/frontend/testing.md` - Frontend component testing patterns
-- [ ] `/standards/frontend/data-fetching.md` - Frontend data access patterns
-- [ ] `/standards/frontend/components.md` - Container/Presenter pattern
+- [x] `/standards/overview.md` - High-level architecture overview
+- [x] `/standards/patterns/repository.md` - Repository pattern
+- [x] `/standards/patterns/use-case.md` - Use case pattern
+- [x] `/standards/patterns/error-handling.md` - Error handling approach
+- [x] `/standards/patterns/router-handler.md` - API router handler pattern
+- [x] `/standards/patterns/serialization.md` - Serialization patterns
+- [x] `/standards/testing/use-case-tests.md` - Use case unit testing patterns
+- [x] `/standards/testing/integration-tests.md` - Router integration testing patterns
+- [x] `/standards/frontend/testing.md` - Frontend component testing patterns
+- [x] `/standards/frontend/data-fetching.md` - Frontend data access patterns
+- [x] `/standards/frontend/components.md` - Container/Presenter pattern
 
 ### Review Current Implementation
-- [ ] `packages/db/src/schemas/podcasts.ts` - Current schema with podcastScript
-- [ ] `packages/db/src/schemas/auth.ts` - User table structure
-- [ ] `packages/media/src/podcast/repos/script-version-repo.ts` - Version management (to remove)
-- [ ] `packages/media/src/podcast/repos/podcast-repo.ts` - Current podcast repo
-- [ ] `packages/media/src/podcast/use-cases/*.ts` - All use cases that reference versions
-- [ ] `apps/web/src/features/podcasts/lib/status.ts` - UI status handling
+- [x] `packages/db/src/schemas/podcasts.ts` - Current schema with podcastScript
+- [x] `packages/db/src/schemas/auth.ts` - User table structure
+- [x] `packages/media/src/podcast/repos/script-version-repo.ts` - Version management (to remove)
+- [x] `packages/media/src/podcast/repos/podcast-repo.ts` - Current podcast repo
+- [x] `packages/media/src/podcast/use-cases/*.ts` - All use cases that reference versions
+- [x] `apps/web/src/features/podcasts/lib/status.ts` - UI status handling
 
 **No code changes** - understanding only.
+
+✅ **COMPLETED**
 
 ---
 
@@ -133,28 +135,29 @@ apps/web/src/features/podcasts/
 ### 1.1 Update `packages/db/src/schemas/podcasts.ts`
 
 Add fields from `podcastScript` to `podcast` table:
-- `status` (versionStatusEnum, default 'drafting')
-- `segments` (jsonb ScriptSegment[])
-- `summary` (text)
-- `generationPrompt` (text)
-- `audioUrl` (text)
-- `duration` (integer)
-- `errorMessage` (text)
+- [x] `status` (versionStatusEnum, default 'drafting')
+- [x] `segments` (jsonb ScriptSegment[])
+- [x] `summary` (text)
+- [x] `generationPrompt` (text)
+- [x] `audioUrl` (text)
+- [x] `duration` (integer)
+- [x] `errorMessage` (text)
+- [x] `ownerHasApproved` (boolean, default false) - for owner approval tracking
 
 ### 1.2 Remove `podcastScript` table and related code
 
-- Delete `podcastScript` table definition
-- Delete `ScriptVersionId` brand usage for this table
-- Remove `PodcastScriptOutputSchema` and related schemas
-- Remove `ActiveVersionSummarySchema`
-- Update `PodcastFullOutputSchema` to include script fields directly (no `activeVersion`)
-- Update `PodcastListItemOutputSchema` similarly
+- [x] Delete `podcastScript` table definition
+- [x] Delete `ScriptVersionId` brand usage for this table
+- [x] Remove `PodcastScriptOutputSchema` and related schemas
+- [x] Remove `ActiveVersionSummarySchema`
+- [x] Update `PodcastFullOutputSchema` to include script fields directly (no `activeVersion`)
+- [x] Update `PodcastListItemOutputSchema` similarly
 
 ### 1.3 Update serializers
 
-- Remove `serializePodcastScript*` functions
-- Update `serializePodcastFull` to include status/segments/audio directly
-- Update `serializePodcastListItem` to include status/duration directly
+- [x] Remove `serializePodcastScript*` functions
+- [x] Update `serializePodcastFull` to include status/segments/audio directly
+- [x] Update `serializePodcastListItem` to include status/duration directly
 
 ### 1.4 Push schema changes
 
@@ -163,6 +166,8 @@ DB_POSTGRES_URL=postgresql://... pnpm --filter @repo/db exec drizzle-kit push
 ```
 
 **Validation**: `pnpm --filter @repo/db typecheck && pnpm --filter @repo/db build`
+
+✅ **COMPLETED**
 
 ---
 
@@ -236,17 +241,18 @@ DB_POSTGRES_URL=postgresql://... pnpm --filter @repo/db exec drizzle-kit push
 
 ### 3.1 Delete `script-version-repo.ts`
 
-Remove `/packages/media/src/podcast/repos/script-version-repo.ts` entirely.
+- [x] Remove `/packages/media/src/podcast/repos/script-version-repo.ts` entirely.
 
 ### 3.2 Extend `PodcastRepo` with status operations
 
 Add methods to `PodcastRepoService`:
-- `updateStatus(id, status, errorMessage?)` - Update generation status
-- `updateScript(id, { segments, summary, generationPrompt })` - Update script content
-- `updateAudio(id, { audioUrl, duration })` - Update audio after generation
-- `clearAudio(id)` - Clear audio for regeneration
-- `canUserAccess(podcastId, userId)` - Check if user is owner or collaborator
-- `canUserEdit(podcastId, userId)` - Check if user can edit (owner or collaborator)
+- [x] `updateStatus(id, status, errorMessage?)` - Update generation status
+- [x] `updateScript(id, { segments, summary, generationPrompt })` - Update script content
+- [x] `updateAudio(id, { audioUrl, duration })` - Update audio after generation
+- [x] `clearAudio(id)` - Clear audio for regeneration
+- [x] `clearApprovals(id)` - Clear approvals when content changes
+- [ ] `canUserAccess(podcastId, userId)` - Check if user is owner or collaborator (deferred to Sprint 5)
+- [ ] `canUserEdit(podcastId, userId)` - Check if user can edit (owner or collaborator) (deferred to Sprint 5)
 
 ### 3.3 Create `collaborator-repo.ts`
 
@@ -272,13 +278,17 @@ interface CollaboratorRepoService {
 }
 ```
 
+**Note**: CollaboratorRepo creation deferred to Sprint 5 (collaboration features)
+
 ### 3.4 Update repo exports and layers
 
-- Remove `ScriptVersionRepo` from `/packages/media/src/podcast/repos/index.ts`
-- Add `CollaboratorRepo` to exports
-- Update layer composition in `/packages/media/src/podcast/index.ts`
+- [x] Remove `ScriptVersionRepo` from `/packages/media/src/podcast/repos/index.ts`
+- [ ] Add `CollaboratorRepo` to exports (deferred to Sprint 5)
+- [x] Update layer composition in `/packages/media/src/podcast/index.ts`
 
 **Validation**: `pnpm --filter @repo/media typecheck`
+
+✅ **PARTIALLY COMPLETED** - Versioning removal done, collaboration repo deferred to Sprint 5
 
 ---
 
@@ -288,45 +298,69 @@ interface CollaboratorRepoService {
 
 ### 4.1 Simplify `start-generation.ts`
 
-- Remove version creation logic
-- Set podcast status to 'drafting' directly
-- Remove `ScriptVersionRepo` dependency
-- Clear all approvals when starting generation
+- [x] Remove version creation logic
+- [x] Set podcast status to 'drafting' directly
+- [x] Remove `ScriptVersionRepo` dependency
+- [ ] Clear all approvals when starting generation (deferred to Sprint 5)
 
 ### 4.2 Update `generate-script.ts`
 
-- Update podcast directly via `PodcastRepo.updateScript()`
-- Update status on podcast via `PodcastRepo.updateStatus()`
-- Remove all `ScriptVersionRepo` references
+- [x] Update podcast directly via `PodcastRepo.updateScript()`
+- [x] Update status on podcast via `PodcastRepo.updateStatus()`
+- [x] Remove all `ScriptVersionRepo` references
 
 ### 4.3 Update `generate-audio.ts`
 
-- Update podcast directly via `PodcastRepo.updateAudio()`
-- Update status on podcast via `PodcastRepo.updateStatus()`
-- Change S3 key from `podcasts/{id}/audio-v{version}.wav` to `podcasts/{id}/audio.wav`
-- Remove all `ScriptVersionRepo` references
+- [x] Update podcast directly via `PodcastRepo.updateAudio()`
+- [x] Update status on podcast via `PodcastRepo.updateStatus()`
+- [x] Change S3 key from `podcasts/{id}/audio-v{version}.wav` to `podcasts/{id}/audio.wav`
+- [x] Remove all `ScriptVersionRepo` references
+- [x] Change input from `versionId` to `podcastId`
 
 ### 4.4 Update `save-changes.ts`
 
-- Work directly with podcast status (not version status)
-- Update segments/voice on podcast
-- Clear audioUrl/duration
-- **Clear all approvals** via `CollaboratorRepo.clearAllApprovals()`
-- Auto-queue audio generation job
-- Add permission check: user must be owner or collaborator
+- [x] Work directly with podcast status (not version status)
+- [x] Update segments/voice on podcast
+- [x] Clear audioUrl/duration
+- [ ] **Clear all approvals** via `CollaboratorRepo.clearAllApprovals()` (deferred to Sprint 5)
+- [x] Auto-queue audio generation job
+- [ ] Add permission check: user must be owner or collaborator (deferred to Sprint 5)
 
 ### 4.5 Delete version-specific use cases
 
 Remove these files:
-- `edit-script.ts`
-- `get-active-script.ts`
-- `progress-to.ts`
+- [x] `edit-script.ts`
+- [x] `get-active-script.ts`
+- [x] `progress-to.ts`
 
 ### 4.6 Update use case exports
 
-Update `/packages/media/src/podcast/use-cases/index.ts` to remove deleted use cases.
+- [x] Update `/packages/media/src/podcast/use-cases/index.ts` to remove deleted use cases.
 
-**Validation**: `pnpm --filter @repo/media typecheck`
+### 4.7 Update API layer (added)
+
+- [x] Update `packages/api/src/contracts/podcasts.ts` - remove `PodcastScriptOutputSchema`
+- [x] Update `packages/api/src/server/router/podcast.ts` - remove `getActiveScript`, update handlers
+- [x] Update integration tests for flattened schema
+
+### 4.8 Update server workers (added)
+
+- [x] Update `apps/server/src/workers/handlers.ts` - use `podcastId` instead of `versionId`
+- [x] Update `apps/server/src/workers/podcast-worker.ts` - simplify payload handling
+
+### 4.9 Update frontend (added)
+
+- [x] Update `apps/web/src/features/podcasts/components/podcast-detail-container.tsx`
+- [x] Update `apps/web/src/features/podcasts/components/podcast-detail.tsx`
+- [x] Update `apps/web/src/features/podcasts/components/workbench/config-panel.tsx`
+- [x] Update `apps/web/src/features/podcasts/components/workbench/workbench-layout.tsx`
+- [x] Update `apps/web/src/features/podcasts/hooks/use-optimistic-generation.ts`
+- [x] Update `apps/web/src/features/podcasts/hooks/use-optimistic-save-changes.ts`
+- [x] Update `apps/web/src/features/podcasts/lib/status.ts`
+
+**Validation**: `pnpm typecheck && pnpm build`
+
+✅ **COMPLETED** - All versioning removal done, approval clearing deferred to Sprint 5
 
 ---
 

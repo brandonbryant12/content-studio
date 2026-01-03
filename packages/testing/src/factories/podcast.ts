@@ -1,10 +1,7 @@
 import {
   generatePodcastId,
-  generateScriptVersionId,
   type PodcastId,
-  type ScriptVersionId,
   type Podcast,
-  type PodcastScript,
   type PodcastFormat,
   type VersionStatus,
   type ScriptSegment,
@@ -28,33 +25,21 @@ export interface CreateTestPodcastOptions {
   tags?: string[];
   sourceDocumentIds?: string[];
   generationContext?: GenerationContext | null;
-  createdBy?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-/**
- * Options for creating a test podcast script (version).
- */
-export interface CreateTestPodcastScriptOptions {
-  id?: string;
-  podcastId?: PodcastId;
-  version?: number;
-  isActive?: boolean;
+  // Script fields (flattened)
   status?: VersionStatus;
-  errorMessage?: string | null;
   segments?: ScriptSegment[] | null;
   summary?: string | null;
   generationPrompt?: string | null;
   audioUrl?: string | null;
   duration?: number | null;
+  errorMessage?: string | null;
+  ownerHasApproved?: boolean;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 let podcastCounter = 0;
-let scriptCounter = 0;
 
 /**
  * Default segments for a test podcast script.
@@ -68,7 +53,7 @@ export const DEFAULT_TEST_SEGMENTS: ScriptSegment[] = [
 
 /**
  * Create a test podcast with default values.
- * Note: Status is now tracked at the version (PodcastScript) level.
+ * All script fields are now directly on the podcast (flattened schema).
  */
 export const createTestPodcast = (
   options: CreateTestPodcastOptions = {},
@@ -92,33 +77,15 @@ export const createTestPodcast = (
     sourceDocumentIds: (options.sourceDocumentIds ??
       []) as Podcast['sourceDocumentIds'],
     generationContext: options.generationContext ?? null,
-    createdBy: options.createdBy ?? 'test-user-id',
-    createdAt: options.createdAt ?? now,
-    updatedAt: options.updatedAt ?? now,
-  };
-};
-
-/**
- * Create a test podcast script (version) with default values.
- */
-export const createTestPodcastScript = (
-  options: CreateTestPodcastScriptOptions = {},
-): PodcastScript => {
-  scriptCounter++;
-  const now = new Date();
-
-  return {
-    id: (options.id ?? generateScriptVersionId()) as ScriptVersionId,
-    podcastId: options.podcastId ?? generatePodcastId(),
-    version: options.version ?? 1,
-    isActive: options.isActive ?? true,
+    // Script fields (flattened)
     status: options.status ?? 'drafting',
-    errorMessage: options.errorMessage ?? null,
-    segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
-    summary: options.summary ?? 'A test podcast about interesting topics.',
+    segments: options.segments ?? null,
+    summary: options.summary ?? null,
     generationPrompt: options.generationPrompt ?? null,
     audioUrl: options.audioUrl ?? null,
     duration: options.duration ?? null,
+    errorMessage: options.errorMessage ?? null,
+    ownerHasApproved: options.ownerHasApproved ?? false,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
@@ -126,64 +93,35 @@ export const createTestPodcastScript = (
 };
 
 /**
- * Create a test podcast script with ready status.
+ * Create a test podcast with ready status and audio.
  */
-export const createReadyScript = (
-  options: Omit<
-    CreateTestPodcastScriptOptions,
-    'status' | 'audioUrl' | 'duration'
-  > = {},
-): PodcastScript => {
-  const podcastId = options.podcastId ?? generatePodcastId();
-  return createTestPodcastScript({
+export const createReadyPodcast = (
+  options: Omit<CreateTestPodcastOptions, 'status' | 'audioUrl' | 'duration'> = {},
+): Podcast => {
+  const id = options.id ?? generatePodcastId();
+  return createTestPodcast({
     ...options,
-    podcastId,
+    id,
     status: 'ready',
-    audioUrl: `https://storage.example.com/podcasts/${podcastId}/audio.wav`,
+    segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
+    summary: options.summary ?? 'A test podcast about interesting topics.',
+    audioUrl: `https://storage.example.com/podcasts/${id}/audio.wav`,
     duration: 300, // 5 minutes
   });
 };
 
 /**
- * Create a test podcast script with script ready (no audio yet).
+ * Create a test podcast with script ready status (no audio yet).
  */
-export const createScriptReadyScript = (
-  options: Omit<CreateTestPodcastScriptOptions, 'status'> = {},
-): PodcastScript => {
-  return createTestPodcastScript({
+export const createScriptReadyPodcast = (
+  options: Omit<CreateTestPodcastOptions, 'status'> = {},
+): Podcast => {
+  return createTestPodcast({
     ...options,
     status: 'script_ready',
+    segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
+    summary: options.summary ?? 'A test podcast about interesting topics.',
   });
-};
-
-/**
- * Create a test podcast with an active ready version.
- * Returns both the podcast and its version.
- */
-export const createReadyPodcastWithVersion = (
-  podcastOptions: CreateTestPodcastOptions = {},
-): { podcast: Podcast; version: PodcastScript } => {
-  const podcast = createTestPodcast(podcastOptions);
-  const version = createReadyScript({
-    podcastId: podcast.id,
-    createdBy: podcast.createdBy,
-  });
-  return { podcast, version };
-};
-
-/**
- * Create a test podcast with an active script-ready version.
- * Returns both the podcast and its version.
- */
-export const createScriptReadyPodcastWithVersion = (
-  podcastOptions: CreateTestPodcastOptions = {},
-): { podcast: Podcast; version: PodcastScript } => {
-  const podcast = createTestPodcast(podcastOptions);
-  const version = createScriptReadyScript({
-    podcastId: podcast.id,
-    createdBy: podcast.createdBy,
-  });
-  return { podcast, version };
 };
 
 /**
@@ -191,8 +129,4 @@ export const createScriptReadyPodcastWithVersion = (
  */
 export const resetPodcastCounters = () => {
   podcastCounter = 0;
-  scriptCounter = 0;
 };
-
-// Keep backwards compatible alias
-export const createAudioReadyScript = createReadyScript;

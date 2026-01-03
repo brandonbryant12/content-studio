@@ -1,9 +1,5 @@
 import { Effect } from 'effect';
-import {
-  PodcastRepo,
-  type PodcastFull,
-  type PodcastWithDocuments,
-} from '../repos/podcast-repo';
+import { PodcastRepo, type PodcastWithDocuments } from '../repos/podcast-repo';
 
 // =============================================================================
 // Types
@@ -11,7 +7,7 @@ import {
 
 export interface GetPodcastInput {
   podcastId: string;
-  includeVersion?: boolean; // If true, include active version
+  includeDocuments?: boolean; // If true, include resolved documents
 }
 
 // =============================================================================
@@ -22,17 +18,17 @@ export interface GetPodcastInput {
  * Get a podcast by ID.
  *
  * @example
- * // Get podcast with documents only
+ * // Get podcast with documents
  * const podcast = yield* getPodcast({ podcastId: 'podcast-123' });
  *
- * // Get podcast with active version
- * const podcastFull = yield* getPodcast({ podcastId: 'podcast-123', includeVersion: true });
+ * // Get podcast with resolved source documents
+ * const podcastFull = yield* getPodcast({ podcastId: 'podcast-123', includeDocuments: true });
  */
 export const getPodcast = (input: GetPodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
-    if (input.includeVersion) {
+    if (input.includeDocuments) {
       return yield* podcastRepo.findByIdFull(input.podcastId);
     }
 

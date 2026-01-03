@@ -8,7 +8,6 @@ import {
   PodcastOutputSchema,
   PodcastFullOutputSchema,
   PodcastListItemOutputSchema,
-  PodcastScriptOutputSchema,
   ScriptSegmentSchema,
   // Job schemas
   JobOutputSchema,
@@ -119,7 +118,7 @@ const podcastContract = oc
         method: 'GET',
         path: '/{id}',
         summary: 'Get podcast',
-        description: 'Retrieve a podcast with its documents and active version',
+        description: 'Retrieve a podcast with its documents',
       })
       .errors(podcastErrors)
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
@@ -168,17 +167,17 @@ const podcastContract = oc
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
       .output(std(Schema.Struct({}))),
 
-    // Get podcast script (active version)
+    // Get podcast script
     getScript: oc
       .route({
         method: 'GET',
         path: '/{id}/script',
         summary: 'Get script',
-        description: 'Get the active script version for a podcast',
+        description: 'Get the script for a podcast',
       })
       .errors(podcastErrors)
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
-      .output(std(PodcastScriptOutputSchema)),
+      .output(std(PodcastOutputSchema)),
 
     // Trigger full podcast generation (script + audio in one job)
     generate: oc

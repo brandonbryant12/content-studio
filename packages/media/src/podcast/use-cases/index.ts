@@ -29,18 +29,6 @@ export {
 // =============================================================================
 
 export {
-  getActiveScript,
-  type GetActiveScriptInput,
-} from './get-active-script';
-
-export {
-  editScript,
-  type EditScriptInput,
-  type EditScriptResult,
-  type ScriptSegment,
-} from './edit-script';
-
-export {
   saveChanges,
   type SaveChangesInput,
   type SaveChangesResult,
@@ -63,13 +51,6 @@ export {
   type GenerateAudioResult,
   InvalidAudioGenerationError,
 } from './generate-audio';
-
-export {
-  progressTo,
-  type ProgressToInput,
-  type ProgressToResult,
-  InvalidProgressionError,
-} from './progress-to';
 
 export {
   startGeneration,

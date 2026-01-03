@@ -28,8 +28,8 @@ export function WorkbenchLayout({
   onDelete,
   isDeleting,
 }: WorkbenchLayoutProps) {
-  const statusConfig = getStatusConfig(podcast.activeVersion?.status);
-  const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
+  const statusConfig = getStatusConfig(podcast.status);
+  const isGenerating = isGeneratingStatus(podcast.status);
 
   return (
     <div className="workbench">
@@ -50,7 +50,7 @@ export function WorkbenchLayout({
             <div className="workbench-title-group">
               <PodcastIcon
                 format={podcast.format}
-                status={podcast.activeVersion?.status}
+                status={podcast.status}
               />
               <div className="min-w-0">
                 <h1 className="workbench-title">{podcast.title}</h1>
@@ -72,7 +72,7 @@ export function WorkbenchLayout({
                 </Badge>
               )}
 
-              {podcast.activeVersion?.duration && (
+              {podcast.duration && (
                 <div className="workbench-duration">
                   <svg
                     className="w-4 h-4"
@@ -87,7 +87,7 @@ export function WorkbenchLayout({
                       d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {formatDuration(podcast.activeVersion.duration)}
+                  {formatDuration(podcast.duration)}
                 </div>
               )}
 
