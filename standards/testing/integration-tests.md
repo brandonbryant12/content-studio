@@ -505,6 +505,57 @@ Integration tests catch this by:
 | CRUD (create, get, update, delete) | At least 1 success + 1 error each |
 | Actions (generate, approve, etc.) | At least 1 success + 1 error each |
 | List operations | At least 1 with data + 1 empty |
+| Multi-user operations | At least 1 owner + 1 collaborator scenario |
+
+### Multi-User Collaboration Tests
+
+When a feature involves multiple users (ownership, collaboration, sharing), write tests that:
+
+1. Create separate test users for each role (owner, collaborator, stranger)
+2. Test that authorized users CAN perform the action
+3. Test that unauthorized users CANNOT perform the action
+4. Test edge cases like pending invites (userId is null)
+
+```typescript
+// Example: Testing collaborator access
+it('allows collaborator with claimed invite to approve', async () => {
+  // Create two users
+  const ownerTestUser = createTestUser();
+  const collaboratorTestUser = createTestUser();
+  await insertTestUser(ctx, ownerTestUser);
+  await insertTestUser(ctx, collaboratorTestUser);
+
+  // Create podcast owned by owner
+  const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {...});
+
+  // Add collaborator with userId set (claimed invite)
+  await insertTestCollaborator(ctx, {
+    podcastId: podcast.id,
+    userId: collaboratorTestUser.id,  // Must be set for access
+    email: collaboratorTestUser.email,
+    addedBy: ownerTestUser.id,
+  });
+
+  // Test as collaborator
+  const collaboratorUser = toUser(collaboratorTestUser);
+  const context = createMockContext(runtime, collaboratorUser);
+  const result = await handlers.approve({...});
+
+  expect(result.isOwner).toBe(false);
+});
+
+it('rejects approval from user with pending invite', async () => {
+  // userId: null means invite not claimed - should fail
+  await insertTestCollaborator(ctx, {
+    podcastId: podcast.id,
+    userId: null,  // Pending invite
+    email: pendingTestUser.email,
+    addedBy: ownerTestUser.id,
+  });
+
+  await expect(handlers.approve({...})).rejects.toThrow();
+});
+```
 
 ### When Adding New Services
 

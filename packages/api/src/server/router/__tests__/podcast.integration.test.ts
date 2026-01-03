@@ -5,6 +5,7 @@ import {
   createTestUser,
   createTestDocument,
   createTestPodcast,
+  createTestCollaborator,
   resetAllFactories,
   toUser,
   DEFAULT_TEST_SEGMENTS,
@@ -19,10 +20,12 @@ import {
   user as userTable,
   document as documentTable,
   podcast as podcastTable,
+  podcastCollaborator as collaboratorTable,
   job as jobTable,
   type PodcastFullOutput,
   type PodcastListItemOutput,
   type PodcastOutput,
+  type CollaboratorWithUserOutput,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
@@ -123,6 +126,18 @@ const handlers = {
       podcastRouter.saveChanges as unknown as ORPCProcedure,
       args,
     ),
+  listCollaborators: (
+    args: HandlerArgs,
+  ): Promise<CollaboratorWithUserOutput[]> =>
+    callHandler<CollaboratorWithUserOutput[]>(
+      podcastRouter.listCollaborators as unknown as ORPCProcedure,
+      args,
+    ),
+  approve: (args: HandlerArgs): Promise<{ isOwner: boolean }> =>
+    callHandler<{ isOwner: boolean }>(
+      podcastRouter.approve as unknown as ORPCProcedure,
+      args,
+    ),
 };
 
 // =============================================================================
@@ -217,6 +232,18 @@ const insertTestPodcast = async (
   });
   await ctx.db.insert(podcastTable).values(podcast);
   return podcast;
+};
+
+/**
+ * Insert a collaborator into the database for testing.
+ */
+const insertTestCollaborator = async (
+  ctx: TestContext,
+  options: Parameters<typeof createTestCollaborator>[0],
+) => {
+  const collaborator = createTestCollaborator(options);
+  await ctx.db.insert(collaboratorTable).values(collaborator);
+  return collaborator;
 };
 
 // =============================================================================
@@ -1400,6 +1427,237 @@ describe('podcast router', () => {
       // Assert - job is still created
       expect(result.jobId).toBeDefined();
       expect(result.status).toBe('pending');
+    });
+  });
+
+  // ===========================================================================
+  // Tests: Multi-user collaboration scenarios
+  // ===========================================================================
+
+  describe('multi-user collaboration', () => {
+    describe('list handler with collaborators', () => {
+      it('includes podcasts where user is a collaborator', async () => {
+        // Arrange - Create owner and collaborator users
+        const ownerTestUser = createTestUser();
+        const collaboratorTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+        await insertTestUser(ctx, collaboratorTestUser);
+
+        // Create a podcast owned by owner
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Shared Podcast',
+        });
+
+        // Add collaborator to the podcast (with claimed userId)
+        await insertTestCollaborator(ctx, {
+          podcastId: podcast.id,
+          userId: collaboratorTestUser.id,
+          email: collaboratorTestUser.email,
+          addedBy: ownerTestUser.id,
+        });
+
+        // Act - List podcasts as the collaborator
+        const collaboratorUser = toUser(collaboratorTestUser);
+        const context = createMockContext(runtime, collaboratorUser);
+        const result = await handlers.list({
+          context,
+          input: { limit: 10 },
+          errors,
+        });
+
+        // Assert - Collaborator can see the shared podcast
+        expect(result).toHaveLength(1);
+        expect(result[0]?.title).toBe('Shared Podcast');
+      });
+
+      it('shows podcasts where user is both owner and collaborator on different podcasts', async () => {
+        // Arrange
+        const userA = createTestUser();
+        const userB = createTestUser();
+        await insertTestUser(ctx, userA);
+        await insertTestUser(ctx, userB);
+
+        // User A owns podcast 1
+        const podcast1 = await insertTestPodcast(ctx, userA.id, {
+          title: 'Owned by A',
+        });
+
+        // User B owns podcast 2, A is collaborator
+        const podcast2 = await insertTestPodcast(ctx, userB.id, {
+          title: 'Owned by B, A collaborates',
+        });
+        await insertTestCollaborator(ctx, {
+          podcastId: podcast2.id,
+          userId: userA.id,
+          email: userA.email,
+          addedBy: userB.id,
+        });
+
+        // Act - List podcasts as user A
+        const userAAuth = toUser(userA);
+        const context = createMockContext(runtime, userAAuth);
+        const result = await handlers.list({
+          context,
+          input: { limit: 10 },
+          errors,
+        });
+
+        // Assert - User A sees both podcasts
+        expect(result).toHaveLength(2);
+        const titles = result.map((p) => p.title);
+        expect(titles).toContain('Owned by A');
+        expect(titles).toContain('Owned by B, A collaborates');
+      });
+
+      it('does not show podcasts with pending invites (userId is null)', async () => {
+        // Arrange
+        const ownerTestUser = createTestUser();
+        const invitedTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+        await insertTestUser(ctx, invitedTestUser);
+
+        // Create a podcast
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Podcast with pending invite',
+        });
+
+        // Add collaborator with NULL userId (pending invite - not yet claimed)
+        await insertTestCollaborator(ctx, {
+          podcastId: podcast.id,
+          userId: null, // Pending invite
+          email: invitedTestUser.email,
+          addedBy: ownerTestUser.id,
+        });
+
+        // Act - List podcasts as the invited user (before claiming invite)
+        const invitedUser = toUser(invitedTestUser);
+        const context = createMockContext(runtime, invitedUser);
+        const result = await handlers.list({
+          context,
+          input: { limit: 10 },
+          errors,
+        });
+
+        // Assert - Pending invites don't show in list
+        expect(result).toHaveLength(0);
+      });
+    });
+
+    describe('approve handler', () => {
+      it('allows collaborator with claimed invite to approve', async () => {
+        // Arrange
+        const ownerTestUser = createTestUser();
+        const collaboratorTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+        await insertTestUser(ctx, collaboratorTestUser);
+
+        // Create a podcast
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Podcast for approval',
+          status: 'ready',
+        });
+
+        // Add collaborator with userId set (claimed invite)
+        await insertTestCollaborator(ctx, {
+          podcastId: podcast.id,
+          userId: collaboratorTestUser.id,
+          email: collaboratorTestUser.email,
+          addedBy: ownerTestUser.id,
+        });
+
+        // Act - Approve as collaborator
+        const collaboratorUser = toUser(collaboratorTestUser);
+        const context = createMockContext(runtime, collaboratorUser);
+        const result = await handlers.approve({
+          context,
+          input: { id: podcast.id },
+          errors,
+        });
+
+        // Assert
+        expect(result.isOwner).toBe(false);
+      });
+
+      it('allows owner to approve their own podcast', async () => {
+        // Arrange
+        const ownerTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Owner podcast',
+          status: 'ready',
+        });
+
+        // Act - Approve as owner
+        const ownerUser = toUser(ownerTestUser);
+        const context = createMockContext(runtime, ownerUser);
+        const result = await handlers.approve({
+          context,
+          input: { id: podcast.id },
+          errors,
+        });
+
+        // Assert
+        expect(result.isOwner).toBe(true);
+      });
+
+      it('rejects approval from user with pending invite (userId is null)', async () => {
+        // Arrange
+        const ownerTestUser = createTestUser();
+        const pendingTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+        await insertTestUser(ctx, pendingTestUser);
+
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Podcast with pending invite',
+          status: 'ready',
+        });
+
+        // Add collaborator with NULL userId (pending invite)
+        await insertTestCollaborator(ctx, {
+          podcastId: podcast.id,
+          userId: null,
+          email: pendingTestUser.email,
+          addedBy: ownerTestUser.id,
+        });
+
+        // Act & Assert - Should fail because invite not claimed
+        const pendingUser = toUser(pendingTestUser);
+        const context = createMockContext(runtime, pendingUser);
+
+        await expect(
+          handlers.approve({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        ).rejects.toThrow();
+      });
+
+      it('rejects approval from user who is neither owner nor collaborator', async () => {
+        // Arrange
+        const ownerTestUser = createTestUser();
+        const strangerTestUser = createTestUser();
+        await insertTestUser(ctx, ownerTestUser);
+        await insertTestUser(ctx, strangerTestUser);
+
+        const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+          title: 'Private podcast',
+          status: 'ready',
+        });
+
+        // Act & Assert - Stranger cannot approve
+        const strangerUser = toUser(strangerTestUser);
+        const context = createMockContext(runtime, strangerUser);
+
+        await expect(
+          handlers.approve({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        ).rejects.toThrow();
+      });
     });
   });
 });

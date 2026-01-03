@@ -2,6 +2,7 @@ import { Context, Effect, Layer } from 'effect';
 import {
   podcast,
   document,
+  podcastCollaborator,
   type Podcast,
   type CreatePodcast,
   type UpdatePodcast,
@@ -14,7 +15,15 @@ import {
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { PodcastNotFound, DocumentNotFound } from '../../errors';
-import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
+import {
+  eq,
+  desc,
+  and,
+  or,
+  inArray,
+  exists,
+  count as drizzleCount,
+} from 'drizzle-orm';
 
 // =============================================================================
 // Types
@@ -336,7 +345,26 @@ const make: PodcastRepoService = {
   list: (options) =>
     withDb('podcastRepo.list', (db) => {
       const conditions = [];
-      if (options.createdBy) {
+
+      // If userId is specified, include podcasts where user is owner OR collaborator
+      if (options.userId) {
+        const isOwner = eq(podcast.createdBy, options.userId);
+        const isCollaborator = exists(
+          db
+            .select({ id: podcastCollaborator.id })
+            .from(podcastCollaborator)
+            .where(
+              and(
+                eq(podcastCollaborator.podcastId, podcast.id),
+                eq(podcastCollaborator.userId, options.userId),
+              ),
+            ),
+        );
+        conditions.push(or(isOwner, isCollaborator));
+      }
+
+      // Legacy filter - only by createdBy (no collaborator check)
+      if (options.createdBy && !options.userId) {
         conditions.push(eq(podcast.createdBy, options.createdBy));
       }
 
@@ -352,7 +380,26 @@ const make: PodcastRepoService = {
   count: (options) =>
     withDb('podcastRepo.count', async (db) => {
       const conditions = [];
-      if (options?.createdBy) {
+
+      // If userId is specified, count podcasts where user is owner OR collaborator
+      if (options?.userId) {
+        const isOwner = eq(podcast.createdBy, options.userId);
+        const isCollaborator = exists(
+          db
+            .select({ id: podcastCollaborator.id })
+            .from(podcastCollaborator)
+            .where(
+              and(
+                eq(podcastCollaborator.podcastId, podcast.id),
+                eq(podcastCollaborator.userId, options.userId),
+              ),
+            ),
+        );
+        conditions.push(or(isOwner, isCollaborator));
+      }
+
+      // Legacy filter - only by createdBy (no collaborator check)
+      if (options?.createdBy && !options.userId) {
         conditions.push(eq(podcast.createdBy, options.createdBy));
       }
 

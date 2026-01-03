@@ -220,6 +220,60 @@ export const handleEffect = <A, E extends { _tag: string }>(
 
 This anti-pattern caused a production bug where `CollaboratorRepo` was missing from `MediaLive` but the code compiled because the handler accepted `Effect.Effect<A, unknown, unknown>` and cast away the type information.
 
+## Cross-System Integration (Auth Hooks)
+
+Some operations need to run outside the Effect runtime, such as auth callbacks. In these cases, use direct database operations instead of Effect-based use cases.
+
+### Example: Claiming Collaborator Invites on Session Create
+
+When a user logs in, we need to claim any pending collaborator invites matching their email. This runs in a `better-auth` database hook, outside our Effect runtime:
+
+```typescript
+// packages/auth/src/server/auth.ts
+export const createAuth = ({ db, ... }: AuthOptions) => {
+  return betterAuth({
+    // ...
+    databaseHooks: {
+      session: {
+        create: {
+          after: async (session) => {
+            // Get user email
+            const [sessionUser] = await db
+              .select({ email: user.email })
+              .from(user)
+              .where(eq(user.id, session.userId))
+              .limit(1);
+
+            if (!sessionUser?.email) return;
+
+            // Claim pending invites - direct SQL, not Effect
+            await db
+              .update(podcastCollaborator)
+              .set({ userId: session.userId })
+              .where(
+                and(
+                  eq(podcastCollaborator.email, sessionUser.email),
+                  isNull(podcastCollaborator.userId),
+                ),
+              );
+          },
+        },
+      },
+    },
+  });
+};
+```
+
+**When to use this pattern:**
+- Auth lifecycle hooks (session create, user create)
+- Background job callbacks outside the main runtime
+- External system webhooks
+
+**Key rules:**
+- Use direct drizzle queries, not Effect-based repos
+- Keep the logic simple - if complex, consider a separate cron job
+- Log errors but don't fail the auth flow
+
 ## Summary
 
 | Pattern | Do | Don't |

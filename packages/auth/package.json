@@ -24,6 +24,7 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "url-join": "catalog:"
   },
