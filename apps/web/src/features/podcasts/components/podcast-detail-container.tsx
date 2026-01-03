@@ -2,11 +2,11 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
+import { useKeyboardShortcut, useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import {
   usePodcast,
   useScriptEditor,
@@ -14,10 +14,12 @@ import {
   useDocumentSelection,
   useOptimisticGeneration,
   useOptimisticSaveChanges,
+  useCollaboratorsQuery,
 } from '../hooks';
 import { isSetupMode, isGeneratingStatus } from '../lib/status';
 import { SetupWizardContainer } from './setup-wizard-container';
 import { PodcastDetail } from './podcast-detail';
+import { AddCollaboratorDialog } from './collaborators';
 
 interface PodcastDetailContainerProps {
   podcastId: string;
@@ -32,8 +34,18 @@ export function PodcastDetailContainer({
 }: PodcastDetailContainerProps) {
   const navigate = useNavigate();
 
+  // Get current user
+  const { user } = useSessionGuard();
+  const currentUserId = user?.id ?? '';
+
   // Data fetching (Suspense handles loading)
   const { data: podcast } = usePodcast(podcastId);
+
+  // Collaborator data
+  const { data: collaborators = [] } = useCollaboratorsQuery(podcastId);
+
+  // Add collaborator dialog state
+  const [isAddCollaboratorOpen, setIsAddCollaboratorOpen] = useState(false);
 
   // State management via custom hooks
   const scriptEditor = useScriptEditor({
@@ -79,6 +91,19 @@ export function PodcastDetailContainer({
 
   const isGenerating = isGeneratingStatus(podcast.status);
   const isPendingGeneration = generateMutation.isPending;
+
+  // Owner info for collaborator display
+  const owner = {
+    id: podcast.createdBy,
+    name: user?.id === podcast.createdBy ? (user?.name ?? 'You') : 'Owner',
+    image: user?.id === podcast.createdBy ? user?.image : undefined,
+    hasApproved: podcast.ownerHasApproved,
+  };
+
+  // Check if current user has approved
+  const currentUserHasApproved = podcast.createdBy === currentUserId
+    ? podcast.ownerHasApproved
+    : collaborators.find(c => c.userId === currentUserId)?.hasApproved ?? false;
 
   // Combined save handler for script, voice, and document changes
   const handleSave = useCallback(async () => {
@@ -157,6 +182,10 @@ export function PodcastDetailContainer({
     deleteMutation.mutate({ id: podcast.id });
   }, [deleteMutation, podcast.id]);
 
+  const handleManageCollaborators = useCallback(() => {
+    setIsAddCollaboratorOpen(true);
+  }, []);
+
   // Keyboard shortcut: Cmd/Ctrl+S to save
   useKeyboardShortcut({
     key: 's',
@@ -184,20 +213,32 @@ export function PodcastDetailContainer({
     : null;
 
   return (
-    <PodcastDetail
-      podcast={podcast}
-      scriptEditor={scriptEditor}
-      settings={settings}
-      documentSelection={documentSelection}
-      displayAudio={displayAudio}
-      hasChanges={hasAnyChanges}
-      isGenerating={isGenerating || isPendingGeneration}
-      isPendingGeneration={isPendingGeneration}
-      isSaving={saveChangesMutation.isPending || updateMutation.isPending}
-      isDeleting={deleteMutation.isPending}
-      onSave={handleSave}
-      onGenerate={handleGenerate}
-      onDelete={handleDelete}
-    />
+    <>
+      <PodcastDetail
+        podcast={podcast}
+        scriptEditor={scriptEditor}
+        settings={settings}
+        documentSelection={documentSelection}
+        displayAudio={displayAudio}
+        hasChanges={hasAnyChanges}
+        isGenerating={isGenerating || isPendingGeneration}
+        isPendingGeneration={isPendingGeneration}
+        isSaving={saveChangesMutation.isPending || updateMutation.isPending}
+        isDeleting={deleteMutation.isPending}
+        onSave={handleSave}
+        onGenerate={handleGenerate}
+        onDelete={handleDelete}
+        currentUserId={currentUserId}
+        owner={owner}
+        collaborators={collaborators}
+        currentUserHasApproved={currentUserHasApproved}
+        onManageCollaborators={handleManageCollaborators}
+      />
+      <AddCollaboratorDialog
+        podcastId={podcastId}
+        isOpen={isAddCollaboratorOpen}
+        onClose={() => setIsAddCollaboratorOpen(false)}
+      />
+    </>
   );
 }

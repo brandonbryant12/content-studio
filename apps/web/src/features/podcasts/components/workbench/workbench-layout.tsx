@@ -8,6 +8,8 @@ import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
 import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
+import { CollaboratorAvatars } from '../collaborators';
+import { ApproveButton } from '../collaborators';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -18,6 +20,25 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
+  // New props for collaboration
+  currentUserId: string;
+  owner: {
+    id: string;
+    name: string;
+    image?: string | null;
+    hasApproved: boolean;
+  };
+  collaborators: readonly {
+    id: string;
+    podcastId: string;
+    userId: string | null;
+    email: string;
+    userName: string | null;
+    userImage: string | null;
+    hasApproved: boolean;
+  }[];
+  currentUserHasApproved: boolean;
+  onManageCollaborators: () => void;
 }
 
 export function WorkbenchLayout({
@@ -27,6 +48,11 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
+  currentUserId,
+  owner,
+  collaborators,
+  currentUserHasApproved,
+  onManageCollaborators,
 }: WorkbenchLayoutProps) {
   const statusConfig = getStatusConfig(podcast.status);
   const isGenerating = isGeneratingStatus(podcast.status);
@@ -87,6 +113,20 @@ export function WorkbenchLayout({
                   {formatDuration(podcast.duration)}
                 </div>
               )}
+
+              {/* Collaborators and Approval */}
+              <div className="flex items-center gap-3 mr-3">
+                <CollaboratorAvatars
+                  owner={owner}
+                  collaborators={collaborators}
+                  onManageClick={onManageCollaborators}
+                />
+                <ApproveButton
+                  podcastId={podcast.id}
+                  userId={currentUserId}
+                  hasApproved={currentUserHasApproved}
+                />
+              </div>
 
               {/* Delete button */}
               <div className="workbench-actions">

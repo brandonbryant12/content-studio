@@ -328,7 +328,9 @@ const podcastContract = oc
         std(
           Schema.Struct({
             id: PodcastIdSchema,
-            email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+            email: Schema.String.pipe(
+              Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+            ),
           }),
         ),
       )

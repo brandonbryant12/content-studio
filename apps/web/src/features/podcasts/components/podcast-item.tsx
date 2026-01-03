@@ -20,10 +20,8 @@ export interface PodcastListItem {
   description: string | null;
   format: 'voice_over' | 'conversation';
   createdAt: string;
-  activeVersion?: {
-    status: VersionStatus;
-    duration: number | null;
-  } | null;
+  status: VersionStatus;
+  duration: number | null;
 }
 
 function StatusBadge({ status }: { status: VersionStatus | undefined }) {
@@ -67,16 +65,16 @@ export function PodcastItem({
       >
         <PodcastIcon
           format={podcast.format}
-          status={podcast.activeVersion?.status}
+          status={podcast.status}
         />
         <div className="flex-1 min-w-0">
           <h3 className="list-card-title">{podcast.title}</h3>
           <div className="list-card-meta gap-2 flex-wrap">
-            <StatusBadge status={podcast.activeVersion?.status} />
+            <StatusBadge status={podcast.status} />
             <FormatBadge format={podcast.format} />
-            {podcast.activeVersion?.duration && (
+            {podcast.duration && (
               <span className="text-meta">
-                {formatDuration(podcast.activeVersion.duration)}
+                {formatDuration(podcast.duration)}
               </span>
             )}
           </div>

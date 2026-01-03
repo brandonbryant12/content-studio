@@ -1,0 +1,31 @@
+// features/podcasts/hooks/use-add-collaborator.ts
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/shared/lib/errors';
+import { getCollaboratorsQueryKey } from './use-collaborators';
+
+/**
+ * Mutation to add a collaborator to a podcast.
+ * Only the podcast owner can add collaborators.
+ */
+export function useAddCollaborator(podcastId: string) {
+  const queryClient = useQueryClient();
+  const collaboratorsQueryKey = getCollaboratorsQueryKey(podcastId);
+
+  return useMutation(
+    apiClient.podcasts.addCollaborator.mutationOptions({
+      onSuccess: (data) => {
+        // Invalidate collaborators list to refetch
+        queryClient.invalidateQueries({ queryKey: collaboratorsQueryKey });
+
+        const name = data.userName || data.email;
+        toast.success(`Added ${name} as a collaborator`);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to add collaborator'));
+      },
+    }),
+  );
+}

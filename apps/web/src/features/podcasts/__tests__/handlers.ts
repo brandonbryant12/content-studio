@@ -17,10 +17,8 @@ export function createMockPodcastListItem(
     description: 'A test podcast description',
     format: 'conversation',
     createdAt: new Date().toISOString(),
-    activeVersion: {
-      status: 'ready',
-      duration: 300,
-    },
+    status: 'ready',
+    duration: 300,
     ...overrides,
   };
 }
@@ -32,21 +30,24 @@ export const mockPodcasts: PodcastListItem[] = [
     title: 'Tech Talk Episode 1',
     description: 'Discussion about latest tech trends',
     format: 'conversation',
-    activeVersion: { status: 'ready', duration: 1800 },
+    status: 'ready',
+    duration: 1800,
   }),
   createMockPodcastListItem({
     id: 'podcast-2',
     title: 'AI Weekly',
     description: 'Weekly AI news roundup',
     format: 'conversation',
-    activeVersion: { status: 'generating_script', duration: null },
+    status: 'generating_script',
+    duration: null,
   }),
   createMockPodcastListItem({
     id: 'podcast-3',
     title: 'Product Update',
     description: 'Voice over for product announcement',
     format: 'voice_over',
-    activeVersion: { status: 'drafting', duration: null },
+    status: 'drafting',
+    duration: null,
   }),
 ];
 
@@ -78,7 +79,8 @@ export const podcastHandlers = [
         id: `podcast-${Date.now()}`,
         title: body.title || 'Untitled Podcast',
         format: body.format || 'conversation',
-        activeVersion: { status: 'drafting', duration: null },
+        status: 'drafting',
+        duration: null,
       }),
     );
   }),

@@ -42,6 +42,26 @@ export interface PodcastDetailProps {
   onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
+
+  // Collaborator props
+  currentUserId: string;
+  owner: {
+    id: string;
+    name: string;
+    image?: string | null;
+    hasApproved: boolean;
+  };
+  collaborators: readonly {
+    id: string;
+    podcastId: string;
+    userId: string | null;
+    email: string;
+    userName: string | null;
+    userImage: string | null;
+    hasApproved: boolean;
+  }[];
+  currentUserHasApproved: boolean;
+  onManageCollaborators: () => void;
 }
 
 /**
@@ -61,12 +81,22 @@ export function PodcastDetail({
   onSave,
   onGenerate,
   onDelete,
+  currentUserId,
+  owner,
+  collaborators,
+  currentUserHasApproved,
+  onManageCollaborators,
 }: PodcastDetailProps) {
   return (
     <WorkbenchLayout
       podcast={podcast}
       onDelete={onDelete}
       isDeleting={isDeleting}
+      currentUserId={currentUserId}
+      owner={owner}
+      collaborators={collaborators}
+      currentUserHasApproved={currentUserHasApproved}
+      onManageCollaborators={onManageCollaborators}
       leftPanel={
         <ScriptPanel
           segments={scriptEditor.segments}

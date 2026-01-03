@@ -37,7 +37,8 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Discussion about latest tech trends',
     format: 'conversation',
     createdAt: '2024-01-15T10:00:00Z',
-    activeVersion: { status: 'ready', duration: 1800 },
+    status: 'ready',
+    duration: 1800,
   },
   {
     id: 'podcast-2',
@@ -45,7 +46,8 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Weekly AI news roundup',
     format: 'conversation',
     createdAt: '2024-01-16T10:00:00Z',
-    activeVersion: { status: 'generating_script', duration: null },
+    status: 'generating_script',
+    duration: null,
   },
   {
     id: 'podcast-3',
@@ -53,7 +55,8 @@ const mockPodcasts: PodcastListItem[] = [
     description: 'Voice over for product announcement',
     format: 'voice_over',
     createdAt: '2024-01-17T10:00:00Z',
-    activeVersion: { status: 'drafting', duration: null },
+    status: 'drafting',
+    duration: null,
   },
 ];
 
