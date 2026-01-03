@@ -4,7 +4,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { BaseDialog } from '@/shared/components/base-dialog';
-import { useDocuments } from '@/db';
+import { useDocuments } from '@/features/documents';
 import type { DocumentInfo } from '../../hooks';
 
 interface DocumentManagerProps {

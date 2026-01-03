@@ -11,7 +11,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { useDocuments } from '@/db';
+import { useDocuments } from '@/features/documents';
 
 const SUPPORTED_TYPES = [
   'text/plain',

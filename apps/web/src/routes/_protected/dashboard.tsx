@@ -9,11 +9,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { DocumentItem, UploadDocumentDialog } from '@/features/documents/components';
-import { PodcastItem } from '@/features/podcasts/components';
+import {
+  DocumentItem,
+  UploadDocumentDialog,
+  useDocumentsOrdered,
+} from '@/features/documents';
+import { PodcastItem, usePodcastsOrdered } from '@/features/podcasts';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { usePodcastsOrdered, useDocumentsOrdered } from '@/db';
 
 export const Route = createFileRoute('/_protected/dashboard')({
   component: Dashboard,

@@ -56,3 +56,26 @@ export function getPodcastListQueryKey(
   return apiClient.podcasts.list.queryOptions({ input: { limit: options.limit } })
     .queryKey;
 }
+
+/**
+ * Fetch podcast list with ordering and limit.
+ * Use this for displaying ordered podcast lists with optional limits.
+ */
+export function usePodcastsOrdered(
+  options: { limit?: number; orderBy?: 'asc' | 'desc'; enabled?: boolean } = {},
+): UseQueryResult<PodcastList, Error> {
+  const { limit, orderBy = 'desc', enabled = true } = options;
+
+  return useQuery({
+    ...apiClient.podcasts.list.queryOptions({ input: { limit } }),
+    enabled,
+    select: (data) => {
+      const sorted = [...data].sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return orderBy === 'desc' ? dateB - dateA : dateA - dateB;
+      });
+      return limit ? sorted.slice(0, limit) : sorted;
+    },
+  });
+}

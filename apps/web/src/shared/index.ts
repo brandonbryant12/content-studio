@@ -20,8 +20,10 @@ export {
   useOptimisticMutation,
   useNavigationBlock,
   useKeyboardShortcut,
+  useSessionGuard,
+  usePrevious,
 } from './hooks';
-export type { OptimisticMutationOptions } from './hooks';
+export type { OptimisticMutationOptions, UseSessionGuardReturn } from './hooks';
 
 // Lib
 export { getErrorMessage, formatDuration, formatFileSize } from './lib';

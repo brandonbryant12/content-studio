@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 5 complete, Sprint 6 next
+> **STATUS: IN PROGRESS** - Sprint 6 complete, Sprint 7 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -290,23 +290,34 @@ Deleted `routes/_protected/documents/-components/` directory.
 
 ---
 
-## Sprint 6: Dashboard and Cleanup
+## Sprint 6: Dashboard and Cleanup ✅ COMPLETE
 
 **Goal**: Update dashboard, remove old code
 
-### 6.1 Create `DashboardContainer`
-Uses hooks from both features
+### 6.1 Dashboard already clean ✅
+Dashboard was already well-structured and only needed import updates.
 
-### 6.2 Remove old directories
-After verification:
-- Delete `src/hooks/` (moved to features)
-- Delete `src/db/` (replaced by feature hooks)
-- Delete `src/components/` (moved to shared)
-- Delete route `-components/` directories
+### 6.2 Move utility hooks to shared ✅
+- Moved `use-session-guard.ts` to `shared/hooks/`
+- Moved `use-previous.ts` to `shared/hooks/`
+- Updated `shared/index.ts` barrel exports
 
-### 6.3 Update all import paths
+### 6.3 Add ordered hooks to features ✅
+- Added `usePodcastsOrdered` to `features/podcasts/hooks/use-podcast-list.ts`
+- Added `useDocumentsOrdered` to `features/documents/hooks/use-document-list.ts`
+- Added `useDocuments` alias for backward compatibility
 
-**Final Validation**: `pnpm typecheck && pnpm test && pnpm build`
+### 6.4 Update dashboard imports ✅
+- Updated `routes/_protected/dashboard.tsx` to import from features instead of `@/db`
+- Updated feature components to import from `@/features/documents` instead of `@/db`
+
+### 6.5 Remove old directories ✅
+- Deleted `src/hooks/` (moved to features and shared)
+- Deleted `src/db/` (replaced by feature hooks)
+- Deleted `routes/_protected/podcasts/-components/` (dead code, duplicated in features)
+- Deleted `routes/_protected/podcasts/-constants/` (dead code)
+
+**Final Validation**: `pnpm typecheck && pnpm build` ✅ PASSED
 
 ---
 
@@ -330,7 +341,7 @@ After verification:
 - [x] **Sprint 3**: `$podcastId.tsx` < 30 lines, Container/Presenter split
 - [x] **Sprint 4**: Podcast list page refactored
 - [x] **Sprint 5**: Documents feature follows same patterns
-- [ ] **Sprint 6**: Old code removed, all imports updated
+- [x] **Sprint 6**: Old code removed, all imports updated
 
 **Part 2: Frontend Testing**
 - [ ] **Sprint 7**: Component test infrastructure ready

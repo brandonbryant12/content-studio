@@ -7,6 +7,7 @@ export {
   usePodcastList,
   useSuspensePodcastList,
   getPodcastListQueryKey,
+  usePodcastsOrdered,
 } from './use-podcast-list';
 
 // Optimistic mutation hooks (using factory)
