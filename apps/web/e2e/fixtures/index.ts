@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { LoginPage } from '../pages/login.page';
+import { RegisterPage } from '../pages/register.page';
 import { DashboardPage } from '../pages/dashboard.page';
 import { DocumentsPage } from '../pages/documents.page';
 import { PodcastsPage } from '../pages/podcasts.page';
@@ -27,6 +28,7 @@ const AUTH_FILE = path.join(__dirname, '..', '.auth', 'user.json');
 // Fixture types
 interface PageFixtures {
   loginPage: LoginPage;
+  registerPage: RegisterPage;
   dashboardPage: DashboardPage;
   documentsPage: DocumentsPage;
   podcastsPage: PodcastsPage;
@@ -39,6 +41,10 @@ interface PageFixtures {
 export const test = base.extend<PageFixtures>({
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
+  },
+
+  registerPage: async ({ page }, use) => {
+    await use(new RegisterPage(page));
   },
 
   dashboardPage: async ({ page }, use) => {

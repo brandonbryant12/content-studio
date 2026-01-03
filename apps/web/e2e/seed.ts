@@ -78,8 +78,15 @@ async function seed() {
   }
 }
 
-// Run if executed directly
-seed().catch((error) => {
-  console.error('❌ Seed failed:', error);
-  process.exit(1);
-});
+// Run if executed directly (not imported as a module)
+// Check if this is the main module being run
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+  seed().catch((error) => {
+    console.error('❌ Seed failed:', error);
+    process.exit(1);
+  });
+}
+
+// Export seed function for use in global-setup
+export { seed };
