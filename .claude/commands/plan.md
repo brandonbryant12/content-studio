@@ -65,9 +65,16 @@ Use AskUserQuestion to gather missing information. Focus on questions that will 
 
 After gathering enough information, create the implementation plan.
 
-1. **Determine file location:**
-   - For project-wide work: `/IMPLEMENTATION_PLAN.md`
-   - For feature-specific work: `/docs/plans/{feature-name}.md`
+1. **Determine file name:**
+   - All plans go in `/plans/` directory
+   - Use kebab-case naming: `{category}-{description}.md`
+   - Categories: `feat-`, `fix-`, `refactor-`, `infra-`
+   - Examples:
+     - `feat-dark-mode.md`
+     - `feat-user-authentication.md`
+     - `refactor-podcast-generation.md`
+     - `fix-search-pagination.md`
+     - `infra-ci-pipeline.md`
 
 2. **Write the plan** following the standard format from `/standards/implementation-plan.md`:
 
@@ -141,6 +148,10 @@ After gathering enough information, create the implementation plan.
      - Total number of sprints
      - Estimated scope (small/medium/large)
      - Key architectural decisions made
+   - Show the command to run the implementation loop:
+     ```
+     ./loop.sh plans/{plan-name}.md
+     ```
    - The task is complete - do not offer to start implementation
 
 ## Quality Checklist

@@ -89,7 +89,8 @@
       "Bash(packages/media/src/podcast/use-cases/*.ts)",
       "Bash(packages/media/src/podcast/use-cases/__tests__/*.ts)",
       "Bash(packages/queue/package.json packages/queue/src/errors.ts packages/storage/package.json packages/storage/src/errors.ts )",
-      "Bash(packages/testing/src/mocks/llm.ts packages/testing/src/mocks/tts.ts)"
+      "Bash(packages/testing/src/mocks/llm.ts packages/testing/src/mocks/tts.ts)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

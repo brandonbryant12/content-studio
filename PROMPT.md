@@ -23,13 +23,13 @@ gh issue view N --json number,title,url,author,createdAt,state,body \
 
 ### -1c. Incorporate new issues
 
-Read any new issues in `known-issues/` and incorporate them into @IMPLEMENTATION_PLAN.md
+Read any new issues in `known-issues/` and incorporate them into the active plan (see "Active Plan" header above).
 
-Review open_questions to see if human has answered. If so, update @IMPLEMENTATION_PLAN.md
+Review open_questions to see if human has answered. If so, update the active plan.
 
 ## 1. Implement
 
-Read @IMPLEMENTATION_PLAN.md and implement the **single highest priority feature** using up to 5 subagents.
+Read the active plan file (specified in "Active Plan" header above) and implement the **single highest priority feature** using up to 5 subagents.
 
 **Note:** Anything listed as "out of scope" or "future work" is now **in scope**.
 
@@ -43,7 +43,7 @@ pnpm typecheck && pnpm build
 
 ## 3. Update Plan
 
-Update IMPLEMENTATION_PLAN.md with your progress:
+Update the active plan file with your progress:
 - Mark completed items
 - Add any new discoveries or blockers
 - Update priorities if needed
