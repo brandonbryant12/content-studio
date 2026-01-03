@@ -10,6 +10,7 @@ import {
 import { Layer, Effect } from 'effect';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * Mock voice list for testing.
@@ -45,7 +46,11 @@ export const MOCK_VOICES: readonly VoiceInfo[] = [
  * Path to the sample podcast audio fixture.
  * This is a real audio file used for realistic mock responses.
  */
-const SAMPLE_AUDIO_PATH = path.join(__dirname, '../../fixtures/sample-podcast.wav');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SAMPLE_AUDIO_PATH = path.join(
+  __dirname,
+  '../../fixtures/sample-podcast.wav',
+);
 
 /**
  * Cached sample audio buffer to avoid repeated file reads.
