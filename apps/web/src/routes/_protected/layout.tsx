@@ -1,4 +1,9 @@
-import { FileTextIcon, HomeIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
+import {
+  FileTextIcon,
+  HomeIcon,
+  MixerHorizontalIcon,
+  SpeakerLoudIcon,
+} from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import {
   Navigate,
@@ -63,6 +68,22 @@ function Sidebar() {
               'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
           }}
           title="Podcasts"
+        >
+          <MixerHorizontalIcon className="w-5 h-5" />
+        </Link>
+
+        <Link
+          to="/voiceovers"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          activeProps={{
+            className:
+              'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
+          }}
+          inactiveProps={{
+            className:
+              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+          }}
+          title="Voiceovers"
         >
           <SpeakerLoudIcon className="w-5 h-5" />
         </Link>

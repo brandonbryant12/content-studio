@@ -237,6 +237,32 @@ const makeQueueService = Effect.gen(function* () {
       Effect.tap(() => Effect.annotateCurrentSpan('podcast.id', podcastId)),
     );
 
+  const findPendingJobForVoiceover: QueueService['findPendingJobForVoiceover'] =
+    (voiceoverId) =>
+      runQuery(
+        'findPendingJobForVoiceover',
+        async () => {
+          const [row] = await db
+            .select()
+            .from(job)
+            .where(
+              and(
+                eq(job.type, 'generate-voiceover'),
+                inArray(job.status, ['pending', 'processing']),
+                sql`${job.payload}->>'voiceoverId' = ${voiceoverId}`,
+              ),
+            )
+            .limit(1);
+
+          return row ? mapRowToJob(row) : null;
+        },
+        'Failed to find pending job for voiceover',
+      ).pipe(
+        Effect.tap(() =>
+          Effect.annotateCurrentSpan('voiceover.id', voiceoverId),
+        ),
+      );
+
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(
       'deleteJob',
@@ -264,6 +290,7 @@ const makeQueueService = Effect.gen(function* () {
     processNextJob,
     processJobById,
     findPendingJobForPodcast,
+    findPendingJobForVoiceover,
     deleteJob,
   } satisfies QueueService;
 });

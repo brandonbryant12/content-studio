@@ -1,6 +1,6 @@
 # Voice Overs Implementation Plan
 
-> **STATUS: NOT STARTED**
+> **STATUS: IN PROGRESS - Sprint 8**
 
 ## Overview
 
@@ -428,13 +428,13 @@ POST   /voiceovers/claim-invites      # Claim pending invites
 
 ## Success Criteria
 
-- [ ] **Sprint 1**: Database tables created and migrated
-- [ ] **Sprint 2**: Repositories with full CRUD
-- [ ] **Sprint 3**: Core use cases working
-- [ ] **Sprint 4**: Collaboration use cases working
-- [ ] **Sprint 5**: API endpoints accessible
-- [ ] **Sprint 6**: Background jobs processing
-- [ ] **Sprint 7**: List page renders voice overs
+- [x] **Sprint 1**: Database tables created and migrated
+- [x] **Sprint 2**: Repositories with full CRUD
+- [x] **Sprint 3**: Core use cases working
+- [x] **Sprint 4**: Collaboration use cases working
+- [x] **Sprint 5**: API endpoints accessible
+- [x] **Sprint 6**: Background jobs processing
+- [x] **Sprint 7**: List page renders voice overs
 - [ ] **Sprint 8**: Workbench edits text/voice
 - [ ] **Sprint 9**: Generation triggers and updates in real-time
 - [ ] **Sprint 10**: Collaborators can be added and approve

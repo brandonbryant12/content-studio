@@ -323,6 +323,172 @@ export class CannotAddOwnerAsCollaborator extends Schema.TaggedError<CannotAddOw
 }
 
 // =============================================================================
+// Voiceover Errors
+// =============================================================================
+
+/**
+ * Voiceover not found.
+ */
+export class VoiceoverNotFound extends Schema.TaggedError<VoiceoverNotFound>()(
+  'VoiceoverNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'VOICEOVER_NOT_FOUND' as const;
+  static readonly httpMessage = (e: VoiceoverNotFound) =>
+    e.message ?? `Voiceover ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: VoiceoverNotFound) {
+    return { voiceoverId: e.id };
+  }
+}
+
+/**
+ * Voiceover operation failure.
+ */
+export class VoiceoverError extends Schema.TaggedError<VoiceoverError>()(
+  'VoiceoverError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Voiceover operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
+}
+
+/**
+ * User is not the owner of the voiceover.
+ */
+export class NotVoiceoverOwner extends Schema.TaggedError<NotVoiceoverOwner>()(
+  'NotVoiceoverOwner',
+  {
+    voiceoverId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_VOICEOVER_OWNER' as const;
+  static readonly httpMessage = (e: NotVoiceoverOwner) =>
+    e.message ?? 'Only the voiceover owner can perform this action';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotVoiceoverOwner) {
+    return { voiceoverId: e.voiceoverId };
+  }
+}
+
+/**
+ * User is not a collaborator or owner of the voiceover.
+ */
+export class NotVoiceoverCollaborator extends Schema.TaggedError<NotVoiceoverCollaborator>()(
+  'NotVoiceoverCollaborator',
+  {
+    voiceoverId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_VOICEOVER_COLLABORATOR' as const;
+  static readonly httpMessage = (e: NotVoiceoverCollaborator) =>
+    e.message ?? 'User is not a collaborator on this voiceover';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotVoiceoverCollaborator) {
+    return { voiceoverId: e.voiceoverId };
+  }
+}
+
+/**
+ * Voiceover collaborator already exists.
+ */
+export class VoiceoverCollaboratorAlreadyExists extends Schema.TaggedError<VoiceoverCollaboratorAlreadyExists>()(
+  'VoiceoverCollaboratorAlreadyExists',
+  {
+    voiceoverId: Schema.String,
+    email: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'VOICEOVER_COLLABORATOR_ALREADY_EXISTS' as const;
+  static readonly httpMessage = (e: VoiceoverCollaboratorAlreadyExists) =>
+    e.message ?? `${e.email} is already a collaborator on this voiceover`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: VoiceoverCollaboratorAlreadyExists) {
+    return { voiceoverId: e.voiceoverId, email: e.email };
+  }
+}
+
+/**
+ * Voiceover collaborator not found.
+ */
+export class VoiceoverCollaboratorNotFound extends Schema.TaggedError<VoiceoverCollaboratorNotFound>()(
+  'VoiceoverCollaboratorNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'VOICEOVER_COLLABORATOR_NOT_FOUND' as const;
+  static readonly httpMessage = (e: VoiceoverCollaboratorNotFound) =>
+    e.message ?? `Voiceover collaborator ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: VoiceoverCollaboratorNotFound) {
+    return { collaboratorId: e.id };
+  }
+}
+
+/**
+ * Cannot add owner as voiceover collaborator.
+ */
+export class CannotAddOwnerAsVoiceoverCollaborator extends Schema.TaggedError<CannotAddOwnerAsVoiceoverCollaborator>()(
+  'CannotAddOwnerAsVoiceoverCollaborator',
+  {
+    voiceoverId: Schema.String,
+    email: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'CANNOT_ADD_OWNER_AS_VOICEOVER_COLLABORATOR' as const;
+  static readonly httpMessage = (e: CannotAddOwnerAsVoiceoverCollaborator) =>
+    e.message ?? 'Cannot add the voiceover owner as a collaborator';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: CannotAddOwnerAsVoiceoverCollaborator) {
+    return { voiceoverId: e.voiceoverId, email: e.email };
+  }
+}
+
+/**
+ * Invalid voiceover audio generation.
+ * Text must not be empty.
+ */
+export class InvalidVoiceoverAudioGeneration extends Schema.TaggedError<InvalidVoiceoverAudioGeneration>()(
+  'InvalidVoiceoverAudioGeneration',
+  {
+    voiceoverId: Schema.String,
+    reason: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'INVALID_VOICEOVER_AUDIO_GENERATION' as const;
+  static readonly httpMessage = (e: InvalidVoiceoverAudioGeneration) =>
+    e.message ?? e.reason;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: InvalidVoiceoverAudioGeneration) {
+    return { voiceoverId: e.voiceoverId, reason: e.reason };
+  }
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -344,4 +510,12 @@ export type MediaError =
   | NotPodcastCollaborator
   | CollaboratorAlreadyExists
   | CollaboratorNotFound
-  | CannotAddOwnerAsCollaborator;
+  | CannotAddOwnerAsCollaborator
+  | VoiceoverNotFound
+  | VoiceoverError
+  | NotVoiceoverOwner
+  | NotVoiceoverCollaborator
+  | VoiceoverCollaboratorAlreadyExists
+  | VoiceoverCollaboratorNotFound
+  | CannotAddOwnerAsVoiceoverCollaborator
+  | InvalidVoiceoverAudioGeneration;

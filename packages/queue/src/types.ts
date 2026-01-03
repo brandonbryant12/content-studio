@@ -2,7 +2,11 @@ import type { JobId } from '@repo/db/schema';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
-export type JobType = 'generate-podcast' | 'generate-script' | 'generate-audio';
+export type JobType =
+  | 'generate-podcast'
+  | 'generate-script'
+  | 'generate-audio'
+  | 'generate-voiceover';
 
 export interface Job<TPayload = unknown, TResult = unknown> {
   readonly id: JobId;
@@ -48,6 +52,21 @@ export interface GenerateAudioPayload {
 }
 
 export interface GenerateAudioResult {
+  readonly audioUrl: string;
+  readonly duration: number;
+}
+
+// =============================================================================
+// Voiceover Job Types
+// =============================================================================
+
+export interface GenerateVoiceoverPayload {
+  readonly voiceoverId: string;
+  readonly userId: string;
+}
+
+export interface GenerateVoiceoverResult {
+  readonly voiceoverId: string;
   readonly audioUrl: string;
   readonly duration: number;
 }

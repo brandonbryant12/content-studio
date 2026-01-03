@@ -3,3 +3,9 @@ export {
   createPodcastWorker,
   type PodcastWorkerConfig,
 } from './podcast-worker';
+
+export { handleGenerateVoiceover } from './voiceover-handlers';
+export {
+  createVoiceoverWorker,
+  type VoiceoverWorkerConfig,
+} from './voiceover-worker';

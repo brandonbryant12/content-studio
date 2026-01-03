@@ -53,6 +53,10 @@ export interface QueueService {
     podcastId: string,
   ) => Effect.Effect<Job | null, QueueError>;
 
+  readonly findPendingJobForVoiceover: (
+    voiceoverId: string,
+  ) => Effect.Effect<Job | null, QueueError>;
+
   readonly deleteJob: (
     jobId: JobId,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;

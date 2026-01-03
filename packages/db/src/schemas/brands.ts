@@ -129,3 +129,36 @@ export type CollaboratorId = typeof CollaboratorIdSchema.Type;
 
 export const generateCollaboratorId = (): CollaboratorId =>
   `col_${generateRandomBase32()}` as CollaboratorId;
+
+// =============================================================================
+// Voiceover ID
+// =============================================================================
+
+export const VoiceoverIdSchema = Schema.String.pipe(
+  Schema.pattern(/^voc_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid voiceover ID format',
+  }),
+  Schema.brand('VoiceoverId'),
+);
+
+export type VoiceoverId = typeof VoiceoverIdSchema.Type;
+
+export const generateVoiceoverId = (): VoiceoverId =>
+  `voc_${generateRandomBase32()}` as VoiceoverId;
+
+// =============================================================================
+// Voiceover Collaborator ID
+// =============================================================================
+
+export const VoiceoverCollaboratorIdSchema = Schema.String.pipe(
+  Schema.pattern(/^vcl_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid voiceover collaborator ID format',
+  }),
+  Schema.brand('VoiceoverCollaboratorId'),
+);
+
+export type VoiceoverCollaboratorId =
+  typeof VoiceoverCollaboratorIdSchema.Type;
+
+export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
+  `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;

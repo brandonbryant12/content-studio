@@ -14,6 +14,15 @@ export {
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
+  // Voiceover errors
+  VoiceoverNotFound,
+  VoiceoverError,
+  NotVoiceoverOwner,
+  NotVoiceoverCollaborator,
+  VoiceoverCollaboratorAlreadyExists,
+  VoiceoverCollaboratorNotFound,
+  CannotAddOwnerAsVoiceoverCollaborator,
+  InvalidVoiceoverAudioGeneration,
   // Project/Media errors
   ProjectNotFound,
   MediaNotFound,
@@ -84,6 +93,34 @@ export {
   type UpdateAudioOptions,
 } from './podcast';
 
+// Voiceover module - Repos
+export {
+  VoiceoverRepo,
+  VoiceoverRepoLive,
+  VoiceoverCollaboratorRepo,
+  VoiceoverCollaboratorRepoLive,
+  type VoiceoverRepoService,
+  type VoiceoverCollaboratorRepoService,
+  type VoiceoverListOptions,
+  type VoiceoverUpdateAudioOptions,
+  type RepoAddVoiceoverCollaboratorInput,
+  type VoiceoverUserLookupInfo,
+} from './voiceover';
+
+// Voiceover module - Types
+export type {
+  Voiceover,
+  VoiceoverStatus,
+  CreateVoiceover,
+  UpdateVoiceover,
+  VoiceoverOutput,
+  VoiceoverListItemOutput,
+  VoiceoverCollaborator,
+  VoiceoverCollaboratorOutput,
+  VoiceoverCollaboratorWithUser,
+  VoiceoverCollaboratorWithUserOutput,
+} from './voiceover';
+
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import {
@@ -92,6 +129,12 @@ import {
   CollaboratorRepo,
   CollaboratorRepoLive,
 } from './podcast';
+import {
+  VoiceoverRepo,
+  VoiceoverRepoLive,
+  VoiceoverCollaboratorRepo,
+  VoiceoverCollaboratorRepoLive,
+} from './voiceover';
 
 // =============================================================================
 // Combined Media Layer
@@ -104,7 +147,12 @@ import {
  * IMPORTANT: When adding a new repo, add it here AND to MediaLive below.
  * Otherwise, use cases that depend on the repo will fail at runtime.
  */
-export type Media = DocumentRepo | PodcastRepo | CollaboratorRepo;
+export type Media =
+  | DocumentRepo
+  | PodcastRepo
+  | CollaboratorRepo
+  | VoiceoverRepo
+  | VoiceoverCollaboratorRepo;
 
 /**
  * Combined layer for all media services.
@@ -112,6 +160,7 @@ export type Media = DocumentRepo | PodcastRepo | CollaboratorRepo;
  * Provides:
  * - DocumentRepo: Document repository operations
  * - PodcastRepo: Podcast repository operations
+ * - VoiceoverRepo: Voiceover repository operations
  *
  * Requires:
  * - Db: Database connection
@@ -125,8 +174,13 @@ export type Media = DocumentRepo | PodcastRepo | CollaboratorRepo;
  * );
  * ```
  */
-export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
-  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive, CollaboratorRepoLive);
+export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
+  DocumentRepoLive,
+  PodcastRepoLive,
+  CollaboratorRepoLive,
+  VoiceoverRepoLive,
+  VoiceoverCollaboratorRepoLive,
+);
 
 // Podcast module - Use Cases (error types inferred by Effect)
 export {
@@ -193,3 +247,47 @@ export {
   type VersionStatus,
   type ScriptSegment,
 } from './podcast';
+
+// Voiceover module - Use Cases
+export {
+  createVoiceover,
+  getVoiceover,
+  listVoiceovers,
+  updateVoiceover,
+  deleteVoiceover,
+  generateVoiceoverAudio,
+  startVoiceoverGeneration,
+  getVoiceoverJob,
+  // Collaboration
+  addVoiceoverCollaborator,
+  removeVoiceoverCollaborator,
+  listVoiceoverCollaborators,
+  approveVoiceover,
+  revokeVoiceoverApproval,
+  claimVoiceoverPendingInvites,
+  // Types
+  type CreateVoiceoverInput,
+  type GetVoiceoverInput,
+  type ListVoiceoversInput,
+  type ListVoiceoversResult,
+  type UpdateVoiceoverInput,
+  type DeleteVoiceoverInput,
+  type GenerateVoiceoverAudioInput,
+  type GenerateVoiceoverAudioResult,
+  type StartVoiceoverGenerationInput,
+  type StartVoiceoverGenerationResult,
+  type GetVoiceoverJobInput,
+  type GetVoiceoverJobResult,
+  // Collaboration types
+  type AddVoiceoverCollaboratorInput,
+  type AddVoiceoverCollaboratorResult,
+  type RemoveVoiceoverCollaboratorInput,
+  type ListVoiceoverCollaboratorsInput,
+  type ListVoiceoverCollaboratorsResult,
+  type ApproveVoiceoverInput,
+  type ApproveVoiceoverResult,
+  type RevokeVoiceoverApprovalInput,
+  type RevokeVoiceoverApprovalResult,
+  type ClaimVoiceoverPendingInvitesInput,
+  type ClaimVoiceoverPendingInvitesResult,
+} from './voiceover';
