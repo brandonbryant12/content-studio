@@ -16,9 +16,7 @@ export function VoiceoverIcon({ status, className }: VoiceoverIconProps) {
     <div
       className={cn(
         'shrink-0 w-10 h-10 flex items-center justify-center rounded-lg',
-        isGenerating
-          ? 'bg-purple-100 dark:bg-purple-900/20'
-          : 'bg-muted',
+        isGenerating ? 'bg-purple-100 dark:bg-purple-900/20' : 'bg-muted',
         className,
       )}
     >

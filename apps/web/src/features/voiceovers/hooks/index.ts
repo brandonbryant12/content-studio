@@ -10,3 +10,11 @@ export {
 export { useOptimisticCreate } from './use-optimistic-create';
 
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';
+
+export { useVoiceover, getVoiceoverQueryKey } from './use-voiceover';
+
+export {
+  useVoiceoverSettings,
+  VOICES,
+  type UseVoiceoverSettingsReturn,
+} from './use-voiceover-settings';

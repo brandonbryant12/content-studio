@@ -9,5 +9,9 @@ export {
   type VoiceoverListItem,
 } from './voiceover-item';
 
+// Container/Presenter pattern components - Detail
+export { VoiceoverDetailContainer } from './voiceover-detail-container';
+export { VoiceoverDetail, type VoiceoverDetailProps } from './voiceover-detail';
+
 // Reusable components
 export { VoiceoverIcon } from './voiceover-icon';

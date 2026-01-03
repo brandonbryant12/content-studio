@@ -85,7 +85,8 @@ export function VoiceoverList({
   );
 
   const isEmpty = voiceovers.length === 0;
-  const hasNoResults = filteredVoiceovers.length === 0 && searchQuery.length > 0;
+  const hasNoResults =
+    filteredVoiceovers.length === 0 && searchQuery.length > 0;
 
   return (
     <div className="page-container-narrow">
