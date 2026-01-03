@@ -15,21 +15,14 @@ describe('ConfirmationDialog', () => {
   };
 
   it('does not render content when open=false', () => {
-    render(
-      <ConfirmationDialog
-        {...defaultProps}
-        open={false}
-      />,
-    );
+    render(<ConfirmationDialog {...defaultProps} open={false} />);
 
     expect(screen.queryByText('Test Title')).not.toBeInTheDocument();
     expect(screen.queryByText('Test Description')).not.toBeInTheDocument();
   });
 
   it('renders title and description when open=true', () => {
-    render(
-      <ConfirmationDialog {...defaultProps} />,
-    );
+    render(<ConfirmationDialog {...defaultProps} />);
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test Description')).toBeInTheDocument();
@@ -38,10 +31,7 @@ describe('ConfirmationDialog', () => {
   it('cancel button calls onOpenChange(false)', () => {
     const onOpenChange = vi.fn();
     render(
-      <ConfirmationDialog
-        {...defaultProps}
-        onOpenChange={onOpenChange}
-      />,
+      <ConfirmationDialog {...defaultProps} onOpenChange={onOpenChange} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -51,12 +41,7 @@ describe('ConfirmationDialog', () => {
 
   it('confirm button calls onConfirm', () => {
     const onConfirm = vi.fn();
-    render(
-      <ConfirmationDialog
-        {...defaultProps}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<ConfirmationDialog {...defaultProps} onConfirm={onConfirm} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
 
@@ -94,14 +79,11 @@ describe('ConfirmationDialog', () => {
   });
 
   it('uses custom cancelText when provided', () => {
-    render(
-      <ConfirmationDialog
-        {...defaultProps}
-        cancelText="Go Back"
-      />,
-    );
+    render(<ConfirmationDialog {...defaultProps} cancelText="Go Back" />);
 
     expect(screen.getByRole('button', { name: 'Go Back' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Cancel' }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -14,13 +14,14 @@ import FormFieldInfo from '@/routes/-components/common/form-field-info';
 const FormSchema = Schema.standardSchemaV1(
   Schema.Struct({
     email: Schema.String.pipe(
-      Schema.filter(
-        (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s),
-        { message: () => 'Please enter a valid email address' },
-      ),
+      Schema.filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s), {
+        message: () => 'Please enter a valid email address',
+      }),
     ),
     password: Schema.String.pipe(
-      Schema.minLength(8, { message: () => 'Password must be at least 8 characters' }),
+      Schema.minLength(8, {
+        message: () => 'Password must be at least 8 characters',
+      }),
     ),
   }),
 );

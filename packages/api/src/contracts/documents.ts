@@ -12,7 +12,9 @@ const std = Schema.standardSchemaV1;
 // Helper for query params that may come in as strings
 const CoerceNumber = Schema.Union(
   Schema.Number,
-  Schema.String.pipe(Schema.transform(Schema.Number, { decode: Number, encode: String })),
+  Schema.String.pipe(
+    Schema.transform(Schema.Number, { decode: Number, encode: String }),
+  ),
 ).pipe(Schema.compose(Schema.Number));
 
 const documentErrors = {

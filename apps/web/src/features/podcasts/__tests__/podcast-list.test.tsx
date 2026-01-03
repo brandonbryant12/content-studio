@@ -78,7 +78,9 @@ describe('PodcastList', () => {
 
     // Check header
     expect(screen.getByText('Podcasts')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create new/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /create new/i }),
+    ).toBeInTheDocument();
 
     // Check all podcast titles are rendered
     expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
@@ -162,7 +164,9 @@ describe('PodcastList', () => {
   });
 
   it('shows creating state in empty state when isCreating=true and no podcasts', () => {
-    render(<PodcastList {...createDefaultProps()} podcasts={[]} isCreating={true} />);
+    render(
+      <PodcastList {...createDefaultProps()} podcasts={[]} isCreating={true} />,
+    );
 
     // Both header and empty state buttons should show Creating... and be disabled
     const createButtons = screen.getAllByRole('button', { name: /creating/i });
@@ -189,9 +193,17 @@ describe('PodcastList', () => {
 
   it('calls onCreate from empty state button', () => {
     const onCreate = vi.fn();
-    render(<PodcastList {...createDefaultProps()} podcasts={[]} onCreate={onCreate} />);
+    render(
+      <PodcastList
+        {...createDefaultProps()}
+        podcasts={[]}
+        onCreate={onCreate}
+      />,
+    );
 
-    const createButton = screen.getByRole('button', { name: /create podcast/i });
+    const createButton = screen.getByRole('button', {
+      name: /create podcast/i,
+    });
     fireEvent.click(createButton);
 
     expect(onCreate).toHaveBeenCalledTimes(1);

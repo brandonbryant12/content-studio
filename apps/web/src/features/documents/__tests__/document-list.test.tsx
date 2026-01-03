@@ -50,7 +50,8 @@ const mockDocuments: DocumentListItem[] = [
   {
     id: 'doc-3',
     title: 'Project Roadmap',
-    source: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    source:
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     wordCount: 1200,
     originalFileSize: 45000,
     createdAt: '2024-01-17T09:15:00Z',
@@ -72,7 +73,9 @@ describe('DocumentList', () => {
     render(<DocumentList {...defaultProps} />);
 
     // Check header
-    expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Documents' }),
+    ).toBeInTheDocument();
 
     // Check all documents are rendered
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
@@ -99,11 +102,7 @@ describe('DocumentList', () => {
   it('filters documents by search query', () => {
     const onSearch = vi.fn();
     render(
-      <DocumentList
-        {...defaultProps}
-        searchQuery="API"
-        onSearch={onSearch}
-      />,
+      <DocumentList {...defaultProps} searchQuery="API" onSearch={onSearch} />,
     );
 
     // Only matching document should be visible
@@ -114,10 +113,7 @@ describe('DocumentList', () => {
 
   it('shows no results message when search matches nothing', () => {
     render(
-      <DocumentList
-        {...defaultProps}
-        searchQuery="nonexistent document xyz"
-      />,
+      <DocumentList {...defaultProps} searchQuery="nonexistent document xyz" />,
     );
 
     expect(screen.getByText('No documents found')).toBeInTheDocument();
@@ -176,7 +172,9 @@ describe('DocumentList', () => {
   it('renders Create Podcast link button', () => {
     render(<DocumentList {...defaultProps} />);
 
-    const createPodcastLink = screen.getByRole('link', { name: /create podcast/i });
+    const createPodcastLink = screen.getByRole('link', {
+      name: /create podcast/i,
+    });
     expect(createPodcastLink).toBeInTheDocument();
     expect(createPodcastLink).toHaveAttribute('href', '/podcasts');
   });

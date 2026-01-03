@@ -28,7 +28,11 @@ import {
   type PodcastScriptOutput,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
-import { PodcastRepoLive, ScriptVersionRepoLive, DocumentRepoLive } from '@repo/media';
+import {
+  PodcastRepoLive,
+  ScriptVersionRepoLive,
+  DocumentRepoLive,
+} from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
@@ -46,7 +50,9 @@ import { createMockContext, createMockErrors } from './helpers';
  * containing the actual handler function. This utility provides type-safe
  * access for testing purposes.
  */
-type ORPCProcedure = { '~orpc': { handler: (args: unknown) => Promise<unknown> } };
+type ORPCProcedure = {
+  '~orpc': { handler: (args: unknown) => Promise<unknown> };
+};
 
 const callHandler = <T>(
   procedure: ORPCProcedure,
@@ -81,23 +87,50 @@ interface GenerateResponse {
 // Typed handler accessors for podcast router
 const handlers = {
   create: (args: HandlerArgs): Promise<PodcastFullOutput> =>
-    callHandler<PodcastFullOutput>(podcastRouter.create as unknown as ORPCProcedure, args),
+    callHandler<PodcastFullOutput>(
+      podcastRouter.create as unknown as ORPCProcedure,
+      args,
+    ),
   list: (args: HandlerArgs): Promise<PodcastListItemOutput[]> =>
-    callHandler<PodcastListItemOutput[]>(podcastRouter.list as unknown as ORPCProcedure, args),
+    callHandler<PodcastListItemOutput[]>(
+      podcastRouter.list as unknown as ORPCProcedure,
+      args,
+    ),
   get: (args: HandlerArgs): Promise<PodcastFullOutput> =>
-    callHandler<PodcastFullOutput>(podcastRouter.get as unknown as ORPCProcedure, args),
+    callHandler<PodcastFullOutput>(
+      podcastRouter.get as unknown as ORPCProcedure,
+      args,
+    ),
   update: (args: HandlerArgs): Promise<PodcastOutput> =>
-    callHandler<PodcastOutput>(podcastRouter.update as unknown as ORPCProcedure, args),
+    callHandler<PodcastOutput>(
+      podcastRouter.update as unknown as ORPCProcedure,
+      args,
+    ),
   delete: (args: HandlerArgs): Promise<Record<string, never>> =>
-    callHandler<Record<string, never>>(podcastRouter.delete as unknown as ORPCProcedure, args),
+    callHandler<Record<string, never>>(
+      podcastRouter.delete as unknown as ORPCProcedure,
+      args,
+    ),
   getScript: (args: HandlerArgs): Promise<PodcastScriptOutput> =>
-    callHandler<PodcastScriptOutput>(podcastRouter.getScript as unknown as ORPCProcedure, args),
+    callHandler<PodcastScriptOutput>(
+      podcastRouter.getScript as unknown as ORPCProcedure,
+      args,
+    ),
   generate: (args: HandlerArgs): Promise<GenerateResponse> =>
-    callHandler<GenerateResponse>(podcastRouter.generate as unknown as ORPCProcedure, args),
+    callHandler<GenerateResponse>(
+      podcastRouter.generate as unknown as ORPCProcedure,
+      args,
+    ),
   getJob: (args: HandlerArgs): Promise<JobOutput> =>
-    callHandler<JobOutput>(podcastRouter.getJob as unknown as ORPCProcedure, args),
+    callHandler<JobOutput>(
+      podcastRouter.getJob as unknown as ORPCProcedure,
+      args,
+    ),
   saveChanges: (args: HandlerArgs): Promise<GenerateResponse> =>
-    callHandler<GenerateResponse>(podcastRouter.saveChanges as unknown as ORPCProcedure, args),
+    callHandler<GenerateResponse>(
+      podcastRouter.saveChanges as unknown as ORPCProcedure,
+      args,
+    ),
 };
 
 // =============================================================================
@@ -116,11 +149,17 @@ let inMemoryStorage: ReturnType<typeof createInMemoryStorage>;
  */
 const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   inMemoryStorage = createInMemoryStorage();
-  const mockAILayers = Layer.mergeAll(MockLLMLive, MockTTSLive, inMemoryStorage.layer);
+  const mockAILayers = Layer.mergeAll(
+    MockLLMLive,
+    MockTTSLive,
+    inMemoryStorage.layer,
+  );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
-  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const scriptVersionRepoLayer = ScriptVersionRepoLive.pipe(
+    Layer.provide(ctx.dbLayer),
+  );
   const queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -142,7 +181,10 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
  * Insert a user into the database for testing.
  * Required because podcasts have a foreign key to the user table.
  */
-const insertTestUser = async (ctx: TestContext, testUser: ReturnType<typeof createTestUser>) => {
+const insertTestUser = async (
+  ctx: TestContext,
+  testUser: ReturnType<typeof createTestUser>,
+) => {
   await ctx.db.insert(userTable).values({
     id: testUser.id,
     name: testUser.name,
@@ -192,10 +234,15 @@ const insertTestPodcastScript = async (
   ctx: TestContext,
   podcastId: string,
   userId: string,
-  options: Omit<NonNullable<Parameters<typeof createTestPodcastScript>[0]>, 'podcastId' | 'createdBy'> = {},
+  options: Omit<
+    NonNullable<Parameters<typeof createTestPodcastScript>[0]>,
+    'podcastId' | 'createdBy'
+  > = {},
 ) => {
   const script = createTestPodcastScript({
-    podcastId: podcastId as NonNullable<Parameters<typeof createTestPodcastScript>[0]>['podcastId'],
+    podcastId: podcastId as NonNullable<
+      Parameters<typeof createTestPodcastScript>[0]
+    >['podcastId'],
     createdBy: userId,
     ...options,
   });
@@ -318,7 +365,9 @@ describe('podcast router', () => {
       // Create another user and their podcast
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
-      await insertTestPodcast(ctx, otherTestUser.id, { title: 'Other User Podcast' });
+      await insertTestPodcast(ctx, otherTestUser.id, {
+        title: 'Other User Podcast',
+      });
 
       // Act
       const result = await handlers.list({
@@ -337,7 +386,9 @@ describe('podcast router', () => {
       // Arrange
       const context = createMockContext(runtime, user);
 
-      await insertTestPodcast(ctx, testUser.id, { title: 'Serialization Test' });
+      await insertTestPodcast(ctx, testUser.id, {
+        title: 'Serialization Test',
+      });
 
       // Act
       const result = await handlers.list({
@@ -365,7 +416,9 @@ describe('podcast router', () => {
     it('includes active version summary when present', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id, { title: 'With Version' });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'With Version',
+      });
       await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
         status: 'ready',
         isActive: true,
@@ -395,7 +448,9 @@ describe('podcast router', () => {
     it('returns podcast when found', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id, { title: 'Found Podcast' });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'Found Podcast',
+      });
 
       // Act
       const result = await handlers.get({
@@ -452,7 +507,9 @@ describe('podcast router', () => {
     it('returns podcast in serialized full format with documents and active version', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const doc = await insertTestDocument(ctx, testUser.id, { title: 'Source Doc' });
+      const doc = await insertTestDocument(ctx, testUser.id, {
+        title: 'Source Doc',
+      });
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Full Format Test',
         sourceDocumentIds: [doc.id],
@@ -512,7 +569,9 @@ describe('podcast router', () => {
     it('creates podcast with source documents', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const doc = await insertTestDocument(ctx, testUser.id, { title: 'Source Document' });
+      const doc = await insertTestDocument(ctx, testUser.id, {
+        title: 'Source Document',
+      });
       const input = {
         title: 'Podcast with Docs',
         format: 'voice_over' as const,
@@ -646,7 +705,9 @@ describe('podcast router', () => {
   describe('update handler', () => {
     it('updates podcast title', async () => {
       // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id, { title: 'Original Title' });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'Original Title',
+      });
       const context = createMockContext(runtime, user);
 
       // Act
@@ -685,7 +746,9 @@ describe('podcast router', () => {
 
     it('updates podcast target duration', async () => {
       // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id, { targetDurationMinutes: 5 });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        targetDurationMinutes: 5,
+      });
       const context = createMockContext(runtime, user);
 
       // Act
@@ -983,11 +1046,16 @@ describe('podcast router', () => {
       // Arrange
       const context = createMockContext(runtime, user);
       const podcast = await insertTestPodcast(ctx, testUser.id);
-      const script = await insertTestPodcastScript(ctx, podcast.id, testUser.id, {
-        status: 'ready',
-        isActive: true,
-        segments: DEFAULT_TEST_SEGMENTS,
-      });
+      const script = await insertTestPodcastScript(
+        ctx,
+        podcast.id,
+        testUser.id,
+        {
+          status: 'ready',
+          isActive: true,
+          segments: DEFAULT_TEST_SEGMENTS,
+        },
+      );
 
       // Act
       const result = await handlers.getScript({
@@ -1042,10 +1110,15 @@ describe('podcast router', () => {
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
       const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id);
-      const script = await insertTestPodcastScript(ctx, otherPodcast.id, otherTestUser.id, {
-        status: 'ready',
-        isActive: true,
-      });
+      const script = await insertTestPodcastScript(
+        ctx,
+        otherPodcast.id,
+        otherTestUser.id,
+        {
+          status: 'ready',
+          isActive: true,
+        },
+      );
 
       // Act - access as original user
       const context = createMockContext(runtime, user);
@@ -1201,9 +1274,9 @@ describe('podcast router', () => {
         .where(eq(jobTable.id, result.jobId as any));
 
       expect(job).toBeDefined();
-      expect((job!.payload as { promptInstructions?: string }).promptInstructions).toBe(
-        'Make it educational',
-      );
+      expect(
+        (job!.payload as { promptInstructions?: string }).promptInstructions,
+      ).toBe('Make it educational');
     });
   });
 
@@ -1269,7 +1342,12 @@ describe('podcast router', () => {
           payload: { podcastId: podcast.id, userId: testUser.id },
           createdBy: testUser.id,
           status: 'completed',
-          result: { scriptId: 'ver_123', segmentCount: 4, audioUrl: 'url', duration: 300 },
+          result: {
+            scriptId: 'ver_123',
+            segmentCount: 4,
+            audioUrl: 'url',
+            duration: 300,
+          },
           startedAt: new Date(),
           completedAt: new Date(),
         })

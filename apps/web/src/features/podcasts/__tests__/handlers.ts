@@ -64,10 +64,7 @@ export const podcastHandlers = [
     if (podcast) {
       return HttpResponse.json(podcast);
     }
-    return HttpResponse.json(
-      { error: 'Podcast not found' },
-      { status: 404 },
-    );
+    return HttpResponse.json({ error: 'Podcast not found' }, { status: 404 });
   }),
 
   // Create podcast
@@ -93,9 +90,6 @@ export const podcastHandlers = [
     if (podcast) {
       return HttpResponse.json({ success: true });
     }
-    return HttpResponse.json(
-      { error: 'Podcast not found' },
-      { status: 404 },
-    );
+    return HttpResponse.json({ error: 'Podcast not found' }, { status: 404 });
   }),
 ];

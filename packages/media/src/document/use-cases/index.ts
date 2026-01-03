@@ -10,7 +10,11 @@
 // CRUD Operations
 // =============================================================================
 
-export { listDocuments, type ListDocumentsInput, type ListDocumentsResult } from './list-documents';
+export {
+  listDocuments,
+  type ListDocumentsInput,
+  type ListDocumentsResult,
+} from './list-documents';
 
 export { getDocument, type GetDocumentInput } from './get-document';
 

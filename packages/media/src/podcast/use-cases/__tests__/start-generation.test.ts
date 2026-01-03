@@ -10,10 +10,7 @@ import type { Podcast, PodcastScript, JobId, JobStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
-import {
-  PodcastRepo,
-  type PodcastRepoService,
-} from '../../repos/podcast-repo';
+import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
 import {
   ScriptVersionRepo,
   type ScriptVersionRepoService,
@@ -60,13 +57,16 @@ const createMockScriptVersionRepo = (
   state: MockState,
   options?: {
     onUpdateStatus?: (id: string, status: VersionStatus) => void;
-    onInsert?: (data: { podcastId: string; createdBy: string; status: string }) => void;
+    onInsert?: (data: {
+      podcastId: string;
+      createdBy: string;
+      status: string;
+    }) => void;
   },
 ): Layer.Layer<ScriptVersionRepo> => {
   const service: ScriptVersionRepoService = {
     findById: () => Effect.die('not implemented'),
-    findActiveByPodcastId: () =>
-      Effect.succeed(state.activeVersion ?? null),
+    findActiveByPodcastId: () => Effect.succeed(state.activeVersion ?? null),
     update: () => Effect.die('not implemented'),
     updateStatus: (id, status) =>
       Effect.sync(() => {
@@ -77,7 +77,9 @@ const createMockScriptVersionRepo = (
     getNextVersion: () => Effect.die('not implemented'),
     insert: (data) =>
       Effect.sync(() => {
-        options?.onInsert?.(data as { podcastId: string; createdBy: string; status: string });
+        options?.onInsert?.(
+          data as { podcastId: string; createdBy: string; status: string },
+        );
         return createTestPodcastScript({
           podcastId: data.podcastId as any,
           createdBy: data.createdBy,
@@ -118,8 +120,7 @@ const createMockQueue = (
     updateJobStatus: () => Effect.die('not implemented'),
     processNextJob: () => Effect.die('not implemented'),
     processJobById: () => Effect.die('not implemented'),
-    findPendingJobForPodcast: () =>
-      Effect.succeed(state.pendingJob ?? null),
+    findPendingJobForPodcast: () => Effect.succeed(state.pendingJob ?? null),
     deleteJob: () => Effect.die('not implemented'),
   };
 
@@ -219,7 +220,10 @@ describe('startGeneration', () => {
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
-      expect(updateStatusSpy).toHaveBeenCalledWith(activeVersion.id, 'drafting');
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        activeVersion.id,
+        'drafting',
+      );
     });
 
     it('creates new drafting version when no active version exists', async () => {
@@ -275,7 +279,10 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockScriptVersionRepo({ podcast }),
-        createMockQueue({ podcast, pendingJob: existingJob }, { onEnqueue: enqueueSpy }),
+        createMockQueue(
+          { podcast, pendingJob: existingJob },
+          { onEnqueue: enqueueSpy },
+        ),
       );
 
       const result = await Effect.runPromise(

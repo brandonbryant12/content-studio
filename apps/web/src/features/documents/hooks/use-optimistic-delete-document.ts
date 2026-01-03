@@ -8,14 +8,19 @@ import type { RouterOutput } from '@repo/api/client';
 type DocumentList = RouterOutput['documents']['list'];
 
 // Extract mutationFn from oRPC options (always defined for mutations)
-const deleteMutationFn = apiClient.documents.delete.mutationOptions().mutationFn!;
+const deleteMutationFn =
+  apiClient.documents.delete.mutationOptions().mutationFn!;
 
 /**
  * Delete document from list with optimistic removal.
  * Filters out the deleted document immediately, rolls back on error.
  */
 export function useOptimisticDeleteDocument() {
-  return useOptimisticMutation<Record<string, never>, { id: string }, DocumentList>({
+  return useOptimisticMutation<
+    Record<string, never>,
+    { id: string },
+    DocumentList
+  >({
     queryKey: getDocumentListQueryKey(),
     mutationFn: deleteMutationFn,
     getOptimisticData: (current, { id }) => {

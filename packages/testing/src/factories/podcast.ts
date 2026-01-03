@@ -89,7 +89,8 @@ export const createTestPodcast = (
     promptInstructions: options.promptInstructions ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
     tags: options.tags ?? [],
-    sourceDocumentIds: (options.sourceDocumentIds ?? []) as Podcast['sourceDocumentIds'],
+    sourceDocumentIds: (options.sourceDocumentIds ??
+      []) as Podcast['sourceDocumentIds'],
     generationContext: options.generationContext ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
@@ -128,7 +129,10 @@ export const createTestPodcastScript = (
  * Create a test podcast script with ready status.
  */
 export const createReadyScript = (
-  options: Omit<CreateTestPodcastScriptOptions, 'status' | 'audioUrl' | 'duration'> = {},
+  options: Omit<
+    CreateTestPodcastScriptOptions,
+    'status' | 'audioUrl' | 'duration'
+  > = {},
 ): PodcastScript => {
   const podcastId = options.podcastId ?? generatePodcastId();
   return createTestPodcastScript({

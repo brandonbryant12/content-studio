@@ -1,8 +1,5 @@
 import { implement } from '@orpc/server';
-import {
-  type AuthInstance,
-  getSessionWithRole,
-} from '@repo/auth/server';
+import { type AuthInstance, getSessionWithRole } from '@repo/auth/server';
 import type { User } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { appContract } from '../contracts';
@@ -15,13 +12,13 @@ export type StorageConfig =
   | { provider: 'database' }
   | { provider: 'filesystem'; basePath: string; baseUrl: string }
   | {
-    provider: 's3';
-    bucket: string;
-    region: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-    endpoint?: string;
-  };
+      provider: 's3';
+      bucket: string;
+      region: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      endpoint?: string;
+    };
 
 /**
  * oRPC context passed to all handlers.
@@ -78,11 +75,9 @@ export const createORPCContext = async ({
   };
 };
 
-
 const base = implement(appContract);
 
-export const publicProcedure = base
-  .$context<ORPCContext>()
+export const publicProcedure = base.$context<ORPCContext>();
 
 export const protectedProcedure = publicProcedure.use(
   ({ context, next, errors }) => {

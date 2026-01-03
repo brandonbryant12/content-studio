@@ -42,7 +42,9 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByText('Test error message')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /try again/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows custom fallback component when provided', () => {
@@ -50,7 +52,13 @@ describe('ErrorBoundary', () => {
 
     const testError = new Error('Custom error');
 
-    function CustomFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+    function CustomFallback({
+      error,
+      resetErrorBoundary,
+    }: {
+      error: Error;
+      resetErrorBoundary: () => void;
+    }) {
       return (
         <div>
           <span>Custom Error: {error.message}</span>
@@ -66,7 +74,9 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Custom Error: Custom error')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /custom reset/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /custom reset/i }),
+    ).toBeInTheDocument();
   });
 
   it('calls onError callback when error is caught', () => {
@@ -82,9 +92,12 @@ describe('ErrorBoundary', () => {
     );
 
     expect(onError).toHaveBeenCalledTimes(1);
-    expect(onError).toHaveBeenCalledWith(testError, expect.objectContaining({
-      componentStack: expect.any(String),
-    }));
+    expect(onError).toHaveBeenCalledWith(
+      testError,
+      expect.objectContaining({
+        componentStack: expect.any(String),
+      }),
+    );
   });
 
   it('reset button clears error state and calls onReset', () => {

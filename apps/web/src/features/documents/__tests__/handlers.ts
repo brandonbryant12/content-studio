@@ -48,7 +48,8 @@ export const mockDocuments: MockDocumentListItem[] = [
   createMockDocumentListItem({
     id: 'doc-3',
     title: 'Project Roadmap',
-    source: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    source:
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     wordCount: 1200,
     originalFileSize: 45000,
     createdAt: '2024-01-17T09:15:00Z',
@@ -71,7 +72,10 @@ export const documentHandlers = [
   }),
 
   http.post(`${API_BASE}/documents.upload`, async ({ request }) => {
-    const body = (await request.json()) as { title?: string; fileName?: string };
+    const body = (await request.json()) as {
+      title?: string;
+      fileName?: string;
+    };
     return HttpResponse.json(
       createMockDocumentListItem({
         id: `doc-${Date.now()}`,

@@ -73,7 +73,11 @@ export interface PodcastRepoService {
   readonly insert: (
     data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string },
     documentIds: readonly string[],
-  ) => Effect.Effect<PodcastWithDocuments, DatabaseError | DocumentNotFound, Db>;
+  ) => Effect.Effect<
+    PodcastWithDocuments,
+    DatabaseError | DocumentNotFound,
+    Db
+  >;
 
   /**
    * Find podcast by ID with resolved documents.
@@ -105,19 +109,27 @@ export interface PodcastRepoService {
   /**
    * List podcasts with optional filters.
    */
-  readonly list: (options: ListOptions) => Effect.Effect<readonly Podcast[], DatabaseError, Db>;
+  readonly list: (
+    options: ListOptions,
+  ) => Effect.Effect<readonly Podcast[], DatabaseError, Db>;
 
   /**
    * List podcasts with active version summary (for list views).
    */
   readonly listWithActiveVersionSummary: (
     options: ListOptions,
-  ) => Effect.Effect<readonly PodcastWithActiveVersionSummary[], DatabaseError, Db>;
+  ) => Effect.Effect<
+    readonly PodcastWithActiveVersionSummary[],
+    DatabaseError,
+    Db
+  >;
 
   /**
    * Count podcasts with optional filters.
    */
-  readonly count: (options?: ListOptions) => Effect.Effect<number, DatabaseError, Db>;
+  readonly count: (
+    options?: ListOptions,
+  ) => Effect.Effect<number, DatabaseError, Db>;
 
   /**
    * Verify all document IDs exist and are owned by the specified user.
@@ -172,10 +184,7 @@ const make: PodcastRepoService = {
 
       const docs =
         docIds.length > 0
-          ? await db
-              .select()
-              .from(document)
-              .where(inArray(document.id, docIds))
+          ? await db.select().from(document).where(inArray(document.id, docIds))
           : [];
 
       const docMap = new Map(docs.map((d) => [d.id, d]));
@@ -392,7 +401,11 @@ const make: PodcastRepoService = {
     withDb('podcastRepo.verifyDocuments', async (db) => {
       const docIds = [...documentIds] as DocumentId[];
       if (docIds.length === 0) {
-        return { docs: [] as Document[], missingId: undefined as string | undefined, notOwnedId: undefined as string | undefined };
+        return {
+          docs: [] as Document[],
+          missingId: undefined as string | undefined,
+          notOwnedId: undefined as string | undefined,
+        };
       }
 
       const docs = await db
@@ -405,7 +418,11 @@ const make: PodcastRepoService = {
 
       const notOwned = docs.find((d) => d.createdBy !== userId);
 
-      return { docs, missingId: missingId as string | undefined, notOwnedId: notOwned?.id as string | undefined };
+      return {
+        docs,
+        missingId: missingId as string | undefined,
+        notOwnedId: notOwned?.id as string | undefined,
+      };
     }).pipe(
       Effect.flatMap((result) => {
         if (result.missingId) {

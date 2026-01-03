@@ -40,7 +40,9 @@ export interface ErrorFactory {
   JOB_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
   VALIDATION_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
   VOICE_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  [key: string]: ((opts: { message: string; data?: unknown }) => unknown) | undefined;
+  [key: string]:
+    | ((opts: { message: string; data?: unknown }) => unknown)
+    | undefined;
 }
 
 /**
@@ -134,8 +136,20 @@ export const handleTaggedError = <E extends { _tag: string }>(
     throw factory({ message, data });
   }
 
-  // Fallback to INTERNAL_ERROR if no matching factory
-  throw errors.INTERNAL_ERROR({ message });
+  // Fallback to standard factory based on httpStatus when custom factory not found
+  const status = ErrorClass.httpStatus!;
+  const statusFactory =
+    status === 400
+      ? errors.BAD_REQUEST
+      : status === 401
+        ? errors.UNAUTHORIZED
+        : status === 403
+          ? errors.FORBIDDEN
+          : status === 404
+            ? errors.NOT_FOUND
+            : errors.INTERNAL_ERROR;
+
+  throw statusFactory({ message, data });
 };
 
 /**
@@ -195,13 +209,21 @@ export const handleEffectWithProtocol = <A>(
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
   // Cast to the expected types - runtime will provide SharedServices
-  const typedEffect = effect as Effect.Effect<A, { _tag: string }, SharedServices>;
+  const typedEffect = effect as Effect.Effect<
+    A,
+    { _tag: string },
+    SharedServices
+  >;
 
   let tracedEffect = options?.span
-    ? typedEffect.pipe(Effect.withSpan(options.span, { attributes: options.attributes }))
+    ? typedEffect.pipe(
+        Effect.withSpan(options.span, { attributes: options.attributes }),
+      )
     : typedEffect;
 
-  const scopedEffect = user ? withCurrentUser(user)(tracedEffect) : tracedEffect;
+  const scopedEffect = user
+    ? withCurrentUser(user)(tracedEffect)
+    : tracedEffect;
 
   return runtime.runPromise(
     scopedEffect.pipe(

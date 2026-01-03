@@ -2,7 +2,11 @@
 // Custom render function with providers for component tests
 
 import { type ReactElement, type ReactNode } from 'react';
-import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Re-export everything from testing-library
@@ -49,9 +53,7 @@ export function renderWithQuery(
 
   function Wrapper({ children }: WrapperProps): ReactElement {
     return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
   }
 

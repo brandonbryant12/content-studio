@@ -15,7 +15,8 @@ export class PodcastsPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    this.createButton = page.getByRole('button', { name: /new podcast|create/i });
+    // Use "Create New" button in the header (not "Create Podcast" in empty state)
+    this.createButton = page.getByRole('button', { name: 'Create New' });
     this.searchInput = page.getByPlaceholder(/search/i);
   }
 
@@ -31,7 +32,9 @@ export class PodcastsPage extends BasePage {
    * Verify the podcasts page is displayed
    */
   async expectVisible(): Promise<void> {
-    await expect(this.page.getByText('Podcasts')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: 'Podcasts', level: 1 }),
+    ).toBeVisible();
     await expect(this.createButton).toBeVisible();
   }
 
@@ -65,9 +68,9 @@ export class PodcastsPage extends BasePage {
    * Get all podcast items
    */
   getPodcastItems(): Locator {
-    return this.page.locator('[data-testid="podcast-item"]').or(
-      this.page.locator('a[href*="/podcasts/"]'),
-    );
+    return this.page
+      .locator('[data-testid="podcast-item"]')
+      .or(this.page.locator('a[href*="/podcasts/"]'));
   }
 
   /**
@@ -126,7 +129,7 @@ export class PodcastsPage extends BasePage {
    */
   async expectEmpty(): Promise<void> {
     await expect(
-      this.page.getByText(/no podcasts/i).or(this.page.getByText(/create.*first/i)),
+      this.page.getByRole('heading', { name: /no podcasts/i }),
     ).toBeVisible();
   }
 

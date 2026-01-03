@@ -204,8 +204,18 @@ describe('voices router', () => {
     it('filters voices by gender when custom voices provided', async () => {
       // Arrange - create runtime with custom voices
       const customVoices: VoiceInfo[] = [
-        { id: 'TestMale', name: 'Test Male', gender: 'male', description: 'A male voice' },
-        { id: 'TestFemale', name: 'Test Female', gender: 'female', description: 'A female voice' },
+        {
+          id: 'TestMale',
+          name: 'Test Male',
+          gender: 'male',
+          description: 'A male voice',
+        },
+        {
+          id: 'TestFemale',
+          name: 'Test Female',
+          gender: 'female',
+          description: 'A female voice',
+        },
       ];
       const customRuntime = createTestRuntime(ctx, { voices: customVoices });
       const context = createMockContext(customRuntime, user);

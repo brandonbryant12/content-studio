@@ -21,7 +21,11 @@ export function useOptimisticDelete() {
   const queryKey = getPodcastListQueryKey();
 
   // The delete mutation returns an empty object, not void
-  return useOptimisticMutation<Record<string, never>, { id: string }, PodcastList>({
+  return useOptimisticMutation<
+    Record<string, never>,
+    { id: string },
+    PodcastList
+  >({
     queryKey,
     mutationFn: deleteMutationFn,
 

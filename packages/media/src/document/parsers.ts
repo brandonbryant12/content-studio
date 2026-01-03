@@ -205,7 +205,9 @@ const parsePptx = (
     try: async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pptxParser = require('pptx-parser') as {
-        default?: (data: Buffer) => Promise<{ slides: Array<{ text: string }> }>;
+        default?: (
+          data: Buffer,
+        ) => Promise<{ slides: Array<{ text: string }> }>;
         (data: Buffer): Promise<{ slides: Array<{ text: string }> }>;
       };
       const parse = pptxParser.default || pptxParser;

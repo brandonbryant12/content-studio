@@ -3,7 +3,10 @@ import type { PodcastScript } from '@repo/db/schema';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
+import {
+  ScriptVersionRepo,
+  type VersionStatus,
+} from '../repos/script-version-repo';
 
 // =============================================================================
 // Types
@@ -91,7 +94,9 @@ export const generateAudio = (input: GenerateAudioInput) =>
 
     // 5. Convert segments to TTS format
     const turns: SpeakerTurn[] = version.segments.map((segment) => ({
-      speaker: segment.speaker.toLowerCase().includes('host') ? 'host' : 'cohost',
+      speaker: segment.speaker.toLowerCase().includes('host')
+        ? 'host'
+        : 'cohost',
       text: segment.line,
     }));
 
@@ -131,7 +136,11 @@ export const generateAudio = (input: GenerateAudioInput) =>
       // On TTS failure, mark version as failed
       Effect.gen(function* () {
         const scriptVersionRepo = yield* ScriptVersionRepo;
-        yield* scriptVersionRepo.updateStatus(input.versionId, 'failed', error.message);
+        yield* scriptVersionRepo.updateStatus(
+          input.versionId,
+          'failed',
+          error.message,
+        );
         return yield* Effect.fail(error);
       }),
     ),

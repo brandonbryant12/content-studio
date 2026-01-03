@@ -8,7 +8,13 @@ import {
   resetPodcastCounters,
   resetAllFactories,
 } from '@repo/testing';
-import type { Podcast, PodcastScript, Document, CreatePodcast, DocumentId } from '@repo/db/schema';
+import type {
+  Podcast,
+  PodcastScript,
+  Document,
+  CreatePodcast,
+  DocumentId,
+} from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { DocumentNotFound } from '../../../errors';
 import {
@@ -39,7 +45,10 @@ interface MockRepoState {
 const createMockPodcastRepo = (
   state: MockRepoState,
   options?: {
-    onInsert?: (data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string }, documentIds: readonly string[]) => void;
+    onInsert?: (
+      data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string },
+      documentIds: readonly string[],
+    ) => void;
     verifyDocumentsError?: DocumentNotFound;
   },
 ): Layer.Layer<PodcastRepo> => {
@@ -56,20 +65,20 @@ const createMockPodcastRepo = (
     insert: (data, documentIds) =>
       Effect.sync(() => {
         options?.onInsert?.(data, documentIds);
-        const podcast = state.insertedPodcast ?? createTestPodcast({
-          title: data.title,
-          description: data.description,
-          format: data.format,
-          hostVoice: data.hostVoice,
-          coHostVoice: data.coHostVoice,
-          promptInstructions: data.promptInstructions,
-          targetDurationMinutes: data.targetDurationMinutes,
-          createdBy: data.createdBy,
-          sourceDocumentIds: [...documentIds],
-        });
-        const docs = state.documents.filter((d) =>
-          documentIds.includes(d.id),
-        );
+        const podcast =
+          state.insertedPodcast ??
+          createTestPodcast({
+            title: data.title,
+            description: data.description,
+            format: data.format,
+            hostVoice: data.hostVoice,
+            coHostVoice: data.coHostVoice,
+            promptInstructions: data.promptInstructions,
+            targetDurationMinutes: data.targetDurationMinutes,
+            createdBy: data.createdBy,
+            sourceDocumentIds: [...documentIds],
+          });
+        const docs = state.documents.filter((d) => documentIds.includes(d.id));
         const result: PodcastWithDocuments = {
           ...podcast,
           documents: docs,
@@ -82,9 +91,7 @@ const createMockPodcastRepo = (
         if (options?.verifyDocumentsError) {
           return Effect.fail(options.verifyDocumentsError);
         }
-        const docs = state.documents.filter((d) =>
-          documentIds.includes(d.id),
-        );
+        const docs = state.documents.filter((d) => documentIds.includes(d.id));
         return Effect.succeed(docs);
       }),
   };
@@ -112,14 +119,17 @@ const createMockScriptVersionRepo = (
     insert: (data) =>
       Effect.sync(() => {
         options?.onInsert?.(data);
-        return state.insertedVersion ?? createTestPodcastScript({
-          podcastId: data.podcastId as any,
-          createdBy: data.createdBy,
-          status: data.status,
-          segments: data.segments,
-          isActive: true,
-          version: 1,
-        });
+        return (
+          state.insertedVersion ??
+          createTestPodcastScript({
+            podcastId: data.podcastId as any,
+            createdBy: data.createdBy,
+            status: data.status,
+            segments: data.segments,
+            isActive: true,
+            version: 1,
+          })
+        );
       }),
   };
 
@@ -152,8 +162,14 @@ describe('createPodcast', () => {
         { documents: [] },
         { onInsert: insertSpy },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({ documents: [] });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const mockScriptVersionRepo = createMockScriptVersionRepo({
+        documents: [],
+      });
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -181,8 +197,14 @@ describe('createPodcast', () => {
         { documents: [] },
         { onInsert: insertSpy },
       );
-      const mockScriptVersionRepo = createMockScriptVersionRepo({ documents: [] });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const mockScriptVersionRepo = createMockScriptVersionRepo({
+        documents: [],
+      });
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       await Effect.runPromise(
         createPodcast({
@@ -227,7 +249,11 @@ describe('createPodcast', () => {
       const mockScriptVersionRepo = createMockScriptVersionRepo({
         documents: [doc1, doc2],
       });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -238,10 +264,10 @@ describe('createPodcast', () => {
       );
 
       expect(result.documents).toHaveLength(2);
-      expect(insertSpy).toHaveBeenCalledWith(
-        expect.anything(),
-        [doc1.id, doc2.id],
-      );
+      expect(insertSpy).toHaveBeenCalledWith(expect.anything(), [
+        doc1.id,
+        doc2.id,
+      ]);
     });
 
     it('verifies documents exist before creating podcast', async () => {
@@ -256,7 +282,11 @@ describe('createPodcast', () => {
       const mockScriptVersionRepo = createMockScriptVersionRepo({
         documents: [doc],
       });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       const result = await Effect.runPromiseExit(
         createPodcast({
@@ -278,8 +308,14 @@ describe('createPodcast', () => {
       const user = createTestUser();
 
       const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
-      const mockScriptVersionRepo = createMockScriptVersionRepo({ documents: [] });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const mockScriptVersionRepo = createMockScriptVersionRepo({
+        documents: [],
+      });
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       const result = await Effect.runPromise(
         createPodcast({
@@ -303,7 +339,11 @@ describe('createPodcast', () => {
         { documents: [] },
         { onInsert: versionInsertSpy },
       );
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       await Effect.runPromise(
         createPodcast({
@@ -335,7 +375,11 @@ describe('createPodcast', () => {
         documents: [],
         insertedVersion,
       });
-      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo, mockScriptVersionRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockPodcastRepo,
+        mockScriptVersionRepo,
+      );
 
       const result = await Effect.runPromise(
         createPodcast({

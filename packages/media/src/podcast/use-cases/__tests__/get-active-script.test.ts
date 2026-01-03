@@ -41,9 +41,8 @@ const createMockScriptVersionRepo = (
 
     findActiveByPodcastId: (podcastId: string) =>
       Effect.succeed(
-        state.versions.find(
-          (v) => v.podcastId === podcastId && v.isActive,
-        ) ?? null,
+        state.versions.find((v) => v.podcastId === podcastId && v.isActive) ??
+          null,
       ),
   };
 
@@ -218,7 +217,9 @@ describe('getActiveScript', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getActiveScript({ podcastId: podcast1.id }).pipe(Effect.provide(layers)),
+        getActiveScript({ podcastId: podcast1.id }).pipe(
+          Effect.provide(layers),
+        ),
       );
 
       expect(result.id).toBe(version1.id);
@@ -242,7 +243,9 @@ describe('getActiveScript', () => {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error).toBeInstanceOf(ScriptNotFound);
         expect((error as ScriptNotFound).podcastId).toBe(podcastId);
-        expect((error as ScriptNotFound).message).toBe('No active script found');
+        expect((error as ScriptNotFound).message).toBe(
+          'No active script found',
+        );
       }
     });
 
@@ -285,7 +288,9 @@ describe('getActiveScript', () => {
 
       // Query for podcast2, but version belongs to podcast1
       const result = await Effect.runPromiseExit(
-        getActiveScript({ podcastId: podcast2.id }).pipe(Effect.provide(layers)),
+        getActiveScript({ podcastId: podcast2.id }).pipe(
+          Effect.provide(layers),
+        ),
       );
 
       expect(result._tag).toBe('Failure');

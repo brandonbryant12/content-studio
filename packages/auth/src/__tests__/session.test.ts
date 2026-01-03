@@ -1,24 +1,32 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
-import { getSession, getSessionWithRole, requireSession } from '../server/session';
+import {
+  getSession,
+  getSessionWithRole,
+  requireSession,
+} from '../server/session';
 import { Policy, type PolicyService } from '../policy/service';
 import { Role } from '../policy/types';
 import { UnauthorizedError } from '../errors';
 import type { AuthInstance } from '../server/auth';
 
 // Mock auth instance factory
-const createMockAuth = (session: { user: { id: string; email: string; name: string } } | null): AuthInstance => ({
-  api: {
-    getSession: vi.fn().mockResolvedValue(session),
-  },
-  $Infer: {} as AuthInstance['$Infer'],
-  handler: vi.fn(),
-}) as unknown as AuthInstance;
+const createMockAuth = (
+  session: { user: { id: string; email: string; name: string } } | null,
+): AuthInstance =>
+  ({
+    api: {
+      getSession: vi.fn().mockResolvedValue(session),
+    },
+    $Infer: {} as AuthInstance['$Infer'],
+    handler: vi.fn(),
+  }) as unknown as AuthInstance;
 
 // Mock policy service
-const createMockPolicy = (roleMap: Record<string, Role> = {}): PolicyService => ({
-  getUserRole: (userId) =>
-    Effect.succeed(roleMap[userId] ?? Role.USER),
+const createMockPolicy = (
+  roleMap: Record<string, Role> = {},
+): PolicyService => ({
+  getUserRole: (userId) => Effect.succeed(roleMap[userId] ?? Role.USER),
 });
 
 describe('getSession', () => {
@@ -92,7 +100,11 @@ describe('getSessionWithRole', () => {
 
   it('should default to USER role when not found', async () => {
     const mockSession = {
-      user: { id: 'unknown-user', email: 'test@example.com', name: 'Test User' },
+      user: {
+        id: 'unknown-user',
+        email: 'test@example.com',
+        name: 'Test User',
+      },
     };
     const auth = createMockAuth(mockSession);
     const headers = new Headers();
@@ -136,7 +148,9 @@ describe('requireSession', () => {
     if (exit._tag === 'Failure') {
       const error = exit.cause._tag === 'Fail' ? exit.cause.error : null;
       expect(error).toBeInstanceOf(UnauthorizedError);
-      expect((error as UnauthorizedError).message).toBe('Authentication required');
+      expect((error as UnauthorizedError).message).toBe(
+        'Authentication required',
+      );
     }
   });
 });

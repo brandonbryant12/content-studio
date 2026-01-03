@@ -32,7 +32,9 @@ export class DocumentsPage extends BasePage {
    * Verify the documents page is displayed
    */
   async expectVisible(): Promise<void> {
-    await expect(this.page.getByText('Documents')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: 'Documents', level: 1 }),
+    ).toBeVisible();
     await expect(this.uploadButton).toBeVisible();
   }
 
@@ -93,9 +95,9 @@ export class DocumentsPage extends BasePage {
    * Get all document items
    */
   getDocumentItems(): Locator {
-    return this.page.locator('[data-testid="document-item"]').or(
-      this.page.locator('a').filter({ hasText: /\.pdf|\.txt|\.doc/i }),
-    );
+    return this.page
+      .locator('[data-testid="document-item"]')
+      .or(this.page.locator('a').filter({ hasText: /\.pdf|\.txt|\.doc/i }));
   }
 
   /**
@@ -145,7 +147,7 @@ export class DocumentsPage extends BasePage {
    */
   async expectEmpty(): Promise<void> {
     await expect(
-      this.page.getByText(/no documents/i).or(this.page.getByText(/upload.*first/i)),
+      this.page.getByRole('heading', { name: /no documents/i }),
     ).toBeVisible();
   }
 

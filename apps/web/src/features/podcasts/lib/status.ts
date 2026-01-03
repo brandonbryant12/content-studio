@@ -52,7 +52,9 @@ export const VERSION_STATUS_CONFIG: Record<VersionStatus, StatusConfig> = {
 };
 
 /** Check if a status indicates active generation (showing spinner/progress) */
-export function isGeneratingStatus(status: VersionStatus | undefined | null): boolean {
+export function isGeneratingStatus(
+  status: VersionStatus | undefined | null,
+): boolean {
   return (
     status === 'drafting' ||
     status === 'generating_script' ||

@@ -98,7 +98,9 @@ export class RegisterPage extends BasePage {
    * Verify the page is displayed correctly
    */
   async expectVisible(): Promise<void> {
-    await expect(this.page.getByText('Create account')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: /create account/i }),
+    ).toBeVisible();
     await expect(this.nameInput).toBeVisible();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();

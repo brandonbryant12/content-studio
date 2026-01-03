@@ -29,17 +29,20 @@ export function PodcastListContainer() {
     });
   }, [createMutation]);
 
-  const handleDelete = useCallback((id: string) => {
-    setDeletingId(id);
-    deleteMutation.mutate(
-      { id },
-      {
-        onSettled: () => {
-          setDeletingId(null);
+  const handleDelete = useCallback(
+    (id: string) => {
+      setDeletingId(id);
+      deleteMutation.mutate(
+        { id },
+        {
+          onSettled: () => {
+            setDeletingId(null);
+          },
         },
-      },
-    );
-  }, [deleteMutation]);
+      );
+    },
+    [deleteMutation],
+  );
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);

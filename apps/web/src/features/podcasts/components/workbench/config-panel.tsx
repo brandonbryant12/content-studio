@@ -5,7 +5,10 @@ import {
   FileTextIcon,
 } from '@radix-ui/react-icons';
 import { useState } from 'react';
-import type { UsePodcastSettingsReturn, UseDocumentSelectionReturn } from '../../hooks';
+import type {
+  UsePodcastSettingsReturn,
+  UseDocumentSelectionReturn,
+} from '../../hooks';
 import type { RouterOutput } from '@repo/api/client';
 import { AudioPlayer } from '../audio-player';
 import { DocumentManager } from './document-manager';
@@ -97,16 +100,19 @@ export function ConfigPanel({
             )}
 
             {/* Error Display */}
-            {podcast.activeVersion?.status === 'failed' && podcast.activeVersion?.errorMessage && (
-              <ErrorDisplay message={podcast.activeVersion.errorMessage} />
-            )}
+            {podcast.activeVersion?.status === 'failed' &&
+              podcast.activeVersion?.errorMessage && (
+                <ErrorDisplay message={podcast.activeVersion.errorMessage} />
+              )}
 
             {/* Source Documents */}
             <div className="docs-section">
               <div className="docs-header">
                 <h3 className="docs-title">
                   Source Documents
-                  <span className="docs-count">{documentSelection.documents.length}</span>
+                  <span className="docs-count">
+                    {documentSelection.documents.length}
+                  </span>
                 </h3>
               </div>
               <DocumentManager

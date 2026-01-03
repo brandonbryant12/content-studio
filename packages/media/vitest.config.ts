@@ -11,7 +11,8 @@ export default mergeConfig(
       // Use existing test database at localhost:5433 (started via docker compose)
       // Tests use transaction rollback for isolation
       env: {
-        TEST_POSTGRES_URL: 'postgresql://test:test@localhost:5433/content_studio_test',
+        TEST_POSTGRES_URL:
+          'postgresql://test:test@localhost:5433/content_studio_test',
       },
       // Increase timeout for database operations
       testTimeout: 30000,

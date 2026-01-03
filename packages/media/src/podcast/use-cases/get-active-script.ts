@@ -25,7 +25,9 @@ export const getActiveScript = (input: GetActiveScriptInput) =>
   Effect.gen(function* () {
     const scriptVersionRepo = yield* ScriptVersionRepo;
 
-    const version = yield* scriptVersionRepo.findActiveByPodcastId(input.podcastId);
+    const version = yield* scriptVersionRepo.findActiveByPodcastId(
+      input.podcastId,
+    );
 
     if (!version) {
       return yield* Effect.fail(

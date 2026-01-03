@@ -917,6 +917,43 @@ export const authenticatedTest = test.extend({
 export { expect };
 ```
 
+### Selector Best Practices
+
+**Use specific selectors to avoid matching multiple elements:**
+
+```typescript
+// WRONG - matches multiple elements (page title, nav links, code snippets)
+await expect(page.getByText('Podcasts')).toBeVisible();
+
+// CORRECT - use role with level for headings
+await expect(page.getByRole('heading', { name: 'Podcasts', level: 1 })).toBeVisible();
+
+// CORRECT - use exact match for buttons
+this.createButton = page.getByRole('button', { name: 'Create New' });
+
+// WRONG - regex matches both navbar and form footer links
+this.signUpLink = page.getByRole('link', { name: /sign up/i });
+
+// CORRECT - scope to specific container
+this.signUpLink = page.locator('.auth-footer').getByRole('link', { name: /sign up/i });
+```
+
+**Common selector patterns:**
+
+```typescript
+// Page titles - use heading role with level
+page.getByRole('heading', { name: 'Dashboard', level: 1 })
+
+// Buttons - use exact name when possible
+page.getByRole('button', { name: 'Create New' })
+
+// Links in specific areas - scope with locator
+page.locator('.auth-footer').getByRole('link', { name: /sign up/i })
+
+// Empty state headings (often h3)
+page.getByRole('heading', { name: /no podcasts/i })
+```
+
 ### E2E Test Examples
 
 ```typescript
@@ -982,6 +1019,77 @@ test.describe('Create Podcast', () => {
 });
 ```
 
+### API Helpers for Test Data
+
+Create API helpers for test setup/teardown:
+
+```typescript
+// e2e/utils/api.ts
+
+import { type APIRequestContext } from '@playwright/test';
+
+export class ApiHelper {
+  constructor(
+    private request: APIRequestContext,
+    private baseURL: string
+  ) {}
+
+  private get apiURL(): string {
+    return `${this.baseURL}/api`;
+  }
+
+  // Use proper RESTful methods and paths
+  private async get<T>(path: string): Promise<T> {
+    const response = await this.request.get(`${this.apiURL}${path}`);
+    if (!response.ok()) {
+      throw new Error(`GET ${path} failed: ${response.status()}`);
+    }
+    return response.json();
+  }
+
+  private async post<T>(path: string, data?: object): Promise<T> {
+    const response = await this.request.post(`${this.apiURL}${path}`, {
+      data: data ?? {},
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok()) {
+      throw new Error(`POST ${path} failed: ${response.status()}`);
+    }
+    return response.json();
+  }
+
+  // Handle 404 gracefully (already deleted)
+  private async delete(path: string): Promise<boolean> {
+    const response = await this.request.delete(`${this.apiURL}${path}`);
+    if (response.status() === 404) {
+      return false; // Already deleted
+    }
+    if (!response.ok()) {
+      throw new Error(`DELETE ${path} failed: ${response.status()}`);
+    }
+    return true;
+  }
+
+  // Cleanup helpers - handle race conditions
+  async deleteAllPodcasts(): Promise<void> {
+    const podcasts = await this.get<{ id: string }[]>('/podcasts');
+    for (const podcast of podcasts) {
+      try {
+        await this.delete(`/podcasts/${podcast.id}`);
+      } catch {
+        // Ignore errors - may have been deleted by parallel test
+      }
+    }
+  }
+}
+```
+
+**Key patterns:**
+
+1. **Use RESTful paths** - Match your API structure (`/api/podcasts`, not `/rpc/podcasts.list`)
+2. **Handle 404 as success** - Item may already be deleted
+3. **Wrap cleanup in try-catch** - Tests run in parallel and may race
+
 ### E2E Test Checklist
 
 When implementing E2E tests for a feature:
@@ -1004,6 +1112,55 @@ When implementing E2E tests for a feature:
 - [ ] Search and filter
 - [ ] Navigate between pages
 - [ ] Keyboard shortcuts work
+```
+
+### E2E Anti-Patterns
+
+```typescript
+// WRONG - getByText matches too many elements
+await expect(page.getByText('Documents')).toBeVisible();
+
+// CORRECT - use specific role and level
+await expect(page.getByRole('heading', { name: 'Documents', level: 1 })).toBeVisible();
+
+
+// WRONG - regex matches multiple buttons
+this.createButton = page.getByRole('button', { name: /create/i });
+
+// CORRECT - use exact text when multiple similar buttons exist
+this.createButton = page.getByRole('button', { name: 'Create New' });
+
+
+// WRONG - cleanup doesn't handle parallel test races
+async deleteAllPodcasts() {
+  const podcasts = await this.listPodcasts();
+  for (const podcast of podcasts) {
+    await this.deletePodcast(podcast.id); // Throws if already deleted
+  }
+}
+
+// CORRECT - ignore errors from race conditions
+async deleteAllPodcasts() {
+  const podcasts = await this.listPodcasts();
+  for (const podcast of podcasts) {
+    try {
+      await this.deletePodcast(podcast.id);
+    } catch {
+      // May have been deleted by another test
+    }
+  }
+}
+
+
+// WRONG - testing struct-level form validation by looking for error text
+await registerPage.fill('Test', 'test@example.com', 'password123', 'different123');
+await registerPage.confirmPasswordInput.blur();
+await expect(page.getByText('Passwords do not match')).toBeVisible();
+
+// CORRECT - struct-level validation may disable submit instead of showing text
+await registerPage.fill('Test', 'test@example.com', 'password123', 'different123');
+await registerPage.confirmPasswordInput.blur();
+await expect(registerPage.submitButton).toBeDisabled();
 ```
 
 ### Running E2E Tests

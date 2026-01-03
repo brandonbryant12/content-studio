@@ -43,7 +43,11 @@ export interface QueueService {
   readonly processJobById: <R = never>(
     jobId: JobId,
     handler: (job: Job) => Effect.Effect<unknown, JobProcessingError, R>,
-  ) => Effect.Effect<Job, QueueError | JobProcessingError | JobNotFoundError, R>;
+  ) => Effect.Effect<
+    Job,
+    QueueError | JobProcessingError | JobNotFoundError,
+    R
+  >;
 
   readonly findPendingJobForPodcast: (
     podcastId: string,

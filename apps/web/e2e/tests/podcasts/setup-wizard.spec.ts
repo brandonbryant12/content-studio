@@ -26,40 +26,52 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
     await expect(page.getByText(/step/i)).toBeVisible();
   });
 
-  authenticatedTest('step 1: can proceed from basics step', async ({ page }) => {
-    // Should show step indicator
-    await expect(page.getByText(/step 1/i).or(page.locator('[data-step="1"]'))).toBeVisible();
+  authenticatedTest(
+    'step 1: can proceed from basics step',
+    async ({ page }) => {
+      // Should show step indicator
+      await expect(
+        page.getByText(/step 1/i).or(page.locator('[data-step="1"]')),
+      ).toBeVisible();
 
-    // Should have a continue button
-    const continueButton = page.getByRole('button', { name: /continue/i });
-    await expect(continueButton).toBeVisible();
+      // Should have a continue button
+      const continueButton = page.getByRole('button', { name: /continue/i });
+      await expect(continueButton).toBeVisible();
 
-    await continueButton.click();
+      await continueButton.click();
 
-    // Should advance to step 2
-    await expect(page.getByText(/step 2/i).or(page.locator('[data-step="2"]'))).toBeVisible();
-  });
+      // Should advance to step 2
+      await expect(
+        page.getByText(/step 2/i).or(page.locator('[data-step="2"]')),
+      ).toBeVisible();
+    },
+  );
 
-  authenticatedTest('step 2: requires document selection to proceed', async ({ page }) => {
-    // Navigate to step 2
-    await page.getByRole('button', { name: /continue/i }).click();
+  authenticatedTest(
+    'step 2: requires document selection to proceed',
+    async ({ page }) => {
+      // Navigate to step 2
+      await page.getByRole('button', { name: /continue/i }).click();
 
-    // Continue button should be disabled without documents
-    const continueButton = page.getByRole('button', { name: /continue/i });
+      // Should show documents step
+      await expect(
+        page.getByRole('heading', { name: /add source documents/i }),
+      ).toBeVisible();
+    },
+  );
 
-    // Note: This test assumes no documents are uploaded
-    // If documents exist, the button may be enabled
-    await expect(page.getByText(/document/i)).toBeVisible();
-  });
+  authenticatedTest(
+    'step 3: can configure audio settings',
+    async ({ page, api }) => {
+      // Skip step 1
+      await page.getByRole('button', { name: /continue/i }).click();
 
-  authenticatedTest('step 3: can configure audio settings', async ({ page, api }) => {
-    // Skip step 1
-    await page.getByRole('button', { name: /continue/i }).click();
-
-    // Skip step 2 - need documents to proceed
-    // For now, we'll check if documents section is visible
-    await expect(page.getByText(/document/i)).toBeVisible();
-  });
+      // Should show documents step (step 2)
+      await expect(
+        page.getByRole('heading', { name: /add source documents/i }),
+      ).toBeVisible();
+    },
+  );
 
   authenticatedTest('has back button after first step', async ({ page }) => {
     // Advance to step 2
@@ -71,6 +83,8 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
 
     // Clicking back should return to step 1
     await backButton.click();
-    await expect(page.getByText(/step 1/i).or(page.locator('[data-step="1"]'))).toBeVisible();
+    await expect(
+      page.getByText(/step 1/i).or(page.locator('[data-step="1"]')),
+    ).toBeVisible();
   });
 });

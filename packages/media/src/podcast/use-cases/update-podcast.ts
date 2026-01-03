@@ -29,7 +29,10 @@ export const updatePodcast = (input: UpdatePodcastInput) =>
     yield* podcastRepo.findById(input.podcastId);
 
     // Update podcast metadata
-    const updatedPodcast = yield* podcastRepo.update(input.podcastId, input.data);
+    const updatedPodcast = yield* podcastRepo.update(
+      input.podcastId,
+      input.data,
+    );
 
     return updatedPodcast;
   }).pipe(

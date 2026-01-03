@@ -25,14 +25,17 @@ const envSchema = Schema.Struct({
    */
   PUBLIC_WEB_URL: Schema.optionalWith(
     Schema.String.pipe(
-      Schema.filter((s) => {
-        try {
-          new URL(s);
-          return true;
-        } catch {
-          return false;
-        }
-      }, { message: () => 'Must be a valid URL' }),
+      Schema.filter(
+        (s) => {
+          try {
+            new URL(s);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        { message: () => 'Must be a valid URL' },
+      ),
     ),
     { default: () => 'http://localhost:8085' },
   ),

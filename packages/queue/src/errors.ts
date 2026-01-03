@@ -64,4 +64,7 @@ export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()
 /**
  * All queue package errors.
  */
-export type QueuePackageError = QueueError | JobNotFoundError | JobProcessingError;
+export type QueuePackageError =
+  | QueueError
+  | JobNotFoundError
+  | JobProcessingError;

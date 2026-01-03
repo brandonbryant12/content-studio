@@ -112,7 +112,9 @@ async function seedTestUser(apiURL: string) {
   } else if (signUpResult.error?.message?.includes('already exists')) {
     console.log('   Test user already exists');
   } else {
-    throw new Error(`Failed to create test user: ${JSON.stringify(signUpResult)}`);
+    throw new Error(
+      `Failed to create test user: ${JSON.stringify(signUpResult)}`,
+    );
   }
 }
 

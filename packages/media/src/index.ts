@@ -86,7 +86,12 @@ export {
 
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
-import { PodcastRepo, PodcastRepoLive, ScriptVersionRepo, ScriptVersionRepoLive } from './podcast';
+import {
+  PodcastRepo,
+  PodcastRepoLive,
+  ScriptVersionRepo,
+  ScriptVersionRepoLive,
+} from './podcast';
 
 // =============================================================================
 // Combined Media Layer
@@ -118,11 +123,8 @@ export type Media = DocumentRepo | PodcastRepo | ScriptVersionRepo;
  * );
  * ```
  */
-export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
-  DocumentRepoLive,
-  PodcastRepoLive,
-  ScriptVersionRepoLive,
-);
+export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
+  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive, ScriptVersionRepoLive);
 
 // Podcast module - Use Cases (error types inferred by Effect)
 export {

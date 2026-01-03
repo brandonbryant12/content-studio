@@ -130,7 +130,8 @@ export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
 ) {
   static readonly httpStatus = 503 as const;
   static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
-  static readonly httpMessage = 'Database temporarily unavailable, please retry';
+  static readonly httpMessage =
+    'Database temporarily unavailable, please retry';
   static readonly logLevel = 'error' as const;
 }
 

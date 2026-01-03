@@ -75,7 +75,9 @@ export class BasePage {
    * Get the sidebar navigation
    */
   getSidebar(): Locator {
-    return this.page.locator('[data-testid="sidebar"]').or(this.page.locator('nav'));
+    return this.page
+      .locator('[data-testid="sidebar"]')
+      .or(this.page.locator('nav'));
   }
 
   /**

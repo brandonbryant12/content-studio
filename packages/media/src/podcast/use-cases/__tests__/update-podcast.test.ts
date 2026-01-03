@@ -76,8 +76,10 @@ const createMockPodcastRepo = (
           hostVoiceName: data.hostVoiceName ?? existing.hostVoiceName,
           coHostVoice: data.coHostVoice ?? existing.coHostVoice,
           coHostVoiceName: data.coHostVoiceName ?? existing.coHostVoiceName,
-          promptInstructions: data.promptInstructions ?? existing.promptInstructions,
-          targetDurationMinutes: data.targetDurationMinutes ?? existing.targetDurationMinutes,
+          promptInstructions:
+            data.promptInstructions ?? existing.promptInstructions,
+          targetDurationMinutes:
+            data.targetDurationMinutes ?? existing.targetDurationMinutes,
           tags: data.tags ? [...data.tags] : existing.tags,
           sourceDocumentIds: data.documentIds
             ? ([...data.documentIds] as Podcast['sourceDocumentIds'])

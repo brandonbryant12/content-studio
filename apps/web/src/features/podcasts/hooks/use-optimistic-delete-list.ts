@@ -8,14 +8,19 @@ import type { RouterOutput } from '@repo/api/client';
 type PodcastList = RouterOutput['podcasts']['list'];
 
 // Extract mutationFn from oRPC options (always defined for mutations)
-const deleteMutationFn = apiClient.podcasts.delete.mutationOptions().mutationFn!;
+const deleteMutationFn =
+  apiClient.podcasts.delete.mutationOptions().mutationFn!;
 
 /**
  * Delete podcast from list with optimistic removal.
  * Filters out the deleted podcast immediately, rolls back on error.
  */
 export function useOptimisticDeleteList() {
-  return useOptimisticMutation<Record<string, never>, { id: string }, PodcastList>({
+  return useOptimisticMutation<
+    Record<string, never>,
+    { id: string },
+    PodcastList
+  >({
     queryKey: getPodcastListQueryKey(),
     mutationFn: deleteMutationFn,
     getOptimisticData: (current, { id }) => {

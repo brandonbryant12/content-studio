@@ -39,9 +39,7 @@ export function SuspenseBoundary({
       FallbackComponent={FallbackComponent}
       onReset={onReset}
     >
-      <Suspense fallback={fallback ?? <DefaultFallback />}>
-        {children}
-      </Suspense>
+      <Suspense fallback={fallback ?? <DefaultFallback />}>{children}</Suspense>
     </ErrorBoundary>
   );
 }

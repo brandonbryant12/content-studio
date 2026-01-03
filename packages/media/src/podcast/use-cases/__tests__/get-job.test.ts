@@ -2,7 +2,12 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { resetAllFactories } from '@repo/testing';
 import type { JobId, JobStatus } from '@repo/db/schema';
-import { Queue, type QueueService, type Job, JobNotFoundError } from '@repo/queue';
+import {
+  Queue,
+  type QueueService,
+  type Job,
+  JobNotFoundError,
+} from '@repo/queue';
 import { getJob } from '../get-job';
 
 // =============================================================================
@@ -79,7 +84,12 @@ describe('getJob', () => {
     it('returns completed job with result', async () => {
       const job = createTestJob({
         status: 'completed',
-        result: { scriptId: 'ver_123', segmentCount: 10, audioUrl: 'https://example.com/audio.mp3', duration: 300 },
+        result: {
+          scriptId: 'ver_123',
+          segmentCount: 10,
+          audioUrl: 'https://example.com/audio.mp3',
+          duration: 300,
+        },
         completedAt: new Date('2024-01-01T01:00:00Z'),
       });
       const jobs = new Map([[job.id, job]]);
@@ -141,7 +151,9 @@ describe('getJob', () => {
       const layers = createMockQueue({ jobs: new Map() });
 
       const result = await Effect.runPromiseExit(
-        getJob({ jobId: 'job_nonexistent' as JobId }).pipe(Effect.provide(layers)),
+        getJob({ jobId: 'job_nonexistent' as JobId }).pipe(
+          Effect.provide(layers),
+        ),
       );
 
       expect(result._tag).toBe('Failure');

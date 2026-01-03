@@ -1,4 +1,7 @@
-import { createTanstackQueryAPIClient, type TanstackQueryAPIClient } from '@repo/api/client';
+import {
+  createTanstackQueryAPIClient,
+  type TanstackQueryAPIClient,
+} from '@repo/api/client';
 import { env } from '@/env';
 
 export const apiClient: TanstackQueryAPIClient = createTanstackQueryAPIClient({

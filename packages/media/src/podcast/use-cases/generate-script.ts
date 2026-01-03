@@ -3,7 +3,10 @@ import type { PodcastScript } from '@repo/db/schema';
 import { LLM } from '@repo/ai/llm';
 import { getDocumentContent } from '../../document';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
+import {
+  ScriptVersionRepo,
+  type VersionStatus,
+} from '../repos/script-version-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
 
 // =============================================================================
@@ -99,7 +102,8 @@ export const generateScript = (input: GenerateScriptInput) =>
     const combinedContent = documentContents.join('\n\n---\n\n');
 
     // 5. Build prompts
-    const effectivePrompt = input.promptInstructions ?? podcast.promptInstructions ?? '';
+    const effectivePrompt =
+      input.promptInstructions ?? podcast.promptInstructions ?? '';
     const systemPrompt = buildSystemPrompt(podcast.format, effectivePrompt);
     const userPrompt = buildUserPrompt(
       {

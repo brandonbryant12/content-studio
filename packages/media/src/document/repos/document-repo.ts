@@ -3,10 +3,7 @@ import { document, type Document, type DocumentId } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { DocumentNotFound } from '../../errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
-import type {
-  InsertDocumentInput,
-  UpdateDocumentInput,
-} from '../repository';
+import type { InsertDocumentInput, UpdateDocumentInput } from '../repository';
 
 // =============================================================================
 // Types
@@ -71,9 +68,9 @@ export interface DocumentRepoService {
   /**
    * Count documents with optional filter.
    */
-  readonly count: (
-    options?: { createdBy?: string },
-  ) => Effect.Effect<number, DatabaseError, Db>;
+  readonly count: (options?: {
+    createdBy?: string;
+  }) => Effect.Effect<number, DatabaseError, Db>;
 }
 
 // =============================================================================

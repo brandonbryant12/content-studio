@@ -22,25 +22,24 @@ const PathStartingWithSlash = Schema.String.pipe(
 
 // URL validator schema
 const UrlSchema = Schema.String.pipe(
-  Schema.filter((s) => {
-    try {
-      new URL(s);
-      return true;
-    } catch {
-      return false;
-    }
-  }, { message: () => 'Invalid URL' }),
+  Schema.filter(
+    (s) => {
+      try {
+        new URL(s);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: () => 'Invalid URL' },
+  ),
 );
 
 // Boolean string schema
-const BooleanStringSchema = Schema.transform(
-  Schema.String,
-  Schema.Boolean,
-  {
-    decode: (s) => s === 'true' || s === '1',
-    encode: (b) => (b ? 'true' : 'false'),
-  },
-);
+const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
+  decode: (s) => s === 'true' || s === '1',
+  encode: (b) => (b ? 'true' : 'false'),
+});
 
 // Storage provider schema
 const StorageProviderSchema = Schema.Union(
@@ -87,11 +86,6 @@ export const envSchema = Schema.Struct({
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String), // For S3 provider
   S3_SECRET_ACCESS_KEY: Schema.optional(Schema.String), // For S3 provider
   S3_ENDPOINT: Schema.optional(Schema.String), // For S3 provider
-
-  // ElectricSQL sync service URL
-  ELECTRIC_URL: Schema.optionalWith(Schema.String, {
-    default: () => 'http://localhost:3001',
-  }),
 });
 
 export const env = Schema.decodeUnknownSync(envSchema)(process.env);

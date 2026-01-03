@@ -23,8 +23,8 @@ export const CurrentUserRef: FiberRef.FiberRef<Option.Option<User>> =
  * const user = yield* getCurrentUser;
  * ```
  */
-export const getCurrentUser: Effect.Effect<User, UnauthorizedError> = Effect.gen(
-  function* () {
+export const getCurrentUser: Effect.Effect<User, UnauthorizedError> =
+  Effect.gen(function* () {
     const maybeUser = yield* FiberRef.get(CurrentUserRef);
     return yield* Option.match(maybeUser, {
       onNone: () =>
@@ -33,8 +33,7 @@ export const getCurrentUser: Effect.Effect<User, UnauthorizedError> = Effect.gen
         ),
       onSome: (user) => Effect.succeed(user),
     });
-  },
-);
+  });
 
 /**
  * Get the current user as Option. Never fails.

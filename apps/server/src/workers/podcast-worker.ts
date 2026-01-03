@@ -48,7 +48,9 @@ const isGenerateAudioJob = (
 /**
  * Extract podcast ID from any job payload type.
  */
-const getPodcastIdFromPayload = (payload: WorkerPayload): string | undefined => {
+const getPodcastIdFromPayload = (
+  payload: WorkerPayload,
+): string | undefined => {
   if ('podcastId' in payload) {
     return payload.podcastId;
   }

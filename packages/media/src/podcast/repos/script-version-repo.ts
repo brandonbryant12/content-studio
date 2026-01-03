@@ -1,5 +1,11 @@
 import { Context, Effect, Layer } from 'effect';
-import { podcastScript, type PodcastScript, type ScriptSegment, type ScriptVersionId, type PodcastId } from '@repo/db/schema';
+import {
+  podcastScript,
+  type PodcastScript,
+  type ScriptSegment,
+  type ScriptVersionId,
+  type PodcastId,
+} from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { ScriptNotFound } from '../../errors';
 import { eq, desc, and } from 'drizzle-orm';

@@ -318,36 +318,39 @@ describe.skipIf(!hasS3Config)('S3 Storage Live Integration', () => {
   });
 });
 
-describe.skipIf(!hasS3Config)('S3 Storage Live Integration - Error Handling', () => {
-  describe('invalid credentials', () => {
-    it('handles invalid credentials gracefully', async () => {
-      const invalidLayer = S3StorageLive({
-        bucket: S3_BUCKET!,
-        region: S3_REGION!,
-        accessKeyId: 'invalid-access-key',
-        secretAccessKey: 'invalid-secret-key',
-        endpoint: S3_ENDPOINT,
-      });
+describe.skipIf(!hasS3Config)(
+  'S3 Storage Live Integration - Error Handling',
+  () => {
+    describe('invalid credentials', () => {
+      it('handles invalid credentials gracefully', async () => {
+        const invalidLayer = S3StorageLive({
+          bucket: S3_BUCKET!,
+          region: S3_REGION!,
+          accessKeyId: 'invalid-access-key',
+          secretAccessKey: 'invalid-secret-key',
+          endpoint: S3_ENDPOINT,
+        });
 
-      const effect = Effect.gen(function* () {
-        const storage = yield* Storage;
-        return yield* storage.upload(
-          'test-invalid-creds.txt',
-          Buffer.from('test'),
-          'text/plain',
-        );
-      }).pipe(Effect.provide(invalidLayer));
+        const effect = Effect.gen(function* () {
+          const storage = yield* Storage;
+          return yield* storage.upload(
+            'test-invalid-creds.txt',
+            Buffer.from('test'),
+            'text/plain',
+          );
+        }).pipe(Effect.provide(invalidLayer));
 
-      const result = await Effect.runPromiseExit(effect);
+        const result = await Effect.runPromiseExit(effect);
 
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause;
-        expect(error._tag).toBe('Fail');
-        if (error._tag === 'Fail') {
-          expect(error.error._tag).toBe('StorageUploadError');
+        expect(result._tag).toBe('Failure');
+        if (result._tag === 'Failure') {
+          const error = result.cause;
+          expect(error._tag).toBe('Fail');
+          if (error._tag === 'Fail') {
+            expect(error.error._tag).toBe('StorageUploadError');
+          }
         }
-      }
+      });
     });
-  });
-});
+  },
+);

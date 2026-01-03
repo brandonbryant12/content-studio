@@ -28,11 +28,16 @@ test.describe('Login Page', () => {
   test('shows validation error for short password', async ({ loginPage }) => {
     await loginPage.fill('test@example.com', 'short');
     await loginPage.passwordInput.blur();
-    await loginPage.expectPasswordError('Password must be at least 8 characters');
+    await loginPage.expectPasswordError(
+      'Password must be at least 8 characters',
+    );
   });
 
   test('shows error toast for invalid credentials', async ({ loginPage }) => {
-    await loginPage.loginExpectingError('wrong@example.com', 'wrongpassword123');
+    await loginPage.loginExpectingError(
+      'wrong@example.com',
+      'wrongpassword123',
+    );
     await loginPage.expectToast('Invalid email or password');
   });
 

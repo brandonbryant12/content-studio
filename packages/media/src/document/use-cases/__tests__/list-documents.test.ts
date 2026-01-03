@@ -9,7 +9,11 @@ import {
 } from '@repo/testing';
 import type { Document } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { DocumentRepo, type DocumentRepoService, type ListOptions } from '../../repos';
+import {
+  DocumentRepo,
+  type DocumentRepoService,
+  type ListOptions,
+} from '../../repos';
 import { listDocuments } from '../list-documents';
 
 // =============================================================================
@@ -32,7 +36,10 @@ const createMockDocumentRepo = (state: MockRepoState): DocumentRepoService => ({
         .filter((doc) =>
           options.createdBy ? doc.createdBy === options.createdBy : true,
         )
-        .slice(options.offset ?? 0, (options.offset ?? 0) + (options.limit ?? 50)),
+        .slice(
+          options.offset ?? 0,
+          (options.offset ?? 0) + (options.limit ?? 50),
+        ),
     ),
 
   count: (options?: { createdBy?: string }) =>

@@ -1,4 +1,8 @@
-import { CheckIcon, LightningBoltIcon, ReloadIcon } from '@radix-ui/react-icons';
+import {
+  CheckIcon,
+  LightningBoltIcon,
+  ReloadIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { VersionStatus } from '../../lib/status';
@@ -56,7 +60,9 @@ export function GlobalActionBar({
         <div className="global-action-bar-content">
           <div className="global-action-bar-changes">
             <div className="global-action-bar-indicator" />
-            <span className="global-action-bar-changes-text">Unsaved changes</span>
+            <span className="global-action-bar-changes-text">
+              Unsaved changes
+            </span>
           </div>
           <div className="global-action-bar-actions">
             <Button
@@ -97,7 +103,9 @@ export function GlobalActionBar({
                 : 'Draft'}
           </span>
         </div>
-        <div className="global-action-bar-actions">{renderContextActions()}</div>
+        <div className="global-action-bar-actions">
+          {renderContextActions()}
+        </div>
       </div>
     </div>
   );

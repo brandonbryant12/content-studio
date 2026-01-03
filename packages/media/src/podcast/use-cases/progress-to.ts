@@ -1,7 +1,10 @@
 import { Effect } from 'effect';
 import type { PodcastScript } from '@repo/db/schema';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
+import {
+  ScriptVersionRepo,
+  type VersionStatus,
+} from '../repos/script-version-repo';
 
 // =============================================================================
 // Types
@@ -86,7 +89,9 @@ export const progressTo = (input: ProgressToInput) =>
     const podcast = yield* podcastRepo.findById(input.podcastId);
 
     // 2. Get active version (or create draft if none exists)
-    let version = yield* scriptVersionRepo.findActiveByPodcastId(input.podcastId);
+    let version = yield* scriptVersionRepo.findActiveByPodcastId(
+      input.podcastId,
+    );
 
     if (!version) {
       // Create initial drafting version

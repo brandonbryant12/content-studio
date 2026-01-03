@@ -2,7 +2,10 @@ import { Effect } from 'effect';
 import type { PodcastScript, ScriptSegment } from '@repo/db/schema';
 import { ScriptNotFound } from '../../errors';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { ScriptVersionRepo, type VersionStatus } from '../repos/script-version-repo';
+import {
+  ScriptVersionRepo,
+  type VersionStatus,
+} from '../repos/script-version-repo';
 
 // =============================================================================
 // Types
@@ -120,9 +123,15 @@ export const saveChanges = (input: SaveChangesInput) =>
     if (hasVoiceChanges) {
       yield* podcastRepo.update(input.podcastId, {
         ...(input.hostVoice !== undefined && { hostVoice: input.hostVoice }),
-        ...(input.hostVoiceName !== undefined && { hostVoiceName: input.hostVoiceName }),
-        ...(input.coHostVoice !== undefined && { coHostVoice: input.coHostVoice }),
-        ...(input.coHostVoiceName !== undefined && { coHostVoiceName: input.coHostVoiceName }),
+        ...(input.hostVoiceName !== undefined && {
+          hostVoiceName: input.hostVoiceName,
+        }),
+        ...(input.coHostVoice !== undefined && {
+          coHostVoice: input.coHostVoice,
+        }),
+        ...(input.coHostVoiceName !== undefined && {
+          coHostVoiceName: input.coHostVoiceName,
+        }),
       });
     }
 

@@ -58,8 +58,9 @@ export function useSuspenseDocumentList(
 export function getDocumentListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.documents.list.queryOptions({ input: { limit: options.limit } })
-    .queryKey;
+  return apiClient.documents.list.queryOptions({
+    input: { limit: options.limit },
+  }).queryKey;
 }
 
 /**

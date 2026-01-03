@@ -98,7 +98,11 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       userId: podcast.createdBy,
     };
 
-    const job = yield* queue.enqueue('generate-audio', payload, podcast.createdBy);
+    const job = yield* queue.enqueue(
+      'generate-audio',
+      payload,
+      podcast.createdBy,
+    );
 
     return {
       jobId: job.id,

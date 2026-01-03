@@ -95,9 +95,7 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
 
     case 'VALIDATION_ERROR': {
       const data = error.data as { field?: string } | undefined;
-      return data?.field
-        ? `Invalid value for ${data.field}`
-        : error.message;
+      return data?.field ? `Invalid value for ${data.field}` : error.message;
     }
 
     case 'SERVICE_UNAVAILABLE': {

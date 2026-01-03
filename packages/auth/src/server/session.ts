@@ -31,7 +31,11 @@ export const getSession = (
 export const getSessionWithRole = (
   auth: AuthInstance,
   headers: Headers,
-): Effect.Effect<{ session: Session; user: User } | null, PolicyError, Policy> =>
+): Effect.Effect<
+  { session: Session; user: User } | null,
+  PolicyError,
+  Policy
+> =>
   Effect.gen(function* () {
     const session = yield* getSession(auth, headers);
     if (!session?.user) return null;

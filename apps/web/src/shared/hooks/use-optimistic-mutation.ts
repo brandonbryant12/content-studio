@@ -19,7 +19,7 @@ export interface OptimisticMutationOptions<TData, TVariables, TCache = TData> {
   /** Transform current cache to optimistic state */
   getOptimisticData: (
     current: TCache | undefined,
-    variables: TVariables
+    variables: TVariables,
   ) => TCache | undefined;
 
   /** Success message (optional) */
@@ -71,9 +71,10 @@ export function useOptimisticMutation<TData, TVariables, TCache = TData>({
 
     onSuccess: (data, variables) => {
       if (showSuccessToast && successMessage) {
-        const message = typeof successMessage === 'function'
-          ? successMessage(data)
-          : successMessage;
+        const message =
+          typeof successMessage === 'function'
+            ? successMessage(data)
+            : successMessage;
         toast.success(message);
       }
       onSuccess?.(data, variables);

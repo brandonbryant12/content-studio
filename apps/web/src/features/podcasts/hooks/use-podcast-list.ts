@@ -53,8 +53,9 @@ export function useSuspensePodcastList(
 export function getPodcastListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.podcasts.list.queryOptions({ input: { limit: options.limit } })
-    .queryKey;
+  return apiClient.podcasts.list.queryOptions({
+    input: { limit: options.limit },
+  }).queryKey;
 }
 
 /**

@@ -1,4 +1,10 @@
-import { LLM, type LLMService, type GenerateResult, LLMError, type LLMRateLimitError } from '@repo/ai';
+import {
+  LLM,
+  type LLMService,
+  type GenerateResult,
+  LLMError,
+  type LLMRateLimitError,
+} from '@repo/ai';
 import { Layer, Effect } from 'effect';
 
 /**

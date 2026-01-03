@@ -79,7 +79,11 @@ const podcastRouter = {
           userId: context.session.user.id,
           limit: input.limit,
           offset: input.offset,
-        }).pipe(Effect.map((result) => [...result.podcasts].map(serializePodcastListItem))),
+        }).pipe(
+          Effect.map((result) =>
+            [...result.podcasts].map(serializePodcastListItem),
+          ),
+        ),
         errors as unknown as ErrorFactory,
         {
           span: 'api.podcasts.list',
@@ -99,7 +103,9 @@ const podcastRouter = {
         context.user,
         getPodcast({ podcastId: input.id, includeVersion: true }).pipe(
           Effect.map((podcast) => {
-            const p = podcast as Parameters<typeof serializePodcastFull>[0] & { activeVersion?: unknown };
+            const p = podcast as Parameters<typeof serializePodcastFull>[0] & {
+              activeVersion?: unknown;
+            };
             return serializePodcastFull({
               ...p,
               activeVersion: p.activeVersion ?? null,
@@ -123,7 +129,13 @@ const podcastRouter = {
         createPodcast({
           ...input,
           userId: context.session.user.id,
-        }).pipe(Effect.map((podcastFull) => serializePodcastFull(podcastFull as Parameters<typeof serializePodcastFull>[0]))),
+        }).pipe(
+          Effect.map((podcastFull) =>
+            serializePodcastFull(
+              podcastFull as Parameters<typeof serializePodcastFull>[0],
+            ),
+          ),
+        ),
         errors as unknown as ErrorFactory,
         {
           span: 'api.podcasts.create',
@@ -141,7 +153,9 @@ const podcastRouter = {
         context.runtime,
         context.user,
         updatePodcast({ podcastId: id as string, data }).pipe(
-          Effect.map((podcast) => serializePodcast(podcast as Parameters<typeof serializePodcast>[0])),
+          Effect.map((podcast) =>
+            serializePodcast(podcast as Parameters<typeof serializePodcast>[0]),
+          ),
         ),
         errors as unknown as ErrorFactory,
         {
@@ -172,7 +186,9 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getActiveScript({ podcastId: input.id }).pipe(Effect.map(serializePodcastScript)),
+        getActiveScript({ podcastId: input.id }).pipe(
+          Effect.map(serializePodcastScript),
+        ),
         errors as unknown as ErrorFactory,
         {
           span: 'api.podcasts.getScript',
@@ -192,7 +208,10 @@ const podcastRouter = {
           promptInstructions: input.promptInstructions,
         }),
         errors as unknown as ErrorFactory,
-        { span: 'api.podcasts.generate', attributes: { 'podcast.id': input.id } },
+        {
+          span: 'api.podcasts.generate',
+          attributes: { 'podcast.id': input.id },
+        },
       );
     },
   ),
@@ -223,7 +242,10 @@ const podcastRouter = {
           coHostVoiceName: input.coHostVoiceName,
         }),
         errors as unknown as ErrorFactory,
-        { span: 'api.podcasts.saveChanges', attributes: { 'podcast.id': input.id } },
+        {
+          span: 'api.podcasts.saveChanges',
+          attributes: { 'podcast.id': input.id },
+        },
       );
     },
   ),

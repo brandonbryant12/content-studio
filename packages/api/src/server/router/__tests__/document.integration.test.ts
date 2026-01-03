@@ -35,7 +35,9 @@ import { createMockContext, createMockErrors } from './helpers';
  * containing the actual handler function. This utility provides type-safe
  * access for testing purposes.
  */
-type ORPCProcedure = { '~orpc': { handler: (args: unknown) => Promise<unknown> } };
+type ORPCProcedure = {
+  '~orpc': { handler: (args: unknown) => Promise<unknown> };
+};
 
 const callHandler = <T>(
   procedure: ORPCProcedure,
@@ -56,10 +58,7 @@ const expectErrorWithMessage = async (
   try {
     await promise;
   } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     if (typeof expectedMessage === 'string') {
       expect(errorMessage).toContain(expectedMessage);
     } else {
@@ -74,19 +73,40 @@ type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
 // Typed handler accessors for document router
 const handlers = {
   create: (args: HandlerArgs): Promise<DocumentOutput> =>
-    callHandler<DocumentOutput>(documentRouter.create as unknown as ORPCProcedure, args),
+    callHandler<DocumentOutput>(
+      documentRouter.create as unknown as ORPCProcedure,
+      args,
+    ),
   list: (args: HandlerArgs): Promise<DocumentOutput[]> =>
-    callHandler<DocumentOutput[]>(documentRouter.list as unknown as ORPCProcedure, args),
+    callHandler<DocumentOutput[]>(
+      documentRouter.list as unknown as ORPCProcedure,
+      args,
+    ),
   get: (args: HandlerArgs): Promise<DocumentOutput> =>
-    callHandler<DocumentOutput>(documentRouter.get as unknown as ORPCProcedure, args),
+    callHandler<DocumentOutput>(
+      documentRouter.get as unknown as ORPCProcedure,
+      args,
+    ),
   getContent: (args: HandlerArgs): Promise<{ content: string }> =>
-    callHandler<{ content: string }>(documentRouter.getContent as unknown as ORPCProcedure, args),
+    callHandler<{ content: string }>(
+      documentRouter.getContent as unknown as ORPCProcedure,
+      args,
+    ),
   upload: (args: HandlerArgs): Promise<DocumentOutput> =>
-    callHandler<DocumentOutput>(documentRouter.upload as unknown as ORPCProcedure, args),
+    callHandler<DocumentOutput>(
+      documentRouter.upload as unknown as ORPCProcedure,
+      args,
+    ),
   update: (args: HandlerArgs): Promise<DocumentOutput> =>
-    callHandler<DocumentOutput>(documentRouter.update as unknown as ORPCProcedure, args),
+    callHandler<DocumentOutput>(
+      documentRouter.update as unknown as ORPCProcedure,
+      args,
+    ),
   delete: (args: HandlerArgs): Promise<Record<string, never>> =>
-    callHandler<Record<string, never>>(documentRouter.delete as unknown as ORPCProcedure, args),
+    callHandler<Record<string, never>>(
+      documentRouter.delete as unknown as ORPCProcedure,
+      args,
+    ),
 };
 
 // =============================================================================
@@ -105,7 +125,11 @@ let inMemoryStorage: ReturnType<typeof createInMemoryStorage>;
  */
 const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   inMemoryStorage = createInMemoryStorage();
-  const mockAILayers = Layer.mergeAll(MockLLMLive, MockTTSLive, inMemoryStorage.layer);
+  const mockAILayers = Layer.mergeAll(
+    MockLLMLive,
+    MockTTSLive,
+    inMemoryStorage.layer,
+  );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
 
@@ -123,7 +147,10 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
  * Insert a user into the database for testing.
  * Required because documents have a foreign key to the user table.
  */
-const insertTestUser = async (ctx: TestContext, testUser: ReturnType<typeof createTestUser>) => {
+const insertTestUser = async (
+  ctx: TestContext,
+  testUser: ReturnType<typeof createTestUser>,
+) => {
   await ctx.db.insert(userTable).values({
     id: testUser.id,
     name: testUser.name,
@@ -852,7 +879,10 @@ describe('document router', () => {
 
       const created = await handlers.create({
         context,
-        input: { title: 'Content Test', content: 'This is the document content.' },
+        input: {
+          title: 'Content Test',
+          content: 'This is the document content.',
+        },
         errors,
       });
 
@@ -1080,7 +1110,7 @@ describe('document router', () => {
       );
     });
 
-    it('throws FORBIDDEN when trying to update another user\'s document', async () => {
+    it("throws FORBIDDEN when trying to update another user's document", async () => {
       // Arrange - create document as first user
       const doc = await createDocumentForTest();
 
@@ -1198,7 +1228,7 @@ describe('document router', () => {
       );
     });
 
-    it('throws FORBIDDEN when trying to delete another user\'s document', async () => {
+    it("throws FORBIDDEN when trying to delete another user's document", async () => {
       // Arrange - create document as first user
       const doc = await createDocumentForTest();
 
@@ -1253,7 +1283,10 @@ describe('document router', () => {
       const doc = await createDocumentForTest();
 
       // Create admin user
-      const adminTestUser = createTestUser({ id: 'admin-delete-id', role: 'admin' });
+      const adminTestUser = createTestUser({
+        id: 'admin-delete-id',
+        role: 'admin',
+      });
       await insertTestUser(ctx, adminTestUser);
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);

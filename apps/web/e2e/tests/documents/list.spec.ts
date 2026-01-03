@@ -14,16 +14,22 @@ authenticatedTest.describe('Documents List', () => {
     await documentsPage.goto();
   });
 
-  authenticatedTest('displays documents page correctly', async ({ documentsPage }) => {
-    await documentsPage.expectVisible();
-  });
+  authenticatedTest(
+    'displays documents page correctly',
+    async ({ documentsPage }) => {
+      await documentsPage.expectVisible();
+    },
+  );
 
-  authenticatedTest('shows empty state when no documents', async ({ documentsPage, api }) => {
-    // Clean up any existing documents
-    await api.deleteAllDocuments();
-    await documentsPage.goto();
-    await documentsPage.expectEmpty();
-  });
+  authenticatedTest(
+    'shows empty state when no documents',
+    async ({ documentsPage, api }) => {
+      // Clean up any existing documents
+      await api.deleteAllDocuments();
+      await documentsPage.goto();
+      await documentsPage.expectEmpty();
+    },
+  );
 
   authenticatedTest('can open upload dialog', async ({ documentsPage }) => {
     await documentsPage.openUploadDialog();

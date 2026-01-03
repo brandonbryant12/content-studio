@@ -7,7 +7,12 @@ import {
   withTestUser,
   resetAllFactories,
 } from '@repo/testing';
-import { Storage, type StorageService, StorageError, StorageNotFoundError } from '@repo/storage';
+import {
+  Storage,
+  type StorageService,
+  StorageError,
+  StorageNotFoundError,
+} from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
 import { DocumentNotFound } from '../../../errors';
 import { ForbiddenError } from '@repo/db/errors';
@@ -42,7 +47,9 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
     insert: () => Effect.succeed(defaultDoc),
     findById: (id) =>
       overrides.findById
-        ? (overrides.findById(id) as ReturnType<DocumentRepoService['findById']>)
+        ? (overrides.findById(id) as ReturnType<
+            DocumentRepoService['findById']
+          >)
         : Effect.succeed(defaultDoc),
     list: () => Effect.succeed([]),
     update: () => Effect.succeed(defaultDoc),
@@ -247,9 +254,7 @@ describe('getDocumentContent', () => {
 
       const mockStorage = createMockStorage({
         download: () =>
-          Effect.fail(
-            new StorageNotFoundError({ key: doc.contentKey }),
-          ),
+          Effect.fail(new StorageNotFoundError({ key: doc.contentKey })),
       });
 
       const effect = getDocumentContent({ id: doc.id }).pipe(

@@ -28,10 +28,15 @@ function getActiveStep(
   isPendingGeneration: boolean,
 ): Step {
   if (isSavingSettings) return 'saving';
-  if (isPendingGeneration || status === 'drafting' || status === 'generating_script') {
+  if (
+    isPendingGeneration ||
+    status === 'drafting' ||
+    status === 'generating_script'
+  ) {
     return 'script';
   }
-  if (status === 'script_ready' || status === 'generating_audio') return 'audio';
+  if (status === 'script_ready' || status === 'generating_audio')
+    return 'audio';
   if (status === 'ready') return 'complete';
   return 'script';
 }

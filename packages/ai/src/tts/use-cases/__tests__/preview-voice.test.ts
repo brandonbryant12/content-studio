@@ -1,6 +1,10 @@
 import { Effect, Layer, Exit } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { TTSError, TTSQuotaExceededError, VoiceNotFoundError } from '../../../errors';
+import {
+  TTSError,
+  TTSQuotaExceededError,
+  VoiceNotFoundError,
+} from '../../../errors';
 import {
   TTS,
   type TTSService,
@@ -23,9 +27,7 @@ const createMockTTSService = (config: MockConfig = {}): TTSService => ({
 
   previewVoice: (options) => {
     if (config.shouldFail === 'tts-error') {
-      return Effect.fail(
-        new TTSError({ message: 'TTS service unavailable' }),
-      );
+      return Effect.fail(new TTSError({ message: 'TTS service unavailable' }));
     }
     if (config.shouldFail === 'quota-exceeded') {
       return Effect.fail(

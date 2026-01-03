@@ -46,7 +46,8 @@ export const listDocuments = (input: ListDocumentsInput) =>
     // Admins can view any user's documents; regular users only their own
     const isAdmin = user.role === Role.ADMIN;
     const targetUserId = input.userId ?? user.id;
-    const createdBy = isAdmin && input.userId ? targetUserId : (isAdmin ? undefined : user.id);
+    const createdBy =
+      isAdmin && input.userId ? targetUserId : isAdmin ? undefined : user.id;
 
     const options = {
       createdBy,

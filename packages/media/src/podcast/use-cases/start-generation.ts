@@ -81,7 +81,11 @@ export const startGeneration = (input: StartGenerationInput) =>
       promptInstructions: input.promptInstructions,
     };
 
-    const job = yield* queue.enqueue('generate-podcast', payload, podcast.createdBy);
+    const job = yield* queue.enqueue(
+      'generate-podcast',
+      payload,
+      podcast.createdBy,
+    );
 
     return {
       jobId: job.id,

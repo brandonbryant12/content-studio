@@ -20,7 +20,11 @@ describe('useOptimisticMutation', () => {
 
   const createWrapper = () => {
     return function Wrapper({ children }: { children: ReactNode }) {
-      return createElement(QueryClientProvider, { client: queryClient }, children);
+      return createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
     };
   };
 
@@ -50,15 +54,25 @@ describe('useOptimisticMutation', () => {
       // Set initial cache data
       queryClient.setQueryData(queryKey, initialData);
 
-      const mutationFn = vi.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ id: '2', name: 'Item 2' }), 100))
-      );
+      const mutationFn = vi
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise((resolve) =>
+              setTimeout(() => resolve({ id: '2', name: 'Item 2' }), 100),
+            ),
+        );
 
-      const getOptimisticData = vi.fn().mockImplementation(
-        (current: typeof initialData | undefined, variables: { name: string }) => {
-          return [...(current ?? []), { id: 'temp', name: variables.name }];
-        }
-      );
+      const getOptimisticData = vi
+        .fn()
+        .mockImplementation(
+          (
+            current: typeof initialData | undefined,
+            variables: { name: string },
+          ) => {
+            return [...(current ?? []), { id: 'temp', name: variables.name }];
+          },
+        );
 
       const { result } = renderHook(
         () =>
@@ -67,7 +81,7 @@ describe('useOptimisticMutation', () => {
             mutationFn,
             getOptimisticData,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       // Trigger the mutation
@@ -84,7 +98,9 @@ describe('useOptimisticMutation', () => {
         ]);
       });
 
-      expect(getOptimisticData).toHaveBeenCalledWith(initialData, { name: 'New Item' });
+      expect(getOptimisticData).toHaveBeenCalledWith(initialData, {
+        name: 'New Item',
+      });
     });
   });
 
@@ -98,11 +114,16 @@ describe('useOptimisticMutation', () => {
 
       const mutationFn = vi.fn().mockRejectedValue(new Error('Network error'));
 
-      const getOptimisticData = vi.fn().mockImplementation(
-        (current: typeof initialData | undefined, variables: { name: string }) => {
-          return [...(current ?? []), { id: 'temp', name: variables.name }];
-        }
-      );
+      const getOptimisticData = vi
+        .fn()
+        .mockImplementation(
+          (
+            current: typeof initialData | undefined,
+            variables: { name: string },
+          ) => {
+            return [...(current ?? []), { id: 'temp', name: variables.name }];
+          },
+        );
 
       const { result } = renderHook(
         () =>
@@ -112,7 +133,7 @@ describe('useOptimisticMutation', () => {
             getOptimisticData,
             errorMessage: 'Failed to add item',
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       // Trigger the mutation
@@ -138,9 +159,11 @@ describe('useOptimisticMutation', () => {
 
       const mutationFn = vi.fn().mockRejectedValue(new Error('Network error'));
 
-      const getOptimisticData = vi.fn().mockImplementation(
-        (current: typeof initialData | undefined) => current
-      );
+      const getOptimisticData = vi
+        .fn()
+        .mockImplementation(
+          (current: typeof initialData | undefined) => current,
+        );
 
       const { result } = renderHook(
         () =>
@@ -150,7 +173,7 @@ describe('useOptimisticMutation', () => {
             getOptimisticData,
             errorMessage: 'Failed to update',
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -182,7 +205,7 @@ describe('useOptimisticMutation', () => {
             getOptimisticData,
             errorMessage: 'Custom fallback error',
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -207,11 +230,16 @@ describe('useOptimisticMutation', () => {
 
       const mutationFn = vi.fn().mockResolvedValue(responseData);
 
-      const getOptimisticData = vi.fn().mockImplementation(
-        (current: typeof initialData | undefined, variables: { name: string }) => {
-          return [...(current ?? []), { id: 'temp', name: variables.name }];
-        }
-      );
+      const getOptimisticData = vi
+        .fn()
+        .mockImplementation(
+          (
+            current: typeof initialData | undefined,
+            variables: { name: string },
+          ) => {
+            return [...(current ?? []), { id: 'temp', name: variables.name }];
+          },
+        );
 
       const onSuccess = vi.fn();
 
@@ -223,7 +251,7 @@ describe('useOptimisticMutation', () => {
             getOptimisticData,
             onSuccess,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -255,7 +283,7 @@ describe('useOptimisticMutation', () => {
             successMessage: 'Item added successfully!',
             showSuccessToast: true,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -287,7 +315,7 @@ describe('useOptimisticMutation', () => {
             successMessage: 'Item added successfully!',
             showSuccessToast: false,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -319,7 +347,7 @@ describe('useOptimisticMutation', () => {
             showSuccessToast: true,
             // No successMessage provided
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -342,9 +370,11 @@ describe('useOptimisticMutation', () => {
       const mutationFn = vi.fn().mockResolvedValue(responseData);
       const getOptimisticData = vi.fn().mockReturnValue([]);
 
-      const successMessageFn = vi.fn().mockImplementation(
-        (data: typeof responseData) => `Created "${data.name}" successfully!`
-      );
+      const successMessageFn = vi
+        .fn()
+        .mockImplementation(
+          (data: typeof responseData) => `Created "${data.name}" successfully!`,
+        );
 
       const { result } = renderHook(
         () =>
@@ -355,7 +385,7 @@ describe('useOptimisticMutation', () => {
             successMessage: successMessageFn,
             showSuccessToast: true,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       act(() => {
@@ -367,7 +397,9 @@ describe('useOptimisticMutation', () => {
       });
 
       expect(successMessageFn).toHaveBeenCalledWith(responseData);
-      expect(toast.success).toHaveBeenCalledWith('Created "Item 2" successfully!');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Created "Item 2" successfully!',
+      );
     });
   });
 });

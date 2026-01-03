@@ -125,19 +125,58 @@ export type ErrorCode =
  * Error factory interface matching oRPC handler errors.
  */
 export interface MockErrorFactory {
-  DOCUMENT_NOT_FOUND: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  DOCUMENT_TOO_LARGE: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  DOCUMENT_PARSE_ERROR: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  UNSUPPORTED_FORMAT: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  VOICE_NOT_FOUND: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  UNAUTHORIZED: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  FORBIDDEN: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  NOT_FOUND: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  INTERNAL_ERROR: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  CONFLICT: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  BAD_REQUEST: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  SERVICE_UNAVAILABLE: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
-  RATE_LIMITED: (opts: { message: string; data?: unknown }) => ORPCError<string, unknown>;
+  DOCUMENT_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  DOCUMENT_TOO_LARGE: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  DOCUMENT_PARSE_ERROR: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  UNSUPPORTED_FORMAT: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  VOICE_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  UNAUTHORIZED: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  FORBIDDEN: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  INTERNAL_ERROR: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  CONFLICT: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  BAD_REQUEST: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  SERVICE_UNAVAILABLE: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  RATE_LIMITED: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
 }
 
 /**
@@ -184,7 +223,8 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
  * ```
  */
 export const createMockErrors = (): MockErrorFactory => {
-  const createErrorFactory = (code: ErrorCode) =>
+  const createErrorFactory =
+    (code: ErrorCode) =>
     (opts: { message: string; data?: unknown }): ORPCError<string, unknown> =>
       new ORPCError(code, {
         status: ERROR_STATUS_CODES[code],
@@ -230,7 +270,9 @@ export const assertORPCError = (
     throw new Error(`Expected ORPCError but got ${typeof error}: ${error}`);
   }
   if (error.code !== expectedCode) {
-    throw new Error(`Expected error code '${expectedCode}' but got '${error.code}'`);
+    throw new Error(
+      `Expected error code '${expectedCode}' but got '${error.code}'`,
+    );
   }
 };
 

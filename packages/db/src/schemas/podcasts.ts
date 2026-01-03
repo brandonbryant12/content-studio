@@ -151,7 +151,6 @@ export const podcastScript = pgTable(
     audioUrl: text('audioUrl'),
     duration: integer('duration'), // seconds
 
-    // Denormalized from podcast for Electric sync filtering
     createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -323,7 +322,7 @@ export const PodcastScriptOutputSchema = Schema.Struct({
   audioUrl: Schema.NullOr(Schema.String),
   duration: Schema.NullOr(Schema.Number),
 
-  // Denormalized from podcast for Electric sync filtering
+  // Denormalized from podcast for efficient user-scoped queries
   createdBy: Schema.String,
 
   createdAt: Schema.String,
@@ -408,7 +407,9 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
 /**
  * Pure transform for PodcastScript → PodcastScriptOutput.
  */
-const podcastScriptTransform = (script: PodcastScript): PodcastScriptOutput => ({
+const podcastScriptTransform = (
+  script: PodcastScript,
+): PodcastScriptOutput => ({
   id: script.id,
   podcastId: script.podcastId,
   version: script.version,
@@ -460,7 +461,9 @@ type PodcastWithVersion = Podcast & {
 /**
  * Pure transform for full Podcast with documents and active version.
  */
-const podcastFullTransform = (podcast: PodcastWithRelations): PodcastFullOutput => ({
+const podcastFullTransform = (
+  podcast: PodcastWithRelations,
+): PodcastFullOutput => ({
   ...podcastTransform(podcast),
   documents: podcast.documents.map(serializeDocument),
   activeVersion: podcast.activeVersion
@@ -471,7 +474,9 @@ const podcastFullTransform = (podcast: PodcastWithRelations): PodcastFullOutput 
 /**
  * Pure transform for Podcast list item with active version summary.
  */
-const podcastListItemTransform = (podcast: PodcastWithVersion): PodcastListItemOutput => ({
+const podcastListItemTransform = (
+  podcast: PodcastWithVersion,
+): PodcastListItemOutput => ({
   ...podcastTransform(podcast),
   activeVersion: podcast.activeVersion,
 });
@@ -483,10 +488,16 @@ const podcastListItemTransform = (podcast: PodcastWithVersion): PodcastListItemO
 // --- Podcast ---
 
 /** Effect-based serializer with tracing. */
-export const serializePodcastEffect = createEffectSerializer('podcast', podcastTransform);
+export const serializePodcastEffect = createEffectSerializer(
+  'podcast',
+  podcastTransform,
+);
 
 /** Batch serializer for multiple podcasts. */
-export const serializePodcastsEffect = createBatchEffectSerializer('podcast', podcastTransform);
+export const serializePodcastsEffect = createBatchEffectSerializer(
+  'podcast',
+  podcastTransform,
+);
 
 /** Sync serializer for simple cases. */
 export const serializePodcast = createSyncSerializer(podcastTransform);
@@ -506,7 +517,9 @@ export const serializePodcastScriptsEffect = createBatchEffectSerializer(
 );
 
 /** Sync serializer for simple cases. */
-export const serializePodcastScript = createSyncSerializer(podcastScriptTransform);
+export const serializePodcastScript = createSyncSerializer(
+  podcastScriptTransform,
+);
 
 // --- PodcastFull (with documents and active version) ---
 
@@ -534,4 +547,6 @@ export const serializePodcastListItemsEffect = createBatchEffectSerializer(
 );
 
 /** Sync serializer for simple cases. */
-export const serializePodcastListItem = createSyncSerializer(podcastListItemTransform);
+export const serializePodcastListItem = createSyncSerializer(
+  podcastListItemTransform,
+);

@@ -42,12 +42,12 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/podcasts.get`, async ({ request }) => {
-    const body = await request.json() as { id?: string };
+    const body = (await request.json()) as { id?: string };
     return HttpResponse.json(createMockPodcast({ id: body.id || 'podcast-1' }));
   }),
 
   http.post(`${API_BASE}/podcasts.create`, async ({ request }) => {
-    const body = await request.json() as { title?: string; format?: string };
+    const body = (await request.json()) as { title?: string; format?: string };
     return HttpResponse.json(
       createMockPodcast({
         id: `podcast-${Date.now()}`,
@@ -67,14 +67,12 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/documents.get`, async ({ request }) => {
-    const body = await request.json() as { id?: string };
+    const body = (await request.json()) as { id?: string };
     return HttpResponse.json(createMockDocument({ id: body.id || 'doc-1' }));
   }),
 
   http.post(`${API_BASE}/documents.upload`, () => {
-    return HttpResponse.json(
-      createMockDocument({ id: `doc-${Date.now()}` }),
-    );
+    return HttpResponse.json(createMockDocument({ id: `doc-${Date.now()}` }));
   }),
 
   http.post(`${API_BASE}/documents.delete`, () => {

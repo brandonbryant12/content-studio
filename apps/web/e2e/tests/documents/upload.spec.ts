@@ -15,29 +15,38 @@ authenticatedTest.describe('Document Upload', () => {
     await documentsPage.goto();
   });
 
-  authenticatedTest('can open and close upload dialog', async ({ documentsPage }) => {
-    await documentsPage.openUploadDialog();
-    const dialog = documentsPage.getUploadDialog();
-    await expect(dialog).toBeVisible();
+  authenticatedTest(
+    'can open and close upload dialog',
+    async ({ documentsPage }) => {
+      await documentsPage.openUploadDialog();
+      const dialog = documentsPage.getUploadDialog();
+      await expect(dialog).toBeVisible();
 
-    // Close dialog
-    await documentsPage.page.keyboard.press('Escape');
-    await expect(dialog).toBeHidden();
-  });
+      // Close dialog
+      await documentsPage.page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+    },
+  );
 
-  authenticatedTest('upload dialog has file input', async ({ documentsPage }) => {
-    await documentsPage.openUploadDialog();
-    const dialog = documentsPage.getUploadDialog();
+  authenticatedTest(
+    'upload dialog has file input',
+    async ({ documentsPage }) => {
+      await documentsPage.openUploadDialog();
+      const dialog = documentsPage.getUploadDialog();
 
-    // Should have a file input
-    const fileInput = dialog.locator('input[type="file"]');
-    await expect(fileInput).toBeAttached();
-  });
+      // Should have a file input
+      const fileInput = dialog.locator('input[type="file"]');
+      await expect(fileInput).toBeAttached();
+    },
+  );
 
   // Note: Actual file upload tests would require a test file fixture
   // and proper file handling in the test environment
-  authenticatedTest.skip('can upload a text file', async ({ documentsPage }) => {
-    // This test requires a test file to be available
-    // Skipping for now - can be implemented with test fixtures
-  });
+  authenticatedTest.skip(
+    'can upload a text file',
+    async ({ documentsPage }) => {
+      // This test requires a test file to be available
+      // Skipping for now - can be implemented with test fixtures
+    },
+  );
 });

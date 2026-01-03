@@ -148,7 +148,10 @@ const jobTransform = (job: Job): JobOutput => ({
 export const serializeJobEffect = createEffectSerializer('job', jobTransform);
 
 /** Batch serializer for multiple jobs. */
-export const serializeJobsEffect = createBatchEffectSerializer('job', jobTransform);
+export const serializeJobsEffect = createBatchEffectSerializer(
+  'job',
+  jobTransform,
+);
 
 /** Sync serializer for simple cases. */
 export const serializeJob = createSyncSerializer(jobTransform);

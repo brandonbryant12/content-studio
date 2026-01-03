@@ -46,7 +46,9 @@ export class DashboardPage extends BasePage {
    * Verify the dashboard is displayed correctly
    */
   async expectVisible(): Promise<void> {
-    await expect(this.page.getByText('Dashboard')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: /dashboard/i }),
+    ).toBeVisible();
     await expect(this.uploadDocumentAction).toBeVisible();
     await expect(this.newPodcastAction).toBeVisible();
   }
@@ -85,7 +87,9 @@ export class DashboardPage extends BasePage {
    * Get the recent documents section
    */
   getRecentDocumentsSection(): Locator {
-    return this.page.locator('section').filter({ hasText: /recent documents/i });
+    return this.page
+      .locator('section')
+      .filter({ hasText: /recent documents/i });
   }
 
   /**

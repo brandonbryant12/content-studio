@@ -21,7 +21,10 @@ export class LoginPage extends BasePage {
     this.emailInput = page.getByLabel(/email/i);
     this.passwordInput = page.getByLabel(/password/i);
     this.submitButton = page.getByRole('button', { name: /sign in/i });
-    this.signUpLink = page.getByRole('link', { name: /sign up/i });
+    // Target the sign up link in the form footer, not the navbar
+    this.signUpLink = page
+      .locator('.auth-footer')
+      .getByRole('link', { name: /sign up/i });
     this.togglePasswordButton = page.getByRole('button').filter({
       has: page.locator('svg'),
     });
@@ -93,7 +96,9 @@ export class LoginPage extends BasePage {
    * Verify the page is displayed correctly
    */
   async expectVisible(): Promise<void> {
-    await expect(this.page.getByText('Sign in')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { name: /sign in/i }),
+    ).toBeVisible();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
     await expect(this.submitButton).toBeVisible();

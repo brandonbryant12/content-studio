@@ -43,7 +43,10 @@ export function useScriptEditor({
   // Use JSON comparison to avoid infinite loops from array reference changes
   useEffect(() => {
     const serialized = JSON.stringify(initialSegments);
-    if (serialized !== prevInitialSegmentsRef.current && !hasUserEdits.current) {
+    if (
+      serialized !== prevInitialSegmentsRef.current &&
+      !hasUserEdits.current
+    ) {
       prevInitialSegmentsRef.current = serialized;
       setSegments(initialSegments);
       setOriginalSegments(initialSegments);

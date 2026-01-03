@@ -213,7 +213,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        deletePodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        deletePodcast({ podcastId: nonExistentId }).pipe(
+          Effect.provide(layers),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -236,7 +238,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromiseExit(
-        deletePodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        deletePodcast({ podcastId: nonExistentId }).pipe(
+          Effect.provide(layers),
+        ),
       );
 
       // Delete should not be called when findById fails

@@ -43,7 +43,9 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
     insert: () => Effect.succeed(defaultDoc),
     findById: (id) =>
       overrides.findById
-        ? (overrides.findById(id) as ReturnType<DocumentRepoService['findById']>)
+        ? (overrides.findById(id) as ReturnType<
+            DocumentRepoService['findById']
+          >)
         : Effect.succeed(defaultDoc),
     list: () => Effect.succeed([]),
     update: () => Effect.succeed(defaultDoc),

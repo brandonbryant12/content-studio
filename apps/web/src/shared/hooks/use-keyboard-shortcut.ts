@@ -32,7 +32,7 @@ export function useKeyboardShortcut({
       if (!enabled) return;
 
       // Check if modifier requirements are met (exact match when specified)
-      const cmdCtrlMatch = cmdOrCtrl ? (e.metaKey || e.ctrlKey) : true;
+      const cmdCtrlMatch = cmdOrCtrl ? e.metaKey || e.ctrlKey : true;
       const shiftMatch = shift ? e.shiftKey : !e.shiftKey;
       const altMatch = alt ? e.altKey : !e.altKey;
 

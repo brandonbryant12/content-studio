@@ -24,16 +24,19 @@ authenticatedTest.describe('Podcast Workbench', () => {
     await podcastsPage.expectVisible();
   });
 
-  authenticatedTest('can navigate to podcast detail', async ({ podcastsPage, api, page }) => {
-    // Create a podcast via API
-    const podcast = await api.createPodcast({ title: 'E2E Test Podcast' });
+  authenticatedTest(
+    'can navigate to podcast detail',
+    async ({ podcastsPage, api, page }) => {
+      // Create a podcast via API
+      const podcast = await api.createPodcast({ title: 'E2E Test Podcast' });
 
-    // Navigate to the podcast
-    await page.goto(`/podcasts/${podcast.id}`);
+      // Navigate to the podcast
+      await page.goto(`/podcasts/${podcast.id}`);
 
-    // Should be on the podcast detail page
-    await expect(page).toHaveURL(/\/podcasts\/.+/);
-  });
+      // Should be on the podcast detail page
+      await expect(page).toHaveURL(/\/podcasts\/.+/);
+    },
+  );
 
   // Note: Full workbench tests would require a podcast with generated content
   // These tests verify the basic UI elements are present
@@ -44,17 +47,26 @@ authenticatedTest.describe('Podcast Workbench', () => {
     // 2. Has generated script content
     // 3. Is not in generating state
 
-    authenticatedTest.skip('shows script editor when podcast is configured', async () => {
-      // Would verify script editor is visible
-    });
+    authenticatedTest.skip(
+      'shows script editor when podcast is configured',
+      async () => {
+        // Would verify script editor is visible
+      },
+    );
 
-    authenticatedTest.skip('Cmd+S triggers save when there are changes', async () => {
-      // Would verify keyboard shortcut functionality
-    });
+    authenticatedTest.skip(
+      'Cmd+S triggers save when there are changes',
+      async () => {
+        // Would verify keyboard shortcut functionality
+      },
+    );
 
-    authenticatedTest.skip('shows unsaved changes warning on navigation', async () => {
-      // Would verify navigation blocking
-    });
+    authenticatedTest.skip(
+      'shows unsaved changes warning on navigation',
+      async () => {
+        // Would verify navigation blocking
+      },
+    );
 
     authenticatedTest.skip('can edit script segments', async () => {
       // Would verify segment editing

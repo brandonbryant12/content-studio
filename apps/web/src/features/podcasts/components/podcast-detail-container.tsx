@@ -6,10 +6,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import {
-  useKeyboardShortcut,
-  useNavigationBlock,
-} from '@/shared/hooks';
+import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
 import {
   usePodcast,
   useScriptEditor,
@@ -30,7 +27,9 @@ interface PodcastDetailContainerProps {
  * Container: Fetches podcast data and coordinates all state/mutations.
  * Renders SetupWizardContainer for new podcasts, PodcastDetail for configured ones.
  */
-export function PodcastDetailContainer({ podcastId }: PodcastDetailContainerProps) {
+export function PodcastDetailContainer({
+  podcastId,
+}: PodcastDetailContainerProps) {
   const navigate = useNavigate();
 
   // Data fetching (Suspense handles loading)
@@ -74,14 +73,20 @@ export function PodcastDetailContainer({ podcastId }: PodcastDetailContainerProp
 
   // Computed state
   const hasAnyChanges =
-    scriptEditor.hasChanges || settings.hasChanges || documentSelection.hasChanges;
+    scriptEditor.hasChanges ||
+    settings.hasChanges ||
+    documentSelection.hasChanges;
 
   const isGenerating = isGeneratingStatus(podcast.activeVersion?.status);
   const isPendingGeneration = generateMutation.isPending;
 
   // Combined save handler for script, voice, and document changes
   const handleSave = useCallback(async () => {
-    if (saveChangesMutation.isPending || updateMutation.isPending || generateMutation.isPending) {
+    if (
+      saveChangesMutation.isPending ||
+      updateMutation.isPending ||
+      generateMutation.isPending
+    ) {
       return;
     }
 
@@ -114,7 +119,9 @@ export function PodcastDetailContainer({ podcastId }: PodcastDetailContainerProp
     }
 
     // No document changes - just save script/voice and regenerate audio
-    const segmentsToSave = scriptEditor.hasChanges ? scriptEditor.segments : undefined;
+    const segmentsToSave = scriptEditor.hasChanges
+      ? scriptEditor.segments
+      : undefined;
     saveChangesMutation.mutate(
       {
         id: podcast.id,

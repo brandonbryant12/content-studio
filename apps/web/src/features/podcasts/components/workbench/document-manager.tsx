@@ -42,7 +42,8 @@ export function DocumentManager({
     if (selectedIds.length === 0) return;
 
     // Find the full document info for selected IDs
-    const docsToAdd = allDocuments?.filter((d) => selectedIds.includes(d.id)) ?? [];
+    const docsToAdd =
+      allDocuments?.filter((d) => selectedIds.includes(d.id)) ?? [];
     onAddDocuments(docsToAdd);
     setSelectedIds([]);
     setAddDialogOpen(false);

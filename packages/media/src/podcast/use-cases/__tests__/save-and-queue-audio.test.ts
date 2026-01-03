@@ -19,7 +19,10 @@ import {
   ScriptVersionRepo,
   type ScriptVersionRepoService,
 } from '../../repos/script-version-repo';
-import { saveAndQueueAudio, NoChangesToSaveError } from '../save-and-queue-audio';
+import {
+  saveAndQueueAudio,
+  NoChangesToSaveError,
+} from '../save-and-queue-audio';
 import { InvalidSaveError } from '../save-changes';
 
 // =============================================================================
@@ -134,8 +137,7 @@ const createMockQueue = (
     updateJobStatus: () => Effect.die('not implemented'),
     processNextJob: () => Effect.die('not implemented'),
     processJobById: () => Effect.die('not implemented'),
-    findPendingJobForPodcast: () =>
-      Effect.succeed(state.pendingJob ?? null),
+    findPendingJobForPodcast: () => Effect.succeed(state.pendingJob ?? null),
     deleteJob: () => Effect.die('not implemented'),
   };
 
@@ -204,7 +206,10 @@ describe('saveAndQueueAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockPodcastRepo({ podcast, activeVersion }, { onUpdate: podcastUpdateSpy }),
+        createMockPodcastRepo(
+          { podcast, activeVersion },
+          { onUpdate: podcastUpdateSpy },
+        ),
         createMockScriptVersionRepo({ podcast, activeVersion }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
       );
@@ -255,7 +260,10 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast, activeVersion }),
         createMockScriptVersionRepo({ podcast, activeVersion }),
-        createMockQueue({ podcast, pendingJob: existingJob }, { onEnqueue: enqueueSpy }),
+        createMockQueue(
+          { podcast, pendingJob: existingJob },
+          { onEnqueue: enqueueSpy },
+        ),
       );
 
       const result = await Effect.runPromise(
@@ -388,7 +396,9 @@ describe('saveAndQueueAudio', () => {
       expect(NoChangesToSaveError.httpCode).toBe('NO_CHANGES');
       expect(NoChangesToSaveError.httpMessage).toBe('No changes to save');
       expect(NoChangesToSaveError.logLevel).toBe('silent');
-      expect(NoChangesToSaveError.getData(error)).toEqual({ podcastId: 'pod_123' });
+      expect(NoChangesToSaveError.getData(error)).toEqual({
+        podcastId: 'pod_123',
+      });
     });
   });
 });

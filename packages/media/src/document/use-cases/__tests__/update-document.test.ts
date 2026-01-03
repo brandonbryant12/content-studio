@@ -37,7 +37,9 @@ const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
 /**
  * Create a mock storage layer with tracking.
  */
-const createMockStorageLayer = (tracker: StorageTracker): Layer.Layer<Storage> => {
+const createMockStorageLayer = (
+  tracker: StorageTracker,
+): Layer.Layer<Storage> => {
   const service: StorageService = {
     upload: (key, _data, contentType) =>
       Effect.sync(() => {
@@ -156,7 +158,9 @@ const runTestExpectFailure = async <A, E>(
     createMockStorageLayer(storageTracker),
     createMockDocumentRepoLayer({ documents: options.documents }),
   );
-  const result = await Effect.runPromiseExit(effect.pipe(Effect.provide(layers)));
+  const result = await Effect.runPromiseExit(
+    effect.pipe(Effect.provide(layers)),
+  );
 
   if (result._tag === 'Success') {
     throw new Error('Expected effect to fail but it succeeded');
@@ -197,10 +201,10 @@ describe('updateDocument', () => {
         title: 'Updated Title',
       };
 
-      const result = await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        { documents, storageTracker },
-      );
+      const result = await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        storageTracker,
+      });
 
       expect(result.title).toBe('Updated Title');
       expect(result.contentKey).toBe('documents/original.txt');
@@ -229,15 +233,12 @@ describe('updateDocument', () => {
         content: 'This is the new content with seven words here',
       };
 
-      const result = await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        {
-          documents,
-          onUpdate: (_id, data) => {
-            capturedUpdate = data;
-          },
+      const result = await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        onUpdate: (_id, data) => {
+          capturedUpdate = data;
         },
-      );
+      });
 
       // "This is the new content with seven words here" = 9 words
       expect(result.wordCount).toBe(9);
@@ -261,10 +262,10 @@ describe('updateDocument', () => {
         content: 'Brand new content',
       };
 
-      await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        { documents, storageTracker },
-      );
+      await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        storageTracker,
+      });
 
       expect(storageTracker.uploads).toHaveLength(1);
       expect(storageTracker.uploads[0]?.contentType).toBe('text/plain');
@@ -289,10 +290,10 @@ describe('updateDocument', () => {
         content: 'New content replaces old',
       };
 
-      await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        { documents, storageTracker },
-      );
+      await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        storageTracker,
+      });
 
       expect(storageTracker.deletes).toContain(oldContentKey);
     });
@@ -315,15 +316,12 @@ describe('updateDocument', () => {
         content: 'Updated content',
       };
 
-      await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        {
-          documents,
-          onUpdate: (_id, data) => {
-            capturedUpdate = data;
-          },
+      await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        onUpdate: (_id, data) => {
+          capturedUpdate = data;
         },
-      );
+      });
 
       expect(capturedUpdate).toHaveProperty('contentKey');
       expect((capturedUpdate as { contentKey: string }).contentKey).not.toBe(
@@ -351,10 +349,9 @@ describe('updateDocument', () => {
         title: 'Updated by Owner',
       };
 
-      const result = await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        { documents },
-      );
+      const result = await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+      });
 
       expect(result.title).toBe('Updated by Owner');
     });
@@ -375,10 +372,9 @@ describe('updateDocument', () => {
         title: 'Updated by Admin',
       };
 
-      const result = await runTest(
-        withTestUser(admin)(updateDocument(input)),
-        { documents },
-      );
+      const result = await runTest(withTestUser(admin)(updateDocument(input)), {
+        documents,
+      });
 
       expect(result.title).toBe('Updated by Admin');
     });
@@ -449,15 +445,12 @@ describe('updateDocument', () => {
         metadata: { version: 2, newField: 'value' },
       };
 
-      await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        {
-          documents,
-          onUpdate: (_id, data) => {
-            capturedUpdate = data;
-          },
+      await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        onUpdate: (_id, data) => {
+          capturedUpdate = data;
         },
-      );
+      });
 
       expect(capturedUpdate).toMatchObject({
         metadata: { version: 2, newField: 'value' },
@@ -485,10 +478,10 @@ describe('updateDocument', () => {
         content: 'One two three four five',
       };
 
-      const result = await runTest(
-        withTestUser(owner)(updateDocument(input)),
-        { documents, storageTracker },
-      );
+      const result = await runTest(withTestUser(owner)(updateDocument(input)), {
+        documents,
+        storageTracker,
+      });
 
       expect(result.title).toBe('New Title');
       expect(result.wordCount).toBe(5);
