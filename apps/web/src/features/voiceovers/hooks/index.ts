@@ -11,6 +11,8 @@ export { useOptimisticCreate } from './use-optimistic-create';
 
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 
+export { useOptimisticGeneration } from './use-optimistic-generation';
+
 export { useVoiceover, getVoiceoverQueryKey } from './use-voiceover';
 
 export {

@@ -43,7 +43,9 @@ export interface AddVoiceoverCollaboratorResult {
  *   addedBy: 'user-123',
  * });
  */
-export const addVoiceoverCollaborator = (input: AddVoiceoverCollaboratorInput) =>
+export const addVoiceoverCollaborator = (
+  input: AddVoiceoverCollaboratorInput,
+) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
     const collaboratorRepo = yield* VoiceoverCollaboratorRepo;

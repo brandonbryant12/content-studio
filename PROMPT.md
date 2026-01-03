@@ -38,7 +38,7 @@ Read the active plan file (specified in "Active Plan" header above) and implemen
 Ensure all tests and linting passes:
 
 ```bash
-pnpm typecheck && pnpm build
+pnpm typecheck && pnpm build && pnpm test
 ```
 
 ## 3. Update Plan
@@ -47,8 +47,7 @@ Update the active plan file with your progress:
 - Mark completed items
 - Add any new discoveries or blockers
 - Update priorities if needed
-- Document any open_questions directory for any questions that come up or tech debt items that need to be addressed.  That are not covered in the standards documentation. Leave place for human to address these items.
-- When ALL items are completed, change the status header to: `> **STATUS: ✅ COMPLETE**`
+- When ALL items are completed, spawn 5 subagents to review all changes and ensure they followed the standards, update the plan with any necessary changes needed. If no changes needed mark the status as complete and change the status header to: `> **STATUS: ✅ COMPLETE**`
 
 ## 4. Commit
 

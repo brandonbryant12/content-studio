@@ -212,7 +212,9 @@ const voiceoverRouter = {
         context.user,
         listVoiceoverCollaborators({ voiceoverId: input.id }).pipe(
           Effect.map((result) =>
-            [...result.collaborators].map(serializeVoiceoverCollaboratorWithUser),
+            [...result.collaborators].map(
+              serializeVoiceoverCollaboratorWithUser,
+            ),
           ),
         ),
         errors as unknown as ErrorFactory,

@@ -1,5 +1,8 @@
 import { Effect } from 'effect';
-import type { VoiceoverCollaboratorWithUser, VoiceoverId } from '@repo/db/schema';
+import type {
+  VoiceoverCollaboratorWithUser,
+  VoiceoverId,
+} from '@repo/db/schema';
 import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
 
 // =============================================================================
@@ -29,7 +32,9 @@ export interface ListVoiceoverCollaboratorsResult {
  *   voiceoverId: 'voc_xxx',
  * });
  */
-export const listVoiceoverCollaborators = (input: ListVoiceoverCollaboratorsInput) =>
+export const listVoiceoverCollaborators = (
+  input: ListVoiceoverCollaboratorsInput,
+) =>
   Effect.gen(function* () {
     const collaboratorRepo = yield* VoiceoverCollaboratorRepo;
 

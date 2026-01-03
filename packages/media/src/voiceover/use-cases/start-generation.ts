@@ -39,7 +39,9 @@ export interface StartVoiceoverGenerationResult {
  * });
  * // result.jobId, result.status
  */
-export const startVoiceoverGeneration = (input: StartVoiceoverGenerationInput) =>
+export const startVoiceoverGeneration = (
+  input: StartVoiceoverGenerationInput,
+) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
     const collaboratorRepo = yield* VoiceoverCollaboratorRepo;

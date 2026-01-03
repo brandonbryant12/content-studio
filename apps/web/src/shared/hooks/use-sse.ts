@@ -3,7 +3,11 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { SSEEvent } from '@repo/api/contracts';
-import { handleJobCompletion, handleEntityChange } from './sse-handlers';
+import {
+  handleJobCompletion,
+  handleVoiceoverJobCompletion,
+  handleEntityChange,
+} from './sse-handlers';
 import { env } from '@/env';
 
 export type SSEConnectionState =
@@ -58,6 +62,10 @@ export function useSSE(options: SSEOptions = {}): UseSSEReturn {
 
         case 'job_completion':
           handleJobCompletion(event, queryClient);
+          break;
+
+        case 'voiceover_job_completion':
+          handleVoiceoverJobCompletion(event, queryClient);
           break;
 
         case 'entity_change':

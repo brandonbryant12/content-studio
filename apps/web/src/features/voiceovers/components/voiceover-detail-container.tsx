@@ -11,7 +11,11 @@ import {
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-import { useVoiceover, useVoiceoverSettings } from '../hooks';
+import {
+  useVoiceover,
+  useVoiceoverSettings,
+  useOptimisticGeneration,
+} from '../hooks';
 import { isGeneratingStatus } from '../lib/status';
 import { VoiceoverDetail } from './voiceover-detail';
 
@@ -35,6 +39,8 @@ export function VoiceoverDetailContainer({
   const settings = useVoiceoverSettings({ voiceover });
 
   // Mutations
+  const generateMutation = useOptimisticGeneration(voiceoverId);
+
   const deleteMutation = useMutation(
     apiClient.voiceovers.delete.mutationOptions({
       onSuccess: () => {
@@ -49,6 +55,8 @@ export function VoiceoverDetailContainer({
 
   // Computed state
   const isGenerating = isGeneratingStatus(voiceover.status);
+  const isPendingGeneration = generateMutation.isPending;
+  const hasText = settings.text.trim().length > 0;
 
   // Handler to save settings
   const handleSave = useCallback(async () => {
@@ -57,6 +65,25 @@ export function VoiceoverDetailContainer({
     await settings.saveSettings();
     toast.success('Settings saved');
   }, [settings]);
+
+  // Handler to generate audio (saves first if there are changes)
+  const handleGenerate = useCallback(async () => {
+    if (isPendingGeneration || isGenerating) return;
+
+    // Save changes first if there are any
+    if (settings.hasChanges) {
+      await settings.saveSettings();
+    }
+
+    // Then generate
+    generateMutation.mutate({ id: voiceover.id });
+  }, [
+    isPendingGeneration,
+    isGenerating,
+    settings,
+    generateMutation,
+    voiceover.id,
+  ]);
 
   const handleDelete = useCallback(() => {
     deleteMutation.mutate({ id: voiceover.id });
@@ -89,10 +116,12 @@ export function VoiceoverDetailContainer({
       settings={settings}
       displayAudio={displayAudio}
       hasChanges={settings.hasChanges}
-      isGenerating={isGenerating}
+      hasText={hasText}
+      isGenerating={isGenerating || isPendingGeneration}
       isSaving={settings.isSaving}
       isDeleting={deleteMutation.isPending}
       onSave={handleSave}
+      onGenerate={handleGenerate}
       onDelete={handleDelete}
       currentUserId={currentUserId}
     />

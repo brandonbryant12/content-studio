@@ -2,9 +2,7 @@
 
 import type { RouterOutput } from '@repo/api/client';
 import type { UseVoiceoverSettingsReturn } from '../hooks';
-import { WorkbenchLayout, TextEditor, VoiceSelector } from './workbench';
-import { Button } from '@repo/ui/components/button';
-import { Spinner } from '@repo/ui/components/spinner';
+import { WorkbenchLayout, TextEditor, VoiceSelector, ActionBar } from './workbench';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
@@ -18,10 +16,12 @@ export interface VoiceoverDetailProps {
   settings: UseVoiceoverSettingsReturn;
   displayAudio: DisplayAudio | null;
   hasChanges: boolean;
+  hasText: boolean;
   isGenerating: boolean;
   isSaving: boolean;
   isDeleting: boolean;
   onSave: () => void;
+  onGenerate: () => void;
   onDelete: () => void;
   currentUserId: string;
 }
@@ -31,10 +31,12 @@ export function VoiceoverDetail({
   settings,
   displayAudio,
   hasChanges,
+  hasText,
   isGenerating,
   isSaving,
   isDeleting,
   onSave,
+  onGenerate,
   onDelete,
   currentUserId,
 }: VoiceoverDetailProps) {
@@ -45,30 +47,15 @@ export function VoiceoverDetail({
       isDeleting={isDeleting}
       currentUserId={currentUserId}
       actionBar={
-        <div className="workbench-action-bar">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={settings.discardChanges}
-              disabled={!hasChanges || isSaving || isGenerating}
-            >
-              Discard
-            </Button>
-            <Button
-              onClick={onSave}
-              disabled={!hasChanges || isSaving || isGenerating}
-            >
-              {isSaving ? (
-                <>
-                  <Spinner className="w-4 h-4 mr-2" />
-                  Saving...
-                </>
-              ) : (
-                'Save'
-              )}
-            </Button>
-          </div>
-        </div>
+        <ActionBar
+          status={voiceover.status}
+          isGenerating={isGenerating}
+          hasChanges={hasChanges}
+          hasText={hasText}
+          isSaving={isSaving}
+          onSave={onSave}
+          onGenerate={onGenerate}
+        />
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">

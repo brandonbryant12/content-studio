@@ -457,7 +457,8 @@ export class CannotAddOwnerAsVoiceoverCollaborator extends Schema.TaggedError<Ca
   },
 ) {
   static readonly httpStatus = 400 as const;
-  static readonly httpCode = 'CANNOT_ADD_OWNER_AS_VOICEOVER_COLLABORATOR' as const;
+  static readonly httpCode =
+    'CANNOT_ADD_OWNER_AS_VOICEOVER_COLLABORATOR' as const;
   static readonly httpMessage = (e: CannotAddOwnerAsVoiceoverCollaborator) =>
     e.message ?? 'Cannot add the voiceover owner as a collaborator';
   static readonly logLevel = 'silent' as const;

@@ -31,7 +31,9 @@ export interface RemoveVoiceoverCollaboratorInput {
  *   removedBy: 'user-123',
  * });
  */
-export const removeVoiceoverCollaborator = (input: RemoveVoiceoverCollaboratorInput) =>
+export const removeVoiceoverCollaborator = (
+  input: RemoveVoiceoverCollaboratorInput,
+) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
     const collaboratorRepo = yield* VoiceoverCollaboratorRepo;

@@ -5,7 +5,8 @@ import type { BadgeVariant } from '@repo/ui/components/badge';
 
 // Re-export the VoiceoverStatus const for convenience
 export { VoiceoverStatus };
-export type VoiceoverStatusType = (typeof VoiceoverStatus)[keyof typeof VoiceoverStatus];
+export type VoiceoverStatusType =
+  (typeof VoiceoverStatus)[keyof typeof VoiceoverStatus];
 
 interface StatusConfig {
   label: string;
@@ -16,29 +17,31 @@ interface StatusConfig {
 /**
  * Status flow: drafting -> generating_audio -> ready
  */
-export const VOICEOVER_STATUS_CONFIG: Record<VoiceoverStatusType, StatusConfig> =
-  {
-    [VoiceoverStatus.DRAFTING]: {
-      label: 'Drafting',
-      message: 'Ready to generate',
-      badgeVariant: 'default',
-    },
-    [VoiceoverStatus.GENERATING_AUDIO]: {
-      label: 'Generating Audio',
-      message: 'Synthesizing audio...',
-      badgeVariant: 'purple',
-    },
-    [VoiceoverStatus.READY]: {
-      label: 'Ready',
-      message: 'Your voiceover is ready!',
-      badgeVariant: 'success',
-    },
-    [VoiceoverStatus.FAILED]: {
-      label: 'Failed',
-      message: 'Generation failed',
-      badgeVariant: 'error',
-    },
-  };
+export const VOICEOVER_STATUS_CONFIG: Record<
+  VoiceoverStatusType,
+  StatusConfig
+> = {
+  [VoiceoverStatus.DRAFTING]: {
+    label: 'Drafting',
+    message: 'Ready to generate',
+    badgeVariant: 'default',
+  },
+  [VoiceoverStatus.GENERATING_AUDIO]: {
+    label: 'Generating Audio',
+    message: 'Synthesizing audio...',
+    badgeVariant: 'purple',
+  },
+  [VoiceoverStatus.READY]: {
+    label: 'Ready',
+    message: 'Your voiceover is ready!',
+    badgeVariant: 'success',
+  },
+  [VoiceoverStatus.FAILED]: {
+    label: 'Failed',
+    message: 'Generation failed',
+    badgeVariant: 'error',
+  },
+};
 
 /** Check if a status indicates active generation (showing spinner/progress) */
 export function isGeneratingStatus(
@@ -55,7 +58,9 @@ export function isActionDisabled(
 }
 
 /** Check if voiceover is in ready state (can edit settings) */
-export function isReadyStatus(status: VoiceoverStatusType | undefined): boolean {
+export function isReadyStatus(
+  status: VoiceoverStatusType | undefined,
+): boolean {
   return status === VoiceoverStatus.READY;
 }
 

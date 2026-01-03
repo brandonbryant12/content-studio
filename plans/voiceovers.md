@@ -1,6 +1,6 @@
 # Voice Overs Implementation Plan
 
-> **STATUS: IN PROGRESS - Sprint 9**
+> **STATUS: IN PROGRESS - Sprint 10**
 
 ## Overview
 
@@ -436,7 +436,7 @@ POST   /voiceovers/claim-invites      # Claim pending invites
 - [x] **Sprint 6**: Background jobs processing
 - [x] **Sprint 7**: List page renders voice overs
 - [x] **Sprint 8**: Workbench edits text/voice
-- [ ] **Sprint 9**: Generation triggers and updates in real-time
+- [x] **Sprint 9**: Generation triggers and updates in real-time
 - [ ] **Sprint 10**: Collaborators can be added and approve
 - [ ] **Sprint 11**: Tests pass, edge cases handled
 

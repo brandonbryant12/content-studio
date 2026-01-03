@@ -174,13 +174,14 @@ export type Media =
  * );
  * ```
  */
-export const MediaLive: Layer.Layer<Media, never, Db | Storage> = Layer.mergeAll(
-  DocumentRepoLive,
-  PodcastRepoLive,
-  CollaboratorRepoLive,
-  VoiceoverRepoLive,
-  VoiceoverCollaboratorRepoLive,
-);
+export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
+  Layer.mergeAll(
+    DocumentRepoLive,
+    PodcastRepoLive,
+    CollaboratorRepoLive,
+    VoiceoverRepoLive,
+    VoiceoverCollaboratorRepoLive,
+  );
 
 // Podcast module - Use Cases (error types inferred by Effect)
 export {

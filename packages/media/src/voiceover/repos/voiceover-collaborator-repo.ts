@@ -56,7 +56,11 @@ export interface VoiceoverCollaboratorRepoService {
    */
   readonly findByVoiceover: (
     voiceoverId: VoiceoverId,
-  ) => Effect.Effect<readonly VoiceoverCollaboratorWithUser[], DatabaseError, Db>;
+  ) => Effect.Effect<
+    readonly VoiceoverCollaboratorWithUser[],
+    DatabaseError,
+    Db
+  >;
 
   /**
    * Find all pending collaborator invites by email.

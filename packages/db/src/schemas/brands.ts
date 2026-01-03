@@ -157,8 +157,7 @@ export const VoiceoverCollaboratorIdSchema = Schema.String.pipe(
   Schema.brand('VoiceoverCollaboratorId'),
 );
 
-export type VoiceoverCollaboratorId =
-  typeof VoiceoverCollaboratorIdSchema.Type;
+export type VoiceoverCollaboratorId = typeof VoiceoverCollaboratorIdSchema.Type;
 
 export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
   `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;

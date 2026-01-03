@@ -35,7 +35,9 @@ export interface ClaimVoiceoverPendingInvitesResult {
  * });
  * // result.claimedCount === 2 (if there were 2 pending invites)
  */
-export const claimVoiceoverPendingInvites = (input: ClaimVoiceoverPendingInvitesInput) =>
+export const claimVoiceoverPendingInvites = (
+  input: ClaimVoiceoverPendingInvitesInput,
+) =>
   Effect.gen(function* () {
     const collaboratorRepo = yield* VoiceoverCollaboratorRepo;
 

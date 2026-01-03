@@ -1,7 +1,4 @@
-export {
-  createVoiceover,
-  type CreateVoiceoverInput,
-} from './create-voiceover';
+export { createVoiceover, type CreateVoiceoverInput } from './create-voiceover';
 
 export { getVoiceover, type GetVoiceoverInput } from './get-voiceover';
 
@@ -11,15 +8,9 @@ export {
   type ListVoiceoversResult,
 } from './list-voiceovers';
 
-export {
-  updateVoiceover,
-  type UpdateVoiceoverInput,
-} from './update-voiceover';
+export { updateVoiceover, type UpdateVoiceoverInput } from './update-voiceover';
 
-export {
-  deleteVoiceover,
-  type DeleteVoiceoverInput,
-} from './delete-voiceover';
+export { deleteVoiceover, type DeleteVoiceoverInput } from './delete-voiceover';
 
 export {
   generateVoiceoverAudio,

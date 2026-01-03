@@ -3,6 +3,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type {
   JobCompletionEvent,
+  VoiceoverJobCompletionEvent,
   EntityChangeEvent,
 } from '@repo/api/contracts';
 import { apiClient } from '@/clients/apiClient';
@@ -22,6 +23,12 @@ const getDocumentQueryKey = (documentId: string) =>
 
 const getDocumentsListQueryKey = () =>
   apiClient.documents.list.queryOptions({ input: {} }).queryKey;
+
+const getVoiceoverQueryKey = (voiceoverId: string) =>
+  apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }).queryKey;
+
+const getVoiceoversListQueryKey = () =>
+  apiClient.voiceovers.list.queryOptions({ input: {} }).queryKey;
 
 // ============================================================================
 // Event Handlers
@@ -52,6 +59,23 @@ export function handleJobCompletion(
   }
 }
 
+export function handleVoiceoverJobCompletion(
+  event: VoiceoverJobCompletionEvent,
+  queryClient: QueryClient,
+): void {
+  const { voiceoverId } = event;
+
+  // Invalidate specific voiceover
+  queryClient.invalidateQueries({
+    queryKey: getVoiceoverQueryKey(voiceoverId),
+  });
+
+  // Also invalidate the list
+  queryClient.invalidateQueries({
+    queryKey: getVoiceoversListQueryKey(),
+  });
+}
+
 export function handleEntityChange(
   event: EntityChangeEvent,
   queryClient: QueryClient,
@@ -77,6 +101,17 @@ export function handleEntityChange(
       if (changeType === 'insert' || changeType === 'delete') {
         queryClient.invalidateQueries({
           queryKey: getDocumentsListQueryKey(),
+        });
+      }
+      break;
+
+    case 'voiceover':
+      queryClient.invalidateQueries({
+        queryKey: getVoiceoverQueryKey(entityId),
+      });
+      if (changeType === 'insert' || changeType === 'delete') {
+        queryClient.invalidateQueries({
+          queryKey: getVoiceoversListQueryKey(),
         });
       }
       break;
