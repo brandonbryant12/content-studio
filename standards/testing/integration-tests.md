@@ -485,6 +485,55 @@ runtime = createServerRuntime({
 });
 ```
 
+## Required: Test All Handlers
+
+Every handler in a router MUST have at least one integration test that exercises the full Effect stack.
+
+### Why This Matters
+
+Missing service dependencies only fail at **runtime**, not compile time (unless using proper typing). A handler that requires `CollaboratorRepo` will compile even if `CollaboratorRepo` isn't in the production layer, but will fail when called.
+
+Integration tests catch this by:
+1. Creating a test runtime with all required services
+2. Actually calling the handler (not mocking the use case)
+3. Verifying the response or error
+
+### Coverage Requirements
+
+| Handler Type | Required Tests |
+|--------------|----------------|
+| CRUD (create, get, update, delete) | At least 1 success + 1 error each |
+| Actions (generate, approve, etc.) | At least 1 success + 1 error each |
+| List operations | At least 1 with data + 1 empty |
+
+### When Adding New Services
+
+When a new service is added:
+1. Add it to `MediaLive` (or relevant bundled layer) - see `standards/patterns/effect-runtime.md`
+2. Add it to the test runtime in ALL affected integration test files
+3. Run `pnpm --filter @repo/api test` to verify handlers work
+
+```typescript
+// When adding CollaboratorRepo, update test runtime:
+const createTestRuntime = (ctx: TestContext): ServerRuntime => {
+  // ... existing setup
+  const collaboratorRepoLayer = CollaboratorRepoLive.pipe(  // NEW
+    Layer.provide(ctx.dbLayer),
+  );
+
+  const allLayers = Layer.mergeAll(
+    ctx.dbLayer,
+    mockAILayers,
+    policyLayer,
+    documentRepoLayer,
+    podcastRepoLayer,
+    collaboratorRepoLayer,  // NEW - must add here too
+    queueLayer,
+  );
+  // ...
+};
+```
+
 ## Anti-Patterns
 
 ### Don't Test Via HTTP

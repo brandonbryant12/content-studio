@@ -166,9 +166,16 @@ export const handleTaggedError = <E extends { _tag: string }>(
  * (httpStatus, httpCode, httpMessage, logLevel). Custom handlers can be provided
  * to override the default behavior for specific error types.
  *
+ * TYPE SAFETY: This function enforces that all Effect requirements are satisfied
+ * by SharedServices at compile time. If you get a type error here, it means:
+ * 1. Your use case requires a service not in SharedServices
+ * 2. You need to add the service to MediaLive/SharedServices
+ *
+ * See standards/patterns/effect-runtime.md for details.
+ *
  * @param runtime - The shared server runtime
  * @param user - The authenticated user (or null for public routes)
- * @param effect - The Effect to run (requirements must be SharedServices)
+ * @param effect - The Effect to run (requirements must be subset of SharedServices)
  * @param errors - The oRPC error factory
  * @param options - Optional configuration (span name, attributes)
  * @param customHandlers - Optional custom handlers for specific error types
@@ -201,20 +208,15 @@ export const handleTaggedError = <E extends { _tag: string }>(
  * );
  * ```
  */
-export const handleEffectWithProtocol = <A>(
+export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   runtime: ServerRuntime,
   user: User | null,
-  effect: Effect.Effect<A, unknown, unknown>,
+  effect: Effect.Effect<A, E, SharedServices>,
   errors: ErrorFactory,
   options?: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
-  // Cast to the expected types - runtime will provide SharedServices
-  const typedEffect = effect as Effect.Effect<
-    A,
-    { _tag: string },
-    SharedServices
-  >;
+  const typedEffect = effect;
 
   let tracedEffect = options?.span
     ? typedEffect.pipe(
@@ -228,7 +230,7 @@ export const handleEffectWithProtocol = <A>(
 
   return runtime.runPromise(
     scopedEffect.pipe(
-      Effect.catchAll((error: { _tag: string }) =>
+      Effect.catchAll((error: E) =>
         Effect.sync(() => {
           // Check for custom handler first
           const customHandler = customHandlers?.[error._tag];

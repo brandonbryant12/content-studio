@@ -86,7 +86,12 @@ export {
 
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
-import { PodcastRepo, PodcastRepoLive } from './podcast';
+import {
+  PodcastRepo,
+  PodcastRepoLive,
+  CollaboratorRepo,
+  CollaboratorRepoLive,
+} from './podcast';
 
 // =============================================================================
 // Combined Media Layer
@@ -95,8 +100,11 @@ import { PodcastRepo, PodcastRepoLive } from './podcast';
 /**
  * All media services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
+ *
+ * IMPORTANT: When adding a new repo, add it here AND to MediaLive below.
+ * Otherwise, use cases that depend on the repo will fail at runtime.
  */
-export type Media = DocumentRepo | PodcastRepo;
+export type Media = DocumentRepo | PodcastRepo | CollaboratorRepo;
 
 /**
  * Combined layer for all media services.
@@ -118,7 +126,7 @@ export type Media = DocumentRepo | PodcastRepo;
  * ```
  */
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
-  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive);
+  Layer.mergeAll(DocumentRepoLive, PodcastRepoLive, CollaboratorRepoLive);
 
 // Podcast module - Use Cases (error types inferred by Effect)
 export {

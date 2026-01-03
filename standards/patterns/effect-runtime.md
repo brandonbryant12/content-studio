@@ -169,6 +169,57 @@ export const handleEffectWithProtocol = (
 };
 ```
 
+## Type-Safe Service Requirements
+
+Effect's power comes from compile-time verification that all service requirements are satisfied. Never bypass this safety.
+
+### Adding New Services
+
+When adding a new service (repo, provider, etc.):
+
+1. Define the Context.Tag and Layer in the appropriate package
+2. Add the type to the bundled type (e.g., `Media = DocumentRepo | PodcastRepo | NewRepo`)
+3. Add the Layer to the bundled layer (e.g., `MediaLive = Layer.mergeAll(..., NewRepoLive)`)
+4. Run `pnpm typecheck` to verify all use cases compile
+
+```typescript
+// packages/media/src/index.ts
+
+// 1. Export the service type
+export type Media = DocumentRepo | PodcastRepo | CollaboratorRepo;  // Add here
+
+// 2. Merge into the combined layer
+export const MediaLive = Layer.mergeAll(
+  DocumentRepoLive,
+  PodcastRepoLive,
+  CollaboratorRepoLive,  // Add here
+);
+```
+
+### Anti-Pattern: Casting Away Requirements
+
+**CRITICAL**: Never use `unknown` for the requirements type parameter.
+
+```typescript
+// WRONG - loses compile-time safety, errors only at runtime
+export const handleEffect = <A>(
+  effect: Effect.Effect<A, unknown, unknown>,  // Don't do this!
+) => {
+  const typedEffect = effect as Effect.Effect<A, Error, SharedServices>;
+  // ...
+};
+
+// CORRECT - enforces requirements at compile time
+export const handleEffect = <A, E extends { _tag: string }>(
+  effect: Effect.Effect<A, E, SharedServices>,
+) => {
+  // If a use case requires a service not in SharedServices,
+  // TypeScript will error HERE, not at runtime
+};
+```
+
+This anti-pattern caused a production bug where `CollaboratorRepo` was missing from `MediaLive` but the code compiled because the handler accepted `Effect.Effect<A, unknown, unknown>` and cast away the type information.
+
 ## Summary
 
 | Pattern | Do | Don't |
@@ -178,3 +229,5 @@ export const handleEffectWithProtocol = (
 | Service deps | Exclude CurrentUser | Include CurrentUser |
 | Read user | `yield* getCurrentUser` | `yield* CurrentUser` |
 | Scope user | `withCurrentUser(user)(effect)` | Provide layer |
+| Effect requirements | Type as `SharedServices` | Cast to `unknown` |
+| New services | Add to type AND layer | Add to just one |
