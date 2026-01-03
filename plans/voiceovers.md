@@ -23,33 +23,30 @@
 - **Resolution**: All use cases now verify `voiceover.createdBy === input.userId` before performing actions
 - **Sprint**: 12.2 ✅
 
-### 🟡 HIGH Priority
+### ✅ HIGH Priority (Fixed)
 
-#### 3. Zero Test Coverage
+#### 3. ~~Zero Test Coverage~~ ✅ FIXED
 | Layer | Status |
 |-------|--------|
-| Backend use case tests | NONE |
-| Backend integration tests | NONE |
-| Frontend component tests | NONE |
-| MSW handlers | NONE |
-| E2E tests | NONE |
+| Backend use case tests | ✅ 72 tests |
+| Backend integration tests | ✅ 62 tests |
+| Frontend component tests | ✅ 45 tests |
+| MSW handlers | ✅ Created |
+| E2E tests | ✅ 42 tests |
 
-- **Impact**: No automated verification of functionality
-- **Sprint**: 13
+- **Resolution**: Comprehensive test coverage added in Sprint 13
+- **Sprint**: 13 ✅
 
-### 🟠 MEDIUM Priority
+### ✅ MEDIUM Priority (Fixed)
 
-#### 4. ApproveButton Violates Presenter Pattern
+#### 4. ~~ApproveButton Violates Presenter Pattern~~ ✅ FIXED
 - **File**: `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx`
-- **Issue**: Calls `useApproveVoiceover()` hook directly instead of receiving mutation as props
-- **Impact**: Component can't be tested in isolation
-- **Sprint**: 14.1
+- **Resolution**: Refactored to receive `onApprove`, `onRevoke`, and `isPending` as props. Container now provides callbacks.
+- **Sprint**: 14.1 ✅
 
-#### 5. Voice Constants Duplicated
-- **Files**: `use-voiceover-settings.ts` and `voice-selector.tsx`
-- **Issue**: VOICES array defined in both files
-- **Impact**: Maintenance burden, potential inconsistency
-- **Sprint**: 14.2
+#### 5. ~~Voice Constants Duplicated~~ ✅ FIXED
+- **Resolution**: Created shared `lib/voices.ts` exporting `VOICES` array. Both files now import from single source.
+- **Sprint**: 14.2 ✅
 
 ---
 
@@ -784,13 +781,13 @@ All tests must pass before marking feature complete.
 | `packages/media/src/voiceover/use-cases/delete-voiceover.ts` | Modify - add owner check | 12 ✅ |
 | `packages/media/src/voiceover/use-cases/generate-audio.ts` | Modify - add owner check | 12 ✅ |
 | `packages/media/src/voiceover/use-cases/start-generation.ts` | Modify - add owner check | 12 ✅ |
-| `packages/media/src/voiceover/use-cases/__tests__/` | Create - use case tests | 13 |
-| `packages/api/src/server/router/__tests__/voiceover.integration.test.ts` | Create - integration tests | 13 |
-| `apps/web/src/features/voiceovers/__tests__/handlers.ts` | Create - MSW handlers | 13 |
-| `apps/web/src/features/voiceovers/__tests__/*.test.tsx` | Create - component tests | 13 |
-| `apps/web/e2e/tests/voiceovers/` | Create - E2E tests | 13 |
-| `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx` | Modify - presenter pattern | 14 |
-| `apps/web/src/features/voiceovers/lib/constants.ts` | Create - shared constants | 14 |
+| `packages/media/src/voiceover/use-cases/__tests__/` | Create - use case tests | 13 ✅ |
+| `packages/api/src/server/router/__tests__/voiceover.integration.test.ts` | Create - integration tests | 13 ✅ |
+| `apps/web/src/features/voiceovers/__tests__/handlers.ts` | Create - MSW handlers | 13 ✅ |
+| `apps/web/src/features/voiceovers/__tests__/*.test.tsx` | Create - component tests | 13 ✅ |
+| `apps/web/e2e/tests/voiceovers/` | Create - E2E tests | 13 ✅ |
+| `apps/web/src/features/voiceovers/components/collaborators/approve-button.tsx` | Modify - presenter pattern | 14 ✅ |
+| `apps/web/src/features/voiceovers/lib/voices.ts` | Create - shared constants | 14 ✅ |
 
 ---
 
@@ -806,10 +803,10 @@ All tests must pass before marking feature complete.
 - [x] **Sprint 8**: Workbench edits text/voice
 - [x] **Sprint 9**: Generation triggers and updates in real-time
 - [x] **Sprint 10**: Collaborators can be added and approve
-- [ ] **Sprint 11**: Tests pass, edge cases handled (**INCOMPLETE**: no tests)
+- [x] **Sprint 11**: Tests pass, edge cases handled
 - [x] **Sprint 12**: Critical fixes (worker startup, authorization)
-- [ ] **Sprint 13**: Test coverage (use case, integration, component, E2E)
-- [ ] **Sprint 14**: Code quality fixes (presenter pattern, constants)
+- [x] **Sprint 13**: Test coverage (use case, integration, component, E2E)
+- [x] **Sprint 14**: Code quality fixes (presenter pattern, constants)
 - [ ] **Sprint 15**: Standards review with 8 subagents, iterate on findings
 
 Each sprint maintains working functionality with passing build.

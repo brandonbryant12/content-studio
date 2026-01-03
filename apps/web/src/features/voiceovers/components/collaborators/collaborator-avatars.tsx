@@ -91,9 +91,7 @@ function AvatarItem({
       style={{ zIndex: 10 - index }}
       title={tooltipText}
     >
-      <Avatar
-        className={'collab-avatar ' + pendingClass + ' ' + ownerClass}
-      >
+      <Avatar className={'collab-avatar ' + pendingClass + ' ' + ownerClass}>
         {image ? <AvatarImage src={image} alt={name || email} /> : null}
         <AvatarFallback
           className={'collab-avatar-fallback ' + fallbackPendingClass}
@@ -133,8 +131,13 @@ export function CollaboratorAvatars({
   const visibleCollaborators = collaborators.slice(0, MAX_VISIBLE - 1);
   const remainingCount = collaborators.length - visibleCollaborators.length;
   const totalCount = 1 + collaborators.length; // owner + collaborators
-  const ariaLabel = totalCount + ' collaborator' + (totalCount !== 1 ? 's' : '') + '. Click to manage.';
-  const overflowTitle = remainingCount + ' more collaborator' + (remainingCount !== 1 ? 's' : '');
+  const ariaLabel =
+    totalCount +
+    ' collaborator' +
+    (totalCount !== 1 ? 's' : '') +
+    '. Click to manage.';
+  const overflowTitle =
+    remainingCount + ' more collaborator' + (remainingCount !== 1 ? 's' : '');
 
   return (
     <button

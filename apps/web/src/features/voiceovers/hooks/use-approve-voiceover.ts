@@ -66,7 +66,10 @@ export function useApproveVoiceover(voiceoverId: string, userId: string) {
 
       onError: (error, _variables, context) => {
         if (context?.previousVoiceover) {
-          queryClient.setQueryData(voiceoverQueryKey, context.previousVoiceover);
+          queryClient.setQueryData(
+            voiceoverQueryKey,
+            context.previousVoiceover,
+          );
         }
         if (context?.previousCollaborators) {
           queryClient.setQueryData(
@@ -123,7 +126,10 @@ export function useApproveVoiceover(voiceoverId: string, userId: string) {
 
       onError: (error, _variables, context) => {
         if (context?.previousVoiceover) {
-          queryClient.setQueryData(voiceoverQueryKey, context.previousVoiceover);
+          queryClient.setQueryData(
+            voiceoverQueryKey,
+            context.previousVoiceover,
+          );
         }
         if (context?.previousCollaborators) {
           queryClient.setQueryData(

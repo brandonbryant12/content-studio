@@ -25,7 +25,8 @@ const getDocumentsListQueryKey = () =>
   apiClient.documents.list.queryOptions({ input: {} }).queryKey;
 
 const getVoiceoverQueryKey = (voiceoverId: string) =>
-  apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }).queryKey;
+  apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } })
+    .queryKey;
 
 const getVoiceoversListQueryKey = () =>
   apiClient.voiceovers.list.queryOptions({ input: {} }).queryKey;

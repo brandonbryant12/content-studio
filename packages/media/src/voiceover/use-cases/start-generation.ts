@@ -4,7 +4,10 @@ import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
-import { InvalidVoiceoverAudioGeneration, NotVoiceoverOwner } from '../../errors';
+import {
+  InvalidVoiceoverAudioGeneration,
+  NotVoiceoverOwner,
+} from '../../errors';
 
 // =============================================================================
 // Types

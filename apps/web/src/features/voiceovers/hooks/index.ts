@@ -17,9 +17,9 @@ export { useVoiceover, getVoiceoverQueryKey } from './use-voiceover';
 
 export {
   useVoiceoverSettings,
-  VOICES,
   type UseVoiceoverSettingsReturn,
 } from './use-voiceover-settings';
+// Note: VOICES exported from lib/voices.ts
 
 export {
   useCollaborators,

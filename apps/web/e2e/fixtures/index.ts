@@ -16,6 +16,7 @@ import { RegisterPage } from '../pages/register.page';
 import { DashboardPage } from '../pages/dashboard.page';
 import { DocumentsPage } from '../pages/documents.page';
 import { PodcastsPage } from '../pages/podcasts.page';
+import { VoiceoversPage } from '../pages/voiceovers.page';
 import { ApiHelper } from '../utils/api';
 
 // ESM-compatible __dirname
@@ -32,6 +33,7 @@ interface PageFixtures {
   dashboardPage: DashboardPage;
   documentsPage: DocumentsPage;
   podcastsPage: PodcastsPage;
+  voiceoversPage: VoiceoversPage;
   api: ApiHelper;
 }
 
@@ -57,6 +59,10 @@ export const test = base.extend<PageFixtures>({
 
   podcastsPage: async ({ page }, use) => {
     await use(new PodcastsPage(page));
+  },
+
+  voiceoversPage: async ({ page }, use) => {
+    await use(new VoiceoversPage(page));
   },
 
   api: async ({ request }, use) => {

@@ -16,6 +16,7 @@ import {
   useVoiceoverSettings,
   useOptimisticGeneration,
   useCollaborators,
+  useApproveVoiceover,
 } from '../hooks';
 import { isGeneratingStatus } from '../lib/status';
 import { VoiceoverDetail } from './voiceover-detail';
@@ -46,6 +47,7 @@ export function VoiceoverDetailContainer({
 
   // Mutations
   const generateMutation = useOptimisticGeneration(voiceoverId);
+  const { approve, revoke } = useApproveVoiceover(voiceoverId, currentUserId);
 
   const deleteMutation = useMutation(
     apiClient.voiceovers.delete.mutationOptions({
@@ -65,21 +67,37 @@ export function VoiceoverDetailContainer({
   const hasText = settings.text.trim().length > 0;
 
   // Owner info for collaborator display
-  const owner = useMemo(() => ({
-    id: voiceover.createdBy,
-    name: user?.id === voiceover.createdBy ? (user?.name ?? 'You') : 'Owner',
-    image: user?.id === voiceover.createdBy ? user?.image : undefined,
-    hasApproved: voiceover.ownerHasApproved,
-  }), [voiceover.createdBy, voiceover.ownerHasApproved, user?.id, user?.name, user?.image]);
+  const owner = useMemo(
+    () => ({
+      id: voiceover.createdBy,
+      name: user?.id === voiceover.createdBy ? (user?.name ?? 'You') : 'Owner',
+      image: user?.id === voiceover.createdBy ? user?.image : undefined,
+      hasApproved: voiceover.ownerHasApproved,
+    }),
+    [
+      voiceover.createdBy,
+      voiceover.ownerHasApproved,
+      user?.id,
+      user?.name,
+      user?.image,
+    ],
+  );
 
   // Check if current user has approved
   const currentUserHasApproved = useMemo(() => {
     if (currentUserId === voiceover.createdBy) {
       return voiceover.ownerHasApproved;
     }
-    const userCollaborator = collaborators.find(c => c.userId === currentUserId);
+    const userCollaborator = collaborators.find(
+      (c) => c.userId === currentUserId,
+    );
     return userCollaborator?.hasApproved ?? false;
-  }, [currentUserId, voiceover.createdBy, voiceover.ownerHasApproved, collaborators]);
+  }, [
+    currentUserId,
+    voiceover.createdBy,
+    voiceover.ownerHasApproved,
+    collaborators,
+  ]);
 
   // Handler to save settings
   const handleSave = useCallback(async () => {
@@ -115,6 +133,17 @@ export function VoiceoverDetailContainer({
   const handleManageCollaborators = useCallback(() => {
     setCollaboratorDialogOpen(true);
   }, []);
+
+  // Approval handlers
+  const handleApprove = useCallback(() => {
+    approve.mutate({ id: voiceover.id });
+  }, [approve, voiceover.id]);
+
+  const handleRevoke = useCallback(() => {
+    revoke.mutate({ id: voiceover.id });
+  }, [revoke, voiceover.id]);
+
+  const isApprovalPending = approve.isPending || revoke.isPending;
 
   // Keyboard shortcut: Cmd/Ctrl+S to save
   useKeyboardShortcut({
@@ -158,6 +187,9 @@ export function VoiceoverDetailContainer({
         collaborators={collaborators}
         currentUserHasApproved={currentUserHasApproved}
         onManageCollaborators={handleManageCollaborators}
+        onApprove={handleApprove}
+        onRevoke={handleRevoke}
+        isApprovalPending={isApprovalPending}
       />
 
       {/* Collaborator management dialog (only for owner) */}

@@ -2,7 +2,12 @@
 
 import type { RouterOutput } from '@repo/api/client';
 import type { UseVoiceoverSettingsReturn, Collaborator } from '../hooks';
-import { WorkbenchLayout, TextEditor, VoiceSelector, ActionBar } from './workbench';
+import {
+  WorkbenchLayout,
+  TextEditor,
+  VoiceSelector,
+  ActionBar,
+} from './workbench';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
@@ -35,6 +40,10 @@ export interface VoiceoverDetailProps {
   collaborators: readonly Collaborator[];
   currentUserHasApproved: boolean;
   onManageCollaborators: () => void;
+  // Approval callbacks
+  onApprove: () => void;
+  onRevoke: () => void;
+  isApprovalPending: boolean;
 }
 
 export function VoiceoverDetail({
@@ -54,6 +63,9 @@ export function VoiceoverDetail({
   collaborators,
   currentUserHasApproved,
   onManageCollaborators,
+  onApprove,
+  onRevoke,
+  isApprovalPending,
 }: VoiceoverDetailProps) {
   return (
     <WorkbenchLayout
@@ -65,6 +77,9 @@ export function VoiceoverDetail({
       collaborators={collaborators}
       currentUserHasApproved={currentUserHasApproved}
       onManageCollaborators={onManageCollaborators}
+      onApprove={onApprove}
+      onRevoke={onRevoke}
+      isApprovalPending={isApprovalPending}
       actionBar={
         <ActionBar
           status={voiceover.status}

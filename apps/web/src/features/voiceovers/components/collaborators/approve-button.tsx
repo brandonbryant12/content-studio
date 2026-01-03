@@ -2,39 +2,42 @@
 
 import { CheckIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useApproveVoiceover } from '../../hooks/use-approve-voiceover';
 
 export interface ApproveButtonProps {
-  voiceoverId: string;
-  userId: string;
   hasApproved: boolean;
+  onApprove: () => void;
+  onRevoke: () => void;
+  isPending: boolean;
 }
 
 /**
  * A toggle button for approving/revoking voiceover approval.
  * Features a satisfying state transition with visual feedback.
+ *
+ * This is a presenter component - it receives callbacks as props instead of
+ * using hooks directly, enabling easy testing.
  */
 export function ApproveButton({
-  voiceoverId,
-  userId,
   hasApproved,
+  onApprove,
+  onRevoke,
+  isPending,
 }: ApproveButtonProps) {
-  const { approve, revoke } = useApproveVoiceover(voiceoverId, userId);
-  const isLoading = approve.isPending || revoke.isPending;
-
   const handleClick = () => {
-    if (isLoading) return;
+    if (isPending) return;
 
     if (hasApproved) {
-      revoke.mutate({ id: voiceoverId });
+      onRevoke();
     } else {
-      approve.mutate({ id: voiceoverId });
+      onApprove();
     }
   };
 
-  const buttonClass = hasApproved ? 'approve-btn approve-btn-approved' : 'approve-btn approve-btn-pending';
+  const buttonClass = hasApproved
+    ? 'approve-btn approve-btn-approved'
+    : 'approve-btn approve-btn-pending';
   const ariaLabel = hasApproved ? 'Revoke approval' : 'Approve voiceover';
-  const labelText = isLoading
+  const labelText = isPending
     ? hasApproved
       ? 'Revoking...'
       : 'Approving...'
@@ -46,23 +49,21 @@ export function ApproveButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={isLoading}
+      disabled={isPending}
       className={buttonClass}
       aria-label={ariaLabel}
       aria-pressed={hasApproved}
     >
       <span className="approve-btn-track">
         <span className="approve-btn-thumb">
-          {isLoading ? (
+          {isPending ? (
             <Spinner size="sm" className="approve-btn-spinner" />
           ) : (
             <CheckIcon className="approve-btn-icon" />
           )}
         </span>
       </span>
-      <span className="approve-btn-label">
-        {labelText}
-      </span>
+      <span className="approve-btn-label">{labelText}</span>
     </button>
   );
 }

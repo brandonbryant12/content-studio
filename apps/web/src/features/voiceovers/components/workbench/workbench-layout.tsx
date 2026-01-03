@@ -36,6 +36,10 @@ interface WorkbenchLayoutProps {
   }[];
   currentUserHasApproved: boolean;
   onManageCollaborators: () => void;
+  // Approval callbacks
+  onApprove: () => void;
+  onRevoke: () => void;
+  isApprovalPending: boolean;
 }
 
 export function WorkbenchLayout({
@@ -44,12 +48,17 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  currentUserId,
+  currentUserId: _currentUserId,
   owner,
   collaborators,
   currentUserHasApproved,
   onManageCollaborators,
+  onApprove,
+  onRevoke,
+  isApprovalPending,
 }: WorkbenchLayoutProps) {
+  // Note: currentUserId is passed for future owner-only UI features
+  void _currentUserId;
 
   const statusConfig = getStatusConfig(voiceover.status);
   const isGenerating = isGeneratingStatus(voiceover.status);
@@ -116,9 +125,10 @@ export function WorkbenchLayout({
                   onManageClick={onManageCollaborators}
                 />
                 <ApproveButton
-                  voiceoverId={voiceover.id}
-                  userId={currentUserId}
                   hasApproved={currentUserHasApproved}
+                  onApprove={onApprove}
+                  onRevoke={onRevoke}
+                  isPending={isApprovalPending}
                 />
               </div>
 
