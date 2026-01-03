@@ -1,6 +1,6 @@
 # Frontend Refactoring Implementation Plan
 
-> **STATUS: IN PROGRESS** - Sprint 6 complete, Sprint 7 next
+> **STATUS: IN PROGRESS** - Sprint 7 complete, Sprint 8 next
 > - Backend refactoring complete (previous plan archived)
 > - Frontend refactoring to match backend standards
 
@@ -344,7 +344,7 @@ Dashboard was already well-structured and only needed import updates.
 - [x] **Sprint 6**: Old code removed, all imports updated
 
 **Part 2: Frontend Testing**
-- [ ] **Sprint 7**: Component test infrastructure ready
+- [x] **Sprint 7**: Component test infrastructure ready
 - [ ] **Sprint 8**: Component tests passing (shared + features)
 - [ ] **Sprint 9**: E2E infrastructure ready
 - [ ] **Sprint 10**: E2E tests passing
@@ -430,48 +430,42 @@ apps/web/
 
 ---
 
-## Sprint 7: Component Test Infrastructure
+## Sprint 7: Component Test Infrastructure ✅ COMPLETE
 
 **Goal**: Set up Vitest + React Testing Library + MSW
 
-### 7.1 Install dependencies
+### 7.1 Install dependencies ✅
 ```bash
-pnpm --filter web add -D @testing-library/react @testing-library/user-event msw jsdom
+pnpm --filter web add -D @testing-library/react @testing-library/user-event msw jsdom @testing-library/dom @testing-library/jest-dom
 ```
 
-### 7.2 Update `vitest.config.ts`
-- Add `environment: 'jsdom'`
-- Add `setupFiles: ['./src/test-utils/setup.ts']`
+### 7.2 Update `vitest.config.ts` ✅
+- Added `environment: 'jsdom'`
+- Added `setupFiles: ['./src/test-utils/setup.ts']`
+- Added monorepo package aliases for @repo/ui, @repo/auth, @repo/api
 
-### 7.3 Create `src/test-utils/index.tsx`
+### 7.3 Create `src/test-utils/index.tsx` ✅
 Custom render with providers:
 - QueryClientProvider (with retry: false)
-- Router context (mock)
-- Theme provider if needed
+- `renderWithQuery` function for component testing
 
-### 7.4 Create `src/test-utils/server.ts`
-MSW server setup:
-```typescript
-import { setupServer } from 'msw/node';
-import { handlers } from './handlers';
-export const server = setupServer(...handlers);
-```
+### 7.4 Create `src/test-utils/server.ts` ✅
+MSW server setup with handlers
 
-### 7.5 Create `src/test-utils/setup.ts`
-Vitest setup file:
-```typescript
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-```
+### 7.5 Create `src/test-utils/setup.ts` ✅
+Vitest setup file with MSW lifecycle and @testing-library/jest-dom
 
-### 7.6 Create `src/test-utils/handlers.ts`
+### 7.6 Create `src/test-utils/handlers.ts` ✅
 Base MSW handlers for common endpoints:
 - Auth endpoints
 - Podcast list/detail
 - Document list/detail
 
-**Validation**: `pnpm --filter web test` runs without errors
+### 7.7 Create initial test ✅
+- Added `src/shared/__tests__/suspense-boundary.test.tsx` with 3 tests
+- Added `data-testid="loading-spinner"` to SuspenseBoundary
+
+**Validation**: `pnpm --filter web test` ✅ PASSED (25 tests)
 
 ---
 

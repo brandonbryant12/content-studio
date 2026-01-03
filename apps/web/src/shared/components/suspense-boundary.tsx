@@ -17,7 +17,10 @@ interface SuspenseBoundaryProps {
 
 function DefaultFallback() {
   return (
-    <div className="flex items-center justify-center h-full min-h-[200px]">
+    <div
+      className="flex items-center justify-center h-full min-h-[200px]"
+      data-testid="loading-spinner"
+    >
       <Spinner className="w-6 h-6" />
     </div>
   );

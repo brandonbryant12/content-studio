@@ -6,6 +6,7 @@ Architectural patterns, coding standards, and implementation guidelines for Cont
 
 | Standard | Description |
 |------|-------------|
+| [Implementation Plans](./implementation-plan.md) | Writing effective PRD/implementation plans |
 | [Setup Guide](./setup.md) | Requirements and development setup |
 | [Repository Pattern](./patterns/repository.md) | Data access layer structure |
 | [Use Case Pattern](./patterns/use-case.md) | Business logic structure |
@@ -39,6 +40,7 @@ Architectural patterns, coding standards, and implementation guidelines for Cont
 ```
 standards/
 ├── README.md                  # This file
+├── implementation-plan.md     # How to write PRD/implementation plans
 ├── setup.md                   # Requirements and setup guide
 ├── patterns/                  # Backend architectural patterns
 │   ├── repository.md          # Data access layer
