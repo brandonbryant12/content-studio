@@ -45,6 +45,7 @@ const createMockPodcastRepo = (
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
     clearApprovals: () => Effect.die('not implemented'),
+    setOwnerApproval: () => Effect.die('not implemented'),
 
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -127,7 +128,10 @@ describe('getPodcast', () => {
 
     it('returns podcast without documents by default', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id, status: 'ready' });
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        status: 'ready',
+      });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
@@ -172,7 +176,10 @@ describe('getPodcast', () => {
 
     it('returns podcast with status from the podcast directly', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id, status: 'generating_script' });
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        status: 'generating_script',
+      });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],

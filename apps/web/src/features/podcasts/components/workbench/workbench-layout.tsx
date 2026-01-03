@@ -48,10 +48,7 @@ export function WorkbenchLayout({
 
             {/* Podcast icon and title */}
             <div className="workbench-title-group">
-              <PodcastIcon
-                format={podcast.format}
-                status={podcast.status}
-              />
+              <PodcastIcon format={podcast.format} status={podcast.status} />
               <div className="min-w-0">
                 <h1 className="workbench-title">{podcast.title}</h1>
                 {podcast.description && (

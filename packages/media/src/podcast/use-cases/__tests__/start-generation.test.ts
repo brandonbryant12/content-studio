@@ -1,11 +1,25 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createTestUser, createTestPodcast, resetAllFactories } from '@repo/testing';
-import type { Podcast, JobId, JobStatus, VersionStatus } from '@repo/db/schema';
+import {
+  createTestUser,
+  createTestPodcast,
+  resetAllFactories,
+} from '@repo/testing';
+import type {
+  Podcast,
+  JobId,
+  JobStatus,
+  VersionStatus,
+  PodcastId,
+} from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
+import {
+  CollaboratorRepo,
+  type CollaboratorRepoService,
+} from '../../repos/collaborator-repo';
 import { startGeneration } from '../start-generation';
 
 // =============================================================================
@@ -49,10 +63,32 @@ const createMockPodcastRepo = (
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
+    clearApprovals: (id: string) =>
+      Effect.sync(() => ({ ...state.podcast!, ownerHasApproved: false })),
+    setOwnerApproval: (id, hasApproved) =>
+      Effect.sync(() => ({ ...state.podcast!, ownerHasApproved: hasApproved })),
   };
 
   return Layer.succeed(PodcastRepo, service);
+};
+
+const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
+  const service: CollaboratorRepoService = {
+    findById: () => Effect.succeed(null),
+    findByPodcast: () => Effect.succeed([]),
+    findByEmail: () => Effect.succeed([]),
+    findByPodcastAndUser: () => Effect.succeed(null),
+    findByPodcastAndEmail: () => Effect.succeed(null),
+    lookupUserByEmail: () => Effect.succeed(null),
+    add: () => Effect.die('not implemented'),
+    remove: () => Effect.die('not implemented'),
+    approve: () => Effect.die('not implemented'),
+    revokeApproval: () => Effect.die('not implemented'),
+    clearAllApprovals: (_podcastId: PodcastId) => Effect.succeed(0),
+    claimByEmail: () => Effect.succeed(0),
+  };
+
+  return Layer.succeed(CollaboratorRepo, service);
 };
 
 const createMockQueue = (
@@ -111,6 +147,7 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -139,6 +176,7 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -161,13 +199,17 @@ describe('startGeneration', () => {
   describe('status handling', () => {
     it('updates podcast status to drafting', async () => {
       const user = createTestUser();
-      const podcast = createTestPodcast({ createdBy: user.id, status: 'ready' });
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        status: 'ready',
+      });
       const updateStatusSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }),
+        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -205,6 +247,7 @@ describe('startGeneration', () => {
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -237,6 +280,7 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast, pendingJob: existingJob }),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -254,6 +298,7 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({}),
         createMockQueue({}),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(

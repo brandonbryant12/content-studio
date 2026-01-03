@@ -28,6 +28,15 @@ export {
 } from './podcast';
 import { resetPodcastCounters as _resetPodcastCounters } from './podcast';
 
+// Collaborator factories
+export {
+  createTestCollaborator,
+  createTestCollaboratorWithUser,
+  resetCollaboratorCounter,
+  type CreateTestCollaboratorOptions,
+} from './collaborator';
+import { resetCollaboratorCounter as _resetCollaboratorCounter } from './collaborator';
+
 /**
  * Reset all factory counters.
  * Call this in beforeEach for consistent test IDs.
@@ -36,4 +45,5 @@ export const resetAllFactories = () => {
   _resetUserCounter();
   _resetDocumentCounter();
   _resetPodcastCounters();
+  _resetCollaboratorCounter();
 };

@@ -275,3 +275,29 @@ const doc = yield* repo.findById(id).pipe(
 // CORRECT - propagate or handle explicitly
 const doc = yield* repo.findById(id);
 ```
+
+### Don't Bypass the Repository Layer
+
+Use cases should access data through repositories, not direct database calls. Dynamic imports to access DB internals are a code smell indicating missing repository methods.
+
+```typescript
+// WRONG - bypassing repo with dynamic imports and direct DB access
+const result = yield* Effect.tryPromise({
+  try: async () => {
+    const { withDb } = await import('@repo/db/effect');
+    const { podcast } = await import('@repo/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    return withDb('update', async (db) => {
+      return db.update(podcast).set({ approved: true }).where(eq(podcast.id, id));
+    });
+  },
+  catch: (e) => e,
+});
+
+// CORRECT - use repository method
+const repo = yield* PodcastRepo;
+yield* repo.setApprovalStatus(id, true);
+```
+
+If the repository doesn't have the method you need, add it to the repository rather than bypassing it.

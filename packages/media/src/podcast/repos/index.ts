@@ -14,3 +14,11 @@ export {
   type UpdateScriptOptions,
   type UpdateAudioOptions,
 } from './podcast-repo';
+
+export {
+  CollaboratorRepo,
+  CollaboratorRepoLive,
+  type CollaboratorRepoService,
+  type AddCollaboratorInput,
+  type UserLookupInfo,
+} from './collaborator-repo';

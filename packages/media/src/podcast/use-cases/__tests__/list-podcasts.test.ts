@@ -35,6 +35,7 @@ const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
   updateAudio: () => Effect.die('Not implemented in mock'),
   clearAudio: () => Effect.die('Not implemented in mock'),
   clearApprovals: () => Effect.die('Not implemented in mock'),
+  setOwnerApproval: () => Effect.die('Not implemented in mock'),
 
   list: (options: ListOptions) =>
     Effect.succeed(

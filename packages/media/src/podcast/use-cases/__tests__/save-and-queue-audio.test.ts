@@ -5,14 +5,15 @@ import {
   createTestPodcast,
   resetAllFactories,
 } from '@repo/testing';
-import type { Podcast, JobId, JobStatus } from '@repo/db/schema';
+import type { Podcast, JobId, JobStatus, PodcastId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
+import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
 import {
-  PodcastRepo,
-  type PodcastRepoService,
-} from '../../repos/podcast-repo';
+  CollaboratorRepo,
+  type CollaboratorRepoService,
+} from '../../repos/collaborator-repo';
 import {
   saveAndQueueAudio,
   NoChangesToSaveError,
@@ -70,11 +71,16 @@ const createMockPodcastRepo = (
       Effect.sync(() => ({ ...state.podcast!, ...opts }) as Podcast),
     clearAudio: (id) =>
       Effect.sync(
-        () => ({ ...state.podcast!, audioUrl: null, duration: null }) as Podcast,
+        () =>
+          ({ ...state.podcast!, audioUrl: null, duration: null }) as Podcast,
       ),
     clearApprovals: (id) =>
       Effect.sync(
         () => ({ ...state.podcast!, ownerHasApproved: false }) as Podcast,
+      ),
+    setOwnerApproval: (id, hasApproved) =>
+      Effect.sync(
+        () => ({ ...state.podcast!, ownerHasApproved: hasApproved }) as Podcast,
       ),
   };
 
@@ -117,6 +123,25 @@ const createMockQueue = (
   return Layer.succeed(Queue, service);
 };
 
+const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
+  const service: CollaboratorRepoService = {
+    findById: () => Effect.succeed(null),
+    findByPodcast: () => Effect.succeed([]),
+    findByEmail: () => Effect.succeed([]),
+    findByPodcastAndUser: () => Effect.succeed(null),
+    findByPodcastAndEmail: () => Effect.succeed(null),
+    lookupUserByEmail: () => Effect.succeed(null),
+    add: () => Effect.die('not implemented'),
+    remove: () => Effect.die('not implemented'),
+    approve: () => Effect.die('not implemented'),
+    revokeApproval: () => Effect.die('not implemented'),
+    clearAllApprovals: (_podcastId: PodcastId) => Effect.succeed(0),
+    claimByEmail: () => Effect.succeed(0),
+  };
+
+  return Layer.succeed(CollaboratorRepo, service);
+};
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -140,6 +165,7 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -176,6 +202,7 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdate: podcastUpdateSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -226,6 +253,7 @@ describe('saveAndQueueAudio', () => {
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -247,6 +275,7 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({}),
         createMockQueue({}),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -274,6 +303,7 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -302,6 +332,7 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
+        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(

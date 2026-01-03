@@ -215,6 +215,114 @@ export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
 }
 
 // =============================================================================
+// Collaboration Errors
+// =============================================================================
+
+/**
+ * User is not the owner of the podcast.
+ */
+export class NotPodcastOwner extends Schema.TaggedError<NotPodcastOwner>()(
+  'NotPodcastOwner',
+  {
+    podcastId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_PODCAST_OWNER' as const;
+  static readonly httpMessage = (e: NotPodcastOwner) =>
+    e.message ?? 'Only the podcast owner can perform this action';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotPodcastOwner) {
+    return { podcastId: e.podcastId };
+  }
+}
+
+/**
+ * User is not a collaborator or owner of the podcast.
+ */
+export class NotPodcastCollaborator extends Schema.TaggedError<NotPodcastCollaborator>()(
+  'NotPodcastCollaborator',
+  {
+    podcastId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_PODCAST_COLLABORATOR' as const;
+  static readonly httpMessage = (e: NotPodcastCollaborator) =>
+    e.message ?? 'User is not a collaborator on this podcast';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotPodcastCollaborator) {
+    return { podcastId: e.podcastId };
+  }
+}
+
+/**
+ * Collaborator already exists for this podcast.
+ */
+export class CollaboratorAlreadyExists extends Schema.TaggedError<CollaboratorAlreadyExists>()(
+  'CollaboratorAlreadyExists',
+  {
+    podcastId: Schema.String,
+    email: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'COLLABORATOR_ALREADY_EXISTS' as const;
+  static readonly httpMessage = (e: CollaboratorAlreadyExists) =>
+    e.message ?? `${e.email} is already a collaborator on this podcast`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: CollaboratorAlreadyExists) {
+    return { podcastId: e.podcastId, email: e.email };
+  }
+}
+
+/**
+ * Collaborator not found.
+ */
+export class CollaboratorNotFound extends Schema.TaggedError<CollaboratorNotFound>()(
+  'CollaboratorNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'COLLABORATOR_NOT_FOUND' as const;
+  static readonly httpMessage = (e: CollaboratorNotFound) =>
+    e.message ?? `Collaborator ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: CollaboratorNotFound) {
+    return { collaboratorId: e.id };
+  }
+}
+
+/**
+ * Cannot add owner as collaborator.
+ */
+export class CannotAddOwnerAsCollaborator extends Schema.TaggedError<CannotAddOwnerAsCollaborator>()(
+  'CannotAddOwnerAsCollaborator',
+  {
+    podcastId: Schema.String,
+    email: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'CANNOT_ADD_OWNER_AS_COLLABORATOR' as const;
+  static readonly httpMessage = (e: CannotAddOwnerAsCollaborator) =>
+    e.message ?? 'Cannot add the podcast owner as a collaborator';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: CannotAddOwnerAsCollaborator) {
+    return { podcastId: e.podcastId, email: e.email };
+  }
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -231,4 +339,9 @@ export type MediaError =
   | ScriptNotFound
   | PodcastError
   | ProjectNotFound
-  | MediaNotFound;
+  | MediaNotFound
+  | NotPodcastOwner
+  | NotPodcastCollaborator
+  | CollaboratorAlreadyExists
+  | CollaboratorNotFound
+  | CannotAddOwnerAsCollaborator;

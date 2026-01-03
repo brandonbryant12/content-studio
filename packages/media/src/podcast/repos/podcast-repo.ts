@@ -172,6 +172,14 @@ export interface PodcastRepoService {
   readonly clearApprovals: (
     id: string,
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Set owner approval status.
+   */
+  readonly setOwnerApproval: (
+    id: string,
+    hasApproved: boolean,
+  ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 }
 
 // =============================================================================
@@ -494,6 +502,23 @@ const make: PodcastRepoService = {
         .update(podcast)
         .set({
           ownerHasApproved: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(podcast.id, id as PodcastId))
+        .returning();
+      return pod;
+    }).pipe(
+      Effect.flatMap((pod) =>
+        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+      ),
+    ),
+
+  setOwnerApproval: (id, hasApproved) =>
+    withDb('podcastRepo.setOwnerApproval', async (db) => {
+      const [pod] = await db
+        .update(podcast)
+        .set({
+          ownerHasApproved: hasApproved,
           updatedAt: new Date(),
         })
         .where(eq(podcast.id, id as PodcastId))

@@ -3,6 +3,7 @@ import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { CollaboratorRepo } from '../repos/collaborator-repo';
 
 // =============================================================================
 // Types
@@ -41,6 +42,7 @@ export interface StartGenerationResult {
 export const startGeneration = (input: StartGenerationInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
+    const collaboratorRepo = yield* CollaboratorRepo;
     const queue = yield* Queue;
 
     // 1. Verify podcast exists and user has access
@@ -58,7 +60,11 @@ export const startGeneration = (input: StartGenerationInput) =>
     // 3. Update podcast status to drafting
     yield* podcastRepo.updateStatus(podcast.id, 'drafting');
 
-    // 4. Enqueue the combined generation job
+    // 4. Clear all approvals since content will change
+    yield* podcastRepo.clearApprovals(podcast.id);
+    yield* collaboratorRepo.clearAllApprovals(podcast.id);
+
+    // 5. Enqueue the combined generation job
     const payload: GeneratePodcastPayload = {
       podcastId: podcast.id,
       userId: podcast.createdBy,

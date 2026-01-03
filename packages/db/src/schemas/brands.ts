@@ -129,3 +129,19 @@ export type ProjectId = typeof ProjectIdSchema.Type;
 
 export const generateProjectId = (): ProjectId =>
   `prj_${generateRandomBase32()}` as ProjectId;
+
+// =============================================================================
+// Collaborator ID
+// =============================================================================
+
+export const CollaboratorIdSchema = Schema.String.pipe(
+  Schema.pattern(/^col_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid collaborator ID format',
+  }),
+  Schema.brand('CollaboratorId'),
+);
+
+export type CollaboratorId = typeof CollaboratorIdSchema.Type;
+
+export const generateCollaboratorId = (): CollaboratorId =>
+  `col_${generateRandomBase32()}` as CollaboratorId;

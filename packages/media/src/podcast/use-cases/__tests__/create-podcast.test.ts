@@ -7,7 +7,12 @@ import {
   resetPodcastCounters,
   resetAllFactories,
 } from '@repo/testing';
-import type { Podcast, Document, CreatePodcast, DocumentId } from '@repo/db/schema';
+import type {
+  Podcast,
+  Document,
+  CreatePodcast,
+  DocumentId,
+} from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { DocumentNotFound } from '../../../errors';
 import {
@@ -52,6 +57,7 @@ const createMockPodcastRepo = (
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
     clearApprovals: () => Effect.die('not implemented'),
+    setOwnerApproval: () => Effect.die('not implemented'),
 
     insert: (data, documentIds) =>
       Effect.sync(() => {

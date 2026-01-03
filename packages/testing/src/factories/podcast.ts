@@ -96,7 +96,10 @@ export const createTestPodcast = (
  * Create a test podcast with ready status and audio.
  */
 export const createReadyPodcast = (
-  options: Omit<CreateTestPodcastOptions, 'status' | 'audioUrl' | 'duration'> = {},
+  options: Omit<
+    CreateTestPodcastOptions,
+    'status' | 'audioUrl' | 'duration'
+  > = {},
 ): Podcast => {
   const id = options.id ?? generatePodcastId();
   return createTestPodcast({

@@ -8,6 +8,7 @@ import {
   index,
   pgEnum,
   boolean,
+  unique,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
 import { user } from './auth';
@@ -24,9 +25,12 @@ import {
 import {
   type PodcastId,
   type DocumentId,
+  type CollaboratorId,
   PodcastIdSchema,
   DocumentIdSchema,
+  CollaboratorIdSchema,
   generatePodcastId,
+  generateCollaboratorId,
 } from './brands';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
@@ -129,6 +133,54 @@ export const podcast = pgTable(
   (table) => [
     index('podcast_createdBy_idx').on(table.createdBy),
     index('podcast_status_idx').on(table.status),
+  ],
+);
+
+// =============================================================================
+// Podcast Collaborator Table
+// =============================================================================
+
+/**
+ * Podcast collaborator table.
+ * Tracks users who have been invited to collaborate on a podcast.
+ * - userId is null for pending invites (email-only)
+ * - When user signs up, pending invites are claimed by matching email
+ */
+export const podcastCollaborator = pgTable(
+  'podcastCollaborator',
+  {
+    id: varchar('id', { length: 20 })
+      .$type<CollaboratorId>()
+      .$default(generateCollaboratorId)
+      .primaryKey(),
+    podcastId: varchar('podcastId', { length: 20 })
+      .notNull()
+      .references(() => podcast.id, { onDelete: 'cascade' })
+      .$type<PodcastId>(),
+    // userId is null for pending invites (email-only)
+    userId: text('userId').references(() => user.id, { onDelete: 'cascade' }),
+    // Email used for pending invites and display
+    email: text('email').notNull(),
+    // Approval tracking
+    hasApproved: boolean('hasApproved').notNull().default(false),
+    approvedAt: timestamp('approvedAt', { mode: 'date', withTimezone: true }),
+    // Audit fields
+    addedAt: timestamp('addedAt', { mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    addedBy: text('addedBy')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    index('collaborator_podcastId_idx').on(table.podcastId),
+    index('collaborator_userId_idx').on(table.userId),
+    index('collaborator_email_idx').on(table.email),
+    // Unique constraint: one invite per email per podcast
+    unique('collaborator_podcast_email_unique').on(
+      table.podcastId,
+      table.email,
+    ),
   ],
 );
 
@@ -294,6 +346,34 @@ export const PodcastListItemOutputSchema = Schema.Struct({
 });
 
 // =============================================================================
+// Collaborator Output Schemas
+// =============================================================================
+
+/**
+ * Base collaborator output schema.
+ */
+export const CollaboratorOutputSchema = Schema.Struct({
+  id: CollaboratorIdSchema,
+  podcastId: PodcastIdSchema,
+  userId: Schema.NullOr(Schema.String),
+  email: Schema.String,
+  hasApproved: Schema.Boolean,
+  approvedAt: Schema.NullOr(Schema.String),
+  addedAt: Schema.String,
+  addedBy: Schema.String,
+});
+
+/**
+ * Collaborator with user details output schema.
+ * Includes user name and image when the collaborator is a registered user.
+ */
+export const CollaboratorWithUserOutputSchema = Schema.Struct({
+  ...CollaboratorOutputSchema.fields,
+  userName: Schema.NullOr(Schema.String),
+  userImage: Schema.NullOr(Schema.String),
+});
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -307,6 +387,12 @@ export type PodcastListItemOutput = typeof PodcastListItemOutputSchema.Type;
 export type CreatePodcast = typeof CreatePodcastSchema.Type;
 export type UpdatePodcast = typeof UpdatePodcastSchema.Type;
 export type UpdateScript = typeof UpdateScriptSchema.Type;
+
+// Collaborator types
+export type Collaborator = typeof podcastCollaborator.$inferSelect;
+export type CollaboratorOutput = typeof CollaboratorOutputSchema.Type;
+export type CollaboratorWithUserOutput =
+  typeof CollaboratorWithUserOutputSchema.Type;
 
 // =============================================================================
 // Transform Functions - pure DB → API output conversion
@@ -417,4 +503,75 @@ export const serializePodcastListItemsEffect = createBatchEffectSerializer(
 /** Sync serializer for simple cases. */
 export const serializePodcastListItem = createSyncSerializer(
   podcastListItemTransform,
+);
+
+// --- Collaborator ---
+
+/**
+ * Input type for collaborator with user serialization.
+ */
+export interface CollaboratorWithUser extends Collaborator {
+  userName: string | null;
+  userImage: string | null;
+}
+
+/**
+ * Pure transform for Collaborator → CollaboratorOutput.
+ */
+const collaboratorTransform = (
+  collaborator: Collaborator,
+): CollaboratorOutput => ({
+  id: collaborator.id,
+  podcastId: collaborator.podcastId,
+  userId: collaborator.userId ?? null,
+  email: collaborator.email,
+  hasApproved: collaborator.hasApproved,
+  approvedAt: collaborator.approvedAt?.toISOString() ?? null,
+  addedAt: collaborator.addedAt.toISOString(),
+  addedBy: collaborator.addedBy,
+});
+
+/**
+ * Pure transform for CollaboratorWithUser → CollaboratorWithUserOutput.
+ */
+const collaboratorWithUserTransform = (
+  collaborator: CollaboratorWithUser,
+): CollaboratorWithUserOutput => ({
+  ...collaboratorTransform(collaborator),
+  userName: collaborator.userName,
+  userImage: collaborator.userImage,
+});
+
+/** Effect-based serializer with tracing. */
+export const serializeCollaboratorEffect = createEffectSerializer(
+  'collaborator',
+  collaboratorTransform,
+);
+
+/** Batch serializer for multiple collaborators. */
+export const serializeCollaboratorsEffect = createBatchEffectSerializer(
+  'collaborator',
+  collaboratorTransform,
+);
+
+/** Sync serializer for simple cases. */
+export const serializeCollaborator = createSyncSerializer(
+  collaboratorTransform,
+);
+
+/** Effect-based serializer for collaborator with user. */
+export const serializeCollaboratorWithUserEffect = createEffectSerializer(
+  'collaboratorWithUser',
+  collaboratorWithUserTransform,
+);
+
+/** Batch serializer for collaborators with user info. */
+export const serializeCollaboratorsWithUserEffect = createBatchEffectSerializer(
+  'collaboratorWithUser',
+  collaboratorWithUserTransform,
+);
+
+/** Sync serializer for collaborator with user. */
+export const serializeCollaboratorWithUser = createSyncSerializer(
+  collaboratorWithUserTransform,
 );

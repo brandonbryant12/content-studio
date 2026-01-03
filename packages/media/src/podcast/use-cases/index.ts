@@ -66,3 +66,36 @@ export {
 } from './save-and-queue-audio';
 
 export { getJob, type GetJobInput, type GetJobResult } from './get-job';
+
+// =============================================================================
+// Collaboration Operations
+// =============================================================================
+
+export {
+  addCollaborator,
+  type AddCollaboratorInput,
+  type AddCollaboratorResult,
+} from './add-collaborator';
+
+export {
+  removeCollaborator,
+  type RemoveCollaboratorInput,
+} from './remove-collaborator';
+
+export {
+  approvePodcast,
+  type ApprovePodcastInput,
+  type ApprovePodcastResult,
+} from './approve-podcast';
+
+export {
+  revokeApproval,
+  type RevokeApprovalInput,
+  type RevokeApprovalResult,
+} from './revoke-approval';
+
+export {
+  claimPendingInvites,
+  type ClaimPendingInvitesInput,
+  type ClaimPendingInvitesResult,
+} from './claim-pending-invites';

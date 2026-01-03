@@ -1,6 +1,7 @@
 import { Effect } from 'effect';
 import type { Podcast, ScriptSegment, VersionStatus } from '@repo/db/schema';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { CollaboratorRepo } from '../repos/collaborator-repo';
 
 // =============================================================================
 // Types
@@ -71,6 +72,7 @@ export class InvalidSaveError {
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
+    const collaboratorRepo = yield* CollaboratorRepo;
 
     // 1. Load podcast
     const podcast = yield* podcastRepo.findById(input.podcastId);
@@ -133,6 +135,10 @@ export const saveChanges = (input: SaveChangesInput) =>
       input.podcastId,
       'script_ready',
     );
+
+    // 7. Clear all approvals (owner and collaborators) since content changed
+    yield* podcastRepo.clearApprovals(input.podcastId);
+    yield* collaboratorRepo.clearAllApprovals(podcast.id);
 
     return {
       podcast: updatedPodcast,
