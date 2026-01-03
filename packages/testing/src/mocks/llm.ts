@@ -114,5 +114,12 @@ export const createMockLLM = (
 
 /**
  * Default mock LLM layer with standard test responses.
+ * No delay for fast tests.
  */
 export const MockLLMLive = createMockLLM();
+
+/**
+ * Mock LLM layer with realistic latency for dev server.
+ * Simulates 10 second script generation time.
+ */
+export const MockLLMWithLatency = createMockLLM({ delay: 10_000 });

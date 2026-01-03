@@ -224,5 +224,12 @@ export const createMockTTS = (
 
 /**
  * Default mock TTS layer with standard test responses.
+ * No delay for fast tests.
  */
 export const MockTTSLive = createMockTTS();
+
+/**
+ * Mock TTS layer with realistic latency for dev server.
+ * Simulates 15 second audio synthesis time.
+ */
+export const MockTTSWithLatency = createMockTTS({ delay: 15_000 });

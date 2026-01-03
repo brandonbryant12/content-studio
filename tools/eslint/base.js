@@ -96,12 +96,30 @@ export default defineConfig([
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  // No dynamic imports
+  {
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression',
+          message:
+            'Dynamic imports are not allowed. Use static imports instead.',
+        },
+      ],
+    },
+  },
   // Effect-TS best practices
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'no-restricted-syntax': [
         'warn',
+        {
+          selector: 'ImportExpression',
+          message:
+            'Dynamic imports are not allowed. Use static imports instead.',
+        },
         {
           selector:
             'CallExpression[callee.object.name="Layer"][callee.property.name="succeed"]',

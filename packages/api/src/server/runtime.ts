@@ -2,7 +2,7 @@ import { ManagedRuntime, Layer, Logger } from 'effect';
 import { DbLive, type Db } from '@repo/db/effect';
 import { QueueLive, type Queue } from '@repo/queue';
 import { GoogleAILive, type AI } from '@repo/ai';
-import { MockAILive } from '@repo/testing';
+import { MockAIWithLatency } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { MediaLive, type Media } from '@repo/media';
 import type { Storage } from '@repo/storage';
@@ -50,8 +50,9 @@ export const createSharedLayers = (
   const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
 
   // AI layer bundles LLM and TTS
+  // Mock AI has realistic latency (10s LLM, 15s TTS) for dev testing
   const aiLayer = config.useMockAI
-    ? MockAILive
+    ? MockAIWithLatency
     : GoogleAILive({ apiKey: config.geminiApiKey });
 
   // Media layer bundles Documents, PodcastRepo, and CollaboratorRepo
