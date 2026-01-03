@@ -406,6 +406,96 @@ function CreatePodcastContainer() {
 }
 ```
 
+## Cache Consistency for Non-Optimistic Mutations
+
+Not all mutations need optimistic updates. Some mutations save data "silently" without immediate UI feedback (e.g., wizard steps, background saves). **These mutations still need to update the cache** to prevent stale data bugs.
+
+### The Problem
+
+When Component A saves data but Component B reads from cache:
+
+```typescript
+// WRONG - Wizard saves but doesn't update cache
+// Component B will see stale data after transition
+
+const updateMutation = useMutation(
+  apiClient.podcasts.update.mutationOptions({
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save'));
+    },
+    // Missing onSuccess - cache not updated!
+  }),
+);
+```
+
+### The Solution: Always Update Cache on Success
+
+**Every mutation must update or invalidate the cache on success**, even if the current component doesn't display the updated data:
+
+```typescript
+// CORRECT - Update cache with API response
+const queryKey = getPodcastQueryKey(podcastId);
+
+const updateMutation = useMutation(
+  apiClient.podcasts.update.mutationOptions({
+    onSuccess: (response) => {
+      // Update cache so other components see fresh data
+      queryClient.setQueryData(queryKey, (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          ...response,
+          // Preserve nested data not in response
+          documents: current.documents,
+        };
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save'));
+    },
+  }),
+);
+```
+
+### When This Matters Most
+
+1. **Multi-step wizards** - Each step saves data for the final view
+2. **Modal forms** - Modal saves, parent component displays
+3. **Settings panels** - Settings saved here, reflected elsewhere
+4. **Cross-component flows** - Any data shared between components
+
+### Decision Tree
+
+```
+Does this mutation update server data?
+├── No → No cache update needed
+└── Yes → Will ANY component read this data from cache?
+    ├── No → No cache update needed (rare)
+    └── Yes → UPDATE THE CACHE
+        ├── Need instant UI feedback? → Use optimistic update (onMutate)
+        └── No instant feedback needed? → Update in onSuccess with response
+```
+
+### Cache Update Checklist
+
+Before merging any mutation code, verify:
+
+- [ ] Does `onSuccess` update the cache OR invalidate queries?
+- [ ] If updating cache: are nested objects preserved (e.g., `documents`)?
+- [ ] If this is a wizard/modal: will the destination component have fresh data?
+
+### Alternative: Invalidation
+
+If response shape is complex, invalidate instead:
+
+```typescript
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey });
+},
+```
+
+This triggers a refetch—less optimal but guarantees consistency.
+
 ## Anti-Patterns
 
 ### No Rollback Context
@@ -476,6 +566,40 @@ const queryKey = apiClient.podcasts.get.queryOptions({
   input: { id: podcastId },
 }).queryKey;
 queryClient.setQueryData(queryKey, optimisticData);
+```
+
+### Missing Cache Update in Wizards/Modals
+
+```typescript
+// WRONG - Wizard step saves data but next view sees stale cache
+const updateMutation = useMutation(
+  apiClient.podcasts.update.mutationOptions({
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save'));
+    },
+    // No onSuccess → cache not updated!
+    // When user transitions to workbench, usePodcastSettings
+    // reads stale data from cache
+  }),
+);
+
+// CORRECT - Update cache so destination component has fresh data
+const queryKey = getPodcastQueryKey(podcast.id);
+
+const updateMutation = useMutation(
+  apiClient.podcasts.update.mutationOptions({
+    onSuccess: (response) => {
+      queryClient.setQueryData(queryKey, (current) => ({
+        ...current,
+        ...response,
+        documents: current?.documents, // Preserve nested data
+      }));
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save'));
+    },
+  }),
+);
 ```
 
 ### Generic Error Messages

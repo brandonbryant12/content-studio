@@ -267,10 +267,19 @@ export function usePodcastList(options: { limit?: number } = {}) {
 
 ### State Management Hook
 
+Hooks that manage local state derived from server data need special handling to stay in sync.
+
+**The Problem:** When Component A (wizard) updates server data via cache, and Component B's hook has local state initialized from that data, the local state gets stale.
+
+**The Solution:** Track whether the user has made local edits. Sync from server when:
+- Props change AND user hasn't made edits
+- User navigates to different resource
+- User explicitly discards changes
+
 ```typescript
 // features/podcasts/hooks/use-podcast-settings.ts
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
@@ -279,97 +288,76 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 type Podcast = RouterOutput['podcasts']['get'];
 
-interface UsePodcastSettingsOptions {
-  podcast: Podcast | undefined;
-}
-
-export interface UsePodcastSettingsReturn {
-  // Current values
-  hostVoice: string;
-  coHostVoice: string;
-  targetDuration: number;
-
-  // Setters
-  setHostVoice: (voice: string) => void;
-  setCoHostVoice: (voice: string) => void;
-  setTargetDuration: (duration: number) => void;
-
-  // State
-  hasChanges: boolean;
-  isSaving: boolean;
-
-  // Actions
-  saveSettings: () => Promise<void>;
-  discardChanges: () => void;
-}
-
-export function usePodcastSettings({
-  podcast,
-}: UsePodcastSettingsOptions): UsePodcastSettingsReturn {
+export function usePodcastSettings({ podcast }: { podcast: Podcast | undefined }) {
   // Track podcast ID to reset on navigation
   const podcastIdRef = useRef(podcast?.id);
 
-  // Local state
-  const [hostVoice, setHostVoice] = useState(podcast?.hostVoice ?? 'Aoede');
-  const [coHostVoice, setCoHostVoice] = useState(podcast?.coHostVoice ?? 'Charon');
-  const [targetDuration, setTargetDuration] = useState(
+  // Track whether user has made local edits (to avoid overwriting)
+  const hasUserEditsRef = useRef(false);
+
+  // Internal state
+  const [hostVoice, setHostVoiceInternal] = useState(podcast?.hostVoice ?? 'Aoede');
+  const [targetDuration, setTargetDurationInternal] = useState(
     podcast?.targetDurationMinutes ?? 5
   );
+
+  // Wrapped setters that track user edits
+  const setHostVoice = useCallback((value: string) => {
+    hasUserEditsRef.current = true;
+    setHostVoiceInternal(value);
+  }, []);
+
+  const setTargetDuration = useCallback((value: number) => {
+    hasUserEditsRef.current = true;
+    setTargetDurationInternal(value);
+  }, []);
 
   // Reset on navigation to different podcast
   if (podcast?.id !== podcastIdRef.current) {
     podcastIdRef.current = podcast?.id;
-    setHostVoice(podcast?.hostVoice ?? 'Aoede');
-    setCoHostVoice(podcast?.coHostVoice ?? 'Charon');
-    setTargetDuration(podcast?.targetDurationMinutes ?? 5);
+    hasUserEditsRef.current = false;
+    setHostVoiceInternal(podcast?.hostVoice ?? 'Aoede');
+    setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
   }
+
+  // Sync from server when data changes (if no user edits)
+  // This handles: wizard saves, SSE updates, cache invalidation
+  useEffect(() => {
+    if (hasUserEditsRef.current) return;
+
+    setHostVoiceInternal(podcast?.hostVoice ?? 'Aoede');
+    setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
+  }, [podcast?.hostVoice, podcast?.targetDurationMinutes]);
 
   // Track changes
   const hasChanges =
     hostVoice !== (podcast?.hostVoice ?? 'Aoede') ||
-    coHostVoice !== (podcast?.coHostVoice ?? 'Charon') ||
     targetDuration !== (podcast?.targetDurationMinutes ?? 5);
 
-  // Mutation
-  const updateMutation = useMutation(
-    apiClient.podcasts.update.mutationOptions({
-      onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to save settings'));
-      },
-    }),
-  );
-
-  const saveSettings = useCallback(async () => {
-    if (!podcast?.id) return;
-
-    await updateMutation.mutateAsync({
-      id: podcast.id,
-      hostVoice,
-      coHostVoice,
-      targetDurationMinutes: targetDuration,
-    });
-  }, [podcast?.id, hostVoice, coHostVoice, targetDuration, updateMutation]);
-
   const discardChanges = useCallback(() => {
-    setHostVoice(podcast?.hostVoice ?? 'Aoede');
-    setCoHostVoice(podcast?.coHostVoice ?? 'Charon');
-    setTargetDuration(podcast?.targetDurationMinutes ?? 5);
+    hasUserEditsRef.current = false;
+    setHostVoiceInternal(podcast?.hostVoice ?? 'Aoede');
+    setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
   }, [podcast]);
 
   return {
     hostVoice,
-    coHostVoice,
     targetDuration,
     setHostVoice,
-    setCoHostVoice,
     setTargetDuration,
     hasChanges,
-    isSaving: updateMutation.isPending,
-    saveSettings,
     discardChanges,
+    // ... other fields
   };
 }
 ```
+
+**Key Points:**
+
+1. **Track user edits** via ref - don't overwrite user's intentional changes
+2. **Use `useEffect`** for syncing - not inline setState during render
+3. **Reset edit tracking** on navigation and discard
+4. **Wrapped setters** mark when user interacts with the form
 
 ### Optimistic Mutation Hook
 
@@ -614,3 +602,64 @@ function Container() {
   settings={settings}
 />
 ```
+
+### Stale Local State from Props
+
+When a hook initializes state from props, that state won't update when props change:
+
+```typescript
+// WRONG - state initialized once, never syncs with props
+function usePodcastSettings({ podcast }) {
+  // This only runs on FIRST render
+  const [duration, setDuration] = useState(podcast?.targetDurationMinutes ?? 5);
+
+  // If another component (wizard) updates podcast via cache,
+  // duration stays stale → shows "Unsaved changes" incorrectly
+  const hasChanges = duration !== (podcast?.targetDurationMinutes ?? 5);
+
+  return { duration, setDuration, hasChanges };
+}
+
+// ALSO WRONG - inline setState during render has timing issues
+function usePodcastSettings({ podcast }) {
+  const serverValueRef = useRef(podcast?.targetDurationMinutes);
+  const [duration, setDuration] = useState(podcast?.targetDurationMinutes ?? 5);
+
+  // setState during render schedules update for NEXT render
+  // hasChanges calculation below still uses OLD state
+  if (podcast?.targetDurationMinutes !== serverValueRef.current) {
+    setDuration(podcast?.targetDurationMinutes ?? 5);  // Doesn't help THIS render
+    serverValueRef.current = podcast?.targetDurationMinutes;
+  }
+
+  // This runs with stale duration value!
+  const hasChanges = duration !== (podcast?.targetDurationMinutes ?? 5);
+  return { hasChanges };  // Incorrectly true
+}
+
+// CORRECT - use useEffect + track user edits
+function usePodcastSettings({ podcast }) {
+  const hasUserEditsRef = useRef(false);
+  const [duration, setDurationInternal] = useState(podcast?.targetDurationMinutes ?? 5);
+
+  // Wrap setter to track user edits
+  const setDuration = useCallback((value: number) => {
+    hasUserEditsRef.current = true;
+    setDurationInternal(value);
+  }, []);
+
+  // Sync from props when they change (if no user edits)
+  useEffect(() => {
+    if (hasUserEditsRef.current) return;
+    setDurationInternal(podcast?.targetDurationMinutes ?? 5);
+  }, [podcast?.targetDurationMinutes]);
+
+  const hasChanges = duration !== (podcast?.targetDurationMinutes ?? 5);
+  return { duration, setDuration, hasChanges };
+}
+```
+
+**When this matters:**
+- Wizard/modal saves data → destination view needs fresh values
+- SSE updates arrive → local form should reflect server state
+- Cache invalidation → hook should sync with refetched data

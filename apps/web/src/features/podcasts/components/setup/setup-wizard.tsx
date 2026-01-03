@@ -5,16 +5,17 @@ import { toast } from 'sonner';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
-import { StepBasics } from './steps/step-basics';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
+import { useOptimisticGeneration, getPodcastQueryKey } from '../../hooks';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
+import type { RouterOutput } from '@repo/api/client';
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 interface SetupWizardProps {
   podcast: PodcastFull;
@@ -52,31 +53,32 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   );
 
   // Update mutation for saving progress
+  const queryKey = getPodcastQueryKey(podcast.id);
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
+      onSuccess: (updatedPodcast) => {
+        // Update the cache so workbench gets fresh data after wizard completes
+        queryClient.setQueryData(
+          queryKey,
+          (current: RouterOutput['podcasts']['get'] | undefined) => {
+            if (!current) return current;
+            return {
+              ...current,
+              ...updatedPodcast,
+              // Preserve documents since update only returns podcast fields
+              documents: current.documents,
+            };
+          },
+        );
+      },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to save'));
       },
     }),
   );
 
-  // Generate mutation for final step
-  const generateMutation = useMutation(
-    apiClient.podcasts.generate.mutationOptions({
-      onSuccess: () => {
-        // Invalidate podcast query so parent detects exit from setup mode
-        queryClient.invalidateQueries({
-          queryKey: apiClient.podcasts.get.queryOptions({
-            input: { id: podcast.id },
-          }).queryKey,
-        });
-        toast.success('Generation started');
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to start generation'));
-      },
-    }),
-  );
+  // Generate mutation for final step - uses optimistic update for immediate status feedback
+  const generateMutation = useOptimisticGeneration(podcast.id);
 
   const isLoading = updateMutation.isPending || generateMutation.isPending;
 
@@ -84,12 +86,10 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const canProceedFromStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return true; // Step 1 is informational, always proceed
-      case 2:
         return selectedDocIds.length > 0;
-      case 3:
+      case 2:
         return duration > 0 && hostVoice.length > 0;
-      case 4:
+      case 3:
         return true; // Instructions are optional
       default:
         return false;
@@ -101,15 +101,12 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     try {
       switch (step) {
         case 1:
-          // Step 1 is informational - no data to save
-          break;
-        case 2:
           await updateMutation.mutateAsync({
             id: podcast.id,
             documentIds: selectedDocIds,
           });
           break;
-        case 3:
+        case 2:
           await updateMutation.mutateAsync({
             id: podcast.id,
             targetDurationMinutes: duration,
@@ -117,13 +114,14 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             coHostVoice: format === 'conversation' ? coHostVoice : undefined,
           });
           break;
-        case 4:
+        case 3:
           // Save instructions and trigger generation
           await updateMutation.mutateAsync({
             id: podcast.id,
             promptInstructions: instructions.trim() || undefined,
           });
-          // Trigger generation
+          // Trigger generation - optimistic update will set status to 'generating_script'
+          // which exits setup mode via isSetupMode() check
           await generateMutation.mutateAsync({ id: podcast.id });
           break;
       }
@@ -155,16 +153,14 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
       <div className="setup-wizard-card">
         <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
-        {currentStep === 1 && <StepBasics format={format} />}
-
-        {currentStep === 2 && (
+        {currentStep === 1 && (
           <StepDocuments
             selectedIds={selectedDocIds}
             onSelectionChange={setSelectedDocIds}
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 2 && (
           <StepAudio
             format={format}
             duration={duration}
@@ -176,7 +172,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           />
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <StepInstructions
             instructions={instructions}
             onInstructionsChange={setInstructions}

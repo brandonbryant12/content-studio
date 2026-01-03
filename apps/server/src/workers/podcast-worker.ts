@@ -25,6 +25,7 @@ import {
   handleGeneratePodcast,
   handleGenerateScript,
   handleGenerateAudio,
+  type HandlerOptions,
 } from './handlers';
 
 // Type guards for job type discrimination
@@ -106,6 +107,21 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
   });
 
   /**
+   * Emit SSE event to notify frontend of entity change.
+   */
+  const emitEntityChange = (userId: string, podcastId: string) => {
+    const entityChangeEvent: EntityChangeEvent = {
+      type: 'entity_change',
+      entityType: 'podcast',
+      changeType: 'update',
+      entityId: podcastId,
+      userId,
+      timestamp: new Date().toISOString(),
+    };
+    sseManager.emit(userId, entityChangeEvent);
+  };
+
+  /**
    * Process a single job based on its type.
    * User context is scoped via FiberRef for the duration of the job.
    */
@@ -117,11 +133,25 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
 
       // Create user context for this job
       const user = makeJobUser(job.payload.userId);
+      const { userId } = job.payload;
+
+      // Handler options with progress callbacks
+      const handlerOptions: HandlerOptions = {
+        onScriptComplete: (podcastId) => {
+          // Emit SSE event so frontend can fetch the script while audio generates
+          emitEntityChange(userId, podcastId);
+          console.log(
+            `[Worker] Script complete for ${podcastId}, emitted SSE event`,
+          );
+        },
+      };
 
       // Run the appropriate handler with user context scoped via FiberRef
       // Each handler returns a different result type, so we type as unknown
       if (isGeneratePodcastJob(job)) {
-        yield* withCurrentUser(user)(handleGeneratePodcast(job));
+        yield* withCurrentUser(user)(
+          handleGeneratePodcast(job, handlerOptions),
+        );
       } else if (isGenerateScriptJob(job)) {
         yield* withCurrentUser(user)(handleGenerateScript(job));
       } else {

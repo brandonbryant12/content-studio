@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -81,6 +81,7 @@ export interface UsePodcastSettingsReturn {
 
   // State
   hasChanges: boolean;
+  hasScriptSettingsChanges: boolean;
   isSaving: boolean;
 
   // Actions
@@ -104,32 +105,79 @@ export function usePodcastSettings({
   // Track the podcast ID to detect navigation to a different podcast
   const podcastIdRef = useRef(podcast?.id);
 
+  // Track whether user has made local edits (to avoid overwriting user changes)
+  const hasUserEditsRef = useRef(false);
+
   // Initialize state from podcast
   const initial = getInitialValues(podcast);
-  const [hostVoice, setHostVoice] = useState(initial.hostVoice);
-  const [coHostVoice, setCoHostVoice] = useState(initial.coHostVoice);
-  const [targetDuration, setTargetDuration] = useState(initial.targetDuration);
-  const [instructions, setInstructions] = useState(initial.instructions);
+  const [hostVoice, setHostVoiceInternal] = useState(initial.hostVoice);
+  const [coHostVoice, setCoHostVoiceInternal] = useState(initial.coHostVoice);
+  const [targetDuration, setTargetDurationInternal] = useState(
+    initial.targetDuration,
+  );
+  const [instructions, setInstructionsInternal] = useState(
+    initial.instructions,
+  );
 
-  // Reset state when navigating to a different podcast (not just any podcast change)
-  // This runs synchronously during render, not in an effect
+  // Wrapped setters that track user edits
+  const setHostVoice = useCallback((value: string) => {
+    hasUserEditsRef.current = true;
+    setHostVoiceInternal(value);
+  }, []);
+
+  const setCoHostVoice = useCallback((value: string) => {
+    hasUserEditsRef.current = true;
+    setCoHostVoiceInternal(value);
+  }, []);
+
+  const setTargetDuration = useCallback((value: number) => {
+    hasUserEditsRef.current = true;
+    setTargetDurationInternal(value);
+  }, []);
+
+  const setInstructions = useCallback((value: string) => {
+    hasUserEditsRef.current = true;
+    setInstructionsInternal(value);
+  }, []);
+
+  // Reset state when navigating to a different podcast
   if (podcast?.id !== podcastIdRef.current) {
     podcastIdRef.current = podcast?.id;
+    hasUserEditsRef.current = false;
     const newInitial = getInitialValues(podcast);
-    // Only reset if values haven't been touched yet for this podcast
-    // This handles the initial navigation case
-    setHostVoice(newInitial.hostVoice);
-    setCoHostVoice(newInitial.coHostVoice);
-    setTargetDuration(newInitial.targetDuration);
-    setInstructions(newInitial.instructions);
+    setHostVoiceInternal(newInitial.hostVoice);
+    setCoHostVoiceInternal(newInitial.coHostVoice);
+    setTargetDurationInternal(newInitial.targetDuration);
+    setInstructionsInternal(newInitial.instructions);
   }
+
+  // Sync local state when server data changes externally (wizard saves, SSE updates)
+  // Only sync if user hasn't made local edits in the workbench
+  useEffect(() => {
+    if (hasUserEditsRef.current) return;
+
+    const newInitial = getInitialValues(podcast);
+    setHostVoiceInternal(newInitial.hostVoice);
+    setCoHostVoiceInternal(newInitial.coHostVoice);
+    setTargetDurationInternal(newInitial.targetDuration);
+    setInstructionsInternal(newInitial.instructions);
+  }, [
+    podcast?.hostVoice,
+    podcast?.coHostVoice,
+    podcast?.targetDurationMinutes,
+    podcast?.promptInstructions,
+  ]);
+
+  // Track if script-affecting settings changed (requires script regeneration)
+  const hasScriptSettingsChanges =
+    targetDuration !== (podcast?.targetDurationMinutes ?? 5) ||
+    instructions !== (podcast?.promptInstructions ?? '');
 
   // Track if there are changes compared to the current podcast values
   const hasChanges =
     hostVoice !== (podcast?.hostVoice ?? 'Aoede') ||
     coHostVoice !== (podcast?.coHostVoice ?? 'Charon') ||
-    targetDuration !== (podcast?.targetDurationMinutes ?? 5) ||
-    instructions !== (podcast?.promptInstructions ?? '');
+    hasScriptSettingsChanges;
 
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
@@ -164,10 +212,11 @@ export function usePodcastSettings({
   ]);
 
   const discardChanges = useCallback(() => {
-    setHostVoice(podcast?.hostVoice ?? 'Aoede');
-    setCoHostVoice(podcast?.coHostVoice ?? 'Charon');
-    setTargetDuration(podcast?.targetDurationMinutes ?? 5);
-    setInstructions(podcast?.promptInstructions ?? '');
+    hasUserEditsRef.current = false;
+    setHostVoiceInternal(podcast?.hostVoice ?? 'Aoede');
+    setCoHostVoiceInternal(podcast?.coHostVoice ?? 'Charon');
+    setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
+    setInstructionsInternal(podcast?.promptInstructions ?? '');
   }, [podcast]);
 
   return {
@@ -185,6 +234,7 @@ export function usePodcastSettings({
 
     // State
     hasChanges,
+    hasScriptSettingsChanges,
     isSaving: updateMutation.isPending,
 
     // Actions

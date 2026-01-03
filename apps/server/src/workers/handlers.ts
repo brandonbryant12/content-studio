@@ -17,6 +17,14 @@ import type {
 } from '@repo/queue';
 
 /**
+ * Options for handlers that support progress callbacks.
+ */
+export interface HandlerOptions {
+  /** Called when script generation completes (before audio generation starts) */
+  onScriptComplete?: (podcastId: string) => void;
+}
+
+/**
  * Format an error for logging - handles Effect tagged errors and standard errors.
  */
 const formatError = (error: unknown): string => {
@@ -42,7 +50,10 @@ const formatError = (error: unknown): string => {
  *
  * Requires: All dependencies for generateScript and generateAudio
  */
-export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
+export const handleGeneratePodcast = (
+  job: Job<GeneratePodcastPayload>,
+  options?: HandlerOptions,
+) =>
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
 
@@ -51,6 +62,9 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
       podcastId,
       promptInstructions,
     });
+
+    // Notify that script is complete (so frontend can show script while audio generates)
+    options?.onScriptComplete?.(scriptResult.podcast.id);
 
     // Phase 2: Generate audio from the new script
     const audioResult: UseCaseAudioResult = yield* generateAudio({
