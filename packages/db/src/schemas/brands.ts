@@ -6,7 +6,7 @@
  * and API ergonomics.
  *
  * Pattern: {prefix}_{base32-encoded-random}
- * - Prefixes: pod_, doc_, ver_, job_, usr_, prj_
+ * - Prefixes: pod_, doc_, job_, col_, prj_
  * - Base32 encoding (lowercase, no padding) for URL-safe, readable IDs
  */
 import { Schema } from 'effect';
@@ -73,22 +73,6 @@ export type DocumentId = typeof DocumentIdSchema.Type;
 
 export const generateDocumentId = (): DocumentId =>
   `doc_${generateRandomBase32()}` as DocumentId;
-
-// =============================================================================
-// Script Version ID
-// =============================================================================
-
-export const ScriptVersionIdSchema = Schema.String.pipe(
-  Schema.pattern(/^ver_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid script version ID format',
-  }),
-  Schema.brand('ScriptVersionId'),
-);
-
-export type ScriptVersionId = typeof ScriptVersionIdSchema.Type;
-
-export const generateScriptVersionId = (): ScriptVersionId =>
-  `ver_${generateRandomBase32()}` as ScriptVersionId;
 
 // =============================================================================
 // Job ID

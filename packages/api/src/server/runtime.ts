@@ -39,7 +39,7 @@ export interface ServerRuntimeConfig {
  * - Queue: Job queue service (depends on Db)
  * - Storage: File storage (S3, filesystem, or database-backed)
  * - AI: LLM + TTS services (standalone)
- * - Media: Documents, PodcastRepo, ScriptVersionRepo (depends on Db, Storage)
+ * - Media: Documents, PodcastRepo, CollaboratorRepo (depends on Db, Storage)
  */
 export const createSharedLayers = (
   config: ServerRuntimeConfig,
@@ -54,7 +54,7 @@ export const createSharedLayers = (
     ? MockAILive
     : GoogleAILive({ apiKey: config.geminiApiKey });
 
-  // Media layer bundles Documents, PodcastRepo, and ScriptVersionRepo
+  // Media layer bundles Documents, PodcastRepo, and CollaboratorRepo
   const mediaLayer = MediaLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, storageLayer)),
   );

@@ -1,6 +1,6 @@
 # Podcast Versioning Removal + Collaboration Implementation Plan
 
-> **STATUS: IN PROGRESS - Sprints 1-9 complete, Sprint 10 (Cleanup) pending**
+> **STATUS: ✅ COMPLETE**
 
 ## Overview
 
@@ -680,17 +680,21 @@ File: `apps/web/src/features/podcasts/__tests__/handlers.ts`
 ### 10.1 Search and remove orphaned code
 
 Search for any remaining references to:
-- `podcastScript`
-- `ScriptVersionRepo`
-- `activeVersion`
-- `isActive`
-- `version:` (in podcast context)
+- [x] `podcastScript` - Only comment in podcasts.ts explaining field origin
+- [x] `ScriptVersionRepo` - Updated comments in runtime.ts
+- [x] `activeVersion` - Updated standards docs
+- [x] `isActive` - No references in code
+- [x] `version:` (in podcast context) - No orphaned code
+- [x] Removed unused `ScriptVersionId` from brands.ts
+- [x] Updated standards documentation to use flattened schema
 
 ### 10.2 Run full validation
 
 ```bash
 pnpm typecheck && pnpm build
 ```
+
+✅ All validation passing
 
 ### 10.3 Manual testing
 
@@ -706,9 +710,12 @@ Test complete flow:
 
 ### 10.4 Fix any broken tests
 
-Update/fix tests that reference removed code.
+- [x] Issue #10 (dynamic imports) - Already fixed, use cases now use proper repo methods
+- [x] Issue #11 (test failures) - Already fixed, all 279 tests passing
 
-**Validation**: `pnpm typecheck && pnpm test && pnpm build`
+**Validation**: `pnpm typecheck && pnpm test && pnpm build` ✅
+
+✅ **COMPLETED**
 
 ---
 

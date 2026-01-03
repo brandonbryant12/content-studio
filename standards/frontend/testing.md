@@ -174,12 +174,9 @@ export const handlers = [
       id: params.id,
       title: 'Test Podcast',
       status: 'ready',
-      activeVersion: {
-        status: 'ready',
-        segments: [
-          { speaker: 'Host', line: 'Hello!', index: 0 },
-        ],
-      },
+      segments: [
+        { speaker: 'Host', line: 'Hello!', index: 0 },
+      ],
     });
   }),
 

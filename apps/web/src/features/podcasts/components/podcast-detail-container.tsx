@@ -6,7 +6,11 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { useKeyboardShortcut, useNavigationBlock, useSessionGuard } from '@/shared/hooks';
+import {
+  useKeyboardShortcut,
+  useNavigationBlock,
+  useSessionGuard,
+} from '@/shared/hooks';
 import {
   usePodcast,
   useScriptEditor,
@@ -101,9 +105,11 @@ export function PodcastDetailContainer({
   };
 
   // Check if current user has approved
-  const currentUserHasApproved = podcast.createdBy === currentUserId
-    ? podcast.ownerHasApproved
-    : collaborators.find(c => c.userId === currentUserId)?.hasApproved ?? false;
+  const currentUserHasApproved =
+    podcast.createdBy === currentUserId
+      ? podcast.ownerHasApproved
+      : (collaborators.find((c) => c.userId === currentUserId)?.hasApproved ??
+        false);
 
   // Combined save handler for script, voice, and document changes
   const handleSave = useCallback(async () => {

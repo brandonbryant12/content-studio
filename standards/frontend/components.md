@@ -66,7 +66,7 @@ export function PodcastDetailContainer() {
   // State management via custom hooks
   const scriptEditor = useScriptEditor({
     podcastId,
-    initialSegments: podcast.activeVersion?.segments ?? [],
+    initialSegments: podcast.segments ?? [],
   });
 
   const settings = usePodcastSettings({ podcast });
@@ -76,7 +76,7 @@ export function PodcastDetailContainer() {
 
   // Computed values
   const hasChanges = scriptEditor.hasChanges || settings.hasChanges;
-  const isGenerating = podcast.activeVersion?.status === 'generating_script';
+  const isGenerating = podcast.status === 'generating_script';
 
   // Event handlers
   const handleSave = async () => {

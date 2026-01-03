@@ -394,14 +394,13 @@ export type { ListOptions } from './entity-repo';
 For queries that join multiple tables:
 
 ```typescript
-export interface PodcastFull extends Podcast {
+export interface PodcastWithDocuments extends Podcast {
   documents: Document[];
-  activeVersion: PodcastScript | null;
 }
 
 readonly findByIdFull: (
   id: string,
-) => Effect.Effect<PodcastFull, PodcastNotFound | DatabaseError, Db>;
+) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
 ```
 
 Implementation:
@@ -417,14 +416,7 @@ findByIdFull: (id) =>
     const docs = await db.select().from(document)
       .where(inArray(document.id, pod.sourceDocumentIds));
 
-    // Query active version
-    const [activeVersion] = await db.select().from(podcastScript)
-      .where(and(
-        eq(podcastScript.podcastId, id),
-        eq(podcastScript.isActive, true)
-      )).limit(1);
-
-    return { ...pod, documents: docs, activeVersion: activeVersion ?? null };
+    return { ...pod, documents: docs };
   }).pipe(
     Effect.flatMap((result) =>
       result ? Effect.succeed(result) : Effect.fail(new PodcastNotFound({ id }))

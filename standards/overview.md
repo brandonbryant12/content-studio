@@ -66,10 +66,10 @@ pnpm test:live          # Run live integration tests (requires env vars)
 All entity IDs use branded types with prefixes:
 
 ```typescript
-type PodcastId = string & Brand<"PodcastId">;      // pod_xxx
-type DocumentId = string & Brand<"DocumentId">;    // doc_xxx
-type ScriptVersionId = string & Brand<"ScriptVersionId">; // ver_xxx
-type JobId = string & Brand<"JobId">;              // job_xxx
+type PodcastId = string & Brand<"PodcastId">;         // pod_xxx
+type DocumentId = string & Brand<"DocumentId">;       // doc_xxx
+type CollaboratorId = string & Brand<"CollaboratorId">; // col_xxx
+type JobId = string & Brand<"JobId">;                 // job_xxx
 ```
 
 When accepting IDs from external sources (API params, job payloads), cast to branded type:

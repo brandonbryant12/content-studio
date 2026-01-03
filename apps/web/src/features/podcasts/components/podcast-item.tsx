@@ -63,10 +63,7 @@ export function PodcastItem({
         search={{ version: undefined }}
         className="flex items-start gap-4 flex-1"
       >
-        <PodcastIcon
-          format={podcast.format}
-          status={podcast.status}
-        />
+        <PodcastIcon format={podcast.format} status={podcast.status} />
         <div className="flex-1 min-w-0">
           <h3 className="list-card-title">{podcast.title}</h3>
           <div className="list-card-meta gap-2 flex-wrap">
