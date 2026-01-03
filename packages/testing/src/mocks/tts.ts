@@ -8,6 +8,8 @@ import {
   type TTSQuotaExceededError,
 } from '@repo/ai';
 import { Layer, Effect } from 'effect';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 /**
  * Mock voice list for testing.
@@ -40,10 +42,39 @@ export const MOCK_VOICES: readonly VoiceInfo[] = [
 ];
 
 /**
+ * Path to the sample podcast audio fixture.
+ * This is a real audio file used for realistic mock responses.
+ */
+const SAMPLE_AUDIO_PATH = path.join(__dirname, '../../fixtures/sample-podcast.wav');
+
+/**
+ * Cached sample audio buffer to avoid repeated file reads.
+ */
+let cachedSampleAudio: Buffer | null = null;
+
+/**
+ * Load the sample audio file from fixtures.
+ * Returns the real audio file if available, falls back to generated silence.
+ */
+const loadSampleAudio = (): Buffer => {
+  if (cachedSampleAudio) {
+    return cachedSampleAudio;
+  }
+
+  try {
+    cachedSampleAudio = fs.readFileSync(SAMPLE_AUDIO_PATH);
+    return cachedSampleAudio;
+  } catch {
+    // Fall back to generated silence if file not found
+    return createSilentAudioBuffer(30);
+  }
+};
+
+/**
  * Create a minimal WAV file header for testing.
  * Returns a valid but silent WAV buffer.
  */
-const createMockAudioBuffer = (durationSeconds: number = 5): Buffer => {
+const createSilentAudioBuffer = (durationSeconds: number = 5): Buffer => {
   const sampleRate = 24000;
   const bitsPerSample = 16;
   const channels = 1;
@@ -92,9 +123,15 @@ export interface MockTTSOptions {
   voices?: readonly VoiceInfo[];
 
   /**
-   * Duration of the mock audio in seconds.
+   * Duration of the mock audio in seconds (only used if useSampleAudio is false).
    */
   audioDurationSeconds?: number;
+
+  /**
+   * If true, use the sample-podcast.wav fixture instead of generated silence.
+   * Defaults to true.
+   */
+  useSampleAudio?: boolean;
 
   /**
    * If set, the synthesize method will fail with this error message.
@@ -119,8 +156,10 @@ export interface MockTTSOptions {
 export const createMockTTS = (
   options: MockTTSOptions = {},
 ): Layer.Layer<TTS> => {
-  const audioDuration = options.audioDurationSeconds ?? 30;
-  const audioBuffer = createMockAudioBuffer(audioDuration);
+  const useSampleAudio = options.useSampleAudio ?? true;
+  const audioBuffer = useSampleAudio
+    ? loadSampleAudio()
+    : createSilentAudioBuffer(options.audioDurationSeconds ?? 30);
 
   const service: TTSService = {
     listVoices: () =>
@@ -146,7 +185,7 @@ export const createMockTTS = (
         }
 
         return {
-          audioContent: createMockAudioBuffer(2),
+          audioContent: createSilentAudioBuffer(2),
           audioEncoding: 'LINEAR16',
           voiceId,
         } as PreviewVoiceResult;

@@ -70,9 +70,9 @@ export const envSchema = Schema.Struct({
   // Google AI API key for LLM and TTS
   GEMINI_API_KEY: Schema.String.pipe(Schema.minLength(1)),
 
-  // Use mock AI services (for testing)
+  // Use mock AI services in development (set to false to use real AI)
   USE_MOCK_AI: Schema.optionalWith(BooleanStringSchema, {
-    default: () => false,
+    default: () => process.env.NODE_ENV !== 'production',
   }),
 
   // Storage configuration
