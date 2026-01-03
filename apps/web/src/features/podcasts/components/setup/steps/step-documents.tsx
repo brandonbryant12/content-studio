@@ -3,15 +3,16 @@ import {
   UploadIcon,
   Cross2Icon,
   CheckIcon,
+  MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { useDocuments } from '@/features/documents';
+import { useDocuments, getDocumentListQueryKey } from '@/features/documents';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -36,13 +37,22 @@ export function StepDocuments({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: documents, isLoading: loadingDocs } = useDocuments();
+
+  // Filter documents by search query
+  const filteredDocuments = useMemo(() => {
+    if (!documents) return [];
+    if (!searchQuery.trim()) return documents;
+    const query = searchQuery.toLowerCase();
+    return documents.filter((doc) => doc.title.toLowerCase().includes(query));
+  }, [documents, searchQuery]);
 
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
       onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: ['documents'] });
+        queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
         toast.success('Document uploaded');
         onSelectionChange([...selectedIds, data.id]);
         setUploadFile(null);
@@ -117,7 +127,7 @@ export function StepDocuments({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 2 of 4</p>
+        <p className="setup-step-eyebrow">Step 1 of 3</p>
         <h2 className="setup-step-title">Add Source Documents</h2>
         <p className="setup-step-description">
           Select existing documents or upload new ones. Your podcast will be
@@ -161,32 +171,60 @@ export function StepDocuments({
             <Spinner className="w-6 h-6" />
           </div>
         ) : documents && documents.length > 0 ? (
-          <div className="setup-doc-grid">
-            {documents.map((doc) => (
-              <button
-                key={doc.id}
-                type="button"
-                onClick={() => toggleDocument(doc.id)}
-                className={`setup-doc-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
-              >
-                <div className="setup-doc-icon">
-                  <span>
-                    {doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) ||
-                      'DOC'}
-                  </span>
+          <>
+            {/* Search bar */}
+            <div className="relative mb-4">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="setup-input pl-9"
+              />
+            </div>
+
+            {filteredDocuments.length > 0 ? (
+              <div className="setup-doc-grid">
+                {filteredDocuments.map((doc) => (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => toggleDocument(doc.id)}
+                    className={`setup-doc-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
+                  >
+                    <div className="setup-doc-icon">
+                      <span>
+                        {doc.mimeType
+                          .split('/')[1]
+                          ?.toUpperCase()
+                          .slice(0, 3) || 'DOC'}
+                      </span>
+                    </div>
+                    <div className="setup-doc-info">
+                      <p className="setup-doc-title">{doc.title}</p>
+                      <p className="setup-doc-meta">
+                        {doc.wordCount.toLocaleString()} words
+                      </p>
+                    </div>
+                    <div className="setup-doc-checkbox">
+                      {selectedIds.includes(doc.id) && <CheckIcon />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="setup-doc-empty">
+                <div className="setup-doc-empty-icon">
+                  <MagnifyingGlassIcon />
                 </div>
-                <div className="setup-doc-info">
-                  <p className="setup-doc-title">{doc.title}</p>
-                  <p className="setup-doc-meta">
-                    {doc.wordCount.toLocaleString()} words
-                  </p>
-                </div>
-                <div className="setup-doc-checkbox">
-                  {selectedIds.includes(doc.id) && <CheckIcon />}
-                </div>
-              </button>
-            ))}
-          </div>
+                <p className="setup-doc-empty-title">No documents found</p>
+                <p className="setup-doc-empty-description">
+                  No documents match your search.
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="setup-doc-empty">
             <div className="setup-doc-empty-icon">
