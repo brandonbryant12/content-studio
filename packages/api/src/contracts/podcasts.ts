@@ -9,12 +9,14 @@ import {
   PodcastFullOutputSchema,
   PodcastListItemOutputSchema,
   ScriptSegmentSchema,
+  CollaboratorWithUserOutputSchema,
   // Job schemas
   JobOutputSchema,
   JobStatusSchema,
   // Branded ID schemas
   PodcastIdSchema,
   JobIdSchema,
+  CollaboratorIdSchema,
 } from '@repo/db/schema';
 
 // Helper to convert Effect Schema to Standard Schema for oRPC
@@ -74,6 +76,53 @@ const jobErrors = {
     data: std(
       Schema.Struct({
         jobId: Schema.String,
+      }),
+    ),
+  },
+} as const;
+
+const collaboratorErrors = {
+  NOT_PODCAST_OWNER: {
+    status: 403,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        userId: Schema.String,
+      }),
+    ),
+  },
+  NOT_PODCAST_COLLABORATOR: {
+    status: 403,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        userId: Schema.String,
+      }),
+    ),
+  },
+  COLLABORATOR_ALREADY_EXISTS: {
+    status: 409,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        email: Schema.String,
+      }),
+    ),
+  },
+  COLLABORATOR_NOT_FOUND: {
+    status: 404,
+    data: std(
+      Schema.Struct({
+        id: Schema.String,
+      }),
+    ),
+  },
+  CANNOT_ADD_OWNER_AS_COLLABORATOR: {
+    status: 400,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        email: Schema.String,
       }),
     ),
   },
@@ -248,6 +297,118 @@ const podcastContract = oc
       .errors(jobErrors)
       .input(std(Schema.Struct({ jobId: JobIdSchema })))
       .output(std(JobOutputSchema)),
+
+    // =========================================================================
+    // Collaborator Endpoints
+    // =========================================================================
+
+    // List collaborators for a podcast
+    listCollaborators: oc
+      .route({
+        method: 'GET',
+        path: '/{id}/collaborators',
+        summary: 'List collaborators',
+        description: 'List all collaborators for a podcast',
+      })
+      .errors(podcastErrors)
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(std(Schema.Array(CollaboratorWithUserOutputSchema))),
+
+    // Add a collaborator to a podcast
+    addCollaborator: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/collaborators',
+        summary: 'Add collaborator',
+        description:
+          'Add a collaborator by email. Only the podcast owner can add collaborators.',
+      })
+      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .input(
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+          }),
+        ),
+      )
+      .output(std(CollaboratorWithUserOutputSchema)),
+
+    // Remove a collaborator from a podcast
+    removeCollaborator: oc
+      .route({
+        method: 'DELETE',
+        path: '/{id}/collaborators/{collaboratorId}',
+        summary: 'Remove collaborator',
+        description:
+          'Remove a collaborator from a podcast. Only the podcast owner can remove collaborators.',
+      })
+      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .input(
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            collaboratorId: CollaboratorIdSchema,
+          }),
+        ),
+      )
+      .output(std(Schema.Struct({}))),
+
+    // Approve a podcast (owner or collaborator)
+    approve: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/approve',
+        summary: 'Approve podcast',
+        description:
+          'Approve the current podcast content. Available to both owners and collaborators.',
+      })
+      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(
+        std(
+          Schema.Struct({
+            isOwner: Schema.Boolean,
+          }),
+        ),
+      ),
+
+    // Revoke approval on a podcast
+    revokeApproval: oc
+      .route({
+        method: 'DELETE',
+        path: '/{id}/approve',
+        summary: 'Revoke approval',
+        description:
+          'Revoke your approval on a podcast. Available to both owners and collaborators.',
+      })
+      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(
+        std(
+          Schema.Struct({
+            isOwner: Schema.Boolean,
+          }),
+        ),
+      ),
+
+    // Claim pending invites for the current user
+    claimInvites: oc
+      .route({
+        method: 'POST',
+        path: '/claim-invites',
+        summary: 'Claim pending invites',
+        description:
+          'Claim any pending podcast collaboration invites for the current user. Should be called after login/registration.',
+      })
+      .input(std(Schema.Struct({})))
+      .output(
+        std(
+          Schema.Struct({
+            claimedCount: Schema.Number,
+          }),
+        ),
+      ),
   });
 
 export default podcastContract;

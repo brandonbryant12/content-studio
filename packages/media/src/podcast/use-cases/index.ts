@@ -72,6 +72,12 @@ export { getJob, type GetJobInput, type GetJobResult } from './get-job';
 // =============================================================================
 
 export {
+  listCollaborators,
+  type ListCollaboratorsInput,
+  type ListCollaboratorsResult,
+} from './list-collaborators';
+
+export {
   addCollaborator,
   type AddCollaboratorInput,
   type AddCollaboratorResult,

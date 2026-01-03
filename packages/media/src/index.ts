@@ -74,7 +74,10 @@ export {
 export {
   PodcastRepo,
   PodcastRepoLive,
+  CollaboratorRepo,
+  CollaboratorRepoLive,
   type PodcastRepoService,
+  type CollaboratorRepoService,
   type PodcastWithDocuments,
   type ListOptions,
   type UpdateScriptOptions,
@@ -130,6 +133,14 @@ export {
   startGeneration,
   saveAndQueueAudio,
   getJob,
+  // Collaboration
+  listCollaborators,
+  addCollaborator,
+  removeCollaborator,
+  approvePodcast,
+  revokeApproval,
+  claimPendingInvites,
+  // Errors
   InvalidAudioGenerationError,
   InvalidSaveError,
   NoChangesToSaveError,
@@ -151,6 +162,18 @@ export {
   type SaveAndQueueAudioResult,
   type GetJobInput,
   type GetJobResult,
+  // Collaboration types
+  type ListCollaboratorsInput,
+  type ListCollaboratorsResult,
+  type AddCollaboratorInput,
+  type AddCollaboratorResult,
+  type RemoveCollaboratorInput,
+  type ApprovePodcastInput,
+  type ApprovePodcastResult,
+  type RevokeApprovalInput,
+  type RevokeApprovalResult,
+  type ClaimPendingInvitesInput,
+  type ClaimPendingInvitesResult,
 } from './podcast';
 
 // Podcast module - Types

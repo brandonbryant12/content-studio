@@ -7,9 +7,16 @@ import {
   startGeneration,
   saveAndQueueAudio,
   getJob,
+  // Collaboration
+  listCollaborators,
+  addCollaborator,
+  removeCollaborator,
+  approvePodcast,
+  revokeApproval,
+  claimPendingInvites,
 } from '@repo/media';
 import { Effect } from 'effect';
-import type { Job } from '@repo/db/schema';
+import type { Job, CollaboratorId } from '@repo/db/schema';
 import type { GeneratePodcastResult, GenerateAudioResult } from '@repo/queue';
 import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
@@ -17,6 +24,7 @@ import {
   serializePodcast,
   serializePodcastFull,
   serializePodcastListItem,
+  serializeCollaboratorWithUser,
 } from '@repo/db/schema';
 
 /**
@@ -222,6 +230,130 @@ const podcastRouter = {
         {
           span: 'api.podcasts.saveChanges',
           attributes: { 'podcast.id': input.id },
+        },
+      );
+    },
+  ),
+
+  // =========================================================================
+  // Collaborator Handlers
+  // =========================================================================
+
+  listCollaborators: protectedProcedure.podcasts.listCollaborators.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        listCollaborators({ podcastId: input.id }).pipe(
+          Effect.map((result) =>
+            [...result.collaborators].map(serializeCollaboratorWithUser),
+          ),
+        ),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.listCollaborators',
+          attributes: { 'podcast.id': input.id },
+        },
+      );
+    },
+  ),
+
+  addCollaborator: protectedProcedure.podcasts.addCollaborator.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        addCollaborator({
+          podcastId: input.id,
+          email: input.email,
+          addedBy: context.session.user.id,
+        }).pipe(
+          Effect.map((result) =>
+            serializeCollaboratorWithUser(result.collaborator),
+          ),
+        ),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.addCollaborator',
+          attributes: {
+            'podcast.id': input.id,
+            'collaborator.email': input.email,
+          },
+        },
+      );
+    },
+  ),
+
+  removeCollaborator: protectedProcedure.podcasts.removeCollaborator.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        removeCollaborator({
+          collaboratorId: input.collaboratorId as CollaboratorId,
+          removedBy: context.session.user.id,
+        }).pipe(Effect.map(() => ({}))),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.removeCollaborator',
+          attributes: {
+            'podcast.id': input.id,
+            'collaborator.id': input.collaboratorId,
+          },
+        },
+      );
+    },
+  ),
+
+  approve: protectedProcedure.podcasts.approve.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        approvePodcast({
+          podcastId: input.id,
+          userId: context.session.user.id,
+        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.approve',
+          attributes: { 'podcast.id': input.id },
+        },
+      );
+    },
+  ),
+
+  revokeApproval: protectedProcedure.podcasts.revokeApproval.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        revokeApproval({
+          podcastId: input.id,
+          userId: context.session.user.id,
+        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.revokeApproval',
+          attributes: { 'podcast.id': input.id },
+        },
+      );
+    },
+  ),
+
+  claimInvites: protectedProcedure.podcasts.claimInvites.handler(
+    async ({ context, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        claimPendingInvites({
+          email: context.session.user.email,
+          userId: context.session.user.id,
+        }),
+        errors as unknown as ErrorFactory,
+        {
+          span: 'api.podcasts.claimInvites',
+          attributes: { 'user.id': context.session.user.id },
         },
       );
     },

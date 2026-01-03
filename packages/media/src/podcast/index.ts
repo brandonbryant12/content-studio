@@ -51,6 +51,7 @@ export {
   InvalidSaveError,
   NoChangesToSaveError,
   // Collaboration
+  listCollaborators,
   addCollaborator,
   removeCollaborator,
   approvePodcast,
@@ -75,6 +76,8 @@ export {
   type SaveAndQueueAudioResult,
   type GetJobInput,
   type GetJobResult,
+  type ListCollaboratorsInput,
+  type ListCollaboratorsResult,
   type AddCollaboratorInput,
   type AddCollaboratorResult,
   type RemoveCollaboratorInput,

@@ -25,7 +25,11 @@ import {
   type PodcastOutput,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
-import { PodcastRepoLive, DocumentRepoLive } from '@repo/media';
+import {
+  PodcastRepoLive,
+  DocumentRepoLive,
+  CollaboratorRepoLive,
+} from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
@@ -145,6 +149,9 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const collaboratorRepoLayer = CollaboratorRepoLive.pipe(
+    Layer.provide(ctx.dbLayer),
+  );
   const queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -153,6 +160,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     policyLayer,
     documentRepoLayer,
     podcastRepoLayer,
+    collaboratorRepoLayer,
     queueLayer,
   );
 
