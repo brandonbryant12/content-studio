@@ -414,7 +414,9 @@ describe('voiceover router', () => {
 
       // Create 5 voiceovers
       for (let i = 1; i <= 5; i++) {
-        await insertTestVoiceover(ctx, testUser.id, { title: `Voiceover ${i}` });
+        await insertTestVoiceover(ctx, testUser.id, {
+          title: `Voiceover ${i}`,
+        });
       }
 
       // Act
@@ -434,7 +436,9 @@ describe('voiceover router', () => {
 
       // Create 5 voiceovers
       for (let i = 1; i <= 5; i++) {
-        await insertTestVoiceover(ctx, testUser.id, { title: `Voiceover ${i}` });
+        await insertTestVoiceover(ctx, testUser.id, {
+          title: `Voiceover ${i}`,
+        });
       }
 
       // Act

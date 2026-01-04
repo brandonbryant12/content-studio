@@ -34,7 +34,8 @@ const MockDbLive = Layer.succeed(Db, { db: {} as never });
 /**
  * Generate a voiceover ID for testing.
  */
-const generateTestVoiceoverId = (): VoiceoverId => `voc_test${Date.now()}` as VoiceoverId;
+const generateTestVoiceoverId = (): VoiceoverId =>
+  `voc_test${Date.now()}` as VoiceoverId;
 
 /**
  * Create a test voiceover object.
@@ -119,10 +120,18 @@ const createMockVoiceoverRepo = (
     delete: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    updateStatus: (id: string, status: VoiceoverStatus, errorMessage?: string) =>
+    updateStatus: (
+      id: string,
+      status: VoiceoverStatus,
+      errorMessage?: string,
+    ) =>
       Effect.sync(() => {
         options?.onUpdateStatus?.(id, status, errorMessage);
-        return { ...state.voiceover!, status, errorMessage: errorMessage ?? null };
+        return {
+          ...state.voiceover!,
+          status,
+          errorMessage: errorMessage ?? null,
+        };
       }),
     updateAudio: (id: string, data: { audioUrl: string; duration: number }) =>
       Effect.sync(() => {
@@ -141,11 +150,9 @@ const createMockVoiceoverRepo = (
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo = (
-  options?: {
-    onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
-  },
-): Layer.Layer<VoiceoverCollaboratorRepo> => {
+const createMockCollaboratorRepo = (options?: {
+  onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
+}): Layer.Layer<VoiceoverCollaboratorRepo> => {
   const service: VoiceoverCollaboratorRepoService = {
     findById: () => Effect.succeed(null),
     findByVoiceover: () => Effect.succeed([]),
@@ -298,7 +305,10 @@ describe('generateVoiceoverAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo({ voiceover }, { onUpdateStatus: updateStatusSpy }),
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onUpdateStatus: updateStatusSpy },
+        ),
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
@@ -330,7 +340,10 @@ describe('generateVoiceoverAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo({ voiceover }, { onUpdateAudio: updateAudioSpy }),
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onUpdateAudio: updateAudioSpy },
+        ),
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
@@ -484,37 +497,42 @@ describe('generateVoiceoverAudio', () => {
       }
     });
 
-    it('fails with InvalidVoiceoverAudioGeneration when status is generating_audio', async () => {
+    it('succeeds when status is generating_audio (worker scenario)', async () => {
+      // When called from the worker after start-generation, status is already generating_audio
       const user = createTestUser();
       const voiceover = createTestVoiceover({
         createdBy: user.id,
-        status: 'generating_audio', // Already generating
+        status: 'generating_audio',
         text: 'Some text.',
       });
+      const updateStatusSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo({ voiceover }),
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onUpdateStatus: updateStatusSpy },
+        ),
         createMockCollaboratorRepo(),
         createMockTTS(),
-        createMockStorage(),
+        createMockStorage({ baseUrl: 'https://storage.example.com/' }),
       );
 
-      const result = await Effect.runPromiseExit(
+      const result = await Effect.runPromise(
         generateVoiceoverAudio({
           voiceoverId: voiceover.id,
           userId: user.id,
         }).pipe(Effect.provide(layers)),
       );
 
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
-        expect((error as InvalidVoiceoverAudioGeneration).reason).toContain(
-          'generating_audio',
-        );
-      }
+      expect(result.voiceover).toBeDefined();
+      expect(result.audioUrl).toBeDefined();
+      // Status should transition to ready
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        voiceover.id,
+        'ready',
+        undefined,
+      );
     });
 
     it('propagates TTS service failure and marks voiceover as failed', async () => {
@@ -528,7 +546,10 @@ describe('generateVoiceoverAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo({ voiceover }, { onUpdateStatus: updateStatusSpy }),
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onUpdateStatus: updateStatusSpy },
+        ),
         createMockCollaboratorRepo(),
         createMockTTS({ errorMessage: 'TTS service unavailable' }),
         createMockStorage(),
@@ -570,7 +591,10 @@ describe('generateVoiceoverAudio', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo({ voiceover }, { onClearApprovals: clearApprovalsSpy }),
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onClearApprovals: clearApprovalsSpy },
+        ),
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),

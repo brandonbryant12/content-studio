@@ -32,7 +32,6 @@ export interface VoiceoverDetailProps {
   isGenerating: boolean;
   isSaving: boolean;
   isDeleting: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
   currentUserId: string;
@@ -55,7 +54,6 @@ export function VoiceoverDetail({
   isGenerating,
   isSaving,
   isDeleting,
-  onSave,
   onGenerate,
   onDelete,
   currentUserId,
@@ -87,7 +85,6 @@ export function VoiceoverDetail({
           hasChanges={hasChanges}
           hasText={hasText}
           isSaving={isSaving}
-          onSave={onSave}
           onGenerate={onGenerate}
         />
       }

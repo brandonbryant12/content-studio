@@ -280,7 +280,9 @@ authenticatedTest.describe('Voiceover Collaboration', () => {
 
         // Collaborator should no longer be visible
         await expect(
-          voiceoversPage.getCollaboratorList().getByText(TEST_COLLABORATOR_EMAIL),
+          voiceoversPage
+            .getCollaboratorList()
+            .getByText(TEST_COLLABORATOR_EMAIL),
         ).not.toBeVisible();
       },
     );
@@ -331,7 +333,9 @@ authenticatedTest.describe('Voiceover Collaboration', () => {
 
         // After removal, collaborator should be gone
         await expect(
-          voiceoversPage.getCollaboratorList().getByText('remove-test@example.com'),
+          voiceoversPage
+            .getCollaboratorList()
+            .getByText('remove-test@example.com'),
         ).not.toBeVisible({ timeout: 5000 });
       },
     );
@@ -355,7 +359,9 @@ authenticatedTest.describe('Voiceover Collaboration', () => {
         await voiceoversPage.openCollaboratorDialog();
 
         // Owner badge should be visible
-        await expect(page.locator('.collab-list-owner-badge').first()).toBeVisible();
+        await expect(
+          page.locator('.collab-list-owner-badge').first(),
+        ).toBeVisible();
 
         // Owner role badge text
         await expect(page.getByText(/owner/i).first()).toBeVisible();

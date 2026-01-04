@@ -2,11 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
-import {
-  createTestUser,
-  withTestUser,
-  resetAllFactories,
-} from '@repo/testing';
+import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import {
   VoiceoverRepo,
   type VoiceoverRepoService,
@@ -74,7 +70,9 @@ const createMockVoiceoverRepo = (
     list: (options: ListOptions) =>
       Effect.succeed(
         state.voiceovers
-          .filter((v) => (options.userId ? v.createdBy === options.userId : true))
+          .filter((v) =>
+            options.userId ? v.createdBy === options.userId : true,
+          )
           .slice(
             options.offset ?? 0,
             (options.offset ?? 0) + (options.limit ?? 50),
@@ -155,9 +153,7 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({}).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(3);

@@ -13,7 +13,6 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -24,7 +23,6 @@ export function ActionBar({
   hasChanges,
   hasText,
   isSaving,
-  onSave,
   onGenerate,
   disabled,
 }: ActionBarProps) {
@@ -44,40 +42,7 @@ export function ActionBar({
     );
   }
 
-  // Has changes + ready status: show "Unsaved changes" with "Save" button
-  if (hasChanges && status === VoiceoverStatus.READY) {
-    return (
-      <div className="global-action-bar has-changes">
-        <div className="global-action-bar-content">
-          <div className="global-action-bar-changes">
-            <div className="global-action-bar-indicator" />
-            <span className="global-action-bar-changes-text">
-              Unsaved changes
-            </span>
-          </div>
-          <div className="global-action-bar-actions">
-            <Button
-              size="sm"
-              onClick={onSave}
-              disabled={isSaving || disabled}
-              className="global-action-bar-btn-primary"
-            >
-              {isSaving ? (
-                <>
-                  <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                  Saving...
-                </>
-              ) : (
-                'Save'
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Has changes + hasText: show "Save & Generate" button
+  // Has changes + hasText: show "Save & Generate" or "Save & Regenerate" button
   if (hasChanges && hasText) {
     return (
       <div className="global-action-bar has-changes">
@@ -103,7 +68,9 @@ export function ActionBar({
               ) : (
                 <>
                   <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                  Save & Generate
+                  {status === VoiceoverStatus.READY
+                    ? 'Save & Regenerate'
+                    : 'Save & Generate'}
                 </>
               )}
             </Button>

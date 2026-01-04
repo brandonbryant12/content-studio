@@ -2,7 +2,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test-utils';
-import { ApproveButton, type ApproveButtonProps } from '../components/collaborators/approve-button';
+import {
+  ApproveButton,
+  type ApproveButtonProps,
+} from '../components/collaborators/approve-button';
 
 // Mock the Spinner component
 vi.mock('@repo/ui/components/spinner', () => ({
@@ -13,7 +16,9 @@ vi.mock('@repo/ui/components/spinner', () => ({
   ),
 }));
 
-function createDefaultProps(overrides: Partial<ApproveButtonProps> = {}): ApproveButtonProps {
+function createDefaultProps(
+  overrides: Partial<ApproveButtonProps> = {},
+): ApproveButtonProps {
   return {
     hasApproved: false,
     onApprove: vi.fn(),
@@ -56,7 +61,7 @@ describe('ApproveButton', () => {
 
   it('has correct aria-pressed state', () => {
     const { rerender } = render(
-      <ApproveButton {...createDefaultProps({ hasApproved: false })} />
+      <ApproveButton {...createDefaultProps({ hasApproved: false })} />,
     );
 
     expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');
@@ -70,7 +75,11 @@ describe('ApproveButton', () => {
     const onApprove = vi.fn();
     const onRevoke = vi.fn();
 
-    render(<ApproveButton {...createDefaultProps({ hasApproved: false, onApprove, onRevoke })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({ hasApproved: false, onApprove, onRevoke })}
+      />,
+    );
 
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -83,7 +92,11 @@ describe('ApproveButton', () => {
     const onApprove = vi.fn();
     const onRevoke = vi.fn();
 
-    render(<ApproveButton {...createDefaultProps({ hasApproved: true, onApprove, onRevoke })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({ hasApproved: true, onApprove, onRevoke })}
+      />,
+    );
 
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -93,21 +106,33 @@ describe('ApproveButton', () => {
   });
 
   it('shows loading state when approving', () => {
-    render(<ApproveButton {...createDefaultProps({ hasApproved: false, isPending: true })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({ hasApproved: false, isPending: true })}
+      />,
+    );
 
     expect(screen.getByText('Approving...')).toBeInTheDocument();
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
   it('shows loading state when revoking', () => {
-    render(<ApproveButton {...createDefaultProps({ hasApproved: true, isPending: true })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({ hasApproved: true, isPending: true })}
+      />,
+    );
 
     expect(screen.getByText('Revoking...')).toBeInTheDocument();
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
   it('is disabled when loading', () => {
-    render(<ApproveButton {...createDefaultProps({ hasApproved: false, isPending: true })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({ hasApproved: false, isPending: true })}
+      />,
+    );
 
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
@@ -117,7 +142,16 @@ describe('ApproveButton', () => {
     const onApprove = vi.fn();
     const onRevoke = vi.fn();
 
-    render(<ApproveButton {...createDefaultProps({ hasApproved: false, onApprove, onRevoke, isPending: true })} />);
+    render(
+      <ApproveButton
+        {...createDefaultProps({
+          hasApproved: false,
+          onApprove,
+          onRevoke,
+          isPending: true,
+        })}
+      />,
+    );
 
     const button = screen.getByRole('button');
     fireEvent.click(button);

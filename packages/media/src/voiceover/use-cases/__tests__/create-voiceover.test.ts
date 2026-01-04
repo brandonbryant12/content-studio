@@ -2,11 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
-import {
-  createTestUser,
-  withTestUser,
-  resetAllFactories,
-} from '@repo/testing';
+import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { createVoiceover } from '../create-voiceover';
 
@@ -17,7 +13,9 @@ import { createVoiceover } from '../create-voiceover';
 /**
  * Create a mock voiceover for testing.
  */
-const createMockVoiceover = (overrides: Partial<Voiceover> = {}): Voiceover => ({
+const createMockVoiceover = (
+  overrides: Partial<Voiceover> = {},
+): Voiceover => ({
   id: 'voc_test123456789012' as VoiceoverId,
   title: 'Test Voiceover',
   text: '',

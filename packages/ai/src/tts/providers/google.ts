@@ -10,12 +10,7 @@ import {
   type PreviewVoiceOptions,
   type PreviewVoiceResult,
 } from '../service';
-import {
-  VOICES,
-  getVoicesByGender,
-  DEFAULT_PREVIEW_TEXT,
-  type VoiceInfo,
-} from '../voices';
+import { VOICES, getVoicesByGender, DEFAULT_PREVIEW_TEXT } from '../voices';
 
 /**
  * Configuration for Google Gemini TTS provider.

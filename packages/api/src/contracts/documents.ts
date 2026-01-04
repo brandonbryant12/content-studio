@@ -4,6 +4,7 @@ import {
   CreateDocumentSchema,
   UpdateDocumentFields,
   DocumentOutputSchema,
+  DocumentIdSchema,
 } from '@repo/db/schema';
 
 // Helper to convert Effect Schema to Standard Schema for oRPC
@@ -107,7 +108,7 @@ const documentContract = oc
         description: 'Retrieve a document by ID',
       })
       .errors(documentErrors)
-      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .input(std(Schema.Struct({ id: DocumentIdSchema })))
       .output(std(DocumentOutputSchema)),
 
     // Get document content
@@ -119,7 +120,7 @@ const documentContract = oc
         description: 'Retrieve the parsed text content of a document',
       })
       .errors(documentErrors)
-      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .input(std(Schema.Struct({ id: DocumentIdSchema })))
       .output(std(Schema.Struct({ content: Schema.String }))),
 
     // Create a document from text content
@@ -158,7 +159,7 @@ const documentContract = oc
       .input(
         std(
           Schema.Struct({
-            id: Schema.UUID,
+            id: DocumentIdSchema,
             ...UpdateDocumentFields,
           }),
         ),
@@ -174,7 +175,7 @@ const documentContract = oc
         description: 'Permanently delete a document',
       })
       .errors(documentErrors)
-      .input(std(Schema.Struct({ id: Schema.UUID })))
+      .input(std(Schema.Struct({ id: DocumentIdSchema })))
       .output(std(Schema.Struct({}))),
   });
 

@@ -289,14 +289,19 @@ export class ApiHelper {
     },
   ): Promise<Voiceover> {
     // Use PATCH method for updates
-    const response = await this.request.patch(`${this.apiURL}/voiceovers/${id}`, {
-      data,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await this.request.patch(
+      `${this.apiURL}/voiceovers/${id}`,
+      {
+        data,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
 
     if (!response.ok()) {
       const text = await response.text();
-      throw new Error(`PATCH /voiceovers/${id} failed: ${response.status()} ${text}`);
+      throw new Error(
+        `PATCH /voiceovers/${id} failed: ${response.status()} ${text}`,
+      );
     }
 
     return response.json() as Promise<Voiceover>;
@@ -368,14 +373,18 @@ export class ApiHelper {
     voiceoverId: string,
     collaboratorId: string,
   ): Promise<void> {
-    await this.delete(`/voiceovers/${voiceoverId}/collaborators/${collaboratorId}`);
+    await this.delete(
+      `/voiceovers/${voiceoverId}/collaborators/${collaboratorId}`,
+    );
   }
 
   /**
    * Approve a voiceover
    */
   async approveVoiceover(voiceoverId: string): Promise<{ isOwner: boolean }> {
-    return this.post<{ isOwner: boolean }>(`/voiceovers/${voiceoverId}/approve`);
+    return this.post<{ isOwner: boolean }>(
+      `/voiceovers/${voiceoverId}/approve`,
+    );
   }
 
   /**

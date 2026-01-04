@@ -293,9 +293,9 @@ export class VoiceoversPage extends BasePage {
    * Get the voice selector
    */
   getVoiceSelector(): Locator {
-    return this.page.locator('[data-testid="voice-selector"]').or(
-      this.page.getByRole('combobox'),
-    );
+    return this.page
+      .locator('[data-testid="voice-selector"]')
+      .or(this.page.getByRole('combobox'));
   }
 
   /**
@@ -315,9 +315,9 @@ export class VoiceoversPage extends BasePage {
    * Get the collaborator avatars component
    */
   getCollaboratorAvatars(): Locator {
-    return this.page.locator('.collab-avatars').or(
-      this.page.locator('[data-testid="collaborator-avatars"]'),
-    );
+    return this.page
+      .locator('.collab-avatars')
+      .or(this.page.locator('[data-testid="collaborator-avatars"]'));
   }
 
   /**
@@ -325,9 +325,9 @@ export class VoiceoversPage extends BasePage {
    */
   async openCollaboratorDialog(): Promise<void> {
     // Click the manage button (+) in the collaborator avatars
-    const manageButton = this.page.getByRole('button', { name: /manage/i }).or(
-      this.page.locator('.collab-avatars-manage'),
-    );
+    const manageButton = this.page
+      .getByRole('button', { name: /manage/i })
+      .or(this.page.locator('.collab-avatars-manage'));
     await manageButton.click();
     // Wait for dialog to open
     await expect(this.page.getByRole('dialog')).toBeVisible();
@@ -337,7 +337,9 @@ export class VoiceoversPage extends BasePage {
    * Get the Add Collaborator dialog
    */
   getAddCollaboratorDialog(): Locator {
-    return this.page.getByRole('dialog').filter({ hasText: /add collaborator/i });
+    return this.page
+      .getByRole('dialog')
+      .filter({ hasText: /add collaborator/i });
   }
 
   /**
@@ -345,9 +347,9 @@ export class VoiceoversPage extends BasePage {
    */
   async addCollaborator(email: string): Promise<void> {
     // Click the add button to open the add collaborator dialog
-    const addButton = this.page.getByRole('button', { name: /add/i }).or(
-      this.page.locator('.collab-add-btn'),
-    );
+    const addButton = this.page
+      .getByRole('button', { name: /add/i })
+      .or(this.page.locator('.collab-add-btn'));
     await addButton.click();
 
     // Wait for dialog
@@ -410,17 +412,17 @@ export class VoiceoversPage extends BasePage {
    * Expect approval state to be "Approved"
    */
   async expectApproved(): Promise<void> {
-    await expect(
-      this.getApproveButton().getByText(/approved/i),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(this.getApproveButton().getByText(/approved/i)).toBeVisible({
+      timeout: 5000,
+    });
   }
 
   /**
    * Expect approval state to be "Approve" (not yet approved)
    */
   async expectNotApproved(): Promise<void> {
-    await expect(
-      this.getApproveButton().getByText(/^approve$/i),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(this.getApproveButton().getByText(/^approve$/i)).toBeVisible({
+      timeout: 5000,
+    });
   }
 }

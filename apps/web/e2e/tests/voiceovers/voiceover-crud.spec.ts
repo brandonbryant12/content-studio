@@ -86,19 +86,22 @@ authenticatedTest.describe('Voiceover CRUD Operations', () => {
   // ============================================================================
 
   authenticatedTest.describe('List Voiceovers', () => {
-    authenticatedTest('can search voiceovers', async ({ voiceoversPage, api }) => {
-      // Create voiceovers via API
-      await api.createVoiceover({ title: 'Alpha Voiceover' });
-      await api.createVoiceover({ title: 'Beta Voiceover' });
+    authenticatedTest(
+      'can search voiceovers',
+      async ({ voiceoversPage, api }) => {
+        // Create voiceovers via API
+        await api.createVoiceover({ title: 'Alpha Voiceover' });
+        await api.createVoiceover({ title: 'Beta Voiceover' });
 
-      await voiceoversPage.goto();
+        await voiceoversPage.goto();
 
-      // Search for "Alpha"
-      await voiceoversPage.search('Alpha');
+        // Search for "Alpha"
+        await voiceoversPage.search('Alpha');
 
-      // Should only see Alpha voiceover
-      await voiceoversPage.expectVoiceoverVisible('Alpha Voiceover');
-    });
+        // Should only see Alpha voiceover
+        await voiceoversPage.expectVoiceoverVisible('Alpha Voiceover');
+      },
+    );
 
     authenticatedTest('can clear search', async ({ voiceoversPage, api }) => {
       // Create voiceovers via API

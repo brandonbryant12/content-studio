@@ -41,24 +41,24 @@ vi.mock('@repo/ui/components/button', () => ({
 }));
 
 interface ActionBarProps {
-  status: typeof VoiceoverStatus[keyof typeof VoiceoverStatus] | undefined;
+  status: (typeof VoiceoverStatus)[keyof typeof VoiceoverStatus] | undefined;
   isGenerating: boolean;
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
 
-function createDefaultProps(overrides: Partial<ActionBarProps> = {}): ActionBarProps {
+function createDefaultProps(
+  overrides: Partial<ActionBarProps> = {},
+): ActionBarProps {
   return {
     status: VoiceoverStatus.DRAFTING,
     isGenerating: false,
     hasChanges: false,
     hasText: true,
     isSaving: false,
-    onSave: vi.fn(),
     onGenerate: vi.fn(),
     ...overrides,
   };
@@ -86,55 +86,60 @@ describe('ActionBar', () => {
         <ActionBar
           {...createDefaultProps({
             hasChanges: true,
+            hasText: true,
             status: VoiceoverStatus.READY,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
     });
 
-    it('shows Save button', () => {
-      const onSave = vi.fn();
+    it('shows Save & Regenerate button', () => {
       render(
         <ActionBar
           {...createDefaultProps({
             hasChanges: true,
+            hasText: true,
             status: VoiceoverStatus.READY,
-            onSave,
           })}
-        />
+        />,
       );
 
-      const saveButton = screen.getByRole('button', { name: 'Save' });
-      expect(saveButton).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /save & regenerate/i }),
+      ).toBeInTheDocument();
     });
 
-    it('calls onSave when Save button clicked', () => {
-      const onSave = vi.fn();
+    it('calls onGenerate when Save & Regenerate clicked', () => {
+      const onGenerate = vi.fn();
       render(
         <ActionBar
           {...createDefaultProps({
             hasChanges: true,
+            hasText: true,
             status: VoiceoverStatus.READY,
-            onSave,
+            onGenerate,
           })}
-        />
+        />,
       );
 
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-      expect(onSave).toHaveBeenCalled();
+      fireEvent.click(
+        screen.getByRole('button', { name: /save & regenerate/i }),
+      );
+      expect(onGenerate).toHaveBeenCalled();
     });
 
-    it('disables Save button while saving', () => {
+    it('disables Save & Regenerate button while saving', () => {
       render(
         <ActionBar
           {...createDefaultProps({
             hasChanges: true,
+            hasText: true,
             status: VoiceoverStatus.READY,
             isSaving: true,
           })}
-        />
+        />,
       );
 
       expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
@@ -145,10 +150,11 @@ describe('ActionBar', () => {
         <ActionBar
           {...createDefaultProps({
             hasChanges: true,
+            hasText: true,
             status: VoiceoverStatus.READY,
             isSaving: true,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('Saving...')).toBeInTheDocument();
@@ -165,10 +171,12 @@ describe('ActionBar', () => {
             hasText: true,
             status: VoiceoverStatus.DRAFTING,
           })}
-        />
+        />,
       );
 
-      expect(screen.getByRole('button', { name: /save & generate/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /save & generate/i }),
+      ).toBeInTheDocument();
     });
 
     it('calls onGenerate when Save & Generate clicked', () => {
@@ -181,7 +189,7 @@ describe('ActionBar', () => {
             status: VoiceoverStatus.DRAFTING,
             onGenerate,
           })}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole('button', { name: /save & generate/i }));
@@ -197,7 +205,7 @@ describe('ActionBar', () => {
             status: VoiceoverStatus.DRAFTING,
             isSaving: true,
           })}
-        />
+        />,
       );
 
       expect(screen.getByRole('button')).toBeDisabled();
@@ -213,10 +221,12 @@ describe('ActionBar', () => {
             hasText: true,
             status: VoiceoverStatus.DRAFTING,
           })}
-        />
+        />,
       );
 
-      expect(screen.getByRole('button', { name: /generate audio/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /generate audio/i }),
+      ).toBeInTheDocument();
     });
 
     it('calls onGenerate when Generate Audio clicked', () => {
@@ -229,7 +239,7 @@ describe('ActionBar', () => {
             status: VoiceoverStatus.DRAFTING,
             onGenerate,
           })}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole('button', { name: /generate audio/i }));
@@ -245,10 +255,12 @@ describe('ActionBar', () => {
             status: VoiceoverStatus.DRAFTING,
             disabled: true,
           })}
-        />
+        />,
       );
 
-      expect(screen.getByRole('button', { name: /generate audio/i })).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: /generate audio/i }),
+      ).toBeDisabled();
     });
   });
 
@@ -261,7 +273,7 @@ describe('ActionBar', () => {
             hasText: false,
             status: VoiceoverStatus.DRAFTING,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('Draft')).toBeInTheDocument();
@@ -275,10 +287,12 @@ describe('ActionBar', () => {
             hasText: false,
             status: VoiceoverStatus.DRAFTING,
           })}
-        />
+        />,
       );
 
-      expect(screen.queryByRole('button', { name: /generate/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /generate/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -290,7 +304,7 @@ describe('ActionBar', () => {
             hasChanges: false,
             status: VoiceoverStatus.READY,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('Ready')).toBeInTheDocument();
@@ -303,7 +317,7 @@ describe('ActionBar', () => {
             hasChanges: false,
             status: VoiceoverStatus.READY,
           })}
-        />
+        />,
       );
 
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -318,7 +332,7 @@ describe('ActionBar', () => {
             hasChanges: false,
             status: VoiceoverStatus.FAILED,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('Generation failed')).toBeInTheDocument();
@@ -331,10 +345,12 @@ describe('ActionBar', () => {
             hasChanges: false,
             status: VoiceoverStatus.FAILED,
           })}
-        />
+        />,
       );
 
-      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /retry/i }),
+      ).toBeInTheDocument();
     });
 
     it('calls onGenerate when Retry clicked', () => {
@@ -346,7 +362,7 @@ describe('ActionBar', () => {
             status: VoiceoverStatus.FAILED,
             onGenerate,
           })}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole('button', { name: /retry/i }));

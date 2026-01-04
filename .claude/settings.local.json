@@ -94,7 +94,9 @@
       "Bash(gh issue edit:*)",
       "mcp__playwriter__execute",
       "mcp__playwriter__reset",
-      "Bash(git -C /Users/brandon/Development/content-studio log --oneline -15)"
+      "Bash(git -C /Users/brandon/Development/content-studio log --oneline -15)",
+      "WebFetch(domain:www.effect.solutions)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

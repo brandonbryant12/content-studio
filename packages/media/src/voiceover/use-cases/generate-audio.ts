@@ -1,5 +1,5 @@
 import { Effect } from 'effect';
-import type { Voiceover } from '@repo/db/schema';
+import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { TTS } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
@@ -32,7 +32,8 @@ export interface GenerateVoiceoverAudioResult {
  * Generate audio for a voiceover.
  *
  * This use case:
- * 1. Validates voiceover is in 'drafting' or 'ready' status (can regenerate)
+ * 1. Validates voiceover is in valid status (drafting, ready, failed, or generating_audio)
+ *    - generating_audio is valid when called from worker after start-generation
  * 2. Validates text is not empty
  * 3. Updates status to 'generating_audio'
  * 4. Clears all approvals (owner + collaborators)
@@ -63,15 +64,19 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
       );
     }
 
-    if (
-      voiceover.status !== 'drafting' &&
-      voiceover.status !== 'ready' &&
-      voiceover.status !== 'failed'
-    ) {
+    // Allow generation from drafting, ready, failed, or generating_audio status
+    // (generating_audio is valid when called from worker after start-generation)
+    const allowedStatuses = [
+      VoiceoverStatus.DRAFTING,
+      VoiceoverStatus.READY,
+      VoiceoverStatus.FAILED,
+      VoiceoverStatus.GENERATING_AUDIO,
+    ];
+    if (!allowedStatuses.includes(voiceover.status)) {
       return yield* Effect.fail(
         new InvalidVoiceoverAudioGeneration({
           voiceoverId: input.voiceoverId,
-          reason: `Cannot generate audio from status '${voiceover.status}'. Voiceover must be in 'drafting', 'ready', or 'failed' status.`,
+          reason: `Cannot generate audio from status '${voiceover.status}'. Voiceover must be in 'drafting', 'ready', 'failed', or 'generating_audio' status.`,
         }),
       );
     }

@@ -37,9 +37,10 @@
   },
   "packageManager": "pnpm@10.23.0",
   "devDependencies": {
+    "@effect/language-service": "^0.64.0",
+    "@vitest/coverage-v8": "catalog:",
     "turbo": "catalog:",
-    "vitest": "catalog:",
-    "@vitest/coverage-v8": "catalog:"
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=22.10.0"

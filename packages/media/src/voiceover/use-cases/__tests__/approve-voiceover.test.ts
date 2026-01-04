@@ -6,7 +6,10 @@ import type {
   VoiceoverCollaborator,
   VoiceoverId,
 } from '@repo/db/schema';
-import { generateVoiceoverId, generateVoiceoverCollaboratorId } from '@repo/db/schema';
+import {
+  generateVoiceoverId,
+  generateVoiceoverCollaboratorId,
+} from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { NotVoiceoverCollaborator, VoiceoverNotFound } from '../../../errors';
 import {
@@ -312,7 +315,10 @@ describe('approveVoiceover', () => {
 
       expect(result.isOwner).toBe(false);
       expect(result.voiceover).toBeDefined();
-      expect(approveSpy).toHaveBeenCalledWith(voiceover.id, collaboratorUser.id);
+      expect(approveSpy).toHaveBeenCalledWith(
+        voiceover.id,
+        collaboratorUser.id,
+      );
     });
 
     it('is idempotent - approving again when already approved succeeds', async () => {
@@ -350,7 +356,10 @@ describe('approveVoiceover', () => {
 
       expect(result.isOwner).toBe(false);
       // Should still call approve (idempotent behavior)
-      expect(approveSpy).toHaveBeenCalledWith(voiceover.id, collaboratorUser.id);
+      expect(approveSpy).toHaveBeenCalledWith(
+        voiceover.id,
+        collaboratorUser.id,
+      );
     });
   });
 
@@ -421,7 +430,10 @@ describe('approveVoiceover', () => {
 
     it('fails with NotVoiceoverCollaborator when collaborator is pending (no userId)', async () => {
       const owner = createTestUser({ id: 'owner-id' });
-      const user = createTestUser({ id: 'user-id', email: 'pending@example.com' });
+      const user = createTestUser({
+        id: 'user-id',
+        email: 'pending@example.com',
+      });
       const voiceover = createTestVoiceover({
         createdBy: owner.id,
       });

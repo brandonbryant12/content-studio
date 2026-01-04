@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    /** Effect Integration */
+    "plugins": [{ "name": "@effect/language-service" }],
+
+    /** Module System */
     "target": "ES2022",
     "lib": ["ES2022"],
-    "allowJs": true,
-    "resolveJsonModule": true,
+    "module": "es2022",
+    "moduleResolution": "bundler",
     "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "isolatedModules": true,
 
     /**
@@ -17,19 +21,25 @@
      */
     "verbatimModuleSyntax": false,
 
-    /** Keep TSC performant in monorepos */
+    /** Strictness (Effect recommended) */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    /** JavaScript */
+    "allowJs": true,
+    "checkJs": true,
+
+    /** Build Performance */
+    "skipLibCheck": true,
     "incremental": true,
     "disableSourceOfProjectReferenceRedirect": true,
     "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.json",
 
-    /** Strictness */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "checkJs": true,
+    /** Development & Debugging */
+    "sourceMap": true,
 
     /** Transpile using Bundler (not tsc) */
-    "module": "es2022",
-    "moduleResolution": "bundler",
     "noEmit": true
   },
   "exclude": ["node_modules", "build", "dist"]

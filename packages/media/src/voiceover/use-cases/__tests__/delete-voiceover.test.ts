@@ -2,11 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
-import {
-  createTestUser,
-  withTestUser,
-  resetAllFactories,
-} from '@repo/testing';
+import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { VoiceoverNotFound, NotVoiceoverOwner } from '../../../errors';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { deleteVoiceover } from '../delete-voiceover';
@@ -18,7 +14,9 @@ import { deleteVoiceover } from '../delete-voiceover';
 /**
  * Create a mock voiceover for testing.
  */
-const createMockVoiceover = (overrides: Partial<Voiceover> = {}): Voiceover => ({
+const createMockVoiceover = (
+  overrides: Partial<Voiceover> = {},
+): Voiceover => ({
   id: 'voc_test123456789012' as VoiceoverId,
   title: 'Test Voiceover',
   text: 'This is test voiceover text.',
@@ -95,10 +93,7 @@ const runTest = <A, E>(
     onDelete?: (id: string) => void;
   },
 ) => {
-  const layers = Layer.mergeAll(
-    MockDbLive,
-    createMockVoiceoverRepo(options),
-  );
+  const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(options));
   return Effect.runPromise(effect.pipe(Effect.provide(layers)));
 };
 
@@ -111,10 +106,7 @@ const runTestExpectFailure = async <A, E>(
     voiceovers: Map<string, Voiceover>;
   },
 ): Promise<E> => {
-  const layers = Layer.mergeAll(
-    MockDbLive,
-    createMockVoiceoverRepo(options),
-  );
+  const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(options));
   const result = await Effect.runPromiseExit(
     effect.pipe(Effect.provide(layers)),
   );

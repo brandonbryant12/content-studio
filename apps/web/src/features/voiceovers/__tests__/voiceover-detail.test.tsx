@@ -2,7 +2,10 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@/test-utils';
-import { VoiceoverDetail, type VoiceoverDetailProps } from '../components/voiceover-detail';
+import {
+  VoiceoverDetail,
+  type VoiceoverDetailProps,
+} from '../components/voiceover-detail';
 import type { UseVoiceoverSettingsReturn, Collaborator } from '../hooks';
 import { VoiceoverStatus } from '../lib/status';
 import type { RouterOutput } from '@repo/api/client';
@@ -70,7 +73,11 @@ vi.mock('../components/workbench', () => ({
     status: string;
     isGenerating: boolean;
   }) => (
-    <div data-testid="action-bar" data-status={status} data-generating={isGenerating}>
+    <div
+      data-testid="action-bar"
+      data-status={status}
+      data-generating={isGenerating}
+    >
       Action Bar
     </div>
   ),
@@ -97,7 +104,9 @@ function createMockVoiceover(overrides: Partial<Voiceover> = {}): Voiceover {
 }
 
 // Mock settings return
-function createMockSettings(overrides: Partial<UseVoiceoverSettingsReturn> = {}): UseVoiceoverSettingsReturn {
+function createMockSettings(
+  overrides: Partial<UseVoiceoverSettingsReturn> = {},
+): UseVoiceoverSettingsReturn {
   return {
     text: 'Test voiceover text',
     voice: 'Charon',
@@ -121,7 +130,9 @@ function createMockOwner(overrides = {}) {
   };
 }
 
-function createDefaultProps(overrides: Partial<VoiceoverDetailProps> = {}): VoiceoverDetailProps {
+function createDefaultProps(
+  overrides: Partial<VoiceoverDetailProps> = {},
+): VoiceoverDetailProps {
   return {
     voiceover: createMockVoiceover(),
     settings: createMockSettings(),
@@ -131,7 +142,6 @@ function createDefaultProps(overrides: Partial<VoiceoverDetailProps> = {}): Voic
     isGenerating: false,
     isSaving: false,
     isDeleting: false,
-    onSave: vi.fn(),
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
     currentUserId: 'user-1',
@@ -203,7 +213,10 @@ describe('VoiceoverDetail', () => {
     // Use querySelector to find audio element since role might not work directly
     const audioElement = document.querySelector('audio');
     expect(audioElement).toBeInTheDocument();
-    expect(audioElement).toHaveAttribute('src', 'https://example.com/audio.mp3');
+    expect(audioElement).toHaveAttribute(
+      'src',
+      'https://example.com/audio.mp3',
+    );
   });
 
   it('does not show audio player when no audio', () => {
@@ -232,7 +245,9 @@ describe('VoiceoverDetail', () => {
   });
 
   it('enables inputs when not generating', () => {
-    render(<VoiceoverDetail {...createDefaultProps({ isGenerating: false })} />);
+    render(
+      <VoiceoverDetail {...createDefaultProps({ isGenerating: false })} />,
+    );
 
     const textEditor = screen.getByTestId('text-editor');
     const voiceSelector = screen.getByTestId('voice-selector');

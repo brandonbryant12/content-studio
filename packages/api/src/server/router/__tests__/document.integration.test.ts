@@ -1100,7 +1100,7 @@ describe('document router', () => {
     it('throws DOCUMENT_NOT_FOUND when document does not exist', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+      const nonExistentId = 'doc_0000000000000000';
 
       // Act & Assert
       await expectErrorWithMessage(
@@ -1218,7 +1218,7 @@ describe('document router', () => {
     it('throws DOCUMENT_NOT_FOUND when document does not exist', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
-      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+      const nonExistentId = 'doc_0000000000000000';
 
       // Act & Assert
       await expectErrorWithMessage(

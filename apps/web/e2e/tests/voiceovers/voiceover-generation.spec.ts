@@ -340,7 +340,9 @@ authenticatedTest.describe('Voiceover Audio Generation', () => {
         await voiceoversPage.expectStatusReady();
 
         // Edit the text
-        await voiceoversPage.enterText('Updated content for second generation.');
+        await voiceoversPage.enterText(
+          'Updated content for second generation.',
+        );
 
         // Click Save (since status is Ready)
         await voiceoversPage.clickSave();

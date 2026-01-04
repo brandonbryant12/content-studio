@@ -478,27 +478,24 @@ export function createVoiceoverNotFoundHandler(voiceoverId: string) {
  * Create a handler that returns a 403 for non-owner operations
  */
 export function createNotOwnerHandler(voiceoverId: string) {
-  return http.post(
-    `${API_BASE}/voiceovers/:id/collaborators`,
-    ({ params }) => {
-      if (params.id === voiceoverId) {
-        return HttpResponse.json(
-          {
-            code: 'NOT_VOICEOVER_OWNER',
-            data: { voiceoverId },
-          },
-          { status: 403 },
-        );
-      }
-      // Fall through
+  return http.post(`${API_BASE}/voiceovers/:id/collaborators`, ({ params }) => {
+    if (params.id === voiceoverId) {
       return HttpResponse.json(
-        createMockCollaborator({
-          voiceoverId:
-            params.id as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
-        }),
+        {
+          code: 'NOT_VOICEOVER_OWNER',
+          data: { voiceoverId },
+        },
+        { status: 403 },
       );
-    },
-  );
+    }
+    // Fall through
+    return HttpResponse.json(
+      createMockCollaborator({
+        voiceoverId:
+          params.id as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
+      }),
+    );
+  });
 }
 
 /**

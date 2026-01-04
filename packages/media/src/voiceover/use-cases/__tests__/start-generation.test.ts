@@ -124,11 +124,9 @@ const createMockVoiceoverRepo = (
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo = (
-  options?: {
-    onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
-  },
-): Layer.Layer<VoiceoverCollaboratorRepo> => {
+const createMockCollaboratorRepo = (options?: {
+  onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
+}): Layer.Layer<VoiceoverCollaboratorRepo> => {
   const service: VoiceoverCollaboratorRepoService = {
     findById: () => Effect.succeed(null),
     findByVoiceover: () => Effect.succeed([]),
@@ -181,8 +179,7 @@ const createMockQueue = (
     processNextJob: () => Effect.die('not implemented'),
     processJobById: () => Effect.die('not implemented'),
     findPendingJobForPodcast: () => Effect.die('not implemented'),
-    findPendingJobForVoiceover: () =>
-      Effect.succeed(state.pendingJob ?? null),
+    findPendingJobForVoiceover: () => Effect.succeed(state.pendingJob ?? null),
     deleteJob: () => Effect.die('not implemented'),
   };
 
@@ -289,7 +286,9 @@ describe('startVoiceoverGeneration', () => {
           { onClearApprovals: clearApprovalsSpy },
         ),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo({ onClearAllApprovals: clearAllApprovalsSpy }),
+        createMockCollaboratorRepo({
+          onClearAllApprovals: clearAllApprovalsSpy,
+        }),
       );
 
       await Effect.runPromise(
@@ -561,7 +560,10 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo(
           { voiceover },
-          { onUpdateStatus: updateStatusSpy, onClearApprovals: clearApprovalsSpy },
+          {
+            onUpdateStatus: updateStatusSpy,
+            onClearApprovals: clearApprovalsSpy,
+          },
         ),
         createMockQueue({ voiceover }),
         createMockCollaboratorRepo(),

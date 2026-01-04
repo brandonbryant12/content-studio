@@ -99,14 +99,6 @@ export function VoiceoverDetailContainer({
     collaborators,
   ]);
 
-  // Handler to save settings
-  const handleSave = useCallback(async () => {
-    if (settings.isSaving) return;
-
-    await settings.saveSettings();
-    toast.success('Settings saved');
-  }, [settings]);
-
   // Handler to generate audio (saves first if there are changes)
   const handleGenerate = useCallback(async () => {
     if (isPendingGeneration || isGenerating) return;
@@ -145,11 +137,11 @@ export function VoiceoverDetailContainer({
 
   const isApprovalPending = approve.isPending || revoke.isPending;
 
-  // Keyboard shortcut: Cmd/Ctrl+S to save
+  // Keyboard shortcut: Cmd/Ctrl+S to save and generate
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
-    onTrigger: handleSave,
+    onTrigger: handleGenerate,
     enabled: settings.hasChanges,
   });
 
@@ -179,7 +171,6 @@ export function VoiceoverDetailContainer({
         isGenerating={isGenerating || isPendingGeneration}
         isSaving={settings.isSaving}
         isDeleting={deleteMutation.isPending}
-        onSave={handleSave}
         onGenerate={handleGenerate}
         onDelete={handleDelete}
         currentUserId={currentUserId}

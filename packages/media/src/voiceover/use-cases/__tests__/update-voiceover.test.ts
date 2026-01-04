@@ -2,11 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId, UpdateVoiceover } from '@repo/db/schema';
-import {
-  createTestUser,
-  withTestUser,
-  resetAllFactories,
-} from '@repo/testing';
+import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { VoiceoverNotFound, NotVoiceoverOwner } from '../../../errors';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { updateVoiceover } from '../update-voiceover';
@@ -18,7 +14,9 @@ import { updateVoiceover } from '../update-voiceover';
 /**
  * Create a mock voiceover for testing.
  */
-const createMockVoiceover = (overrides: Partial<Voiceover> = {}): Voiceover => ({
+const createMockVoiceover = (
+  overrides: Partial<Voiceover> = {},
+): Voiceover => ({
   id: 'voc_test123456789012' as VoiceoverId,
   title: 'Test Voiceover',
   text: 'This is test voiceover text.',
@@ -85,7 +83,8 @@ const createMockVoiceoverRepo = (
           title: data.title ?? existing.title,
           text: data.text ?? existing.text,
           voice: data.voice ?? existing.voice,
-          voiceName: data.voiceName !== undefined ? data.voiceName : existing.voiceName,
+          voiceName:
+            data.voiceName !== undefined ? data.voiceName : existing.voiceName,
           updatedAt: new Date(),
         };
         options.voiceovers.set(id, updated);
@@ -106,10 +105,7 @@ const runTest = <A, E>(
     onUpdate?: (id: string, data: UpdateVoiceover) => void;
   },
 ) => {
-  const layers = Layer.mergeAll(
-    MockDbLive,
-    createMockVoiceoverRepo(options),
-  );
+  const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(options));
   return Effect.runPromise(effect.pipe(Effect.provide(layers)));
 };
 
@@ -122,10 +118,7 @@ const runTestExpectFailure = async <A, E>(
     voiceovers: Map<string, Voiceover>;
   },
 ): Promise<E> => {
-  const layers = Layer.mergeAll(
-    MockDbLive,
-    createMockVoiceoverRepo(options),
-  );
+  const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(options));
   const result = await Effect.runPromiseExit(
     effect.pipe(Effect.provide(layers)),
   );

@@ -6,7 +6,10 @@ import type {
   VoiceoverCollaborator,
   VoiceoverId,
 } from '@repo/db/schema';
-import { generateVoiceoverId, generateVoiceoverCollaboratorId } from '@repo/db/schema';
+import {
+  generateVoiceoverId,
+  generateVoiceoverCollaboratorId,
+} from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import {
   NotVoiceoverOwner,
