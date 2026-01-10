@@ -319,16 +319,16 @@ apps/
 ---
 
 ### Task 12: Worker Implementation
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** Reference `apps/server/src/workers/podcast-worker.ts`
 **Acceptance Criteria:**
-- [ ] Create `apps/server/src/workers/infographic-worker.ts`
-- [ ] Create `apps/server/src/workers/infographic-handlers.ts`
-- [ ] Follow same pattern: polling loop, user context via FiberRef, error handling
-- [ ] Handle `'generate-infographic'` job type
-- [ ] Emit SSE events on completion (JobCompletionEvent, EntityChangeEvent)
-- [ ] Configure: pollInterval, maxConsecutiveErrors, exponential backoff
-- [ ] Add to server startup (or document how to run)
+- [x] Create `apps/server/src/workers/infographic-worker.ts`
+- [x] Create `apps/server/src/workers/infographic-handlers.ts`
+- [x] Follow same pattern: polling loop, user context via FiberRef, error handling
+- [x] Handle `'generate-infographic'` job type
+- [x] Emit SSE events on completion (JobCompletionEvent, EntityChangeEvent)
+- [x] Configure: pollInterval, maxConsecutiveErrors, exponential backoff
+- [x] Export from workers/index.ts for use in server startup
 **Details:** [12-worker-implementation.md](./tasks/12-worker-implementation.md)
 
 ---

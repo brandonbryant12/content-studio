@@ -2,7 +2,7 @@
  * Server-Sent Events (SSE) event types for real-time updates
  */
 
-export type EntityType = 'podcast' | 'document' | 'voiceover';
+export type EntityType = 'podcast' | 'document' | 'voiceover' | 'infographic';
 export type ChangeType = 'insert' | 'update' | 'delete';
 
 export interface EntityChangeEvent {
@@ -32,6 +32,15 @@ export interface VoiceoverJobCompletionEvent {
   error?: string;
 }
 
+export interface InfographicJobCompletionEvent {
+  type: 'infographic_job_completion';
+  jobId: string;
+  jobType: 'generate-infographic';
+  status: 'completed' | 'failed';
+  infographicId: string;
+  error?: string;
+}
+
 export interface ConnectionEvent {
   type: 'connected';
   userId: string;
@@ -41,4 +50,5 @@ export type SSEEvent =
   | EntityChangeEvent
   | JobCompletionEvent
   | VoiceoverJobCompletionEvent
+  | InfographicJobCompletionEvent
   | ConnectionEvent;

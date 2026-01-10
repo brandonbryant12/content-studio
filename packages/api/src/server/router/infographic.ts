@@ -23,10 +23,7 @@ import {
   type InfographicTypeValue,
 } from '@repo/media';
 import type { GenerateInfographicResult } from '@repo/queue';
-import {
-  handleEffectWithProtocol,
-  type ErrorFactory,
-} from '../effect-handler';
+import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 // =============================================================================

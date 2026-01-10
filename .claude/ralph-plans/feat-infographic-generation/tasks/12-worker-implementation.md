@@ -278,4 +278,27 @@ export const startInfographicWorker = () => {
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
+### Completed: 2026-01-10
+
+**Files Created:**
+- `apps/server/src/workers/infographic-handlers.ts` - Handler for generate-infographic jobs
+- `apps/server/src/workers/infographic-worker.ts` - Worker with polling loop, retry logic, SSE events
+
+**Files Modified:**
+- `apps/server/src/workers/index.ts` - Added exports for infographic worker
+- `packages/api/src/contracts/events.ts` - Added `infographic` to EntityType, InfographicJobCompletionEvent type, and SSEEvent union
+
+**Implementation Details:**
+- Followed voiceover-worker.ts pattern exactly (simpler than podcast worker)
+- Worker uses shared ManagedRuntime created at startup
+- User context scoped per job via FiberRef (withCurrentUser)
+- Exponential backoff on errors with configurable maxConsecutiveErrors
+- Emits both InfographicJobCompletionEvent and EntityChangeEvent on completion
+- Handler calls `generateInfographic` use case from @repo/media
+- Handler includes tracing span with job.id, job.type, infographic.id attributes
+
+**Validation:**
+- `pnpm typecheck` - ✅ Pass
+- `pnpm build` - ✅ Pass
+- `pnpm --filter @repo/media test` - ✅ 224 tests pass
+- Integration tests skipped (require running database)
