@@ -234,16 +234,17 @@ apps/
 ---
 
 ### Task 07: AI Extraction Use Case
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/use-case.md`
 **Acceptance Criteria:**
-- [ ] Create `extractKeyPoints.ts` use case
-- [ ] Input: infographicId (uses linked documents) or documentIds array
-- [ ] Calls LLM to extract key points from document content
-- [ ] Returns structured suggestions: `{ text: string, documentId: string, relevance: 'high' | 'medium' }[]`
-- [ ] Limit to ~10 suggestions per extraction
-- [ ] Use existing `LLM` service with Schema for structured output
-- [ ] Add tracing span
+- [x] Create `extractKeyPoints.ts` use case
+- [x] Input: infographicId (uses linked documents) or documentIds array
+- [x] Calls LLM to extract key points from document content
+- [x] Returns structured suggestions: `{ text: string, documentId: string, relevance: 'high' | 'medium' }[]`
+- [x] Limit to ~10 suggestions per extraction
+- [x] Use existing `LLM` service with Schema for structured output
+- [x] Add tracing span
+- [x] Includes type-specific extraction guidance based on infographic type
 **Details:** [07-ai-extraction-use-case.md](./tasks/07-ai-extraction-use-case.md)
 
 ---
