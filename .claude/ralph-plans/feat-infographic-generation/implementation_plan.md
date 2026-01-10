@@ -382,14 +382,14 @@ apps/
 ---
 
 ### Task 16: Frontend - Workbench Layout
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`
 **Acceptance Criteria:**
-- [ ] Create `WorkbenchLayout` - header with back button, title, status, actions
-- [ ] Two-panel layout: left (document content + selections), right (settings + preview)
-- [ ] Responsive: stack panels on mobile
-- [ ] Action bar at bottom with Generate/Regenerate button
-- [ ] Status badge with spinner during generation
+- [x] Create `InfographicWorkbenchLayout` - header with back button, title, status, actions
+- [x] Two-panel layout: left (document content + selections), right (settings + preview)
+- [x] Responsive: stack panels on mobile (via workbench CSS classes)
+- [x] Action bar at bottom with Generate/Regenerate button (`InfographicActionBar`)
+- [x] Status badge with spinner during generation
 **Details:** [16-frontend-workbench-layout.md](./tasks/16-frontend-workbench-layout.md)
 
 ---

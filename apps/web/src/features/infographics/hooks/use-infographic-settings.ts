@@ -190,15 +190,18 @@ export function useInfographicSettings({
         // Update cache so other components see fresh data
         if (infographic?.id) {
           const queryKey = getInfographicQueryKey(infographic.id);
-          queryClient.setQueryData(queryKey, (current: InfographicFull | undefined) => {
-            if (!current) return current;
-            return {
-              ...current,
-              ...response,
-              // Preserve nested data not in response
-              selections: current.selections,
-            };
-          });
+          queryClient.setQueryData(
+            queryKey,
+            (current: InfographicFull | undefined) => {
+              if (!current) return current;
+              return {
+                ...current,
+                ...response,
+                // Preserve nested data not in response
+                selections: current.selections,
+              };
+            },
+          );
         }
         // Reset user edits flag after successful save
         hasUserEditsRef.current = false;

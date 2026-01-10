@@ -331,9 +331,7 @@ export function useReorderSelections(infographicId: string) {
       const previous = queryClient.getQueryData<Infographic>(queryKey);
 
       if (previous) {
-        const selectionMap = new Map(
-          previous.selections.map((s) => [s.id, s]),
-        );
+        const selectionMap = new Map(previous.selections.map((s) => [s.id, s]));
         const reorderedSelections = variables.orderedSelectionIds
           .map((id, index) => {
             const selection = selectionMap.get(id);

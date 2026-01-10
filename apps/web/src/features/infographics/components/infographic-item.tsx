@@ -38,7 +38,11 @@ export interface InfographicListItem {
   createdAt: string;
 }
 
-function StatusBadge({ status }: { status: InfographicStatusType | undefined }) {
+function StatusBadge({
+  status,
+}: {
+  status: InfographicStatusType | undefined;
+}) {
   const config = getStatusConfig(status);
   if (!config) return null;
 
@@ -51,7 +55,8 @@ function StatusBadge({ status }: { status: InfographicStatusType | undefined }) 
 }
 
 function TypeBadge({ infographicType }: { infographicType: string }) {
-  const displayName = INFOGRAPHIC_TYPE_NAMES[infographicType] ?? infographicType;
+  const displayName =
+    INFOGRAPHIC_TYPE_NAMES[infographicType] ?? infographicType;
 
   return <Badge variant="default">{displayName}</Badge>;
 }

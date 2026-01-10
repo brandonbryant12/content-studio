@@ -9,3 +9,11 @@ export {
 } from './infographic-item';
 export { InfographicList, type InfographicListProps } from './infographic-list';
 export { InfographicListContainer } from './infographic-list-container';
+
+// Workbench components
+export {
+  InfographicWorkbenchLayout,
+  type InfographicWorkbenchLayoutProps,
+  InfographicActionBar,
+  type InfographicActionBarProps,
+} from './workbench';
