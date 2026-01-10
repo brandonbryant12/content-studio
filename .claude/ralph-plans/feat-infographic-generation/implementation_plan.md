@@ -334,45 +334,47 @@ apps/
 ---
 
 ### Task 13: Frontend - Routes and Navigation
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/project-structure.md`
 **Acceptance Criteria:**
-- [ ] Create route files: `apps/web/src/routes/_protected/infographics/index.tsx`, `new.tsx`, `$infographicId.tsx`
-- [ ] Add "Infographics" to main navigation alongside Podcasts, Voiceovers, Documents
-- [ ] List route shows infographic cards with status, thumbnail, title
-- [ ] New route provides quick create flow
-- [ ] Detail route loads infographic and renders workbench
-- [ ] Route loaders use `ensureQueryData` pattern
+- [x] Create route files: `apps/web/src/routes/_protected/infographics/index.tsx`, `new.tsx`, `$infographicId.tsx`
+- [x] Add "Infographics" to main navigation alongside Podcasts, Voiceovers, Documents
+- [x] List route shows infographic cards with status, thumbnail, title
+- [x] New route provides quick create flow
+- [x] Detail route loads infographic and renders workbench (placeholder)
+- [x] Route loaders use `ensureQueryData` pattern
 **Details:** [13-frontend-routes.md](./tasks/13-frontend-routes.md)
 
 ---
 
 ### Task 14: Frontend - Data Fetching Hooks
-**Status:** ⏳ NOT_STARTED
+**Status:** ⏳ IN_PROGRESS (partial)
 **Standards:** `standards/frontend/data-fetching.md`
 **Acceptance Criteria:**
-- [ ] Create `apps/web/src/features/infographics/hooks/use-infographic.ts` - single infographic query
-- [ ] Create `use-infographic-list.ts` - paginated list query
+- [x] Create `apps/web/src/features/infographics/hooks/use-infographic.ts` - single infographic query
+- [x] Create `use-infographic-list.ts` - paginated list query
+- [x] Create `use-create-infographic.ts` - create mutation with navigation
+- [x] Create `use-optimistic-delete.ts` - delete mutation
 - [ ] Create `use-selections.ts` - manage selections state
 - [ ] Create `use-ai-extraction.ts` - mutation for AI key point extraction
 - [ ] Create `use-infographic-settings.ts` - local settings state (type, aspectRatio, instructions)
-- [ ] All hooks follow TanStack Query patterns
-- [ ] Query key factories for cache management
+- [x] All hooks follow TanStack Query patterns
+- [x] Query key factories for cache management
 **Details:** [14-frontend-data-hooks.md](./tasks/14-frontend-data-hooks.md)
 
 ---
 
 ### Task 15: Frontend - List Components
-**Status:** ⏳ NOT_STARTED
+**Status:** ⏳ IN_PROGRESS (partial)
 **Standards:** `standards/frontend/components.md`, `standards/frontend/styling.md`
 **Acceptance Criteria:**
-- [ ] Create `InfographicListContainer` - data fetching, state management
+- [x] Create `InfographicListContainer` - data fetching, state management (basic implementation)
 - [ ] Create `InfographicList` - presenter with grid of items
 - [ ] Create `InfographicItem` - card with thumbnail, title, status badge, type badge
 - [ ] Create `InfographicIcon` - icon for infographic type
-- [ ] Empty state with CTA to create first infographic
-- [ ] Loading skeleton
-- [ ] Delete functionality with confirmation
+- [x] Empty state with CTA to create first infographic
+- [x] Loading skeleton
+- [x] Delete functionality with confirmation
 **Details:** [15-frontend-list-components.md](./tasks/15-frontend-list-components.md)
 
 ---
