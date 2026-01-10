@@ -46,12 +46,18 @@ export const updateInfographic = (input: UpdateInfographicInput) =>
     // Build update object with only provided fields
     const updates: Parameters<typeof infographicRepo.update>[1] = {};
     if (input.title !== undefined) updates.title = input.title;
-    if (input.infographicType !== undefined) updates.infographicType = input.infographicType;
-    if (input.aspectRatio !== undefined) updates.aspectRatio = input.aspectRatio;
-    if (input.customInstructions !== undefined) updates.customInstructions = input.customInstructions;
-    if (input.feedbackInstructions !== undefined) updates.feedbackInstructions = input.feedbackInstructions;
-    if (input.styleOptions !== undefined) updates.styleOptions = input.styleOptions;
-    if (input.documentIds !== undefined) updates.sourceDocumentIds = input.documentIds;
+    if (input.infographicType !== undefined)
+      updates.infographicType = input.infographicType;
+    if (input.aspectRatio !== undefined)
+      updates.aspectRatio = input.aspectRatio;
+    if (input.customInstructions !== undefined)
+      updates.customInstructions = input.customInstructions;
+    if (input.feedbackInstructions !== undefined)
+      updates.feedbackInstructions = input.feedbackInstructions;
+    if (input.styleOptions !== undefined)
+      updates.styleOptions = input.styleOptions;
+    if (input.documentIds !== undefined)
+      updates.sourceDocumentIds = input.documentIds;
 
     const updated = yield* infographicRepo.update(input.infographicId, updates);
 

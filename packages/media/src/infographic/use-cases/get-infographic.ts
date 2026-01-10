@@ -25,7 +25,9 @@ export const getInfographic = (input: GetInfographicInput) =>
   Effect.gen(function* () {
     const infographicRepo = yield* InfographicRepo;
 
-    const infographic = yield* infographicRepo.findByIdFull(input.infographicId);
+    const infographic = yield* infographicRepo.findByIdFull(
+      input.infographicId,
+    );
 
     if (infographic.createdBy !== input.userId) {
       return yield* Effect.fail(

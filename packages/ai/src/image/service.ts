@@ -42,4 +42,7 @@ export interface ImageService {
 /**
  * Image service Context.Tag for dependency injection.
  */
-export class Image extends Context.Tag('@repo/ai/Image')<Image, ImageService>() {}
+export class Image extends Context.Tag('@repo/ai/Image')<
+  Image,
+  ImageService
+>() {}

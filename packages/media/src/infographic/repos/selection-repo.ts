@@ -171,7 +171,10 @@ const make: SelectionRepoService = {
         .select()
         .from(infographicSelection)
         .where(
-          eq(infographicSelection.infographicId, infographicId as InfographicId),
+          eq(
+            infographicSelection.infographicId,
+            infographicId as InfographicId,
+          ),
         )
         .orderBy(asc(infographicSelection.orderIndex)),
     ),
@@ -271,7 +274,10 @@ const make: SelectionRepoService = {
         .select({ count: drizzleCount() })
         .from(infographicSelection)
         .where(
-          eq(infographicSelection.infographicId, infographicId as InfographicId),
+          eq(
+            infographicSelection.infographicId,
+            infographicId as InfographicId,
+          ),
         );
       return result?.count ?? 0;
     }),
@@ -281,7 +287,10 @@ const make: SelectionRepoService = {
       const result = await db
         .delete(infographicSelection)
         .where(
-          eq(infographicSelection.infographicId, infographicId as InfographicId),
+          eq(
+            infographicSelection.infographicId,
+            infographicId as InfographicId,
+          ),
         )
         .returning({ id: infographicSelection.id });
       return result.length > 0;

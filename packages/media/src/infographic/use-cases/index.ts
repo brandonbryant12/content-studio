@@ -4,10 +4,7 @@ export {
   type CreateInfographicInput,
 } from './create-infographic';
 
-export {
-  getInfographic,
-  type GetInfographicInput,
-} from './get-infographic';
+export { getInfographic, type GetInfographicInput } from './get-infographic';
 
 export {
   updateInfographic,
@@ -35,15 +32,9 @@ export {
   type AddSelectionResult,
 } from './add-selection';
 
-export {
-  removeSelection,
-  type RemoveSelectionInput,
-} from './remove-selection';
+export { removeSelection, type RemoveSelectionInput } from './remove-selection';
 
-export {
-  updateSelection,
-  type UpdateSelectionInput,
-} from './update-selection';
+export { updateSelection, type UpdateSelectionInput } from './update-selection';
 
 export {
   reorderSelections,
@@ -57,3 +48,18 @@ export {
   type ExtractKeyPointsResult,
   type KeyPointSuggestion,
 } from './extract-key-points';
+
+// Generation operations
+export {
+  startGeneration,
+  type StartGenerationInput,
+  type StartGenerationResult,
+} from './start-generation';
+
+export {
+  generateInfographic,
+  type GenerateInfographicInput,
+  type GenerateInfographicResult,
+} from './generate-infographic';
+
+export { getJob, type GetJobInput, type GetJobResult } from './get-job';

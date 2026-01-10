@@ -125,7 +125,9 @@ const makeGoogleImageService = (config: GoogleImageConfig): ImageService => {
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+            throw new Error(
+              `Gemini API error (${response.status}): ${errorText}`,
+            );
           }
 
           const data = (await response.json()) as GeminiImageResponse;
@@ -184,5 +186,6 @@ const makeGoogleImageService = (config: GoogleImageConfig): ImageService => {
  * }).pipe(Effect.provide(ImageLive));
  * ```
  */
-export const GoogleImageLive = (config: GoogleImageConfig): Layer.Layer<Image> =>
-  Layer.succeed(Image, makeGoogleImageService(config));
+export const GoogleImageLive = (
+  config: GoogleImageConfig,
+): Layer.Layer<Image> => Layer.succeed(Image, makeGoogleImageService(config));

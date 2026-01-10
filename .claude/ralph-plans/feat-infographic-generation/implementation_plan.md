@@ -250,30 +250,31 @@ apps/
 ---
 
 ### Task 08: Generation Use Cases
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/use-case.md`, reference `packages/media/src/podcast/use-cases/start-generation.ts`
 **Acceptance Criteria:**
-- [ ] Create `startGeneration.ts` - validates infographic, checks for pending job (idempotency), enqueues job
-- [ ] Create `generateInfographic.ts` - actual generation logic:
+- [x] Create `startGeneration.ts` - validates infographic, checks for pending job (idempotency), enqueues job
+- [x] Create `generateInfographic.ts` - actual generation logic:
   - Builds prompt from selections + type + custom instructions
   - Calls Image service
   - Uploads to storage
   - Updates infographic with imageUrl
-- [ ] Support regeneration: clears existing image, uses feedbackInstructions if provided
-- [ ] Update status: drafting → generating → ready/failed
-- [ ] Store generation context (prompt used, selections at generation time)
+- [x] Support regeneration: clears existing image, uses feedbackInstructions if provided
+- [x] Update status: drafting → generating → ready/failed
+- [x] Store generation context (prompt used, selections at generation time)
+- [x] Create `getJob.ts` - retrieves job status for polling
 **Details:** [08-generation-use-cases.md](./tasks/08-generation-use-cases.md)
 
 ---
 
 ### Task 09: Queue Integration
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** Reference `packages/queue/src/types.ts`
 **Acceptance Criteria:**
-- [ ] Add `'generate-infographic'` to `JobType` union in `packages/queue/src/types.ts`
-- [ ] Define `GenerateInfographicPayload` and `GenerateInfographicResult` types
-- [ ] Add `findPendingJobForInfographic` method to QueueService interface
-- [ ] Implement in queue repository
+- [x] Add `'generate-infographic'` to `JobType` union in `packages/queue/src/types.ts`
+- [x] Define `GenerateInfographicPayload` and `GenerateInfographicResult` types
+- [x] Add `findPendingJobForInfographic` method to QueueService interface
+- [x] Implement in queue repository
 **Details:** [09-queue-integration.md](./tasks/09-queue-integration.md)
 
 ---

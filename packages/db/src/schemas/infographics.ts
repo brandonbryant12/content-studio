@@ -102,7 +102,9 @@ export const infographic = pgTable(
     title: varchar('title', { length: 255 }).notNull(),
     status: infographicStatusEnum('status').notNull().default('drafting'),
     infographicType: varchar('infographic_type', { length: 50 }).notNull(),
-    aspectRatio: varchar('aspect_ratio', { length: 10 }).notNull().default('1:1'),
+    aspectRatio: varchar('aspect_ratio', { length: 10 })
+      .notNull()
+      .default('1:1'),
     customInstructions: text('custom_instructions'),
     feedbackInstructions: text('feedback_instructions'),
     styleOptions: jsonb('style_options').$type<InfographicStyleOptions>(),
@@ -112,7 +114,8 @@ export const infographic = pgTable(
       .$type<string[]>()
       .notNull()
       .default([]),
-    generationContext: jsonb('generation_context').$type<InfographicGenerationContext>(),
+    generationContext:
+      jsonb('generation_context').$type<InfographicGenerationContext>(),
 
     createdBy: text('created_by')
       .notNull()
@@ -176,7 +179,10 @@ export const infographicSelection = pgTable(
 
 export const CreateInfographicSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
-  infographicType: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(50)),
+  infographicType: Schema.String.pipe(
+    Schema.minLength(1),
+    Schema.maxLength(50),
+  ),
 });
 
 /**

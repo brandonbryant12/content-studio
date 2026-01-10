@@ -103,9 +103,9 @@ export interface InfographicRepoService {
   /**
    * Count infographics with optional filter.
    */
-  readonly count: (
-    options?: { createdBy?: string },
-  ) => Effect.Effect<number, DatabaseError, Db>;
+  readonly count: (options?: {
+    createdBy?: string;
+  }) => Effect.Effect<number, DatabaseError, Db>;
 
   /**
    * Update infographic status.

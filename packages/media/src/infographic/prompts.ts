@@ -24,7 +24,8 @@ export const InfographicType = {
   GEOGRAPHIC: 'geographic',
 } as const;
 
-export type InfographicType = (typeof InfographicType)[keyof typeof InfographicType];
+export type InfographicType =
+  (typeof InfographicType)[keyof typeof InfographicType];
 
 /**
  * Information about an infographic type for UI display.
@@ -325,6 +326,8 @@ export const getInfographicTypeInfo = (
 /**
  * Check if a string is a valid infographic type.
  */
-export const isValidInfographicType = (type: string): type is InfographicType => {
+export const isValidInfographicType = (
+  type: string,
+): type is InfographicType => {
   return Object.values(InfographicType).includes(type as InfographicType);
 };
