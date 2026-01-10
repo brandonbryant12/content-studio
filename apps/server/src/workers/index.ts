@@ -9,3 +9,9 @@ export {
   createVoiceoverWorker,
   type VoiceoverWorkerConfig,
 } from './voiceover-worker';
+
+export { handleGenerateInfographic } from './infographic-handlers';
+export {
+  createInfographicWorker,
+  type InfographicWorkerConfig,
+} from './infographic-worker';

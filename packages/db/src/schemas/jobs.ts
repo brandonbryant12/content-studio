@@ -89,10 +89,16 @@ export const GenerateAudioResultSchema = Schema.Struct({
   duration: Schema.Number,
 });
 
+export const GenerateInfographicResultSchema = Schema.Struct({
+  imageUrl: Schema.String,
+  infographicId: Schema.String,
+});
+
 export const JobResultSchema = Schema.Union(
   GeneratePodcastResultSchema,
   GenerateScriptResultSchema,
   GenerateAudioResultSchema,
+  GenerateInfographicResultSchema,
 );
 
 // =============================================================================

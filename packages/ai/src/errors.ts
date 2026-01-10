@@ -94,6 +94,38 @@ export class VoiceNotFoundError extends Schema.TaggedError<VoiceNotFoundError>()
 }
 
 // =============================================================================
+// Image Errors
+// =============================================================================
+
+/**
+ * Image generation service failure.
+ */
+export class ImageError extends Schema.TaggedError<ImageError>()('ImageError', {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {
+  static readonly httpStatus = 502 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'Image generation service unavailable';
+  static readonly logLevel = 'error' as const;
+}
+
+/**
+ * Image generation quota exceeded.
+ */
+export class ImageQuotaExceededError extends Schema.TaggedError<ImageQuotaExceededError>()(
+  'ImageQuotaExceededError',
+  {
+    message: Schema.String,
+  },
+) {
+  static readonly httpStatus = 429 as const;
+  static readonly httpCode = 'RATE_LIMITED' as const;
+  static readonly httpMessage = 'Image generation quota exceeded';
+  static readonly logLevel = 'warn' as const;
+}
+
+// =============================================================================
 // Audio Errors
 // =============================================================================
 
@@ -143,5 +175,7 @@ export type AIError =
   | TTSError
   | TTSQuotaExceededError
   | VoiceNotFoundError
+  | ImageError
+  | ImageQuotaExceededError
   | AudioError
   | AudioProcessingError;

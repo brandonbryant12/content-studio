@@ -3,3 +3,4 @@
 
 export * from './podcasts';
 export * from './documents';
+export * from './infographics';

@@ -263,6 +263,32 @@ const makeQueueService = Effect.gen(function* () {
         ),
       );
 
+  const findPendingJobForInfographic: QueueService['findPendingJobForInfographic'] =
+    (infographicId) =>
+      runQuery(
+        'findPendingJobForInfographic',
+        async () => {
+          const [row] = await db
+            .select()
+            .from(job)
+            .where(
+              and(
+                eq(job.type, 'generate-infographic'),
+                inArray(job.status, ['pending', 'processing']),
+                sql`${job.payload}->>'infographicId' = ${infographicId}`,
+              ),
+            )
+            .limit(1);
+
+          return row ? mapRowToJob(row) : null;
+        },
+        'Failed to find pending job for infographic',
+      ).pipe(
+        Effect.tap(() =>
+          Effect.annotateCurrentSpan('infographic.id', infographicId),
+        ),
+      );
+
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(
       'deleteJob',
@@ -291,6 +317,7 @@ const makeQueueService = Effect.gen(function* () {
     processJobById,
     findPendingJobForPodcast,
     findPendingJobForVoiceover,
+    findPendingJobForInfographic,
     deleteJob,
   } satisfies QueueService;
 });

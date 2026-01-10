@@ -57,6 +57,10 @@ export interface QueueService {
     voiceoverId: string,
   ) => Effect.Effect<Job | null, QueueError>;
 
+  readonly findPendingJobForInfographic: (
+    infographicId: string,
+  ) => Effect.Effect<Job | null, QueueError>;
+
   readonly deleteJob: (
     jobId: JobId,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;
