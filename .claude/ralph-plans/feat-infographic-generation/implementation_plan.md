@@ -152,17 +152,17 @@ apps/
 ---
 
 ### Task 02: Database Schema
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/repository.md`, `standards/patterns/serialization.md`
 **Acceptance Criteria:**
-- [ ] Create `packages/db/src/schemas/infographics.ts` with `infographic` table
-- [ ] Fields: id (InfographicId), title, status enum (drafting/generating/ready/failed), infographicType, aspectRatio, customInstructions, feedbackInstructions, styleOptions (JSONB), imageUrl, errorMessage, sourceDocumentIds, createdBy, timestamps
-- [ ] Create `infographic_selection` table for persisted text selections
-- [ ] Fields: id, infographicId (FK), documentId (FK), selectedText, startOffset, endOffset, orderIndex, createdAt
-- [ ] Add indexes on createdBy, status, infographicId
-- [ ] Create serializers: `serializeInfographicEffect`, `serializeInfographicListItemEffect`, `serializeSelectionEffect`
-- [ ] Generate and run migration
-- [ ] Branded ID type `InfographicId` with `inf_` prefix
+- [x] Create `packages/db/src/schemas/infographics.ts` with `infographic` table
+- [x] Fields: id (InfographicId), title, status enum (drafting/generating/ready/failed), infographicType, aspectRatio, customInstructions, feedbackInstructions, styleOptions (JSONB), imageUrl, errorMessage, sourceDocumentIds, createdBy, timestamps
+- [x] Create `infographic_selection` table for persisted text selections
+- [x] Fields: id, infographicId (FK), documentId (FK), selectedText, startOffset, endOffset, orderIndex, createdAt
+- [x] Add indexes on createdBy, status, infographicId
+- [x] Create serializers: `serializeInfographicEffect`, `serializeInfographicListItemEffect`, `serializeInfographicSelectionEffect`
+- [x] Migration: use `pnpm --filter @repo/db push` to push schema to database
+- [x] Branded ID types `InfographicId` with `inf_` prefix and `InfographicSelectionId` with `sel_` prefix
 **Details:** [02-database-schema.md](./tasks/02-database-schema.md)
 
 ---
