@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "content-studio.fullname" . }}-worker
+  labels:
+    {{- include "content-studio.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.autoscaling.worker.enabled }}
+  replicas: {{ .Values.worker.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "content-studio.worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "content-studio.worker.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.secrets.create }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "content-studio.serviceAccountName" . }}
+      containers:
+        - name: worker
+          image: {{ include "content-studio.worker.image" . }}
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          args: ["--mode=worker"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "content-studio.fullname" . }}-config
+            - secretRef:
+                name: {{ include "content-studio.secretName" . }}
+          env:
+            - name: MODE
+              value: "worker"
+            - name: REDIS_URL
+              value: {{ include "content-studio.redisUrl" . }}
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  if [ -f /tmp/worker-health ]; then
+                    HEALTH_TIME=$(cat /tmp/worker-health | cut -c1-10)
+                    CURRENT_TIME=$(date +%s)
+                    DIFF=$((CURRENT_TIME - HEALTH_TIME))
+                    if [ $DIFF -lt 120 ]; then
+                      exit 0
+                    fi
+                  fi
+                  exit 1
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

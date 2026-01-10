@@ -76,6 +76,7 @@ export const createVoiceoverWorker = (config: VoiceoverWorkerConfig) => {
 
   /**
    * Emit SSE event to notify frontend of entity change.
+   * Fire-and-forget: SSE notifications are not critical path.
    */
   const emitEntityChange = (userId: string, voiceoverId: string) => {
     const entityChangeEvent: EntityChangeEvent = {
@@ -86,7 +87,9 @@ export const createVoiceoverWorker = (config: VoiceoverWorkerConfig) => {
       userId,
       timestamp: new Date().toISOString(),
     };
-    sseManager.emit(userId, entityChangeEvent);
+    sseManager.emit(userId, entityChangeEvent).catch((err) => {
+      console.error('[VoiceoverWorker] Failed to emit SSE event:', err);
+    });
   };
 
   /**
@@ -146,7 +149,7 @@ export const createVoiceoverWorker = (config: VoiceoverWorkerConfig) => {
         const payload = job.payload as GenerateVoiceoverPayload;
         const { userId, voiceoverId } = payload;
 
-        // Emit job completion event
+        // Emit job completion event (fire-and-forget)
         const jobCompletionEvent: VoiceoverJobCompletionEvent = {
           type: 'voiceover_job_completion',
           jobId: job.id,
@@ -155,7 +158,9 @@ export const createVoiceoverWorker = (config: VoiceoverWorkerConfig) => {
           voiceoverId,
           error: job.error ?? undefined,
         };
-        sseManager.emit(userId, jobCompletionEvent);
+        sseManager.emit(userId, jobCompletionEvent).catch((err) => {
+          console.error('[VoiceoverWorker] Failed to emit SSE event:', err);
+        });
 
         // Emit entity change event for the voiceover
         emitEntityChange(userId, voiceoverId);

@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "content-studio.fullname" . }}-config
+  labels:
+    {{- include "content-studio.labels" . | nindent 4 }}
+data:
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: {{ .Values.server.port | quote }}
+  PUBLIC_SERVER_URL: {{ .Values.publicServerUrl | quote }}
+  PUBLIC_SERVER_API_PATH: {{ .Values.publicServerApiPath | default "/api" | quote }}
+  PUBLIC_WEB_URL: {{ .Values.publicWebUrl | quote }}
+  STORAGE_PROVIDER: {{ .Values.storage.provider | default "s3" | quote }}
+  {{- if eq .Values.storage.provider "s3" }}
+  S3_BUCKET: {{ .Values.storage.s3.bucket | quote }}
+  S3_REGION: {{ .Values.storage.s3.region | quote }}
+  {{- if .Values.storage.s3.endpoint }}
+  S3_ENDPOINT: {{ .Values.storage.s3.endpoint | quote }}
+  {{- end }}
+  {{- end }}
+  SSE_ADAPTER: {{ .Values.sse.adapter | default "redis" | quote }}
+  USE_MOCK_AI: {{ .Values.useMockAI | default false | quote }}
+  # OpenTelemetry configuration
+  OTEL_SERVICE_NAME: "content-studio"
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.otlpEndpoint | quote }}
+  # Datadog unified service tagging
+  DD_ENV: {{ .Values.environment | quote }}
+  DD_SERVICE: "content-studio"
+  DD_VERSION: {{ .Chart.AppVersion | quote }}
