@@ -184,16 +184,18 @@ apps/
 ---
 
 ### Task 04: Infographic Repository
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/repository.md`
 **Acceptance Criteria:**
-- [ ] Create `packages/media/src/infographic/repos/infographic-repo.ts`
-- [ ] Implement: insert, findById, findByIdFull (with selections), update, delete, list, count
-- [ ] Implement: updateStatus, updateImage, clearImage
-- [ ] Create `packages/media/src/infographic/repos/selection-repo.ts`
-- [ ] Implement: insert, findByInfographic, update, delete, reorder, bulkInsert
-- [ ] Both repos use Effect Context.Tag pattern
-- [ ] All queries use Drizzle (no raw SQL)
+- [x] Create `packages/media/src/infographic/repos/infographic-repo.ts`
+- [x] Implement: insert, findById, findByIdFull (with selections), update, delete, list, count
+- [x] Implement: updateStatus, updateImage, clearImage, updateGenerationContext
+- [x] Create `packages/media/src/infographic/repos/selection-repo.ts`
+- [x] Implement: insert, findById, findByInfographic, update, delete, reorder, bulkInsert, count, deleteByInfographic
+- [x] Both repos use Effect Context.Tag pattern
+- [x] All queries use Drizzle with withDb helper for tracing
+- [x] Added infographic error types to errors.ts (InfographicNotFound, InfographicError, NotInfographicOwner, InfographicSelectionNotFound, InvalidInfographicGeneration)
+- [x] Updated Media type and MediaLive layer to include InfographicRepo and SelectionRepo
 **Details:** [04-infographic-repository.md](./tasks/04-infographic-repository.md)
 
 ---

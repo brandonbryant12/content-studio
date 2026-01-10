@@ -23,6 +23,12 @@ export {
   VoiceoverCollaboratorNotFound,
   CannotAddOwnerAsVoiceoverCollaborator,
   InvalidVoiceoverAudioGeneration,
+  // Infographic errors
+  InfographicNotFound,
+  InfographicError,
+  NotInfographicOwner,
+  InfographicSelectionNotFound,
+  InvalidInfographicGeneration,
   // Project/Media errors
   ProjectNotFound,
   MediaNotFound,
@@ -121,6 +127,33 @@ export type {
   VoiceoverCollaboratorWithUserOutput,
 } from './voiceover';
 
+// Infographic module - Repos
+export {
+  InfographicRepo,
+  InfographicRepoLive,
+  SelectionRepo,
+  SelectionRepoLive,
+  type InfographicRepoService,
+  type SelectionRepoService,
+  type InfographicListOptions,
+  type InfographicFull,
+  type InsertSelection,
+  type UpdateSelection,
+} from './infographic';
+
+// Infographic module - Prompts and types
+export {
+  InfographicType,
+  type InfographicTypeValue,
+  type InfographicTypeInfo,
+  INFOGRAPHIC_TYPES,
+  buildInfographicPrompt,
+  getSystemPrompt,
+  getInfographicTypeInfo,
+  isValidInfographicType,
+  type BuildPromptInput,
+} from './infographic';
+
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import {
@@ -135,6 +168,12 @@ import {
   VoiceoverCollaboratorRepo,
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
+import {
+  InfographicRepo,
+  InfographicRepoLive,
+  SelectionRepo,
+  SelectionRepoLive,
+} from './infographic';
 
 // =============================================================================
 // Combined Media Layer
@@ -152,7 +191,9 @@ export type Media =
   | PodcastRepo
   | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo;
+  | VoiceoverCollaboratorRepo
+  | InfographicRepo
+  | SelectionRepo;
 
 /**
  * Combined layer for all media services.
@@ -161,6 +202,8 @@ export type Media =
  * - DocumentRepo: Document repository operations
  * - PodcastRepo: Podcast repository operations
  * - VoiceoverRepo: Voiceover repository operations
+ * - InfographicRepo: Infographic repository operations
+ * - SelectionRepo: Infographic selection repository operations
  *
  * Requires:
  * - Db: Database connection
@@ -181,6 +224,8 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     CollaboratorRepoLive,
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
+    InfographicRepoLive,
+    SelectionRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)
