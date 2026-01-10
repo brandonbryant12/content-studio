@@ -31,7 +31,11 @@ import {
   toUser,
   type TestContext,
 } from '@repo/testing';
-import { createInMemoryStorage, MockLLMLive, MockImageLive } from '@repo/testing/mocks';
+import {
+  createInMemoryStorage,
+  MockLLMLive,
+  MockImageLive,
+} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer, ManagedRuntime } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -398,8 +402,12 @@ describe('infographic router', () => {
       const context = createMockContext(runtime, user);
 
       // Create some infographics for this user
-      await insertTestInfographic(ctx, testUser.id, { title: 'Infographic One' });
-      await insertTestInfographic(ctx, testUser.id, { title: 'Infographic Two' });
+      await insertTestInfographic(ctx, testUser.id, {
+        title: 'Infographic One',
+      });
+      await insertTestInfographic(ctx, testUser.id, {
+        title: 'Infographic Two',
+      });
 
       // Act
       const result = await handlers.list({
@@ -1698,7 +1706,8 @@ describe('infographic router', () => {
 
       expect(job).toBeDefined();
       expect(
-        (job!.payload as { feedbackInstructions?: string }).feedbackInstructions,
+        (job!.payload as { feedbackInstructions?: string })
+          .feedbackInstructions,
       ).toBe('Make it more colorful');
     });
   });

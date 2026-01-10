@@ -226,7 +226,9 @@ function GeneratingState() {
   return (
     <div className="preview-panel-loading">
       <Spinner className="w-8 h-8" />
-      <p className="preview-panel-loading-text">Generating your infographic...</p>
+      <p className="preview-panel-loading-text">
+        Generating your infographic...
+      </p>
       <p className="preview-panel-loading-subtext">
         This may take a minute or two
       </p>

@@ -36,7 +36,6 @@ import { useDocuments } from '@/features/documents';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-
 type Infographic = RouterOutput['infographics']['get'];
 type Selection = Infographic['selections'][number];
 
@@ -66,8 +65,11 @@ export function InfographicDetailContainer({
   });
 
   // Generation hook
-  const { generate, isGenerating, error: generationError } =
-    useGenerateInfographic(infographicId);
+  const {
+    generate,
+    isGenerating,
+    error: generationError,
+  } = useGenerateInfographic(infographicId);
 
   // Selection mutations
   const addSelection = useAddSelection(infographicId);
@@ -201,12 +203,7 @@ export function InfographicDetailContainer({
     } catch {
       // Errors handled by mutations
     }
-  }, [
-    infographicId,
-    settings,
-    selectionState,
-    reorderSelectionsMutation,
-  ]);
+  }, [infographicId, settings, selectionState, reorderSelectionsMutation]);
 
   // Generate handler
   const handleGenerate = useCallback(() => {

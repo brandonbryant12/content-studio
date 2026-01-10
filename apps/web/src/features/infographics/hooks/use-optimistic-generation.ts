@@ -114,7 +114,10 @@ export function useOptimisticGeneration(
 
         // Polling error - stop polling and show error
         currentJobIdRef.current = null;
-        const errorMsg = getErrorMessage(pollError, 'Failed to check job status');
+        const errorMsg = getErrorMessage(
+          pollError,
+          'Failed to check job status',
+        );
         setError(errorMsg);
 
         if (previousDataRef.current !== undefined) {
@@ -198,9 +201,7 @@ export function useOptimisticGeneration(
   );
 
   const isGenerating =
-    mutation.isPending ||
-    progress === 'pending' ||
-    progress === 'processing';
+    mutation.isPending || progress === 'pending' || progress === 'processing';
 
   return {
     generate,
