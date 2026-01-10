@@ -26,3 +26,6 @@ export type {
   SelectionListProps,
   SelectionListItem,
 } from './selection-list';
+
+export { AISuggestionsPanel } from './ai-suggestions-panel';
+export type { AISuggestionsPanelProps } from './ai-suggestions-panel';

@@ -439,16 +439,16 @@ apps/
 ---
 
 ### Task 20: Frontend - AI Suggestions Panel
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`, `standards/frontend/mutations.md`
 **Acceptance Criteria:**
-- [ ] Create `AISuggestionsPanel` - collapsible panel
-- [ ] "Extract Key Points" button triggers AI extraction
-- [ ] Loading state during extraction
-- [ ] Display suggestions with relevance indicator (high/medium)
-- [ ] "Add" button on each suggestion to add to selections
-- [ ] "Add All" button to add all high-relevance suggestions
-- [ ] Suggestions show source document name
+- [x] Create `AISuggestionsPanel` - collapsible panel
+- [x] "Extract Key Points" button triggers AI extraction
+- [x] Loading state during extraction
+- [x] Display suggestions with relevance indicator (high/medium)
+- [x] "Add" button on each suggestion to add to selections
+- [x] "Add All" button to add all high-relevance suggestions
+- [x] Suggestions show source document name
 **Details:** [20-frontend-ai-suggestions.md](./tasks/20-frontend-ai-suggestions.md)
 
 ---

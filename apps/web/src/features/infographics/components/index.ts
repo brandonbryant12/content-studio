@@ -27,4 +27,6 @@ export {
   SelectionList,
   type SelectionListProps,
   type SelectionListItem,
+  AISuggestionsPanel,
+  type AISuggestionsPanelProps,
 } from './workbench';

@@ -1551,6 +1551,93 @@
   }
 
   /* -----------------------------------------
+     AI SUGGESTIONS PANEL
+     ----------------------------------------- */
+  .ai-suggestions-panel {
+    @apply border rounded-lg bg-card;
+  }
+
+  .ai-suggestions-header {
+    @apply flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-accent/50 rounded-t-lg transition-colors;
+  }
+
+  .ai-suggestions-header-title {
+    @apply flex items-center gap-2 text-sm font-medium;
+  }
+
+  .ai-suggestions-count {
+    @apply px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300;
+  }
+
+  .ai-suggestions-chevron {
+    @apply w-4 h-4 text-muted-foreground transition-transform;
+  }
+
+  .ai-suggestions-chevron.expanded {
+    @apply rotate-180;
+  }
+
+  .ai-suggestions-content {
+    @apply px-3 pb-3;
+  }
+
+  .ai-suggestions-actions {
+    @apply flex items-center gap-2 mb-3;
+  }
+
+  .ai-suggestions-extract-btn {
+    @apply flex-1;
+  }
+
+  .ai-suggestions-list {
+    @apply space-y-2;
+  }
+
+  .ai-suggestions-empty {
+    @apply py-4 text-center;
+  }
+
+  .ai-suggestion-item {
+    @apply flex items-start gap-2 p-2.5 rounded-lg border transition-colors;
+  }
+
+  .ai-suggestion-item.high {
+    @apply border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-900/20;
+  }
+
+  .ai-suggestion-item.medium {
+    @apply border-border bg-card;
+  }
+
+  .ai-suggestion-relevance {
+    @apply w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0;
+  }
+
+  .ai-suggestion-relevance.high {
+    @apply bg-purple-500 text-white;
+  }
+
+  .ai-suggestion-relevance.medium {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .ai-suggestion-content {
+    @apply flex-1 min-w-0;
+  }
+
+  .ai-suggestion-text {
+    @apply text-sm leading-relaxed line-clamp-3;
+  }
+
+  .ai-suggestion-meta {
+    @apply flex items-center gap-1 mt-1 text-xs text-muted-foreground;
+  }
+
+  .ai-suggestion-add {
+    @apply w-7 h-7 shrink-0;
+  }
+
+  /* -----------------------------------------
      PODCAST SETTINGS
      ----------------------------------------- */
   .settings-section {
