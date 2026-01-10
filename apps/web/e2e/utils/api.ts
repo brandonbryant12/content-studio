@@ -566,7 +566,9 @@ export class ApiHelper {
     infographicId: string,
     selectionId: string,
   ): Promise<void> {
-    await this.delete(`/infographics/${infographicId}/selections/${selectionId}`);
+    await this.delete(
+      `/infographics/${infographicId}/selections/${selectionId}`,
+    );
   }
 
   /**

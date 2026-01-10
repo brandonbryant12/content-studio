@@ -61,7 +61,10 @@ test.describe('infographics list', () => {
     expect(count).toBe(2);
   });
 
-  test('can search infographics by title', async ({ infographicsPage, api }) => {
+  test('can search infographics by title', async ({
+    infographicsPage,
+    api,
+  }) => {
     // Create test infographics
     await api.createInfographic({
       title: 'Project Timeline',
@@ -144,9 +147,7 @@ test.describe('infographics list', () => {
     await infographicsPage.goto();
     await infographicsPage.openInfographic('Click Me');
 
-    await expect(page).toHaveURL(
-      new RegExp(`/infographics/${infographic.id}`),
-    );
+    await expect(page).toHaveURL(new RegExp(`/infographics/${infographic.id}`));
     await infographicsPage.waitForWorkbench();
   });
 

@@ -84,7 +84,10 @@ test.describe('infographics workbench', () => {
     expect(infographics.find((i) => i.id === infographicId)).toBeUndefined();
   });
 
-  test('displays document content panel', async ({ infographicsPage, page }) => {
+  test('displays document content panel', async ({
+    infographicsPage,
+    page,
+  }) => {
     await page.goto(`/infographics/${infographicId}`);
     await infographicsPage.waitForWorkbench();
 
@@ -128,7 +131,10 @@ test.describe('infographics workbench', () => {
     ).toBeVisible();
   });
 
-  test('displays aspect ratio in header', async ({ infographicsPage, page }) => {
+  test('displays aspect ratio in header', async ({
+    infographicsPage,
+    page,
+  }) => {
     await page.goto(`/infographics/${infographicId}`);
     await infographicsPage.waitForWorkbench();
 

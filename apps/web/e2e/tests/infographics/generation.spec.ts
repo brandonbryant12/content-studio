@@ -142,7 +142,9 @@ test.describe('infographics generation', () => {
 
     // Should show regenerate button instead of generate
     await expect(
-      infographicsPage.getActionBar().getByRole('button', { name: /regenerate/i }),
+      infographicsPage
+        .getActionBar()
+        .getByRole('button', { name: /regenerate/i }),
     ).toBeVisible();
   });
 

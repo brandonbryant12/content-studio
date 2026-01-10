@@ -72,7 +72,9 @@ export class InfographicsPage extends BasePage {
    * Get all infographic items in the list
    */
   getInfographicItems(): Locator {
-    return this.page.locator('.list-card').filter({ has: this.page.locator('a[href*="/infographics/"]') });
+    return this.page
+      .locator('.list-card')
+      .filter({ has: this.page.locator('a[href*="/infographics/"]') });
   }
 
   /**
@@ -165,7 +167,9 @@ export class InfographicsPage extends BasePage {
     await this.page.getByPlaceholder(/title/i).fill(title);
 
     // Select type
-    await this.page.getByRole('button', { name: new RegExp(type, 'i') }).click();
+    await this.page
+      .getByRole('button', { name: new RegExp(type, 'i') })
+      .click();
 
     // Select document if provided
     if (documentTitle) {
@@ -324,7 +328,10 @@ export class InfographicsPage extends BasePage {
    * Click the "Add Selection" button that appears after selecting text
    */
   async clickAddSelection(): Promise<void> {
-    await this.page.locator('.selection-popup').getByRole('button', { name: /add selection/i }).click();
+    await this.page
+      .locator('.selection-popup')
+      .getByRole('button', { name: /add selection/i })
+      .click();
   }
 
   /**
@@ -405,7 +412,9 @@ export class InfographicsPage extends BasePage {
    * Click extract key points button
    */
   async extractKeyPoints(): Promise<void> {
-    await this.page.getByRole('button', { name: /extract key points/i }).click();
+    await this.page
+      .getByRole('button', { name: /extract key points/i })
+      .click();
   }
 
   /**
@@ -438,23 +447,29 @@ export class InfographicsPage extends BasePage {
    * Select an infographic type
    */
   async selectType(type: string): Promise<void> {
-    await this.page.locator('.type-card').filter({ hasText: new RegExp(type, 'i') }).click();
+    await this.page
+      .locator('.type-card')
+      .filter({ hasText: new RegExp(type, 'i') })
+      .click();
   }
 
   /**
    * Select an aspect ratio
    */
   async selectAspectRatio(ratio: string): Promise<void> {
-    await this.page.locator('.aspect-ratio-option').filter({ hasText: ratio }).click();
+    await this.page
+      .locator('.aspect-ratio-option')
+      .filter({ hasText: ratio })
+      .click();
   }
 
   /**
    * Get the custom instructions textarea
    */
   getCustomInstructions(): Locator {
-    return this.page.locator('textarea[placeholder*="instructions"]').or(
-      this.page.getByLabel(/custom instructions/i)
-    );
+    return this.page
+      .locator('textarea[placeholder*="instructions"]')
+      .or(this.page.getByLabel(/custom instructions/i));
   }
 
   /**
@@ -469,9 +484,9 @@ export class InfographicsPage extends BasePage {
    * Get the feedback instructions textarea (shown after generation)
    */
   getFeedbackInstructions(): Locator {
-    return this.page.locator('textarea[placeholder*="feedback"]').or(
-      this.page.getByLabel(/feedback/i)
-    );
+    return this.page
+      .locator('textarea[placeholder*="feedback"]')
+      .or(this.page.getByLabel(/feedback/i));
   }
 
   /**
@@ -564,14 +579,18 @@ export class InfographicsPage extends BasePage {
    * Click generate button
    */
   async clickGenerate(): Promise<void> {
-    await this.getActionBar().getByRole('button', { name: /generate/i }).click();
+    await this.getActionBar()
+      .getByRole('button', { name: /generate/i })
+      .click();
   }
 
   /**
    * Click regenerate button
    */
   async clickRegenerate(): Promise<void> {
-    await this.getActionBar().getByRole('button', { name: /regenerate/i }).click();
+    await this.getActionBar()
+      .getByRole('button', { name: /regenerate/i })
+      .click();
   }
 
   /**

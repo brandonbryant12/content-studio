@@ -129,9 +129,9 @@ test.describe('infographics text selection', () => {
     await infographicsPage.waitForWorkbench();
 
     // Should show count
-    await expect(
-      page.locator('.selection-list-count'),
-    ).toContainText('3 selections');
+    await expect(page.locator('.selection-list-count')).toContainText(
+      '3 selections',
+    );
   });
 
   test('shows warning when over selection limit', async ({
@@ -231,7 +231,9 @@ test.describe('infographics text selection', () => {
     await infographicsPage.waitForWorkbench();
 
     const selectionItem = infographicsPage.getSelectionItems().first();
-    const text = await selectionItem.locator('.selection-item-text').textContent();
+    const text = await selectionItem
+      .locator('.selection-item-text')
+      .textContent();
 
     // Should be truncated (ends with ...)
     expect(text).toMatch(/\.\.\.$/);
