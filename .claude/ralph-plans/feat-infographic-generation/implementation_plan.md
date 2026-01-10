@@ -348,16 +348,16 @@ apps/
 ---
 
 ### Task 14: Frontend - Data Fetching Hooks
-**Status:** ⏳ IN_PROGRESS (partial)
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/data-fetching.md`
 **Acceptance Criteria:**
 - [x] Create `apps/web/src/features/infographics/hooks/use-infographic.ts` - single infographic query
 - [x] Create `use-infographic-list.ts` - paginated list query
 - [x] Create `use-create-infographic.ts` - create mutation with navigation
 - [x] Create `use-optimistic-delete.ts` - delete mutation
-- [ ] Create `use-selections.ts` - manage selections state
-- [ ] Create `use-ai-extraction.ts` - mutation for AI key point extraction
-- [ ] Create `use-infographic-settings.ts` - local settings state (type, aspectRatio, instructions)
+- [x] Create `use-selections.ts` - manage selections state (with optimistic add/remove/update/reorder)
+- [x] Create `use-ai-extraction.ts` - mutation for AI key point extraction
+- [x] Create `use-infographic-settings.ts` - local settings state (type, aspectRatio, instructions, title)
 - [x] All hooks follow TanStack Query patterns
 - [x] Query key factories for cache management
 **Details:** [14-frontend-data-hooks.md](./tasks/14-frontend-data-hooks.md)
@@ -365,16 +365,18 @@ apps/
 ---
 
 ### Task 15: Frontend - List Components
-**Status:** ⏳ IN_PROGRESS (partial)
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`, `standards/frontend/styling.md`
 **Acceptance Criteria:**
-- [x] Create `InfographicListContainer` - data fetching, state management (basic implementation)
-- [ ] Create `InfographicList` - presenter with grid of items
-- [ ] Create `InfographicItem` - card with thumbnail, title, status badge, type badge
-- [ ] Create `InfographicIcon` - icon for infographic type
+- [x] Create `InfographicListContainer` - data fetching, state management, uses presenter pattern
+- [x] Create `InfographicList` - presenter with search and grid of items
+- [x] Create `InfographicItem` - card with icon, title, status badge, type badge, delete button
+- [x] Create `InfographicIcon` - type-specific icons for each infographic type
 - [x] Empty state with CTA to create first infographic
 - [x] Loading skeleton
-- [x] Delete functionality with confirmation
+- [x] Delete functionality with confirmation modal
+- [x] Search functionality for filtering list
+- [x] Created `lib/status.ts` with status utilities (isGeneratingStatus, getStatusConfig, etc.)
 **Details:** [15-frontend-list-components.md](./tasks/15-frontend-list-components.md)
 
 ---

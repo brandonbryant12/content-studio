@@ -172,7 +172,9 @@ function NewInfographicPage() {
         <div className="space-y-2">
           <Label htmlFor="aspectRatio">
             Aspect Ratio{' '}
-            <span className="text-muted-foreground font-normal">(optional)</span>
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
           </Label>
           <Select
             id="aspectRatio"
@@ -226,7 +228,9 @@ function NewInfographicPage() {
           ) : documents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No documents available.</p>
-              <p className="text-sm mt-1">Upload documents first to create an infographic.</p>
+              <p className="text-sm mt-1">
+                Upload documents first to create an infographic.
+              </p>
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -279,10 +283,7 @@ function NewInfographicPage() {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={!isValid || createMutation.isPending}
-          >
+          <Button type="submit" disabled={!isValid || createMutation.isPending}>
             {createMutation.isPending ? (
               <>
                 <Spinner className="w-4 h-4 mr-2" />

@@ -27,6 +27,7 @@ export function useInfographic(
  * Useful for cache operations.
  */
 export function getInfographicQueryKey(infographicId: string): QueryKey {
-  return apiClient.infographics.get.queryOptions({ input: { id: infographicId } })
-    .queryKey;
+  return apiClient.infographics.get.queryOptions({
+    input: { id: infographicId },
+  }).queryKey;
 }

@@ -6,15 +6,17 @@ import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
-export const Route = createFileRoute('/_protected/infographics/$infographicId')({
-  loader: ({ params }) =>
-    queryClient.ensureQueryData(
-      apiClient.infographics.get.queryOptions({
-        input: { id: params.infographicId },
-      }),
-    ),
-  component: InfographicDetailPage,
-});
+export const Route = createFileRoute('/_protected/infographics/$infographicId')(
+  {
+    loader: ({ params }) =>
+      queryClient.ensureQueryData(
+        apiClient.infographics.get.queryOptions({
+          input: { id: params.infographicId },
+        }),
+      ),
+    component: InfographicDetailPage,
+  },
+);
 
 function InfographicDetailPage() {
   const { infographicId } = Route.useParams();
