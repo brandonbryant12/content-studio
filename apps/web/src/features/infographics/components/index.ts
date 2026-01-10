@@ -24,4 +24,7 @@ export {
   TextHighlighter,
   type TextHighlighterProps,
   type ExistingSelection,
+  SelectionList,
+  type SelectionListProps,
+  type SelectionListItem,
 } from './workbench';

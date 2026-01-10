@@ -425,15 +425,15 @@ apps/
 ---
 
 ### Task 19: Frontend - Selection List
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`
 **Acceptance Criteria:**
-- [ ] Create `SelectionList` - shows all added selections
-- [ ] Create `SelectionItem` - displays selection text preview, source document, remove button
-- [ ] Drag-and-drop reordering
-- [ ] Warning banner when > 10 selections
-- [ ] Empty state: "Select text from documents to add content"
-- [ ] Mutations: add, remove, reorder with optimistic updates
+- [x] Create `SelectionList` - shows all added selections
+- [x] Create `SelectionItem` - displays selection text preview, source document, remove button
+- [x] Drag-and-drop reordering (with dnd-kit)
+- [x] Warning banner when > 10 selections
+- [x] Empty state: "Select text from documents to add content"
+- [x] Mutations: add, remove, reorder with optimistic updates (uses existing hooks)
 **Details:** [19-frontend-selection-list.md](./tasks/19-frontend-selection-list.md)
 
 ---

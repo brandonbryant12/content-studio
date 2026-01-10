@@ -1476,6 +1476,81 @@
   }
 
   /* -----------------------------------------
+     SELECTION LIST
+     ----------------------------------------- */
+  .selection-list {
+    @apply flex flex-col h-full;
+  }
+
+  .selection-list-warning {
+    @apply flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-200 text-xs rounded-md mx-3 mt-3;
+  }
+
+  .selection-list-header {
+    @apply flex items-center justify-between px-3 py-2;
+  }
+
+  .selection-list-count {
+    @apply text-xs text-muted-foreground font-medium;
+  }
+
+  .selection-list-items {
+    @apply flex-1 overflow-auto px-3 pb-3 space-y-2;
+  }
+
+  .selection-list-empty {
+    @apply flex flex-col items-center justify-center h-full p-6 text-center text-muted-foreground;
+  }
+
+  .selection-list-empty-icon {
+    @apply w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3;
+  }
+
+  .selection-item {
+    @apply flex items-start gap-2 p-3 rounded-lg border bg-card transition-all;
+  }
+
+  .selection-item.dragging {
+    @apply opacity-50 shadow-lg;
+  }
+
+  .selection-item.disabled {
+    @apply opacity-60;
+  }
+
+  .selection-item-index {
+    @apply w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0;
+  }
+
+  .selection-item-drag {
+    @apply w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing shrink-0 -ml-1;
+  }
+
+  .selection-item.disabled .selection-item-drag {
+    @apply cursor-default;
+  }
+
+  .selection-item-content {
+    @apply flex-1 min-w-0;
+  }
+
+  .selection-item-text {
+    @apply text-sm leading-relaxed line-clamp-3;
+  }
+
+  .selection-item-meta {
+    @apply flex items-center gap-1 mt-1.5 text-xs text-muted-foreground;
+  }
+
+  .selection-item-remove {
+    @apply w-7 h-7 opacity-0 text-muted-foreground hover:text-destructive shrink-0;
+  }
+
+  .selection-item:hover .selection-item-remove {
+    @apply opacity-100;
+  }
+
+  /* -----------------------------------------
      PODCAST SETTINGS
      ----------------------------------------- */
   .settings-section {

@@ -20,3 +20,9 @@ export type {
   TextHighlighterProps,
   ExistingSelection,
 } from './text-highlighter';
+
+export { SelectionList } from './selection-list';
+export type {
+  SelectionListProps,
+  SelectionListItem,
+} from './selection-list';
