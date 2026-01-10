@@ -506,10 +506,20 @@ apps/
 - [x] Test selection management
 - [x] Test generation flow with mock AI
 - [x] Test error cases (not found, not owner, etc.)
-- [ ] Frontend integration tests for workbench (deferred - requires E2E setup)
-- [ ] Test text selection interaction (deferred - requires E2E setup)
-- [ ] Test generation polling (deferred - requires E2E setup)
+- [x] Frontend E2E tests for infographic list (list.spec.ts)
+- [x] Frontend E2E tests for infographic workbench (workbench.spec.ts)
+- [x] E2E tests for text selection interaction (text-selection.spec.ts)
+- [x] E2E tests for generation polling (generation.spec.ts)
 **Details:** [24-integration-testing.md](./tasks/24-integration-testing.md)
+
+**E2E Test Files Created:**
+- `apps/web/e2e/pages/infographics.page.ts` - Page object for infographics
+- `apps/web/e2e/tests/infographics/list.spec.ts` - List page tests
+- `apps/web/e2e/tests/infographics/workbench.spec.ts` - Workbench tests
+- `apps/web/e2e/tests/infographics/text-selection.spec.ts` - Selection tests
+- `apps/web/e2e/tests/infographics/generation.spec.ts` - Generation flow tests
+- Updated `apps/web/e2e/utils/api.ts` with infographic API methods
+- Updated `apps/web/e2e/fixtures/index.ts` with infographicsPage fixture
 
 ---
 
