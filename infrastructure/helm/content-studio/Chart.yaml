@@ -1,0 +1,22 @@
+apiVersion: v2
+name: content-studio
+description: A Helm chart for Content Studio - AI-powered podcast generation platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - content-studio
+  - podcast
+  - ai
+  - kubernetes
+  - eks
+
+maintainers:
+  - name: Content Studio Team
+
+dependencies:
+  - name: redis
+    version: "18.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

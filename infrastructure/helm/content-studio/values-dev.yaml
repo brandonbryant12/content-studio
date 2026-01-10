@@ -1,0 +1,159 @@
+# Development environment values for Content Studio
+# Use with: helm install content-studio . -f values-dev.yaml
+
+environment: dev
+
+# Public URLs (update with your dev domain)
+publicServerUrl: "https://api.dev.content-studio.example.com"
+publicServerApiPath: "/api"
+publicWebUrl: "https://dev.content-studio.example.com"
+
+# Moderate replicas for dev
+server:
+  replicas: 2
+  port: 3000
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/content-studio-server
+    tag: ""  # Set by CI/CD
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+worker:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+web:
+  replicas: 2
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/content-studio-web
+    tag: ""  # Set by CI/CD
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Enable autoscaling with moderate limits
+autoscaling:
+  server:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  worker:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  web:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+# Use internal Redis
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+# S3 storage configuration (update with your bucket)
+storage:
+  provider: s3
+  s3:
+    bucket: content-studio-dev-assets
+    region: us-east-1
+    endpoint: ""
+
+# SSE with Redis
+sse:
+  adapter: redis
+
+# Use real AI in dev for testing
+useMockAI: false
+
+# AWS ALB Ingress configuration
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN>
+    alb.ingress.kubernetes.io/healthcheck-path: /healthcheck
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    # Sticky sessions for SSE connections
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
+  hosts:
+    - host: dev.content-studio.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - hosts:
+        - dev.content-studio.example.com
+      secretName: ""  # Using ACM certificate via ALB
+
+# Enable Datadog for dev monitoring
+observability:
+  otlpEndpoint: "http://datadog-agent:4317"
+  datadog:
+    enabled: true
+    deployAgent: false  # Assume agent is deployed separately
+
+# Secrets - use existing secret or create from values
+# In production, use secrets.existingSecret to reference a K8s secret
+# created via AWS Secrets Manager sync or similar
+secrets:
+  create: false
+  existingSecret: content-studio-dev-secrets
+  # If create: true, populate these values:
+  # authSecret: ""
+  # postgresUrl: ""
+  # geminiApiKey: ""
+  # s3AccessKeyId: ""  # Or use IRSA
+  # s3SecretAccessKey: ""
+  # datadogApiKey: ""
+
+# Service account with IRSA annotations for S3 access
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/content-studio-dev-role

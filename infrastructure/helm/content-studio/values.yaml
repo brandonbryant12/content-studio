@@ -1,0 +1,230 @@
+# Default values for content-studio.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Environment name (dev, staging, prod)
+environment: dev
+
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the chart
+fullnameOverride: ""
+
+# Namespace configuration
+namespace:
+  # -- Create namespace
+  create: false
+  # -- Namespace name (defaults to fullname-environment)
+  name: ""
+
+# Public URLs (set per environment)
+# -- Public URL for the API server (used by frontend)
+publicServerUrl: "http://localhost:3035"
+# -- API path prefix
+publicServerApiPath: "/api"
+# -- Public URL for the web frontend
+publicWebUrl: "http://localhost:8085"
+
+# Server configuration (API backend)
+server:
+  # -- Number of server replicas
+  replicas: 2
+  # -- Server port
+  port: 3000
+  image:
+    # -- Server image repository
+    repository: content-studio-server
+    # -- Server image tag (defaults to Chart.appVersion)
+    tag: ""
+    # -- Image pull policy
+    pullPolicy: IfNotPresent
+  service:
+    # -- Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    # -- Service port
+    port: 3000
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  # -- Node selector for server pods
+  nodeSelector: {}
+
+# Worker configuration (job processing)
+worker:
+  # -- Number of worker replicas
+  replicas: 2
+  image:
+    # Note: Worker uses the same image as server
+    repository: ""  # Uses server.image.repository if empty
+    tag: ""  # Uses server.image.tag if empty
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  # -- Node selector for worker pods
+  nodeSelector: {}
+
+# Web configuration (frontend)
+web:
+  # -- Number of web replicas
+  replicas: 2
+  image:
+    # -- Web image repository
+    repository: content-studio-web
+    # -- Web image tag (defaults to Chart.appVersion)
+    tag: ""
+    # -- Image pull policy
+    pullPolicy: IfNotPresent
+  service:
+    # -- Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    # -- Service port
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  # -- Node selector for web pods
+  nodeSelector: {}
+
+# Service account configuration
+serviceAccount:
+  # -- Create service account
+  create: true
+  # -- Service account name (defaults to fullname)
+  name: ""
+  # -- Annotations to add to the service account
+  annotations: {}
+
+# Secrets configuration
+secrets:
+  # -- Create secrets (set to false if using external secrets)
+  create: true
+  # -- Name of existing secret to use instead of creating one
+  existingSecret: ""
+  # -- JWT auth secret for session signing
+  authSecret: ""
+  # -- PostgreSQL connection URL
+  postgresUrl: ""
+  # -- Google Gemini API key for AI features
+  geminiApiKey: ""
+  # -- S3 access key ID (if using S3 storage)
+  s3AccessKeyId: ""
+  # -- S3 secret access key (if using S3 storage)
+  s3SecretAccessKey: ""
+  # -- Datadog API key (if Datadog is enabled)
+  datadogApiKey: ""
+
+# Storage configuration
+storage:
+  # -- Storage provider (s3, local, memory)
+  provider: s3
+  s3:
+    # -- S3 bucket name
+    bucket: ""
+    # -- S3 region
+    region: "us-east-1"
+    # -- S3 endpoint (for S3-compatible storage like MinIO)
+    endpoint: ""
+
+# SSE (Server-Sent Events) configuration
+sse:
+  # -- SSE adapter (memory, redis)
+  adapter: redis
+
+# Redis configuration (for SSE scaling)
+redis:
+  # -- Enable Redis subchart
+  enabled: true
+  auth:
+    # -- Enable Redis authentication
+    enabled: false
+  architecture: standalone
+  master:
+    persistence:
+      enabled: false
+
+# External Redis (if redis.enabled is false)
+externalRedis:
+  # -- External Redis URL
+  url: ""
+
+# Ingress configuration
+ingress:
+  # -- Enable ingress
+  enabled: true
+  # -- Ingress class name
+  className: "alb"
+  # -- Ingress annotations
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  # -- Hosts configuration
+  hosts:
+    - host: ""
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+        - path: /
+          pathType: Prefix
+          service: web
+  # -- TLS configuration
+  tls: []
+
+# HPA (Horizontal Pod Autoscaler) configuration
+autoscaling:
+  server:
+    # -- Enable HPA for server
+    enabled: true
+    # -- Minimum replicas
+    minReplicas: 2
+    # -- Maximum replicas
+    maxReplicas: 10
+    # -- Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 70
+    # -- Target memory utilization percentage
+    targetMemoryUtilizationPercentage: 80
+  worker:
+    # -- Enable HPA for worker
+    enabled: true
+    # -- Minimum replicas
+    minReplicas: 2
+    # -- Maximum replicas
+    maxReplicas: 10
+    # -- Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 70
+  web:
+    # -- Enable HPA for web
+    enabled: true
+    # -- Minimum replicas
+    minReplicas: 2
+    # -- Maximum replicas
+    maxReplicas: 5
+    # -- Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 70
+
+# Observability configuration
+observability:
+  # -- OpenTelemetry OTLP endpoint
+  otlpEndpoint: "http://localhost:4317"
+  datadog:
+    # -- Enable Datadog integration
+    enabled: false
+    # -- Deploy Datadog agent as DaemonSet
+    deployAgent: false
+
+# -- Use mock AI services (for testing)
+useMockAI: false

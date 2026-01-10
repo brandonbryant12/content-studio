@@ -1,0 +1,117 @@
+# Local/Kind cluster values for Content Studio
+# Use with: helm install content-studio . -f values-local.yaml
+
+environment: local
+
+# Local URLs (Kind with nginx ingress)
+publicServerUrl: "http://localhost:3035"
+publicServerApiPath: "/api"
+publicWebUrl: "http://localhost:8085"
+
+# Reduced replicas for local testing
+server:
+  replicas: 1
+  port: 3000
+  image:
+    repository: content-studio-server
+    tag: local
+    pullPolicy: Never  # Use locally built images
+  service:
+    type: NodePort
+    port: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+worker:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+web:
+  replicas: 1
+  image:
+    repository: content-studio-web
+    tag: local
+    pullPolicy: Never  # Use locally built images
+  service:
+    type: NodePort
+    port: 80
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Disable autoscaling for local testing
+autoscaling:
+  server:
+    enabled: false
+  worker:
+    enabled: false
+  web:
+    enabled: false
+
+# Use internal Redis for local testing
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  architecture: standalone
+  master:
+    persistence:
+      enabled: false
+
+# Local storage configuration (use memory for testing)
+storage:
+  provider: memory
+
+# SSE configuration
+sse:
+  adapter: redis
+
+# Use mock AI for local testing (no API costs)
+useMockAI: true
+
+# Ingress for Kind with nginx ingress controller
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: localhost
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+        - path: /
+          pathType: Prefix
+          service: web
+  tls: []
+
+# Disable Datadog for local
+observability:
+  otlpEndpoint: ""
+  datadog:
+    enabled: false
+    deployAgent: false
+
+# Create secrets with test values
+secrets:
+  create: true
+  authSecret: "local-development-secret-change-in-production"
+  postgresUrl: "postgres://postgres:postgres@postgres:5432/postgres"
+  geminiApiKey: ""

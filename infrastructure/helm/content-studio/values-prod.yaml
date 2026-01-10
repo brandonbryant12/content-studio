@@ -1,0 +1,168 @@
+# Production environment values for Content Studio
+# Use with: helm install content-studio . -f values-prod.yaml
+#
+# IMPORTANT: Production deployments should use:
+# - External secrets management (AWS Secrets Manager sync)
+# - IRSA for S3 access (no static credentials)
+# - Properly configured monitoring and alerting
+# - Backup and disaster recovery procedures
+
+environment: prod
+
+# Public URLs (update with your production domain)
+publicServerUrl: "https://api.content-studio.example.com"
+publicServerApiPath: "/api"
+publicWebUrl: "https://content-studio.example.com"
+
+# Production-grade replicas
+server:
+  replicas: 3
+  port: 3000
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/content-studio-server
+    tag: ""  # Set by CI/CD with immutable tag
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  # Use dedicated node pool for production
+  nodeSelector:
+    node-type: application
+
+worker:
+  replicas: 3
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  nodeSelector:
+    node-type: application
+
+web:
+  replicas: 3
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/content-studio-web
+    tag: ""  # Set by CI/CD with immutable tag
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  nodeSelector:
+    node-type: application
+
+# Production autoscaling configuration
+autoscaling:
+  server:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
+  worker:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 60
+  web:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+
+# Use external Redis (ElastiCache) for production
+# Provides better reliability and automatic failover
+redis:
+  enabled: false
+
+externalRedis:
+  url: "redis://content-studio-prod.xxxxxx.cache.amazonaws.com:6379"
+
+# S3 storage configuration (production bucket)
+storage:
+  provider: s3
+  s3:
+    bucket: content-studio-prod-assets
+    region: us-east-1
+    endpoint: ""
+
+# SSE with Redis (ElastiCache)
+sse:
+  adapter: redis
+
+# Use real AI in production
+useMockAI: false
+
+# AWS ALB Ingress configuration with production hardening
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN>
+    alb.ingress.kubernetes.io/healthcheck-path: /healthcheck
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+    # Sticky sessions for SSE connections
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
+    # WAF protection
+    alb.ingress.kubernetes.io/wafv2-acl-arn: <WAF_ACL_ARN>
+    # Connection draining
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+    # Access logging
+    alb.ingress.kubernetes.io/load-balancer-attributes: access_logs.s3.enabled=true,access_logs.s3.bucket=<ALB_LOGS_BUCKET>,access_logs.s3.prefix=content-studio-prod
+  hosts:
+    - host: content-studio.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - hosts:
+        - content-studio.example.com
+      secretName: ""  # Using ACM certificate via ALB
+
+# Datadog for production monitoring
+observability:
+  otlpEndpoint: "http://datadog-agent:4317"
+  datadog:
+    enabled: true
+    deployAgent: false  # Agent deployed separately via Datadog operator or DaemonSet
+
+# Secrets - MUST use existing secret in production
+# Create via AWS Secrets Manager sync or similar
+secrets:
+  create: false
+  existingSecret: content-studio-prod-secrets
+
+# Service account with IRSA annotations for S3 access
+# No static credentials in production
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/content-studio-prod-role

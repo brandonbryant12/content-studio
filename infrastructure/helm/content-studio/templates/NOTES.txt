@@ -1,0 +1,37 @@
+Content Studio has been deployed!
+
+Environment: {{ .Values.environment }}
+
+Components:
+  - Server: {{ include "content-studio.fullname" . }}-server ({{ .Values.server.replicas }} replicas)
+  - Worker: {{ include "content-studio.fullname" . }}-worker ({{ .Values.worker.replicas }} replicas)
+  - Web:    {{ include "content-studio.fullname" . }}-web ({{ .Values.web.replicas }} replicas)
+
+{{- if .Values.ingress.enabled }}
+
+Ingress:
+{{- range .Values.ingress.hosts }}
+  - Host: {{ .host }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.redis.enabled }}
+
+Redis (SSE scaling):
+  - Internal URL: {{ include "content-studio.redisUrl" . }}
+{{- end }}
+
+To check the status of your deployment:
+
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+
+To view logs:
+
+  # Server logs
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=server -f
+
+  # Worker logs
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=worker -f
+
+  # Web logs
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=web -f

@@ -1,0 +1,213 @@
+{{- if .Values.observability.datadog.deployAgent }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "content-studio.fullname" . }}-datadog-agent
+  labels:
+    {{- include "content-studio.labels" . | nindent 4 }}
+    app.kubernetes.io/component: datadog-agent
+spec:
+  selector:
+    matchLabels:
+      {{- include "content-studio.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: datadog-agent
+  template:
+    metadata:
+      labels:
+        {{- include "content-studio.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: datadog-agent
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.secrets.create }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "content-studio.serviceAccountName" . }}
+      # Tolerations to run on all nodes including masters/control-plane
+      tolerations:
+        - operator: Exists
+      # Host network and PID access for full system visibility
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: datadog-agent
+          image: gcr.io/datadoghq/agent:7
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            # Required for system-level access
+            privileged: false
+            runAsUser: 0
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - SYS_RESOURCE
+                - SYS_PTRACE
+                - NET_ADMIN
+                - NET_BROADCAST
+                - NET_RAW
+                - IPC_LOCK
+                - CHOWN
+                - AUDIT_CONTROL
+                - AUDIT_READ
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8126
+              hostPort: 8126
+              name: traceport
+              protocol: TCP
+            - containerPort: 8125
+              hostPort: 8125
+              name: dogstatsdport
+              protocol: UDP
+            - containerPort: 4317
+              hostPort: 4317
+              name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              hostPort: 4318
+              name: otlp-http
+              protocol: TCP
+          env:
+            # API Key from secrets
+            - name: DD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "content-studio.secretName" . }}
+                  key: DD_API_KEY
+            # Unified service tagging from ConfigMap
+            - name: DD_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "content-studio.fullname" . }}-config
+                  key: DD_ENV
+            - name: DD_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "content-studio.fullname" . }}-config
+                  key: DD_SERVICE
+            - name: DD_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "content-studio.fullname" . }}-config
+                  key: DD_VERSION
+            # Datadog site configuration
+            - name: DD_SITE
+              value: {{ .Values.observability.datadog.site | default "datadoghq.com" | quote }}
+            # APM configuration
+            - name: DD_APM_ENABLED
+              value: "true"
+            - name: DD_APM_NON_LOCAL_TRAFFIC
+              value: "true"
+            # OTLP receiver configuration for OpenTelemetry traces
+            - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT
+              value: "0.0.0.0:4317"
+            - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT
+              value: "0.0.0.0:4318"
+            # Log collection configuration
+            - name: DD_LOGS_ENABLED
+              value: "true"
+            - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+              value: "true"
+            - name: DD_CONTAINER_EXCLUDE
+              value: "name:datadog-agent"
+            # DogStatsD configuration
+            - name: DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+              value: "true"
+            # Kubernetes metadata
+            - name: DD_KUBERNETES_KUBELET_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
+              value: '{"app.kubernetes.io/name":"kube_app_name","app.kubernetes.io/component":"kube_component"}'
+            # Process monitoring
+            - name: DD_PROCESS_AGENT_ENABLED
+              value: "true"
+            # Cluster name for better organization
+            - name: DD_CLUSTER_NAME
+              value: {{ .Values.observability.datadog.clusterName | default (printf "%s-%s" (include "content-studio.fullname" .) .Values.environment) | quote }}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          volumeMounts:
+            # Docker socket for container discovery
+            - name: dockersocket
+              mountPath: /var/run/docker.sock
+              readOnly: true
+            # Container runtime socket (for containerd/CRI-O)
+            - name: containerdsocket
+              mountPath: /var/run/containerd/containerd.sock
+              readOnly: true
+            # CRI socket for container runtime interface
+            - name: crisocket
+              mountPath: /var/run/cri-dockerd.sock
+              readOnly: true
+            # Proc filesystem for system metrics
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            # Cgroup filesystem for container metrics
+            - name: cgroup
+              mountPath: /host/sys/fs/cgroup
+              readOnly: true
+            # Container logs for log collection
+            - name: pointerdir
+              mountPath: /opt/datadog-agent/run
+            - name: containerlogdir
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: podlogdir
+              mountPath: /var/log/pods
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 5555
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5555
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: dockersocket
+          hostPath:
+            path: /var/run/docker.sock
+            type: ""
+        - name: containerdsocket
+          hostPath:
+            path: /var/run/containerd/containerd.sock
+            type: ""
+        - name: crisocket
+          hostPath:
+            path: /var/run/cri-dockerd.sock
+            type: ""
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: pointerdir
+          hostPath:
+            path: /opt/datadog-agent/run
+            type: DirectoryOrCreate
+        - name: containerlogdir
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: podlogdir
+          hostPath:
+            path: /var/log/pods
+{{- end }}

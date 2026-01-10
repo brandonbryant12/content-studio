@@ -43,11 +43,32 @@ FROM base AS production
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 hono
 
+# Copy built artifacts
 COPY --from=installer --chown=hono:nodejs /app/apps/server/dist /app/dist
+
+# Copy entrypoint script
+COPY --chown=hono:nodejs apps/server/docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 USER hono
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD wget --quiet --spider http://${SERVER_HOST}:${SERVER_PORT}/healthcheck || exit 1
+# Default environment
+ENV MODE=server
 
-CMD ["node", "/app/dist/server.js"]
+# Note: Healthcheck varies by mode
+# - server mode: HTTP check to /healthcheck endpoint
+# - worker mode: File-based check on /tmp/worker-health
+# Kubernetes liveness/readiness probes should be used instead of Docker HEALTHCHECK
+# for production deployments. This HEALTHCHECK is for local Docker testing only.
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD if [ "$MODE" = "server" ]; then \
+        wget --quiet --spider http://localhost:${SERVER_PORT:-3000}/healthcheck || exit 1; \
+      else \
+        test -f /tmp/worker-health && \
+        [ $(($(date +%s) - $(cat /tmp/worker-health | cut -c1-10))) -lt 120 ] || exit 1; \
+      fi
+
+EXPOSE 3000
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--mode=server"]

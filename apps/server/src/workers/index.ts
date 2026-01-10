@@ -9,3 +9,8 @@ export {
   createVoiceoverWorker,
   type VoiceoverWorkerConfig,
 } from './voiceover-worker';
+
+export {
+  createUnifiedWorker,
+  type UnifiedWorkerConfig,
+} from './unified-worker';

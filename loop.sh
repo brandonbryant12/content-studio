@@ -5,6 +5,9 @@
 
 PLAN_PATH="${1:-IMPLEMENTATION_PLAN.md}"
 
+# Anthropic API key for Docker sandbox
+export ANTHROPIC_API_KEY="lzcz8T0WAaLtplCDFCPC7CZysVjEZ07VhXzZYwGNchrGMsup#i3r-eSW9RvguvKbUr7iU9OoUrJ7F_JzrT5bAyBrviwU"
+
 if [ ! -f "$PLAN_PATH" ]; then
     echo "Error: Plan file not found: $PLAN_PATH"
     exit 1
@@ -13,8 +16,14 @@ fi
 echo "Using plan: $PLAN_PATH"
 
 while true; do
-    # Prepend the plan path to the prompt
-    (echo "## Active Plan: $PLAN_PATH"; echo ""; cat PROMPT.md) | claude -p \
+    # Build the prompt content
+    PROMPT_CONTENT="## Active Plan: $PLAN_PATH
+
+$(cat PROMPT.md)"
+
+    # Run Claude in Docker sandbox - pass prompt as argument after -p flag
+    docker sandbox run -w "$(pwd)" -e ANTHROPIC_API_KEY claude \
+        -p "$PROMPT_CONTENT" \
         --dangerously-skip-permissions \
         --output-format=stream-json \
         --verbose \

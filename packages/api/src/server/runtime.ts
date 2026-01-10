@@ -2,7 +2,8 @@ import { ManagedRuntime, Layer, Logger } from 'effect';
 import { DbLive, type Db } from '@repo/db/effect';
 import { QueueLive, type Queue } from '@repo/queue';
 import { GoogleAILive, type AI } from '@repo/ai';
-import { MockAIWithLatency } from '@repo/testing';
+// Import only the mocks subpath to avoid bundling testcontainers (which uses native modules)
+import { MockAIWithLatency } from '@repo/testing/mocks';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { MediaLive, type Media } from '@repo/media';
 import type { Storage } from '@repo/storage';

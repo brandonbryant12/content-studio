@@ -48,6 +48,12 @@ const StorageProviderSchema = Schema.Union(
   Schema.Literal('s3'),
 );
 
+// SSE adapter schema - memory for local dev, redis for multi-replica EKS
+const SSEAdapterSchema = Schema.Union(
+  Schema.Literal('memory'),
+  Schema.Literal('redis'),
+);
+
 export const envSchema = Schema.Struct({
   SERVER_PORT: Schema.optionalWith(PortSchema, {
     default: () => DEFAULT_SERVER_PORT,
@@ -57,6 +63,12 @@ export const envSchema = Schema.Struct({
   }),
   SERVER_AUTH_SECRET: Schema.String.pipe(Schema.minLength(1)),
   SERVER_POSTGRES_URL: Schema.String,
+
+  // Worker mode - alternative to --mode=worker CLI flag
+  // Set to "true" or "1" to run in worker-only mode (no HTTP server)
+  WORKER_MODE: Schema.optionalWith(BooleanStringSchema, {
+    default: () => false,
+  }),
 
   // Backend URL, used to configure OpenAPI (Scalar)
   PUBLIC_SERVER_URL: UrlSchema,
@@ -86,6 +98,15 @@ export const envSchema = Schema.Struct({
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String), // For S3 provider
   S3_SECRET_ACCESS_KEY: Schema.optional(Schema.String), // For S3 provider
   S3_ENDPOINT: Schema.optional(Schema.String), // For S3 provider
+
+  // SSE adapter configuration for horizontal scaling
+  // memory: local EventEmitter (default, for local dev/single instance)
+  // redis: Redis pub/sub (for multi-replica EKS deployments)
+  SSE_ADAPTER: Schema.optionalWith(SSEAdapterSchema, {
+    default: () => 'memory' as const,
+  }),
+  // Redis URL required when SSE_ADAPTER=redis (e.g., redis://localhost:6379)
+  REDIS_URL: Schema.optional(Schema.String),
 });
 
 export const env = Schema.decodeUnknownSync(envSchema)(process.env);

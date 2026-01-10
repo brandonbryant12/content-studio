@@ -1,0 +1,93 @@
+# Docker Compose for testing K8s backend deployment (server + worker + redis)
+# Excludes web frontend due to Docker build issues with vite
+#
+# Usage:
+#   docker compose -f compose.k8s-backend-test.yaml up --build
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+    command: ["--mode=server"]
+    ports:
+      - "3035:3000"
+    environment:
+      - MODE=server
+      - SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET:-please_change_this_in_production}
+      - SERVER_POSTGRES_URL=postgres://postgres:postgres@db:5432/postgres
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+      - PUBLIC_WEB_URL=http://localhost:8085
+      - PUBLIC_SERVER_URL=http://localhost:3035
+      - SSE_ADAPTER=redis
+      - REDIS_URL=redis://redis:6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-dummy-key-for-testing}
+      - USE_MOCK_AI=${USE_MOCK_AI:-true}
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/healthcheck"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+    command: ["--mode=worker"]
+    environment:
+      - MODE=worker
+      - SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET:-please_change_this_in_production}
+      - SERVER_POSTGRES_URL=postgres://postgres:postgres@db:5432/postgres
+      - PUBLIC_WEB_URL=http://localhost:8085
+      - PUBLIC_SERVER_URL=http://localhost:3035
+      - SSE_ADAPTER=redis
+      - REDIS_URL=redis://redis:6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-dummy-key-for-testing}
+      - USE_MOCK_AI=${USE_MOCK_AI:-true}
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+      # Worker health check: verify health file exists and is recent (within 120 seconds)
+      test: ["CMD-SHELL", "test -f /tmp/worker-health && [ $(($(date +%s) - $(cat /tmp/worker-health | cut -c1-10))) -lt 120 ]"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      test: ["CMD", "redis-cli", "ping"]
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_k8s_test_data:/var/lib/postgresql/data
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+
+volumes:
+  postgres_k8s_test_data:
