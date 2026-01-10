@@ -9,6 +9,7 @@ export {
 } from './infographic-item';
 export { InfographicList, type InfographicListProps } from './infographic-list';
 export { InfographicListContainer } from './infographic-list-container';
+export { InfographicDetailContainer } from './infographic-detail-container';
 
 // Workbench components
 export {
@@ -41,4 +42,6 @@ export {
   type FeedbackPanelProps,
   SettingsPanel,
   type SettingsPanelProps,
+  PreviewPanel,
+  type PreviewPanelProps,
 } from './workbench';

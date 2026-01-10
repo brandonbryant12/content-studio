@@ -5,6 +5,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
+import { InfographicDetailContainer } from '@/features/infographics';
 
 export const Route = createFileRoute('/_protected/infographics/$infographicId')(
   {
@@ -23,11 +24,7 @@ function InfographicDetailPage() {
 
   return (
     <SuspenseBoundary resetKeys={[infographicId]}>
-      <div className="page-container-narrow">
-        <h1 className="page-title">Infographic Detail</h1>
-        <p className="text-muted-foreground">Infographic ID: {infographicId}</p>
-        {/* InfographicDetailContainer will be added in later tasks */}
-      </div>
+      <InfographicDetailContainer infographicId={infographicId} />
     </SuspenseBoundary>
   );
 }

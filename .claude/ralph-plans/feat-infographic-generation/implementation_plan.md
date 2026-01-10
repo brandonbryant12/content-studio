@@ -484,15 +484,15 @@ apps/
 ---
 
 ### Task 23: Frontend - Detail Container
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`
 **Acceptance Criteria:**
-- [ ] Create `InfographicDetailContainer` - orchestrates all workbench components
-- [ ] Manages state: infographic data, selections, settings, generation status
-- [ ] Handles mutations: save, generate, add/remove selections
-- [ ] Keyboard shortcuts (Cmd+S to save)
-- [ ] Navigation blocking for unsaved changes
-- [ ] SSE subscription for real-time updates
+- [x] Create `InfographicDetailContainer` - orchestrates all workbench components
+- [x] Manages state: infographic data, selections, settings, generation status
+- [x] Handles mutations: save, generate, add/remove selections
+- [x] Keyboard shortcuts (Cmd+S to save)
+- [x] Navigation blocking for unsaved changes
+- [x] SSE subscription for real-time updates (handled by mutation hooks)
 **Details:** [23-frontend-detail-container.md](./tasks/23-frontend-detail-container.md)
 
 ---
