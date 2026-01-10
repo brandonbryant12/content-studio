@@ -4,7 +4,10 @@ import { PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { useRef, useMemo, Fragment } from 'react';
 import { createPortal } from 'react-dom';
-import { useTextHighlight, type TextSelection } from '../../hooks/use-text-highlight';
+import {
+  useTextHighlight,
+  type TextSelection,
+} from '../../hooks/use-text-highlight';
 import { MAX_SELECTION_LENGTH } from '../../hooks/use-selections';
 
 /** Selection from the infographic (stored in DB) */
@@ -170,7 +173,11 @@ function renderHighlightedText(
     const { id, startOffset, endOffset } = selection;
 
     // Skip invalid or out-of-bounds selections
-    if (startOffset < 0 || endOffset > content.length || startOffset >= endOffset) {
+    if (
+      startOffset < 0 ||
+      endOffset > content.length ||
+      startOffset >= endOffset
+    ) {
       continue;
     }
 
@@ -205,9 +212,7 @@ function renderHighlightedText(
   // Add remaining text after last highlight
   if (lastIndex < content.length) {
     parts.push(
-      <Fragment key={`text-${lastIndex}`}>
-        {content.slice(lastIndex)}
-      </Fragment>,
+      <Fragment key={`text-${lastIndex}`}>{content.slice(lastIndex)}</Fragment>,
     );
   }
 

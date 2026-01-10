@@ -14,10 +14,22 @@ export interface StyleOptionsPanelProps {
 // Predefined color schemes
 const COLOR_SCHEMES = [
   { id: 'default', name: 'Default', colors: ['#3b82f6', '#10b981', '#f59e0b'] },
-  { id: 'corporate', name: 'Corporate', colors: ['#1e40af', '#374151', '#0891b2'] },
+  {
+    id: 'corporate',
+    name: 'Corporate',
+    colors: ['#1e40af', '#374151', '#0891b2'],
+  },
   { id: 'vibrant', name: 'Vibrant', colors: ['#ec4899', '#8b5cf6', '#06b6d4'] },
-  { id: 'earth', name: 'Earth Tones', colors: ['#78716c', '#65a30d', '#b45309'] },
-  { id: 'monochrome', name: 'Monochrome', colors: ['#1f2937', '#4b5563', '#9ca3af'] },
+  {
+    id: 'earth',
+    name: 'Earth Tones',
+    colors: ['#78716c', '#65a30d', '#b45309'],
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome',
+    colors: ['#1f2937', '#4b5563', '#9ca3af'],
+  },
   { id: 'warm', name: 'Warm', colors: ['#dc2626', '#ea580c', '#facc15'] },
   { id: 'cool', name: 'Cool', colors: ['#0ea5e9', '#6366f1', '#14b8a6'] },
   { id: 'pastel', name: 'Pastel', colors: ['#fca5a5', '#c4b5fd', '#a5f3fc'] },
@@ -115,7 +127,9 @@ export function StyleOptionsPanel({
       <div className="style-options-section">
         <label className="style-options-label">
           Emphasis
-          <span className="style-options-hint-inline">(select any that apply)</span>
+          <span className="style-options-hint-inline">
+            (select any that apply)
+          </span>
         </label>
         <div className="style-options-emphasis-grid">
           {EMPHASIS_OPTIONS.map((option) => (
@@ -147,7 +161,9 @@ export function StyleOptionsPanel({
               aria-pressed={currentLayout === option.id}
             >
               <span className="style-options-layout-name">{option.name}</span>
-              <span className="style-options-layout-desc">{option.description}</span>
+              <span className="style-options-layout-desc">
+                {option.description}
+              </span>
             </button>
           ))}
         </div>

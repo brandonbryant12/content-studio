@@ -30,7 +30,10 @@ export function CustomInstructions({
 
   return (
     <div className="custom-instructions">
-      <label className="custom-instructions-label" htmlFor="custom-instructions">
+      <label
+        className="custom-instructions-label"
+        htmlFor="custom-instructions"
+      >
         Custom Instructions
         <span className="custom-instructions-optional">(optional)</span>
       </label>

@@ -117,7 +117,9 @@ export function AISuggestionsPanel({
                 <SuggestionItem
                   key={index}
                   suggestion={suggestion}
-                  documentTitle={documentTitles[suggestion.documentId] ?? 'Unknown'}
+                  documentTitle={
+                    documentTitles[suggestion.documentId] ?? 'Unknown'
+                  }
                   onAdd={() => onAddSuggestion(suggestion)}
                   disabled={disabled}
                 />

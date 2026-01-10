@@ -56,26 +56,36 @@ export function FeedbackPanel({
       />
 
       <div className="feedback-panel-suggestions">
-        <span className="feedback-panel-suggestions-label">Common feedback:</span>
+        <span className="feedback-panel-suggestions-label">
+          Common feedback:
+        </span>
         <div className="feedback-panel-suggestions-list">
           <SuggestionChip
             text="Larger text"
-            onClick={() => appendFeedback('Make the text larger and more readable.')}
+            onClick={() =>
+              appendFeedback('Make the text larger and more readable.')
+            }
             disabled={disabled}
           />
           <SuggestionChip
             text="More contrast"
-            onClick={() => appendFeedback('Increase contrast between elements.')}
+            onClick={() =>
+              appendFeedback('Increase contrast between elements.')
+            }
             disabled={disabled}
           />
           <SuggestionChip
             text="Simpler layout"
-            onClick={() => appendFeedback('Simplify the layout with less visual clutter.')}
+            onClick={() =>
+              appendFeedback('Simplify the layout with less visual clutter.')
+            }
             disabled={disabled}
           />
           <SuggestionChip
             text="More visual"
-            onClick={() => appendFeedback('Add more icons and visual elements.')}
+            onClick={() =>
+              appendFeedback('Add more icons and visual elements.')
+            }
             disabled={disabled}
           />
         </div>

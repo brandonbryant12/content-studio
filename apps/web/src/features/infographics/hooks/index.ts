@@ -18,6 +18,12 @@ export {
   useExtractKeyPoints,
   type KeyPointSuggestion,
 } from './use-ai-extraction';
+// Note: useOptimisticGeneration is exported as useGenerateInfographic to avoid
+// name collision with podcasts' useOptimisticGeneration in the features barrel export
+export {
+  useOptimisticGeneration as useGenerateInfographic,
+  type UseOptimisticGenerationReturn,
+} from './use-optimistic-generation';
 
 // Selection hooks
 export {

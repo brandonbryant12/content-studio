@@ -56,9 +56,8 @@ export function useTextHighlight({
   onSelectionChange,
 }: UseTextHighlightOptions): UseTextHighlightReturn {
   const [selection, setSelection] = useState<TextSelection | null>(null);
-  const [buttonPosition, setButtonPosition] = useState<SelectionPosition | null>(
-    null,
-  );
+  const [buttonPosition, setButtonPosition] =
+    useState<SelectionPosition | null>(null);
 
   const clearSelection = useCallback(() => {
     window.getSelection()?.removeAllRanges();
@@ -96,8 +95,16 @@ export function useTextHighlight({
 
     // Calculate offset relative to container text content
     // This walks the DOM to find the actual character offset
-    const startOffset = getTextOffset(container, range.startContainer, range.startOffset);
-    const endOffset = getTextOffset(container, range.endContainer, range.endOffset);
+    const startOffset = getTextOffset(
+      container,
+      range.startContainer,
+      range.startOffset,
+    );
+    const endOffset = getTextOffset(
+      container,
+      range.endContainer,
+      range.endOffset,
+    );
 
     const newSelection: TextSelection = {
       text: selectedText,

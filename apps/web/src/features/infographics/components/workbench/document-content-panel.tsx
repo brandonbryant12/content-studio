@@ -5,7 +5,10 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { apiClient } from '@/clients/apiClient';
-import { DocumentSelector, type InfographicDocumentInfo } from './document-selector';
+import {
+  DocumentSelector,
+  type InfographicDocumentInfo,
+} from './document-selector';
 
 export interface DocumentContentPanelProps {
   /** List of documents to display */
@@ -75,9 +78,7 @@ export function DocumentContentPanel({
       {/* Content area */}
       <div className="doc-panel-content">
         {activeDocument ? (
-          children ?? (
-            <DocumentContent documentId={activeDocument.id} />
-          )
+          (children ?? <DocumentContent documentId={activeDocument.id} />)
         ) : (
           <div className="doc-panel-empty">
             <div className="empty-state-icon">

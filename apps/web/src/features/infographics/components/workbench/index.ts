@@ -22,10 +22,7 @@ export type {
 } from './text-highlighter';
 
 export { SelectionList } from './selection-list';
-export type {
-  SelectionListProps,
-  SelectionListItem,
-} from './selection-list';
+export type { SelectionListProps, SelectionListItem } from './selection-list';
 
 export { AISuggestionsPanel } from './ai-suggestions-panel';
 export type { AISuggestionsPanelProps } from './ai-suggestions-panel';
@@ -47,3 +44,6 @@ export type { FeedbackPanelProps } from './feedback-panel';
 
 export { SettingsPanel } from './settings-panel';
 export type { SettingsPanelProps } from './settings-panel';
+
+export { PreviewPanel } from './preview-panel';
+export type { PreviewPanelProps } from './preview-panel';

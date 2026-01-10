@@ -468,17 +468,17 @@ apps/
 ---
 
 ### Task 22: Frontend - Preview and Generation
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`, `standards/frontend/mutations.md`
 **Acceptance Criteria:**
-- [ ] Create `PreviewPanel` - shows generated infographic image
-- [ ] Zoom/pan controls for large images
-- [ ] Download button
-- [ ] Create `ActionBar` - Generate/Regenerate button with loading state
-- [ ] Create `useOptimisticGeneration` hook
-- [ ] Poll job status during generation
-- [ ] Show progress indicator
-- [ ] Success/error toasts
+- [x] Create `PreviewPanel` - shows generated infographic image
+- [x] Zoom/pan controls for large images
+- [x] Download button
+- [x] Create `ActionBar` - Generate/Regenerate button with loading state (already exists as InfographicActionBar from Task 16)
+- [x] Create `useOptimisticGeneration` hook
+- [x] Poll job status during generation
+- [x] Show progress indicator
+- [x] Success/error toasts
 **Details:** [22-frontend-preview-generation.md](./tasks/22-frontend-preview-generation.md)
 
 ---

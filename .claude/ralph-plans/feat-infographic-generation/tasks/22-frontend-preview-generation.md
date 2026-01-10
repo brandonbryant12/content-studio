@@ -536,4 +536,24 @@ function InfographicDetailContainer({ infographicId }) {
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
+### 2025-01-10 - Task Completed
+
+**Files Created:**
+- `apps/web/src/features/infographics/components/workbench/preview-panel.tsx` - Preview panel with zoom/pan controls
+- `apps/web/src/features/infographics/hooks/use-optimistic-generation.ts` - Generation hook with polling
+
+**Files Updated:**
+- `apps/web/src/features/infographics/components/workbench/index.ts` - Added PreviewPanel export
+- `apps/web/src/features/infographics/hooks/index.ts` - Added useGenerateInfographic export
+
+**Implementation Notes:**
+- ActionBar component already exists as `InfographicActionBar` in `global-action-bar.tsx` (Task 16)
+- PreviewPanel includes: zoom (0.5x-3x), pan when zoomed, download, empty/loading/error states
+- useOptimisticGeneration uses setTimeout-based polling (not setInterval) for better cleanup
+- Hook exported as `useGenerateInfographic` to avoid name collision with podcasts
+
+**Validation:**
+- `pnpm typecheck` - ✅ Passed
+- `pnpm build` - ✅ Passed
+- `pnpm lint` - ✅ No errors (only pre-existing warnings)
+- `pnpm test` - ⚠️ Pre-existing DB connection failures (ECONNREFUSED - test DB not running)
