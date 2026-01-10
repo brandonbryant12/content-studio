@@ -168,16 +168,17 @@ apps/
 ---
 
 ### Task 03: Infographic Prompts
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** Reference `packages/media/src/podcast/prompts.ts` pattern
 **Acceptance Criteria:**
-- [ ] Create `packages/media/src/infographic/prompts.ts`
-- [ ] Define `InfographicType` enum: timeline, comparison, statistical, process, list, mindMap, hierarchy, geographic
-- [ ] Create optimized system prompt for each type
-- [ ] Create `buildInfographicPrompt(type, selections, customInstructions)` function
-- [ ] Each prompt should guide Gemini to create clear, readable infographics
-- [ ] Include guidance for text placement, visual hierarchy, color usage
-- [ ] Export `INFOGRAPHIC_TYPES` array with id, name, description for UI
+- [x] Create `packages/media/src/infographic/prompts.ts`
+- [x] Define `InfographicType` const object: timeline, comparison, statistical, process, list, mindMap, hierarchy, geographic
+- [x] Create optimized system prompt for each type with design principles and visual style guidance
+- [x] Create `buildInfographicPrompt(type, selections, customInstructions, feedbackInstructions, aspectRatio)` function
+- [x] Each prompt guides AI to create clear, readable infographics
+- [x] Includes guidance for text placement, visual hierarchy, color usage
+- [x] Export `INFOGRAPHIC_TYPES` array with id, name, description, icon for UI
+- [x] Helper functions: `getSystemPrompt`, `getInfographicTypeInfo`, `isValidInfographicType`
 **Details:** [03-infographic-prompts.md](./tasks/03-infographic-prompts.md)
 
 ---
