@@ -49,3 +49,11 @@ export {
   reorderSelections,
   type ReorderSelectionsInput,
 } from './reorder-selections';
+
+// AI-powered operations
+export {
+  extractKeyPoints,
+  type ExtractKeyPointsInput,
+  type ExtractKeyPointsResult,
+  type KeyPointSuggestion,
+} from './extract-key-points';

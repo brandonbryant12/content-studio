@@ -38,6 +38,8 @@ export {
   removeSelection,
   updateSelection,
   reorderSelections,
+  // AI-powered operations
+  extractKeyPoints,
   // Constants
   MAX_SELECTION_LENGTH,
   SELECTION_SOFT_LIMIT,
@@ -54,4 +56,7 @@ export {
   type RemoveSelectionInput,
   type UpdateSelectionInput,
   type ReorderSelectionsInput,
+  type ExtractKeyPointsInput,
+  type ExtractKeyPointsResult,
+  type KeyPointSuggestion,
 } from './use-cases';
