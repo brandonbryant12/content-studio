@@ -217,16 +217,18 @@ apps/
 ---
 
 ### Task 06: Selection Use Cases
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/use-case.md`
 **Acceptance Criteria:**
-- [ ] Create `addSelection.ts` - adds text selection with document reference, enforces character limit (500 chars)
-- [ ] Create `removeSelection.ts` - removes selection by ID
-- [ ] Create `updateSelection.ts` - updates text or reorders
-- [ ] Create `reorderSelections.ts` - bulk reorder selections
-- [ ] Implement soft limit warning: return `warningMessage` when selections > 10
-- [ ] Validate documentId belongs to user
-- [ ] Store exact selected text for audit trail
+- [x] Create `addSelection.ts` - adds text selection with document reference, enforces character limit (500 chars)
+- [x] Create `removeSelection.ts` - removes selection by ID
+- [x] Create `updateSelection.ts` - updates text or reorders
+- [x] Create `reorderSelections.ts` - bulk reorder selections
+- [x] Implement soft limit warning: return `warningMessage` when selections > 10
+- [x] Validate documentId belongs to user
+- [x] Store exact selected text for audit trail
+- [x] Added `SelectionTextTooLong` error to errors.ts
+- [x] Exported constants `MAX_SELECTION_LENGTH` (500) and `SELECTION_SOFT_LIMIT` (10)
 **Details:** [06-selection-use-cases.md](./tasks/06-selection-use-cases.md)
 
 ---
