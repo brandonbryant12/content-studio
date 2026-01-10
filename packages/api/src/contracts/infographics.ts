@@ -345,7 +345,9 @@ const infographicContract = oc
           }),
         ),
       )
-      .output(std(Schema.Struct({ selection: InfographicSelectionOutputSchema }))),
+      .output(
+        std(Schema.Struct({ selection: InfographicSelectionOutputSchema })),
+      ),
 
     // Reorder selections
     reorderSelections: oc
@@ -365,7 +367,11 @@ const infographicContract = oc
         ),
       )
       .output(
-        std(Schema.Struct({ selections: Schema.Array(InfographicSelectionOutputSchema) })),
+        std(
+          Schema.Struct({
+            selections: Schema.Array(InfographicSelectionOutputSchema),
+          }),
+        ),
       ),
 
     // =========================================================================
@@ -384,7 +390,11 @@ const infographicContract = oc
       .errors(infographicErrors)
       .input(std(Schema.Struct({ id: InfographicIdSchema })))
       .output(
-        std(Schema.Struct({ suggestions: Schema.Array(KeyPointSuggestionSchema) })),
+        std(
+          Schema.Struct({
+            suggestions: Schema.Array(KeyPointSuggestionSchema),
+          }),
+        ),
       ),
 
     // =========================================================================

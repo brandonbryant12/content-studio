@@ -170,6 +170,10 @@ export {
   reorderSelections,
   // AI-powered operations
   extractKeyPoints,
+  // Generation operations
+  startGeneration as startInfographicGeneration,
+  generateInfographic,
+  getJob as getInfographicJob,
   // Constants
   MAX_SELECTION_LENGTH,
   SELECTION_SOFT_LIMIT,
@@ -189,6 +193,12 @@ export {
   type ExtractKeyPointsInput,
   type ExtractKeyPointsResult,
   type KeyPointSuggestion,
+  type StartGenerationInput as StartInfographicGenerationInput,
+  type StartGenerationResult as StartInfographicGenerationResult,
+  type GenerateInfographicInput,
+  type GenerateInfographicResult,
+  type GetJobInput as GetInfographicJobInput,
+  type GetJobResult as GetInfographicJobResult,
 } from './infographic';
 
 // Import for combined layer

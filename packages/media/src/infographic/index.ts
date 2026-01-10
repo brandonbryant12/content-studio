@@ -40,6 +40,10 @@ export {
   reorderSelections,
   // AI-powered operations
   extractKeyPoints,
+  // Generation operations
+  startGeneration,
+  generateInfographic,
+  getJob,
   // Constants
   MAX_SELECTION_LENGTH,
   SELECTION_SOFT_LIMIT,
@@ -59,4 +63,10 @@ export {
   type ExtractKeyPointsInput,
   type ExtractKeyPointsResult,
   type KeyPointSuggestion,
+  type StartGenerationInput,
+  type StartGenerationResult,
+  type GenerateInfographicInput,
+  type GenerateInfographicResult,
+  type GetJobInput,
+  type GetJobResult,
 } from './use-cases';

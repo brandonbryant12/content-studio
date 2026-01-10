@@ -371,6 +371,30 @@ const infographicSelectionTransform = (
   createdAt: selection.createdAt.toISOString(),
 });
 
+/**
+ * Full infographic with selections type.
+ */
+export interface InfographicWithSelections extends Infographic {
+  selections: InfographicSelection[];
+}
+
+/**
+ * Full infographic output with selections.
+ */
+export interface InfographicFullOutput extends InfographicOutput {
+  selections: InfographicSelectionOutput[];
+}
+
+/**
+ * Pure transform for full Infographic with selections.
+ */
+const infographicFullTransform = (
+  infographic: InfographicWithSelections,
+): InfographicFullOutput => ({
+  ...infographicTransform(infographic),
+  selections: infographic.selections.map(infographicSelectionTransform),
+});
+
 // =============================================================================
 // Serializers - Effect-based and sync variants
 // =============================================================================
@@ -391,6 +415,19 @@ export const serializeInfographicsEffect = createBatchEffectSerializer(
 
 /** Sync serializer for simple cases. */
 export const serializeInfographic = createSyncSerializer(infographicTransform);
+
+// --- InfographicFull (with selections) ---
+
+/** Effect-based serializer with tracing. */
+export const serializeInfographicFullEffect = createEffectSerializer(
+  'infographicFull',
+  infographicFullTransform,
+);
+
+/** Sync serializer for simple cases. */
+export const serializeInfographicFull = createSyncSerializer(
+  infographicFullTransform,
+);
 
 // --- InfographicListItem ---
 

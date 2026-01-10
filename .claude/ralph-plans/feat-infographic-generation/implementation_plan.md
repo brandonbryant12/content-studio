@@ -304,16 +304,16 @@ apps/
 ---
 
 ### Task 11: API Router
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/router-handler.md`
 **Acceptance Criteria:**
-- [ ] Create `packages/api/src/server/router/infographic.ts`
-- [ ] Implement all endpoints from contract
-- [ ] All endpoints use `protectedProcedure`
-- [ ] Use `handleEffectWithProtocol` for error handling
-- [ ] Apply serializers to responses
-- [ ] Add tracing spans with appropriate attributes
-- [ ] Register router in main app router
+- [x] Create `packages/api/src/server/router/infographic.ts`
+- [x] Implement all endpoints from contract
+- [x] All endpoints use `protectedProcedure`
+- [x] Use `handleEffectWithProtocol` for error handling
+- [x] Apply serializers to responses
+- [x] Add tracing spans with appropriate attributes
+- [x] Register router in main app router
 **Details:** [11-api-router.md](./tasks/11-api-router.md)
 
 ---
