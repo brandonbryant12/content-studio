@@ -42,9 +42,7 @@ export const getJob = (input: GetJobInput) =>
 
     // Verify job belongs to user
     if (job.createdBy !== user.id) {
-      return yield* Effect.fail(
-        new JobNotFoundError({ jobId: input.jobId }),
-      );
+      return yield* Effect.fail(new JobNotFoundError({ jobId: input.jobId }));
     }
 
     return job;

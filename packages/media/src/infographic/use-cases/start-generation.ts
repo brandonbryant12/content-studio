@@ -58,9 +58,7 @@ export const startGeneration = (input: StartGenerationInput) =>
       .findById(input.infographicId)
       .pipe(
         Effect.catchTag('InfographicNotFound', () =>
-          Effect.fail(
-            new InfographicNotFound({ id: input.infographicId }),
-          ),
+          Effect.fail(new InfographicNotFound({ id: input.infographicId })),
         ),
       );
 

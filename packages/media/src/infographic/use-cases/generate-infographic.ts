@@ -6,7 +6,10 @@ import { InfographicRepo } from '../repos/infographic-repo';
 import { SelectionRepo } from '../repos/selection-repo';
 import { DocumentRepo } from '../../document/repos/document-repo';
 import { buildInfographicPrompt, type InfographicType } from '../prompts';
-import { InfographicNotFound, InvalidInfographicGeneration } from '../../errors';
+import {
+  InfographicNotFound,
+  InvalidInfographicGeneration,
+} from '../../errors';
 
 // =============================================================================
 // Types
@@ -56,9 +59,7 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
       .findById(input.infographicId)
       .pipe(
         Effect.catchTag('InfographicNotFound', () =>
-          Effect.fail(
-            new InfographicNotFound({ id: input.infographicId }),
-          ),
+          Effect.fail(new InfographicNotFound({ id: input.infographicId })),
         ),
       );
 
@@ -85,9 +86,9 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
     // 4. Get document titles for prompt context
     const documentTitles = new Map<string, string>();
     for (const docId of infographic.sourceDocumentIds) {
-      const doc = yield* documentRepo.findById(docId).pipe(
-        Effect.catchTag('DocumentNotFound', () => Effect.succeed(null)),
-      );
+      const doc = yield* documentRepo
+        .findById(docId)
+        .pipe(Effect.catchTag('DocumentNotFound', () => Effect.succeed(null)));
       if (doc) {
         documentTitles.set(docId, doc.title);
       }
@@ -133,7 +134,11 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
 
     // 7. Upload to storage
     const fileName = `infographics/${infographic.id}/${Date.now()}.png`;
-    yield* storage.upload(fileName, imageResult.imageContent, imageResult.mimeType);
+    yield* storage.upload(
+      fileName,
+      imageResult.imageContent,
+      imageResult.mimeType,
+    );
 
     const imageUrl = yield* storage.getUrl(fileName);
 

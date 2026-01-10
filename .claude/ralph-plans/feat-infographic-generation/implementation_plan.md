@@ -280,11 +280,11 @@ apps/
 ---
 
 ### Task 10: API Contract
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/router-handler.md`, `standards/patterns/serialization.md`
 **Acceptance Criteria:**
-- [ ] Create `packages/api/src/contracts/infographics.ts`
-- [ ] Define endpoints:
+- [x] Create `packages/api/src/contracts/infographics.ts`
+- [x] Define endpoints:
   - GET /infographics - list
   - GET /infographics/:id - get with selections
   - POST /infographics - create
@@ -297,8 +297,8 @@ apps/
   - POST /infographics/:id/extract-key-points - AI extraction
   - POST /infographics/:id/generate - start generation
   - GET /infographics/jobs/:jobId - poll job status
-- [ ] Define error types: INFOGRAPHIC_NOT_FOUND, NOT_INFOGRAPHIC_OWNER, SELECTION_NOT_FOUND, SELECTION_LIMIT_WARNING
-- [ ] Define input/output schemas
+- [x] Define error types: INFOGRAPHIC_NOT_FOUND, NOT_INFOGRAPHIC_OWNER, SELECTION_NOT_FOUND, SELECTION_TOO_LONG, INVALID_INFOGRAPHIC_GENERATION, DOCUMENT_NOT_FOUND
+- [x] Define input/output schemas
 **Details:** [10-api-contract.md](./tasks/10-api-contract.md)
 
 ---
