@@ -3385,3 +3385,327 @@
     }
   }
 }
+
+/* =============================================================================
+   Settings Panel Components
+   ============================================================================= */
+
+@layer components {
+  /* Settings Panel Container */
+  .settings-panel {
+    @apply flex flex-col gap-6;
+  }
+
+  .settings-panel-section {
+    @apply space-y-2;
+  }
+
+  .settings-panel-label {
+    @apply block text-sm font-medium text-foreground;
+  }
+
+  .settings-panel-title-input {
+    @apply w-full;
+  }
+
+  .settings-panel-advanced {
+    @apply border-t border-border pt-4 mt-2;
+  }
+
+  .settings-panel-advanced-toggle {
+    @apply flex items-center justify-between w-full;
+    @apply text-sm font-medium text-muted-foreground;
+    @apply hover:text-foreground transition-colors;
+  }
+
+  .settings-panel-advanced-chevron {
+    @apply w-4 h-4 transition-transform duration-200;
+  }
+
+  .settings-panel-advanced-chevron.expanded {
+    @apply rotate-180;
+  }
+
+  .settings-panel-advanced-content {
+    @apply mt-4 space-y-6;
+  }
+
+  /* Type Selector */
+  .type-selector {
+    @apply space-y-3;
+  }
+
+  .type-selector-label {
+    @apply block text-sm font-medium text-foreground;
+  }
+
+  .type-selector-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .type-card {
+    @apply flex items-start gap-3 p-3;
+    @apply border border-border rounded-lg;
+    @apply bg-card hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+    @apply text-left;
+  }
+
+  .type-card.selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .type-card.disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-card;
+  }
+
+  .type-card-icon {
+    @apply flex-shrink-0 w-8 h-8 rounded-md;
+    @apply flex items-center justify-center;
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .type-card.selected .type-card-icon {
+    @apply bg-primary/10 text-primary;
+  }
+
+  .type-card-content {
+    @apply flex flex-col gap-0.5 min-w-0;
+  }
+
+  .type-card-name {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .type-card-description {
+    @apply text-xs text-muted-foreground line-clamp-2;
+  }
+
+  /* Aspect Ratio Selector */
+  .aspect-ratio-selector {
+    @apply space-y-3;
+  }
+
+  .aspect-ratio-selector-label {
+    @apply block text-sm font-medium text-foreground;
+  }
+
+  .aspect-ratio-selector-grid {
+    @apply grid grid-cols-3 gap-2;
+  }
+
+  .aspect-ratio-card {
+    @apply flex flex-col items-center gap-2 p-3;
+    @apply border border-border rounded-lg;
+    @apply bg-card hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+  }
+
+  .aspect-ratio-card.selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .aspect-ratio-card.disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-card;
+  }
+
+  .aspect-ratio-preview-container {
+    @apply flex items-center justify-center h-8;
+  }
+
+  .aspect-ratio-preview-shape {
+    @apply bg-muted-foreground/20 rounded-sm;
+    @apply border border-muted-foreground/30;
+  }
+
+  .aspect-ratio-card.selected .aspect-ratio-preview-shape {
+    @apply bg-primary/20 border-primary/50;
+  }
+
+  .aspect-ratio-card-content {
+    @apply flex flex-col items-center gap-0.5;
+  }
+
+  .aspect-ratio-card-name {
+    @apply text-xs font-medium text-foreground;
+  }
+
+  .aspect-ratio-card-ratio {
+    @apply text-[10px] text-muted-foreground;
+  }
+
+  /* Custom Instructions */
+  .custom-instructions {
+    @apply space-y-2;
+  }
+
+  .custom-instructions-label {
+    @apply flex items-center gap-2;
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .custom-instructions-optional {
+    @apply text-xs text-muted-foreground font-normal;
+  }
+
+  .custom-instructions-textarea {
+    @apply w-full min-h-[80px] resize-y;
+  }
+
+  .custom-instructions-hint {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Style Options */
+  .style-options {
+    @apply space-y-5;
+  }
+
+  .style-options-section {
+    @apply space-y-2;
+  }
+
+  .style-options-label {
+    @apply flex items-center gap-2;
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .style-options-hint-inline {
+    @apply text-xs text-muted-foreground font-normal;
+  }
+
+  /* Color Scheme Grid */
+  .style-options-color-grid {
+    @apply grid grid-cols-4 gap-2;
+  }
+
+  .style-options-color-card {
+    @apply flex flex-col items-center gap-1.5 p-2;
+    @apply border border-border rounded-lg;
+    @apply bg-card hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+  }
+
+  .style-options-color-card.selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .style-options-color-card.disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-card;
+  }
+
+  .style-options-color-swatches {
+    @apply flex gap-0.5;
+  }
+
+  .style-options-color-swatch {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  .style-options-color-name {
+    @apply text-[10px] text-muted-foreground;
+  }
+
+  /* Emphasis Chips */
+  .style-options-emphasis-grid {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .style-options-emphasis-chip {
+    @apply px-3 py-1.5;
+    @apply text-xs font-medium;
+    @apply border border-border rounded-full;
+    @apply bg-card hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+  }
+
+  .style-options-emphasis-chip.selected {
+    @apply border-primary bg-primary/10 text-primary;
+  }
+
+  .style-options-emphasis-chip.disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-card;
+  }
+
+  /* Layout Density */
+  .style-options-layout-grid {
+    @apply grid grid-cols-3 gap-2;
+  }
+
+  .style-options-layout-card {
+    @apply flex flex-col items-center gap-1 p-2.5;
+    @apply border border-border rounded-lg;
+    @apply bg-card hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+  }
+
+  .style-options-layout-card.selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .style-options-layout-card.disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-card;
+  }
+
+  .style-options-layout-name {
+    @apply text-xs font-medium text-foreground;
+  }
+
+  .style-options-layout-desc {
+    @apply text-[10px] text-muted-foreground text-center;
+  }
+
+  /* Feedback Panel */
+  .feedback-panel {
+    @apply p-4 rounded-lg;
+    @apply bg-blue-500/5 border border-blue-500/20;
+    @apply space-y-3;
+  }
+
+  .feedback-panel-header {
+    @apply flex items-center gap-2;
+  }
+
+  .feedback-panel-title {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .feedback-panel-description {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .feedback-panel-textarea {
+    @apply w-full min-h-[70px] resize-y;
+    @apply bg-background;
+  }
+
+  .feedback-panel-suggestions {
+    @apply space-y-2;
+  }
+
+  .feedback-panel-suggestions-label {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .feedback-panel-suggestions-list {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .feedback-panel-suggestion-chip {
+    @apply px-2.5 py-1;
+    @apply text-xs;
+    @apply border border-border rounded-full;
+    @apply bg-background hover:bg-accent/50;
+    @apply transition-colors cursor-pointer;
+  }
+
+  .feedback-panel-suggestion-chip:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    @apply hover:bg-background;
+  }
+}

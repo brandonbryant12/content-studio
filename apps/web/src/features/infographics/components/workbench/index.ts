@@ -29,3 +29,21 @@ export type {
 
 export { AISuggestionsPanel } from './ai-suggestions-panel';
 export type { AISuggestionsPanelProps } from './ai-suggestions-panel';
+
+export { TypeSelector } from './type-selector';
+export type { TypeSelectorProps } from './type-selector';
+
+export { AspectRatioSelector } from './aspect-ratio-selector';
+export type { AspectRatioSelectorProps } from './aspect-ratio-selector';
+
+export { CustomInstructions } from './custom-instructions';
+export type { CustomInstructionsProps } from './custom-instructions';
+
+export { StyleOptionsPanel } from './style-options';
+export type { StyleOptionsPanelProps } from './style-options';
+
+export { FeedbackPanel } from './feedback-panel';
+export type { FeedbackPanelProps } from './feedback-panel';
+
+export { SettingsPanel } from './settings-panel';
+export type { SettingsPanelProps } from './settings-panel';

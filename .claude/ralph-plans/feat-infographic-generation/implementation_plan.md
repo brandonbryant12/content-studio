@@ -454,15 +454,15 @@ apps/
 ---
 
 ### Task 21: Frontend - Settings Panel
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`, `standards/frontend/forms.md`
 **Acceptance Criteria:**
-- [ ] Create `TypeSelector` - grid of infographic type cards with icons
-- [ ] Create `AspectRatioSelector` - visual aspect ratio options
-- [ ] Create `CustomInstructions` - textarea for custom prompt additions
-- [ ] Create `StyleOptions` - structured feedback options (colors, emphasis, etc.)
-- [ ] Create `FeedbackPanel` - shown after first generation for iteration
-- [ ] All settings sync with `useInfographicSettings` hook
+- [x] Create `TypeSelector` - grid of infographic type cards with icons
+- [x] Create `AspectRatioSelector` - visual aspect ratio options
+- [x] Create `CustomInstructions` - textarea for custom prompt additions
+- [x] Create `StyleOptionsPanel` - structured feedback options (colors, emphasis, etc.)
+- [x] Create `FeedbackPanel` - shown after first generation for iteration
+- [x] All settings sync with `useInfographicSettings` hook (via SettingsPanel wrapper)
 **Details:** [21-frontend-settings-panel.md](./tasks/21-frontend-settings-panel.md)
 
 ---
