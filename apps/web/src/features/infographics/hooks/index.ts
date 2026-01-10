@@ -40,3 +40,12 @@ export {
   type StyleOptions,
   type UseInfographicSettingsReturn,
 } from './use-infographic-settings';
+
+// Text highlight hook
+export {
+  useTextHighlight,
+  type TextSelection,
+  type SelectionPosition,
+  type UseTextHighlightOptions,
+  type UseTextHighlightReturn,
+} from './use-text-highlight';

@@ -409,17 +409,17 @@ apps/
 ---
 
 ### Task 18: Frontend - Text Highlighter
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`
 **Acceptance Criteria:**
-- [ ] Create `TextHighlighter` - renders document text with selection capability
-- [ ] User can click-drag to select text
-- [ ] Selected text shows highlight overlay
-- [ ] "Add Selection" button appears near selection
-- [ ] Existing selections shown with different highlight color
-- [ ] Click existing selection to remove
-- [ ] Create `useTextHighlight` hook for selection state
-- [ ] Enforce 500 character limit per selection with visual feedback
+- [x] Create `TextHighlighter` - renders document text with selection capability
+- [x] User can click-drag to select text
+- [x] Selected text shows highlight overlay
+- [x] "Add Selection" button appears near selection
+- [x] Existing selections shown with different highlight color
+- [x] Click existing selection to remove
+- [x] Create `useTextHighlight` hook for selection state
+- [x] Enforce 500 character limit per selection with visual feedback
 **Details:** [18-frontend-text-highlighter.md](./tasks/18-frontend-text-highlighter.md)
 
 ---

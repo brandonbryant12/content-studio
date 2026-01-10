@@ -21,4 +21,7 @@ export {
   type InfographicDocumentInfo,
   DocumentContentPanel,
   type DocumentContentPanelProps,
+  TextHighlighter,
+  type TextHighlighterProps,
+  type ExistingSelection,
 } from './workbench';

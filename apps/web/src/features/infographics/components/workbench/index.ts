@@ -14,3 +14,9 @@ export type {
 
 export { DocumentContentPanel } from './document-content-panel';
 export type { DocumentContentPanelProps } from './document-content-panel';
+
+export { TextHighlighter } from './text-highlighter';
+export type {
+  TextHighlighterProps,
+  ExistingSelection,
+} from './text-highlighter';

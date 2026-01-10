@@ -1421,6 +1421,61 @@
   }
 
   /* -----------------------------------------
+     TEXT HIGHLIGHTER
+     ----------------------------------------- */
+  .text-highlighter {
+    @apply relative h-full overflow-hidden;
+  }
+
+  .text-highlighter-content {
+    @apply h-full overflow-auto p-4 text-sm leading-relaxed whitespace-pre-wrap font-sans text-foreground select-text cursor-text;
+  }
+
+  .selection-popup {
+    @apply flex flex-col items-center gap-1;
+  }
+
+  .selection-button {
+    @apply shadow-md;
+  }
+
+  .selection-counter {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .selection-counter.warning {
+    @apply text-amber-600;
+  }
+
+  .selection-counter.error {
+    @apply text-destructive;
+  }
+
+  .selection-highlight {
+    @apply relative inline cursor-pointer transition-colors;
+    background-color: hsl(var(--primary) / 0.15);
+    border-radius: 2px;
+    padding: 1px 0;
+  }
+
+  .selection-highlight:hover {
+    background-color: hsl(var(--primary) / 0.25);
+  }
+
+  .selection-highlight.disabled {
+    @apply cursor-default;
+    background-color: hsl(var(--primary) / 0.1);
+  }
+
+  .selection-highlight-remove {
+    @apply absolute -top-2 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity flex items-center justify-center;
+  }
+
+  .selection-highlight:hover .selection-highlight-remove {
+    @apply opacity-100;
+  }
+
+  /* -----------------------------------------
      PODCAST SETTINGS
      ----------------------------------------- */
   .settings-section {
