@@ -16,4 +16,9 @@ export {
   type InfographicWorkbenchLayoutProps,
   InfographicActionBar,
   type InfographicActionBarProps,
+  DocumentSelector,
+  type DocumentSelectorProps,
+  type InfographicDocumentInfo,
+  DocumentContentPanel,
+  type DocumentContentPanelProps,
 } from './workbench';

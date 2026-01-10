@@ -395,15 +395,15 @@ apps/
 ---
 
 ### Task 17: Frontend - Document Selection Panel
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/frontend/components.md`
 **Acceptance Criteria:**
-- [ ] Create `DocumentSelector` - dropdown/modal to add documents to workbench
-- [ ] Create `DocumentContentPanel` - displays document text for highlighting
-- [ ] Tabs to switch between added documents
-- [ ] Document content scrollable with visible text
-- [ ] "Add Document" button opens selector
-- [ ] Remove document button (if > 1 document)
+- [x] Create `DocumentSelector` - dropdown/modal to add documents to workbench
+- [x] Create `DocumentContentPanel` - displays document text for highlighting
+- [x] Tabs to switch between added documents
+- [x] Document content scrollable with visible text
+- [x] "Add Document" button opens selector
+- [x] Remove document button (if > 1 document)
 **Details:** [17-frontend-document-panel.md](./tasks/17-frontend-document-panel.md)
 
 ---
