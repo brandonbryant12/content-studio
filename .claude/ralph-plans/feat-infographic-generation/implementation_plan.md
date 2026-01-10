@@ -201,16 +201,17 @@ apps/
 ---
 
 ### Task 05: Core Use Cases (CRUD)
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETED
 **Standards:** `standards/patterns/use-case.md`, `standards/patterns/error-handling.md`
 **Acceptance Criteria:**
-- [ ] Create `createInfographic.ts` - validates documents owned by user, creates in drafting status
-- [ ] Create `getInfographic.ts` - retrieves with selections and documents
-- [ ] Create `updateInfographic.ts` - updates settings (title, type, aspectRatio, instructions)
-- [ ] Create `deleteInfographic.ts` - cascading delete with selections
-- [ ] Create `listInfographics.ts` - paginated list for user
-- [ ] All use cases follow Effect pattern with proper error types
-- [ ] Add tracing spans with infographic.id attribute
+- [x] Create `createInfographic.ts` - validates documents owned by user, creates in drafting status
+- [x] Create `getInfographic.ts` - retrieves with selections, validates ownership
+- [x] Create `updateInfographic.ts` - updates settings (title, type, aspectRatio, instructions, styleOptions)
+- [x] Create `deleteInfographic.ts` - validates ownership, cascade delete handled by FK
+- [x] Create `listInfographics.ts` - paginated list for user with total count
+- [x] All use cases follow Effect pattern with inferred error types
+- [x] Add tracing spans with infographic.id and user.id attributes
+- [x] Export all use cases and types from @repo/media
 **Details:** [05-core-use-cases.md](./tasks/05-core-use-cases.md)
 
 ---

@@ -24,3 +24,19 @@ export {
   type InsertSelection,
   type UpdateSelection,
 } from './repos';
+
+// Use Cases
+export {
+  createInfographic,
+  getInfographic,
+  updateInfographic,
+  deleteInfographic,
+  listInfographics,
+  type CreateInfographicInput,
+  type GetInfographicInput,
+  type UpdateInfographicInput,
+  type DeleteInfographicInput,
+  type DeleteInfographicResult,
+  type ListInfographicsInput,
+  type ListInfographicsResult,
+} from './use-cases';

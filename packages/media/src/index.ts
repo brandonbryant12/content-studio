@@ -154,6 +154,22 @@ export {
   type BuildPromptInput,
 } from './infographic';
 
+// Infographic module - Use Cases
+export {
+  createInfographic,
+  getInfographic,
+  updateInfographic,
+  deleteInfographic,
+  listInfographics,
+  type CreateInfographicInput,
+  type GetInfographicInput,
+  type UpdateInfographicInput,
+  type DeleteInfographicInput,
+  type DeleteInfographicResult,
+  type ListInfographicsInput,
+  type ListInfographicsResult,
+} from './infographic';
+
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import {
