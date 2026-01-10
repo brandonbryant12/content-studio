@@ -27,11 +27,21 @@ export {
 
 // Use Cases
 export {
+  // CRUD
   createInfographic,
   getInfographic,
   updateInfographic,
   deleteInfographic,
   listInfographics,
+  // Selection operations
+  addSelection,
+  removeSelection,
+  updateSelection,
+  reorderSelections,
+  // Constants
+  MAX_SELECTION_LENGTH,
+  SELECTION_SOFT_LIMIT,
+  // Types
   type CreateInfographicInput,
   type GetInfographicInput,
   type UpdateInfographicInput,
@@ -39,4 +49,9 @@ export {
   type DeleteInfographicResult,
   type ListInfographicsInput,
   type ListInfographicsResult,
+  type AddSelectionInput,
+  type AddSelectionResult,
+  type RemoveSelectionInput,
+  type UpdateSelectionInput,
+  type ReorderSelectionsInput,
 } from './use-cases';

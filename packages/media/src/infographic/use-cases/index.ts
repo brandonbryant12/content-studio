@@ -25,3 +25,27 @@ export {
   type ListInfographicsInput,
   type ListInfographicsResult,
 } from './list-infographics';
+
+// Selection operations
+export {
+  addSelection,
+  MAX_SELECTION_LENGTH,
+  SELECTION_SOFT_LIMIT,
+  type AddSelectionInput,
+  type AddSelectionResult,
+} from './add-selection';
+
+export {
+  removeSelection,
+  type RemoveSelectionInput,
+} from './remove-selection';
+
+export {
+  updateSelection,
+  type UpdateSelectionInput,
+} from './update-selection';
+
+export {
+  reorderSelections,
+  type ReorderSelectionsInput,
+} from './reorder-selections';

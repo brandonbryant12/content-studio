@@ -592,6 +592,27 @@ export class InvalidInfographicGeneration extends Schema.TaggedError<InvalidInfo
   }
 }
 
+/**
+ * Selection text exceeds character limit.
+ */
+export class SelectionTextTooLong extends Schema.TaggedError<SelectionTextTooLong>()(
+  'SelectionTextTooLong',
+  {
+    textLength: Schema.Number,
+    maxLength: Schema.Number,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'SELECTION_TEXT_TOO_LONG' as const;
+  static readonly httpMessage = (e: SelectionTextTooLong) =>
+    e.message ?? `Selection text exceeds maximum of ${e.maxLength} characters`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: SelectionTextTooLong) {
+    return { textLength: e.textLength, maxLength: e.maxLength };
+  }
+}
+
 // =============================================================================
 // Error Union Types
 // =============================================================================
@@ -627,4 +648,5 @@ export type MediaError =
   | InfographicError
   | NotInfographicOwner
   | InfographicSelectionNotFound
-  | InvalidInfographicGeneration;
+  | InvalidInfographicGeneration
+  | SelectionTextTooLong;
