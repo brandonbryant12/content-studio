@@ -3,13 +3,14 @@
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo } from 'react';
-import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Select } from '@repo/ui/components/select';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useDocumentList } from '@/features/documents/hooks/use-document-list';
+import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useCreateInfographic } from '@/features/infographics/hooks/use-create-infographic';
 
 export const Route = createFileRoute('/_protected/infographics/new')({
@@ -82,6 +83,7 @@ function NewInfographicPage() {
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   // Data fetching
   const { data: documents = [], isLoading: isLoadingDocuments } =
@@ -191,12 +193,23 @@ function NewInfographicPage() {
 
         {/* Document Selection */}
         <div className="space-y-4">
-          <div>
-            <Label>Source Documents</Label>
-            <p className="text-sm text-muted-foreground mt-1">
-              Select one or more documents to use as sources for your
-              infographic.
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <Label>Source Documents</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Select one or more documents to use as sources for your
+                infographic.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsUploadDialogOpen(true)}
+            >
+              <PlusIcon className="w-4 h-4 mr-1" />
+              Upload
+            </Button>
           </div>
 
           {/* Selection counter */}
@@ -226,11 +239,19 @@ function NewInfographicPage() {
               <Spinner className="w-6 h-6" />
             </div>
           ) : documents.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
               <p>No documents available.</p>
-              <p className="text-sm mt-1">
-                Upload documents first to create an infographic.
+              <p className="text-sm mt-1 mb-3">
+                Upload a document to get started.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsUploadDialogOpen(true)}
+              >
+                <PlusIcon className="w-4 h-4 mr-1" />
+                Upload Document
+              </Button>
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -272,6 +293,12 @@ function NewInfographicPage() {
             </div>
           )}
         </div>
+
+        {/* Upload Document Dialog */}
+        <UploadDocumentDialog
+          open={isUploadDialogOpen}
+          onOpenChange={setIsUploadDialogOpen}
+        />
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t">

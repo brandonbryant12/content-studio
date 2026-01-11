@@ -2,10 +2,10 @@
 // Container: Handles data fetching, state management, and mutations
 
 import { useState, useCallback } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useInfographicList } from '../hooks/use-infographic-list';
-import { useCreateInfographic } from '../hooks/use-create-infographic';
 import { useOptimisticDelete as useDeleteInfographic } from '../hooks/use-optimistic-delete';
 import { InfographicList } from './infographic-list';
 import type { InfographicListItem } from './infographic-item';
@@ -15,6 +15,7 @@ import type { InfographicListItem } from './infographic-item';
  * Manages search state and delete confirmation.
  */
 export function InfographicListContainer() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -35,18 +36,12 @@ export function InfographicListContainer() {
     })) ?? [];
 
   // Mutations
-  const createMutation = useCreateInfographic();
   const deleteMutation = useDeleteInfographic();
 
   const handleCreate = useCallback(() => {
-    // For now, create with minimal required fields
-    // This will be replaced with a proper creation flow in later tasks
-    createMutation.mutate({
-      title: 'Untitled Infographic',
-      infographicType: 'list',
-      documentIds: [], // TODO: Will need document selection
-    });
-  }, [createMutation]);
+    // Navigate to the new infographic page for document selection
+    navigate({ to: '/infographics/new' });
+  }, [navigate]);
 
   const handleDeleteClick = useCallback((id: string) => {
     setConfirmDeleteId(id);
@@ -118,7 +113,7 @@ export function InfographicListContainer() {
       <InfographicList
         infographics={infographics}
         searchQuery={searchQuery}
-        isCreating={createMutation.isPending}
+        isCreating={false}
         deletingId={deletingId}
         onSearch={handleSearch}
         onCreate={handleCreate}
