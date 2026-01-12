@@ -180,6 +180,7 @@ const createMockQueue = (
     processJobById: () => Effect.die('not implemented'),
     findPendingJobForPodcast: () => Effect.die('not implemented'),
     findPendingJobForVoiceover: () => Effect.succeed(state.pendingJob ?? null),
+    findPendingJobForInfographic: () => Effect.succeed(null),
     deleteJob: () => Effect.die('not implemented'),
   };
 

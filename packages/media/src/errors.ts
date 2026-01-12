@@ -490,6 +490,130 @@ export class InvalidVoiceoverAudioGeneration extends Schema.TaggedError<InvalidV
 }
 
 // =============================================================================
+// Infographic Errors
+// =============================================================================
+
+/**
+ * Infographic not found.
+ */
+export class InfographicNotFound extends Schema.TaggedError<InfographicNotFound>()(
+  'InfographicNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'INFOGRAPHIC_NOT_FOUND' as const;
+  static readonly httpMessage = (e: InfographicNotFound) =>
+    e.message ?? `Infographic ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: InfographicNotFound) {
+    return { infographicId: e.id };
+  }
+}
+
+/**
+ * Infographic operation failure.
+ */
+export class InfographicError extends Schema.TaggedError<InfographicError>()(
+  'InfographicError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Infographic operation failed';
+  static readonly logLevel = 'error-with-stack' as const;
+}
+
+/**
+ * User is not the owner of the infographic.
+ */
+export class NotInfographicOwner extends Schema.TaggedError<NotInfographicOwner>()(
+  'NotInfographicOwner',
+  {
+    infographicId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_INFOGRAPHIC_OWNER' as const;
+  static readonly httpMessage = (e: NotInfographicOwner) =>
+    e.message ?? 'Only the infographic owner can perform this action';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotInfographicOwner) {
+    return { infographicId: e.infographicId };
+  }
+}
+
+/**
+ * Infographic selection not found.
+ */
+export class InfographicSelectionNotFound extends Schema.TaggedError<InfographicSelectionNotFound>()(
+  'InfographicSelectionNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'INFOGRAPHIC_SELECTION_NOT_FOUND' as const;
+  static readonly httpMessage = (e: InfographicSelectionNotFound) =>
+    e.message ?? `Selection ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: InfographicSelectionNotFound) {
+    return { selectionId: e.id };
+  }
+}
+
+/**
+ * Invalid infographic generation.
+ * No selections or invalid state.
+ */
+export class InvalidInfographicGeneration extends Schema.TaggedError<InvalidInfographicGeneration>()(
+  'InvalidInfographicGeneration',
+  {
+    infographicId: Schema.String,
+    reason: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'INVALID_INFOGRAPHIC_GENERATION' as const;
+  static readonly httpMessage = (e: InvalidInfographicGeneration) =>
+    e.message ?? e.reason;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: InvalidInfographicGeneration) {
+    return { infographicId: e.infographicId, reason: e.reason };
+  }
+}
+
+/**
+ * Selection text exceeds character limit.
+ */
+export class SelectionTextTooLong extends Schema.TaggedError<SelectionTextTooLong>()(
+  'SelectionTextTooLong',
+  {
+    textLength: Schema.Number,
+    maxLength: Schema.Number,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'SELECTION_TEXT_TOO_LONG' as const;
+  static readonly httpMessage = (e: SelectionTextTooLong) =>
+    e.message ?? `Selection text exceeds maximum of ${e.maxLength} characters`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: SelectionTextTooLong) {
+    return { textLength: e.textLength, maxLength: e.maxLength };
+  }
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -519,4 +643,10 @@ export type MediaError =
   | VoiceoverCollaboratorAlreadyExists
   | VoiceoverCollaboratorNotFound
   | CannotAddOwnerAsVoiceoverCollaborator
-  | InvalidVoiceoverAudioGeneration;
+  | InvalidVoiceoverAudioGeneration
+  | InfographicNotFound
+  | InfographicError
+  | NotInfographicOwner
+  | InfographicSelectionNotFound
+  | InvalidInfographicGeneration
+  | SelectionTextTooLong;

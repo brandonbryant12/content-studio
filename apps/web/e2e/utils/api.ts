@@ -45,6 +45,58 @@ interface VoiceoverCollaborator {
   hasApproved: boolean;
 }
 
+interface Infographic {
+  id: string;
+  title: string;
+  status: string;
+  infographicType: string;
+  aspectRatio: string;
+  customInstructions: string | null;
+  feedbackInstructions: string | null;
+  styleOptions: object | null;
+  imageUrl: string | null;
+  errorMessage: string | null;
+  sourceDocumentIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  selections: InfographicSelection[];
+}
+
+interface InfographicListItem {
+  id: string;
+  title: string;
+  status: string;
+  infographicType: string;
+  aspectRatio: string;
+  imageUrl: string | null;
+  createdAt: string;
+}
+
+interface InfographicSelection {
+  id: string;
+  infographicId: string;
+  documentId: string;
+  documentTitle: string;
+  selectedText: string;
+  startOffset: number | null;
+  endOffset: number | null;
+  orderIndex: number;
+  createdAt: string;
+}
+
+interface AddSelectionResult {
+  selection: InfographicSelection;
+  warningMessage: string | null;
+}
+
+interface KeyPointSuggestion {
+  text: string;
+  documentId: string;
+  documentTitle: string;
+  relevance: 'high' | 'medium';
+  category?: string;
+}
+
 export class ApiHelper {
   private request: APIRequestContext;
   private baseURL: string;
@@ -397,6 +449,199 @@ export class ApiHelper {
     return { isOwner: true }; // Assume owner for now
   }
 
+  // Infographics
+
+  /**
+   * List all infographics
+   */
+  async listInfographics(): Promise<InfographicListItem[]> {
+    const result = await this.get<{ items: InfographicListItem[] }>(
+      '/infographics',
+    );
+    return result.items;
+  }
+
+  /**
+   * Get an infographic by ID
+   */
+  async getInfographic(id: string): Promise<Infographic> {
+    return this.get<Infographic>(`/infographics/${id}`);
+  }
+
+  /**
+   * Create an infographic
+   */
+  async createInfographic(data: {
+    title: string;
+    infographicType: string;
+    documentIds: string[];
+    aspectRatio?: string;
+  }): Promise<Infographic> {
+    return this.post<Infographic>('/infographics', {
+      title: data.title,
+      infographicType: data.infographicType,
+      documentIds: data.documentIds,
+      aspectRatio: data.aspectRatio ?? '16:9',
+    });
+  }
+
+  /**
+   * Update an infographic
+   */
+  async updateInfographic(
+    id: string,
+    data: {
+      title?: string;
+      infographicType?: string;
+      aspectRatio?: string;
+      customInstructions?: string;
+      styleOptions?: object;
+      documentIds?: string[];
+    },
+  ): Promise<Infographic> {
+    const response = await this.request.patch(
+      `${this.apiURL}/infographics/${id}`,
+      {
+        data,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+
+    if (!response.ok()) {
+      const text = await response.text();
+      throw new Error(
+        `PATCH /infographics/${id} failed: ${response.status()} ${text}`,
+      );
+    }
+
+    return response.json() as Promise<Infographic>;
+  }
+
+  /**
+   * Delete an infographic by ID
+   */
+  async deleteInfographic(id: string): Promise<void> {
+    await this.delete(`/infographics/${id}`);
+  }
+
+  /**
+   * Delete all infographics (useful for test cleanup)
+   * Ignores errors for individual deletions (race conditions)
+   */
+  async deleteAllInfographics(): Promise<void> {
+    const infographics = await this.listInfographics();
+    for (const infographic of infographics) {
+      try {
+        await this.deleteInfographic(infographic.id);
+      } catch {
+        // Ignore errors - infographic may have been deleted by another test
+      }
+    }
+  }
+
+  // Infographic Selections
+
+  /**
+   * Add a selection to an infographic
+   */
+  async addSelection(
+    infographicId: string,
+    data: {
+      documentId: string;
+      selectedText: string;
+      startOffset?: number;
+      endOffset?: number;
+    },
+  ): Promise<AddSelectionResult> {
+    return this.post<AddSelectionResult>(
+      `/infographics/${infographicId}/selections`,
+      data,
+    );
+  }
+
+  /**
+   * Remove a selection from an infographic
+   */
+  async removeSelection(
+    infographicId: string,
+    selectionId: string,
+  ): Promise<void> {
+    await this.delete(
+      `/infographics/${infographicId}/selections/${selectionId}`,
+    );
+  }
+
+  /**
+   * Reorder selections
+   */
+  async reorderSelections(
+    infographicId: string,
+    orderedSelectionIds: string[],
+  ): Promise<{ selections: InfographicSelection[] }> {
+    return this.post<{ selections: InfographicSelection[] }>(
+      `/infographics/${infographicId}/selections/reorder`,
+      { orderedSelectionIds },
+    );
+  }
+
+  // Infographic AI & Generation
+
+  /**
+   * Extract key points using AI
+   */
+  async extractKeyPoints(
+    infographicId: string,
+  ): Promise<{ suggestions: KeyPointSuggestion[] }> {
+    return this.post<{ suggestions: KeyPointSuggestion[] }>(
+      `/infographics/${infographicId}/extract-key-points`,
+    );
+  }
+
+  /**
+   * Trigger infographic generation
+   */
+  async generateInfographic(
+    id: string,
+    data?: { feedbackInstructions?: string },
+  ): Promise<{ jobId: string; status: string }> {
+    return this.post<{ jobId: string; status: string }>(
+      `/infographics/${id}/generate`,
+      data ?? {},
+    );
+  }
+
+  /**
+   * Get job status
+   */
+  async getInfographicJob(
+    jobId: string,
+  ): Promise<{ id: string; status: string; result?: object; error?: string }> {
+    return this.get<{
+      id: string;
+      status: string;
+      result?: object;
+      error?: string;
+    }>(`/infographics/jobs/${jobId}`);
+  }
+
+  /**
+   * Poll job until completion
+   */
+  async waitForInfographicJob(
+    jobId: string,
+    timeout = 60000,
+  ): Promise<{ id: string; status: string; result?: object; error?: string }> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+      const job = await this.getInfographicJob(jobId);
+      if (job.status === 'completed' || job.status === 'failed') {
+        return job;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error(`Job ${jobId} timed out after ${timeout}ms`);
+  }
+
   // Cleanup
 
   /**
@@ -404,6 +649,7 @@ export class ApiHelper {
    * Call this in afterEach or afterAll to reset state
    */
   async cleanupAll(): Promise<void> {
+    await this.deleteAllInfographics();
     await this.deleteAllPodcasts();
     await this.deleteAllVoiceovers();
     await this.deleteAllDocuments();

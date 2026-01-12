@@ -4,6 +4,7 @@ export * from './schemas/auth';
 export * from './schemas/documents';
 export * from './schemas/podcasts';
 export * from './schemas/voiceovers';
+export * from './schemas/infographics';
 export * from './schemas/jobs';
 export * from './schemas/storage';
 export * from './schemas/media-types';

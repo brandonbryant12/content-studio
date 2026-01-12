@@ -1,6 +1,7 @@
 import {
   FileTextIcon,
   HomeIcon,
+  ImageIcon,
   MixerHorizontalIcon,
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
@@ -86,6 +87,22 @@ function Sidebar() {
           title="Voiceovers"
         >
           <SpeakerLoudIcon className="w-5 h-5" />
+        </Link>
+
+        <Link
+          to="/infographics"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          activeProps={{
+            className:
+              'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
+          }}
+          inactiveProps={{
+            className:
+              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+          }}
+          title="Infographics"
+        >
+          <ImageIcon className="w-5 h-5" />
         </Link>
       </nav>
 
