@@ -96,7 +96,12 @@
       "mcp__playwriter__reset",
       "Bash(git -C /Users/brandon/Development/content-studio log --oneline -15)",
       "WebFetch(domain:www.effect.solutions)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git worktree:*)",
+      "Skill(remotion-best-practices)",
+      "WebFetch(domain:www.remotion.dev)",
+      "Bash(npx agent-browser:*)",
+      "Bash(agent-browser:*)"
     ],
     "deny": [],
     "ask": []
