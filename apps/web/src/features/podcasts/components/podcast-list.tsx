@@ -1,7 +1,7 @@
 // features/podcasts/components/podcast-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { useCallback, useMemo, type ChangeEvent } from 'react';
+import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
@@ -82,6 +82,9 @@ export function PodcastList({
   onCreate,
   onDelete,
 }: PodcastListProps) {
+  // Use transition for non-urgent search updates (rerender-transitions)
+  const [isPending, startTransition] = useTransition();
+
   const filteredPodcasts = useMemo(
     () =>
       podcasts.filter((podcast) =>
@@ -91,7 +94,13 @@ export function PodcastList({
   );
 
   const handleSearchChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => onSearch(e.target.value),
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      // Wrap in transition to keep input responsive during filtering
+      startTransition(() => {
+        onSearch(value);
+      });
+    },
     [onSearch],
   );
 
@@ -139,7 +148,9 @@ export function PodcastList({
       ) : hasNoResults ? (
         <NoResults searchQuery={searchQuery} />
       ) : (
-        <div className="space-y-2">
+        <div
+          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+        >
           {filteredPodcasts.map((podcast) => (
             <PodcastItem
               key={podcast.id}

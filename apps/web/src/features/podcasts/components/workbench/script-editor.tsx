@@ -14,7 +14,7 @@ import {
 } from '@dnd-kit/sortable';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { AddSegmentDialog } from './add-segment-dialog';
 import { SegmentItem } from './segment-item';
@@ -54,16 +54,22 @@ export function ScriptEditor({
     }),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = segments.findIndex((s) => s.index === active.id);
-      const newIndex = segments.findIndex((s) => s.index === over.id);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        onReorderSegments(oldIndex, newIndex);
+  // Memoize segment IDs to prevent SortableContext re-renders (rerender-memo)
+  const segmentIds = useMemo(() => segments.map((s) => s.index), [segments]);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = segments.findIndex((s) => s.index === active.id);
+        const newIndex = segments.findIndex((s) => s.index === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          onReorderSegments(oldIndex, newIndex);
+        }
       }
-    }
-  };
+    },
+    [segments, onReorderSegments],
+  );
 
   const handleStartEdit = useCallback((segmentIndex: number) => {
     setEditingIndex(segmentIndex);
@@ -126,7 +132,7 @@ export function ScriptEditor({
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={segments.map((s) => s.index)}
+          items={segmentIds}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">

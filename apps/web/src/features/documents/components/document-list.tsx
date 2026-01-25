@@ -1,7 +1,7 @@
 // features/documents/components/document-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useTransition } from 'react';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -63,6 +63,9 @@ export function DocumentList({
   onUploadOpen,
   onDelete,
 }: DocumentListProps) {
+  // Use transition for non-urgent search updates (rerender-transitions)
+  const [isPending, startTransition] = useTransition();
+
   const filteredDocuments = useMemo(
     () =>
       documents.filter((doc) =>
@@ -73,7 +76,11 @@ export function DocumentList({
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      onSearch(e.target.value);
+      const value = e.target.value;
+      // Wrap in transition to keep input responsive during filtering
+      startTransition(() => {
+        onSearch(value);
+      });
     },
     [onSearch],
   );
@@ -121,7 +128,9 @@ export function DocumentList({
       ) : hasNoResults ? (
         <EmptyState hasSearch={true} />
       ) : (
-        <div className="space-y-2">
+        <div
+          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+        >
           {filteredDocuments.map((doc) => (
             <DocumentItem
               key={doc.id}

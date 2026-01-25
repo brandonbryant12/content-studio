@@ -1,7 +1,7 @@
 // features/voiceovers/components/voiceover-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { useCallback, useMemo, type ChangeEvent } from 'react';
+import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
@@ -83,6 +83,9 @@ export function VoiceoverList({
   onCreate,
   onDelete,
 }: VoiceoverListProps) {
+  // Use transition for non-urgent search updates (rerender-transitions)
+  const [isPending, startTransition] = useTransition();
+
   const filteredVoiceovers = useMemo(
     () =>
       voiceovers.filter((voiceover) =>
@@ -93,7 +96,11 @@ export function VoiceoverList({
 
   const handleSearch = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      onSearch(e.target.value);
+      const value = e.target.value;
+      // Wrap in transition to keep input responsive during filtering
+      startTransition(() => {
+        onSearch(value);
+      });
     },
     [onSearch],
   );
@@ -143,7 +150,9 @@ export function VoiceoverList({
       ) : hasNoResults ? (
         <NoResults searchQuery={searchQuery} />
       ) : (
-        <div className="space-y-2">
+        <div
+          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+        >
           {filteredVoiceovers.map((voiceover) => (
             <VoiceoverItem
               key={voiceover.id}
