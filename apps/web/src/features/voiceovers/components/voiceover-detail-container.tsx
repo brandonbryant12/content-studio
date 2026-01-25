@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useState, useMemo } from 'react';
+import { lazy, Suspense, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -14,11 +14,16 @@ import {
 import { useVoiceover } from '../hooks/use-voiceover';
 import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
 import { useOptimisticGeneration } from '../hooks/use-optimistic-generation';
-import { useCollaborators } from '../hooks/use-collaborators';
-import { useApproveVoiceover } from '../hooks/use-approve-voiceover';
+import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
 import { isGeneratingStatus } from '../lib/status';
 import { VoiceoverDetail } from './voiceover-detail';
-import { AddCollaboratorDialog } from './collaborators';
+
+// Dynamic import for collaborator dialog (only needed when opened)
+const AddCollaboratorDialog = lazy(() =>
+  import('./collaborators/add-collaborator-dialog').then((m) => ({
+    default: m.AddCollaboratorDialog,
+  })),
+);
 
 interface VoiceoverDetailContainerProps {
   voiceoverId: string;
@@ -35,17 +40,17 @@ export function VoiceoverDetailContainer({
 
   // Data fetching (Suspense handles loading)
   const { data: voiceover } = useVoiceover(voiceoverId);
-  const { data: collaborators } = useCollaborators(voiceoverId);
 
-  // Dialog state
-  const [isCollaboratorDialogOpen, setCollaboratorDialogOpen] = useState(false);
-
-  // State management via custom hook
+  // State management via custom hooks
   const settings = useVoiceoverSettings({ voiceover });
+  const collaboratorManagement = useCollaboratorManagement(
+    voiceover,
+    currentUserId,
+    user,
+  );
 
   // Mutations
   const generateMutation = useOptimisticGeneration(voiceoverId);
-  const { approve, revoke } = useApproveVoiceover(voiceoverId, currentUserId);
 
   const deleteMutation = useMutation(
     apiClient.voiceovers.delete.mutationOptions({
@@ -64,39 +69,6 @@ export function VoiceoverDetailContainer({
   const isPendingGeneration = generateMutation.isPending;
   const hasText = settings.text.trim().length > 0;
 
-  // Owner info for collaborator display
-  const owner = useMemo(
-    () => ({
-      id: voiceover.createdBy,
-      name: user?.id === voiceover.createdBy ? (user?.name ?? 'You') : 'Owner',
-      image: user?.id === voiceover.createdBy ? user?.image : undefined,
-      hasApproved: voiceover.ownerHasApproved,
-    }),
-    [
-      voiceover.createdBy,
-      voiceover.ownerHasApproved,
-      user?.id,
-      user?.name,
-      user?.image,
-    ],
-  );
-
-  // Check if current user has approved
-  const currentUserHasApproved = useMemo(() => {
-    if (currentUserId === voiceover.createdBy) {
-      return voiceover.ownerHasApproved;
-    }
-    const userCollaborator = collaborators.find(
-      (c) => c.userId === currentUserId,
-    );
-    return userCollaborator?.hasApproved ?? false;
-  }, [
-    currentUserId,
-    voiceover.createdBy,
-    voiceover.ownerHasApproved,
-    collaborators,
-  ]);
-
   // Handler to generate audio (saves first if there are changes)
   const handleGenerate = useCallback(async () => {
     if (isPendingGeneration || isGenerating) return;
@@ -108,32 +80,11 @@ export function VoiceoverDetailContainer({
 
     // Then generate
     generateMutation.mutate({ id: voiceover.id });
-  }, [
-    isPendingGeneration,
-    isGenerating,
-    settings,
-    generateMutation,
-    voiceover.id,
-  ]);
+  }, [isPendingGeneration, isGenerating, settings, generateMutation, voiceover.id]);
 
   const handleDelete = useCallback(() => {
     deleteMutation.mutate({ id: voiceover.id });
   }, [deleteMutation, voiceover.id]);
-
-  const handleManageCollaborators = useCallback(() => {
-    setCollaboratorDialogOpen(true);
-  }, []);
-
-  // Approval handlers
-  const handleApprove = useCallback(() => {
-    approve.mutate({ id: voiceover.id });
-  }, [approve, voiceover.id]);
-
-  const handleRevoke = useCallback(() => {
-    revoke.mutate({ id: voiceover.id });
-  }, [revoke, voiceover.id]);
-
-  const isApprovalPending = approve.isPending || revoke.isPending;
 
   // Keyboard shortcut: Cmd/Ctrl+S to save and generate
   useKeyboardShortcut({
@@ -172,22 +123,24 @@ export function VoiceoverDetailContainer({
         onGenerate={handleGenerate}
         onDelete={handleDelete}
         currentUserId={currentUserId}
-        owner={owner}
-        collaborators={collaborators}
-        currentUserHasApproved={currentUserHasApproved}
-        onManageCollaborators={handleManageCollaborators}
-        onApprove={handleApprove}
-        onRevoke={handleRevoke}
-        isApprovalPending={isApprovalPending}
+        owner={collaboratorManagement.owner}
+        collaborators={collaboratorManagement.collaborators}
+        currentUserHasApproved={collaboratorManagement.currentUserHasApproved}
+        onManageCollaborators={collaboratorManagement.openAddDialog}
+        onApprove={collaboratorManagement.handleApprove}
+        onRevoke={collaboratorManagement.handleRevoke}
+        isApprovalPending={collaboratorManagement.isApprovalPending}
       />
 
       {/* Collaborator management dialog (only for owner) */}
-      {isOwner && (
-        <AddCollaboratorDialog
-          voiceoverId={voiceoverId}
-          isOpen={isCollaboratorDialogOpen}
-          onClose={() => setCollaboratorDialogOpen(false)}
-        />
+      {isOwner && collaboratorManagement.isAddDialogOpen && (
+        <Suspense fallback={null}>
+          <AddCollaboratorDialog
+            voiceoverId={voiceoverId}
+            isOpen={collaboratorManagement.isAddDialogOpen}
+            onClose={collaboratorManagement.closeAddDialog}
+          />
+        </Suspense>
       )}
     </>
   );

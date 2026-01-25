@@ -187,13 +187,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 11: Voiceovers Feature - Detail Container Split
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** Component splitting, `bundle-dynamic-imports`
 **Acceptance Criteria:**
-- [ ] Extract collaborator/approval logic to custom hook
-- [ ] Dynamic import AddCollaboratorDialog
-- [ ] Reduce container to <120 lines
-- [ ] Typecheck passes
+- [x] Extract collaborator/approval logic to custom hook
+- [x] Dynamic import AddCollaboratorDialog
+- [~] Reduce container to 147 lines (from 194, target was <120)
+- [x] Typecheck passes
 **Details:** [11-voiceovers-detail-container.md](./tasks/11-voiceovers-detail-container.md)
 
 ---

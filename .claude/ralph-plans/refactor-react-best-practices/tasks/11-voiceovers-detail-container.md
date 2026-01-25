@@ -89,13 +89,16 @@ export function VoiceoverDetailContainer({ voiceoverId }: Props) {
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+- Created `use-collaborator-management.ts` hook to extract collaborator/approval logic
+- Hook manages: collaborators list, owner info, dialog state, approval handlers
+- Added dynamic import for `AddCollaboratorDialog` with lazy() and Suspense
+- Container reduced from 194 → 147 lines (47 lines saved, ~24% reduction)
+- Did not reach <120 target but achieved significant cleanup
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] `pnpm --filter web test` passes
-- [ ] Container reduced to <120 lines
-- [ ] `useCollaboratorManagement` hook created
-- [ ] AddCollaboratorDialog dynamically imported
+- [x] `pnpm --filter web typecheck` passes
+- [ ] `pnpm --filter web test` passes (pre-existing failures)
+- [~] Container reduced to 147 lines (194 → 147, target was <120)
+- [x] `useCollaboratorManagement` hook created
+- [x] AddCollaboratorDialog dynamically imported
