@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 
 interface KeyboardShortcutOptions {
   /** Key to listen for (e.g., 's', 'Enter', 'Escape') */
@@ -27,9 +27,23 @@ export function useKeyboardShortcut({
   onTrigger,
   enabled = true,
 }: KeyboardShortcutOptions) {
+  // Use refs for values that shouldn't cause callback recreation
+  const enabledRef = useRef(enabled);
+  const onTriggerRef = useRef(onTrigger);
+
+  // Keep refs up to date
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    onTriggerRef.current = onTrigger;
+  }, [onTrigger]);
+
+  // Stable callback - only changes when key modifiers change
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!enabled) return;
+      if (!enabledRef.current) return;
 
       // Check if modifier requirements are met (exact match when specified)
       const cmdCtrlMatch = cmdOrCtrl ? e.metaKey || e.ctrlKey : true;
@@ -47,16 +61,14 @@ export function useKeyboardShortcut({
         (cmdOrCtrl || noUnwantedModifiers)
       ) {
         e.preventDefault();
-        onTrigger();
+        onTriggerRef.current();
       }
     },
-    [key, cmdOrCtrl, shift, alt, onTrigger, enabled],
+    [key, cmdOrCtrl, shift, alt],
   );
 
   useEffect(() => {
-    if (!enabled) return;
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown, enabled]);
+  }, [handleKeyDown]);
 }
