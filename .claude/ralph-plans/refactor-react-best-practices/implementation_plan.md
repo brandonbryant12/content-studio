@@ -262,13 +262,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 17: Root Layout - Toaster Deferral
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `bundle-defer-third-party`
 **Acceptance Criteria:**
-- [ ] Defer Toaster initialization until after hydration
-- [ ] Use dynamic import or useEffect for toast library
-- [ ] Verify toast functionality still works
-- [ ] Typecheck passes
+- [x] Defer Toaster initialization until after hydration (lazy import + mounted state)
+- [x] Use dynamic import for toast library (React.lazy)
+- [x] Verify toast functionality still works
+- [x] Typecheck passes
 **Details:** [17-root-toaster-deferral.md](./tasks/17-root-toaster-deferral.md)
 
 ---

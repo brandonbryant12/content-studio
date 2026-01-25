@@ -1,11 +1,15 @@
-import { Toaster } from '@repo/ui/components/sonner';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
-import React from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
+
+// Defer Toaster loading until after hydration
+const Toaster = lazy(() =>
+  import('@repo/ui/components/sonner').then((m) => ({ default: m.Toaster })),
+);
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -22,6 +26,12 @@ const TanStackRouterDevtools = import.meta.env.PROD
 
 function RootComponent() {
   const { data: session, isPending } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
+
+  // Defer Toaster rendering until after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (isPending) {
     return (
@@ -47,7 +57,11 @@ function RootComponent() {
     >
       <div className="min-h-screen bg-background">
         <Navbar session={session} />
-        <Toaster position="bottom-right" />
+        {mounted && (
+          <Suspense fallback={null}>
+            <Toaster position="bottom-right" />
+          </Suspense>
+        )}
         <Outlet />
         <React.Suspense>
           <TanStackRouterDevtools position="top-right" />
