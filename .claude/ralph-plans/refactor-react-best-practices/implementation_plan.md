@@ -150,12 +150,12 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 08: Voiceovers Feature - Barrel Import Cleanup
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `bundle-barrel-imports`
 **Acceptance Criteria:**
-- [ ] Replace all barrel imports with direct imports
-- [ ] Remove wildcard exports from feature index files
-- [ ] Typecheck passes
+- [x] Replace all barrel imports with direct imports
+- [x] Remove wildcard exports from feature index files
+- [x] Typecheck passes
 **Details:** [08-voiceovers-barrel-imports.md](./tasks/08-voiceovers-barrel-imports.md)
 
 ---

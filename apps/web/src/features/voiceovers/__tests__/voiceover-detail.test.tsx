@@ -6,7 +6,8 @@ import {
   VoiceoverDetail,
   type VoiceoverDetailProps,
 } from '../components/voiceover-detail';
-import type { UseVoiceoverSettingsReturn, Collaborator } from '../hooks';
+import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
+import type { Collaborator } from '../hooks/use-collaborators';
 import { VoiceoverStatus } from '../lib/status';
 import type { RouterOutput } from '@repo/api/client';
 

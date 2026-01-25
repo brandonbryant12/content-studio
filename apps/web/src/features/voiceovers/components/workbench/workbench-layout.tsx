@@ -8,7 +8,8 @@ import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
-import { CollaboratorAvatars, ApproveButton } from '../collaborators';
+import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
+import { ApproveButton } from '../collaborators/approve-button';
 
 type VoiceoverFull = RouterOutput['voiceovers']['get'];
 
