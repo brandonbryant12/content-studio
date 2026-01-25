@@ -123,12 +123,18 @@ export function usePodcastSettings(...) {
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+### Changes Made
+
+1. **use-podcast-generation.ts**: Wrapped `loadingStates` object in `useMemo` with deps on individual `isPending` values
+2. **use-podcast-settings.ts**: Wrapped return object in `useMemo` with all values and callbacks as dependencies
+
+### Result
+
+Both hooks now maintain stable object references when their values haven't changed, preventing unnecessary re-renders in consumers that rely on object reference equality.
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] Settings object memoized (or documented why not)
-- [ ] loadingStates object memoized
-- [ ] No breaking changes to consumers
+- [x] `pnpm --filter web typecheck` passes
+- [x] Settings object memoized (with full dependency list)
+- [x] loadingStates object memoized
+- [x] No breaking changes to consumers (same API)

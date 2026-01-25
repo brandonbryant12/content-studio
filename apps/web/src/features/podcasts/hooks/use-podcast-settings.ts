@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -219,26 +219,43 @@ export function usePodcastSettings({
     setInstructionsInternal(podcast?.promptInstructions ?? '');
   }, [podcast]);
 
-  return {
-    // Current values
-    hostVoice,
-    coHostVoice,
-    targetDuration,
-    instructions,
+  return useMemo(
+    () => ({
+      // Current values
+      hostVoice,
+      coHostVoice,
+      targetDuration,
+      instructions,
 
-    // Setters
-    setHostVoice,
-    setCoHostVoice,
-    setTargetDuration,
-    setInstructions,
+      // Setters
+      setHostVoice,
+      setCoHostVoice,
+      setTargetDuration,
+      setInstructions,
 
-    // State
-    hasChanges,
-    hasScriptSettingsChanges,
-    isSaving: updateMutation.isPending,
+      // State
+      hasChanges,
+      hasScriptSettingsChanges,
+      isSaving: updateMutation.isPending,
 
-    // Actions
-    saveSettings,
-    discardChanges,
-  };
+      // Actions
+      saveSettings,
+      discardChanges,
+    }),
+    [
+      hostVoice,
+      coHostVoice,
+      targetDuration,
+      instructions,
+      setHostVoice,
+      setCoHostVoice,
+      setTargetDuration,
+      setInstructions,
+      hasChanges,
+      hasScriptSettingsChanges,
+      updateMutation.isPending,
+      saveSettings,
+      discardChanges,
+    ],
+  );
 }

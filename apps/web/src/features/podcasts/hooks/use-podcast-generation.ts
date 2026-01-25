@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
@@ -126,11 +127,18 @@ export function usePodcastGeneration({
     }
   };
 
-  const loadingStates = {
-    generate: generateMutation.isPending,
-    createAndGenerate: createAndGenerateMutation.isPending,
-    update: updateMutation.isPending,
-  };
+  const loadingStates = useMemo(
+    () => ({
+      generate: generateMutation.isPending,
+      createAndGenerate: createAndGenerateMutation.isPending,
+      update: updateMutation.isPending,
+    }),
+    [
+      generateMutation.isPending,
+      createAndGenerateMutation.isPending,
+      updateMutation.isPending,
+    ],
+  );
 
   return {
     generate: (podcastId: string) =>

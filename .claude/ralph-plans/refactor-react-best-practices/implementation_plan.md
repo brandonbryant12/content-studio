@@ -250,13 +250,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 16: Feature Hooks - Settings Return Object Memoization
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `rerender-memo-with-default-value`
 **Acceptance Criteria:**
-- [ ] Memoize return object in use-podcast-settings.ts
-- [ ] Memoize loadingStates object in use-podcast-generation.ts
-- [ ] Verify memoization doesn't break reactivity
-- [ ] Typecheck passes
+- [x] Memoize return object in use-podcast-settings.ts
+- [x] Memoize loadingStates object in use-podcast-generation.ts
+- [x] Verify memoization doesn't break reactivity (same API)
+- [x] Typecheck passes
 **Details:** [16-feature-hooks-settings.md](./tasks/16-feature-hooks-settings.md)
 
 ---
