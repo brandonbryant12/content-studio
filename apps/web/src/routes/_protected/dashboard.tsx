@@ -75,7 +75,6 @@ function Dashboard() {
         <button
           onClick={() => setUploadOpen(true)}
           className="action-card animate-fade-in-up stagger-1"
-          style={{ opacity: 0 }}
           aria-label="Upload Document - Add source content"
         >
           <div className="action-card-icon">
@@ -91,7 +90,6 @@ function Dashboard() {
           onClick={handleCreatePodcast}
           disabled={createPodcastMutation.isPending}
           className="action-card animate-fade-in-up stagger-2"
-          style={{ opacity: 0 }}
           aria-label="New Podcast - Generate audio content"
         >
           <div className="action-card-icon">
@@ -111,10 +109,7 @@ function Dashboard() {
       </div>
 
       {/* Recent Documents */}
-      <section
-        className="page-section animate-fade-in-up stagger-3"
-        style={{ opacity: 0 }}
-      >
+      <section className="page-section animate-fade-in-up stagger-3">
         <div className="section-header">
           <div className="flex items-center gap-2.5">
             <FileTextIcon
@@ -151,7 +146,7 @@ function Dashboard() {
       </section>
 
       {/* Recent Podcasts */}
-      <section className="animate-fade-in-up stagger-4" style={{ opacity: 0 }}>
+      <section className="animate-fade-in-up stagger-4">
         <div className="section-header">
           <div className="flex items-center gap-2.5">
             <SpeakerLoudIcon
