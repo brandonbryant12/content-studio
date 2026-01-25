@@ -9,11 +9,17 @@ export {
   useDocumentsOrdered,
 } from './hooks/use-document-list';
 export { useOptimisticDeleteDocument } from './hooks/use-optimistic-delete-document';
-export { useOptimisticUpload, fileToBase64 } from './hooks/use-optimistic-upload';
+export {
+  useOptimisticUpload,
+  fileToBase64,
+} from './hooks/use-optimistic-upload';
 
 // Named exports from components
 export { DocumentListContainer } from './components/document-list-container';
-export { DocumentList, type DocumentListProps } from './components/document-list';
+export {
+  DocumentList,
+  type DocumentListProps,
+} from './components/document-list';
 export {
   DocumentItem,
   type DocumentListItem,
