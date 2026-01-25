@@ -8,7 +8,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, type ChangeEvent, type MouseEvent } from 'react';
 import { toast } from 'sonner';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import {
@@ -107,14 +107,15 @@ export function DocumentManager({
     );
   }, [availableDocuments, searchQuery]);
 
-  const toggleDocument = (docId: string) => {
+  const toggleDocument = useCallback((docId: string) => {
     setSelectedIds((prev) =>
       prev.includes(docId)
         ? prev.filter((id) => id !== docId)
         : [...prev, docId],
     );
-  };
+  }, []);
 
+  // File validation and selection
   const handleFileSelect = useCallback((file: File | null) => {
     if (!file) return;
 
@@ -178,6 +179,84 @@ export function DocumentManager({
     }
   };
 
+  // Stable callback for document toggle using data-attribute pattern
+  const handleDocumentClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      const docId = e.currentTarget.dataset.docId;
+      if (docId) {
+        toggleDocument(docId);
+      }
+    },
+    [toggleDocument],
+  );
+
+  // Stable callback for tab switching using data-attribute pattern
+  const handleTabClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      const tabId = e.currentTarget.dataset.tabId as 'existing' | 'upload';
+      if (tabId) {
+        setActiveTab(tabId);
+      }
+    },
+    [],
+  );
+
+  // Stable callback for switching to upload tab
+  const handleSwitchToUpload = useCallback(() => {
+    setActiveTab('upload');
+  }, []);
+
+  // Stable callback for clearing upload file
+  const handleClearUploadFile = useCallback(() => {
+    setUploadFile(null);
+    setUploadTitle('');
+  }, []);
+
+  // Stable callback for search input
+  const handleSearchChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value);
+    },
+    [],
+  );
+
+  // Stable callback for title input
+  const handleTitleChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setUploadTitle(e.target.value);
+    },
+    [],
+  );
+
+  // Stable callback for file input change
+  const handleFileInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      handleFileSelect(e.target.files?.[0] ?? null);
+    },
+    [handleFileSelect],
+  );
+
+  // Stable callback for drag over
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  // Stable callback for drag leave
+  const handleDragLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Stable callback for upload zone click
+  const handleUploadZoneClick = useCallback(() => {
+    document.getElementById('workbench-file-input')?.click();
+  }, []);
+
+  // Stable callback for opening add dialog
+  const handleOpenAddDialog = useCallback(() => {
+    setAddDialogOpen(true);
+  }, []);
+
   return (
     <>
       <div className="doc-manager-list">
@@ -213,7 +292,7 @@ export function DocumentManager({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setAddDialogOpen(true)}
+            onClick={handleOpenAddDialog}
             className="doc-manager-add-btn"
           >
             <PlusIcon className="w-3.5 h-3.5 mr-1.5" />
@@ -246,14 +325,16 @@ export function DocumentManager({
         <div className="setup-tabs mb-4">
           <button
             type="button"
-            onClick={() => setActiveTab('existing')}
+            data-tab-id="existing"
+            onClick={handleTabClick}
             className={`setup-tab ${activeTab === 'existing' ? 'active' : ''}`}
           >
             Select Existing
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('upload')}
+            data-tab-id="upload"
+            onClick={handleTabClick}
             className={`setup-tab ${activeTab === 'upload' ? 'active' : ''}`}
           >
             Upload New
@@ -270,7 +351,7 @@ export function DocumentManager({
                   type="text"
                   placeholder="Search documents..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className="setup-input pl-9"
                 />
               </div>
@@ -285,7 +366,8 @@ export function DocumentManager({
                 {filteredDocuments.map((doc) => (
                   <button
                     key={doc.id}
-                    onClick={() => toggleDocument(doc.id)}
+                    data-doc-id={doc.id}
+                    onClick={handleDocumentClick}
                     className={`doc-picker-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
                   >
                     <div className="doc-picker-item-icon">
@@ -338,7 +420,7 @@ export function DocumentManager({
                 <p className="text-body">No more documents available to add.</p>
                 <Button
                   variant="outline"
-                  onClick={() => setActiveTab('upload')}
+                  onClick={handleSwitchToUpload}
                   className="mt-4"
                 >
                   <UploadIcon className="w-4 h-4 mr-2" />
@@ -365,10 +447,7 @@ export function DocumentManager({
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => {
-                      setUploadFile(null);
-                      setUploadTitle('');
-                    }}
+                    onClick={handleClearUploadFile}
                     className="setup-file-remove"
                     aria-label="Remove file"
                   >
@@ -387,7 +466,7 @@ export function DocumentManager({
                     id="doc-title"
                     type="text"
                     value={uploadTitle}
-                    onChange={(e) => setUploadTitle(e.target.value)}
+                    onChange={handleTitleChange}
                     placeholder="Document title"
                     className="setup-input"
                   />
@@ -413,15 +492,10 @@ export function DocumentManager({
               </div>
             ) : (
               <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() =>
-                  document.getElementById('workbench-file-input')?.click()
-                }
+                onClick={handleUploadZoneClick}
                 className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
               >
                 <input
@@ -429,9 +503,7 @@ export function DocumentManager({
                   type="file"
                   accept={SUPPORTED_EXTENSIONS}
                   className="hidden"
-                  onChange={(e) =>
-                    handleFileSelect(e.target.files?.[0] ?? null)
-                  }
+                  onChange={handleFileInputChange}
                 />
                 <div className="setup-upload-icon">
                   <UploadIcon />
