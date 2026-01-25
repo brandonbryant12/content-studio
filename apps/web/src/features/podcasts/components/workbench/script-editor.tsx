@@ -107,6 +107,10 @@ export function ScriptEditor({
     [segments],
   );
 
+  const handleAddAfter = useCallback((segmentIndex: number) => {
+    setAddAfterIndex(segmentIndex);
+  }, []);
+
   const handleAddSegment = (data: { speaker: string; line: string }) => {
     if (addAfterIndex !== null) {
       onAddSegment(addAfterIndex, data);
@@ -130,17 +134,16 @@ export function ScriptEditor({
               <SegmentItem
                 key={segment.index}
                 segment={segment}
+                segmentIndex={segment.index}
                 lineNumber={idx + 1}
                 isEditing={editingIndex === segment.index}
                 disabled={disabled}
-                onStartEdit={() => handleStartEdit(segment.index)}
-                onSaveEdit={(data) => handleSaveEdit(segment.index, data)}
+                onStartEdit={handleStartEdit}
+                onSaveEdit={handleSaveEdit}
                 onCancelEdit={handleCancelEdit}
-                onNavigate={(direction) =>
-                  handleNavigate(segment.index, direction)
-                }
-                onRemove={() => onRemoveSegment(segment.index)}
-                onAddAfter={() => setAddAfterIndex(segment.index)}
+                onNavigate={handleNavigate}
+                onRemove={onRemoveSegment}
+                onAddAfter={handleAddAfter}
               />
             ))}
           </div>

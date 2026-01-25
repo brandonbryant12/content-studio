@@ -6,24 +6,29 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
-import { useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 
 interface SegmentItemProps {
   segment: ScriptSegment;
+  segmentIndex: number;
   lineNumber: number;
   isEditing: boolean;
   disabled?: boolean;
-  onStartEdit: () => void;
-  onSaveEdit: (data: { speaker: string; line: string }) => void;
+  onStartEdit: (segmentIndex: number) => void;
+  onSaveEdit: (
+    segmentIndex: number,
+    data: { speaker: string; line: string },
+  ) => void;
   onCancelEdit: () => void;
-  onNavigate: (direction: 'next' | 'prev') => void;
-  onRemove: () => void;
-  onAddAfter: () => void;
+  onNavigate: (segmentIndex: number, direction: 'next' | 'prev') => void;
+  onRemove: (segmentIndex: number) => void;
+  onAddAfter: (segmentIndex: number) => void;
 }
 
-export function SegmentItem({
+export const SegmentItem = memo(function SegmentItem({
   segment,
+  segmentIndex,
   lineNumber,
   isEditing,
   disabled,
@@ -65,44 +70,65 @@ export function SegmentItem({
     }
   }, [isEditing, segment.speaker, segment.line]);
 
-  const handleSave = () => {
+  // Stable callback that calls parent with segmentIndex
+  const handleSave = useCallback(() => {
     const trimmedLine = editLine.trim();
     if (trimmedLine !== segment.line || editSpeaker !== segment.speaker) {
-      onSaveEdit({ speaker: editSpeaker, line: trimmedLine });
+      onSaveEdit(segmentIndex, { speaker: editSpeaker, line: trimmedLine });
     } else {
       onCancelEdit();
     }
-  };
+  }, [editLine, editSpeaker, segment.line, segment.speaker, segmentIndex, onSaveEdit, onCancelEdit]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleNavigateNext = useCallback(() => {
+    onNavigate(segmentIndex, 'next');
+  }, [segmentIndex, onNavigate]);
+
+  const handleNavigatePrev = useCallback(() => {
+    onNavigate(segmentIndex, 'prev');
+  }, [segmentIndex, onNavigate]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       onCancelEdit();
     } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSave();
-      onNavigate('next');
+      handleNavigateNext();
     } else if (e.key === 'Tab') {
       e.preventDefault();
       handleSave();
-      onNavigate(e.shiftKey ? 'prev' : 'next');
+      if (e.shiftKey) {
+        handleNavigatePrev();
+      } else {
+        handleNavigateNext();
+      }
     }
-  };
+  }, [onCancelEdit, handleSave, handleNavigateNext, handleNavigatePrev]);
 
-  const handleBlur = (e: React.FocusEvent) => {
+  const handleBlur = useCallback((e: React.FocusEvent) => {
     // Check if focus is moving to another element within the segment
     const relatedTarget = e.relatedTarget as HTMLElement;
     if (relatedTarget?.closest('.segment-item.editing')) {
       return;
     }
     handleSave();
-  };
+  }, [handleSave]);
 
-  const handleContentClick = () => {
+  const handleContentClick = useCallback(() => {
     if (!isEditing && !isDragging && !disabled) {
-      onStartEdit();
+      onStartEdit(segmentIndex);
     }
-  };
+  }, [isEditing, isDragging, disabled, segmentIndex, onStartEdit]);
+
+  const handleRemove = useCallback(() => {
+    onRemove(segmentIndex);
+  }, [segmentIndex, onRemove]);
+
+  const handleAddAfter = useCallback(() => {
+    onAddAfter(segmentIndex);
+  }, [segmentIndex, onAddAfter]);
 
   const isHost = editSpeaker.toLowerCase() === 'host';
   const isCohost = editSpeaker.toLowerCase() === 'cohost';
@@ -204,7 +230,7 @@ export function SegmentItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onAddAfter}
+          onClick={handleAddAfter}
           className="segment-action-btn add"
           aria-label="Add segment after"
           tabIndex={-1}
@@ -215,7 +241,7 @@ export function SegmentItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onRemove}
+          onClick={handleRemove}
           className="segment-action-btn delete"
           aria-label="Remove segment"
           tabIndex={-1}
@@ -226,4 +252,4 @@ export function SegmentItem({
       </div>
     </div>
   );
-}
+});
