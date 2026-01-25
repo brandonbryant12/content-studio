@@ -11,7 +11,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { BaseDialog } from '@/shared/components/base-dialog';
-import { useDocuments, getDocumentListQueryKey } from '@/features/documents';
+import {
+  useDocuments,
+  getDocumentListQueryKey,
+} from '@/features/documents/hooks/use-document-list';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 import type { DocumentInfo } from '../../hooks/use-document-selection';
