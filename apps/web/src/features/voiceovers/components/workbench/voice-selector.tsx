@@ -1,6 +1,9 @@
 // features/voiceovers/components/workbench/voice-selector.tsx
 
+import { memo, useCallback, type MouseEvent } from 'react';
+
 import { cn } from '@repo/ui/lib/utils';
+
 import { VOICES } from '../../lib/voices';
 import { VoiceSymbol } from './voice-symbols';
 
@@ -26,11 +29,19 @@ const VOICE_TRAITS: Record<string, string> = {
  * Voice Ensemble - Card gallery for selecting voices.
  * Replaces dropdown with theatrical voice cards.
  */
-export function VoiceSelector({
+export const VoiceSelector = memo(function VoiceSelector({
   voice,
   onChange,
   disabled,
 }: VoiceSelectorProps) {
+  const handleVoiceSelect = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      const voiceId = e.currentTarget.dataset.voiceId;
+      if (voiceId) onChange(voiceId);
+    },
+    [onChange]
+  );
+
   return (
     <fieldset className="voice-ensemble" disabled={disabled}>
       <legend className="sr-only">Select a voice</legend>
@@ -41,8 +52,9 @@ export function VoiceSelector({
             <button
               key={v.id}
               type="button"
+              data-voice-id={v.id}
               className={cn('voice-card', isSelected && 'voice-card-selected')}
-              onClick={() => onChange(v.id)}
+              onClick={handleVoiceSelect}
               aria-pressed={isSelected}
               disabled={disabled}
             >
@@ -59,4 +71,4 @@ export function VoiceSelector({
       </div>
     </fieldset>
   );
-}
+});

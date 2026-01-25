@@ -1,6 +1,8 @@
 // features/voiceovers/components/voiceover-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
+import { useCallback, useMemo, type ChangeEvent } from 'react';
+
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
@@ -81,8 +83,19 @@ export function VoiceoverList({
   onCreate,
   onDelete,
 }: VoiceoverListProps) {
-  const filteredVoiceovers = voiceovers.filter((voiceover) =>
-    voiceover.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredVoiceovers = useMemo(
+    () =>
+      voiceovers.filter((voiceover) =>
+        voiceover.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [voiceovers, searchQuery],
+  );
+
+  const handleSearch = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      onSearch(e.target.value);
+    },
+    [onSearch],
   );
 
   const isEmpty = voiceovers.length === 0;
@@ -116,7 +129,7 @@ export function VoiceoverList({
       <div className="relative mb-6">
         <Input
           value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={handleSearch}
           placeholder="Search voiceovers…"
           className="search-input"
           autoComplete="off"
