@@ -44,14 +44,26 @@ export function useSSE(options: SSEOptions = {}): UseSSEReturn {
   const [connectionState, setConnectionState] =
     useState<SSEConnectionState>('disconnected');
 
-  const updateConnectionState = useCallback(
-    (state: SSEConnectionState) => {
-      setConnectionState(state);
-      onConnectionChange?.(state);
-    },
-    [onConnectionChange],
-  );
+  // Store callbacks in refs to avoid triggering reconnections when they change
+  const onConnectionChangeRef = useRef(onConnectionChange);
+  const queryClientRef = useRef(queryClient);
 
+  // Keep refs up to date without triggering effect re-runs
+  useEffect(() => {
+    onConnectionChangeRef.current = onConnectionChange;
+  }, [onConnectionChange]);
+
+  useEffect(() => {
+    queryClientRef.current = queryClient;
+  }, [queryClient]);
+
+  // Stable callback - uses refs internally
+  const updateConnectionState = useCallback((state: SSEConnectionState) => {
+    setConnectionState(state);
+    onConnectionChangeRef.current?.(state);
+  }, []);
+
+  // Stable callback - uses refs internally
   const handleEvent = useCallback(
     (event: SSEEvent) => {
       switch (event.type) {
@@ -61,21 +73,25 @@ export function useSSE(options: SSEOptions = {}): UseSSEReturn {
           break;
 
         case 'job_completion':
-          handleJobCompletion(event, queryClient);
+          handleJobCompletion(event, queryClientRef.current);
           break;
 
         case 'voiceover_job_completion':
-          handleVoiceoverJobCompletion(event, queryClient);
+          handleVoiceoverJobCompletion(event, queryClientRef.current);
           break;
 
         case 'entity_change':
-          handleEntityChange(event, queryClient);
+          handleEntityChange(event, queryClientRef.current);
           break;
       }
     },
-    [queryClient, updateConnectionState],
+    [updateConnectionState],
   );
 
+  // Store connect function ref for recursive timeout calls
+  const connectRef = useRef<(() => void) | undefined>(undefined);
+
+  // Stable - no dependencies that change on every render
   const getReconnectDelay = useCallback(() => {
     const delay = Math.min(
       RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptsRef.current),
@@ -84,6 +100,7 @@ export function useSSE(options: SSEOptions = {}): UseSSEReturn {
     return delay + Math.random() * 1000; // Jitter
   }, []);
 
+  // Now only depends on `enabled` - all other deps are stable
   const connect = useCallback(() => {
     if (!enabled) return;
 
@@ -121,12 +138,20 @@ export function useSSE(options: SSEOptions = {}): UseSSEReturn {
         const delay = getReconnectDelay();
         reconnectAttemptsRef.current += 1;
 
-        reconnectTimeoutRef.current = setTimeout(connect, delay);
+        // Use ref to avoid stale closure in recursive timeout
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connectRef.current?.();
+        }, delay);
       } else {
         updateConnectionState('error');
       }
     };
   }, [enabled, handleEvent, updateConnectionState, getReconnectDelay]);
+
+  // Keep connectRef up to date for recursive timeout calls
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const reconnect = useCallback(() => {
     reconnectAttemptsRef.current = 0;
