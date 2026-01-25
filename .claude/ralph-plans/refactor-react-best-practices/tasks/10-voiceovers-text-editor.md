@@ -74,13 +74,15 @@ const MAX_CHARACTERS = 5000; // Already hoisted - good!
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+- Hoisted RING_RADIUS and RING_CIRCUMFERENCE constants outside component
+- Wrapped CharacterCountRing in memo()
+- Added useCallback for handleChange in TextEditor
+- MAX_CHARACTERS was already hoisted
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] RING_RADIUS and RING_CIRCUMFERENCE hoisted outside component
-- [ ] CharacterCountRing memoized
-- [ ] onChange uses useCallback
-- [ ] MAX_CHARACTERS remains hoisted
+- [x] `pnpm --filter web typecheck` passes
+- [x] RING_RADIUS and RING_CIRCUMFERENCE hoisted outside component
+- [x] CharacterCountRing memoized
+- [x] onChange uses useCallback
+- [x] MAX_CHARACTERS remains hoisted

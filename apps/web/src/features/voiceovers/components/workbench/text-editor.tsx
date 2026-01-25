@@ -1,5 +1,6 @@
 // features/voiceovers/components/workbench/text-editor.tsx
 
+import { memo, useCallback, type ChangeEvent } from 'react';
 import { cn } from '@repo/ui/lib/utils';
 
 interface TextEditorProps {
@@ -11,18 +12,26 @@ interface TextEditorProps {
 
 const MAX_CHARACTERS = 5000;
 
+// Hoisted constants for circle math - avoid recalculation on every render
+const RING_RADIUS = 12;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
 /**
  * Character count ring - circular progress indicator.
  */
-function CharacterCountRing({ count, max }: { count: number; max: number }) {
+const CharacterCountRing = memo(function CharacterCountRing({
+  count,
+  max,
+}: {
+  count: number;
+  max: number;
+}) {
   const percentage = Math.min((count / max) * 100, 100);
   const isWarning = percentage > 80;
   const isError = percentage >= 100;
 
-  // Circle math: circumference = 2 * PI * r
-  const radius = 12;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const strokeDashoffset =
+    RING_CIRCUMFERENCE - (percentage / 100) * RING_CIRCUMFERENCE;
 
   return (
     <div className="manuscript-count">
@@ -37,7 +46,7 @@ function CharacterCountRing({ count, max }: { count: number; max: number }) {
         <circle
           cx="16"
           cy="16"
-          r={radius}
+          r={RING_RADIUS}
           fill="none"
           stroke="currentColor"
           strokeWidth="2.5"
@@ -47,12 +56,12 @@ function CharacterCountRing({ count, max }: { count: number; max: number }) {
         <circle
           cx="16"
           cy="16"
-          r={radius}
+          r={RING_RADIUS}
           fill="none"
           stroke="currentColor"
           strokeWidth="2.5"
           strokeLinecap="round"
-          strokeDasharray={circumference}
+          strokeDasharray={RING_CIRCUMFERENCE}
           strokeDashoffset={strokeDashoffset}
           className={cn(
             'transition-all duration-300',
@@ -79,7 +88,7 @@ function CharacterCountRing({ count, max }: { count: number; max: number }) {
       </span>
     </div>
   );
-}
+});
 
 /**
  * Manuscript - theatrical text editor with serif typography.
@@ -91,12 +100,19 @@ export function TextEditor({
   disabled,
   placeholder = 'Speak, and the Oracle shall give voice to your words...',
 }: TextEditorProps) {
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      onChange(e.target.value);
+    },
+    [onChange],
+  );
+
   return (
     <div className={cn('manuscript', disabled && 'manuscript-disabled')}>
       <textarea
         className="manuscript-content"
         value={text}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         disabled={disabled}
         placeholder={placeholder}
         maxLength={MAX_CHARACTERS}

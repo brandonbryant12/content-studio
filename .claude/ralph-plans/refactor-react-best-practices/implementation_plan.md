@@ -175,13 +175,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 10: Voiceovers Feature - Text Editor Optimization
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `rendering-hoist-jsx`, `js-cache-property-access`
 **Acceptance Criteria:**
-- [ ] Hoist circle math constants (radius, circumference) outside component
-- [ ] Memoize CharacterCountRing or move calculations to useMemo
-- [ ] Convert onChange to useCallback in TextEditor
-- [ ] Typecheck passes
+- [x] Hoist circle math constants (radius, circumference) outside component
+- [x] Memoize CharacterCountRing or move calculations to useMemo
+- [x] Convert onChange to useCallback in TextEditor
+- [x] Typecheck passes
 **Details:** [10-voiceovers-text-editor.md](./tasks/10-voiceovers-text-editor.md)
 
 ---
