@@ -9,10 +9,15 @@ import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcastActions } from '../hooks/use-podcast-actions';
 import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
 import { isSetupMode } from '../lib/status';
-import { SetupWizardContainer } from './setup-wizard-container';
 import { PodcastDetail } from './podcast-detail';
 
-// Dynamic import for AddCollaboratorDialog (conditionally rendered)
+// Dynamic imports for conditionally rendered components
+const SetupWizardContainer = lazy(() =>
+  import('./setup-wizard-container').then((m) => ({
+    default: m.SetupWizardContainer,
+  })),
+);
+
 const AddCollaboratorDialog = lazy(() =>
   import('./collaborators/add-collaborator-dialog').then((m) => ({
     default: m.AddCollaboratorDialog,
@@ -90,9 +95,13 @@ export function PodcastDetailContainer({
     shouldBlock: actions.hasAnyChanges,
   });
 
-  // Show setup wizard for new podcasts
+  // Show setup wizard for new podcasts (lazy loaded)
   if (isSetupMode(podcast)) {
-    return <SetupWizardContainer podcast={podcast} />;
+    return (
+      <Suspense fallback={null}>
+        <SetupWizardContainer podcast={podcast} />
+      </Suspense>
+    );
   }
 
   // Audio from podcast
