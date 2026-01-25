@@ -85,13 +85,24 @@ it('does not re-render items when unrelated state changes', () => {
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+### Changes Made:
+1. **collaborator-list.tsx**:
+   - Added `memo()` wrapper to `CollaboratorRow` component
+   - Updated props to accept `collaboratorId` and stable `onRemove: (id: string) => void` callback
+   - Added internal `useCallback` for `handleRemoveClick` inside `CollaboratorRow`
+   - Added `useCallback` for `handleRemove` in `CollaboratorList`
+   - Removed inline arrow function from map callback
+
+2. **podcast-list.tsx**:
+   - Added `useMemo` for `filteredPodcasts` computation
+   - Added `useCallback` for `handleSearchChange`
+   - Replaced inline `onChange` with stable callback reference
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] `pnpm --filter web test` passes
-- [ ] CollaboratorRow is memoized
-- [ ] filteredPodcasts uses useMemo
-- [ ] No inline arrow functions in list rendering
+- [x] `pnpm --filter web typecheck` passes
+- [x] `pnpm --filter web build` passes (2.51s)
+- [ ] `pnpm --filter web test` - 7 pre-existing failures unrelated to this task
+- [x] CollaboratorRow is memoized with `memo()`
+- [x] filteredPodcasts uses `useMemo([podcasts, searchQuery])`
+- [x] No inline arrow functions in list rendering (search handler uses useCallback)

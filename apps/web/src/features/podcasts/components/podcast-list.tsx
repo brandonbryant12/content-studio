@@ -1,6 +1,7 @@
 // features/podcasts/components/podcast-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
+import { useCallback, useMemo, type ChangeEvent } from 'react';
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
@@ -81,8 +82,17 @@ export function PodcastList({
   onCreate,
   onDelete,
 }: PodcastListProps) {
-  const filteredPodcasts = podcasts.filter((podcast) =>
-    podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredPodcasts = useMemo(
+    () =>
+      podcasts.filter((podcast) =>
+        podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [podcasts, searchQuery],
+  );
+
+  const handleSearchChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => onSearch(e.target.value),
+    [onSearch],
   );
 
   const isEmpty = podcasts.length === 0;
@@ -115,7 +125,7 @@ export function PodcastList({
       <div className="relative mb-6">
         <Input
           value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={handleSearchChange}
           placeholder="Search podcasts…"
           className="search-input"
           autoComplete="off"

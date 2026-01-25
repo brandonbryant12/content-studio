@@ -1,5 +1,6 @@
 // features/podcasts/components/collaborators/collaborator-list.tsx
 
+import { memo, useCallback } from 'react';
 import { CheckIcon, Cross2Icon, PersonIcon } from '@radix-ui/react-icons';
 import {
   Avatar,
@@ -42,6 +43,7 @@ function getInitials(name: string | null, email: string): string {
 }
 
 interface CollaboratorRowProps {
+  collaboratorId?: string;
   name: string | null;
   email: string;
   image: string | null | undefined;
@@ -50,10 +52,11 @@ interface CollaboratorRowProps {
   isOwner: boolean;
   canRemove: boolean;
   isRemoving: boolean;
-  onRemove?: () => void;
+  onRemove?: (collaboratorId: string) => void;
 }
 
-function CollaboratorRow({
+const CollaboratorRow = memo(function CollaboratorRow({
+  collaboratorId,
   name,
   email,
   image,
@@ -66,6 +69,12 @@ function CollaboratorRow({
 }: CollaboratorRowProps) {
   const displayName = name || email;
   const initials = getInitials(name, email);
+
+  const handleRemoveClick = useCallback(() => {
+    if (collaboratorId && onRemove) {
+      onRemove(collaboratorId);
+    }
+  }, [collaboratorId, onRemove]);
 
   return (
     <div className="collab-list-row">
@@ -131,7 +140,7 @@ function CollaboratorRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onRemove}
+            onClick={handleRemoveClick}
             disabled={isRemoving}
             className="collab-list-remove-btn"
             aria-label={`Remove ${displayName}`}
@@ -146,7 +155,7 @@ function CollaboratorRow({
       </div>
     </div>
   );
-}
+});
 
 export function CollaboratorList({
   podcastId,
@@ -160,9 +169,12 @@ export function CollaboratorList({
     variables,
   } = useRemoveCollaborator(podcastId);
 
-  const handleRemove = (collaboratorId: string) => {
-    removeCollaborator({ id: podcastId, collaboratorId });
-  };
+  const handleRemove = useCallback(
+    (collaboratorId: string) => {
+      removeCollaborator({ id: podcastId, collaboratorId });
+    },
+    [podcastId, removeCollaborator],
+  );
 
   return (
     <div className="collab-list">
@@ -182,6 +194,7 @@ export function CollaboratorList({
       {collaborators.map((collaborator) => (
         <CollaboratorRow
           key={collaborator.id}
+          collaboratorId={collaborator.id}
           name={collaborator.userName}
           email={collaborator.email}
           image={collaborator.userImage}
@@ -192,7 +205,7 @@ export function CollaboratorList({
           isRemoving={
             isRemoving && variables?.collaboratorId === collaborator.id
           }
-          onRemove={() => handleRemove(collaborator.id)}
+          onRemove={handleRemove}
         />
       ))}
 
