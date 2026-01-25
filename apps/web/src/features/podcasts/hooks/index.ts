@@ -50,3 +50,13 @@ export {
 export { useAddCollaborator } from './use-add-collaborator';
 export { useRemoveCollaborator } from './use-remove-collaborator';
 export { useApprovePodcast } from './use-approve-podcast';
+export {
+  useCollaboratorManagement,
+  type UseCollaboratorManagementReturn,
+} from './use-collaborator-management';
+
+// Container action hooks
+export {
+  usePodcastActions,
+  type UsePodcastActionsReturn,
+} from './use-podcast-actions';

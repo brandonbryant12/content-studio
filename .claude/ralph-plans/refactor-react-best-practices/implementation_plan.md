@@ -125,14 +125,14 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 06: Podcasts Feature - Detail Container Split
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** Component splitting, `bundle-dynamic-imports`
 **Acceptance Criteria:**
-- [ ] Extract collaborator management to `useCollaboratorManagement` hook
-- [ ] Extract save/generation logic to `usePodcastActions` hook
-- [ ] Dynamic import `AddCollaboratorDialog` (conditionally rendered)
-- [ ] Reduce container to <150 lines
-- [ ] Typecheck passes
+- [x] Extract collaborator management to `useCollaboratorManagement` hook
+- [x] Extract save/generation logic to `usePodcastActions` hook
+- [x] Dynamic import `AddCollaboratorDialog` (conditionally rendered)
+- [x] Reduce container to <150 lines (139 lines)
+- [x] Typecheck passes
 **Details:** [06-podcasts-detail-container.md](./tasks/06-podcasts-detail-container.md)
 
 ---
