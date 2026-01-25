@@ -4,20 +4,20 @@ import * as React from 'react';
 import { cn } from '#/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border',
+  'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors',
   {
     variants: {
       variant: {
-        default: 'bg-secondary text-secondary-foreground border-border',
-        info: 'bg-sky-50 text-sky-700 border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60',
+        default: 'bg-secondary/80 text-secondary-foreground border-border/50',
+        info: 'bg-sky-100/80 text-sky-800 border-sky-200/60 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800/50',
         warning:
-          'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+          'bg-amber-100/80 text-amber-800 border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/50',
         success:
-          'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
+          'bg-emerald-100/80 text-emerald-800 border-emerald-200/60 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/50',
         error:
-          'bg-red-50 text-red-700 border-red-200/80 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800/60',
+          'bg-red-100/80 text-red-800 border-red-200/60 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/50',
         purple:
-          'bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary dark:border-primary/30',
+          'bg-primary/15 text-primary border-primary/25 dark:bg-primary/25 dark:text-primary dark:border-primary/35',
       },
     },
     defaultVariants: {

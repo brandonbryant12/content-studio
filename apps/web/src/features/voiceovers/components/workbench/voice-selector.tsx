@@ -1,6 +1,8 @@
-import { Select } from '@repo/ui/components/select';
-import { Label } from '@repo/ui/components/label';
+// features/voiceovers/components/workbench/voice-selector.tsx
+
+import { cn } from '@repo/ui/lib/utils';
 import { VOICES } from '../../lib/voices';
+import { VoiceSymbol } from './voice-symbols';
 
 interface VoiceSelectorProps {
   voice: string;
@@ -8,29 +10,53 @@ interface VoiceSelectorProps {
   disabled?: boolean;
 }
 
+/** Short trait descriptor for each voice */
+const VOICE_TRAITS: Record<string, string> = {
+  Aoede: 'Melodic',
+  Kore: 'Youthful',
+  Leda: 'Friendly',
+  Zephyr: 'Airy',
+  Charon: 'Clear',
+  Fenrir: 'Bold',
+  Puck: 'Lively',
+  Orus: 'Warm',
+};
+
+/**
+ * Voice Ensemble - Card gallery for selecting voices.
+ * Replaces dropdown with theatrical voice cards.
+ */
 export function VoiceSelector({
   voice,
   onChange,
   disabled,
 }: VoiceSelectorProps) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="voice-select">Voice</Label>
-      <Select
-        id="voice-select"
-        value={voice}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-      >
-        <option value="" disabled>
-          Select a voice
-        </option>
-        {VOICES.map((v) => (
-          <option key={v.id} value={v.id}>
-            {v.name} - {v.description}
-          </option>
-        ))}
-      </Select>
-    </div>
+    <fieldset className="voice-ensemble" disabled={disabled}>
+      <legend className="sr-only">Select a voice</legend>
+      <div className="voice-ensemble-stage">
+        {VOICES.map((v) => {
+          const isSelected = voice === v.id;
+          return (
+            <button
+              key={v.id}
+              type="button"
+              className={cn('voice-card', isSelected && 'voice-card-selected')}
+              onClick={() => onChange(v.id)}
+              aria-pressed={isSelected}
+              disabled={disabled}
+            >
+              <div className="voice-card-symbol">
+                <VoiceSymbol voiceId={v.id} className="w-5 h-5" />
+              </div>
+              <span className="voice-card-name">{v.name}</span>
+              <span className="voice-card-trait">
+                {VOICE_TRAITS[v.id] ?? v.description}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

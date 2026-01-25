@@ -8,6 +8,7 @@ import {
   TextEditor,
   VoiceSelector,
   ActionBar,
+  AudioStage,
 } from './workbench';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
@@ -90,33 +91,27 @@ export function VoiceoverDetail({
         />
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-        {/* Left: Text editor (takes 2/3) */}
-        <div className="lg:col-span-2 flex flex-col min-h-[400px]">
+      <div className="flex flex-col gap-6 p-6">
+        {/* Voice Ensemble at top */}
+        <VoiceSelector
+          voice={settings.voice}
+          onChange={settings.setVoice}
+          disabled={isGenerating}
+        />
+
+        {/* Full-width Manuscript */}
+        <div className="flex-1 min-h-[400px]">
           <TextEditor
             text={settings.text}
             onChange={settings.setText}
             disabled={isGenerating}
-            placeholder="Enter your voiceover text here..."
           />
         </div>
 
-        {/* Right: Voice selector and audio preview (takes 1/3) */}
-        <div className="flex flex-col gap-6">
-          <VoiceSelector
-            voice={settings.voice}
-            onChange={settings.setVoice}
-            disabled={isGenerating}
-          />
-
-          {/* Audio player (if available) */}
-          {displayAudio && (
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="text-sm font-medium mb-3">Audio Preview</h3>
-              <audio src={displayAudio.url} controls className="w-full" />
-            </div>
-          )}
-        </div>
+        {/* Audio Stage (when available) */}
+        {displayAudio && (
+          <AudioStage src={displayAudio.url} duration={displayAudio.duration} />
+        )}
       </div>
     </WorkbenchLayout>
   );

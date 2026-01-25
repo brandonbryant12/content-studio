@@ -101,7 +101,10 @@
       "Skill(remotion-best-practices)",
       "WebFetch(domain:www.remotion.dev)",
       "Bash(npx agent-browser:*)",
-      "Bash(agent-browser:*)"
+      "Bash(agent-browser:*)",
+      "Bash(lsof:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Skill(agent-browser)"
     ],
     "deny": [],
     "ask": []

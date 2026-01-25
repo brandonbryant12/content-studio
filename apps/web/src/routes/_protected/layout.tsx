@@ -20,72 +20,84 @@ export const Route = createFileRoute('/_protected')({
 
 function Sidebar() {
   return (
-    <aside className="w-16 border-r border-gray-200 dark:border-gray-800 h-[calc(100vh-57px)] flex flex-col bg-gray-50/50 dark:bg-gray-900/50 items-center py-4">
-      <nav className="flex-1 flex flex-col gap-2 w-full px-2">
+    <aside className="w-[72px] border-r border-border/50 h-[calc(100vh-65px)] flex flex-col bg-sidebar items-center py-5">
+      <nav className="flex-1 flex flex-col gap-1.5 w-full px-3">
         <Link
           to="/dashboard"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           activeProps={{
             className:
-              'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
+              'bg-gradient-to-br from-primary/20 to-primary/10 text-primary shadow-sm',
           }}
           inactiveProps={{
             className:
-              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
           }}
           aria-label="Dashboard"
         >
-          <HomeIcon className="w-5 h-5" aria-hidden="true" />
+          <HomeIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
         </Link>
 
-        <div className="my-2 border-t border-gray-200 dark:border-gray-800 w-8 mx-auto" />
+        <div className="my-3 border-t border-border/60 w-6 mx-auto" />
 
         <Link
           to="/documents"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           activeProps={{
             className:
-              'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+              'bg-gradient-to-br from-sky-500/20 to-sky-500/10 text-sky-600 dark:text-sky-400 shadow-sm',
           }}
           inactiveProps={{
             className:
-              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
           }}
           aria-label="Documents"
         >
-          <FileTextIcon className="w-5 h-5" aria-hidden="true" />
+          <FileTextIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
         </Link>
 
         <Link
           to="/podcasts"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 focus-visible:ring-offset-2"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           activeProps={{
             className:
-              'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400',
+              'bg-gradient-to-br from-primary/20 to-primary/10 text-primary shadow-sm',
           }}
           inactiveProps={{
             className:
-              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
           }}
           aria-label="Podcasts"
         >
-          <MixerHorizontalIcon className="w-5 h-5" aria-hidden="true" />
+          <MixerHorizontalIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
         </Link>
 
         <Link
           to="/voiceovers"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           activeProps={{
             className:
-              'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
+              'bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm',
           }}
           inactiveProps={{
             className:
-              'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
           }}
           aria-label="Voiceovers"
         >
-          <SpeakerLoudIcon className="w-5 h-5" aria-hidden="true" />
+          <SpeakerLoudIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
         </Link>
       </nav>
 
@@ -101,7 +113,7 @@ function Layout() {
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-57px)]">
+      <div className="flex items-center justify-center h-[calc(100vh-65px)]">
         <Spinner />
       </div>
     );
@@ -114,7 +126,7 @@ function Layout() {
   return (
     <div className="flex">
       <Sidebar />
-      <main className="flex-1 overflow-auto h-[calc(100vh-57px)] bg-white dark:bg-gray-950">
+      <main className="flex-1 overflow-auto h-[calc(100vh-65px)] bg-background">
         <ErrorBoundary resetKeys={[session?.user?.id]}>
           <Outlet />
         </ErrorBoundary>

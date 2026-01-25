@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import 'tailwindcss';
 
 @plugin 'tailwindcss-animate';
@@ -6,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'DM Sans', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   --color-selected: hsl(var(--selected));
   --color-nav: hsl(var(--nav));
@@ -69,6 +69,9 @@
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-fade-in-up: fade-in-up 0.5s ease-out;
+  --animate-scale-in: scale-in 0.3s ease-out;
 
   --color-toast-error: hsl(var(--toast-error));
   --color-toast-info: hsl(var(--toast-info));
@@ -95,6 +98,37 @@
       height: 0;
     }
   }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 /*
@@ -117,138 +151,138 @@
 
 @layer base {
   :root {
-    /* Studio Pro - Light Theme */
-    /* Clean, premium whites with sapphire accent */
-    --selected: 220 25% 93%;
-    --nav: 220 15% 97%;
-    --elevated: 220 10% 95%;
+    /* Warm Creative - Light Theme */
+    /* Inspired by aged paper, pottery, and natural materials */
+    --selected: 35 30% 90%;
+    --nav: 40 25% 96%;
+    --elevated: 38 20% 94%;
 
-    /* Clean, crisp backgrounds */
-    --background: 220 15% 98%;
-    --foreground: 220 25% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    /* Warm cream/paper backgrounds */
+    --background: 42 35% 97%;
+    --foreground: 25 30% 12%;
+    --card: 45 40% 99%;
+    --card-foreground: 25 30% 12%;
+    --popover: 45 40% 99%;
+    --popover-foreground: 25 30% 12%;
 
-    /* Primary: Refined sapphire - premium, trustworthy */
-    --primary: 225 75% 52%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Terracotta - warm, earthy, inviting */
+    --primary: 16 65% 50%;
+    --primary-foreground: 45 40% 98%;
 
-    /* Secondary: Cool neutral gray */
-    --secondary: 220 10% 92%;
-    --secondary-foreground: 220 15% 25%;
+    /* Secondary: Warm stone gray */
+    --secondary: 35 15% 88%;
+    --secondary-foreground: 25 20% 25%;
 
-    /* Muted: Soft cool gray */
-    --muted: 220 10% 94%;
-    --muted-foreground: 220 10% 45%;
+    /* Muted: Soft warm gray */
+    --muted: 38 18% 92%;
+    --muted-foreground: 25 12% 45%;
 
-    /* Accent: Subtle blue tint */
-    --accent: 220 20% 94%;
-    --accent-foreground: 220 25% 30%;
+    /* Accent: Sage green - natural, calming */
+    --accent: 145 20% 90%;
+    --accent-foreground: 145 25% 25%;
 
-    /* Status colors - refined, professional */
-    --destructive: 0 70% 55%;
+    /* Status colors - warm, organic */
+    --destructive: 4 65% 52%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 55% 38%;
+    --success: 152 45% 38%;
     --success-foreground: 152 30% 98%;
-    --info: 210 80% 52%;
-    --info-foreground: 210 30% 98%;
-    --warning: 38 90% 50%;
-    --warning-foreground: 38 90% 12%;
+    --info: 200 60% 48%;
+    --info-foreground: 200 30% 98%;
+    --warning: 42 85% 48%;
+    --warning-foreground: 42 90% 12%;
 
-    /* Clean borders */
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 225 75% 52%;
+    /* Warm borders */
+    --border: 35 20% 85%;
+    --input: 35 20% 85%;
+    --ring: 16 65% 50%;
 
-    --chart-1: 225 75% 55%;
-    --chart-2: 152 55% 45%;
-    --chart-3: 280 60% 55%;
-    --chart-4: 38 90% 50%;
-    --chart-5: 0 70% 55%;
-    --radius: 0.5rem;
+    --chart-1: 16 65% 55%;
+    --chart-2: 152 45% 45%;
+    --chart-3: 280 40% 55%;
+    --chart-4: 42 85% 50%;
+    --chart-5: 4 65% 55%;
+    --radius: 0.75rem;
 
-    --toast-error: 0 70% 95%;
-    --toast-info: 210 70% 95%;
-    --toast-loading: 220 10% 94%;
-    --toast-success: 152 50% 92%;
-    --toast-warning: 38 80% 92%;
+    --toast-error: 4 55% 95%;
+    --toast-info: 200 50% 95%;
+    --toast-loading: 38 18% 94%;
+    --toast-success: 152 40% 92%;
+    --toast-warning: 42 70% 92%;
 
-    --sidebar-background: 220 15% 97%;
-    --sidebar-foreground: 220 20% 25%;
-    --sidebar-primary: 225 75% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 93%;
-    --sidebar-accent-foreground: 220 20% 20%;
-    --sidebar-border: 220 15% 90%;
-    --sidebar-ring: 225 75% 52%;
+    --sidebar-background: 40 30% 96%;
+    --sidebar-foreground: 25 25% 20%;
+    --sidebar-primary: 16 65% 50%;
+    --sidebar-primary-foreground: 45 40% 98%;
+    --sidebar-accent: 35 25% 91%;
+    --sidebar-accent-foreground: 25 25% 18%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 16 65% 50%;
   }
 
   .dark {
-    /* Studio Pro - Dark Theme */
-    /* Deep blacks with electric sapphire glow */
-    --selected: 225 50% 18%;
-    --nav: 225 15% 7%;
-    --elevated: 225 10% 12%;
+    /* Warm Creative - Dark Theme */
+    /* Deep espresso browns with warm amber glow */
+    --selected: 25 35% 18%;
+    --nav: 25 20% 8%;
+    --elevated: 28 18% 12%;
 
-    --background: 225 15% 5%;
-    --foreground: 220 10% 95%;
-    --card: 225 12% 8%;
-    --card-foreground: 220 10% 95%;
-    --popover: 225 12% 8%;
-    --popover-foreground: 220 10% 95%;
+    --background: 25 25% 6%;
+    --foreground: 40 20% 92%;
+    --card: 28 20% 9%;
+    --card-foreground: 40 20% 92%;
+    --popover: 28 20% 9%;
+    --popover-foreground: 40 20% 92%;
 
-    /* Primary: Electric sapphire - glows against dark */
-    --primary: 225 85% 60%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Warm amber/copper - glows warmly */
+    --primary: 24 80% 55%;
+    --primary-foreground: 25 25% 6%;
 
-    /* Secondary: Deep cool gray */
-    --secondary: 225 10% 14%;
-    --secondary-foreground: 220 10% 85%;
+    /* Secondary: Deep warm brown */
+    --secondary: 28 15% 15%;
+    --secondary-foreground: 40 15% 82%;
 
-    /* Muted: Subtle blue-gray */
-    --muted: 225 10% 14%;
-    --muted-foreground: 220 8% 50%;
+    /* Muted: Warm charcoal */
+    --muted: 25 12% 15%;
+    --muted-foreground: 35 10% 55%;
 
-    /* Accent: Muted sapphire tint */
-    --accent: 225 20% 15%;
-    --accent-foreground: 220 15% 75%;
+    /* Accent: Muted sage tint */
+    --accent: 145 15% 16%;
+    --accent-foreground: 145 20% 72%;
 
-    /* Status colors - vibrant against dark */
-    --destructive: 0 72% 55%;
+    /* Status colors - warm against dark */
+    --destructive: 4 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 60% 45%;
+    --success: 152 55% 42%;
     --success-foreground: 152 30% 98%;
-    --info: 210 85% 58%;
-    --info-foreground: 210 30% 98%;
-    --warning: 42 95% 55%;
+    --info: 200 70% 52%;
+    --info-foreground: 200 30% 98%;
+    --warning: 42 90% 52%;
     --warning-foreground: 42 95% 10%;
 
-    --border: 225 12% 16%;
-    --input: 225 12% 16%;
-    --ring: 225 85% 60%;
+    --border: 28 15% 18%;
+    --input: 28 15% 18%;
+    --ring: 24 80% 55%;
 
-    --chart-1: 225 85% 60%;
-    --chart-2: 152 60% 50%;
-    --chart-3: 280 65% 60%;
-    --chart-4: 42 95% 55%;
-    --chart-5: 0 72% 58%;
+    --chart-1: 24 80% 58%;
+    --chart-2: 152 55% 48%;
+    --chart-3: 280 50% 58%;
+    --chart-4: 42 90% 55%;
+    --chart-5: 4 70% 55%;
 
-    --toast-error: 0 60% 12%;
-    --toast-info: 210 60% 12%;
-    --toast-loading: 225 10% 10%;
-    --toast-success: 152 50% 12%;
-    --toast-warning: 42 70% 14%;
+    --toast-error: 4 55% 12%;
+    --toast-info: 200 55% 12%;
+    --toast-loading: 25 12% 12%;
+    --toast-success: 152 45% 12%;
+    --toast-warning: 42 65% 14%;
 
-    --sidebar-background: 225 12% 6%;
-    --sidebar-foreground: 220 10% 90%;
-    --sidebar-primary: 225 85% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 12% 12%;
-    --sidebar-accent-foreground: 220 10% 85%;
-    --sidebar-border: 225 12% 14%;
-    --sidebar-ring: 225 85% 60%;
+    --sidebar-background: 25 20% 7%;
+    --sidebar-foreground: 40 18% 88%;
+    --sidebar-primary: 24 80% 55%;
+    --sidebar-primary-foreground: 25 25% 6%;
+    --sidebar-accent: 28 18% 13%;
+    --sidebar-accent-foreground: 40 15% 82%;
+    --sidebar-border: 28 15% 15%;
+    --sidebar-ring: 24 80% 55%;
   }
 }
 
@@ -272,26 +306,35 @@
   }
 
   html {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Instrument Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: 'ss01', 'ss02';
+    font-feature-settings: 'cv01', 'cv02';
+    /* Subtle paper texture via noise */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-blend-mode: soft-light;
+    background-size: 180px 180px;
   }
 
-  /* Editorial serif headings option */
+  .dark body {
+    background-blend-mode: overlay;
+  }
+
+  /* Warm serif headings - Fraunces has beautiful optical sizing */
   .font-editorial {
-    font-family: 'Source Serif 4', Georgia, serif;
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
   }
 
   /* Monospace for technical/meta info */
   .font-technical {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     font-size: 0.875em;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -317,7 +360,7 @@
   }
 
   .content-grid-2 {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-5;
   }
 
   .content-grid-3 {
@@ -325,31 +368,77 @@
   }
 
   /* -----------------------------------------
+     ANIMATIONS
+     Page transitions and staggered reveals
+     ----------------------------------------- */
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.05s;
+  }
+  .stagger-2 {
+    animation-delay: 0.1s;
+  }
+  .stagger-3 {
+    animation-delay: 0.15s;
+  }
+  .stagger-4 {
+    animation-delay: 0.2s;
+  }
+  .stagger-5 {
+    animation-delay: 0.25s;
+  }
+  .stagger-6 {
+    animation-delay: 0.3s;
+  }
+
+  /* -----------------------------------------
      TYPOGRAPHY
+     Warm, editorial feel with Fraunces display
      ----------------------------------------- */
   .page-eyebrow {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 0.875em;
-    letter-spacing: -0.01em;
-    @apply text-muted-foreground mb-2 tracking-wide uppercase;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75em;
+    letter-spacing: 0.08em;
+    @apply text-primary/70 mb-3 uppercase font-medium;
   }
 
   .page-title {
-    font-family: 'Source Serif 4', Georgia, serif;
-    @apply text-3xl font-semibold text-foreground;
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings:
+      'SOFT' 50,
+      'WONK' 1;
+    @apply text-3xl font-semibold text-foreground tracking-tight;
   }
 
   .page-title-lg {
-    font-family: 'Source Serif 4', Georgia, serif;
-    @apply text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground leading-[1.1];
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings:
+      'SOFT' 50,
+      'WONK' 1;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.08];
   }
 
   .section-title {
-    @apply font-medium text-foreground;
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 30;
+    @apply font-semibold text-foreground text-lg;
   }
 
   .section-header {
-    @apply flex items-center justify-between mb-4;
+    @apply flex items-center justify-between mb-5;
   }
 
   .text-body {
@@ -361,8 +450,8 @@
   }
 
   .text-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 0.875em;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.8em;
     letter-spacing: -0.01em;
     @apply text-xs text-muted-foreground;
   }
@@ -373,54 +462,101 @@
 
   /* -----------------------------------------
      CARDS
+     Warm, paper-like with soft shadows
      ----------------------------------------- */
   .card {
-    @apply border border-border bg-card rounded-lg shadow-sm;
+    @apply border border-border bg-card rounded-xl;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 4px 12px hsl(var(--foreground) / 0.03);
   }
 
   .card-interactive {
-    @apply border border-border bg-card rounded-lg shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-200;
+    @apply border border-border bg-card rounded-xl transition-all duration-300;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 4px 12px hsl(var(--foreground) / 0.03);
+  }
+
+  .card-interactive:hover {
+    @apply border-primary/30;
+    box-shadow:
+      0 2px 4px hsl(var(--primary) / 0.08),
+      0 8px 24px hsl(var(--foreground) / 0.06);
+    transform: translateY(-1px);
   }
 
   .card-padded {
-    @apply border border-border bg-card rounded-lg shadow-sm p-6 md:p-8;
+    @apply border border-border bg-card rounded-xl p-6 md:p-8;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 4px 12px hsl(var(--foreground) / 0.03);
   }
 
   /* Action card - for quick action buttons */
   .action-card {
-    @apply flex items-center gap-4 p-5 rounded-lg border border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-200 text-left;
+    @apply flex items-center gap-5 p-6 rounded-xl border border-border bg-card text-left transition-all duration-300;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 4px 12px hsl(var(--foreground) / 0.03);
+  }
+
+  .action-card:hover {
+    @apply border-primary/35;
+    box-shadow:
+      0 2px 4px hsl(var(--primary) / 0.1),
+      0 12px 32px hsl(var(--foreground) / 0.08);
+    transform: translateY(-2px);
   }
 
   .action-card:disabled {
     @apply opacity-50 cursor-not-allowed;
+    transform: none;
   }
 
   .action-card-icon {
-    @apply w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center transition-colors;
+    @apply w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center transition-all duration-300;
+    box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.1);
   }
 
   .action-card-icon svg {
-    @apply text-primary;
+    @apply text-primary w-5 h-5;
   }
 
   .action-card:hover .action-card-icon {
-    @apply bg-primary/15;
+    @apply from-primary/25 to-primary/10;
+    transform: scale(1.05);
   }
 
   .action-card-title {
-    @apply font-medium text-foreground;
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 30;
+    @apply font-semibold text-foreground;
   }
 
   .action-card-description {
-    @apply text-sm text-muted-foreground;
+    @apply text-sm text-muted-foreground mt-0.5;
   }
 
   /* List item card */
   .list-card {
-    @apply border border-border bg-card p-4 rounded-lg shadow-sm flex items-center gap-4 hover:border-primary/40 hover:shadow-md transition-all duration-200;
+    @apply border border-border bg-card p-4 rounded-xl flex items-center gap-4 transition-all duration-300;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.03),
+      0 2px 8px hsl(var(--foreground) / 0.02);
+  }
+
+  .list-card:hover {
+    @apply border-primary/30;
+    box-shadow:
+      0 2px 4px hsl(var(--primary) / 0.06),
+      0 8px 20px hsl(var(--foreground) / 0.05);
+    transform: translateY(-1px);
   }
 
   .list-card-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 30;
     @apply font-medium text-foreground truncate transition-colors;
   }
 
@@ -432,32 +568,37 @@
     @apply flex items-center gap-3 mt-1.5;
   }
 
-  /* Empty state */
+  /* Empty state - softer, more inviting */
   .empty-state {
-    @apply text-center py-8 border border-dashed border-border rounded-lg;
+    @apply text-center py-10 border-2 border-dashed border-border/60 rounded-2xl bg-muted/30;
   }
 
   .empty-state-lg {
-    @apply flex flex-col items-center justify-center py-16 px-4 border border-dashed border-border rounded-lg;
+    @apply flex flex-col items-center justify-center py-20 px-6 border-2 border-dashed border-border/60 rounded-2xl bg-muted/30;
   }
 
   .empty-state-icon {
-    @apply w-14 h-14 rounded-lg bg-secondary flex items-center justify-center mb-4;
+    @apply w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center mb-5;
+    box-shadow:
+      inset 0 1px 0 hsl(var(--card) / 0.5),
+      0 4px 12px hsl(var(--foreground) / 0.05);
   }
 
   .empty-state-title {
-    @apply font-medium text-foreground mb-1;
+    font-family: 'Fraunces', Georgia, serif;
+    @apply font-semibold text-foreground mb-2 text-lg;
   }
 
   .empty-state-description {
-    @apply text-sm text-muted-foreground text-center max-w-sm mb-4;
+    @apply text-sm text-muted-foreground text-center max-w-sm mb-5 leading-relaxed;
   }
 
   /* -----------------------------------------
      ICONS
      ----------------------------------------- */
   .icon-box {
-    @apply w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center;
+    @apply w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center;
+    box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.08);
   }
 
   .icon-box svg {
@@ -465,34 +606,39 @@
   }
 
   .icon-box-lg {
-    @apply w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center;
+    @apply w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center;
+    box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.08);
   }
 
   .icon-box-lg svg {
-    @apply text-primary;
+    @apply text-primary w-5 h-5;
   }
 
   .icon-box-primary {
-    @apply w-11 h-11 rounded-lg bg-primary flex items-center justify-center;
+    @apply w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/85 flex items-center justify-center;
+    box-shadow:
+      inset 0 1px 0 hsl(var(--primary-foreground) / 0.15),
+      0 2px 8px hsl(var(--primary) / 0.35);
   }
 
   .icon-box-primary svg {
-    @apply text-primary-foreground;
+    @apply text-primary-foreground w-5 h-5;
   }
 
   /* -----------------------------------------
      LINKS & NAVIGATION
      ----------------------------------------- */
   .nav-link {
-    @apply px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
+    @apply px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted/50;
   }
 
   .nav-link-primary {
-    @apply px-3 py-1.5 text-sm font-medium bg-foreground text-background rounded hover:bg-foreground/90 transition-colors;
+    @apply px-4 py-2 text-sm font-semibold bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-all duration-200;
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.2);
   }
 
   .text-link {
-    @apply text-sm text-muted-foreground hover:text-foreground transition-colors;
+    @apply text-sm text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline decoration-primary/40;
   }
 
   .text-link-primary {
@@ -503,11 +649,14 @@
      LOGO
      ----------------------------------------- */
   .logo {
-    @apply flex items-center gap-2.5 hover:opacity-90 transition-opacity;
+    @apply flex items-center gap-3 hover:opacity-90 transition-all duration-200;
   }
 
   .logo-icon {
-    @apply w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm;
+    @apply w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center;
+    box-shadow:
+      inset 0 1px 0 hsl(var(--primary-foreground) / 0.2),
+      0 2px 8px hsl(var(--primary) / 0.4);
   }
 
   .logo-icon svg {
@@ -515,7 +664,11 @@
   }
 
   .logo-text {
-    @apply font-semibold tracking-tight text-foreground;
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings:
+      'SOFT' 50,
+      'WONK' 1;
+    @apply font-bold tracking-tight text-foreground text-lg;
   }
 
   /* -----------------------------------------
@@ -601,11 +754,16 @@
      HEADER
      ----------------------------------------- */
   .header {
-    @apply sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70;
+    @apply sticky top-0 z-50 w-full border-b border-border/40 bg-background/85 backdrop-blur-xl;
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--background)),
+      hsl(var(--background) / 0.95)
+    );
   }
 
   .header-content {
-    @apply px-4 md:px-6 flex items-center justify-between h-14;
+    @apply px-5 md:px-6 flex items-center justify-between h-16;
   }
 
   /* -----------------------------------------
@@ -674,7 +832,8 @@
   }
 
   .workbench-title {
-    font-family: 'Source Serif 4', Georgia, serif;
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 40;
     @apply text-xl font-semibold text-foreground truncate tracking-tight;
   }
 
@@ -687,8 +846,8 @@
   }
 
   .workbench-duration {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply flex items-center gap-1.5 text-sm text-warning font-medium tabular-nums;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply flex items-center gap-1.5 text-sm text-primary font-medium tabular-nums;
   }
 
   .workbench-actions {
@@ -860,7 +1019,7 @@
   }
 
   .segment-item-line-number span {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-[11px] tabular-nums text-muted-foreground select-none;
   }
 
@@ -3111,5 +3270,223 @@
       transform: scale(1);
       opacity: 1;
     }
+  }
+
+  /* ============================================
+     VOICEOVER WORKBENCH - ORACLE THEATRE
+     Theatrical design for voiceover creation
+     Design: Greek pottery aesthetics with warm terracotta
+     ============================================ */
+
+  /* -----------------------------------------
+     VOICE ENSEMBLE
+     Card gallery for voice selection
+     ----------------------------------------- */
+  .voice-ensemble {
+    @apply border-0 p-0 m-0;
+  }
+
+  .voice-ensemble-stage {
+    @apply flex flex-wrap justify-center gap-3;
+  }
+
+  .voice-card {
+    @apply flex flex-col items-center gap-2 px-4 py-3 min-w-[90px];
+    @apply rounded-xl border border-border bg-card;
+    @apply transition-all duration-300 ease-out;
+    @apply hover:border-muted-foreground/30;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .voice-card:hover:not(:disabled) {
+    transform: translateY(-2px);
+    @apply shadow-md;
+  }
+
+  .voice-card-selected {
+    @apply border-primary bg-primary/5;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      0 4px 12px -2px hsl(var(--primary) / 0.2),
+      0 0 0 1px hsl(var(--primary) / 0.3);
+  }
+
+  .voice-card-selected:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  .voice-card-symbol {
+    @apply flex items-center justify-center w-10 h-10 rounded-full;
+    @apply bg-muted text-muted-foreground;
+    @apply transition-all duration-300;
+  }
+
+  .voice-card-selected .voice-card-symbol {
+    @apply bg-primary/20 text-primary;
+  }
+
+  .voice-card-name {
+    font-family: 'Fraunces', Georgia, serif;
+    @apply text-sm font-semibold text-foreground;
+  }
+
+  .voice-card-trait {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-[10px] uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* -----------------------------------------
+     MANUSCRIPT
+     Theatrical text editor with serif typography
+     ----------------------------------------- */
+  .manuscript {
+    @apply flex flex-col h-full;
+    @apply rounded-xl border border-border bg-card;
+    @apply overflow-hidden;
+  }
+
+  .manuscript-disabled {
+    @apply opacity-60;
+  }
+
+  .manuscript-content {
+    font-family: 'Fraunces', Georgia, serif;
+    @apply flex-1 w-full resize-none;
+    @apply px-6 py-5 text-lg leading-relaxed;
+    @apply bg-transparent text-foreground;
+    @apply placeholder:text-muted-foreground/60 placeholder:italic;
+    @apply focus:outline-none;
+    @apply disabled:cursor-not-allowed;
+    min-height: 350px;
+  }
+
+  /* Warm gradient overlay for dark mode (candlelit effect) */
+  .dark .manuscript {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(28 20% 10% / 0.5) 100%
+    );
+  }
+
+  .manuscript-footer {
+    @apply flex items-center justify-end px-4 py-2;
+    @apply border-t border-border bg-muted/30;
+  }
+
+  .manuscript-count {
+    @apply flex items-center gap-2;
+  }
+
+  .manuscript-count-ring {
+    @apply flex-shrink-0;
+  }
+
+  .manuscript-count-text {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-xs text-muted-foreground tabular-nums;
+  }
+
+  /* -----------------------------------------
+     AUDIO STAGE
+     Custom audio player with theatrical design
+     ----------------------------------------- */
+  .stage {
+    @apply relative rounded-xl border border-border bg-card overflow-hidden;
+    @apply transition-all duration-300;
+  }
+
+  .stage-performing {
+    @apply border-primary/30;
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.25);
+  }
+
+  /* Decorative waveform bars */
+  .stage-waveform {
+    @apply absolute bottom-0 left-0 right-0 h-12;
+    @apply flex items-end justify-center gap-[3px] px-4 pb-2;
+    @apply pointer-events-none opacity-30;
+  }
+
+  .stage-waveform-bar {
+    @apply w-1 rounded-full bg-primary/50;
+    height: 30%;
+    transition: height 0.15s ease-out;
+  }
+
+  .stage-performing .stage-waveform {
+    @apply opacity-60;
+  }
+
+  .stage-performing .stage-waveform-bar {
+    animation: waveform-dance 0.6s ease-in-out infinite;
+  }
+
+  /* Stagger the animation for each bar */
+  .stage-performing .stage-waveform-bar:nth-child(odd) {
+    animation-duration: 0.5s;
+  }
+
+  .stage-performing .stage-waveform-bar:nth-child(3n) {
+    animation-duration: 0.7s;
+  }
+
+  .stage-performing .stage-waveform-bar:nth-child(5n) {
+    animation-duration: 0.45s;
+  }
+
+  @keyframes waveform-dance {
+    0%,
+    100% {
+      height: 30%;
+    }
+    50% {
+      height: 100%;
+    }
+  }
+
+  /* Controls */
+  .stage-controls {
+    @apply relative z-10 flex items-center gap-4 px-5 py-4;
+  }
+
+  .stage-play-btn {
+    @apply flex items-center justify-center w-14 h-14 rounded-full;
+    @apply bg-primary text-primary-foreground;
+    @apply transition-all duration-200;
+    @apply hover:bg-primary/90 hover:scale-105;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply active:scale-95;
+  }
+
+  .stage-time {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-sm text-muted-foreground tabular-nums min-w-[40px];
+  }
+
+  .stage-progress {
+    @apply relative flex-1 h-2 rounded-full cursor-pointer;
+    @apply bg-muted;
+  }
+
+  .stage-track {
+    @apply absolute inset-0 rounded-full bg-muted;
+  }
+
+  .stage-spotlight {
+    @apply absolute top-0 left-0 h-full rounded-full;
+    @apply bg-primary;
+    @apply transition-all duration-100;
+  }
+
+  /* Glowing leading edge */
+  .stage-spotlight::after {
+    content: '';
+    @apply absolute right-0 top-1/2 -translate-y-1/2;
+    @apply w-3 h-3 rounded-full bg-primary;
+    box-shadow:
+      0 0 8px 2px hsl(var(--primary) / 0.6),
+      0 0 16px 4px hsl(var(--primary) / 0.3);
   }
 }

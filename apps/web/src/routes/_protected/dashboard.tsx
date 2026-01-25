@@ -65,23 +65,21 @@ function Dashboard() {
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10 animate-fade-in-up">
         <p className="page-eyebrow">Overview</p>
         <h1 className="page-title">Dashboard</h1>
       </div>
 
       {/* Quick Actions */}
-      <div className="content-grid-2 mb-10">
+      <div className="content-grid-2 mb-12">
         <button
           onClick={() => setUploadOpen(true)}
-          className="action-card"
+          className="action-card animate-fade-in-up stagger-1"
+          style={{ opacity: 0 }}
           aria-label="Upload Document - Add source content"
         >
           <div className="action-card-icon">
-            <UploadIcon
-              className="w-5 h-5 text-foreground"
-              aria-hidden="true"
-            />
+            <UploadIcon className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
             <h3 className="action-card-title">Upload Document</h3>
@@ -92,17 +90,15 @@ function Dashboard() {
         <button
           onClick={handleCreatePodcast}
           disabled={createPodcastMutation.isPending}
-          className="action-card"
+          className="action-card animate-fade-in-up stagger-2"
+          style={{ opacity: 0 }}
           aria-label="New Podcast - Generate audio content"
         >
           <div className="action-card-icon">
             {createPodcastMutation.isPending ? (
               <Spinner className="w-5 h-5" />
             ) : (
-              <PlusIcon
-                className="w-5 h-5 text-foreground"
-                aria-hidden="true"
-              />
+              <PlusIcon className="w-5 h-5" aria-hidden="true" />
             )}
           </div>
           <div>
@@ -115,11 +111,14 @@ function Dashboard() {
       </div>
 
       {/* Recent Documents */}
-      <section className="page-section">
+      <section
+        className="page-section animate-fade-in-up stagger-3"
+        style={{ opacity: 0 }}
+      >
         <div className="section-header">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <FileTextIcon
-              className="w-4 h-4 text-muted-foreground"
+              className="w-4 h-4 text-primary/60"
               aria-hidden="true"
             />
             <h2 className="section-title">Recent Documents</h2>
@@ -152,11 +151,11 @@ function Dashboard() {
       </section>
 
       {/* Recent Podcasts */}
-      <section>
+      <section className="animate-fade-in-up stagger-4" style={{ opacity: 0 }}>
         <div className="section-header">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <SpeakerLoudIcon
-              className="w-4 h-4 text-muted-foreground"
+              className="w-4 h-4 text-primary/60"
               aria-hidden="true"
             />
             <h2 className="section-title">Recent Podcasts</h2>
