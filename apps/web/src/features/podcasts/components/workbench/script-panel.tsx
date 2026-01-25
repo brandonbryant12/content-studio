@@ -7,7 +7,7 @@ import {
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { useState } from 'react';
-import type { ScriptSegment } from '../../hooks';
+import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
 
 interface ScriptPanelProps {

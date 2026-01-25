@@ -2,7 +2,7 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState, useEffect } from 'react';
-import type { ScriptSegment } from '../../hooks';
+import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { BaseDialog } from '@/shared/components/base-dialog';
 
 interface SegmentEditorDialogProps {

@@ -7,7 +7,7 @@ import {
   MIN_DURATION,
   MAX_DURATION,
   type UsePodcastSettingsReturn,
-} from '../../hooks';
+} from '../../hooks/use-podcast-settings';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 

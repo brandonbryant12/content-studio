@@ -135,7 +135,7 @@ export function VoiceoverList({
             <VoiceoverItem
               key={voiceover.id}
               voiceover={voiceover}
-              onDelete={() => onDelete(voiceover.id)}
+              onDelete={onDelete}
               isDeleting={deletingId === voiceover.id}
             />
           ))}

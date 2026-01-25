@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_protected/dashboard')({
 });
 
 // Stable noop callback to avoid re-renders (rerender-memo-with-default-value)
-const noop = () => {};
+const noop = (_id: string) => {};
 
 function Dashboard() {
   const navigate = useNavigate();

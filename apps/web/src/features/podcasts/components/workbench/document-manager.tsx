@@ -14,7 +14,7 @@ import { BaseDialog } from '@/shared/components/base-dialog';
 import { useDocuments, getDocumentListQueryKey } from '@/features/documents';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import type { DocumentInfo } from '../../hooks';
+import type { DocumentInfo } from '../../hooks/use-document-selection';
 
 const SUPPORTED_TYPES = [
   'text/plain',

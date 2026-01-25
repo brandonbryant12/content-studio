@@ -134,7 +134,7 @@ export function PodcastList({
             <PodcastItem
               key={podcast.id}
               podcast={podcast}
-              onDelete={() => onDelete(podcast.id)}
+              onDelete={onDelete}
               isDeleting={deletingId === podcast.id}
             />
           ))}

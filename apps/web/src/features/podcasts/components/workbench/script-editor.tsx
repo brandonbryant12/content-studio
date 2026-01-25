@@ -15,7 +15,7 @@ import {
 import { PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { useState, useCallback } from 'react';
-import type { ScriptSegment } from '../../hooks';
+import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { AddSegmentDialog } from './add-segment-dialog';
 import { SegmentItem } from './segment-item';
 

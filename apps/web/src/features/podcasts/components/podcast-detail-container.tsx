@@ -11,15 +11,13 @@ import {
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-import {
-  usePodcast,
-  useScriptEditor,
-  usePodcastSettings,
-  useDocumentSelection,
-  useOptimisticGeneration,
-  useOptimisticSaveChanges,
-  useCollaboratorsQuery,
-} from '../hooks';
+import { usePodcast } from '../hooks/use-podcast';
+import { useScriptEditor } from '../hooks/use-script-editor';
+import { usePodcastSettings } from '../hooks/use-podcast-settings';
+import { useDocumentSelection } from '../hooks/use-document-selection';
+import { useOptimisticGeneration } from '../hooks/use-optimistic-generation';
+import { useOptimisticSaveChanges } from '../hooks/use-optimistic-save-changes';
+import { useCollaboratorsQuery } from '../hooks/use-collaborators';
 import { isSetupMode, isGeneratingStatus } from '../lib/status';
 import { SetupWizardContainer } from './setup-wizard-container';
 import { PodcastDetail } from './podcast-detail';

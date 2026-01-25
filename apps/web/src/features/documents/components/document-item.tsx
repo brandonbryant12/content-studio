@@ -4,6 +4,7 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { memo, useCallback } from 'react';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
 
@@ -36,15 +37,21 @@ function getFileLabel(source: string): string {
 
 export interface DocumentItemProps {
   document: DocumentListItem;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
   isDeleting: boolean;
 }
 
-export function DocumentItem({
+// Memoized to prevent re-renders when parent list re-renders (rerender-memo)
+export const DocumentItem = memo(function DocumentItem({
   document,
   onDelete,
   isDeleting,
 }: DocumentItemProps) {
+  // Stable callback - calls parent with id (rerender-memo-with-default-value)
+  const handleDelete = useCallback(() => {
+    onDelete(document.id);
+  }, [onDelete, document.id]);
+
   return (
     <div className="list-card group">
       <DocumentIcon source={document.source} />
@@ -69,7 +76,7 @@ export function DocumentItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onDelete}
+          onClick={handleDelete}
           disabled={isDeleting}
           className="btn-delete"
         >
@@ -82,4 +89,4 @@ export function DocumentItem({
       </div>
     </div>
   );
-}
+});

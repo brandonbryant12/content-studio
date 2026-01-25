@@ -5,6 +5,7 @@ import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { memo, useCallback } from 'react';
 import { PodcastIcon } from './podcast-icon';
 import {
   type VersionStatus,
@@ -46,15 +47,26 @@ function FormatBadge({ format }: { format: 'voice_over' | 'conversation' }) {
 
 export interface PodcastItemProps {
   podcast: PodcastListItem;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
   isDeleting: boolean;
 }
 
-export function PodcastItem({
+// Memoized to prevent re-renders when parent list re-renders (rerender-memo)
+export const PodcastItem = memo(function PodcastItem({
   podcast,
   onDelete,
   isDeleting,
 }: PodcastItemProps) {
+  // Stable callback - calls parent with id (rerender-memo-with-default-value)
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete(podcast.id);
+    },
+    [onDelete, podcast.id],
+  );
+
   return (
     <div className="list-card group overflow-hidden">
       <Link
@@ -87,11 +99,7 @@ export function PodcastItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={handleDelete}
           disabled={isDeleting}
           className="btn-delete"
         >
@@ -104,4 +112,4 @@ export function PodcastItem({
       </div>
     </div>
   );
-}
+});

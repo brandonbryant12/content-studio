@@ -5,6 +5,7 @@ import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { memo, useCallback, useMemo } from 'react';
 import { VoiceoverIcon } from './voiceover-icon';
 import {
   type VoiceoverStatusType,
@@ -39,20 +40,33 @@ function StatusBadge({ status }: { status: VoiceoverStatusType | undefined }) {
 
 export interface VoiceoverItemProps {
   voiceover: VoiceoverListItem;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
   isDeleting: boolean;
 }
 
-export function VoiceoverItem({
+// Memoized to prevent re-renders when parent list re-renders (rerender-memo)
+export const VoiceoverItem = memo(function VoiceoverItem({
   voiceover,
   onDelete,
   isDeleting,
 }: VoiceoverItemProps) {
-  // Truncate text for preview
-  const textPreview =
-    voiceover.text.length > 100
-      ? voiceover.text.substring(0, 100) + '...'
-      : voiceover.text;
+  // Memoize text truncation to avoid recalculation
+  const textPreview = useMemo(() => {
+    if (voiceover.text.length > 100) {
+      return voiceover.text.substring(0, 100) + '...';
+    }
+    return voiceover.text;
+  }, [voiceover.text]);
+
+  // Stable callback - calls parent with id (rerender-memo-with-default-value)
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete(voiceover.id);
+    },
+    [onDelete, voiceover.id],
+  );
 
   return (
     <div className="list-card group overflow-hidden">
@@ -87,11 +101,7 @@ export function VoiceoverItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={handleDelete}
           disabled={isDeleting}
           className="btn-delete"
         >
@@ -104,4 +114,4 @@ export function VoiceoverItem({
       </div>
     </div>
   );
-}
+});

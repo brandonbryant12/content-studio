@@ -114,7 +114,7 @@ export function DocumentList({
             <DocumentItem
               key={doc.id}
               document={doc}
-              onDelete={() => onDelete(doc.id)}
+              onDelete={onDelete}
               isDeleting={deletingId === doc.id}
             />
           ))}

@@ -1,11 +1,9 @@
 // features/podcasts/components/podcast-detail.tsx
 
 import type { RouterOutput } from '@repo/api/client';
-import type {
-  UseScriptEditorReturn,
-  UsePodcastSettingsReturn,
-  UseDocumentSelectionReturn,
-} from '../hooks';
+import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
+import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
+import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
 import {
   WorkbenchLayout,
   ScriptPanel,

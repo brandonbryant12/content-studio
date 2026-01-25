@@ -7,7 +7,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { useState, useRef, useEffect } from 'react';
-import type { ScriptSegment } from '../../hooks';
+import type { ScriptSegment } from '../../hooks/use-script-editor';
 
 interface SegmentItemProps {
   segment: ScriptSegment;

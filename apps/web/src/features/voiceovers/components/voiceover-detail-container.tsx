@@ -11,13 +11,11 @@ import {
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-import {
-  useVoiceover,
-  useVoiceoverSettings,
-  useOptimisticGeneration,
-  useCollaborators,
-  useApproveVoiceover,
-} from '../hooks';
+import { useVoiceover } from '../hooks/use-voiceover';
+import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
+import { useOptimisticGeneration } from '../hooks/use-optimistic-generation';
+import { useCollaborators } from '../hooks/use-collaborators';
+import { useApproveVoiceover } from '../hooks/use-approve-voiceover';
 import { isGeneratingStatus } from '../lib/status';
 import { VoiceoverDetail } from './voiceover-detail';
 import { AddCollaboratorDialog } from './collaborators';

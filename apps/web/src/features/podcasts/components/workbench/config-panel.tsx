@@ -5,10 +5,8 @@ import {
   FileTextIcon,
 } from '@radix-ui/react-icons';
 import { useState } from 'react';
-import type {
-  UsePodcastSettingsReturn,
-  UseDocumentSelectionReturn,
-} from '../../hooks';
+import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
+import type { UseDocumentSelectionReturn } from '../../hooks/use-document-selection';
 import type { RouterOutput } from '@repo/api/client';
 import { VersionStatus } from '../../lib/status';
 import { AudioPlayer } from '../audio-player';
@@ -20,6 +18,12 @@ import { PromptViewerPanel } from './prompt-viewer';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 type TabId = 'produce' | 'mix';
+
+// Hoisted outside component to avoid recreation on every render (rendering-hoist-jsx)
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: 'produce', label: 'Generate', icon: <LightningBoltIcon /> },
+  { id: 'mix', label: 'Settings', icon: <MixerHorizontalIcon /> },
+];
 
 interface ConfigPanelProps {
   podcast: PodcastFull;
@@ -41,16 +45,11 @@ export function ConfigPanel({
   const [activeTab, setActiveTab] = useState<TabId>('produce');
   const [showPromptViewer, setShowPromptViewer] = useState(false);
 
-  const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
-    { id: 'produce', label: 'Generate', icon: <LightningBoltIcon /> },
-    { id: 'mix', label: 'Settings', icon: <MixerHorizontalIcon /> },
-  ];
-
   return (
     <div className="control-room relative">
       {/* Tab Navigation */}
       <nav className="control-tabs">
-        {tabs.map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}

@@ -2,7 +2,8 @@
 // Container: Handles data fetching, state management, and mutations
 
 import { useState, useCallback } from 'react';
-import { useDocumentList, useOptimisticDeleteDocument } from '../hooks';
+import { useDocumentList } from '../hooks/use-document-list';
+import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-document';
 import { DocumentList } from './document-list';
 
 /**
