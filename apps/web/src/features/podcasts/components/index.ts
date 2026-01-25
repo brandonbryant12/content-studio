@@ -18,8 +18,22 @@ export {
 export { AudioPlayer } from './audio-player';
 export { PodcastIcon } from './podcast-icon';
 
-// Workbench components
-export * from './workbench';
+// Workbench components (specific exports, no barrel re-export)
+export { WorkbenchLayout } from './workbench/workbench-layout';
+export { ScriptPanel } from './workbench/script-panel';
+export { ConfigPanel } from './workbench/config-panel';
+export { ScriptEditor } from './workbench/script-editor';
+export { SegmentItem } from './workbench/segment-item';
+export { SegmentEditorDialog } from './workbench/segment-editor-dialog';
+export { AddSegmentDialog } from './workbench/add-segment-dialog';
+export { SmartActions } from './workbench/smart-actions';
+export { GenerationStatus } from './workbench/generation-status';
+export { ErrorDisplay } from './workbench/error-display';
+export { DocumentManager } from './workbench/document-manager';
+export { PodcastSettings } from './workbench/podcast-settings';
+export { GlobalActionBar } from './workbench/global-action-bar';
 
-// Setup wizard components
-export * from './setup';
+// Setup wizard components (specific exports, no barrel re-export)
+export { SetupWizard } from './setup/setup-wizard';
+export { StepIndicator } from './setup/step-indicator';
+export { SetupFooter } from './setup/setup-footer';

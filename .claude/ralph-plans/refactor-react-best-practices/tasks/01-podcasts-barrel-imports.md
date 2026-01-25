@@ -52,11 +52,19 @@ import { usePodcast } from '@/features/podcasts/hooks/use-podcast';
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+### Findings:
+1. **Route files already use direct imports** - No changes needed for dashboard.tsx, podcasts/index.tsx, or podcasts/$podcastId.tsx
+2. **Internal components already use relative paths** - e.g., `../hooks/use-podcast` instead of barrel imports
+3. **hooks/index.ts already uses specific exports** - No wildcards to remove
+4. **components/index.ts had two wildcards** - `export * from './workbench'` and `export * from './setup'`
+5. **Main index.ts had three wildcards** - `export * from './hooks'`, `export * from './components'`, `export * from './lib/status'`
+
+### Changes Made:
+- `components/index.ts`: Replaced `export * from './workbench'` and `export * from './setup'` with 16 specific exports
+- `index.ts`: Replaced all wildcards with specific exports for all hooks, components, and status utilities
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] `pnpm --filter web build` passes
-- [ ] No remaining barrel imports in podcasts feature (grep check)
+- [x] `pnpm --filter web typecheck` passes
+- [x] `pnpm --filter web build` passes (2.49s)
+- [x] No remaining barrel imports in podcasts feature (grep verified: `export * from` returns no matches)
