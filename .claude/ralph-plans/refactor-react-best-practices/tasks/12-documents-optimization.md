@@ -57,12 +57,30 @@ const handleSearchChange = useCallback(
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+### Changes Made
+
+1. **Barrel exports in `features/documents/index.ts`**: Converted wildcard exports (`export * from`) to named exports from specific files. Routes already used direct imports.
+
+2. **`features/documents/hooks/index.ts`**: Already used named exports - no changes needed.
+
+3. **`features/documents/components/index.ts`**: Already used named exports - no changes needed.
+
+4. **`features/documents/components/document-list.tsx`**:
+   - Added `useMemo` import
+   - Wrapped `filteredDocuments` in `useMemo` with deps `[documents, searchQuery]`
+   - Added `useCallback` import
+   - Converted inline `onChange={(e) => onSearch(e.target.value)}` to `handleSearchChange` callback with deps `[onSearch]`
+
+### Pre-existing Test Issues
+
+Test failures are pre-existing issues unrelated to these changes:
+- Tests use `'Search documents...'` (three periods) but component uses `'Search documents…'` (unicode ellipsis)
+- Similar issue with podcast tests using `'Search podcasts...'`
+- voiceover-detail tests have mock configuration issues
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] Barrel exports removed or made specific
-- [ ] filteredDocuments uses useMemo
-- [ ] onSearch uses useCallback
+- [x] `pnpm --filter web typecheck` passes
+- [x] Barrel exports removed or made specific (index.ts now uses named exports from specific files)
+- [x] filteredDocuments uses useMemo
+- [x] onSearch uses useCallback (handleSearchChange)

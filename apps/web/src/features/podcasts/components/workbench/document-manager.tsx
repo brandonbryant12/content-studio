@@ -8,7 +8,13 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo, type ChangeEvent, type MouseEvent } from 'react';
+import {
+  useState,
+  useCallback,
+  useMemo,
+  type ChangeEvent,
+  type MouseEvent,
+} from 'react';
 import { toast } from 'sonner';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import {
@@ -191,15 +197,12 @@ export function DocumentManager({
   );
 
   // Stable callback for tab switching using data-attribute pattern
-  const handleTabClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      const tabId = e.currentTarget.dataset.tabId as 'existing' | 'upload';
-      if (tabId) {
-        setActiveTab(tabId);
-      }
-    },
-    [],
-  );
+  const handleTabClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    const tabId = e.currentTarget.dataset.tabId as 'existing' | 'upload';
+    if (tabId) {
+      setActiveTab(tabId);
+    }
+  }, []);
 
   // Stable callback for switching to upload tab
   const handleSwitchToUpload = useCallback(() => {
@@ -213,20 +216,14 @@ export function DocumentManager({
   }, []);
 
   // Stable callback for search input
-  const handleSearchChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   // Stable callback for title input
-  const handleTitleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setUploadTitle(e.target.value);
-    },
-    [],
-  );
+  const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setUploadTitle(e.target.value);
+  }, []);
 
   // Stable callback for file input change
   const handleFileInputChange = useCallback(

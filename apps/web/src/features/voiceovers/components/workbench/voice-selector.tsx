@@ -39,7 +39,7 @@ export const VoiceSelector = memo(function VoiceSelector({
       const voiceId = e.currentTarget.dataset.voiceId;
       if (voiceId) onChange(voiceId);
     },
-    [onChange]
+    [onChange],
   );
 
   return (

@@ -1,7 +1,11 @@
 // features/podcasts/components/podcast-detail-container.tsx
 
 import { lazy, Suspense } from 'react';
-import { useKeyboardShortcut, useNavigationBlock, useSessionGuard } from '@/shared/hooks';
+import {
+  useKeyboardShortcut,
+  useNavigationBlock,
+  useSessionGuard,
+} from '@/shared/hooks';
 import { usePodcast } from '../hooks/use-podcast';
 import { useScriptEditor } from '../hooks/use-script-editor';
 import { usePodcastSettings } from '../hooks/use-podcast-settings';

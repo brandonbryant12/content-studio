@@ -1,10 +1,7 @@
 // features/podcasts/hooks/use-collaborator-management.ts
 
 import { useState, useCallback } from 'react';
-import {
-  useCollaboratorsQuery,
-  type Collaborator,
-} from './use-collaborators';
+import { useCollaboratorsQuery, type Collaborator } from './use-collaborators';
 import { useRemoveCollaborator } from './use-remove-collaborator';
 
 export interface UseCollaboratorManagementReturn {

@@ -1,6 +1,7 @@
 // features/documents/components/document-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
+import { useCallback, useMemo } from 'react';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -62,8 +63,19 @@ export function DocumentList({
   onUploadOpen,
   onDelete,
 }: DocumentListProps) {
-  const filteredDocuments = documents.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredDocuments = useMemo(
+    () =>
+      documents.filter((doc) =>
+        doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [documents, searchQuery],
+  );
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onSearch(e.target.value);
+    },
+    [onSearch],
   );
 
   const isEmpty = documents.length === 0;
@@ -95,7 +107,7 @@ export function DocumentList({
       <div className="relative mb-6">
         <Input
           value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={handleSearchChange}
           placeholder="Search documents…"
           className="search-input"
           autoComplete="off"

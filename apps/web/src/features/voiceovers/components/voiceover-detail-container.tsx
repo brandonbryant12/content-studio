@@ -80,7 +80,13 @@ export function VoiceoverDetailContainer({
 
     // Then generate
     generateMutation.mutate({ id: voiceover.id });
-  }, [isPendingGeneration, isGenerating, settings, generateMutation, voiceover.id]);
+  }, [
+    isPendingGeneration,
+    isGenerating,
+    settings,
+    generateMutation,
+    voiceover.id,
+  ]);
 
   const handleDelete = useCallback(() => {
     deleteMutation.mutate({ id: voiceover.id });

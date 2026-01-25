@@ -78,7 +78,15 @@ export const SegmentItem = memo(function SegmentItem({
     } else {
       onCancelEdit();
     }
-  }, [editLine, editSpeaker, segment.line, segment.speaker, segmentIndex, onSaveEdit, onCancelEdit]);
+  }, [
+    editLine,
+    editSpeaker,
+    segment.line,
+    segment.speaker,
+    segmentIndex,
+    onSaveEdit,
+    onCancelEdit,
+  ]);
 
   const handleNavigateNext = useCallback(() => {
     onNavigate(segmentIndex, 'next');
@@ -88,33 +96,39 @@ export const SegmentItem = memo(function SegmentItem({
     onNavigate(segmentIndex, 'prev');
   }, [segmentIndex, onNavigate]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      onCancelEdit();
-    } else if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSave();
-      handleNavigateNext();
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      handleSave();
-      if (e.shiftKey) {
-        handleNavigatePrev();
-      } else {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancelEdit();
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSave();
         handleNavigateNext();
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        handleSave();
+        if (e.shiftKey) {
+          handleNavigatePrev();
+        } else {
+          handleNavigateNext();
+        }
       }
-    }
-  }, [onCancelEdit, handleSave, handleNavigateNext, handleNavigatePrev]);
+    },
+    [onCancelEdit, handleSave, handleNavigateNext, handleNavigatePrev],
+  );
 
-  const handleBlur = useCallback((e: React.FocusEvent) => {
-    // Check if focus is moving to another element within the segment
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (relatedTarget?.closest('.segment-item.editing')) {
-      return;
-    }
-    handleSave();
-  }, [handleSave]);
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      // Check if focus is moving to another element within the segment
+      const relatedTarget = e.relatedTarget as HTMLElement;
+      if (relatedTarget?.closest('.segment-item.editing')) {
+        return;
+      }
+      handleSave();
+    },
+    [handleSave],
+  );
 
   const handleContentClick = useCallback(() => {
     if (!isEditing && !isDragging && !disabled) {

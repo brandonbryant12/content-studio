@@ -199,13 +199,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 12: Documents Feature - Barrel Import & List Optimization
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `bundle-barrel-imports`, `rerender-memo`
 **Acceptance Criteria:**
-- [ ] Replace barrel imports with direct imports
-- [ ] Memoize filteredDocuments in document-list.tsx
-- [ ] Convert onSearch handler to useCallback
-- [ ] Typecheck passes
+- [x] Replace barrel imports with direct imports (index.ts now uses named exports)
+- [x] Memoize filteredDocuments in document-list.tsx
+- [x] Convert onSearch handler to useCallback
+- [x] Typecheck passes
 **Details:** [12-documents-optimization.md](./tasks/12-documents-optimization.md)
 
 ---

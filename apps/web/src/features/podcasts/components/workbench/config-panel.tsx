@@ -46,13 +46,10 @@ export function ConfigPanel({
   const [showPromptViewer, setShowPromptViewer] = useState(false);
 
   // Stable callback using data-attribute pattern to avoid inline closures in map
-  const handleTabClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      const tabId = e.currentTarget.dataset.tabId as TabId;
-      setActiveTab(tabId);
-    },
-    [],
-  );
+  const handleTabClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    const tabId = e.currentTarget.dataset.tabId as TabId;
+    setActiveTab(tabId);
+  }, []);
 
   // Functional setState to avoid closure over showPromptViewer
   const handleTogglePromptViewer = useCallback(() => {

@@ -29,7 +29,11 @@ export interface UseCollaboratorManagementReturn {
 export function useCollaboratorManagement(
   voiceover: Voiceover,
   currentUserId: string,
-  currentUser?: { id?: string; name?: string | null; image?: string | null } | null,
+  currentUser?: {
+    id?: string;
+    name?: string | null;
+    image?: string | null;
+  } | null,
 ): UseCollaboratorManagementReturn {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
@@ -53,7 +57,9 @@ export function useCollaboratorManagement(
           ? (currentUser?.name ?? 'You')
           : 'Owner',
       image:
-        currentUser?.id === voiceover.createdBy ? currentUser?.image : undefined,
+        currentUser?.id === voiceover.createdBy
+          ? currentUser?.image
+          : undefined,
       hasApproved: voiceover.ownerHasApproved,
     }),
     [

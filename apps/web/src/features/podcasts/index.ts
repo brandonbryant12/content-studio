@@ -70,7 +70,10 @@ export { PodcastListContainer } from './components/podcast-list-container';
 export { SetupWizardContainer } from './components/setup-wizard-container';
 
 // Presenter components
-export { PodcastDetail, type PodcastDetailProps } from './components/podcast-detail';
+export {
+  PodcastDetail,
+  type PodcastDetailProps,
+} from './components/podcast-detail';
 export { PodcastList, type PodcastListProps } from './components/podcast-list';
 export {
   PodcastItem,

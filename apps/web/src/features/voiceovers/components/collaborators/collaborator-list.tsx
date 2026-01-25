@@ -175,7 +175,7 @@ export function CollaboratorList({
     (collaboratorId: string) => {
       removeCollaborator({ id: voiceoverId, collaboratorId });
     },
-    [removeCollaborator, voiceoverId]
+    [removeCollaborator, voiceoverId],
   );
 
   return (
