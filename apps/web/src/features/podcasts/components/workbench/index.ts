@@ -4,7 +4,6 @@ export { ConfigPanel } from './config-panel';
 export { ScriptEditor } from './script-editor';
 export { SegmentItem } from './segment-item';
 export { SegmentEditorDialog } from './segment-editor-dialog';
-export { AddSegmentDialog } from './add-segment-dialog';
 export { SmartActions } from './smart-actions';
 export { GenerationStatus } from './generation-status';
 export { ErrorDisplay } from './error-display';

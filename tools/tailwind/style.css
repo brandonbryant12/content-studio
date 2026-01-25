@@ -795,7 +795,102 @@
      ============================================ */
 
   /* -----------------------------------------
-     WORKBENCH LAYOUT
+     WORKBENCH LAYOUT V3 - Tabbed Full-Width
+     ----------------------------------------- */
+  .workbench-v3 {
+    @apply flex flex-col h-full bg-background;
+  }
+
+  /* Header */
+  .workbench-v3-header {
+    @apply shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-background;
+  }
+
+  .workbench-v3-header-left {
+    @apply flex items-center gap-3 min-w-0;
+  }
+
+  .workbench-v3-back {
+    @apply flex items-center justify-center w-8 h-8 rounded-lg
+           text-muted-foreground hover:text-foreground hover:bg-muted
+           transition-colors duration-150;
+  }
+
+  .workbench-v3-back svg {
+    @apply w-4 h-4;
+  }
+
+  .workbench-v3-title-area {
+    @apply flex items-center gap-2.5 min-w-0;
+  }
+
+  .workbench-v3-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 50;
+    @apply text-lg font-medium text-foreground truncate;
+  }
+
+  .workbench-v3-status {
+    @apply gap-1 text-[10px] px-2 py-0.5;
+  }
+
+  .workbench-v3-header-right {
+    @apply flex items-center gap-2;
+  }
+
+  .workbench-v3-duration {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-xs text-muted-foreground tabular-nums;
+  }
+
+  .workbench-v3-divider {
+    @apply w-px h-5 bg-border mx-1;
+  }
+
+  .workbench-v3-delete {
+    @apply w-8 h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors;
+  }
+
+  .workbench-v3-delete svg {
+    @apply w-4 h-4;
+  }
+
+  /* Tab Navigation */
+  .workbench-v3-tabs {
+    @apply shrink-0 flex gap-1 px-4 py-1.5 border-b border-border bg-muted/30;
+  }
+
+  .workbench-v3-tab {
+    @apply flex items-center gap-2 px-4 py-2 rounded-lg
+           text-sm font-medium text-muted-foreground
+           transition-all duration-150;
+  }
+
+  .workbench-v3-tab:hover {
+    @apply text-foreground bg-muted/50;
+  }
+
+  .workbench-v3-tab.active {
+    @apply text-foreground bg-card shadow-sm;
+  }
+
+  .workbench-v3-tab svg {
+    @apply w-4 h-4;
+  }
+
+  /* Main content area */
+  .workbench-v3-main {
+    @apply flex-1 min-h-0 overflow-hidden bg-card;
+  }
+
+  .workbench-v3-content {
+    @apply h-full overflow-y-auto;
+  }
+
+  /* Settings panel gets full width, inner content handles centering */
+
+  /* -----------------------------------------
+     WORKBENCH LAYOUT V1 (Legacy)
      ----------------------------------------- */
   .workbench {
     @apply flex flex-col h-full bg-muted;
@@ -865,6 +960,11 @@
     @apply flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden;
   }
 
+  .workbench-scroll-container {
+    @apply flex-1 overflow-y-auto;
+    overscroll-behavior-y: contain;
+  }
+
   .workbench-panel-left {
     @apply flex-1 lg:w-3/5 overflow-hidden bg-card;
   }
@@ -874,7 +974,98 @@
   }
 
   /* -----------------------------------------
-     SCRIPT PANEL
+     SCRIPT PANEL V2 - Clean, spacious
+     ----------------------------------------- */
+  .script-panel-v2 {
+    @apply flex flex-col h-full relative;
+  }
+
+  /* Floating status bar */
+  .script-status-bar {
+    @apply absolute top-4 left-1/2 -translate-x-1/2 z-10
+           flex items-center gap-3 px-4 py-2 rounded-full
+           shadow-lg border backdrop-blur-sm
+           animate-in fade-in-0 slide-in-from-top-2 duration-300;
+  }
+
+  .script-status-bar.locked {
+    @apply bg-muted/95 border-border text-muted-foreground text-sm;
+  }
+
+  .script-status-bar.unsaved {
+    @apply bg-warning/10 border-warning/30;
+  }
+
+  .script-status-discard {
+    @apply text-xs h-7 px-3;
+  }
+
+  /* Scroll container - full width */
+  .script-panel-v2-scroll {
+    @apply flex-1 overflow-y-auto;
+  }
+
+  /* Inner wrapper - centered with max-width */
+  .script-panel-v2-inner {
+    @apply px-6 py-8 lg:px-12 lg:py-10;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* Summary - minimal, tucked away */
+  .script-summary-v2 {
+    @apply mb-8 pb-6 border-b border-border/50;
+  }
+
+  .script-summary-v2-toggle {
+    @apply flex items-center gap-2 text-xs text-muted-foreground
+           hover:text-foreground transition-colors;
+  }
+
+  .script-summary-v2-label {
+    @apply uppercase tracking-wider font-medium;
+  }
+
+  .script-summary-v2-icon {
+    @apply w-3.5 h-3.5 transition-transform duration-200;
+  }
+
+  .script-summary-v2-icon.expanded {
+    @apply rotate-180;
+  }
+
+  .script-summary-v2-text {
+    @apply mt-3 text-sm text-muted-foreground leading-relaxed;
+  }
+
+  /* Empty state - centered, inviting */
+  .script-empty-v2 {
+    @apply flex flex-col items-center justify-center py-20 text-center;
+  }
+
+  .script-empty-v2-icon {
+    @apply w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6;
+  }
+
+  .script-empty-v2-icon svg {
+    @apply w-8 h-8 text-muted-foreground;
+  }
+
+  .script-empty-v2-title {
+    font-family: 'Fraunces', Georgia, serif;
+    @apply text-xl font-medium text-foreground mb-2;
+  }
+
+  .script-empty-v2-desc {
+    @apply text-sm text-muted-foreground mb-6;
+  }
+
+  .script-empty-v2-btn {
+    @apply gap-2;
+  }
+
+  /* -----------------------------------------
+     SCRIPT PANEL V1 (Legacy)
      ----------------------------------------- */
   .script-panel {
     @apply flex flex-col h-full;
@@ -999,71 +1190,43 @@
   }
 
   /* -----------------------------------------
-     SEGMENT ITEM
+     SEGMENT ROW - Clean, minimal segment display
      ----------------------------------------- */
-  .segment-item {
-    @apply relative flex gap-3 p-4 rounded-lg border bg-card border-border shadow-sm hover:border-warning/40 hover:shadow-md transition-all duration-200;
+  .segment-row {
+    @apply relative flex gap-3 py-3 px-4 rounded-lg border bg-card border-border/50
+           hover:border-warning/40 hover:bg-card/80 transition-all duration-200;
   }
 
-  .segment-item.dragging {
-    @apply bg-warning/5 border-warning shadow-lg scale-[1.01] z-10;
+  .segment-row-speaker {
+    @apply shrink-0 w-16 pt-0.5;
   }
 
-  .segment-item-indicator {
-    @apply absolute -left-px top-0 bottom-0 w-0.5 rounded-l-lg bg-warning opacity-0 transition-opacity;
+  .segment-row-speaker-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
   }
 
-  .group:hover .segment-item-indicator {
+  .segment-row-speaker-badge.host {
+    @apply bg-warning/15 text-warning;
+  }
+
+  .segment-row-speaker-badge.guest {
+    @apply bg-info/15 text-info;
+  }
+
+  .segment-row-content {
+    @apply flex-1 text-sm text-foreground/85 leading-relaxed min-w-0 pt-0.5;
+  }
+
+  .segment-row-empty {
+    @apply text-muted-foreground/60 italic;
+  }
+
+  .segment-row-actions {
+    @apply shrink-0 flex items-start gap-0.5 opacity-0 transition-all duration-150;
+  }
+
+  .group:hover .segment-row-actions {
     @apply opacity-100;
-  }
-
-  .segment-item-line-number {
-    @apply shrink-0 w-6 text-right;
-  }
-
-  .segment-item-line-number span {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[11px] tabular-nums text-muted-foreground select-none;
-  }
-
-  .segment-item-drag-handle {
-    @apply shrink-0 cursor-grab active:cursor-grabbing touch-none text-border hover:text-muted-foreground transition-colors;
-  }
-
-  .segment-item-drag-handle svg {
-    @apply w-5 h-5;
-  }
-
-  .segment-item-speaker {
-    @apply shrink-0 w-20 pt-0.5;
-  }
-
-  .segment-item-speaker-badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide;
-  }
-
-  .segment-item-speaker-badge.host {
-    @apply bg-warning/20 text-warning;
-  }
-
-  .segment-item-speaker-badge.guest {
-    @apply bg-secondary text-secondary-foreground;
-  }
-
-  .segment-item-content {
-    @apply flex-1 text-sm text-foreground/80 leading-relaxed min-w-0 pt-0.5;
-  }
-
-  .segment-item-empty {
-    @apply text-muted-foreground italic;
-  }
-
-  .segment-item-actions {
-    @apply shrink-0 flex items-start gap-0.5 opacity-0 transition-all duration-200 translate-x-1;
-  }
-
-  .group:hover .segment-item-actions {
-    @apply opacity-100 translate-x-0;
   }
 
   .segment-action-btn {
@@ -1074,38 +1237,23 @@
     @apply hover:text-success hover:bg-success/10;
   }
 
-  .segment-action-btn.edit {
-    @apply hover:text-warning hover:bg-warning/10;
-  }
-
   .segment-action-btn.delete {
     @apply hover:text-destructive hover:bg-destructive/10;
   }
 
   /* -----------------------------------------
-     INLINE EDITING MODE
-     Screenplay-style inline text editing
+     SEGMENT ROW - Editing State
      ----------------------------------------- */
-  .segment-item.editing {
-    @apply border-warning bg-warning/5 shadow-md;
-    box-shadow:
-      0 0 0 3px hsl(var(--warning) / 0.15),
-      0 4px 12px -2px hsl(var(--warning) / 0.1);
+  .segment-row.editing {
+    @apply border-warning/50 bg-warning/5;
+    box-shadow: 0 0 0 2px hsl(var(--warning) / 0.1);
   }
 
-  .segment-item.editing .segment-item-indicator {
+  .segment-row.editing .segment-row-actions {
     @apply opacity-100;
   }
 
-  .segment-item.editing .segment-item-actions {
-    @apply opacity-100 translate-x-0;
-  }
-
   /* Editable content area */
-  .segment-edit-content {
-    @apply flex-1 min-w-0;
-  }
-
   .segment-edit-textarea {
     @apply w-full bg-transparent text-sm text-foreground leading-relaxed resize-none
            border-0 p-0 focus:outline-none focus:ring-0;
@@ -1114,11 +1262,11 @@
   }
 
   .segment-edit-textarea::placeholder {
-    @apply text-muted-foreground/60 italic;
+    @apply text-muted-foreground/50 italic;
   }
 
   /* Click hint on hover - just show cursor */
-  .segment-item:not(.editing):not(.dragging) .segment-item-content {
+  .segment-row:not(.editing) .segment-row-content {
     @apply cursor-text;
   }
 
@@ -1151,7 +1299,7 @@
   /* Edit mode hint bar */
   .segment-edit-hints {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply flex items-center gap-3 mt-2 pt-2 border-t border-warning/20 text-[10px] text-muted-foreground;
+    @apply flex items-center gap-3 mt-2 pt-2 border-t border-border/50 text-[10px] text-muted-foreground;
   }
 
   .segment-edit-hint {
@@ -1162,37 +1310,31 @@
     @apply px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium;
   }
 
-  /* Add segment button refined */
-  .script-add-segment-btn {
-    @apply text-muted-foreground hover:text-warning border border-dashed border-border
-           hover:border-warning/50 hover:bg-warning/5 rounded-lg px-4 transition-all duration-200;
-  }
-
-  /* Global edit hint */
-  .script-edit-hint {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground flex items-center gap-1;
-  }
-
-  .script-edit-hint kbd {
-    @apply px-1 py-0.5 rounded bg-muted font-medium;
-  }
-
-  .script-edit-hint.locked {
-    @apply text-warning;
-  }
-
-  /* Segment item disabled state */
-  .segment-item.disabled {
+  /* Segment row disabled state */
+  .segment-row.disabled {
     @apply opacity-60 cursor-not-allowed;
   }
 
-  .segment-item.disabled .segment-item-content {
+  .segment-row.disabled .segment-row-content {
     @apply cursor-not-allowed;
   }
 
-  .segment-item.disabled .segment-item-drag-handle {
-    @apply cursor-not-allowed opacity-50;
+  /* New segment animation */
+  .segment-row.new-segment {
+    @apply animate-in fade-in-0 slide-in-from-top-2 duration-200;
+  }
+
+  /* Add new line button - minimal, text-like */
+  .script-add-line-btn {
+    @apply flex items-center gap-1.5 px-3 py-2 rounded-md
+           text-xs text-muted-foreground/70
+           hover:text-muted-foreground hover:bg-muted/50
+           transition-all duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .script-add-line-btn:hover {
+    @apply pl-4;
   }
 
   /* -----------------------------------------
@@ -2930,7 +3072,102 @@
   }
 
   /* ============================================
-     GLOBAL ACTION BAR
+     ACTION BAR V2
+     Integrated audio player + actions in bottom bar
+     ============================================ */
+
+  .action-bar-v2 {
+    @apply shrink-0 flex items-center justify-between gap-4 px-4 py-2.5
+           border-t border-border bg-card/98 backdrop-blur-md;
+  }
+
+  .action-bar-v2.has-changes {
+    @apply bg-warning/5 border-warning/30;
+  }
+
+  /* Status indicator (left) */
+  .action-bar-status {
+    @apply flex items-center gap-2 text-sm text-muted-foreground shrink-0;
+  }
+
+  .action-bar-status.generating {
+    @apply text-warning;
+  }
+
+  .action-bar-status.unsaved {
+    @apply text-warning font-medium;
+  }
+
+  .action-bar-pulse {
+    @apply w-2 h-2 rounded-full bg-warning animate-pulse;
+    box-shadow: 0 0 6px hsl(var(--warning) / 0.6);
+  }
+
+  /* Audio player (center - takes available space) */
+  .action-bar-audio {
+    @apply flex-1 max-w-2xl mx-4;
+  }
+
+  .action-bar-audio .audio-player {
+    @apply bg-transparent shadow-none border-0 py-0;
+  }
+
+  /* Actions (right) */
+  .action-bar-actions {
+    @apply flex items-center gap-2 shrink-0;
+  }
+
+  .action-bar-btn-primary {
+    @apply gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm;
+  }
+
+  .action-bar-v2.has-changes .action-bar-btn-primary {
+    @apply bg-warning hover:bg-warning/90 text-warning-foreground;
+  }
+
+  /* ============================================
+     CONFIG PANEL V2
+     Single consolidated settings panel
+     ============================================ */
+
+  .config-panel-v2 {
+    @apply flex flex-col h-full;
+  }
+
+  /* Full-width scroll container */
+  .config-panel-v2-scroll {
+    @apply flex-1 overflow-y-auto;
+  }
+
+  /* Centered inner content */
+  .config-panel-v2-inner {
+    @apply px-6 py-8 lg:px-12 lg:py-10 space-y-6;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .config-section-v2 {
+    @apply space-y-3;
+  }
+
+  .config-section-title {
+    @apply flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider;
+  }
+
+  .config-section-count {
+    @apply ml-1 px-1.5 py-0.5 rounded bg-muted text-[10px] font-semibold tabular-nums;
+  }
+
+  .config-prompt-toggle {
+    @apply flex items-center gap-2 w-full px-3 py-2.5 rounded-lg
+           text-sm text-muted-foreground
+           border border-dashed border-border
+           hover:border-foreground/20 hover:text-foreground
+           transition-colors;
+  }
+
+  /* ============================================
+     GLOBAL ACTION BAR (Legacy)
      Unified floating action bar for save/regenerate
      Design: Professional control surface at bottom
      ============================================ */

@@ -6,6 +6,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VersionStatus, type VersionStatusType } from '../../lib/status';
+import { AudioPlayer } from '../audio-player';
 
 interface GlobalActionBarProps {
   // Status
@@ -22,6 +23,9 @@ interface GlobalActionBarProps {
 
   // Disabled state (e.g., viewing history)
   disabled?: boolean;
+
+  // Audio
+  audioUrl?: string;
 }
 
 export function GlobalActionBar({
@@ -32,120 +36,109 @@ export function GlobalActionBar({
   onSave,
   onGenerate,
   disabled,
+  audioUrl,
 }: GlobalActionBarProps) {
-  // During generation, show progress state
-  if (isGenerating) {
-    return (
-      <div className="global-action-bar">
-        <div className="global-action-bar-content">
-          <div className="global-action-bar-status">
-            <Spinner className="w-4 h-4 text-warning" />
-            <span className="global-action-bar-status-text">
-              {status === VersionStatus.GENERATING_SCRIPT
-                ? 'Generating script...'
-                : status === VersionStatus.GENERATING_AUDIO ||
-                    status === VersionStatus.SCRIPT_READY
-                  ? 'Generating audio...'
-                  : 'Processing...'}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasAudio = !!audioUrl;
+  const showChangesState = hasChanges && status === VersionStatus.READY;
 
-  // If there are unsaved changes (only possible when ready), show save action
-  if (hasChanges && status === VersionStatus.READY) {
-    return (
-      <div className="global-action-bar has-changes">
-        <div className="global-action-bar-content">
-          <div className="global-action-bar-changes">
-            <div className="global-action-bar-indicator" />
-            <span className="global-action-bar-changes-text">
-              Unsaved changes
-            </span>
-          </div>
-          <div className="global-action-bar-actions">
-            <Button
-              size="sm"
-              onClick={onSave}
-              disabled={isSaving || disabled}
-              className="global-action-bar-btn-primary"
-            >
-              {isSaving ? (
-                <>
-                  <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                  Save & Regenerate
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Get status message
+  const getStatusMessage = () => {
+    if (isGenerating) {
+      if (status === VersionStatus.GENERATING_SCRIPT) return 'Generating script...';
+      if (status === VersionStatus.GENERATING_AUDIO || status === VersionStatus.SCRIPT_READY) {
+        return 'Generating audio...';
+      }
+      return 'Processing...';
+    }
+    if (showChangesState) return 'Unsaved changes';
+    if (status === VersionStatus.READY) return 'Ready';
+    if (status === VersionStatus.FAILED) return 'Generation failed';
+    return 'Draft';
+  };
 
-  // No changes - show context-aware actions
+  // Get action button
+  const renderAction = () => {
+    if (isGenerating) return null;
+
+    if (showChangesState) {
+      return (
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={isSaving || disabled}
+          className="action-bar-btn-primary"
+        >
+          {isSaving ? (
+            <>
+              <Spinner className="w-3.5 h-3.5" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <LightningBoltIcon className="w-3.5 h-3.5" />
+              <span>Save & Regenerate</span>
+            </>
+          )}
+        </Button>
+      );
+    }
+
+    if (status === VersionStatus.DRAFTING) {
+      return (
+        <Button
+          size="sm"
+          onClick={onGenerate}
+          disabled={disabled}
+          className="action-bar-btn-primary"
+        >
+          <LightningBoltIcon className="w-3.5 h-3.5" />
+          <span>Generate</span>
+        </Button>
+      );
+    }
+
+    if (status === VersionStatus.FAILED) {
+      return (
+        <Button
+          size="sm"
+          onClick={onGenerate}
+          disabled={disabled}
+          className="action-bar-btn-primary"
+        >
+          <ReloadIcon className="w-3.5 h-3.5" />
+          <span>Retry</span>
+        </Button>
+      );
+    }
+
+    return null;
+  };
+
   return (
-    <div className="global-action-bar">
-      <div className="global-action-bar-content">
-        <div className="global-action-bar-status ready">
+    <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
+      {/* Left: Status indicator */}
+      <div className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}>
+        {isGenerating ? (
+          <Spinner className="w-4 h-4" />
+        ) : showChangesState ? (
+          <div className="action-bar-pulse" />
+        ) : status === VersionStatus.READY ? (
           <CheckIcon className="w-4 h-4" />
-          <span className="global-action-bar-status-text">
-            {status === VersionStatus.READY
-              ? 'Ready'
-              : status === VersionStatus.FAILED
-                ? 'Generation failed'
-                : 'Draft'}
-          </span>
+        ) : null}
+        <span>{getStatusMessage()}</span>
+      </div>
+
+      {/* Center: Audio player (when available) */}
+      {hasAudio && (
+        <div className="action-bar-audio">
+          <AudioPlayer url={audioUrl} />
         </div>
-        <div className="global-action-bar-actions">
-          {renderContextActions()}
-        </div>
+      )}
+
+      {/* Right: Actions */}
+      <div className="action-bar-actions">
+        {renderAction()}
       </div>
     </div>
   );
-
-  function renderContextActions() {
-    switch (status) {
-      case VersionStatus.DRAFTING:
-        return (
-          <Button
-            size="sm"
-            onClick={onGenerate}
-            disabled={disabled}
-            className="global-action-bar-btn-primary"
-          >
-            <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-            Generate Podcast
-          </Button>
-        );
-
-      case VersionStatus.READY:
-        // No regenerate button when ready with no changes
-        // User must make changes to script/settings first
-        return null;
-
-      case VersionStatus.FAILED:
-        return (
-          <Button
-            size="sm"
-            onClick={onGenerate}
-            disabled={disabled}
-            className="global-action-bar-btn-primary"
-          >
-            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-            Retry
-          </Button>
-        );
-
-      default:
-        return null;
-    }
-  }
 }

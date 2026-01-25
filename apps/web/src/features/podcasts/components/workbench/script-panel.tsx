@@ -6,7 +6,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
 
@@ -18,7 +18,6 @@ interface ScriptPanelProps {
   disabled?: boolean;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
-  onReorderSegments: (fromIndex: number, toIndex: number) => void;
   onAddSegment: (
     afterIndex: number,
     data: Omit<ScriptSegment, 'index'>,
@@ -34,104 +33,101 @@ export function ScriptPanel({
   disabled,
   onUpdateSegment,
   onRemoveSegment,
-  onReorderSegments,
   onAddSegment,
   onDiscard,
 }: ScriptPanelProps) {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const isEmpty = segments.length === 0;
 
-  return (
-    <div className="script-panel">
-      {/* Panel header */}
-      <div className="script-panel-header">
-        <div className="script-panel-title-group">
-          <div className="script-panel-icon">
-            <FileTextIcon />
-          </div>
-          <div>
-            <h2 className="script-panel-title">Script</h2>
-            {disabled ? (
-              <span className="script-edit-hint locked">
-                <LockClosedIcon className="w-3 h-3 mr-1" />
-                Editing locked during generation
-              </span>
-            ) : (
-              segments.length > 0 && (
-                <span className="script-edit-hint">Click any line to edit</span>
-              )
-            )}
-          </div>
-        </div>
-        {hasChanges && (
-          <div className="script-panel-actions">
-            <Badge variant="warning" className="mr-2 animate-pulse">
-              Unsaved
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDiscard}
-              disabled={isSaving}
-            >
-              Discard
-            </Button>
-          </div>
-        )}
-      </div>
+  const toggleSummary = useCallback(() => {
+    setSummaryExpanded((prev) => !prev);
+  }, []);
 
-      {/* Script editor */}
-      <div className="script-panel-content">
-        {/* Summary */}
-        {summary && (
-          <div className="script-summary">
-            <button
-              type="button"
-              onClick={() => setSummaryExpanded(!summaryExpanded)}
-              className="script-summary-toggle"
-            >
-              <div className="script-summary-label">
-                <div className="script-summary-indicator" />
-                <p className="script-summary-text">Summary</p>
-              </div>
-              <ChevronDownIcon
-                className={`script-summary-chevron ${summaryExpanded ? 'expanded' : ''}`}
-              />
-            </button>
-            {summaryExpanded && (
-              <p className="script-summary-content">{summary}</p>
-            )}
-          </div>
-        )}
-        {isEmpty ? (
-          <div className="script-empty">
-            <div className="script-empty-icon">
-              <FileTextIcon />
+  const handleAddFirst = useCallback(() => {
+    onAddSegment(-1, { speaker: 'host', line: '' });
+  }, [onAddSegment]);
+
+  return (
+    <div className="script-panel-v2">
+      {/* Floating status bar - only shows when there are changes or locked */}
+      {(hasChanges || disabled) && (
+        <div className={`script-status-bar ${disabled ? 'locked' : 'unsaved'}`}>
+          {disabled ? (
+            <>
+              <LockClosedIcon className="w-3.5 h-3.5" />
+              <span>Editing locked during generation</span>
+            </>
+          ) : (
+            <>
+              <Badge variant="warning" className="animate-pulse">
+                Unsaved changes
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDiscard}
+                disabled={isSaving}
+                className="script-status-discard"
+              >
+                Discard
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Script content - full width scroll, centered inner content */}
+      <div className="script-panel-v2-scroll">
+        <div className="script-panel-v2-inner">
+          {/* Collapsible summary - minimal */}
+          {summary && (
+            <div className="script-summary-v2">
+              <button
+                type="button"
+                onClick={toggleSummary}
+                className="script-summary-v2-toggle"
+              >
+                <span className="script-summary-v2-label">Summary</span>
+                <ChevronDownIcon
+                  className={`script-summary-v2-icon ${summaryExpanded ? 'expanded' : ''}`}
+                />
+              </button>
+              {summaryExpanded && (
+                <p className="script-summary-v2-text">{summary}</p>
+              )}
             </div>
-            <h3 className="script-empty-title">No script yet</h3>
-            <p className="script-empty-description">
-              Generate a script from your documents or add segments manually.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => onAddSegment(-1, { speaker: 'host', line: '' })}
-              className="script-empty-btn"
+          )}
+
+          {/* Main editor area */}
+          {isEmpty ? (
+            <div className="script-empty-v2">
+              <div className="script-empty-v2-icon">
+                <FileTextIcon />
+              </div>
+              <h3 className="script-empty-v2-title">Start your script</h3>
+              <p className="script-empty-v2-desc">
+                Add your first line or generate from documents
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleAddFirst}
+                className="script-empty-v2-btn"
+                disabled={disabled}
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>Add first line</span>
+              </Button>
+            </div>
+          ) : (
+            <ScriptEditor
+              segments={segments}
               disabled={disabled}
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Add First Segment
-            </Button>
-          </div>
-        ) : (
-          <ScriptEditor
-            segments={segments}
-            disabled={disabled}
-            onUpdateSegment={onUpdateSegment}
-            onRemoveSegment={onRemoveSegment}
-            onReorderSegments={onReorderSegments}
-            onAddSegment={onAddSegment}
-          />
-        )}
+              onUpdateSegment={onUpdateSegment}
+              onRemoveSegment={onRemoveSegment}
+              onAddSegment={onAddSegment}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

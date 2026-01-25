@@ -1,17 +1,23 @@
-import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  ArrowLeftIcon,
+  TrashIcon,
+  FileTextIcon,
+  MixerHorizontalIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import type { ReactNode } from 'react';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
-import { PodcastIcon } from '../podcast-icon';
-import { formatDuration } from '@/shared/lib/formatters';
 import { CollaboratorAvatars } from '../collaborators';
 import { ApproveButton } from '../collaborators';
+import { PodcastIcon } from '../podcast-icon';
+import { formatDuration } from '@/shared/lib/formatters';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
+type TabId = 'script' | 'settings';
 
 interface WorkbenchLayoutProps {
   podcast: PodcastFull;
@@ -20,7 +26,6 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
-  // New props for collaboration
   currentUserId: string;
   owner: {
     id: string;
@@ -56,111 +61,102 @@ export function WorkbenchLayout({
 }: WorkbenchLayoutProps) {
   const statusConfig = getStatusConfig(podcast.status);
   const isGenerating = isGeneratingStatus(podcast.status);
+  const [activeTab, setActiveTab] = useState<TabId>('script');
+
+  const handleTabClick = useCallback((tab: TabId) => {
+    setActiveTab(tab);
+  }, []);
 
   return (
-    <div className="workbench">
-      {/* Header */}
-      <header className="workbench-header">
-        <div className="workbench-header-content">
-          <div className="workbench-header-row">
-            {/* Back button */}
-            <Link
-              to="/podcasts"
-              className="workbench-back-btn"
-              aria-label="Back to podcasts"
-            >
-              <ArrowLeftIcon />
-            </Link>
-
-            {/* Podcast icon and title */}
-            <div className="workbench-title-group">
-              <PodcastIcon format={podcast.format} status={podcast.status} />
-              <div className="min-w-0">
-                <h1 className="workbench-title">{podcast.title}</h1>
-                {podcast.description && (
-                  <p className="workbench-subtitle">{podcast.description}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Status badges and metadata */}
-            <div className="workbench-meta">
-              {statusConfig && (
-                <Badge
-                  variant={statusConfig.badgeVariant}
-                  className="gap-1.5 px-2.5 py-1 font-medium"
-                >
-                  {isGenerating && <Spinner className="w-3 h-3" />}
-                  {statusConfig.label}
-                </Badge>
-              )}
-
-              {podcast.duration && (
-                <div className="workbench-duration">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {formatDuration(podcast.duration)}
-                </div>
-              )}
-
-              {/* Collaborators and Approval */}
-              <div className="flex items-center gap-3 mr-3">
-                <CollaboratorAvatars
-                  owner={owner}
-                  collaborators={collaborators}
-                  onManageClick={onManageCollaborators}
-                />
-                <ApproveButton
-                  podcastId={podcast.id}
-                  userId={currentUserId}
-                  hasApproved={currentUserHasApproved}
-                />
-              </div>
-
-              {/* Delete button */}
-              <div className="workbench-actions">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onDelete}
-                  disabled={isDeleting || isGenerating}
-                  className="workbench-delete-btn"
-                  aria-label="Delete podcast"
-                >
-                  {isDeleting ? (
-                    <Spinner className="w-4 h-4" />
-                  ) : (
-                    <TrashIcon className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
+    <div className="workbench-v3">
+      {/* Header with integrated tabs */}
+      <header className="workbench-v3-header">
+        <div className="workbench-v3-header-left">
+          <Link
+            to="/podcasts"
+            className="workbench-v3-back"
+            aria-label="Back to podcasts"
+          >
+            <ArrowLeftIcon />
+          </Link>
+          <PodcastIcon format={podcast.format} status={podcast.status} />
+          <div className="workbench-v3-title-area">
+            <h1 className="workbench-v3-title">{podcast.title}</h1>
+            {statusConfig && (
+              <Badge
+                variant={statusConfig.badgeVariant}
+                className="workbench-v3-status"
+              >
+                {isGenerating && <Spinner className="w-3 h-3" />}
+                {statusConfig.label}
+              </Badge>
+            )}
           </div>
+        </div>
+
+        <div className="workbench-v3-header-right">
+          {podcast.duration && (
+            <span className="workbench-v3-duration">
+              {formatDuration(podcast.duration)}
+            </span>
+          )}
+          <CollaboratorAvatars
+            owner={owner}
+            collaborators={collaborators}
+            onManageClick={onManageCollaborators}
+          />
+          <ApproveButton
+            podcastId={podcast.id}
+            userId={currentUserId}
+            hasApproved={currentUserHasApproved}
+          />
+          <div className="workbench-v3-divider" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            disabled={isDeleting || isGenerating}
+            className="workbench-v3-delete"
+            aria-label="Delete podcast"
+          >
+            {isDeleting ? <Spinner className="w-4 h-4" /> : <TrashIcon />}
+          </Button>
         </div>
       </header>
 
-      {/* Main content - split panels */}
-      <div className="workbench-main">
-        {/* Left panel - Script */}
-        <div className="workbench-panel-left">{leftPanel}</div>
+      {/* Tab Navigation */}
+      <nav className="workbench-v3-tabs">
+        <button
+          type="button"
+          onClick={() => handleTabClick('script')}
+          className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
+        >
+          <FileTextIcon className="w-4 h-4" />
+          <span>Script</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabClick('settings')}
+          className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
+        >
+          <MixerHorizontalIcon className="w-4 h-4" />
+          <span>Settings</span>
+        </button>
+      </nav>
 
-        {/* Right panel - Config */}
-        <div className="workbench-panel-right">{rightPanel}</div>
+      {/* Main Content Area - Full Width */}
+      <div className="workbench-v3-main">
+        {activeTab === 'script' && (
+          <div className="workbench-v3-content">{leftPanel}</div>
+        )}
+        {activeTab === 'settings' && (
+          <div className="workbench-v3-content workbench-v3-settings">
+            {rightPanel}
+          </div>
+        )}
       </div>
 
-      {/* Global Action Bar */}
+      {/* Action Bar */}
       {actionBar}
     </div>
   );

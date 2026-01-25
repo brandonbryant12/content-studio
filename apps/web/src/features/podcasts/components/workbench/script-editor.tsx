@@ -1,22 +1,6 @@
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { PlusIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
-import { AddSegmentDialog } from './add-segment-dialog';
 import { SegmentItem } from './segment-item';
 
 interface ScriptEditorProps {
@@ -24,11 +8,110 @@ interface ScriptEditorProps {
   disabled?: boolean;
   onUpdateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   onRemoveSegment: (index: number) => void;
-  onReorderSegments: (fromIndex: number, toIndex: number) => void;
   onAddSegment: (
     afterIndex: number,
     data: Omit<ScriptSegment, 'index'>,
   ) => void;
+}
+
+/**
+ * Inline new segment row - appears immediately when adding a segment.
+ * Auto-focuses and saves on Enter/blur, cancels on Escape if empty.
+ */
+function NewSegmentRow({
+  speaker,
+  onSave,
+  onCancel,
+  onSpeakerToggle,
+}: {
+  speaker: string;
+  onSave: (line: string) => void;
+  onCancel: () => void;
+  onSpeakerToggle: () => void;
+}) {
+  const [line, setLine] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    // Focus and scroll into view
+    const el = textareaRef.current;
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  const handleSave = useCallback(() => {
+    const trimmed = line.trim();
+    if (trimmed) {
+      onSave(trimmed);
+    } else {
+      onCancel();
+    }
+  }, [line, onSave, onCancel]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSave();
+      }
+    },
+    [handleSave, onCancel],
+  );
+
+  const isHost = speaker.toLowerCase() === 'host';
+  const isCohost = speaker.toLowerCase() === 'cohost';
+
+  return (
+    <div className="segment-row editing new-segment">
+      <div className="segment-row-speaker">
+        <div className="segment-speaker-toggle">
+          <button
+            type="button"
+            onClick={() => {
+              if (!isHost) onSpeakerToggle();
+            }}
+            className={`segment-speaker-btn host ${isHost ? 'active' : ''}`}
+          >
+            Host
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (!isCohost) onSpeakerToggle();
+            }}
+            className={`segment-speaker-btn cohost ${isCohost ? 'active' : ''}`}
+          >
+            Co
+          </button>
+        </div>
+      </div>
+      <div className="segment-row-content">
+        <textarea
+          ref={textareaRef}
+          value={line}
+          onChange={(e) => setLine(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleSave}
+          placeholder="Type your line..."
+          className="segment-edit-textarea"
+          rows={1}
+        />
+        <div className="segment-edit-hints">
+          <span className="segment-edit-hint">
+            <kbd>Enter</kbd> save
+          </span>
+          <span className="segment-edit-hint">
+            <kbd>Esc</kbd> cancel
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function ScriptEditor({
@@ -36,40 +119,20 @@ export function ScriptEditor({
   disabled,
   onUpdateSegment,
   onRemoveSegment,
-  onReorderSegments,
   onAddSegment,
 }: ScriptEditorProps) {
-  // Track which segment index is being edited (null = none)
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [addAfterIndex, setAddAfterIndex] = useState<number | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+  const [newSegment, setNewSegment] = useState<{
+    afterIndex: number;
+    speaker: string;
+  } | null>(null);
+  const newSegmentRef = useRef<{ afterIndex: number; speaker: string } | null>(
+    null,
   );
 
-  // Memoize segment IDs to prevent SortableContext re-renders (rerender-memo)
-  const segmentIds = useMemo(() => segments.map((s) => s.index), [segments]);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (over && active.id !== over.id) {
-        const oldIndex = segments.findIndex((s) => s.index === active.id);
-        const newIndex = segments.findIndex((s) => s.index === over.id);
-        if (oldIndex !== -1 && newIndex !== -1) {
-          onReorderSegments(oldIndex, newIndex);
-        }
-      }
-    },
-    [segments, onReorderSegments],
-  );
+  useEffect(() => {
+    newSegmentRef.current = newSegment;
+  }, [newSegment]);
 
   const handleStartEdit = useCallback((segmentIndex: number) => {
     setEditingIndex(segmentIndex);
@@ -95,7 +158,6 @@ export function ScriptEditor({
       if (currentArrayIndex === -1) return;
 
       if (direction === 'next') {
-        // Move to next segment, or exit edit mode if at end
         const nextSegment = segments[currentArrayIndex + 1];
         if (nextSegment) {
           setEditingIndex(nextSegment.index);
@@ -103,7 +165,6 @@ export function ScriptEditor({
           setEditingIndex(null);
         }
       } else {
-        // Move to previous segment, or stay if at beginning
         const prevSegment = segments[currentArrayIndex - 1];
         if (prevSegment) {
           setEditingIndex(prevSegment.index);
@@ -113,71 +174,104 @@ export function ScriptEditor({
     [segments],
   );
 
-  const handleAddAfter = useCallback((segmentIndex: number) => {
-    setAddAfterIndex(segmentIndex);
+  const getOppositeSpeaker = useCallback(
+    (afterIndex: number): string => {
+      if (afterIndex === -1) return 'host';
+      const arrayIdx = segments.findIndex((s) => s.index === afterIndex);
+      if (arrayIdx === -1) return 'host';
+      const prevSpeaker = segments[arrayIdx]?.speaker.toLowerCase();
+      return prevSpeaker === 'host' ? 'cohost' : 'host';
+    },
+    [segments],
+  );
+
+  const handleAddAfter = useCallback(
+    (segmentIndex: number) => {
+      setEditingIndex(null);
+      setNewSegment({
+        afterIndex: segmentIndex,
+        speaker: getOppositeSpeaker(segmentIndex),
+      });
+    },
+    [getOppositeSpeaker],
+  );
+
+  const handleNewSegmentSave = useCallback(
+    (line: string) => {
+      const current = newSegmentRef.current;
+      if (current) {
+        onAddSegment(current.afterIndex, {
+          speaker: current.speaker,
+          line,
+        });
+        setNewSegment(null);
+      }
+    },
+    [onAddSegment],
+  );
+
+  const handleNewSegmentCancel = useCallback(() => {
+    setNewSegment(null);
   }, []);
 
-  const handleAddSegment = (data: { speaker: string; line: string }) => {
-    if (addAfterIndex !== null) {
-      onAddSegment(addAfterIndex, data);
-      setAddAfterIndex(null);
-    }
-  };
+  const handleNewSegmentSpeakerToggle = useCallback(() => {
+    setNewSegment((prev) => {
+      if (!prev) return prev;
+      const newSpeaker = prev.speaker === 'host' ? 'cohost' : 'host';
+      return { ...prev, speaker: newSpeaker };
+    });
+  }, []);
 
   return (
-    <>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={segmentIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-3">
-            {segments.map((segment, idx) => (
-              <SegmentItem
-                key={segment.index}
-                segment={segment}
-                segmentIndex={segment.index}
-                lineNumber={idx + 1}
-                isEditing={editingIndex === segment.index}
-                disabled={disabled}
-                onStartEdit={handleStartEdit}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onNavigate={handleNavigate}
-                onRemove={onRemoveSegment}
-                onAddAfter={handleAddAfter}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+    <div className="script-segments">
+      {/* New segment at start */}
+      {newSegment && newSegment.afterIndex === -1 && (
+        <NewSegmentRow
+          speaker={newSegment.speaker}
+          onSave={handleNewSegmentSave}
+          onCancel={handleNewSegmentCancel}
+          onSpeakerToggle={handleNewSegmentSpeakerToggle}
+        />
+      )}
 
-      {/* Add segment at end */}
-      <div className="mt-5 flex justify-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() =>
-            setAddAfterIndex(segments[segments.length - 1]?.index ?? -1)
-          }
-          className="script-add-segment-btn"
+      {segments.map((segment) => (
+        <div key={segment.index}>
+          <SegmentItem
+            segment={segment}
+            segmentIndex={segment.index}
+            isEditing={editingIndex === segment.index}
+            disabled={disabled || newSegment !== null}
+            onStartEdit={handleStartEdit}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            onNavigate={handleNavigate}
+            onRemove={onRemoveSegment}
+            onAddAfter={handleAddAfter}
+          />
+          {/* New segment after this one */}
+          {newSegment && newSegment.afterIndex === segment.index && (
+            <NewSegmentRow
+              speaker={newSegment.speaker}
+              onSave={handleNewSegmentSave}
+              onCancel={handleNewSegmentCancel}
+              onSpeakerToggle={handleNewSegmentSpeakerToggle}
+            />
+          )}
+        </div>
+      ))}
+
+      {/* Add new line button */}
+      {!newSegment && (
+        <button
+          type="button"
+          onClick={() => handleAddAfter(segments[segments.length - 1]?.index ?? -1)}
+          className="script-add-line-btn"
           disabled={disabled}
         >
-          <PlusIcon className="w-4 h-4 mr-1.5" />
-          Add Segment
-        </Button>
-      </div>
-
-      {/* Add dialog - still useful for adding with specific speaker/content */}
-      <AddSegmentDialog
-        open={addAfterIndex !== null}
-        onOpenChange={(open) => !open && setAddAfterIndex(null)}
-        onAdd={handleAddSegment}
-      />
-    </>
+          <PlusIcon className="w-3.5 h-3.5" />
+          <span>New line</span>
+        </button>
+      )}
+    </div>
   );
 }

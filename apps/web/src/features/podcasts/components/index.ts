@@ -25,7 +25,6 @@ export { ConfigPanel } from './workbench/config-panel';
 export { ScriptEditor } from './workbench/script-editor';
 export { SegmentItem } from './workbench/segment-item';
 export { SegmentEditorDialog } from './workbench/segment-editor-dialog';
-export { AddSegmentDialog } from './workbench/add-segment-dialog';
 export { SmartActions } from './workbench/smart-actions';
 export { GenerationStatus } from './workbench/generation-status';
 export { ErrorDisplay } from './workbench/error-display';

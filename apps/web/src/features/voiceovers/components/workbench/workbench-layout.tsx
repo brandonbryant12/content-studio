@@ -1,11 +1,10 @@
 import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
-import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import type { ReactNode } from 'react';
-import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
+import { isGeneratingStatus } from '../../lib/status';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
@@ -61,7 +60,6 @@ export function WorkbenchLayout({
   // Note: currentUserId is passed for future owner-only UI features
   void _currentUserId;
 
-  const statusConfig = getStatusConfig(voiceover.status);
   const isGenerating = isGeneratingStatus(voiceover.status);
 
   return (
@@ -87,18 +85,8 @@ export function WorkbenchLayout({
               </div>
             </div>
 
-            {/* Status badges and metadata */}
+            {/* Metadata */}
             <div className="workbench-meta">
-              {statusConfig && (
-                <Badge
-                  variant={statusConfig.badgeVariant}
-                  className="gap-1.5 px-2.5 py-1 font-medium"
-                >
-                  {isGenerating && <Spinner className="w-3 h-3" />}
-                  {statusConfig.label}
-                </Badge>
-              )}
-
               {voiceover.duration && (
                 <div className="workbench-duration">
                   <svg
@@ -158,7 +146,7 @@ export function WorkbenchLayout({
 
       {/* Main content - single panel (voiceover is simpler than podcast) */}
       <div className="workbench-main">
-        <div className="flex-1 overflow-auto p-6">{children}</div>
+        <div className="workbench-scroll-container">{children}</div>
       </div>
 
       {/* Global Action Bar */}

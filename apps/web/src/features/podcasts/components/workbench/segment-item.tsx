@@ -1,10 +1,4 @@
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
-  DragHandleDots2Icon,
-  PlusIcon,
-  TrashIcon,
-} from '@radix-ui/react-icons';
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
@@ -12,7 +6,6 @@ import type { ScriptSegment } from '../../hooks/use-script-editor';
 interface SegmentItemProps {
   segment: ScriptSegment;
   segmentIndex: number;
-  lineNumber: number;
   isEditing: boolean;
   disabled?: boolean;
   onStartEdit: (segmentIndex: number) => void;
@@ -29,7 +22,6 @@ interface SegmentItemProps {
 export const SegmentItem = memo(function SegmentItem({
   segment,
   segmentIndex,
-  lineNumber,
   isEditing,
   disabled,
   onStartEdit,
@@ -42,20 +34,6 @@ export const SegmentItem = memo(function SegmentItem({
   const [editSpeaker, setEditSpeaker] = useState(segment.speaker);
   const [editLine, setEditLine] = useState(segment.line);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: segment.index, disabled });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
 
   // Reset edit state when segment changes or editing starts
   useEffect(() => {
@@ -122,7 +100,7 @@ export const SegmentItem = memo(function SegmentItem({
     (e: React.FocusEvent) => {
       // Check if focus is moving to another element within the segment
       const relatedTarget = e.relatedTarget as HTMLElement;
-      if (relatedTarget?.closest('.segment-item.editing')) {
+      if (relatedTarget?.closest('.segment-row.editing')) {
         return;
       }
       handleSave();
@@ -131,10 +109,10 @@ export const SegmentItem = memo(function SegmentItem({
   );
 
   const handleContentClick = useCallback(() => {
-    if (!isEditing && !isDragging && !disabled) {
+    if (!isEditing && !disabled) {
       onStartEdit(segmentIndex);
     }
-  }, [isEditing, isDragging, disabled, segmentIndex, onStartEdit]);
+  }, [isEditing, disabled, segmentIndex, onStartEdit]);
 
   const handleRemove = useCallback(() => {
     onRemove(segmentIndex);
@@ -149,31 +127,10 @@ export const SegmentItem = memo(function SegmentItem({
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={`group segment-item ${isDragging ? 'dragging' : ''} ${isEditing ? 'editing' : ''} ${disabled ? 'disabled' : ''}`}
+      className={`group segment-row ${isEditing ? 'editing' : ''} ${disabled ? 'disabled' : ''}`}
     >
-      {/* Line indicator */}
-      <div className="segment-item-indicator" />
-
-      {/* Line number */}
-      <div className="segment-item-line-number">
-        <span>{lineNumber}</span>
-      </div>
-
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="segment-item-drag-handle"
-        aria-label="Drag to reorder"
-        tabIndex={-1}
-      >
-        <DragHandleDots2Icon />
-      </button>
-
       {/* Speaker - toggle in edit mode, badge in view mode */}
-      <div className="segment-item-speaker">
+      <div className="segment-row-speaker">
         {isEditing ? (
           <div className="segment-speaker-toggle">
             <button
@@ -193,7 +150,7 @@ export const SegmentItem = memo(function SegmentItem({
           </div>
         ) : (
           <span
-            className={`segment-item-speaker-badge ${isHost ? 'host' : 'guest'}`}
+            className={`segment-row-speaker-badge ${isHost ? 'host' : 'guest'}`}
           >
             {segment.speaker}
           </span>
@@ -202,7 +159,7 @@ export const SegmentItem = memo(function SegmentItem({
 
       {/* Content - inline edit or display */}
       {isEditing ? (
-        <div className="segment-edit-content">
+        <div className="segment-row-content">
           <textarea
             ref={textareaRef}
             value={editLine}
@@ -227,20 +184,20 @@ export const SegmentItem = memo(function SegmentItem({
         </div>
       ) : (
         <p
-          className="segment-item-content"
+          className="segment-row-content"
           onClick={handleContentClick}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleContentClick()}
         >
           {segment.line || (
-            <span className="segment-item-empty">Click to add dialogue...</span>
+            <span className="segment-row-empty">Click to add dialogue...</span>
           )}
         </p>
       )}
 
       {/* Actions */}
-      <div className="segment-item-actions">
+      <div className="segment-row-actions">
         <Button
           variant="ghost"
           size="icon"

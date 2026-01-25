@@ -1,9 +1,9 @@
 // features/podcasts/components/podcast-detail.tsx
 
-import type { RouterOutput } from '@repo/api/client';
-import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
-import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
+import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
+import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
+import type { RouterOutput } from '@repo/api/client';
 import {
   WorkbenchLayout,
   ScriptPanel,
@@ -104,7 +104,6 @@ export function PodcastDetail({
           disabled={podcast.status !== 'ready'}
           onUpdateSegment={scriptEditor.updateSegment}
           onRemoveSegment={scriptEditor.removeSegment}
-          onReorderSegments={scriptEditor.reorderSegments}
           onAddSegment={scriptEditor.addSegment}
           onDiscard={scriptEditor.discardChanges}
         />
@@ -112,7 +111,6 @@ export function PodcastDetail({
       rightPanel={
         <ConfigPanel
           podcast={podcast}
-          displayAudio={displayAudio}
           isGenerating={isGenerating}
           isPendingGeneration={isPendingGeneration}
           settings={settings}
@@ -128,6 +126,7 @@ export function PodcastDetail({
           onSave={onSave}
           onGenerate={onGenerate}
           disabled={isGenerating}
+          audioUrl={displayAudio?.url}
         />
       }
     />
