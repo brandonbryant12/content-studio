@@ -32,9 +32,13 @@ export function useScriptEditor({
   podcastId,
   initialSegments,
 }: UseScriptEditorOptions): UseScriptEditorReturn {
-  const [segments, setSegments] = useState<ScriptSegment[]>(initialSegments);
-  const [originalSegments, setOriginalSegments] =
-    useState<ScriptSegment[]>(initialSegments);
+  // Use lazy initializer to avoid recreating arrays on every render (rerender-lazy-state-init)
+  const [segments, setSegments] = useState<ScriptSegment[]>(
+    () => initialSegments,
+  );
+  const [originalSegments, setOriginalSegments] = useState<ScriptSegment[]>(
+    () => initialSegments,
+  );
   const hasUserEdits = useRef(false);
   const prevInitialSegmentsRef = useRef<string>('');
 

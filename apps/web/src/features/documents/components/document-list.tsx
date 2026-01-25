@@ -22,6 +22,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
           viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth="1.5"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -95,8 +96,9 @@ export function DocumentList({
         <Input
           value={searchQuery}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search documents..."
+          placeholder="Search documents…"
           className="search-input"
+          autoComplete="off"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>

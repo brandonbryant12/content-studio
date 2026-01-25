@@ -24,7 +24,7 @@ function Sidebar() {
       <nav className="flex-1 flex flex-col gap-2 w-full px-2">
         <Link
           to="/dashboard"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
           activeProps={{
             className:
               'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
@@ -33,16 +33,16 @@ function Sidebar() {
             className:
               'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
           }}
-          title="Dashboard"
+          aria-label="Dashboard"
         >
-          <HomeIcon className="w-5 h-5" />
+          <HomeIcon className="w-5 h-5" aria-hidden="true" />
         </Link>
 
         <div className="my-2 border-t border-gray-200 dark:border-gray-800 w-8 mx-auto" />
 
         <Link
           to="/documents"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           activeProps={{
             className:
               'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
@@ -51,14 +51,14 @@ function Sidebar() {
             className:
               'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
           }}
-          title="Documents"
+          aria-label="Documents"
         >
-          <FileTextIcon className="w-5 h-5" />
+          <FileTextIcon className="w-5 h-5" aria-hidden="true" />
         </Link>
 
         <Link
           to="/podcasts"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 focus-visible:ring-offset-2"
           activeProps={{
             className:
               'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400',
@@ -67,14 +67,14 @@ function Sidebar() {
             className:
               'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
           }}
-          title="Podcasts"
+          aria-label="Podcasts"
         >
-          <MixerHorizontalIcon className="w-5 h-5" />
+          <MixerHorizontalIcon className="w-5 h-5" aria-hidden="true" />
         </Link>
 
         <Link
           to="/voiceovers"
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto"
+          className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
           activeProps={{
             className:
               'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
@@ -83,9 +83,9 @@ function Sidebar() {
             className:
               'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200',
           }}
-          title="Voiceovers"
+          aria-label="Voiceovers"
         >
-          <SpeakerLoudIcon className="w-5 h-5" />
+          <SpeakerLoudIcon className="w-5 h-5" aria-hidden="true" />
         </Link>
       </nav>
 

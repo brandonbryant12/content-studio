@@ -108,6 +108,8 @@ export function UploadDocumentDialog({
         <div className="space-y-4 py-4">
           {/* Drop zone */}
           <div
+            role="button"
+            tabIndex={0}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -116,10 +118,18 @@ export function UploadDocumentDialog({
             onDrop={handleDrop}
             className={`
               border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
               ${isDragging ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700'}
               ${file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
             `}
             onClick={() => document.getElementById('file-input')?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('file-input')?.click();
+              }
+            }}
+            aria-label="Drop zone for file upload. Click or press Enter to select a file."
           >
             <input
               id="file-input"
@@ -139,7 +149,10 @@ export function UploadDocumentDialog({
               </div>
             ) : (
               <div>
-                <UploadIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                <UploadIcon
+                  className="w-8 h-8 mx-auto text-gray-400 mb-2"
+                  aria-hidden="true"
+                />
                 <p className="text-gray-600 dark:text-gray-400">
                   Drag and drop or click to select
                 </p>
@@ -155,7 +168,8 @@ export function UploadDocumentDialog({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Document title"
+              placeholder="Document title…"
+              autoComplete="off"
             />
           </div>
         </div>

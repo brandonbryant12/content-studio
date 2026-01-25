@@ -5,7 +5,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
-import { PodcastDetailContainer } from '@/features/podcasts';
+import { PodcastDetailContainer } from '@/features/podcasts/components/podcast-detail-container';
 
 export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
   loader: ({ params }) =>

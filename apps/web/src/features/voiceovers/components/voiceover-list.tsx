@@ -22,6 +22,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
           viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth="1.5"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -116,8 +117,9 @@ export function VoiceoverList({
         <Input
           value={searchQuery}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search voiceovers..."
+          placeholder="Search voiceovers…"
           className="search-input"
+          autoComplete="off"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>

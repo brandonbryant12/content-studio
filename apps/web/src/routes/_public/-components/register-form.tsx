@@ -100,6 +100,7 @@ export default function RegisterCredentialsForm() {
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="John Doe"
+                autoComplete="name"
               />
               <FormFieldInfo field={field} />
             </>
@@ -126,6 +127,7 @@ export default function RegisterCredentialsForm() {
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="you@example.com"
+                autoComplete="email"
               />
               <FormFieldInfo field={field} />
             </>
@@ -152,7 +154,8 @@ export default function RegisterCredentialsForm() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Create a password"
+                  autoComplete="new-password"
                 />
                 <Button
                   className="absolute mr-2 w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -164,8 +167,15 @@ export default function RegisterCredentialsForm() {
                     e.preventDefault();
                     setIsPasswordVisible(!isPasswordVisible);
                   }}
+                  aria-label={
+                    isPasswordVisible ? 'Hide password' : 'Show password'
+                  }
                 >
-                  {isPasswordVisible ? <EyeOpenIcon /> : <EyeNoneIcon />}
+                  {isPasswordVisible ? (
+                    <EyeOpenIcon aria-hidden="true" />
+                  ) : (
+                    <EyeNoneIcon aria-hidden="true" />
+                  )}
                 </Button>
               </div>
               <FormFieldInfo field={field} />
@@ -193,7 +203,8 @@ export default function RegisterCredentialsForm() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
                 />
                 <Button
                   className="absolute mr-2 w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -205,8 +216,15 @@ export default function RegisterCredentialsForm() {
                     e.preventDefault();
                     setIsConfirmPasswordVisible(!isConfirmPasswordVisible);
                   }}
+                  aria-label={
+                    isConfirmPasswordVisible ? 'Hide password' : 'Show password'
+                  }
                 >
-                  {isConfirmPasswordVisible ? <EyeOpenIcon /> : <EyeNoneIcon />}
+                  {isConfirmPasswordVisible ? (
+                    <EyeOpenIcon aria-hidden="true" />
+                  ) : (
+                    <EyeNoneIcon aria-hidden="true" />
+                  )}
                 </Button>
               </div>
               <FormFieldInfo field={field} />

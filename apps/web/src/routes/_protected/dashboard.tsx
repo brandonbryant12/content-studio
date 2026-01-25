@@ -9,18 +9,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import {
-  DocumentItem,
-  UploadDocumentDialog,
-  useDocumentsOrdered,
-} from '@/features/documents';
-import { PodcastItem, usePodcastsOrdered } from '@/features/podcasts';
+import { DocumentItem } from '@/features/documents/components/document-item';
+import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
+import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
+import { PodcastItem } from '@/features/podcasts/components/podcast-item';
+import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 export const Route = createFileRoute('/_protected/dashboard')({
   component: Dashboard,
 });
+
+// Stable noop callback to avoid re-renders (rerender-memo-with-default-value)
+const noop = () => {};
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -70,9 +72,16 @@ function Dashboard() {
 
       {/* Quick Actions */}
       <div className="content-grid-2 mb-10">
-        <button onClick={() => setUploadOpen(true)} className="action-card">
+        <button
+          onClick={() => setUploadOpen(true)}
+          className="action-card"
+          aria-label="Upload Document - Add source content"
+        >
           <div className="action-card-icon">
-            <UploadIcon className="w-5 h-5 text-foreground" />
+            <UploadIcon
+              className="w-5 h-5 text-foreground"
+              aria-hidden="true"
+            />
           </div>
           <div>
             <h3 className="action-card-title">Upload Document</h3>
@@ -84,12 +93,16 @@ function Dashboard() {
           onClick={handleCreatePodcast}
           disabled={createPodcastMutation.isPending}
           className="action-card"
+          aria-label="New Podcast - Generate audio content"
         >
           <div className="action-card-icon">
             {createPodcastMutation.isPending ? (
               <Spinner className="w-5 h-5" />
             ) : (
-              <PlusIcon className="w-5 h-5 text-foreground" />
+              <PlusIcon
+                className="w-5 h-5 text-foreground"
+                aria-hidden="true"
+              />
             )}
           </div>
           <div>
@@ -105,7 +118,10 @@ function Dashboard() {
       <section className="page-section">
         <div className="section-header">
           <div className="flex items-center gap-2">
-            <FileTextIcon className="w-4 h-4 text-muted-foreground" />
+            <FileTextIcon
+              className="w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <h2 className="section-title">Recent Documents</h2>
           </div>
           <Link to="/documents" className="text-link">
@@ -127,7 +143,7 @@ function Dashboard() {
               <DocumentItem
                 key={doc.id}
                 document={doc}
-                onDelete={() => {}}
+                onDelete={noop}
                 isDeleting={false}
               />
             ))}
@@ -139,7 +155,10 @@ function Dashboard() {
       <section>
         <div className="section-header">
           <div className="flex items-center gap-2">
-            <SpeakerLoudIcon className="w-4 h-4 text-muted-foreground" />
+            <SpeakerLoudIcon
+              className="w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <h2 className="section-title">Recent Podcasts</h2>
           </div>
           <Link to="/podcasts" className="text-link">
@@ -161,7 +180,7 @@ function Dashboard() {
               <PodcastItem
                 key={podcast.id}
                 podcast={podcast}
-                onDelete={() => {}}
+                onDelete={noop}
                 isDeleting={false}
               />
             ))}

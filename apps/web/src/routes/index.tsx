@@ -35,7 +35,10 @@ function RouteComponent() {
                 <Button asChild size="lg">
                   <Link to="/register">
                     Get started
-                    <ArrowRightIcon className="w-4 h-4 ml-1" />
+                    <ArrowRightIcon
+                      className="w-4 h-4 ml-1"
+                      aria-hidden="true"
+                    />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
@@ -57,6 +60,7 @@ function RouteComponent() {
                         key={i}
                         className="waveform-bar"
                         style={{ height: `${height * 100}%` }}
+                        aria-hidden="true"
                       />
                     ))}
                   </div>
@@ -123,7 +127,7 @@ function FeatureBlock({
   return (
     <div>
       <span className="text-meta text-accent mb-3 block">{number}</span>
-      <h3 className="font-editorial text-xl font-semibold mb-2 text-foreground">
+      <h3 className="font-editorial text-xl font-semibold mb-2 text-foreground text-balance">
         {title}
       </h3>
       <p className="text-body">{description}</p>
