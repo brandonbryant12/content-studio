@@ -99,13 +99,13 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 04: Podcasts Feature - Config Panel Optimization
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `rerender-memo-with-default-value`, `rerender-functional-setstate`
 **Acceptance Criteria:**
-- [ ] Convert inline onClick handlers to useCallback
-- [ ] Use functional setState for toggle operations
-- [ ] Verify TABS array is already hoisted (reference only)
-- [ ] Typecheck passes
+- [x] Convert inline onClick handlers to useCallback
+- [x] Use functional setState for toggle operations
+- [x] Verify TABS array is already hoisted (reference only)
+- [x] Typecheck passes
 **Details:** [04-podcasts-config-panel.md](./tasks/04-podcasts-config-panel.md)
 
 ---

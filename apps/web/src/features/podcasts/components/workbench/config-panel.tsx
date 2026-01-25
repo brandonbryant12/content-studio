@@ -4,7 +4,7 @@ import {
   SpeakerLoudIcon,
   FileTextIcon,
 } from '@radix-ui/react-icons';
-import { useState } from 'react';
+import { useState, useCallback, type MouseEvent } from 'react';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
 import type { UseDocumentSelectionReturn } from '../../hooks/use-document-selection';
 import type { RouterOutput } from '@repo/api/client';
@@ -45,6 +45,25 @@ export function ConfigPanel({
   const [activeTab, setActiveTab] = useState<TabId>('produce');
   const [showPromptViewer, setShowPromptViewer] = useState(false);
 
+  // Stable callback using data-attribute pattern to avoid inline closures in map
+  const handleTabClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      const tabId = e.currentTarget.dataset.tabId as TabId;
+      setActiveTab(tabId);
+    },
+    [],
+  );
+
+  // Functional setState to avoid closure over showPromptViewer
+  const handleTogglePromptViewer = useCallback(() => {
+    setShowPromptViewer((prev) => !prev);
+  }, []);
+
+  // Stable callback for closing prompt viewer
+  const handleClosePromptViewer = useCallback(() => {
+    setShowPromptViewer(false);
+  }, []);
+
   return (
     <div className="control-room relative">
       {/* Tab Navigation */}
@@ -52,7 +71,8 @@ export function ConfigPanel({
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            data-tab-id={tab.id}
+            onClick={handleTabClick}
             className={`control-tab ${activeTab === tab.id ? 'active' : ''}`}
           >
             {tab.icon}
@@ -63,7 +83,7 @@ export function ConfigPanel({
         {/* Prompt Viewer Toggle */}
         {podcast.generationContext && (
           <button
-            onClick={() => setShowPromptViewer(!showPromptViewer)}
+            onClick={handleTogglePromptViewer}
             className={`history-toggle ${showPromptViewer ? 'active' : ''}`}
             aria-label="View generation details"
             title="View generation details"
@@ -140,7 +160,7 @@ export function ConfigPanel({
       {showPromptViewer && podcast.generationContext && (
         <PromptViewerPanel
           generationContext={podcast.generationContext}
-          onClose={() => setShowPromptViewer(false)}
+          onClose={handleClosePromptViewer}
         />
       )}
     </div>

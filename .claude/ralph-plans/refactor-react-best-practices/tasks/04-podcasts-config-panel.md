@@ -74,12 +74,16 @@ This is a good pattern - no changes needed.
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+### Changes Made:
+1. Added `handleTabClick` using data-attribute pattern (`data-tab-id`)
+2. Added `handleTogglePromptViewer` using functional setState `(prev) => !prev`
+3. Added `handleClosePromptViewer` for the PromptViewerPanel onClose prop
+4. All three inline arrow functions replaced with stable useCallback references
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
-- [ ] `pnpm --filter web typecheck` passes
-- [ ] Tab click uses data attribute pattern or stable callback
-- [ ] Toggle uses functional setState
-- [ ] No inline arrow functions in event handlers
+- [x] `pnpm --filter web typecheck` passes
+- [x] `pnpm --filter web build` passes (2.47s)
+- [x] Tab click uses data attribute pattern with stable callback
+- [x] Toggle uses functional setState
+- [x] No inline arrow functions in event handlers
