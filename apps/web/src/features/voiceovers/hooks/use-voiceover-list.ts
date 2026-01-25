@@ -71,11 +71,12 @@ export function useVoiceoversOrdered(
     ...apiClient.voiceovers.list.queryOptions({ input: { limit } }),
     enabled,
     select: (data) => {
-      const sorted = [...data].sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
-        return orderBy === 'desc' ? dateB - dateA : dateA - dateB;
-      });
+      // ISO 8601 dates are lexicographically sortable - no Date objects needed
+      const sorted = [...data].sort((a, b) =>
+        orderBy === 'desc'
+          ? b.createdAt.localeCompare(a.createdAt)
+          : a.createdAt.localeCompare(b.createdAt),
+      );
       return limit ? sorted.slice(0, limit) : sorted;
     },
   });

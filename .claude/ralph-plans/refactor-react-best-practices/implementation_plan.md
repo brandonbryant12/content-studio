@@ -237,14 +237,14 @@ These patterns are already correctly implemented and serve as examples:
 ---
 
 ### Task 15: Feature Hooks - List Select Optimization
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `js-cache-function-results`
 **Acceptance Criteria:**
-- [ ] Optimize select function in use-podcast-list.ts (avoid Date object recreation)
-- [ ] Optimize select function in use-voiceover-list.ts
-- [ ] Optimize select function in use-document-list.ts
-- [ ] Use string comparison for ISO dates or cache Date objects
-- [ ] Typecheck passes
+- [x] Optimize select function in use-podcast-list.ts (string comparison)
+- [x] Optimize select function in use-voiceover-list.ts
+- [x] Optimize select function in use-document-list.ts
+- [x] Use string comparison for ISO dates (localeCompare)
+- [x] Typecheck passes
 **Details:** [15-feature-hooks-select.md](./tasks/15-feature-hooks-select.md)
 
 ---
