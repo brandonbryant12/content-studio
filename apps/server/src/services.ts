@@ -5,6 +5,7 @@ import {
 } from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
+import type { VertexAIConfig } from '@repo/ai';
 import { storageConfig } from './config';
 import { env } from './env';
 
@@ -25,11 +26,33 @@ export const auth = createAuth({
   db,
 });
 
+// Build Vertex AI config if using vertex provider
+const buildVertexConfig = (): VertexAIConfig | undefined => {
+  if (env.AI_PROVIDER !== 'vertex') return undefined;
+
+  // Express mode takes precedence if API key is provided
+  if (env.GOOGLE_VERTEX_API_KEY) {
+    return {
+      mode: 'express',
+      apiKey: env.GOOGLE_VERTEX_API_KEY,
+    };
+  }
+
+  // Service account mode
+  return {
+    mode: 'serviceAccount',
+    project: env.GOOGLE_VERTEX_PROJECT!,
+    location: env.GOOGLE_VERTEX_LOCATION!,
+  };
+};
+
 export const serverRuntime = createServerRuntime({
   db,
-  geminiApiKey: env.GEMINI_API_KEY,
   storageConfig,
   useMockAI: env.USE_MOCK_AI,
+  aiProvider: env.AI_PROVIDER,
+  geminiApiKey: env.GEMINI_API_KEY,
+  vertexConfig: buildVertexConfig(),
 });
 
 export const sseManager = createSSEManager();

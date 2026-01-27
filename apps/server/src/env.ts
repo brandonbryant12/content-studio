@@ -60,8 +60,29 @@ export const envSchema = Schema.Struct({
   // Frontend URL, used to configure trusted origin (CORS)
   PUBLIC_WEB_URL: UrlSchema,
 
-  // Google AI API key for LLM and TTS
-  GEMINI_API_KEY: Schema.String.pipe(Schema.minLength(1)),
+  // AI Provider selection: 'gemini' (default) or 'vertex'
+  AI_PROVIDER: Schema.optionalWith(Schema.Literal('gemini', 'vertex'), {
+    default: () => 'gemini' as const,
+  }),
+
+  // Google Gemini API key (required when AI_PROVIDER=gemini)
+  GEMINI_API_KEY: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
+
+  // Vertex AI configuration (required when AI_PROVIDER=vertex)
+  // Express mode: only GOOGLE_VERTEX_API_KEY needed
+  // Service account mode: GOOGLE_VERTEX_PROJECT + GOOGLE_VERTEX_LOCATION + GOOGLE_APPLICATION_CREDENTIALS
+  GOOGLE_VERTEX_PROJECT: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  GOOGLE_VERTEX_LOCATION: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  GOOGLE_VERTEX_API_KEY: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  GOOGLE_APPLICATION_CREDENTIALS: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
 
   // Use mock AI services in development (set to false to use real AI)
   USE_MOCK_AI: Schema.optionalWith(BooleanStringSchema, {
@@ -91,4 +112,29 @@ export const envSchema = Schema.Struct({
   NO_PROXY: Schema.optional(Schema.String), // Comma-separated list of hosts to bypass proxy
 });
 
-export const env = Schema.decodeUnknownSync(envSchema)(process.env);
+const rawEnv = Schema.decodeUnknownSync(envSchema)(process.env);
+
+// Validate AI provider configuration
+if (!rawEnv.USE_MOCK_AI) {
+  if (rawEnv.AI_PROVIDER === 'gemini') {
+    if (!rawEnv.GEMINI_API_KEY) {
+      throw new Error(
+        'GEMINI_API_KEY is required when AI_PROVIDER=gemini (or not set)',
+      );
+    }
+  } else if (rawEnv.AI_PROVIDER === 'vertex') {
+    // Vertex AI can use either Express mode (API key) or Service Account mode
+    const hasExpressMode = !!rawEnv.GOOGLE_VERTEX_API_KEY;
+    const hasServiceAccountMode =
+      !!rawEnv.GOOGLE_VERTEX_PROJECT && !!rawEnv.GOOGLE_VERTEX_LOCATION;
+
+    if (!hasExpressMode && !hasServiceAccountMode) {
+      throw new Error(
+        'Vertex AI requires either GOOGLE_VERTEX_API_KEY (express mode) or ' +
+          'GOOGLE_VERTEX_PROJECT + GOOGLE_VERTEX_LOCATION (service account mode)',
+      );
+    }
+  }
+}
+
+export const env = rawEnv;

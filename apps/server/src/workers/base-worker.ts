@@ -5,6 +5,7 @@ import {
   type SSEManagerService,
   type SharedServices,
 } from '@repo/api/server';
+import type { AIProvider, VertexAIConfig } from '@repo/ai';
 import { Role, type User } from '@repo/auth/policy';
 import { createDb } from '@repo/db/client';
 import { Queue, JobProcessingError, type Job, type JobType } from '@repo/queue';
@@ -27,8 +28,12 @@ export interface BaseWorkerConfig {
   runtime?: ServerRuntime;
   /** Database URL (used only if runtime not provided) */
   databaseUrl?: string;
+  /** AI provider to use: 'gemini' or 'vertex' (used only if runtime not provided) */
+  aiProvider?: AIProvider;
   /** Google API key for AI services (used only if runtime not provided) */
   geminiApiKey?: string;
+  /** Vertex AI config (used only if runtime not provided and aiProvider='vertex') */
+  vertexConfig?: VertexAIConfig;
   /** Storage configuration (used only if runtime not provided) */
   storageConfig?: StorageConfig;
   /** Use mock AI services (used only if runtime not provided) */
@@ -126,9 +131,25 @@ export const createWorker = <
     console.log(`[${name}] Using shared runtime`);
   } else {
     // Validate required config for creating a new runtime
-    if (!config.databaseUrl || !config.geminiApiKey || !config.storageConfig) {
+    const aiProvider = config.aiProvider ?? 'gemini';
+    const needsGeminiKey = aiProvider === 'gemini' && !config.useMockAI;
+    const needsVertexConfig = aiProvider === 'vertex' && !config.useMockAI;
+
+    if (!config.databaseUrl || !config.storageConfig) {
       throw new Error(
-        `[${name}] Either 'runtime' or 'databaseUrl', 'geminiApiKey', and 'storageConfig' must be provided`,
+        `[${name}] Either 'runtime' or 'databaseUrl' and 'storageConfig' must be provided`,
+      );
+    }
+
+    if (needsGeminiKey && !config.geminiApiKey) {
+      throw new Error(
+        `[${name}] 'geminiApiKey' is required when aiProvider='gemini' and useMockAI=false`,
+      );
+    }
+
+    if (needsVertexConfig && !config.vertexConfig) {
+      throw new Error(
+        `[${name}] 'vertexConfig' is required when aiProvider='vertex' and useMockAI=false`,
       );
     }
 
@@ -136,9 +157,11 @@ export const createWorker = <
     const db = createDb({ databaseUrl: config.databaseUrl });
     runtime = createServerRuntime({
       db,
-      geminiApiKey: config.geminiApiKey,
       storageConfig: config.storageConfig,
       useMockAI: config.useMockAI,
+      aiProvider,
+      geminiApiKey: config.geminiApiKey,
+      vertexConfig: config.vertexConfig,
     });
 
     if (config.useMockAI) {

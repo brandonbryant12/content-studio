@@ -102,7 +102,9 @@
       "Bash(agent-browser:*)",
       "Bash(lsof:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Skill(agent-browser)"
+      "Skill(agent-browser)",
+      "WebFetch(domain:discuss.ai.google.dev)",
+      "WebFetch(domain:ai-sdk.dev)"
     ],
     "deny": [],
     "ask": []

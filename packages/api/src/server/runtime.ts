@@ -1,7 +1,13 @@
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import { DbLive, type Db } from '@repo/db/effect';
 import { QueueLive, type Queue } from '@repo/queue';
-import { GoogleAILive, type AI } from '@repo/ai';
+import {
+  GoogleAILive,
+  VertexAILive,
+  type AI,
+  type AIProvider,
+  type VertexAIConfig,
+} from '@repo/ai';
 import { MockAIWithLatency } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { MediaLive, type Media } from '@repo/media';
@@ -24,9 +30,14 @@ export type SharedServices = Db | Policy | Storage | Queue | AI | Media;
  */
 export interface ServerRuntimeConfig {
   db: DatabaseInstance;
-  geminiApiKey: string;
   storageConfig: StorageConfig;
   useMockAI?: boolean;
+  /** AI provider to use: 'gemini' or 'vertex' */
+  aiProvider: AIProvider;
+  /** Gemini API key (required when aiProvider='gemini') */
+  geminiApiKey?: string;
+  /** Vertex AI config (required when aiProvider='vertex') */
+  vertexConfig?: VertexAIConfig;
 }
 
 /**
@@ -53,7 +64,9 @@ export const createSharedLayers = (
   // Mock AI has realistic latency (10s LLM, 15s TTS) for dev testing
   const aiLayer = config.useMockAI
     ? MockAIWithLatency
-    : GoogleAILive({ apiKey: config.geminiApiKey });
+    : config.aiProvider === 'vertex'
+      ? VertexAILive(config.vertexConfig!)
+      : GoogleAILive({ apiKey: config.geminiApiKey! });
 
   // Media layer bundles Documents, PodcastRepo, and CollaboratorRepo
   const mediaLayer = MediaLive.pipe(
