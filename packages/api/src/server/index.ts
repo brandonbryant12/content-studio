@@ -36,6 +36,15 @@ export {
   type EffectSuccess,
 } from './effect-handler';
 
+// Export SSE manager
+export {
+  SSEManager,
+  SSEManagerLive,
+  createSSEManager,
+  type SSEManagerService,
+  type SSEWriter,
+} from './sse';
+
 export type AppRouter = typeof appRouter;
 
 export const createApi = ({

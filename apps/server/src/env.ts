@@ -86,6 +86,11 @@ export const envSchema = Schema.Struct({
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String), // For S3 provider
   S3_SECRET_ACCESS_KEY: Schema.optional(Schema.String), // For S3 provider
   S3_ENDPOINT: Schema.optional(Schema.String), // For S3 provider
+
+  // Proxy configuration (for corporate environments)
+  HTTPS_PROXY: Schema.optional(Schema.String),
+  HTTP_PROXY: Schema.optional(Schema.String),
+  NO_PROXY: Schema.optional(Schema.String), // Comma-separated list of hosts to bypass proxy
 });
 
 export const env = Schema.decodeUnknownSync(envSchema)(process.env);

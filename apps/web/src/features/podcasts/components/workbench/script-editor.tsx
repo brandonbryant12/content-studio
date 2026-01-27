@@ -264,7 +264,9 @@ export function ScriptEditor({
       {!newSegment && (
         <button
           type="button"
-          onClick={() => handleAddAfter(segments[segments.length - 1]?.index ?? -1)}
+          onClick={() =>
+            handleAddAfter(segments[segments.length - 1]?.index ?? -1)
+          }
           className="script-add-line-btn"
           disabled={disabled}
         >

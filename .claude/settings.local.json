@@ -98,8 +98,6 @@
       "WebFetch(domain:www.effect.solutions)",
       "Bash(node:*)",
       "Bash(git worktree:*)",
-      "Skill(remotion-best-practices)",
-      "WebFetch(domain:www.remotion.dev)",
       "Bash(npx agent-browser:*)",
       "Bash(agent-browser:*)",
       "Bash(lsof:*)",

@@ -44,8 +44,12 @@ export function GlobalActionBar({
   // Get status message
   const getStatusMessage = () => {
     if (isGenerating) {
-      if (status === VersionStatus.GENERATING_SCRIPT) return 'Generating script...';
-      if (status === VersionStatus.GENERATING_AUDIO || status === VersionStatus.SCRIPT_READY) {
+      if (status === VersionStatus.GENERATING_SCRIPT)
+        return 'Generating script...';
+      if (
+        status === VersionStatus.GENERATING_AUDIO ||
+        status === VersionStatus.SCRIPT_READY
+      ) {
         return 'Generating audio...';
       }
       return 'Processing...';
@@ -117,7 +121,9 @@ export function GlobalActionBar({
   return (
     <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
       {/* Left: Status indicator */}
-      <div className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}>
+      <div
+        className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
+      >
         {isGenerating ? (
           <Spinner className="w-4 h-4" />
         ) : showChangesState ? (
@@ -136,9 +142,7 @@ export function GlobalActionBar({
       )}
 
       {/* Right: Actions */}
-      <div className="action-bar-actions">
-        {renderAction()}
-      </div>
+      <div className="action-bar-actions">{renderAction()}</div>
     </div>
   );
 }

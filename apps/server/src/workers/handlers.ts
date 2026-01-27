@@ -4,7 +4,7 @@ import {
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
-import { JobProcessingError } from '@repo/queue';
+import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
 import type {
   GeneratePodcastPayload,
@@ -23,26 +23,6 @@ export interface HandlerOptions {
   /** Called when script generation completes (before audio generation starts) */
   onScriptComplete?: (podcastId: string) => void;
 }
-
-/**
- * Format an error for logging - handles Effect tagged errors and standard errors.
- */
-const formatError = (error: unknown): string => {
-  if (error && typeof error === 'object') {
-    // Effect tagged error
-    if ('_tag' in error) {
-      const tag = (error as { _tag: string })._tag;
-      const message =
-        'message' in error ? (error as { message: string }).message : '';
-      return message ? `${tag}: ${message}` : tag;
-    }
-    // Standard Error
-    if (error instanceof Error) {
-      return error.message || error.name;
-    }
-  }
-  return String(error);
-};
 
 /**
  * Handler for generate-podcast jobs.

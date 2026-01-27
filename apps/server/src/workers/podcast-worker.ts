@@ -1,12 +1,6 @@
+import { type SSEManagerService } from '@repo/api/server';
+import { withCurrentUser } from '@repo/auth/policy';
 import {
-  createServerRuntime,
-  type StorageConfig,
-  type ServerRuntime,
-} from '@repo/api/server';
-import { withCurrentUser, Role, type User } from '@repo/auth/policy';
-import { createDb } from '@repo/db/client';
-import {
-  Queue,
   JobProcessingError,
   type GeneratePodcastPayload,
   type GenerateScriptPayload,
@@ -14,13 +8,18 @@ import {
   type Job,
   type JobType,
 } from '@repo/queue';
-import { Effect, Schedule } from 'effect';
+import { Effect } from 'effect';
 import type {
   EntityChangeEvent,
   JobCompletionEvent,
 } from '@repo/api/contracts';
-import { WORKER_DEFAULTS } from '../constants';
-import { sseManager } from '../sse';
+import {
+  createWorker,
+  makeJobUser,
+  wrapJobError,
+  type BaseWorkerConfig,
+  type Worker,
+} from './base-worker';
 import {
   handleGeneratePodcast,
   handleGenerateScript,
@@ -42,10 +41,6 @@ const isGenerateScriptJob = (
   job: Job<WorkerPayload>,
 ): job is Job<GenerateScriptPayload> => job.type === 'generate-script';
 
-const isGenerateAudioJob = (
-  job: Job<WorkerPayload>,
-): job is Job<GenerateAudioPayload> => job.type === 'generate-audio';
-
 /**
  * Extract podcast ID from any job payload type.
  */
@@ -53,20 +48,14 @@ const getPodcastIdFromPayload = (payload: WorkerPayload): string => {
   return payload.podcastId;
 };
 
-export interface PodcastWorkerConfig {
-  /** Database URL */
-  databaseUrl: string;
-  /** Polling interval in milliseconds */
-  pollInterval?: number;
-  /** Google API key for LLM and TTS - required unless useMockAI is true */
-  geminiApiKey: string;
-  /** Storage configuration */
-  storageConfig: StorageConfig;
-  /** Max consecutive errors before exiting */
-  maxConsecutiveErrors?: number;
-  /** Use mock AI services instead of real ones (for testing) */
-  useMockAI?: boolean;
-}
+export interface PodcastWorkerConfig extends BaseWorkerConfig {}
+
+// Job types this worker handles
+const JOB_TYPES: JobType[] = [
+  'generate-podcast',
+  'generate-script',
+  'generate-audio',
+];
 
 /**
  * Create and start the podcast generation worker.
@@ -75,36 +64,8 @@ export interface PodcastWorkerConfig {
  * Uses a single shared ManagedRuntime created at startup.
  * User context is scoped per job via FiberRef (withCurrentUser).
  */
-export const createPodcastWorker = (config: PodcastWorkerConfig) => {
-  const pollInterval = config.pollInterval ?? WORKER_DEFAULTS.POLL_INTERVAL_MS;
-  const maxConsecutiveErrors =
-    config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
-
-  // Create database connection
-  const db = createDb({ databaseUrl: config.databaseUrl });
-
-  // Create single shared runtime at worker startup
-  // All layers (Db, Queue, TTS, LLM, Storage, Documents, etc.) are built once
-  const runtime: ServerRuntime = createServerRuntime({
-    db,
-    geminiApiKey: config.geminiApiKey,
-    storageConfig: config.storageConfig,
-    useMockAI: config.useMockAI,
-  });
-
-  if (config.useMockAI) {
-    console.log('[Worker] Using mock AI layers for testing');
-  }
-
-  /**
-   * Create a User object for job processing.
-   */
-  const makeJobUser = (userId: string): User => ({
-    id: userId,
-    email: '', // Not needed for job processing
-    name: 'Worker',
-    role: Role.USER,
-  });
+export const createPodcastWorker = (config: PodcastWorkerConfig): Worker => {
+  const { sseManager } = config;
 
   /**
    * Emit SSE event to notify frontend of entity change.
@@ -163,144 +124,46 @@ export const createPodcastWorker = (config: PodcastWorkerConfig) => {
     }).pipe(
       // Catch any unexpected errors and wrap as JobProcessingError
       Effect.catchAll((error: unknown) =>
-        Effect.fail(
-          error instanceof JobProcessingError
-            ? error
-            : new JobProcessingError({
-                jobId: job.id,
-                message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
-                cause: error,
-              }),
-        ),
+        Effect.fail(wrapJobError(job.id, error)),
       ),
       Effect.annotateLogs('worker', 'PodcastWorker'),
     );
 
-  // Job types this worker handles
-  const JOB_TYPES: JobType[] = [
-    'generate-podcast',
-    'generate-script',
-    'generate-audio',
-  ];
-
   /**
-   * Poll for and process the next job from any of the supported types.
+   * Handle job completion - emit SSE events.
    */
-  const pollOnce = Effect.gen(function* () {
-    const queue = yield* Queue;
+  const onJobComplete = (job: Job<WorkerPayload>) => {
+    const payload = job.payload;
+    const { userId } = payload;
+    const podcastId = getPodcastIdFromPayload(payload);
 
-    // Try each job type until we find one
-    for (const jobType of JOB_TYPES) {
-      const job = yield* queue.processNextJob(jobType, (j) =>
-        processJob(j as Job<WorkerPayload>),
-      );
+    // Emit job completion event
+    const jobCompletionEvent: JobCompletionEvent = {
+      type: 'job_completion',
+      jobId: job.id,
+      jobType: job.type as
+        | 'generate-podcast'
+        | 'generate-script'
+        | 'generate-audio',
+      status: job.status === 'completed' ? 'completed' : 'failed',
+      podcastId,
+      error: job.error ?? undefined,
+    };
+    sseManager.emit(userId, jobCompletionEvent);
 
-      if (job) {
-        yield* Effect.logInfo(
-          `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
-        );
+    // Emit entity change event for the podcast
+    emitEntityChange(userId, podcastId);
 
-        // Emit SSE events for job completion
-        const payload = job.payload as WorkerPayload;
-        const { userId } = payload;
-        const podcastId = getPodcastIdFromPayload(payload);
-
-        // Emit job completion event
-        const jobCompletionEvent: JobCompletionEvent = {
-          type: 'job_completion',
-          jobId: job.id,
-          jobType: job.type as
-            | 'generate-podcast'
-            | 'generate-script'
-            | 'generate-audio',
-          status: job.status === 'completed' ? 'completed' : 'failed',
-          podcastId,
-          error: job.error ?? undefined,
-        };
-        sseManager.emit(userId, jobCompletionEvent);
-
-        // Emit entity change event for the podcast
-        const entityChangeEvent: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'podcast',
-          changeType: 'update',
-          entityId: podcastId,
-          userId,
-          timestamp: new Date().toISOString(),
-        };
-        sseManager.emit(userId, entityChangeEvent);
-
-        yield* Effect.logInfo(
-          `Emitted SSE events for job ${job.id} to user ${userId}`,
-        );
-
-        return job;
-      }
-    }
-
-    yield* Effect.logInfo('No pending jobs found');
-    return null;
-  }).pipe(Effect.annotateLogs('worker', 'PodcastWorker'));
-
-  /**
-   * Start the worker loop with error handling and backoff.
-   */
-  const start = async () => {
-    // Retry schedule: exponential backoff starting at pollInterval, capped at BACKOFF_CAP_MS, max retries
-    const retrySchedule = Schedule.exponential(pollInterval, 2).pipe(
-      Schedule.union(Schedule.spaced(WORKER_DEFAULTS.BACKOFF_CAP_MS)),
-      Schedule.intersect(Schedule.recurs(maxConsecutiveErrors - 1)),
+    console.log(
+      `[PodcastWorker] Emitted SSE events for job ${job.id} to user ${userId}`,
     );
-
-    const loop = Effect.gen(function* () {
-      yield* Effect.logInfo(`Starting worker, polling every ${pollInterval}ms`);
-
-      // Main polling loop - runs forever on success
-      yield* pollOnce.pipe(
-        Effect.tap(() => Effect.sleep(pollInterval)),
-        Effect.forever,
-      );
-    }).pipe(
-      Effect.annotateLogs('worker', 'PodcastWorker'),
-      // Retry the entire loop with backoff on infrastructure errors
-      Effect.retry({
-        schedule: retrySchedule,
-        while: (error) => {
-          Effect.runSync(
-            Effect.logWarning(`Worker error, will retry...`).pipe(
-              Effect.annotateLogs('error', String(error)),
-            ),
-          );
-          return true;
-        },
-      }),
-      Effect.tapError((error) =>
-        Effect.logError(
-          `Too many consecutive errors (${maxConsecutiveErrors}), shutting down`,
-        ).pipe(Effect.annotateLogs('error', String(error))),
-      ),
-    );
-
-    await runtime.runPromise(loop);
   };
 
-  /**
-   * Process a single job by ID (for testing).
-   */
-  const processJobById = async (jobId: string) => {
-    const effect = Effect.gen(function* () {
-      const queue = yield* Queue;
-      // Cast to JobId - the queue.getJob will validate and fail if invalid
-      const job = yield* queue.getJob(jobId as import('@repo/db/schema').JobId);
-      return yield* processJob(job as Job<WorkerPayload>);
-    });
-
-    return runtime.runPromise(effect);
-  };
-
-  return {
-    start,
-    processJobById,
-    runtime,
-  };
+  return createWorker({
+    name: 'PodcastWorker',
+    jobTypes: JOB_TYPES,
+    config,
+    processJob,
+    onJobComplete,
+  });
 };

@@ -1,10 +1,13 @@
+// Configure proxy FIRST before any network requests
+import { configureProxy } from './proxy';
+configureProxy();
+
 import { serve } from '@hono/node-server';
-import { createDb, verifyDbConnection } from '@repo/db/client';
+import { verifyDbConnection } from '@repo/db/client';
 import { QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
-import { createPodcastWorker } from './workers/podcast-worker';
-import { createVoiceoverWorker } from './workers/voiceover-worker';
-import app, { storageConfig } from '.';
+import { createUnifiedWorker } from './workers/unified-worker';
+import app, { db, serverRuntime, sseManager } from '.';
 
 // =============================================================================
 // Global Error Handlers
@@ -41,9 +44,8 @@ process.on('uncaughtException', (error) => {
 // =============================================================================
 
 const startServer = async () => {
-  // Verify database connection before starting
+  // Verify database connection before starting (using shared db from index.ts)
   console.log('Verifying database connection...');
-  const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
 
   try {
     await verifyDbConnection(db);
@@ -56,31 +58,18 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // Start the podcast worker
-  const podcastWorker = createPodcastWorker({
-    databaseUrl: env.SERVER_POSTGRES_URL,
+  // Start the unified worker (handles all job types, can be scaled horizontally)
+  const worker = createUnifiedWorker({
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
-    geminiApiKey: env.GEMINI_API_KEY,
-    storageConfig,
-    useMockAI: env.USE_MOCK_AI,
+    sseManager,
+    runtime: serverRuntime,
   });
 
-  // Start the voiceover worker
-  const voiceoverWorker = createVoiceoverWorker({
-    databaseUrl: env.SERVER_POSTGRES_URL,
-    pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
-    geminiApiKey: env.GEMINI_API_KEY,
-    storageConfig,
-    useMockAI: env.USE_MOCK_AI,
+  // Start the worker
+  worker.start().catch((error) => {
+    console.error('Worker error:', error);
+    process.exit(1);
   });
-
-  // Start both workers
-  Promise.all([podcastWorker.start(), voiceoverWorker.start()]).catch(
-    (error) => {
-      console.error('Worker error:', error);
-      process.exit(1);
-    },
-  );
 
   const server = serve(
     {

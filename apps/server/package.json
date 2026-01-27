@@ -27,7 +27,8 @@
     "@repo/storage": "workspace:*",
     "@repo/testing": "workspace:*",
     "effect": "^3.16.0",
-    "hono": "catalog:"
+    "hono": "catalog:",
+    "undici": "^7.3.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -58,6 +58,30 @@ export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()
 }
 
 // =============================================================================
+// Error Utilities
+// =============================================================================
+
+/**
+ * Format an error for logging - handles Effect tagged errors and standard errors.
+ */
+export const formatError = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    // Effect tagged error
+    if ('_tag' in error) {
+      const tag = (error as { _tag: string })._tag;
+      const message =
+        'message' in error ? (error as { message: string }).message : '';
+      return message ? `${tag}: ${message}` : tag;
+    }
+    // Standard Error
+    if (error instanceof Error) {
+      return error.message || error.name;
+    }
+  }
+  return String(error);
+};
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
