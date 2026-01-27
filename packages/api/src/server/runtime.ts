@@ -37,7 +37,7 @@ export interface ServerRuntimeConfig {
  * - Db: Database connection
  * - Policy: Authorization service (depends on Db)
  * - Queue: Job queue service (depends on Db)
- * - Storage: File storage (S3, filesystem, or database-backed)
+ * - Storage: File storage (S3/MinIO)
  * - AI: LLM + TTS services (standalone)
  * - Media: Documents, PodcastRepo, CollaboratorRepo (depends on Db, Storage)
  */
@@ -47,7 +47,7 @@ export const createSharedLayers = (
   const dbLayer = DbLive(config.db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
+  const storageLayer = createStorageLayer(config.storageConfig);
 
   // AI layer bundles LLM and TTS
   // Mock AI has realistic latency (10s LLM, 15s TTS) for dev testing

@@ -8,10 +8,8 @@ import {
   apiPath,
   eventsRoute,
   eventsPath,
-  staticRoute,
-  staticPath,
 } from './routes';
-import { auth, storageConfig } from './services';
+import { auth } from './services';
 import { generateRootHtml } from './utils';
 
 // =============================================================================
@@ -45,11 +43,6 @@ app.get('/healthcheck', (c) => c.text('OK'));
 app.get('/', (c) =>
   c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL)),
 );
-
-// Static files (filesystem storage only)
-if (storageConfig.provider === 'filesystem') {
-  app.route(staticPath, staticRoute);
-}
 
 // Auth routes
 app.route(authPath, authRoute);

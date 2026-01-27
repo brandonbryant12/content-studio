@@ -5,6 +5,5 @@ export * from './schemas/documents';
 export * from './schemas/podcasts';
 export * from './schemas/voiceovers';
 export * from './schemas/jobs';
-export * from './schemas/storage';
 export * from './schemas/media-types';
 export * from './schemas/serialization';

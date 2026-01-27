@@ -5,7 +5,7 @@ import {
 } from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
-import { buildStorageConfig } from './config';
+import { storageConfig } from './config';
 import { env } from './env';
 
 /**
@@ -13,7 +13,7 @@ import { env } from './env';
  * These are used by both the HTTP server and background workers.
  */
 
-export const storageConfig = buildStorageConfig();
+export { storageConfig };
 
 export const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
 

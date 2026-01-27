@@ -41,13 +41,6 @@ const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
   encode: (b) => (b ? 'true' : 'false'),
 });
 
-// Storage provider schema
-const StorageProviderSchema = Schema.Union(
-  Schema.Literal('database'),
-  Schema.Literal('filesystem'),
-  Schema.Literal('s3'),
-);
-
 export const envSchema = Schema.Struct({
   SERVER_PORT: Schema.optionalWith(PortSchema, {
     default: () => DEFAULT_SERVER_PORT,
@@ -75,17 +68,22 @@ export const envSchema = Schema.Struct({
     default: () => process.env.NODE_ENV !== 'production',
   }),
 
-  // Storage configuration
-  STORAGE_PROVIDER: Schema.optionalWith(StorageProviderSchema, {
-    default: () => 'database' as const,
+  // Storage configuration (S3/MinIO)
+  S3_BUCKET: Schema.optionalWith(Schema.String, {
+    default: () => 'content-studio',
   }),
-  STORAGE_PATH: Schema.optional(Schema.String), // For filesystem provider
-  STORAGE_BASE_URL: Schema.optional(Schema.String), // For filesystem provider
-  S3_BUCKET: Schema.optional(Schema.String), // For S3 provider
-  S3_REGION: Schema.optional(Schema.String), // For S3 provider
-  S3_ACCESS_KEY_ID: Schema.optional(Schema.String), // For S3 provider
-  S3_SECRET_ACCESS_KEY: Schema.optional(Schema.String), // For S3 provider
-  S3_ENDPOINT: Schema.optional(Schema.String), // For S3 provider
+  S3_REGION: Schema.optionalWith(Schema.String, {
+    default: () => 'us-east-1',
+  }),
+  S3_ACCESS_KEY_ID: Schema.optionalWith(Schema.String, {
+    default: () => 'minioadmin',
+  }),
+  S3_SECRET_ACCESS_KEY: Schema.optionalWith(Schema.String, {
+    default: () => 'minioadmin',
+  }),
+  S3_ENDPOINT: Schema.optionalWith(Schema.String, {
+    default: () => 'http://localhost:9000',
+  }),
 
   // Proxy configuration (for corporate environments)
   HTTPS_PROXY: Schema.optional(Schema.String),
