@@ -17,3 +17,11 @@ export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 
 // Chat hook
 export { useBrandChat, type UseBrandChatReturn } from './use-brand-chat';
+
+// Progress hooks
+export {
+  useBrandProgress,
+  type BrandProgress,
+  type ProgressItem,
+} from './use-brand-progress';
+export { useQuickReplies } from './use-quick-replies';

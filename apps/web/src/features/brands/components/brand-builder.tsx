@@ -2,12 +2,22 @@
 // Brand builder with chat interface and document preview
 
 import { useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
-import { PaperPlaneIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons';
+import {
+  PaperPlaneIcon,
+  StopIcon,
+  ChatBubbleIcon,
+  PersonIcon,
+  TargetIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
 import type { RouterOutput } from '@repo/api/client';
 import { useBrandChat } from '../hooks/use-brand-chat';
+import { useBrandProgress } from '../hooks/use-brand-progress';
+import { useQuickReplies } from '../hooks/use-quick-replies';
+import { BrandProgressIndicator } from './brand-progress';
+import { QuickReplies } from './quick-replies';
 
 type Brand = RouterOutput['brands']['get'];
 
@@ -19,17 +29,40 @@ interface BrandBuilderProps {
  * Brand builder with split view - chat on left, preview on right.
  */
 export function BrandBuilder({ brand }: BrandBuilderProps) {
+  const hasAutoStartedRef = useRef(false);
+  const progress = useBrandProgress(brand);
+
   const initialMessages = brand.chatMessages.map((msg, index) => ({
     id: `msg_${index}`,
     role: msg.role,
     content: msg.content,
   }));
 
+  const isNewBrand = brand.chatMessages.length === 0;
+
   const { messages, input, setInput, isLoading, error, sendMessage, stop } =
     useBrandChat({
       brandId: brand.id,
       initialMessages,
     });
+
+  const quickReplies = useQuickReplies(progress, messages);
+
+  // Auto-start conversation for new brands (no existing chat messages)
+  useEffect(() => {
+    if (isNewBrand && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      // Send initial message to trigger AI greeting
+      sendMessage("Let's get started");
+    }
+  }, [isNewBrand, sendMessage]);
+
+  const handleQuickReply = useCallback(
+    (suggestion: string) => {
+      sendMessage(suggestion);
+    },
+    [sendMessage],
+  );
 
   return (
     <div className="h-full flex">
@@ -43,13 +76,14 @@ export function BrandBuilder({ brand }: BrandBuilderProps) {
           error={error}
           onSend={sendMessage}
           onStop={stop}
-          brandName={brand.name}
+          quickReplies={quickReplies}
+          onQuickReply={handleQuickReply}
         />
       </div>
 
       {/* Document Preview */}
       <div className="w-1/2 flex flex-col bg-muted/20">
-        <DocumentPreview brand={brand} />
+        <DocumentPreview brand={brand} progress={progress} />
       </div>
     </div>
   );
@@ -63,7 +97,8 @@ interface ChatPanelProps {
   error: Error | null;
   onSend: (content?: string) => Promise<void>;
   onStop: () => void;
-  brandName: string;
+  quickReplies: string[];
+  onQuickReply: (suggestion: string) => void;
 }
 
 function ChatPanel({
@@ -74,7 +109,8 @@ function ChatPanel({
   error,
   onSend,
   onStop,
-  brandName,
+  quickReplies,
+  onQuickReply,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -102,10 +138,6 @@ function ChatPanel({
     [onSend],
   );
 
-  const handleSkip = useCallback(() => {
-    onSend("Let's skip this for now and move on to the next topic.");
-  }, [onSend]);
-
   return (
     <>
       {/* Chat Header */}
@@ -118,13 +150,10 @@ function ChatPanel({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && !isLoading && (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-2">
-              Welcome to the brand builder for <strong>{brandName}</strong>!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Start the conversation to define your brand's identity.
+              Starting your brand builder...
             </p>
           </div>
         )}
@@ -175,7 +204,15 @@ function ChatPanel({
       </div>
 
       {/* Input */}
-      <div className="shrink-0 p-4 border-t border-border bg-background">
+      <div className="shrink-0 p-4 border-t border-border bg-background space-y-3">
+        {/* Quick replies */}
+        <QuickReplies
+          suggestions={quickReplies}
+          onSelect={onQuickReply}
+          disabled={isLoading}
+        />
+
+        {/* Input area */}
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea
@@ -190,15 +227,6 @@ function ChatPanel({
             />
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSkip}
-              disabled={isLoading}
-              title="Skip this question"
-            >
-              <TrackNextIcon className="w-4 h-4" />
-            </Button>
             {isLoading ? (
               <Button variant="destructive" size="icon" onClick={onStop}>
                 <StopIcon className="w-4 h-4" />
@@ -221,9 +249,10 @@ function ChatPanel({
 
 interface DocumentPreviewProps {
   brand: Brand;
+  progress: ReturnType<typeof useBrandProgress>;
 }
 
-function DocumentPreview({ brand }: DocumentPreviewProps) {
+function DocumentPreview({ brand, progress }: DocumentPreviewProps) {
   return (
     <>
       {/* Preview Header */}
@@ -234,25 +263,43 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
         </p>
       </div>
 
+      {/* Progress indicator */}
+      <BrandProgressIndicator progress={progress} />
+
       {/* Preview Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="prose prose-sm max-w-none">
           <h1 className="text-2xl font-bold mb-4">{brand.name}</h1>
 
-          {brand.description && (
+          {/* Description */}
+          {brand.description ? (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">About</h2>
               <p className="text-muted-foreground">{brand.description}</p>
             </section>
+          ) : (
+            <EmptySection
+              title="About"
+              hint="Tell the AI what your brand does"
+              icon={<ChatBubbleIcon className="w-4 h-4" />}
+            />
           )}
 
-          {brand.mission && (
+          {/* Mission */}
+          {brand.mission ? (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">Mission</h2>
               <p className="text-muted-foreground">{brand.mission}</p>
             </section>
+          ) : (
+            <EmptySection
+              title="Mission"
+              hint="Share your brand's purpose"
+              icon={<TargetIcon className="w-4 h-4" />}
+            />
           )}
 
+          {/* Values */}
           {brand.values.length > 0 && (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">
@@ -266,6 +313,7 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
             </section>
           )}
 
+          {/* Colors */}
           {brand.colors && (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">
@@ -307,6 +355,7 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
             </section>
           )}
 
+          {/* Brand Guide */}
           {brand.brandGuide && (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">
@@ -318,7 +367,8 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
             </section>
           )}
 
-          {brand.personas.length > 0 && (
+          {/* Personas */}
+          {brand.personas.length > 0 ? (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">
                 Personas
@@ -340,9 +390,19 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
                 </div>
               ))}
             </section>
+          ) : (
+            progress.percentage >= 50 && (
+              <EmptySection
+                title="Personas"
+                hint="Create character voices for podcasts"
+                icon={<PersonIcon className="w-4 h-4" />}
+                highlight
+              />
+            )
           )}
 
-          {brand.segments.length > 0 && (
+          {/* Segments */}
+          {brand.segments.length > 0 ? (
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">
                 Target Segments
@@ -359,26 +419,51 @@ function DocumentPreview({ brand }: DocumentPreviewProps) {
                 </div>
               ))}
             </section>
+          ) : (
+            progress.percentage >= 50 && (
+              <EmptySection
+                title="Audience Segments"
+                hint="Define your target audiences"
+                icon={<TargetIcon className="w-4 h-4" />}
+                highlight
+              />
+            )
           )}
-
-          {/* Empty state */}
-          {!brand.description &&
-            !brand.mission &&
-            brand.values.length === 0 &&
-            !brand.colors &&
-            !brand.brandGuide &&
-            brand.personas.length === 0 &&
-            brand.segments.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Start chatting to build your brand profile.</p>
-                <p className="text-sm mt-2">
-                  The AI will help you define your brand's identity, values, and
-                  voice.
-                </p>
-              </div>
-            )}
         </div>
       </div>
     </>
+  );
+}
+
+interface EmptySectionProps {
+  title: string;
+  hint: string;
+  icon?: React.ReactNode;
+  highlight?: boolean;
+}
+
+function EmptySection({ title, hint, icon, highlight }: EmptySectionProps) {
+  return (
+    <section
+      className={cn(
+        'mb-6 p-4 rounded-lg border-2 border-dashed',
+        highlight
+          ? 'border-primary/30 bg-primary/5'
+          : 'border-muted-foreground/20 bg-muted/30',
+      )}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        {icon && <span className="text-muted-foreground/50">{icon}</span>}
+        <h2
+          className={cn(
+            'text-lg font-semibold',
+            highlight ? 'text-primary/70' : 'text-muted-foreground/50',
+          )}
+        >
+          {title}
+        </h2>
+      </div>
+      <p className="text-sm text-muted-foreground/70">{hint}</p>
+    </section>
   );
 }

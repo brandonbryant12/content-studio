@@ -20,11 +20,27 @@ export interface BrandDetailProps {
 }
 
 /**
+ * Check if a brand is "new" (no meaningful content yet).
+ */
+function isNewBrand(brand: Brand): boolean {
+  return (
+    !brand.description &&
+    !brand.mission &&
+    brand.values.length === 0 &&
+    !brand.brandGuide &&
+    brand.personas.length === 0 &&
+    brand.segments.length === 0
+  );
+}
+
+/**
  * Brand detail presenter - displays brand information with edit capability.
  * Shows split view with brand info and chat builder.
+ * Defaults to edit mode for new brands to start the conversational flow.
  */
 export function BrandDetail({ brand, isDeleting, onDelete }: BrandDetailProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Default to edit mode for new brands so conversation auto-starts
+  const [isEditing, setIsEditing] = useState(() => isNewBrand(brand));
 
   return (
     <div className="h-full flex flex-col">

@@ -17,6 +17,8 @@ export { BrandBuilder } from './brand-builder';
 
 // Reusable components
 export { BrandIcon } from './brand-icon';
+export { BrandProgressIndicator, CompactProgress } from './brand-progress';
+export { QuickReplies } from './quick-replies';
 
 // Selectors
 export { BrandSelector, type BrandSelectorOption } from './brand-selector';
