@@ -1,4 +1,5 @@
 export * from './schemas/brands';
+export * from './schemas/brands-table';
 export * from './schemas/pagination';
 export * from './schemas/auth';
 export * from './schemas/documents';
