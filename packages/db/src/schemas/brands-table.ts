@@ -79,7 +79,9 @@ export const brand = pgTable(
     values: jsonb('values').$type<string[]>().default([]),
     colors: jsonb('colors').$type<BrandColors>(),
     brandGuide: text('brand_guide'),
-    chatMessages: jsonb('chat_messages').$type<BrandChatMessage[]>().default([]),
+    chatMessages: jsonb('chat_messages')
+      .$type<BrandChatMessage[]>()
+      .default([]),
     personas: jsonb('personas').$type<BrandPersona[]>().default([]),
     segments: jsonb('segments').$type<BrandSegment[]>().default([]),
     createdBy: text('created_by')
@@ -243,9 +245,7 @@ export type UpdateBrand = typeof UpdateBrandSchema.Type;
 /**
  * Serialize colors, handling optional fields.
  */
-const serializeColors = (
-  colors: BrandColors | null,
-): BrandOutput['colors'] => {
+const serializeColors = (colors: BrandColors | null): BrandOutput['colors'] => {
   if (!colors) return null;
   return {
     primary: colors.primary,

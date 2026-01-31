@@ -1,0 +1,584 @@
+
+> rt-stack@ dev /Users/brandon/Development/content-studio
+> turbo watch dev --continue
+
+turbo 2.6.1
+
+• Packages in scope: @repo/ai, @repo/api, @repo/auth, @repo/db, @repo/eslint-config, @repo/media, @repo/prettier-config, @repo/queue, @repo/storage, @repo/tailwind-config, @repo/testing, @repo/typescript-config, @repo/ui, server, web
+• Running dev in 15 packages
+• Remote caching disabled
+@repo/storage:dev: cache bypass, force executing 9a63a36ca0a81fb6
+@repo/db:dev: cache bypass, force executing 7ff2eaeb12d2bc96
+@repo/ui:dev: cache bypass, force executing f414111c79a5e7a3
+server:dev: cache bypass, force executing a726fdd42d2154f1
+web:dev: cache bypass, force executing 8f9c5caae84cf2cf
+@repo/db:dev: 
+@repo/db:dev: > @repo/db@ dev /Users/brandon/Development/content-studio/packages/db
+@repo/db:dev: > tsc --build tsconfig.package.json
+@repo/db:dev: 
+@repo/storage:dev: 
+@repo/storage:dev: > @repo/storage@ dev /Users/brandon/Development/content-studio/packages/storage
+@repo/storage:dev: > tsc --build tsconfig.package.json
+@repo/storage:dev: 
+web:dev: 
+web:dev: > web@ dev /Users/brandon/Development/content-studio/apps/web
+web:dev: > pnpm env:run dev
+web:dev: 
+server:dev: 
+server:dev: > server@ dev /Users/brandon/Development/content-studio/apps/server
+server:dev: > NODE_OPTIONS='--enable-source-maps' pnpm env:run tsx watch src/server.ts
+server:dev: 
+@repo/ui:dev: 
+@repo/ui:dev: > @repo/ui@ dev /Users/brandon/Development/content-studio/packages/ui
+@repo/ui:dev: > tsc
+@repo/ui:dev: 
+@repo/auth:dev: cache bypass, force executing 7808c92626f051f1
+@repo/ai:dev: cache bypass, force executing 1791e264a3dc1ffb
+@repo/queue:dev: cache bypass, force executing 802a39b25a2e5a71
+web:dev: 
+web:dev: > web@ env:run /Users/brandon/Development/content-studio/apps/web
+web:dev: > dotenv -- vite --configLoader runner dev
+web:dev: 
+server:dev: 
+server:dev: > server@ env:run /Users/brandon/Development/content-studio/apps/server
+server:dev: > dotenv -- tsx watch src/server.ts
+server:dev: 
+@repo/queue:dev: 
+@repo/queue:dev: > @repo/queue@ dev /Users/brandon/Development/content-studio/packages/queue
+@repo/queue:dev: > tsc --build tsconfig.package.json
+@repo/queue:dev: 
+@repo/ai:dev: 
+@repo/ai:dev: > @repo/ai@ dev /Users/brandon/Development/content-studio/packages/ai
+@repo/ai:dev: > tsc --build tsconfig.package.json
+@repo/ai:dev: 
+@repo/auth:dev: 
+@repo/auth:dev: > @repo/auth@ dev /Users/brandon/Development/content-studio/packages/auth
+@repo/auth:dev: > tsc --build
+@repo/auth:dev: 
+@repo/testing:dev: cache bypass, force executing 55d4e2b9a772dee3
+@repo/testing:dev: 
+@repo/testing:dev: > @repo/testing@ dev /Users/brandon/Development/content-studio/packages/testing
+@repo/testing:dev: > tsc --build tsconfig.package.json
+@repo/testing:dev: 
+@repo/media:dev: cache bypass, force executing 9432dbaf9a35bc71
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing a204e19f4f6eb255
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+web:dev: 
+web:dev:   VITE v7.2.4  ready in 1885 ms
+web:dev: 
+web:dev:   ➜  Local:   http://localhost:8085/
+@repo/api:dev:  ELIFECYCLE  Command failed.
+@repo/media:dev: cache bypass, force executing ac1adb7e85fb64e2
+server:dev: Verifying database connection...
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:45:40.946] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:45:40.964] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/repos/brand-repo.ts(103,11): error TS2769: No overload matches this call.
+@repo/media:dev:   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev:       Type 'undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev: src/brand/repos/brand-repo.ts(149,14): error TS2345: Argument of type '{ updatedAt: Date; name?: string | undefined; description?: string | undefined; mission?: string | undefined; values?: readonly string[] | undefined; colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; brandGuide?: string | undefined; per...' is not assignable to parameter of type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; createdBy?: string | SQL<unknown> | PgColumn<...> | undefined; ... 10 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }'.
+@repo/media:dev:   Types of property 'values' are incompatible.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:       Type 'readonly string[]' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:         The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 64a848908b356744
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/api:dev:  ELIFECYCLE  Command failed.
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+@repo/media:dev: cache bypass, force executing b919744fa97697d1
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:45:44.003] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/repos/brand-repo.ts(103,11): error TS2769: No overload matches this call.
+@repo/media:dev:   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev:       Type 'undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev: src/brand/repos/brand-repo.ts(149,14): error TS2345: Argument of type '{ updatedAt: Date; name?: string | undefined; description?: string | undefined; mission?: string | undefined; values?: readonly string[] | undefined; colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; brandGuide?: string | undefined; per...' is not assignable to parameter of type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; createdBy?: string | SQL<unknown> | PgColumn<...> | undefined; ... 10 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }'.
+@repo/media:dev:   Types of property 'values' are incompatible.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:       Type 'readonly string[]' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:         The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 34fc8ebb317ea4eb
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:45:47.030] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:45:50.057] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 649891649173665f
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/media:dev: src/brand/repos/brand-repo.ts(103,11): error TS2769: No overload matches this call.
+@repo/media:dev:   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev:       Type 'undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev: src/brand/repos/brand-repo.ts(149,14): error TS2345: Argument of type '{ updatedAt: Date; name?: string | undefined; description?: string | undefined; mission?: string | undefined; values?: readonly string[] | undefined; colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; brandGuide?: string | undefined; per...' is not assignable to parameter of type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; createdBy?: string | SQL<unknown> | PgColumn<...> | undefined; ... 10 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }'.
+@repo/media:dev:   Types of property 'values' are incompatible.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:       Type 'readonly string[]' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:         The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 2f9fdbe222574fa2
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:45:53.076] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:45:56.098] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing ffee2389e28039b8
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:45:59.122] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/repos/brand-repo.ts(106,11): error TS2769: No overload matches this call.
+@repo/media:dev:   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev:       Type 'undefined' is not assignable to type '() => ArrayIterator<{ name: string | SQL<unknown> | Placeholder<string, any>; createdBy: string | SQL<unknown> | Placeholder<string, any>; description?: string | SQL<unknown> | Placeholder<...> | null | undefined; ... 9 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }>'.
+@repo/media:dev: src/brand/repos/brand-repo.ts(152,14): error TS2345: Argument of type '{ updatedAt: Date; name?: string | undefined; description?: string | undefined; mission?: string | undefined; values?: readonly string[] | undefined; colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; brandGuide?: string | undefined; per...' is not assignable to parameter of type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; createdBy?: string | SQL<unknown> | PgColumn<...> | undefined; ... 10 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }'.
+@repo/media:dev:   Types of property 'values' are incompatible.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:       Type 'readonly string[]' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:         The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 26c08b17c3ba569f
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:46:02.140] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 5c801250154ff4d9
+server:dev: [20:46:05.163] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/media:dev: src/brand/repos/brand-repo.ts(176,14): error TS2345: Argument of type '{ updatedAt: Date; name?: string | undefined; description?: string | undefined; mission?: string | undefined; values?: readonly string[] | undefined; colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; brandGuide?: string | undefined; per...' is not assignable to parameter of type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; createdBy?: string | SQL<unknown> | PgColumn<...> | undefined; ... 10 more ...; updatedAt?: SQL<...> | ... 2 more ... | undefined; }'.
+@repo/media:dev:   Types of property 'values' are incompatible.
+@repo/media:dev:     Type 'readonly string[] | undefined' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:       Type 'readonly string[]' is not assignable to type 'string[] | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | null | undefined'.
+@repo/media:dev:         The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 43bd3c333b7fa48f
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:46:08.194] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:46:11.204] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing a246bf057aeffefd
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:46:14.235] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing be288632c13ad69e
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:46:17.271] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:20.285] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:23.298] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:26.308] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:29.322] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:32.336] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:35.346] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:38.355] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:41.367] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:44.376] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:47.385] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:50.396] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:53.406] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:56.424] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:46:59.459] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:02.479] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:05.489] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:08.501] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:11.508] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:14.517] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:17.528] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 91e416a7fdd9affe
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 06726191723addeb
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:20.561] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:23.574] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:26.584] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 0188452d433635cf
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/media:dev:  ELIFECYCLE  Command failed.
+@repo/media:dev: cache bypass, force executing 054a819cfcdb01d4
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 4de0bc56ad0fe480
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:29.596] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:32.687] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 310a5bd43d57112e
+@repo/media:dev: cache bypass, force executing 60c031dca621050f
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:47:35.762] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:38.801] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing f6b7f3e268437454
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:41.821] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:44.837] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 319e08ee1d5a610d
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 284894b9d212a129
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:47.849] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:47:50.867] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 707714b94d8e92a3
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 9d0a2d690750fa76
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:53.881] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 70727a6e192585b6
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:47:56.902] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/use-cases/append-chat-message.ts(62,7): error TS2353: Object literal may only specify known properties, and 'chatMessages' does not exist in type 'Partial<{ readonly name?: string | undefined; readonly description?: string | undefined; readonly mission?: string | undefined; readonly values?: readonly string[] | undefined; readonly colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; ...'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 59be80c4db464508
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:47:59.912] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:48:02.931] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:05.939] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:08.947] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:11.958] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:14.969] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:17.977] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:20.982] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:23.991] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:26.999] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:30.006] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:33.014] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:36.021] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:39.030] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:42.039] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:45.046] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:48.054] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:51.061] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:54.076] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:48:57.085] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 04259aa2227f05b7
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:49:00.096] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/use-cases/append-chat-message.ts(62,7): error TS2353: Object literal may only specify known properties, and 'chatMessages' does not exist in type 'Partial<{ readonly name?: string | undefined; readonly description?: string | undefined; readonly mission?: string | undefined; readonly values?: readonly string[] | undefined; readonly colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; ...'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 154f2b2d9c3b5c70
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:49:03.112] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 24f69433fe203576
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:49:06.167] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/use-cases/append-chat-message.ts(62,7): error TS2353: Object literal may only specify known properties, and 'chatMessages' does not exist in type 'Partial<{ readonly name?: string | undefined; readonly description?: string | undefined; readonly mission?: string | undefined; readonly values?: readonly string[] | undefined; readonly colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; ...'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 15cf87d555249b26
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:49:09.184] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:12.193] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:15.200] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:18.210] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:21.219] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:24.226] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:27.232] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:30.242] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing d64767da75e57aa3
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:49:33.266] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: src/brand/use-cases/append-chat-message.ts(62,7): error TS2353: Object literal may only specify known properties, and 'chatMessages' does not exist in type 'Partial<{ readonly name?: string | undefined; readonly description?: string | undefined; readonly mission?: string | undefined; readonly values?: readonly string[] | undefined; readonly colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; ...'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing c86613e0dce71a96
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: [20:49:36.280] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 526db276e9701702
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/media:dev: src/brand/use-cases/append-chat-message.ts(62,7): error TS2353: Object literal may only specify known properties, and 'chatMessages' does not exist in type 'Partial<{ readonly name?: string | undefined; readonly description?: string | undefined; readonly mission?: string | undefined; readonly values?: readonly string[] | undefined; readonly colors?: { readonly primary: string; readonly secondary?: string | undefined; readonly accent?: string | undefined; } | undefined; ...'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 19efb45779cc5b7d
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:49:39.301] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+@repo/media:dev: cache bypass, force executing 772fe0612c8eb111
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+server:dev: [20:49:42.314] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing b2fa2dcc6628dd6e
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:49:45.322] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing fe9eeafc0563f7a8
+server:dev: [20:49:48.330] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing d1555327f0ac2c11
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:49:51.366] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:49:54.377] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 07417b3426163a7b
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 367551f46bb4aa0f
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:49:57.396] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:00.406] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:03.413] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:06.443] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:09.453] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:12.464] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:15.507] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:18.515] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:21.532] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:24.542] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:27.549] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:30.557] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:33.566] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:36.577] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:39.584] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:42.596] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:45.606] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:48.613] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:51.626] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:54.637] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:50:57.645] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:00.656] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:03.664] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:06.680] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:09.689] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:12.702] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker

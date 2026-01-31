@@ -513,6 +513,51 @@ export class InvalidVoiceoverAudioGeneration extends Schema.TaggedError<InvalidV
 }
 
 // =============================================================================
+// Brand Errors
+// =============================================================================
+
+/**
+ * Brand not found.
+ */
+export class BrandNotFound extends Schema.TaggedError<BrandNotFound>()(
+  'BrandNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'BRAND_NOT_FOUND' as const;
+  static readonly httpMessage = (e: BrandNotFound) =>
+    e.message ?? `Brand ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: BrandNotFound) {
+    return { brandId: e.id };
+  }
+}
+
+/**
+ * User is not the owner of the brand.
+ */
+export class NotBrandOwner extends Schema.TaggedError<NotBrandOwner>()(
+  'NotBrandOwner',
+  {
+    brandId: Schema.String,
+    userId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'NOT_BRAND_OWNER' as const;
+  static readonly httpMessage = (e: NotBrandOwner) =>
+    e.message ?? 'Only the brand owner can perform this action';
+  static readonly logLevel = 'silent' as const;
+  static getData(e: NotBrandOwner) {
+    return { brandId: e.brandId };
+  }
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -543,4 +588,6 @@ export type MediaError =
   | VoiceoverCollaboratorAlreadyExists
   | VoiceoverCollaboratorNotFound
   | CannotAddOwnerAsVoiceoverCollaborator
-  | InvalidVoiceoverAudioGeneration;
+  | InvalidVoiceoverAudioGeneration
+  | BrandNotFound
+  | NotBrandOwner;

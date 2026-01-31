@@ -19,6 +19,25 @@ pnpm --filter web typecheck
 pnpm typecheck && pnpm build && pnpm test
 ```
 
+## Dev Server Logs
+
+The dev server is running in the background with logs written to `dev.log` in the project root.
+
+```bash
+# View recent logs
+tail -100 dev.log
+
+# Follow logs in real-time
+tail -f dev.log
+
+# Search for errors
+grep -i error dev.log | tail -20
+```
+
+**Endpoints:**
+- Web (Vite): http://localhost:8085/
+- API Server: http://localhost:3035
+
 ## Issues
 
 | Issue | Status | Notes |
@@ -52,24 +71,28 @@ psql postgres://postgres:postgres@localhost:5432/postgres -c "\d brand"
 ---
 
 ### Task 02: Brand Repository & Use Cases
-**Status:** ⏳ NOT_STARTED
-**Standards:** `standards/patterns/use-case.md`, `standards/patterns/error-handling.md`
+**Status:** ✅ COMPLETE
+**Standards:** `standards/patterns/use-case.md`, `standards/patterns/error-handling.md`, `standards/testing/use-case-tests.md`
 **Acceptance Criteria:**
-- [ ] BrandRepo with findById, list, insert, update, delete methods
-- [ ] BrandNotFound, NotBrandOwner error types
-- [ ] create-brand use case with ownership
-- [ ] get-brand use case with ownership check
-- [ ] update-brand use case
-- [ ] delete-brand use case
-- [ ] append-chat-message use case (manages last N)
-- [ ] Unit tests for use cases
+- [x] BrandRepo with findById, list, insert, update, delete methods
+- [x] BrandNotFound, NotBrandOwner error types
+- [x] create-brand use case with ownership
+- [x] get-brand use case with ownership check
+- [x] update-brand use case
+- [x] delete-brand use case
+- [x] append-chat-message use case (manages last N)
+- [ ] **Unit tests** - deferred to integration tests in Task 03
+**Verification:**
+```bash
+pnpm --filter @repo/media test
+```
 **Details:** [02-repository-use-cases.md](./tasks/02-repository-use-cases.md)
 
 ---
 
 ### Task 03: API Contracts & Routes
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/patterns/router-handler.md`
+**Standards:** `standards/patterns/router-handler.md`, `standards/testing/integration-tests.md`
 **Acceptance Criteria:**
 - [ ] brands.list contract and route
 - [ ] brands.get contract and route
@@ -77,13 +100,23 @@ psql postgres://postgres:postgres@localhost:5432/postgres -c "\d brand"
 - [ ] brands.update contract and route
 - [ ] brands.delete contract and route
 - [ ] Proper error mapping to HTTP status codes
+- [ ] **Integration tests** in `packages/api/src/server/router/__tests__/brand.integration.test.ts`:
+  - [ ] Success case for each handler (list, get, create, update, delete)
+  - [ ] Authentication: UNAUTHORIZED when user is null
+  - [ ] Authorization: NOT_FOUND when accessing other user's brand
+  - [ ] Error responses: BRAND_NOT_FOUND for missing brand
+  - [ ] Response format matches serialized schema
+**Verification:**
+```bash
+pnpm test:db:up && pnpm --filter @repo/api test
+```
 **Details:** [03-api-routes.md](./tasks/03-api-routes.md)
 
 ---
 
 ### Task 04: Streaming Chat Endpoint
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/patterns/router-handler.md`
+**Standards:** `standards/patterns/router-handler.md`, `standards/testing/integration-tests.md`
 **Acceptance Criteria:**
 - [ ] POST /api/brand-chat endpoint
 - [ ] Uses Vercel AI SDK streamText with Gemini
@@ -91,13 +124,23 @@ psql postgres://postgres:postgres@localhost:5432/postgres -c "\d brand"
 - [ ] Emits SSE events on brand updates
 - [ ] Appends messages to brand chatMessages (last 30)
 - [ ] System prompt guides brand-building conversation
+- [ ] **Integration tests** in `packages/api/src/server/router/__tests__/brand-chat.integration.test.ts`:
+  - [ ] Successful chat request returns stream
+  - [ ] UNAUTHORIZED when user is null
+  - [ ] BRAND_NOT_FOUND for invalid brand
+  - [ ] NOT_BRAND_OWNER when accessing other user's brand
+  - [ ] Tool call updates brand and emits SSE event (use MockLLMLive)
+**Verification:**
+```bash
+pnpm test:db:up && pnpm --filter @repo/api test
+```
 **Details:** [04-streaming-chat.md](./tasks/04-streaming-chat.md)
 
 ---
 
 ### Task 05: Frontend Feature Module
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/frontend/components.md`, `standards/frontend/data-fetching.md`
+**Standards:** `standards/frontend/components.md`, `standards/frontend/data-fetching.md`, `standards/frontend/testing.md`
 **Skill:** Use `/frontend-design` skill for all frontend components
 **Acceptance Criteria:**
 - [ ] /brands route with brand list
@@ -109,9 +152,14 @@ psql postgres://postgres:postgres@localhost:5432/postgres -c "\d brand"
 - [ ] Split view: chat panel + document preview
 - [ ] Skip button for skipping questions
 - [ ] streamdown for markdown rendering
+- [ ] **Component tests** in `apps/web/src/features/brands/__tests__/`:
+  - [ ] `brand-list.test.tsx`: loading, list renders, empty state, error state
+  - [ ] `brand-detail.test.tsx`: displays data, loading, not found error
+  - [ ] `brand-builder.test.tsx`: chat input, message send, skip button
+  - [ ] MSW handlers in `handlers.ts` for brand API mocking
 **Verification:**
 ```bash
-pnpm --filter web typecheck && pnpm --filter web build
+pnpm --filter web typecheck && pnpm --filter web build && pnpm --filter web test
 ```
 Use `/agent-browser` on localhost:8085 (login: b@b.com / 12345678):
 - Navigate to /brands - verify list renders
@@ -123,7 +171,7 @@ Use `/agent-browser` on localhost:8085 (login: b@b.com / 12345678):
 
 ### Task 06: Persona & Segment Selectors
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/frontend/components.md`, `standards/frontend/forms.md`
+**Standards:** `standards/frontend/components.md`, `standards/frontend/forms.md`, `standards/frontend/testing.md`
 **Skill:** Use `/frontend-design` skill for polished selector components
 **Acceptance Criteria:**
 - [ ] BrandSelector dropdown component
@@ -131,13 +179,21 @@ Use `/agent-browser` on localhost:8085 (login: b@b.com / 12345678):
 - [ ] SegmentSelector dropdown with descriptions
 - [ ] Persona selection auto-sets voiceId
 - [ ] Segment selection provides messaging tone
+- [ ] **Component tests** in `apps/web/src/features/brands/__tests__/`:
+  - [ ] `brand-selector.test.tsx`: renders options, calls onChange, empty state
+  - [ ] `persona-selector.test.tsx`: renders cards, selection updates voiceId
+  - [ ] `segment-selector.test.tsx`: renders options with descriptions, selection fires callback
+**Verification:**
+```bash
+pnpm --filter web test
+```
 **Details:** [06-selectors.md](./tasks/06-selectors.md)
 
 ---
 
 ### Task 07: Podcast Form Integration
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/frontend/forms.md`
+**Standards:** `standards/frontend/forms.md`, `standards/frontend/testing.md`
 **Acceptance Criteria:**
 - [ ] Optional brand dropdown in podcast setup
 - [ ] Persona dropdown appears when brand selected
@@ -145,9 +201,17 @@ Use `/agent-browser` on localhost:8085 (login: b@b.com / 12345678):
 - [ ] Segment dropdown for target audience
 - [ ] Selecting segment populates promptInstructions
 - [ ] User can override auto-filled values
+- [ ] **Component tests** in `apps/web/src/features/podcasts/__tests__/`:
+  - [ ] `podcast-form-brand-integration.test.tsx`:
+    - Brand selector appears and loads brands
+    - Selecting brand shows persona/segment selectors
+    - Selecting persona auto-fills hostVoice field
+    - Selecting segment populates promptInstructions
+    - User can override auto-filled values
+    - Form submits with brand/persona/segment IDs
 **Verification:**
 ```bash
-pnpm --filter web typecheck && pnpm --filter web build
+pnpm --filter web typecheck && pnpm --filter web build && pnpm --filter web test
 ```
 Use `/agent-browser` on localhost:8085:
 - Navigate to podcast creation
@@ -161,11 +225,17 @@ Use `/agent-browser` on localhost:8085:
 
 ### Task 08: SSE Handler Extension
 **Status:** ⏳ NOT_STARTED
-**Standards:** `standards/frontend/real-time.md`
+**Standards:** `standards/frontend/real-time.md`, `standards/frontend/testing.md`
 **Acceptance Criteria:**
 - [ ] 'brand' added to EntityType in events contract
 - [ ] SSE handler invalidates brand queries on update
 - [ ] Brand document refreshes when AI updates sections
+- [ ] **Component test** (add to existing SSE tests if present):
+  - [ ] Brand update event invalidates brand query cache
+**Verification:**
+```bash
+pnpm --filter web typecheck
+```
 **Details:** [08-sse-handler.md](./tasks/08-sse-handler.md)
 
 ---
@@ -220,3 +290,6 @@ Each task maintains working functionality with passing build.
 - `standards/frontend/data-fetching.md` - useSuspenseQuery
 - `standards/frontend/forms.md` - TanStack Form
 - `standards/frontend/mutations.md` - Optimistic updates
+- `standards/testing/use-case-tests.md` - Unit tests for use cases
+- `standards/testing/integration-tests.md` - Router integration tests
+- `standards/frontend/testing.md` - Component tests (Vitest + RTL + MSW)

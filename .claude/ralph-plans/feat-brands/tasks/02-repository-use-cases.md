@@ -3,9 +3,9 @@
 ## Standards Checklist
 
 Before starting implementation, read and understand:
-- [ ] `standards/patterns/use-case.md`
-- [ ] `standards/patterns/error-handling.md`
-- [ ] `standards/patterns/repository.md`
+- [x] `standards/patterns/use-case.md`
+- [x] `standards/patterns/error-handling.md`
+- [x] `standards/patterns/repository.md`
 
 ## Context
 
@@ -109,8 +109,26 @@ export const appendChatMessage = (input: { brandId: string; message: AppendChatM
 
 ## Implementation Notes
 
-<!-- Agent writes notes here as it implements -->
+- Added `BrandNotFound` and `NotBrandOwner` error types to `packages/media/src/errors.ts`
+- Created `BrandRepo` at `packages/media/src/brand/repos/brand-repo.ts` with:
+  - Full CRUD operations: insert, findById, list, update, delete, count
+  - Extended `BrandUpdateData` type to support chatMessages updates
+  - Proper readonly array → mutable array conversion for Drizzle
+- Created use cases in `packages/media/src/brand/use-cases/`:
+  - `create-brand.ts` - Creates brand with current user as owner
+  - `get-brand.ts` - Gets brand with ownership check using `requireOwnership`
+  - `update-brand.ts` - Updates brand with ownership check
+  - `delete-brand.ts` - Deletes brand with ownership check
+  - `list-brands.ts` - Lists brands with pagination and admin role support
+  - `append-chat-message.ts` - Appends message, keeps last 30, uses `BrandUpdateData`
+- Use cases use `requireOwnership` from `@repo/auth/policy` instead of manual NotBrandOwner errors (simpler, reuses ForbiddenError)
+- Created domain index at `packages/media/src/brand/index.ts`
 
 ## Verification Log
 
-<!-- Agent writes verification results here -->
+```
+✅ pnpm --filter @repo/media typecheck - PASS
+✅ pnpm typecheck - PASS
+✅ pnpm build - PASS
+✅ pnpm test - PASS
+```
