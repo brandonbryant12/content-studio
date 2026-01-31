@@ -582,3 +582,372 @@ server:dev: [20:51:09.689] INFO (#1): No pending jobs found
 server:dev:   worker: UnifiedWorker
 server:dev: [20:51:12.702] INFO (#1): No pending jobs found
 server:dev:   worker: UnifiedWorker
+server:dev: [20:51:15.709] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:18.723] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:21.735] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:24.746] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:27.754] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:30.762] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:33.776] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:36.787] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:39.796] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:42.807] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:45.819] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:48.828] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:51.844] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:54.852] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:51:57.860] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:00.869] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:03.881] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:06.891] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:09.900] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:12.912] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:15.916] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:18.924] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:21.933] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:24.940] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:27.956] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:30.969] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:33.977] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:36.991] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:39.998] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:43.011] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:46.017] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:49.025] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:52.041] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:55.048] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:52:58.057] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:01.065] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:04.074] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:07.085] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:10.094] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing 09eac1f1dd2735ce
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/api:dev:  ELIFECYCLE  Command failed.
+server:dev: [20:53:13.111] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing b63ef254f0d38df4
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:53:16.152] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: src/server/router/brand.ts(12,8): error TS2307: Cannot find module '@repo/media/brand' or its corresponding type declarations.
+@repo/api:dev: src/server/router/brand.ts(18,28): error TS2339: Property 'brands' does not exist on type 'RouterImplementerWithMiddlewares<{ documents: { list: ContractProcedure<StandardSchemaV1<{ readonly limit?: string | number | undefined; readonly offset?: string | number | undefined; }, { readonly limit?: number | undefined; readonly offset?: number | undefined; }> & SchemaClass<...>, StandardSchemaV1<...> & Schema...'.
+@repo/api:dev: src/server/router/brand.ts(19,14): error TS7031: Binding element 'context' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(19,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(19,30): error TS7031: Binding element 'errors' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(25,43): error TS18046: 'result' is of type 'unknown'.
+@repo/api:dev: src/server/router/brand.ts(40,27): error TS2339: Property 'brands' does not exist on type 'RouterImplementerWithMiddlewares<{ documents: { list: ContractProcedure<StandardSchemaV1<{ readonly limit?: string | number | undefined; readonly offset?: string | number | undefined; }, { readonly limit?: number | undefined; readonly offset?: number | undefined; }> & SchemaClass<...>, StandardSchemaV1<...> & Schema...'.
+@repo/api:dev: src/server/router/brand.ts(41,14): error TS7031: Binding element 'context' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(41,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(41,30): error TS7031: Binding element 'errors' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(55,30): error TS2339: Property 'brands' does not exist on type 'RouterImplementerWithMiddlewares<{ documents: { list: ContractProcedure<StandardSchemaV1<{ readonly limit?: string | number | undefined; readonly offset?: string | number | undefined; }, { readonly limit?: number | undefined; readonly offset?: number | undefined; }> & SchemaClass<...>, StandardSchemaV1<...> & Schema...'.
+@repo/api:dev: src/server/router/brand.ts(56,14): error TS7031: Binding element 'context' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(56,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(56,30): error TS7031: Binding element 'errors' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(70,30): error TS2339: Property 'brands' does not exist on type 'RouterImplementerWithMiddlewares<{ documents: { list: ContractProcedure<StandardSchemaV1<{ readonly limit?: string | number | undefined; readonly offset?: string | number | undefined; }, { readonly limit?: number | undefined; readonly offset?: number | undefined; }> & SchemaClass<...>, StandardSchemaV1<...> & Schema...'.
+@repo/api:dev: src/server/router/brand.ts(71,14): error TS7031: Binding element 'context' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(71,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(71,30): error TS7031: Binding element 'errors' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(86,30): error TS2339: Property 'brands' does not exist on type 'RouterImplementerWithMiddlewares<{ documents: { list: ContractProcedure<StandardSchemaV1<{ readonly limit?: string | number | undefined; readonly offset?: string | number | undefined; }, { readonly limit?: number | undefined; readonly offset?: number | undefined; }> & SchemaClass<...>, StandardSchemaV1<...> & Schema...'.
+@repo/api:dev: src/server/router/brand.ts(87,14): error TS7031: Binding element 'context' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(87,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
+@repo/api:dev: src/server/router/brand.ts(87,30): error TS7031: Binding element 'errors' implicitly has an 'any' type.
+@repo/api:dev:  ELIFECYCLE  Command failed with exit code 2.
+@repo/api:dev: command finished with error, but continuing...
+@repo/api#dev: command (/Users/brandon/Development/content-studio/packages/api) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (2)
+server:dev: [20:53:19.173] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:22.188] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+web:dev: 8:53:24 PM [vite] (client) hmr update /src/routes/_protected/podcasts/$podcastId.tsx, /src/routes/_protected/voiceovers/$voiceoverId.tsx, /src/providers/sse-provider.tsx
+web:dev: 8:53:24 PM [vite] (client) hmr update /src/routes/_protected/podcasts/$podcastId.tsx, /src/routes/_protected/voiceovers/$voiceoverId.tsx, /src/providers/sse-provider.tsx
+server:dev: 8:53:24 PM [tsx] change in ./../../packages/api/src/contracts/index.ts Restarting...
+server:dev: 
+server:dev: Server has stopped gracefully.
+web:dev: 8:53:24 PM [vite] (client) hmr invalidate /src/providers/sse-provider.tsx Could not Fast Refresh ("useSSEContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react-swc#consistent-components-exports
+web:dev: 8:53:24 PM [vite] (client) page reload src/providers/sse-provider.tsx
+@repo/api:dev: cache bypass, force executing d6732125f7e47f13
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+web:dev: 8:53:27 PM [vite] (client) hmr update /src/routes/_protected/podcasts/$podcastId.tsx, /src/routes/_protected/voiceovers/$voiceoverId.tsx, /src/providers/sse-provider.tsx
+web:dev: 8:53:27 PM [vite] (client) hmr invalidate /src/providers/sse-provider.tsx Could not Fast Refresh ("useSSEContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react-swc#consistent-components-exports
+web:dev: 8:53:27 PM [vite] (client) page reload src/providers/sse-provider.tsx
+server:dev: c8:53:27 PM [tsx] change in ./../../packages/api/src/contracts/index.ts Restarting...
+@repo/api:dev:  ELIFECYCLE  Command failed.
+@repo/api:dev: cache bypass, force executing 5c2c1f11cc29a0f2
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: Verifying database connection...
+server:dev: cVerifying database connection...
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:53:32.745] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:53:32.775] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: src/server/router/brand.ts(12,8): error TS2307: Cannot find module '@repo/media/brand' or its corresponding type declarations.
+@repo/api:dev: src/server/router/brand.ts(25,43): error TS18046: 'result' is of type 'unknown'.
+@repo/api:dev:  ELIFECYCLE  Command failed with exit code 2.
+@repo/api:dev: command finished with error, but continuing...
+@repo/api#dev: command (/Users/brandon/Development/content-studio/packages/api) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (2)
+server:dev: [20:53:35.793] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:38.803] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:41.810] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:44.819] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:47.827] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:50.835] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/media:dev: cache bypass, force executing 7a2fb968adc3fc47
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing bde9848eace26b0f
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: [20:53:53.857] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: src/server/router/brand.ts(23,9): error TS2345: Argument of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 4 more ...; readonly segmentCount: number; }[], UnauthorizedError | ... 1 more ... | SerializationError, Db | Br...' is not assignable to parameter of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 4 more ...; readonly segmentCount: number; }[], UnauthorizedError | ... 1 more ... | SerializationError, SharedS...'.
+@repo/api:dev:   Type 'Db | BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:     Type 'BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:       Type 'TagClassShape<"@repo/media/BrandRepo", BrandRepoService>' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/api:dev:         Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/api:dev: src/server/router/brand.ts(45,9): error TS2345: Argument of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 3 more ... | ForbiddenError, Db | BrandRepo>' is not assignable to parameter of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 3 more ... | ForbiddenError, SharedServices>'.
+@repo/api:dev:   Type 'Db | BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:     Type 'BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:       Type 'TagClassShape<"@repo/media/BrandRepo", BrandRepoService>' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/api:dev:         Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/api:dev: src/server/router/brand.ts(60,9): error TS2345: Argument of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 1 more ... | SerializationError, Db | BrandRe...' is not assignable to parameter of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 1 more ... | SerializationError, SharedServic...'.
+@repo/api:dev:   Type 'Db | BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:     Type 'BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:       Type 'TagClassShape<"@repo/media/BrandRepo", BrandRepoService>' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/api:dev:         Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/api:dev: src/server/router/brand.ts(76,9): error TS2345: Argument of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 3 more ... | ForbiddenError, Db | BrandRepo>' is not assignable to parameter of type 'Effect<{ readonly values: readonly string[]; readonly id: string & Brand<"BrandId">; readonly name: string; readonly createdAt: string; readonly updatedAt: string; readonly description: string | null; ... 6 more ...; readonly createdBy: string; }, UnauthorizedError | ... 3 more ... | ForbiddenError, SharedServices>'.
+@repo/api:dev:   Type 'Db | BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:     Type 'BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:       Type 'TagClassShape<"@repo/media/BrandRepo", BrandRepoService>' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/api:dev:         Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/api:dev: src/server/router/brand.ts(91,9): error TS2345: Argument of type 'Effect<{}, UnauthorizedError | DatabaseError | BrandNotFound | ForbiddenError, Db | BrandRepo>' is not assignable to parameter of type 'Effect<{}, UnauthorizedError | DatabaseError | BrandNotFound | ForbiddenError, SharedServices>'.
+@repo/api:dev:   Type 'Db | BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:     Type 'BrandRepo' is not assignable to type 'SharedServices'.
+@repo/api:dev:       Type 'TagClassShape<"@repo/media/BrandRepo", BrandRepoService>' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/api:dev:         Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/api:dev:  ELIFECYCLE  Command failed with exit code 2.
+@repo/api:dev: command finished with error, but continuing...
+@repo/api#dev: command (/Users/brandon/Development/content-studio/packages/api) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (2)
+server:dev: [20:53:56.899] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:53:59.912] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:02.922] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:05.929] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:08.941] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:11.949] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: 8:54:14 PM [tsx] change in ./../../packages/media/src/index.ts Restarting...
+server:dev: 
+server:dev: Server has stopped gracefully.
+@repo/media:dev: cache bypass, force executing b96fd89d7e966958
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 03c24958b6b46a91
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+@repo/api:dev:  ELIFECYCLE  Command failed.
+server:dev: c8:54:17 PM [tsx] change in ./../../packages/media/src/index.ts Restarting...
+server:dev: Verifying database connection...
+@repo/media:dev: cache bypass, force executing ae79b252e367cf8d
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/media:dev: src/index.ts(179,14): error TS2322: Type 'Layer<DocumentRepo | PodcastRepo | CollaboratorRepo | VoiceoverRepo | VoiceoverCollaboratorRepo, never, Db>' is not assignable to type 'Layer<Media, never, Db | Storage>'.
+@repo/media:dev:   Type 'Media' is not assignable to type 'DocumentRepo | PodcastRepo | CollaboratorRepo | VoiceoverRepo | VoiceoverCollaboratorRepo'.
+@repo/media:dev:     Type 'BrandRepo' is not assignable to type 'DocumentRepo | PodcastRepo | CollaboratorRepo | VoiceoverRepo | VoiceoverCollaboratorRepo'.
+@repo/media:dev:       Type 'BrandRepo' is not assignable to type 'VoiceoverCollaboratorRepo'.
+@repo/media:dev:         Types of property 'Id' are incompatible.
+@repo/media:dev:           Type '"@repo/media/BrandRepo"' is not assignable to type '"@repo/media/VoiceoverCollaboratorRepo"'.
+@repo/media:dev:  ELIFECYCLE  Command failed with exit code 1.
+@repo/media:dev: command finished with error, but continuing...
+@repo/api:dev: cache bypass, force executing 4a27733ce6e662da
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: cVerifying database connection...
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:54:20.496] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:54:20.563] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev:  ELIFECYCLE  Command failed.
+@repo/media#dev: command (/Users/brandon/Development/content-studio/packages/media) /Users/brandon/Library/pnpm/.tools/pnpm/10.23.0/bin/pnpm run dev exited (1)
+server:dev: 8:54:21 PM [tsx] change in ./../../packages/media/src/index.ts Restarting...
+server:dev: 
+server:dev: Server has stopped gracefully.
+@repo/media:dev: cache bypass, force executing d1be8a4cb990618f
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing 913e8def0dd2f77b
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: cVerifying database connection...
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:54:24.429] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:54:24.446] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:27.472] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:30.484] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:33.494] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:36.503] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+@repo/api:dev: cache bypass, force executing 371ffd6bb0e0c9ca
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+server:dev: 8:54:39 PM [tsx] change in ./../../packages/api/src/server/router/index.ts Restarting...
+server:dev: 
+server:dev: Server has stopped gracefully.
+server:dev: cVerifying database connection...
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:54:42.855] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:54:42.885] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:45.911] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:48.921] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:51.937] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:54.945] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:54:57.955] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:00.965] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:03.973] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:06.983] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:09.991] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:13.014] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:16.030] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:19.040] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:22.046] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:25.052] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:28.059] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:31.068] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:34.078] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:37.086] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:55:40.096] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker

@@ -135,6 +135,7 @@ import {
   VoiceoverCollaboratorRepo,
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
+import { BrandRepo, BrandRepoLive } from './brand';
 
 // =============================================================================
 // Combined Media Layer
@@ -152,7 +153,8 @@ export type Media =
   | PodcastRepo
   | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo;
+  | VoiceoverCollaboratorRepo
+  | BrandRepo;
 
 /**
  * Combined layer for all media services.
@@ -181,6 +183,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     CollaboratorRepoLive,
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
+    BrandRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)
