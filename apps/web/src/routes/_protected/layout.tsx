@@ -3,6 +3,7 @@ import {
   HomeIcon,
   MixerHorizontalIcon,
   SpeakerLoudIcon,
+  StarFilledIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import {
@@ -95,6 +96,25 @@ function Sidebar() {
           aria-label="Voiceovers"
         >
           <SpeakerLoudIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
+        </Link>
+
+        <Link
+          to="/brands"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          activeProps={{
+            className:
+              'bg-gradient-to-br from-violet-500/20 to-violet-500/10 text-violet-600 dark:text-violet-400 shadow-sm',
+          }}
+          inactiveProps={{
+            className:
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
+          }}
+          aria-label="Brands"
+        >
+          <StarFilledIcon
             className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
             aria-hidden="true"
           />

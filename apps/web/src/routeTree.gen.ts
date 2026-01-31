@@ -18,8 +18,10 @@ import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dash
 import { Route as ProtectedVoiceoversIndexRouteImport } from './routes/_protected/voiceovers/index'
 import { Route as ProtectedPodcastsIndexRouteImport } from './routes/_protected/podcasts/index'
 import { Route as ProtectedDocumentsIndexRouteImport } from './routes/_protected/documents/index'
+import { Route as ProtectedBrandsIndexRouteImport } from './routes/_protected/brands/index'
 import { Route as ProtectedVoiceoversVoiceoverIdRouteImport } from './routes/_protected/voiceovers/$voiceoverId'
 import { Route as ProtectedPodcastsPodcastIdRouteImport } from './routes/_protected/podcasts/$podcastId'
+import { Route as ProtectedBrandsBrandIdRouteImport } from './routes/_protected/brands/$brandId'
 
 const PublicLayoutRoute = PublicLayoutRouteImport.update({
   id: '/_public',
@@ -65,6 +67,11 @@ const ProtectedDocumentsIndexRoute = ProtectedDocumentsIndexRouteImport.update({
   path: '/documents/',
   getParentRoute: () => ProtectedLayoutRoute,
 } as any)
+const ProtectedBrandsIndexRoute = ProtectedBrandsIndexRouteImport.update({
+  id: '/brands/',
+  path: '/brands/',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
 const ProtectedVoiceoversVoiceoverIdRoute =
   ProtectedVoiceoversVoiceoverIdRouteImport.update({
     id: '/voiceovers/$voiceoverId',
@@ -77,14 +84,21 @@ const ProtectedPodcastsPodcastIdRoute =
     path: '/podcasts/$podcastId',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
+const ProtectedBrandsBrandIdRoute = ProtectedBrandsBrandIdRouteImport.update({
+  id: '/brands/$brandId',
+  path: '/brands/$brandId',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/brands/$brandId': typeof ProtectedBrandsBrandIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
+  '/brands': typeof ProtectedBrandsIndexRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
   '/podcasts': typeof ProtectedPodcastsIndexRoute
   '/voiceovers': typeof ProtectedVoiceoversIndexRoute
@@ -94,8 +108,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/brands/$brandId': typeof ProtectedBrandsBrandIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
+  '/brands': typeof ProtectedBrandsIndexRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
   '/podcasts': typeof ProtectedPodcastsIndexRoute
   '/voiceovers': typeof ProtectedVoiceoversIndexRoute
@@ -108,8 +124,10 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
+  '/_protected/brands/$brandId': typeof ProtectedBrandsBrandIdRoute
   '/_protected/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/_protected/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
+  '/_protected/brands/': typeof ProtectedBrandsIndexRoute
   '/_protected/documents/': typeof ProtectedDocumentsIndexRoute
   '/_protected/podcasts/': typeof ProtectedPodcastsIndexRoute
   '/_protected/voiceovers/': typeof ProtectedVoiceoversIndexRoute
@@ -121,8 +139,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/brands/$brandId'
     | '/podcasts/$podcastId'
     | '/voiceovers/$voiceoverId'
+    | '/brands'
     | '/documents'
     | '/podcasts'
     | '/voiceovers'
@@ -132,8 +152,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/brands/$brandId'
     | '/podcasts/$podcastId'
     | '/voiceovers/$voiceoverId'
+    | '/brands'
     | '/documents'
     | '/podcasts'
     | '/voiceovers'
@@ -145,8 +167,10 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_public/login'
     | '/_public/register'
+    | '/_protected/brands/$brandId'
     | '/_protected/podcasts/$podcastId'
     | '/_protected/voiceovers/$voiceoverId'
+    | '/_protected/brands/'
     | '/_protected/documents/'
     | '/_protected/podcasts/'
     | '/_protected/voiceovers/'
@@ -223,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedDocumentsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
+    '/_protected/brands/': {
+      id: '/_protected/brands/'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof ProtectedBrandsIndexRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
     '/_protected/voiceovers/$voiceoverId': {
       id: '/_protected/voiceovers/$voiceoverId'
       path: '/voiceovers/$voiceoverId'
@@ -237,13 +268,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedPodcastsPodcastIdRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
+    '/_protected/brands/$brandId': {
+      id: '/_protected/brands/$brandId'
+      path: '/brands/$brandId'
+      fullPath: '/brands/$brandId'
+      preLoaderRoute: typeof ProtectedBrandsBrandIdRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
   }
 }
 
 interface ProtectedLayoutRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedBrandsBrandIdRoute: typeof ProtectedBrandsBrandIdRoute
   ProtectedPodcastsPodcastIdRoute: typeof ProtectedPodcastsPodcastIdRoute
   ProtectedVoiceoversVoiceoverIdRoute: typeof ProtectedVoiceoversVoiceoverIdRoute
+  ProtectedBrandsIndexRoute: typeof ProtectedBrandsIndexRoute
   ProtectedDocumentsIndexRoute: typeof ProtectedDocumentsIndexRoute
   ProtectedPodcastsIndexRoute: typeof ProtectedPodcastsIndexRoute
   ProtectedVoiceoversIndexRoute: typeof ProtectedVoiceoversIndexRoute
@@ -251,8 +291,10 @@ interface ProtectedLayoutRouteChildren {
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedBrandsBrandIdRoute: ProtectedBrandsBrandIdRoute,
   ProtectedPodcastsPodcastIdRoute: ProtectedPodcastsPodcastIdRoute,
   ProtectedVoiceoversVoiceoverIdRoute: ProtectedVoiceoversVoiceoverIdRoute,
+  ProtectedBrandsIndexRoute: ProtectedBrandsIndexRoute,
   ProtectedDocumentsIndexRoute: ProtectedDocumentsIndexRoute,
   ProtectedPodcastsIndexRoute: ProtectedPodcastsIndexRoute,
   ProtectedVoiceoversIndexRoute: ProtectedVoiceoversIndexRoute,
