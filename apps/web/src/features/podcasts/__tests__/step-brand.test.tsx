@@ -43,7 +43,9 @@ describe('BrandSelector in Podcast Setup', () => {
     expect(
       screen.getByRole('option', { name: /select a brand/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /TechCorp/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: /TechCorp/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('option', { name: /EcoFriendly/i }),
     ).toBeInTheDocument();
@@ -188,9 +190,7 @@ describe('PersonaSelector in Podcast Setup', () => {
   });
 
   it('shows empty message when no personas defined', () => {
-    render(
-      <PersonaSelector value={null} onChange={vi.fn()} personas={[]} />,
-    );
+    render(<PersonaSelector value={null} onChange={vi.fn()} personas={[]} />);
 
     expect(
       screen.getByText(/no personas defined for this brand/i),
@@ -280,9 +280,7 @@ describe('SegmentSelector in Podcast Setup', () => {
   });
 
   it('shows empty dropdown when no segments defined', () => {
-    render(
-      <SegmentSelector value={null} onChange={vi.fn()} segments={[]} />,
-    );
+    render(<SegmentSelector value={null} onChange={vi.fn()} segments={[]} />);
 
     expect(screen.getByText(/no segments defined/i)).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toBeDisabled();

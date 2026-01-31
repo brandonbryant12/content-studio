@@ -46,7 +46,8 @@ export function useBrandChat({
   const queryClient = useQueryClient();
 
   // Generate unique message ID
-  const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const generateId = () =>
+    `msg_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
   // Stop streaming
   const stop = useCallback(() => {
@@ -164,7 +165,8 @@ export function useBrandChat({
           // Request was aborted, don't set error
           return;
         }
-        const error = err instanceof Error ? err : new Error('Failed to send message');
+        const error =
+          err instanceof Error ? err : new Error('Failed to send message');
         setError(error);
         onError?.(error);
 

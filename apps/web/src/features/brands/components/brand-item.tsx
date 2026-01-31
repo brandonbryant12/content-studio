@@ -15,7 +15,11 @@ export interface BrandListItem {
   description: string | null;
   mission: string | null;
   values: readonly string[];
-  colors: { primary: string; secondary?: string | null; accent?: string | null } | null;
+  colors: {
+    primary: string;
+    secondary?: string | null;
+    accent?: string | null;
+  } | null;
   personaCount: number;
   segmentCount: number;
   createdAt: string;
@@ -56,12 +60,14 @@ export const BrandItem = memo(function BrandItem({
           <div className="list-card-meta gap-2 flex-wrap">
             {brand.personaCount > 0 && (
               <Badge variant="default">
-                {brand.personaCount} persona{brand.personaCount !== 1 ? 's' : ''}
+                {brand.personaCount} persona
+                {brand.personaCount !== 1 ? 's' : ''}
               </Badge>
             )}
             {brand.segmentCount > 0 && (
               <Badge variant="default">
-                {brand.segmentCount} segment{brand.segmentCount !== 1 ? 's' : ''}
+                {brand.segmentCount} segment
+                {brand.segmentCount !== 1 ? 's' : ''}
               </Badge>
             )}
             {brand.values.length > 0 && (

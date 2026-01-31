@@ -49,24 +49,24 @@ export function StepBrand({
   }));
 
   // Get personas and segments from selected brand
-  const personas: PersonaSelectorOption[] = (
-    selectedBrand?.personas ?? []
-  ).map((p) => ({
-    id: p.id,
-    name: p.name,
-    role: p.role,
-    voiceId: p.voiceId,
-    personalityDescription: p.personalityDescription,
-  }));
+  const personas: PersonaSelectorOption[] = (selectedBrand?.personas ?? []).map(
+    (p) => ({
+      id: p.id,
+      name: p.name,
+      role: p.role,
+      voiceId: p.voiceId,
+      personalityDescription: p.personalityDescription,
+    }),
+  );
 
-  const segments: SegmentSelectorOption[] = (
-    selectedBrand?.segments ?? []
-  ).map((s) => ({
-    id: s.id,
-    name: s.name,
-    description: s.description,
-    messagingTone: s.messagingTone,
-  }));
+  const segments: SegmentSelectorOption[] = (selectedBrand?.segments ?? []).map(
+    (s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      messagingTone: s.messagingTone,
+    }),
+  );
 
   const handleBrandChange = (brandId: string | null) => {
     onBrandChange(brandId);

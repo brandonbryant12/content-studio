@@ -64,7 +64,11 @@ const mockBrands = [
 export const brandHandlers = {
   // List brands - success
   listSuccess: http.get(`${API_URL}/brands`, () => {
-    return HttpResponse.json(mockBrands.map(({ chatMessages, personas, segments, brandGuide, ...rest }) => rest));
+    return HttpResponse.json(
+      mockBrands.map(
+        ({ chatMessages, personas, segments, brandGuide, ...rest }) => rest,
+      ),
+    );
   }),
 
   // List brands - empty
@@ -133,21 +137,24 @@ export const brandHandlers = {
   }),
 
   // Update brand - success
-  updateSuccess: http.patch(`${API_URL}/brands/:id`, async ({ params, request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    const brand = mockBrands.find((b) => b.id === params.id);
-    if (brand) {
-      return HttpResponse.json({
-        ...brand,
-        ...body,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    return HttpResponse.json(
-      { code: 'BRAND_NOT_FOUND', message: 'Brand not found' },
-      { status: 404 },
-    );
-  }),
+  updateSuccess: http.patch(
+    `${API_URL}/brands/:id`,
+    async ({ params, request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      const brand = mockBrands.find((b) => b.id === params.id);
+      if (brand) {
+        return HttpResponse.json({
+          ...brand,
+          ...body,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      return HttpResponse.json(
+        { code: 'BRAND_NOT_FOUND', message: 'Brand not found' },
+        { status: 404 },
+      );
+    },
+  ),
 
   // Delete brand - success
   deleteSuccess: http.delete(`${API_URL}/brands/:id`, () => {

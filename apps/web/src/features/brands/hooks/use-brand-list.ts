@@ -50,7 +50,9 @@ export function useSuspenseBrandList(
  * Get the query key for brand list.
  * Useful for cache operations.
  */
-export function getBrandListQueryKey(options: { limit?: number } = {}): QueryKey {
+export function getBrandListQueryKey(
+  options: { limit?: number } = {},
+): QueryKey {
   return apiClient.brands.list.queryOptions({
     input: { limit: options.limit },
   }).queryKey;

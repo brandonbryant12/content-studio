@@ -14,7 +14,9 @@ type Brand = RouterOutput['brands']['get'];
  * Fetch a single brand by ID.
  * Uses Suspense - wrap with SuspenseBoundary.
  */
-export function useBrand(brandId: string): UseSuspenseQueryResult<Brand, Error> {
+export function useBrand(
+  brandId: string,
+): UseSuspenseQueryResult<Brand, Error> {
   return useSuspenseQuery(
     apiClient.brands.get.queryOptions({ input: { id: brandId } }),
   );

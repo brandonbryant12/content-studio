@@ -23,11 +23,7 @@ export interface BrandDetailProps {
  * Brand detail presenter - displays brand information with edit capability.
  * Shows split view with brand info and chat builder.
  */
-export function BrandDetail({
-  brand,
-  isDeleting,
-  onDelete,
-}: BrandDetailProps) {
+export function BrandDetail({ brand, isDeleting, onDelete }: BrandDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   return (

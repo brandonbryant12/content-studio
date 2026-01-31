@@ -70,8 +70,12 @@ export const PersonaSelector = memo(function PersonaSelector({
           aria-pressed={value === null}
           disabled={disabled}
         >
-          <span className="font-medium text-sm text-muted-foreground">None</span>
-          <span className="text-xs text-muted-foreground">No persona selected</span>
+          <span className="font-medium text-sm text-muted-foreground">
+            None
+          </span>
+          <span className="text-xs text-muted-foreground">
+            No persona selected
+          </span>
         </button>
 
         {personas.map((persona) => {
@@ -92,7 +96,9 @@ export const PersonaSelector = memo(function PersonaSelector({
               disabled={disabled}
             >
               <span className="font-medium text-sm">{persona.name}</span>
-              <span className="text-xs text-muted-foreground">{persona.role}</span>
+              <span className="text-xs text-muted-foreground">
+                {persona.role}
+              </span>
               <span className="text-xs text-muted-foreground line-clamp-2 mt-1">
                 {persona.personalityDescription}
               </span>

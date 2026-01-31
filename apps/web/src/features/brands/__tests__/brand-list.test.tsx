@@ -102,7 +102,9 @@ describe('BrandList', () => {
 
     expect(screen.getByText('No brands yet')).toBeInTheDocument();
     expect(
-      screen.getByText('Create your first brand to define your identity and voice.'),
+      screen.getByText(
+        'Create your first brand to define your identity and voice.',
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /create brand/i }),
@@ -203,11 +205,7 @@ describe('BrandList', () => {
   it('calls onCreate from empty state button', () => {
     const onCreate = vi.fn();
     render(
-      <BrandList
-        {...createDefaultProps()}
-        brands={[]}
-        onCreate={onCreate}
-      />,
+      <BrandList {...createDefaultProps()} brands={[]} onCreate={onCreate} />,
     );
 
     const createButton = screen.getByRole('button', {

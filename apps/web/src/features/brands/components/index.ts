@@ -8,17 +8,18 @@ export { BrandDetailContainer } from './brand-detail-container';
 // Presenter components
 export { BrandList, type BrandListProps } from './brand-list';
 export { BrandDetail, type BrandDetailProps } from './brand-detail';
-export { BrandItem, type BrandItemProps, type BrandListItem } from './brand-item';
+export {
+  BrandItem,
+  type BrandItemProps,
+  type BrandListItem,
+} from './brand-item';
 export { BrandBuilder } from './brand-builder';
 
 // Reusable components
 export { BrandIcon } from './brand-icon';
 
 // Selectors
-export {
-  BrandSelector,
-  type BrandSelectorOption,
-} from './brand-selector';
+export { BrandSelector, type BrandSelectorOption } from './brand-selector';
 export {
   PersonaSelector,
   type PersonaSelectorOption,

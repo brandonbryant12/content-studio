@@ -2,7 +2,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test-utils';
-import { PersonaSelector, type PersonaSelectorOption } from '../components/persona-selector';
+import {
+  PersonaSelector,
+  type PersonaSelectorOption,
+} from '../components/persona-selector';
 
 const mockPersonas: PersonaSelectorOption[] = [
   {
@@ -74,8 +77,12 @@ describe('PersonaSelector', () => {
       />,
     );
 
-    expect(screen.getByText('Friendly and knowledgeable tech expert')).toBeInTheDocument();
-    expect(screen.getByText('Curious interviewer who asks great questions')).toBeInTheDocument();
+    expect(
+      screen.getByText('Friendly and knowledgeable tech expert'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Curious interviewer who asks great questions'),
+    ).toBeInTheDocument();
   });
 
   it('calls onChange with persona when selected', () => {
@@ -151,15 +158,11 @@ describe('PersonaSelector', () => {
   });
 
   it('shows empty state when no personas', () => {
-    render(
-      <PersonaSelector
-        value={null}
-        onChange={vi.fn()}
-        personas={[]}
-      />,
-    );
+    render(<PersonaSelector value={null} onChange={vi.fn()} personas={[]} />);
 
-    expect(screen.getByText('No personas defined for this brand.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No personas defined for this brand.'),
+    ).toBeInTheDocument();
   });
 
   it('returns full persona object with voiceId on selection', () => {

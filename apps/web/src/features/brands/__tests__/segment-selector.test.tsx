@@ -2,7 +2,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test-utils';
-import { SegmentSelector, type SegmentSelectorOption } from '../components/segment-selector';
+import {
+  SegmentSelector,
+  type SegmentSelectorOption,
+} from '../components/segment-selector';
 
 const mockSegments: SegmentSelectorOption[] = [
   {
@@ -48,7 +51,9 @@ describe('SegmentSelector', () => {
       />,
     );
 
-    expect(screen.getByRole('option', { name: 'Choose audience' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: 'Choose audience' }),
+    ).toBeInTheDocument();
   });
 
   it('renders selected segment', () => {
@@ -86,8 +91,16 @@ describe('SegmentSelector', () => {
       />,
     );
 
-    expect(screen.getByRole('option', { name: /Developers - Software developers and engineers/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /Business Leaders - CTOs, VPs, and technical managers/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', {
+        name: /Developers - Software developers and engineers/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', {
+        name: /Business Leaders - CTOs, VPs, and technical managers/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it('shows messaging tone in option text', () => {
@@ -99,8 +112,12 @@ describe('SegmentSelector', () => {
       />,
     );
 
-    expect(screen.getByRole('option', { name: /Technical but approachable/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /Professional and strategic/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: /Technical but approachable/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: /Professional and strategic/i }),
+    ).toBeInTheDocument();
   });
 
   it('calls onChange with segment object when selected', () => {
@@ -113,7 +130,9 @@ describe('SegmentSelector', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'segment-1' } });
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'segment-1' },
+    });
 
     expect(onChange).toHaveBeenCalledWith(mockSegments[0]);
   });
@@ -147,16 +166,12 @@ describe('SegmentSelector', () => {
   });
 
   it('shows empty state when no segments', () => {
-    render(
-      <SegmentSelector
-        value={null}
-        onChange={vi.fn()}
-        segments={[]}
-      />,
-    );
+    render(<SegmentSelector value={null} onChange={vi.fn()} segments={[]} />);
 
     expect(screen.getByRole('combobox')).toBeDisabled();
-    expect(screen.getByRole('option', { name: 'No segments defined' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: 'No segments defined' }),
+    ).toBeInTheDocument();
   });
 
   it('returns segment with messagingTone for content generation', () => {
@@ -169,7 +184,9 @@ describe('SegmentSelector', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'segment-1' } });
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'segment-1' },
+    });
 
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({

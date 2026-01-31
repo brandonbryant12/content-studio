@@ -15,17 +15,19 @@ const deleteMutationFn = apiClient.brands.delete.mutationOptions().mutationFn!;
  * Filters out the deleted brand immediately, rolls back on error.
  */
 export function useOptimisticDeleteList() {
-  return useOptimisticMutation<Record<string, never>, { id: string }, BrandList>(
-    {
-      queryKey: getBrandListQueryKey(),
-      mutationFn: deleteMutationFn,
-      getOptimisticData: (current, { id }) => {
-        if (!current) return undefined;
-        return current.filter((brand) => brand.id !== id);
-      },
-      successMessage: 'Brand deleted',
-      errorMessage: 'Failed to delete brand',
-      showSuccessToast: true,
+  return useOptimisticMutation<
+    Record<string, never>,
+    { id: string },
+    BrandList
+  >({
+    queryKey: getBrandListQueryKey(),
+    mutationFn: deleteMutationFn,
+    getOptimisticData: (current, { id }) => {
+      if (!current) return undefined;
+      return current.filter((brand) => brand.id !== id);
     },
-  );
+    successMessage: 'Brand deleted',
+    errorMessage: 'Failed to delete brand',
+    showSuccessToast: true,
+  });
 }

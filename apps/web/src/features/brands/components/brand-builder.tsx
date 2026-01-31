@@ -2,11 +2,7 @@
 // Brand builder with chat interface and document preview
 
 import { useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
-import {
-  PaperPlaneIcon,
-  StopIcon,
-  TrackNextIcon,
-} from '@radix-ui/react-icons';
+import { PaperPlaneIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
@@ -29,18 +25,11 @@ export function BrandBuilder({ brand }: BrandBuilderProps) {
     content: msg.content,
   }));
 
-  const {
-    messages,
-    input,
-    setInput,
-    isLoading,
-    error,
-    sendMessage,
-    stop,
-  } = useBrandChat({
-    brandId: brand.id,
-    initialMessages,
-  });
+  const { messages, input, setInput, isLoading, error, sendMessage, stop } =
+    useBrandChat({
+      brandId: brand.id,
+      initialMessages,
+    });
 
   return (
     <div className="h-full flex">
