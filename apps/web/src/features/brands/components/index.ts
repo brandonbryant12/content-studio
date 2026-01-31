@@ -13,3 +13,17 @@ export { BrandBuilder } from './brand-builder';
 
 // Reusable components
 export { BrandIcon } from './brand-icon';
+
+// Selectors
+export {
+  BrandSelector,
+  type BrandSelectorOption,
+} from './brand-selector';
+export {
+  PersonaSelector,
+  type PersonaSelectorOption,
+} from './persona-selector';
+export {
+  SegmentSelector,
+  type SegmentSelectorOption,
+} from './segment-selector';

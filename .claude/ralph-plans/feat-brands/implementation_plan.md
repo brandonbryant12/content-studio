@@ -173,23 +173,28 @@ pnpm --filter web typecheck && pnpm --filter web build && pnpm --filter web test
 ---
 
 ### Task 06: Persona & Segment Selectors
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `standards/frontend/components.md`, `standards/frontend/forms.md`, `standards/frontend/testing.md`
 **Skill:** Use `/frontend-design` skill for polished selector components
 **Acceptance Criteria:**
-- [ ] BrandSelector dropdown component
-- [ ] PersonaSelector card gallery (like voice-selector.tsx)
-- [ ] SegmentSelector dropdown with descriptions
-- [ ] Persona selection auto-sets voiceId
-- [ ] Segment selection provides messaging tone
-- [ ] **Component tests** in `apps/web/src/features/brands/__tests__/`:
-  - [ ] `brand-selector.test.tsx`: renders options, calls onChange, empty state
-  - [ ] `persona-selector.test.tsx`: renders cards, selection updates voiceId
-  - [ ] `segment-selector.test.tsx`: renders options with descriptions, selection fires callback
+- [x] BrandSelector dropdown component (native select with placeholder)
+- [x] PersonaSelector card gallery (like voice-selector.tsx)
+- [x] SegmentSelector dropdown with descriptions
+- [x] Persona selection auto-sets voiceId (returns full persona object)
+- [x] Segment selection provides messaging tone (returns full segment object)
+- [x] **Component tests** in `apps/web/src/features/brands/__tests__/`:
+  - [x] `brand-selector.test.tsx`: renders options, calls onChange, empty state (10 tests)
+  - [x] `persona-selector.test.tsx`: renders cards, selection updates voiceId (12 tests)
+  - [x] `segment-selector.test.tsx`: renders options with descriptions, selection fires callback (11 tests)
 **Verification:**
 ```bash
 pnpm --filter web test
 ```
+**Implementation Notes:**
+- Used native HTML select (not Radix UI) to match project's Select component
+- PersonaSelector uses card gallery with aria-pressed for accessibility
+- All selectors support disabled state and null/empty placeholder selection
+- 33 new tests passing (combined with existing 12 brand-list tests = 45 total brand tests)
 **Details:** [06-selectors.md](./tasks/06-selectors.md)
 
 ---
@@ -276,7 +281,7 @@ pnpm --filter web typecheck
 - [x] **Task 03**: oRPC contracts and routes working
 - [x] **Task 04**: Streaming chat endpoint with tool calls
 - [x] **Task 05**: Brand builder UI with split view chat
-- [ ] **Task 06**: Persona cards + segment dropdown working
+- [x] **Task 06**: Persona cards + segment dropdown working
 - [ ] **Task 07**: Podcast form integrates brand selectors
 - [ ] **Task 08**: SSE refreshes brand on AI updates
 - [x] **Task 09**: Brands in navigation
