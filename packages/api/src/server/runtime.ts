@@ -7,8 +7,10 @@ import {
   type AI,
   type AIProvider,
   type VertexAIConfig,
+  LLMGoogleLive,
+  LLMVertexLive,
 } from '@repo/ai';
-import { MockAIWithLatency } from '@repo/testing';
+import { MockAIWithLatency, MockTTSWithLatency } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { MediaLive, type Media } from '@repo/media';
 import type { Storage } from '@repo/storage';
@@ -62,11 +64,15 @@ export const createSharedLayers = (
 
   // AI layer bundles LLM and TTS
   // Mock AI has realistic latency (10s LLM, 15s TTS) for dev testing
+  // TTS is always mocked for now (real TTS not yet available)
   const aiLayer = config.useMockAI
     ? MockAIWithLatency
-    : config.aiProvider === 'vertex'
-      ? VertexAILive(config.vertexConfig!)
-      : GoogleAILive({ apiKey: config.geminiApiKey! });
+    : Layer.mergeAll(
+        config.aiProvider === 'vertex'
+          ? LLMVertexLive(config.vertexConfig!)
+          : LLMGoogleLive({ apiKey: config.geminiApiKey! }),
+        MockTTSWithLatency,
+      );
 
   // Media layer bundles Documents, PodcastRepo, and CollaboratorRepo
   const mediaLayer = MediaLive.pipe(

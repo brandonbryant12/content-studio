@@ -106,6 +106,7 @@ services:
       /bin/sh -c "
       mc alias set myminio http://minio:9000 minioadmin minioadmin;
       mc mb myminio/content-studio --ignore-existing;
+      mc anonymous set download myminio/content-studio;
       "
 
 volumes:

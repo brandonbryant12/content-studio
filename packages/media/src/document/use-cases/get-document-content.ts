@@ -1,9 +1,10 @@
 import { Effect } from 'effect';
 import type { Db } from '@repo/db/effect';
-import { Storage } from '@repo/storage';
+import { Storage, StorageNotFoundError } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
 import { DocumentRepo } from '../repos';
 import { parseDocumentContent } from '../parsers';
+import { DocumentContentNotFound } from '../../errors';
 
 // =============================================================================
 // Types
@@ -45,7 +46,17 @@ export const getDocumentContent = (input: GetDocumentContentInput) =>
     yield* requireOwnership(doc.createdBy);
 
     // Download file from storage
-    const buffer = yield* storage.download(doc.contentKey);
+    const buffer = yield* storage.download(doc.contentKey).pipe(
+      Effect.catchTag('StorageNotFoundError', () =>
+        Effect.fail(
+          new DocumentContentNotFound({
+            id: doc.id,
+            title: doc.title,
+            contentKey: doc.contentKey,
+          }),
+        ),
+      ),
+    );
 
     // For plain text, return directly
     if (doc.mimeType === 'text/plain') {

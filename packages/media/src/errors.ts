@@ -108,6 +108,29 @@ export class DocumentParseError extends Schema.TaggedError<DocumentParseError>()
   }
 }
 
+/**
+ * Document content not found in storage.
+ * The document metadata exists but the file is missing from storage.
+ */
+export class DocumentContentNotFound extends Schema.TaggedError<DocumentContentNotFound>()(
+  'DocumentContentNotFound',
+  {
+    id: Schema.String,
+    title: Schema.String,
+    contentKey: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'DOCUMENT_CONTENT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: DocumentContentNotFound) =>
+    e.message ?? `Document file "${e.title}" is missing from storage`;
+  static readonly logLevel = 'warn' as const;
+  static getData(e: DocumentContentNotFound) {
+    return { documentId: e.id, title: e.title, contentKey: e.contentKey };
+  }
+}
+
 // =============================================================================
 // Podcast Errors
 // =============================================================================
@@ -502,6 +525,7 @@ export type MediaError =
   | DocumentTooLargeError
   | UnsupportedDocumentFormat
   | DocumentParseError
+  | DocumentContentNotFound
   | PodcastNotFound
   | ScriptNotFound
   | PodcastError

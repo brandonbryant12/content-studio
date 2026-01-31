@@ -14,7 +14,7 @@ import {
   StorageNotFoundError,
 } from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
-import { DocumentNotFound } from '../../../errors';
+import { DocumentNotFound, DocumentContentNotFound } from '../../../errors';
 import { ForbiddenError } from '@repo/db/errors';
 import type { Document } from '@repo/db/schema';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
@@ -239,7 +239,7 @@ describe('getDocumentContent', () => {
       }
     });
 
-    it('should fail with StorageNotFoundError when file is missing from storage', async () => {
+    it('should fail with DocumentContentNotFound when file is missing from storage', async () => {
       const user = createTestUser({ id: 'owner-123' });
       const doc = createTestDocument({
         id: 'doc_test5' as any,
@@ -266,8 +266,11 @@ describe('getDocumentContent', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(StorageNotFoundError);
-        expect((error as StorageNotFoundError).key).toBe(doc.contentKey);
+        expect(error).toBeInstanceOf(DocumentContentNotFound);
+        expect((error as DocumentContentNotFound).id).toBe(doc.id);
+        expect((error as DocumentContentNotFound).contentKey).toBe(
+          doc.contentKey,
+        );
       }
     });
   });

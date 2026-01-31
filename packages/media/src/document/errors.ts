@@ -5,4 +5,5 @@ export {
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
   DocumentParseError,
+  DocumentContentNotFound,
 } from '../errors';
