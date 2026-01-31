@@ -232,18 +232,22 @@ Use `/agent-browser` on localhost:8085:
 ---
 
 ### Task 08: SSE Handler Extension
-**Status:** ⏳ NOT_STARTED
+**Status:** ✅ COMPLETE
 **Standards:** `standards/frontend/real-time.md`, `standards/frontend/testing.md`
 **Acceptance Criteria:**
-- [ ] 'brand' added to EntityType in events contract
-- [ ] SSE handler invalidates brand queries on update
-- [ ] Brand document refreshes when AI updates sections
-- [ ] **Component test** (add to existing SSE tests if present):
-  - [ ] Brand update event invalidates brand query cache
+- [x] 'brand' added to EntityType in events contract (done in Task 04)
+- [x] SSE handler invalidates brand queries on update
+- [x] Brand document refreshes when AI updates sections (via cache invalidation)
+- [x] **Component test** (add to existing SSE tests if present):
+  - [x] Brand update event invalidates brand query cache (3 tests: update, insert, delete)
 **Verification:**
 ```bash
 pnpm --filter web typecheck
 ```
+**Implementation Notes:**
+- Added getBrandQueryKey and getBrandsListQueryKey helpers in sse-handlers.ts
+- Added 'brand' case to handleEntityChange function
+- Added 3 tests for brand changes (update, insert, delete) to sse-handlers.test.ts
 **Details:** [08-sse-handler.md](./tasks/08-sse-handler.md)
 
 ---
@@ -283,7 +287,7 @@ pnpm --filter web typecheck
 - [x] **Task 05**: Brand builder UI with split view chat
 - [x] **Task 06**: Persona cards + segment dropdown working
 - [ ] **Task 07**: Podcast form integrates brand selectors
-- [ ] **Task 08**: SSE refreshes brand on AI updates
+- [x] **Task 08**: SSE refreshes brand on AI updates
 - [x] **Task 09**: Brands in navigation
 - [ ] **Task 99**: All standards verified
 

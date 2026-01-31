@@ -33,6 +33,30 @@ vi.mock('@/clients/apiClient', () => ({
         })),
       },
     },
+    voiceovers: {
+      get: {
+        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+          queryKey: ['voiceovers', 'get', input.id],
+        })),
+      },
+      list: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ['voiceovers', 'list'],
+        })),
+      },
+    },
+    brands: {
+      get: {
+        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+          queryKey: ['brands', 'get', input.id],
+        })),
+      },
+      list: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ['brands', 'list'],
+        })),
+      },
+    },
   },
 }));
 
@@ -271,6 +295,74 @@ describe('SSE Handlers', () => {
         });
         expect(invalidateSpy).toHaveBeenCalledWith({
           queryKey: ['documents', 'list'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('brand changes', () => {
+      it('invalidates brand query on update', () => {
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+        const event: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'brand',
+          changeType: 'update',
+          entityId: 'brand-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+        };
+
+        handleEntityChange(event, queryClient);
+
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['brands', 'get', 'brand-123'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('invalidates brand query and list on insert', () => {
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+        const event: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'brand',
+          changeType: 'insert',
+          entityId: 'brand-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+        };
+
+        handleEntityChange(event, queryClient);
+
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['brands', 'get', 'brand-123'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['brands', 'list'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledTimes(2);
+      });
+
+      it('invalidates brand query and list on delete', () => {
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+        const event: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'brand',
+          changeType: 'delete',
+          entityId: 'brand-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+        };
+
+        handleEntityChange(event, queryClient);
+
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['brands', 'get', 'brand-123'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['brands', 'list'],
         });
         expect(invalidateSpy).toHaveBeenCalledTimes(2);
       });
