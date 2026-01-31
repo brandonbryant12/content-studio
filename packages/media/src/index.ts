@@ -295,3 +295,26 @@ export {
   type ClaimVoiceoverPendingInvitesInput,
   type ClaimVoiceoverPendingInvitesResult,
 } from './voiceover';
+
+// Brand module - Repos and Use Cases
+export {
+  BrandRepo,
+  BrandRepoLive,
+  type BrandRepoService,
+  type BrandListOptions,
+  // Use Cases
+  listBrands,
+  getBrand,
+  createBrand,
+  updateBrand,
+  deleteBrand,
+  appendChatMessage,
+  // Input Types
+  type ListBrandsInput,
+  type ListBrandsResult,
+  type GetBrandInput,
+  type CreateBrandInput,
+  type UpdateBrandInput,
+  type DeleteBrandInput,
+  type AppendChatMessageInput,
+} from './brand';

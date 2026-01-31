@@ -8,6 +8,8 @@ import {
   apiPath,
   eventsRoute,
   eventsPath,
+  brandChatRoute,
+  brandChatPath,
 } from './routes';
 import { auth } from './services';
 import { generateRootHtml } from './utils';
@@ -49,6 +51,9 @@ app.route(authPath, authRoute);
 
 // SSE events
 app.route(eventsPath, eventsRoute);
+
+// Brand chat (AI streaming)
+app.route(brandChatPath, brandChatRoute);
 
 // API routes (must be last - catches all /api/*)
 app.route(apiPath, apiRoute);

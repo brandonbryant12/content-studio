@@ -2,7 +2,7 @@
  * Server-Sent Events (SSE) event types for real-time updates
  */
 
-export type EntityType = 'podcast' | 'document' | 'voiceover';
+export type EntityType = 'podcast' | 'document' | 'voiceover' | 'brand';
 export type ChangeType = 'insert' | 'update' | 'delete';
 
 export interface EntityChangeEvent {

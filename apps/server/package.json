@@ -17,6 +17,7 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
+    "@ai-sdk/google": "^3.0.15",
     "@hono/node-server": "catalog:",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
@@ -26,9 +27,11 @@
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/testing": "workspace:*",
+    "ai": "^6.0.57",
     "effect": "^3.16.0",
     "hono": "catalog:",
-    "undici": "^7.3.0"
+    "undici": "^7.3.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

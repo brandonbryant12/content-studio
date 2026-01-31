@@ -243,6 +243,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@ai-sdk/google':
+        specifier: ^3.0.15
+        version: 3.0.15(zod@3.25.76)
       '@hono/node-server':
         specifier: 'catalog:'
         version: 1.19.6(hono@4.10.6)
@@ -270,6 +273,9 @@ importers:
       '@repo/testing':
         specifier: workspace:*
         version: link:../../packages/testing
+      ai:
+        specifier: ^6.0.57
+        version: 6.0.57(zod@3.25.76)
       effect:
         specifier: ^3.16.0
         version: 3.19.8
@@ -279,6 +285,9 @@ importers:
       undici:
         specifier: ^7.3.0
         version: 7.16.0
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -7328,9 +7337,6 @@ packages:
   zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
-  zod@4.1.5:
-    resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
-
 snapshots:
 
   '@acemir/cssom@0.9.30': {}
@@ -7342,6 +7348,13 @@ snapshots:
       '@ai-sdk/provider': 3.0.5
       '@ai-sdk/provider-utils': 4.0.10(zod@4.1.12)
       zod: 4.1.12
+
+  '@ai-sdk/gateway@3.0.25(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@ai-sdk/provider-utils': 4.0.10(zod@3.25.76)
+      '@vercel/oidc': 3.1.0
+      zod: 3.25.76
 
   '@ai-sdk/gateway@3.0.25(zod@4.1.12)':
     dependencies:
@@ -7361,6 +7374,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@ai-sdk/google@3.0.15(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@ai-sdk/provider-utils': 4.0.10(zod@3.25.76)
+      zod: 3.25.76
+
   '@ai-sdk/google@3.0.15(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 3.0.5
@@ -7379,6 +7398,13 @@ snapshots:
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
       zod: 4.1.12
+
+  '@ai-sdk/provider-utils@4.0.10(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 3.25.76
 
   '@ai-sdk/provider-utils@4.0.10(zod@4.1.12)':
     dependencies:
@@ -10875,6 +10901,14 @@ snapshots:
 
   agent-base@7.1.4: {}
 
+  ai@6.0.57(zod@3.25.76):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.25(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.5
+      '@ai-sdk/provider-utils': 4.0.10(zod@3.25.76)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.76
+
   ai@6.0.57(zod@4.1.12):
     dependencies:
       '@ai-sdk/gateway': 3.0.25(zod@4.1.12)
@@ -11842,8 +11876,8 @@ snapshots:
       '@babel/parser': 7.28.4
       eslint: 9.39.1(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.1.5
-      zod-validation-error: 4.0.2(zod@4.1.5)
+      zod: 3.25.76
+      zod-validation-error: 4.0.2(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
 
@@ -14630,12 +14664,10 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-validation-error@4.0.2(zod@4.1.5):
+  zod-validation-error@4.0.2(zod@3.25.76):
     dependencies:
-      zod: 4.1.5
+      zod: 3.25.76
 
   zod@3.25.76: {}
 
   zod@4.1.12: {}
-
-  zod@4.1.5: {}
