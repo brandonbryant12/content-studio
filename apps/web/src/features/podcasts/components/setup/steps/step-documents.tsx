@@ -130,7 +130,7 @@ export function StepDocuments({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 1 of 3</p>
+        <p className="setup-step-eyebrow">Step 1 of 4</p>
         <h2 className="setup-step-title">Add Source Documents</h2>
         <p className="setup-step-description">
           Select existing documents or upload new ones. Your podcast will be
