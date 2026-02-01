@@ -11,10 +11,7 @@ import {
 import { PaperPlaneIcon, StopIcon } from '@radix-ui/react-icons';
 import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
-import {
-  useBrandChat,
-  type UseBrandChatReturn,
-} from '../../hooks/use-brand-chat';
+import { useBrandChat } from '../../hooks/use-brand-chat';
 
 interface QuickAction {
   label: string;
@@ -42,7 +39,7 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
   brandId,
   stepKey,
   quickActions = [],
-  onSuggestion,
+  onSuggestion: _onSuggestion,
   className,
 }: AIAssistantPanelProps) {
   const chat = useBrandChat({ brandId });
@@ -166,7 +163,8 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
             value={chat.input}
             onChange={(e) => chat.setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask for suggestions..."
+            placeholder="Ask for suggestions…"
+            autoComplete="off"
             disabled={chat.isLoading}
             rows={2}
             className={cn(

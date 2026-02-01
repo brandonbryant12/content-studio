@@ -84,7 +84,8 @@ export const ValueChips = memo(function ValueChips({
         values.length > 0
       ) {
         // Remove last value on backspace when input is empty
-        removeValue(values[values.length - 1]);
+        const lastValue = values[values.length - 1];
+        if (lastValue) removeValue(lastValue);
       }
     },
     [inputValue, addValue, values, removeValue],

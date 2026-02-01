@@ -71,7 +71,11 @@ export const StepPersonas = memo(function StepPersonas({
   className,
 }: StepPersonasProps) {
   const updateMutation = useOptimisticUpdate();
-  const personas = brand.personas ?? [];
+  // Deep clone to convert readonly to mutable (including nested arrays)
+  const personas: BrandPersona[] = (brand.personas ?? []).map((p) => ({
+    ...p,
+    exampleQuotes: [...p.exampleQuotes],
+  }));
 
   const handleAddPersona = useCallback(async () => {
     const newPersona = createEmptyPersona();

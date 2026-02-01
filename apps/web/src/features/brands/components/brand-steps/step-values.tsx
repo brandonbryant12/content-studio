@@ -58,13 +58,13 @@ export const StepValues = memo(function StepValues({
   brand,
   className,
 }: StepValuesProps) {
-  const [values, setValues] = useState<string[]>(brand.values ?? []);
-  const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
+  const [values, setValues] = useState<string[]>([...(brand.values ?? [])]);
+  const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const updateMutation = useOptimisticUpdate();
 
   // Sync local state when brand prop changes (e.g., after AI update)
   useEffect(() => {
-    setValues(brand.values ?? []);
+    setValues([...(brand.values ?? [])]);
   }, [brand.values]);
 
   const handleValuesChange = useCallback(
@@ -100,7 +100,7 @@ export const StepValues = memo(function StepValues({
             onChange={handleValuesChange}
             suggestions={suggestions}
             maxValues={5}
-            placeholder="Add a core value..."
+            placeholder="Add a core value…"
             label="Your Brand Values"
             disabled={updateMutation.isPending}
           />

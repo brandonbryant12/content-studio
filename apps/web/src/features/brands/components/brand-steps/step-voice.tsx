@@ -64,7 +64,7 @@ export const StepVoice = memo(function StepVoice({
     if (trimmedGuide !== (brand.brandGuide ?? '')) {
       await updateMutation.mutateAsync({
         id: brand.id,
-        brandGuide: trimmedGuide || null,
+        brandGuide: trimmedGuide || undefined,
       });
     }
   }, [brandGuide, brand.id, brand.brandGuide, updateMutation]);
@@ -92,7 +92,7 @@ export const StepVoice = memo(function StepVoice({
               value={brandGuide}
               onChange={(e) => setBrandGuide(e.target.value)}
               onBlur={handleBrandGuideBlur}
-              placeholder="Describe your brand's voice and tone. Include personality traits, writing style, vocabulary preferences, and what to avoid..."
+              placeholder="Describe your brand's voice and tone. Include personality traits, writing style, vocabulary preferences, and what to avoid…"
               disabled={updateMutation.isPending}
               rows={12}
               className="flex-1 min-h-[240px] resize-none"

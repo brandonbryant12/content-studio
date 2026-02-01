@@ -59,7 +59,7 @@ export const StepMission = memo(function StepMission({
     if (trimmedMission !== (brand.mission ?? '')) {
       await updateMutation.mutateAsync({
         id: brand.id,
-        mission: trimmedMission || null,
+        mission: trimmedMission || undefined,
       });
     }
   }, [mission, brand.id, brand.mission, updateMutation]);
@@ -88,7 +88,7 @@ export const StepMission = memo(function StepMission({
               value={mission}
               onChange={(e) => setMission(e.target.value)}
               onBlur={handleMissionBlur}
-              placeholder="We exist to..."
+              placeholder="We exist to…"
               disabled={updateMutation.isPending}
               rows={6}
               className="flex-1 min-h-[160px] resize-none"

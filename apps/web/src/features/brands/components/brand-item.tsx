@@ -52,6 +52,7 @@ export const BrandItem = memo(function BrandItem({
       <Link
         to="/brands/$brandId"
         params={{ brandId: brand.id }}
+        search={{ step: undefined }}
         className="flex items-start gap-4 flex-1"
       >
         <BrandIcon colors={brand.colors} />

@@ -5,6 +5,7 @@ import { memo, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import { cn } from '@repo/ui/lib/utils';
+import { WizardProvider } from '../../context';
 import { WizardContainer } from './wizard-container';
 import {
   StepBasics,
@@ -30,6 +31,7 @@ interface BrandWizardProps {
 /**
  * Brand wizard component that replaces BrandBuilder.
  * Provides a step-based editing experience with AI assistance.
+ * Wrapped in WizardProvider for centralized state management.
  */
 export const BrandWizard = memo(function BrandWizard({
   brand,
@@ -42,7 +44,7 @@ export const BrandWizard = memo(function BrandWizard({
     navigate({
       to: '/brands/$brandId',
       params: { brandId: brand.id },
-      search: {},
+      search: { step: undefined },
       replace: true,
     });
   }, [brand.id, navigate]);
@@ -74,11 +76,13 @@ export const BrandWizard = memo(function BrandWizard({
   );
 
   return (
-    <WizardContainer
-      brand={brand}
-      renderStep={renderStep}
-      onComplete={handleComplete}
-      className={cn('h-full', className)}
-    />
+    <WizardProvider brand={brand}>
+      <WizardContainer
+        brand={brand}
+        renderStep={renderStep}
+        onComplete={handleComplete}
+        className={cn('h-full', className)}
+      />
+    </WizardProvider>
   );
 });

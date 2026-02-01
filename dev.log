@@ -7480,3 +7480,133 @@ server:dev: [07:47:43.296] INFO (#1): No pending jobs found
 server:dev:   worker: UnifiedWorker
 server:dev: [07:47:46.323] INFO (#1): No pending jobs found
 server:dev:   worker: UnifiedWorker
+
+> rt-stack@ dev /Users/brandon/Development/content-studio
+> turbo watch dev --continue
+
+turbo 2.6.1
+
+• Packages in scope: @repo/ai, @repo/api, @repo/auth, @repo/db, @repo/eslint-config, @repo/media, @repo/prettier-config, @repo/queue, @repo/storage, @repo/tailwind-config, @repo/testing, @repo/typescript-config, @repo/ui, server, web
+• Running dev in 15 packages
+• Remote caching disabled
+web:dev: cache bypass, force executing 5de4484ca005e67a
+server:dev: cache bypass, force executing 4966045e42800b44
+@repo/db:dev: cache bypass, force executing bdc242d2e2de8a17
+@repo/storage:dev: cache bypass, force executing 1a2f8a708a3a62a4
+@repo/ui:dev: cache bypass, force executing 452e42818a16c4b6
+server:dev: 
+server:dev: > server@ dev /Users/brandon/Development/content-studio/apps/server
+server:dev: > NODE_OPTIONS='--enable-source-maps' pnpm env:run tsx watch src/server.ts
+server:dev: 
+@repo/ui:dev: 
+@repo/ui:dev: > @repo/ui@ dev /Users/brandon/Development/content-studio/packages/ui
+@repo/ui:dev: > tsc
+@repo/ui:dev: 
+web:dev: 
+web:dev: > web@ dev /Users/brandon/Development/content-studio/apps/web
+web:dev: > pnpm env:run dev
+web:dev: 
+@repo/db:dev: 
+@repo/db:dev: > @repo/db@ dev /Users/brandon/Development/content-studio/packages/db
+@repo/db:dev: > tsc --build tsconfig.package.json
+@repo/db:dev: 
+@repo/storage:dev: 
+@repo/storage:dev: > @repo/storage@ dev /Users/brandon/Development/content-studio/packages/storage
+@repo/storage:dev: > tsc --build tsconfig.package.json
+@repo/storage:dev: 
+@repo/ai:dev: cache bypass, force executing 1e70cdad6485357a
+@repo/queue:dev: cache bypass, force executing 6e77d6fa859d06ea
+@repo/auth:dev: cache bypass, force executing 9f49d037344f0bc6
+server:dev: 
+server:dev: > server@ env:run /Users/brandon/Development/content-studio/apps/server
+server:dev: > dotenv -- tsx watch src/server.ts
+server:dev: 
+web:dev: 
+web:dev: > web@ env:run /Users/brandon/Development/content-studio/apps/web
+web:dev: > dotenv -- vite --configLoader runner dev
+web:dev: 
+@repo/queue:dev: 
+@repo/queue:dev: > @repo/queue@ dev /Users/brandon/Development/content-studio/packages/queue
+@repo/queue:dev: > tsc --build tsconfig.package.json
+@repo/queue:dev: 
+@repo/auth:dev: 
+@repo/auth:dev: > @repo/auth@ dev /Users/brandon/Development/content-studio/packages/auth
+@repo/auth:dev: > tsc --build
+@repo/auth:dev: 
+@repo/ai:dev: 
+@repo/ai:dev: > @repo/ai@ dev /Users/brandon/Development/content-studio/packages/ai
+@repo/ai:dev: > tsc --build tsconfig.package.json
+@repo/ai:dev: 
+@repo/testing:dev: cache bypass, force executing 3ae639e282bfe8f6
+@repo/testing:dev: 
+@repo/testing:dev: > @repo/testing@ dev /Users/brandon/Development/content-studio/packages/testing
+@repo/testing:dev: > tsc --build tsconfig.package.json
+@repo/testing:dev: 
+@repo/media:dev: cache bypass, force executing df5274cfa0d5f55d
+@repo/media:dev: 
+@repo/media:dev: > @repo/media@ dev /Users/brandon/Development/content-studio/packages/media
+@repo/media:dev: > tsc --build tsconfig.package.json
+@repo/media:dev: 
+@repo/api:dev: cache bypass, force executing b54f4273c6546248
+@repo/api:dev: 
+@repo/api:dev: > @repo/api@ dev /Users/brandon/Development/content-studio/packages/api
+@repo/api:dev: > tsc
+@repo/api:dev: 
+web:dev: error when starting dev server:
+web:dev: Error: Port 8085 is already in use
+web:dev:     at Server.onError$1 (file:///Users/brandon/Development/content-studio/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_jiti@2.6.1_lightningcss@1.30.2_terser@5.44.1_tsx@4.20.6_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:15590:28)
+web:dev:     at Server.emit (node:events:524:28)
+web:dev:     at emitErrorNT (node:net:1948:8)
+web:dev:     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+web:dev:  ELIFECYCLE  Command failed with exit code 1.
+web:dev:  ELIFECYCLE  Command failed with exit code 1.
+web:dev: command finished with error, but continuing...
+server:dev: Verifying database connection...
+server:dev: Database connection verified
+server:dev: [UnifiedWorker] Using shared runtime
+server:dev: [20:22:16.945] INFO (#1): Starting UnifiedWorker, polling every 3000ms
+server:dev:   worker: UnifiedWorker
+server:dev: 
+server:dev: Hono
+server:dev: - internal server url: http://[::1]:3035
+server:dev: - external server url: http://localhost:3035
+server:dev: - public web url: http://localhost:8085
+server:dev:       
+server:dev: [20:22:16.958] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:19.989] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:23.018] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: <-- GET /
+server:dev: --> GET / [32m200[0m 0ms
+server:dev: [20:22:26.042] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:29.052] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:32.080] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:35.105] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:38.137] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:41.160] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:44.181] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:47.205] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:50.235] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:53.259] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:56.286] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:22:59.316] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:23:02.344] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:23:05.375] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker
+server:dev: [20:23:08.401] INFO (#1): No pending jobs found
+server:dev:   worker: UnifiedWorker

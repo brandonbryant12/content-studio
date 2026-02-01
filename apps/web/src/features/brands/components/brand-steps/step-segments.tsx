@@ -70,7 +70,11 @@ export const StepSegments = memo(function StepSegments({
   className,
 }: StepSegmentsProps) {
   const updateMutation = useOptimisticUpdate();
-  const segments = brand.segments ?? [];
+  // Deep clone to convert readonly to mutable (including nested arrays)
+  const segments: BrandSegment[] = (brand.segments ?? []).map((s) => ({
+    ...s,
+    keyBenefits: [...s.keyBenefits],
+  }));
 
   const handleAddSegment = useCallback(async () => {
     const newSegment = createEmptySegment();

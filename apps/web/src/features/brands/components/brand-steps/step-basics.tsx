@@ -72,7 +72,7 @@ export const StepBasics = memo(function StepBasics({
     if (trimmedDescription !== (brand.description ?? '')) {
       await updateMutation.mutateAsync({
         id: brand.id,
-        description: trimmedDescription || null,
+        description: trimmedDescription || undefined,
       });
     }
   }, [description, brand.id, brand.description, updateMutation]);
@@ -103,7 +103,8 @@ export const StepBasics = memo(function StepBasics({
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={handleNameBlur}
-              placeholder="Enter your brand name..."
+              placeholder="Enter your brand name…"
+              autoComplete="organization"
               disabled={updateMutation.isPending}
               className="text-lg font-medium"
             />
@@ -117,7 +118,8 @@ export const StepBasics = memo(function StepBasics({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onBlur={handleDescriptionBlur}
-              placeholder="Describe what your brand does, who it serves, and what makes it special..."
+              placeholder="Describe what your brand does, who it serves, and what makes it special…"
+              autoComplete="off"
               disabled={updateMutation.isPending}
               rows={6}
               className="flex-1 min-h-[120px] resize-none"
@@ -128,11 +130,13 @@ export const StepBasics = memo(function StepBasics({
           </div>
         </div>
 
-        {updateMutation.isPending && (
+        {updateMutation.isPending ? (
           <p className="text-xs text-muted-foreground animate-pulse">
-            Saving...
+            Saving…
           </p>
-        )}
+        ) : updateMutation.isSuccess ? (
+          <p className="text-xs text-green-600">✓ Saved</p>
+        ) : null}
       </div>
 
       {/* Right side: AI assistant */}

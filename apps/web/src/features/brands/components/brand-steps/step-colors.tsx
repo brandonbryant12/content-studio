@@ -4,7 +4,7 @@
 import { memo, useState, useCallback, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { cn } from '@repo/ui/lib/utils';
-import { ColorPicker, type ColorPreset } from '../brand-inputs/color-picker';
+import { ColorPicker } from '../brand-inputs/color-picker';
 import {
   AIAssistantPanel,
   type QuickAction,
@@ -40,11 +40,6 @@ const QUICK_ACTIONS: QuickAction[] = [
     prompt:
       'Suggest a bold and creative color palette that will help my brand stand out.',
   },
-];
-
-// AI-suggested color presets (shown when AI responds with color suggestions)
-const AI_SUGGESTED_PRESETS: ColorPreset[] = [
-  { name: 'AI Suggested', hex: '#4F46E5' },
 ];
 
 /**

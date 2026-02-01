@@ -8,6 +8,9 @@ import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 import { BrandDetailContainer } from '@/features/brands/components/brand-detail-container';
 
 export const Route = createFileRoute('/_protected/brands/$brandId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    step: typeof search.step === 'string' ? search.step : undefined,
+  }),
   loader: ({ params }) =>
     queryClient.ensureQueryData(
       apiClient.brands.get.queryOptions({ input: { id: params.brandId } }),

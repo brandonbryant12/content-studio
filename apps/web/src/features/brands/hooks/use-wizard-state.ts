@@ -76,7 +76,8 @@ export function useWizardState({
     return parsed;
   }, [search.step]);
 
-  const currentStepDef = WIZARD_STEPS[currentStep];
+  // Safe access - currentStep is always valid due to validation in useMemo above
+  const currentStepDef = WIZARD_STEPS[currentStep]!;
   const totalSteps = WIZARD_STEPS.length;
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === totalSteps - 1;
@@ -85,13 +86,11 @@ export function useWizardState({
   const goToStep = useCallback(
     (index: number) => {
       if (index < 0 || index >= WIZARD_STEPS.length) return;
+      // Type assertion needed since hook is route-agnostic but used in brand route
       navigate({
-        search: (prev: Record<string, unknown>) => ({
-          ...prev,
-          step: index.toString(),
-        }),
+        search: { step: index.toString() },
         replace: true,
-      });
+      } as unknown as Parameters<typeof navigate>[0]);
     },
     [navigate],
   );

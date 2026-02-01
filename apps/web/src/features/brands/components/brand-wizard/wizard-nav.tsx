@@ -31,7 +31,7 @@ export function WizardNav({ wizardState, className }: WizardNavProps) {
           <span className="text-sm font-medium text-foreground">
             Brand Builder
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground tabular-nums">
             {progress.percentage}% complete
           </span>
         </div>

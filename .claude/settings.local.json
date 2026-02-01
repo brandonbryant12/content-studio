@@ -110,7 +110,10 @@
       "Bash(docker run --rm --network host minio/mc:latest sh -c \"mc alias set local http://localhost:9000 minioadmin minioadmin && mc anonymous set download local/content-studio\")",
       "Bash(docker run --rm --network host --entrypoint /bin/sh minio/mc:latest -c \"mc alias set local http://localhost:9000 minioadmin minioadmin && mc anonymous set download local/content-studio\")",
       "WebFetch(domain:sdk.vercel.ai)",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:vercel.com)",
+      "Bash(ulimit:*)",
+      "Bash(pkill:*)",
+      "Bash(pm2 start:*)"
     ],
     "deny": [],
     "ask": []

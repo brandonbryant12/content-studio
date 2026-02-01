@@ -22,6 +22,7 @@ export function useOptimisticCreate() {
         navigate({
           to: '/brands/$brandId',
           params: { brandId: data.id },
+          search: { step: undefined },
         });
       },
       onError: (error) => {

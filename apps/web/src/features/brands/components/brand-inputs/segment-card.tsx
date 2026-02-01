@@ -179,7 +179,7 @@ export const SegmentCard = memo(function SegmentCard({
                 value={benefitsInput}
                 onChange={(e) => setBenefitsInput(e.target.value)}
                 onKeyDown={handleBenefitsKeyDown}
-                placeholder="Add a benefit..."
+                placeholder="Add a benefit…"
                 disabled={disabled}
                 className="flex-1 h-9 text-sm"
               />

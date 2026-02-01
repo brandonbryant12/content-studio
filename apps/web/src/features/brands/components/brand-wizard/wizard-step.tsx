@@ -1,6 +1,7 @@
 // features/brands/components/brand-wizard/wizard-step.tsx
 // Wrapper component for individual wizard steps
 
+import { useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
@@ -50,6 +51,18 @@ export function WizardStep({
   className,
 }: WizardStepProps) {
   const Icon = step.icon;
+
+  // Keyboard shortcut: Cmd/Ctrl+Enter to go to next step
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        onNext();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onNext]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -110,7 +123,7 @@ export function WizardStep({
             Back
           </Button>
 
-          <Button onClick={onNext} className="gap-2">
+          <Button onClick={onNext} className="gap-2" title="Shortcut: ⌘+Enter">
             {isLastStep ? 'Finish' : 'Next'}
             {!isLastStep && <ChevronRightIcon className="w-4 h-4" />}
           </Button>
