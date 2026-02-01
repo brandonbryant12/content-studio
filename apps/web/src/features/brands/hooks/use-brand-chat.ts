@@ -25,6 +25,8 @@ export interface UseBrandChatReturn {
 
 interface UseBrandChatOptions {
   brandId: string;
+  /** Optional wizard step key for step-aware AI assistance */
+  stepKey?: string;
   initialMessages?: ChatMessage[];
   onError?: (error: Error) => void;
 }
@@ -35,6 +37,7 @@ interface UseBrandChatOptions {
  */
 export function useBrandChat({
   brandId,
+  stepKey,
   initialMessages = [],
   onError,
 }: UseBrandChatOptions): UseBrandChatReturn {
@@ -104,6 +107,7 @@ export function useBrandChat({
             },
             body: JSON.stringify({
               brandId,
+              stepKey,
               messages: newMessages.map((m) => ({
                 role: m.role,
                 content: m.content,
@@ -183,7 +187,7 @@ export function useBrandChat({
         abortControllerRef.current = null;
       }
     },
-    [brandId, input, isLoading, messages, onError, queryClient],
+    [brandId, stepKey, input, isLoading, messages, onError, queryClient],
   );
 
   return {

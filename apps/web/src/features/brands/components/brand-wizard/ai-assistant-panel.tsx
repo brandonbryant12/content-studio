@@ -42,7 +42,7 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
   onSuggestion: _onSuggestion,
   className,
 }: AIAssistantPanelProps) {
-  const chat = useBrandChat({ brandId });
+  const chat = useBrandChat({ brandId, stepKey });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
