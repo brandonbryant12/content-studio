@@ -177,7 +177,15 @@ export function useBrandChat({
         abortControllerRef.current = null;
       }
     },
-    [brandId, stepKey, state.input, state.isLoading, state.messages, onError, queryClient],
+    [
+      brandId,
+      stepKey,
+      state.input,
+      state.isLoading,
+      state.messages,
+      onError,
+      queryClient,
+    ],
   );
 
   // Create setInput callback

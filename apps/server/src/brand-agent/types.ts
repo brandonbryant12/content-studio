@@ -5,6 +5,23 @@ import type { User } from '@repo/auth/policy';
 import type { BrandOutput } from '@repo/db/schema';
 
 /**
+ * Summary of a persona for status display.
+ */
+export interface PersonaSummary {
+  id: string;
+  name: string;
+  role: string;
+}
+
+/**
+ * Summary of a segment for status display.
+ */
+export interface SegmentSummary {
+  id: string;
+  name: string;
+}
+
+/**
  * Brand completion status for driving the agent conversation.
  */
 export interface BrandStatus {
@@ -19,6 +36,10 @@ export interface BrandStatus {
   completionPercentage: number;
   missingFields: string[];
   suggestedNextStep: string;
+  /** List of existing personas with IDs for reference */
+  personas: PersonaSummary[];
+  /** List of existing segments with IDs for reference */
+  segments: SegmentSummary[];
 }
 
 /**
@@ -35,7 +56,8 @@ export interface ToolContext {
  */
 export interface ToolResult {
   success: boolean;
-  updated?: string[];
+  updated?: string[] | { type: 'persona' | 'segment'; id: string; name: string };
   created?: { type: 'persona' | 'segment'; id: string; name: string };
+  deleted?: { type: 'persona' | 'segment'; id: string; name: string };
   error?: string;
 }

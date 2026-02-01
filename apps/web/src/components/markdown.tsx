@@ -29,7 +29,7 @@ export const Markdown = memo(function Markdown({
       <h1
         className={cn(
           'font-serif font-semibold text-foreground',
-          compact ? 'text-lg mt-3 mb-1.5' : 'text-2xl mt-6 mb-3'
+          compact ? 'text-lg mt-3 mb-1.5' : 'text-2xl mt-6 mb-3',
         )}
         {...props}
       >
@@ -40,7 +40,7 @@ export const Markdown = memo(function Markdown({
       <h2
         className={cn(
           'font-serif font-semibold text-foreground',
-          compact ? 'text-base mt-2.5 mb-1' : 'text-xl mt-5 mb-2'
+          compact ? 'text-base mt-2.5 mb-1' : 'text-xl mt-5 mb-2',
         )}
         {...props}
       >
@@ -51,7 +51,7 @@ export const Markdown = memo(function Markdown({
       <h3
         className={cn(
           'font-serif font-medium text-foreground',
-          compact ? 'text-sm mt-2 mb-1' : 'text-lg mt-4 mb-2'
+          compact ? 'text-sm mt-2 mb-1' : 'text-lg mt-4 mb-2',
         )}
         {...props}
       >
@@ -62,7 +62,7 @@ export const Markdown = memo(function Markdown({
       <h4
         className={cn(
           'font-medium text-foreground',
-          compact ? 'text-sm mt-2 mb-0.5' : 'text-base mt-3 mb-1'
+          compact ? 'text-sm mt-2 mb-0.5' : 'text-base mt-3 mb-1',
         )}
         {...props}
       >
@@ -75,7 +75,7 @@ export const Markdown = memo(function Markdown({
       <p
         className={cn(
           'leading-relaxed',
-          compact ? 'mb-2 last:mb-0' : 'mb-3 last:mb-0'
+          compact ? 'mb-2 last:mb-0' : 'mb-3 last:mb-0',
         )}
         {...props}
       >
@@ -88,7 +88,7 @@ export const Markdown = memo(function Markdown({
       <ul
         className={cn(
           'list-disc list-outside',
-          compact ? 'pl-4 mb-2 space-y-0.5' : 'pl-5 mb-3 space-y-1'
+          compact ? 'pl-4 mb-2 space-y-0.5' : 'pl-5 mb-3 space-y-1',
         )}
         {...props}
       >
@@ -99,7 +99,7 @@ export const Markdown = memo(function Markdown({
       <ol
         className={cn(
           'list-decimal list-outside',
-          compact ? 'pl-4 mb-2 space-y-0.5' : 'pl-5 mb-3 space-y-1'
+          compact ? 'pl-4 mb-2 space-y-0.5' : 'pl-5 mb-3 space-y-1',
         )}
         {...props}
       >
@@ -155,7 +155,12 @@ export const Markdown = memo(function Markdown({
       const codeString = String(children).replace(/\n$/, '');
 
       return (
-        <div className={cn('my-2 rounded-lg overflow-hidden', compact ? 'text-xs' : 'text-sm')}>
+        <div
+          className={cn(
+            'my-2 rounded-lg overflow-hidden',
+            compact ? 'text-xs' : 'text-sm',
+          )}
+        >
           {language && (
             <div className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono border-b border-zinc-700">
               {language}
@@ -184,7 +189,7 @@ export const Markdown = memo(function Markdown({
       <blockquote
         className={cn(
           'border-l-4 border-primary/40 pl-4 italic text-muted-foreground',
-          compact ? 'my-2' : 'my-4'
+          compact ? 'my-2' : 'my-4',
         )}
         {...props}
       >
@@ -192,7 +197,10 @@ export const Markdown = memo(function Markdown({
       </blockquote>
     ),
     hr: ({ ...props }) => (
-      <hr className={cn('border-border', compact ? 'my-3' : 'my-6')} {...props} />
+      <hr
+        className={cn('border-border', compact ? 'my-3' : 'my-6')}
+        {...props}
+      />
     ),
 
     // Tables
@@ -213,9 +221,7 @@ export const Markdown = memo(function Markdown({
         {children}
       </tbody>
     ),
-    tr: ({ children, ...props }) => (
-      <tr {...props}>{children}</tr>
-    ),
+    tr: ({ children, ...props }) => <tr {...props}>{children}</tr>,
     th: ({ children, ...props }) => (
       <th
         className="px-3 py-2 text-left font-medium text-foreground border-b border-border"
@@ -236,7 +242,7 @@ export const Markdown = memo(function Markdown({
       className={cn(
         'markdown-content',
         compact ? 'text-sm' : 'text-base',
-        className
+        className,
       )}
     >
       <ReactMarkdown components={components}>{children}</ReactMarkdown>

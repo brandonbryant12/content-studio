@@ -71,6 +71,18 @@ export function calculateBrandStatus(brand: BrandOutput): BrandStatus {
       'Offer to add more personas/segments or refine existing content';
   }
 
+  // Include personas and segments with IDs for update/delete operations
+  const personas = brand.personas.map((p) => ({
+    id: p.id,
+    name: p.name,
+    role: p.role,
+  }));
+
+  const segments = brand.segments.map((s) => ({
+    id: s.id,
+    name: s.name,
+  }));
+
   return {
     hasName,
     hasDescription,
@@ -83,6 +95,8 @@ export function calculateBrandStatus(brand: BrandOutput): BrandStatus {
     completionPercentage,
     missingFields,
     suggestedNextStep,
+    personas,
+    segments,
   };
 }
 

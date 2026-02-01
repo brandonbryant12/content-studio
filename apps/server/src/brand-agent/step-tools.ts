@@ -10,7 +10,11 @@ import {
   createUpdateBrandValuesTool,
   createUpdateBrandVisualsTool,
   createCreatePersonaTool,
+  createUpdatePersonaTool,
+  createDeletePersonaTool,
   createCreateSegmentTool,
+  createUpdateSegmentTool,
+  createDeleteSegmentTool,
 } from './tools';
 
 /**
@@ -115,7 +119,11 @@ export type BrandToolName =
   | 'updateBrandValues'
   | 'updateBrandVisuals'
   | 'createPersona'
-  | 'createSegment';
+  | 'updatePersona'
+  | 'deletePersona'
+  | 'createSegment'
+  | 'updateSegment'
+  | 'deleteSegment';
 
 /**
  * Get tools available for a specific wizard step.
@@ -143,7 +151,11 @@ export function getToolsForStep(
     updateBrandValues: createUpdateBrandValuesTool(toolContext),
     updateBrandVisuals: createUpdateBrandVisualsTool(toolContext),
     createPersona: createCreatePersonaTool(toolContext),
+    updatePersona: createUpdatePersonaTool(toolContext),
+    deletePersona: createDeletePersonaTool(toolContext),
     createSegment: createCreateSegmentTool(toolContext),
+    updateSegment: createUpdateSegmentTool(toolContext),
+    deleteSegment: createDeleteSegmentTool(toolContext),
   };
 
   // Return only the tools needed for this step
@@ -174,9 +186,19 @@ export function getToolNamesForStep(stepKey: WizardStepKey): string[] {
     case 'voice':
       return ['getBrandStatus', 'updateBrandVisuals'];
     case 'personas':
-      return ['getBrandStatus', 'createPersona'];
+      return [
+        'getBrandStatus',
+        'createPersona',
+        'updatePersona',
+        'deletePersona',
+      ];
     case 'segments':
-      return ['getBrandStatus', 'createSegment'];
+      return [
+        'getBrandStatus',
+        'createSegment',
+        'updateSegment',
+        'deleteSegment',
+      ];
     case 'review':
     default:
       return [
@@ -185,7 +207,11 @@ export function getToolNamesForStep(stepKey: WizardStepKey): string[] {
         'updateBrandValues',
         'updateBrandVisuals',
         'createPersona',
+        'updatePersona',
+        'deletePersona',
         'createSegment',
+        'updateSegment',
+        'deleteSegment',
       ];
   }
 }

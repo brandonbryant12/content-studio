@@ -115,7 +115,8 @@
       "Bash(pkill:*)",
       "Bash(pm2 start:*)",
       "Bash(ps:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": [],
     "ask": []

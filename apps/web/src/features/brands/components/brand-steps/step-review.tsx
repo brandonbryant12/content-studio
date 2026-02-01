@@ -133,7 +133,8 @@ export const StepReview = memo(function StepReview({
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No values added yet. Visit the Values step to add your brand's core values.
+                  No values added yet. Visit the Values step to add your brand's
+                  core values.
                 </p>
               )}
             </section>
@@ -178,7 +179,8 @@ export const StepReview = memo(function StepReview({
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No colors selected yet. Visit the Colors step to choose your brand colors.
+                  No colors selected yet. Visit the Colors step to choose your
+                  brand colors.
                 </p>
               )}
             </section>
@@ -208,7 +210,8 @@ export const StepReview = memo(function StepReview({
                   <div className="flex flex-wrap gap-2">
                     {brand.personas.map((persona) => (
                       <Badge key={persona.id} variant="info">
-                        {persona.name || 'Untitled'} - {persona.role || 'No role'}
+                        {persona.name || 'Untitled'} -{' '}
+                        {persona.role || 'No role'}
                       </Badge>
                     ))}
                   </div>
@@ -218,7 +221,8 @@ export const StepReview = memo(function StepReview({
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No personas created yet. Visit the Personas step to define your target audience personas.
+                  No personas created yet. Visit the Personas step to define
+                  your target audience personas.
                 </p>
               )}
             </section>
@@ -243,7 +247,8 @@ export const StepReview = memo(function StepReview({
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No audience segments defined yet. Visit the Segments step to identify your target market segments.
+                  No audience segments defined yet. Visit the Segments step to
+                  identify your target market segments.
                 </p>
               )}
             </section>
