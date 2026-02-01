@@ -5,6 +5,7 @@ export { BrandWizard } from './brand-wizard';
 export { WizardContainer, type WizardContainerProps } from './wizard-container';
 export { WizardNav, type WizardNavProps } from './wizard-nav';
 export { WizardStep, type WizardStepProps } from './wizard-step';
+export { WizardOnboarding } from './wizard-onboarding';
 export {
   AIAssistantPanel,
   type AIAssistantPanelProps,

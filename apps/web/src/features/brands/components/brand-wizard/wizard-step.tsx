@@ -1,12 +1,12 @@
 // features/brands/components/brand-wizard/wizard-step.tsx
 // Wrapper component for individual wizard steps
 
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
-import type { ReactNode } from 'react';
 import type { WizardStep as WizardStepDef } from '../../lib/wizard-steps';
+import { WizardOnboarding } from './wizard-onboarding';
 
 export interface WizardStepProps {
   /** Step definition */
@@ -108,7 +108,11 @@ export function WizardStep({
       </header>
 
       {/* Step content */}
-      <div className="flex-1 overflow-auto p-6">{children}</div>
+      <div className="flex-1 overflow-auto p-6">
+        {/* Show onboarding on first step */}
+        {isFirstStep && <WizardOnboarding />}
+        {children}
+      </div>
 
       {/* Navigation footer */}
       <footer className="px-6 py-4 border-t border-border bg-card/30">
