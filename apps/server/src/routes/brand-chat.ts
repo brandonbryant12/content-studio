@@ -1,5 +1,5 @@
 // routes/brand-chat.ts
-// Brand chat route with proactive multi-tool agent
+// Brand chat route with step-aware proactive multi-tool agent
 
 import { Effect } from 'effect';
 import { Hono } from 'hono';
@@ -15,13 +15,11 @@ import { env } from '../env';
 import { auth, serverRuntime } from '../services';
 import {
   generateBrandAgentPrompt,
+  generateStepAwarePrompt,
   calculateBrandStatus,
-  createGetBrandStatusTool,
-  createUpdateBrandBasicsTool,
-  createUpdateBrandValuesTool,
-  createUpdateBrandVisualsTool,
-  createCreatePersonaTool,
-  createCreateSegmentTool,
+  getToolsForStep,
+  isValidStepKey,
+  type WizardStepKey,
 } from '../brand-agent';
 import type { User } from '@repo/auth/policy';
 import type { ToolContext } from '../brand-agent';
@@ -38,6 +36,8 @@ interface ChatMessage {
 interface BrandChatRequest {
   brandId: string;
   messages: ChatMessage[];
+  /** Optional wizard step key for step-aware tool selection */
+  stepKey?: string;
 }
 
 // =============================================================================
@@ -63,6 +63,10 @@ const getSessionUser = async (headers: Headers): Promise<User | null> => {
 /**
  * Brand chat route for AI-powered brand building conversations.
  * Uses a proactive multi-tool agent that drives the conversation.
+ * 
+ * When stepKey is provided, the agent is step-aware:
+ * - Only tools relevant to the current step are available
+ * - System prompt includes wizard context and step-specific instructions
  */
 export const brandChatRoute = new Hono()
   .use(
@@ -86,11 +90,15 @@ export const brandChatRoute = new Hono()
       return c.json({ error: 'Invalid request body' }, 400);
     }
 
-    const { brandId, messages } = body;
+    const { brandId, messages, stepKey: rawStepKey } = body;
 
     if (!brandId || !messages?.length) {
       return c.json({ error: 'brandId and messages are required' }, 400);
     }
+
+    // Validate and normalize stepKey (defaults to 'review' for backwards compatibility)
+    const stepKey: WizardStepKey =
+      rawStepKey && isValidStepKey(rawStepKey) ? rawStepKey : 'review';
 
     // Fetch brand to get current state for status calculation
     let brand;
@@ -130,8 +138,14 @@ export const brandChatRoute = new Hono()
     });
     const model = google('gemini-2.5-flash');
 
-    // Generate proactive system prompt based on current brand state
-    const systemPrompt = generateBrandAgentPrompt(brand.name, status);
+    // Generate system prompt based on step awareness
+    const systemPrompt =
+      rawStepKey && isValidStepKey(rawStepKey)
+        ? generateStepAwarePrompt(brand.name, status, stepKey)
+        : generateBrandAgentPrompt(brand.name, status);
+
+    // Get step-specific tools
+    const tools = getToolsForStep(stepKey, brand, toolContext);
 
     // Stream the response with multi-tool support
     const result = streamText({
@@ -141,14 +155,7 @@ export const brandChatRoute = new Hono()
         role: m.role,
         content: m.content,
       })),
-      tools: {
-        getBrandStatus: createGetBrandStatusTool(brand),
-        updateBrandBasics: createUpdateBrandBasicsTool(toolContext),
-        updateBrandValues: createUpdateBrandValuesTool(toolContext),
-        updateBrandVisuals: createUpdateBrandVisualsTool(toolContext),
-        createPersona: createCreatePersonaTool(toolContext),
-        createSegment: createCreateSegmentTool(toolContext),
-      },
+      tools,
       stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-tool responses
       onFinish: async ({ text }) => {
         // Append the assistant's response to chat history

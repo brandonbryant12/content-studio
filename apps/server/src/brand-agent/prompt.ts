@@ -2,6 +2,12 @@
 // Dynamic system prompt generator for proactive brand building
 
 import type { BrandStatus } from './types';
+import {
+  WIZARD_STEPS,
+  getStepInfo,
+  getToolNamesForStep,
+  type WizardStepKey,
+} from './step-tools';
 
 /**
  * Generate a proactive system prompt based on current brand status.
@@ -198,4 +204,149 @@ Brand is well-developed! Be a thought partner:
 - Refine anything that doesn't feel quite right
 
 What would be most valuable right now?"`;
+}
+
+/**
+ * Generate wizard context section showing current step and available tools.
+ */
+function generateWizardContext(
+  stepKey: WizardStepKey,
+  status: BrandStatus,
+): string {
+  const currentStep = getStepInfo(stepKey);
+  const toolNames = getToolNamesForStep(stepKey);
+
+  // Build step list with completion markers
+  const stepList = WIZARD_STEPS.map((step) => {
+    const isCurrent = step.key === stepKey;
+    const isComplete = isStepComplete(step.key, status);
+    const marker = isCurrent ? '← CURRENT' : isComplete ? '✓' : '';
+    return `${step.stepNumber}. ${step.title} - ${step.description} ${marker}`;
+  }).join('\n');
+
+  return `## Wizard Context
+
+You are assisting on step ${currentStep.stepNumber} of 8: **${currentStep.title}**
+Your focus: ${currentStep.description}
+
+### Full Wizard Journey (for context)
+${stepList}
+
+### Your Tools This Step
+You have access to: ${toolNames.join(', ')}
+${stepKey !== 'review' ? 'Other tools are available in their respective steps.' : 'You have full access to all tools for final edits.'}`;
+}
+
+/**
+ * Check if a step is complete based on brand status.
+ */
+function isStepComplete(stepKey: WizardStepKey, status: BrandStatus): boolean {
+  switch (stepKey) {
+    case 'basics':
+      return status.hasName && status.hasDescription;
+    case 'mission':
+      return status.hasMission;
+    case 'values':
+      return status.hasValues;
+    case 'colors':
+      return status.hasColors;
+    case 'voice':
+      return status.hasBrandGuide;
+    case 'personas':
+      return status.personaCount > 0;
+    case 'segments':
+      return status.segmentCount > 0;
+    case 'review':
+      return false; // Review is never "complete"
+    default:
+      return false;
+  }
+}
+
+/**
+ * Get step-specific instructions for the current wizard step.
+ */
+function getStepSpecificInstructions(stepKey: WizardStepKey): string {
+  switch (stepKey) {
+    case 'basics':
+      return `Focus on helping the user define their brand name and description.
+- Ask about the brand name if not set
+- Explore what the brand does and who it serves
+- Use updateBrandBasics to save when confirmed`;
+
+    case 'mission':
+      return `Focus on defining the brand's mission statement.
+- Connect their description to deeper purpose
+- Help articulate the "why" behind the brand
+- Use updateBrandBasics to save the mission when confirmed`;
+
+    case 'values':
+      return `Focus on identifying 3-5 core values.
+- Explore what principles guide the brand
+- Offer concrete value suggestions
+- Use updateBrandValues to save when the user confirms`;
+
+    case 'colors':
+      return `Focus on choosing brand colors.
+- Ask about existing colors or preferences
+- Suggest colors that match the brand personality
+- Use updateBrandVisuals to save primary/secondary/accent colors`;
+
+    case 'voice':
+      return `Focus on establishing voice and tone.
+- Help define how the brand communicates
+- Explore formal vs casual, playful vs serious
+- Use updateBrandVisuals to save the brand guide`;
+
+    case 'personas':
+      return `Focus on creating brand personas (character voices).
+- Suggest persona types that fit the brand
+- Explore name, role, personality, speaking style
+- Use createPersona to save each persona when complete`;
+
+    case 'segments':
+      return `Focus on defining target audience segments.
+- Help identify distinct customer groups
+- Explore demographics, needs, messaging tone
+- Use createSegment to save each segment when complete`;
+
+    case 'review':
+      return `Help the user review and finalize their brand.
+- Summarize the complete brand profile
+- Offer to refine any section
+- You have access to all tools for final edits`;
+
+    default:
+      return '';
+  }
+}
+
+/**
+ * Generate a step-aware system prompt for the brand wizard.
+ * This is used when the frontend passes a stepKey.
+ */
+export function generateStepAwarePrompt(
+  brandName: string,
+  status: BrandStatus,
+  stepKey: WizardStepKey,
+): string {
+  const basePrompt = generateBrandAgentPrompt(brandName, status);
+  const wizardContext = generateWizardContext(stepKey, status);
+  const stepInstructions = getStepSpecificInstructions(stepKey);
+
+  // Insert wizard context after the brand status section
+  const insertPoint = basePrompt.indexOf('## Your Approach');
+  if (insertPoint === -1) {
+    // Fallback: append at end
+    return `${basePrompt}\n\n${wizardContext}\n\n## Step Instructions\n${stepInstructions}`;
+  }
+
+  return (
+    basePrompt.slice(0, insertPoint) +
+    wizardContext +
+    '\n\n## Step Instructions\n' +
+    stepInstructions +
+    '\n\n' +
+    basePrompt.slice(insertPoint)
+  );
 }
