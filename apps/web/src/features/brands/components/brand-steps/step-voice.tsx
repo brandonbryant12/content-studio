@@ -18,7 +18,6 @@ interface StepVoiceProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -51,7 +50,6 @@ const QUICK_ACTIONS: QuickAction[] = [
  */
 export const StepVoice = memo(function StepVoice({
   brand,
-  onStepComplete,
   className,
 }: StepVoiceProps) {
   const [brandGuide, setBrandGuide] = useState(brand.brandGuide ?? '');
@@ -132,7 +130,6 @@ export const StepVoice = memo(function StepVoice({
           brandId={brand.id}
           stepKey="voice"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

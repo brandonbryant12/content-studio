@@ -25,7 +25,6 @@ interface StepSegmentsProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -74,7 +73,6 @@ function createEmptySegment(): BrandSegment {
  */
 export const StepSegments = memo(function StepSegments({
   brand,
-  onStepComplete,
   className,
 }: StepSegmentsProps) {
   const updateMutation = useOptimisticUpdate();
@@ -216,7 +214,6 @@ export const StepSegments = memo(function StepSegments({
           brandId={brand.id}
           stepKey="segments"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

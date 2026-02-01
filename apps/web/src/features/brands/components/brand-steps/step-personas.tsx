@@ -25,7 +25,6 @@ interface StepPersonasProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -75,7 +74,6 @@ function createEmptyPersona(): BrandPersona {
  */
 export const StepPersonas = memo(function StepPersonas({
   brand,
-  onStepComplete,
   className,
 }: StepPersonasProps) {
   const updateMutation = useOptimisticUpdate();
@@ -215,7 +213,6 @@ export const StepPersonas = memo(function StepPersonas({
           brandId={brand.id}
           stepKey="personas"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

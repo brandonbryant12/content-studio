@@ -18,7 +18,6 @@ interface StepMissionProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -46,7 +45,6 @@ const QUICK_ACTIONS: QuickAction[] = [
  */
 export const StepMission = memo(function StepMission({
   brand,
-  onStepComplete,
   className,
 }: StepMissionProps) {
   const [mission, setMission] = useState(brand.mission ?? '');
@@ -131,7 +129,6 @@ export const StepMission = memo(function StepMission({
           brandId={brand.id}
           stepKey="mission"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

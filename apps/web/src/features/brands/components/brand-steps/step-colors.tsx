@@ -17,7 +17,6 @@ interface StepColorsProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -50,7 +49,6 @@ const QUICK_ACTIONS: QuickAction[] = [
  */
 export const StepColors = memo(function StepColors({
   brand,
-  onStepComplete,
   className,
 }: StepColorsProps) {
   const [primary, setPrimary] = useState(
@@ -197,7 +195,6 @@ export const StepColors = memo(function StepColors({
           brandId={brand.id}
           stepKey="colors"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

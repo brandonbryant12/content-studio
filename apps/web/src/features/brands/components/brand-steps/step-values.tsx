@@ -17,7 +17,6 @@ interface StepValuesProps {
   /** Current brand data */
   brand: Brand;
   /** Callback when AI completes step - auto-progress to next */
-  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -58,7 +57,6 @@ const DEFAULT_SUGGESTIONS = [
  */
 export const StepValues = memo(function StepValues({
   brand,
-  onStepComplete,
   className,
 }: StepValuesProps) {
   const [values, setValues] = useState<string[]>([...(brand.values ?? [])]);
@@ -135,7 +133,6 @@ export const StepValues = memo(function StepValues({
           brandId={brand.id}
           stepKey="values"
           quickActions={QUICK_ACTIONS}
-          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>

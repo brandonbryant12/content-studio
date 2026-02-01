@@ -30,8 +30,6 @@ interface UseBrandChatOptions {
   stepKey?: string;
   initialMessages?: ChatMessage[];
   onError?: (error: Error) => void;
-  /** Callback when AI successfully updates brand data */
-  onBrandUpdated?: () => void;
 }
 
 /**
@@ -43,7 +41,6 @@ export function useBrandChat({
   stepKey,
   initialMessages = [],
   onError,
-  onBrandUpdated,
 }: UseBrandChatOptions): UseBrandChatReturn {
   const [state, dispatch] = useReducer(
     brandChatReducer,
@@ -160,10 +157,9 @@ export function useBrandChat({
         // Invalidate brand query to refresh data after AI updates
         queryClient.invalidateQueries({ queryKey: getBrandQueryKey(brandId) });
 
-        // Notify that brand was updated (for auto-progress)
-        if (accumulatedContent.trim()) {
-          onBrandUpdated?.();
-        }
+        // NOTE: We don't auto-advance anymore - the AI responding doesn't mean
+        // the step is complete. User should click "Next" when ready.
+        // The SSE entity_change events will refresh the UI when data is saved.
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
           // Request was aborted, don't set error
@@ -181,16 +177,7 @@ export function useBrandChat({
         abortControllerRef.current = null;
       }
     },
-    [
-      brandId,
-      stepKey,
-      state.input,
-      state.isLoading,
-      state.messages,
-      onError,
-      onBrandUpdated,
-      queryClient,
-    ],
+    [brandId, stepKey, state.input, state.isLoading, state.messages, onError, queryClient],
   );
 
   // Create setInput callback
