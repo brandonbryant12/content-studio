@@ -3,7 +3,6 @@
 // These tests verify the UI behavior of the step-brand component with mocked API responses
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 // Import directly from component files to avoid triggering env module
 import {
   BrandSelector,
@@ -17,6 +16,7 @@ import {
   SegmentSelector,
   type SegmentSelectorOption,
 } from '@/features/brands/components/segment-selector';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Test BrandSelector integration behavior
 describe('BrandSelector in Podcast Setup', () => {

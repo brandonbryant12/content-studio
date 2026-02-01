@@ -1,9 +1,9 @@
 // shared/__tests__/suspense-boundary.test.tsx
 
-import type { ReactNode } from 'react';
 import { describe, it, expect } from 'vitest';
-import { renderWithQuery, screen } from '@/test-utils';
+import type { ReactNode } from 'react';
 import { SuspenseBoundary } from '../components/suspense-boundary';
+import { renderWithQuery, screen } from '@/test-utils';
 
 // Component that suspends by throwing a promise
 function SuspendingComponent(): ReactNode {

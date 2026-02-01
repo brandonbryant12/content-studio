@@ -1,16 +1,18 @@
 // features/brands/hooks/use-brand-chat.ts
 // Custom chat hook for brand building conversations
 
-import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { env } from '@/env';
+import { useReducer, useCallback, useRef, useEffect } from 'react';
+import type {
+  ChatMessage} from './brand-chat-reducer';
+import {
+  BrandChatState,
+  BrandChatAction,
+  brandChatReducer,
+  createInitialBrandChatState,
+} from './brand-chat-reducer';
 import { getBrandQueryKey } from './use-brand';
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { env } from '@/env';
 
 export interface UseBrandChatReturn {
   messages: ChatMessage[];
@@ -44,10 +46,10 @@ export function useBrandChat({
   onError,
   onBrandUpdated,
 }: UseBrandChatOptions): UseBrandChatReturn {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, dispatch] = useReducer(
+    brandChatReducer,
+    createInitialBrandChatState(initialMessages),
+  );
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryClient = useQueryClient();
 
@@ -61,30 +63,28 @@ export function useBrandChat({
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    setIsLoading(false);
+    dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
 
   // Clear messages
   const clearMessages = useCallback(() => {
-    setMessages([]);
-    setError(null);
+    dispatch({ type: 'CLEAR_MESSAGES' });
   }, []);
 
   // Reset messages when brandId changes
   useEffect(() => {
-    setMessages(initialMessages);
-    setError(null);
+    dispatch({ type: 'RESET', payload: { messages: initialMessages } });
   }, [brandId]); // Don't include initialMessages to avoid infinite loop
 
   // Send message
   const sendMessage = useCallback(
     async (content?: string) => {
-      const messageContent = content ?? input;
-      if (!messageContent.trim() || isLoading) return;
+      const messageContent = content ?? state.input;
+      if (!messageContent.trim() || state.isLoading) return;
 
       // Clear input immediately
-      setInput('');
-      setError(null);
+      dispatch({ type: 'CLEAR_INPUT' });
+      dispatch({ type: 'SET_ERROR', payload: null });
 
       // Add user message
       const userMessage: ChatMessage = {
@@ -93,9 +93,9 @@ export function useBrandChat({
         content: messageContent.trim(),
       };
 
-      const newMessages = [...messages, userMessage];
-      setMessages(newMessages);
-      setIsLoading(true);
+      dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
+      const newMessages = [...state.messages, userMessage];
+      dispatch({ type: 'SET_LOADING', payload: true });
 
       // Create abort controller for this request
       abortControllerRef.current = new AbortController();
@@ -137,7 +137,7 @@ export function useBrandChat({
           content: '',
         };
 
-        setMessages((prev) => [...prev, assistantMessage]);
+        dispatch({ type: 'ADD_MESSAGE', payload: assistantMessage });
 
         // Stream the response
         const reader = response.body.getReader();
@@ -152,22 +152,15 @@ export function useBrandChat({
           accumulatedContent += chunk;
 
           // Update the assistant message with accumulated content
-          setMessages((prev) => {
-            const updated = [...prev];
-            const lastMessage = updated[updated.length - 1];
-            if (lastMessage && lastMessage.role === 'assistant') {
-              updated[updated.length - 1] = {
-                ...lastMessage,
-                content: accumulatedContent,
-              };
-            }
-            return updated;
+          dispatch({
+            type: 'UPDATE_LAST_ASSISTANT_MESSAGE',
+            payload: accumulatedContent,
           });
         }
 
         // Invalidate brand query to refresh data after AI updates
         queryClient.invalidateQueries({ queryKey: getBrandQueryKey(brandId) });
-        
+
         // Notify that brand was updated (for auto-progress)
         if (accumulatedContent.trim()) {
           onBrandUpdated?.();
@@ -179,31 +172,39 @@ export function useBrandChat({
         }
         const error =
           err instanceof Error ? err : new Error('Failed to send message');
-        setError(error);
+        dispatch({ type: 'SET_ERROR', payload: error });
         onError?.(error);
 
         // Remove the empty assistant message if there was an error
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage?.role === 'assistant' && !lastMessage.content) {
-            return prev.slice(0, -1);
-          }
-          return prev;
-        });
+        dispatch({ type: 'REMOVE_LAST_MESSAGE' });
       } finally {
-        setIsLoading(false);
+        dispatch({ type: 'SET_LOADING', payload: false });
         abortControllerRef.current = null;
       }
     },
-    [brandId, stepKey, input, isLoading, messages, onError, onBrandUpdated, queryClient],
+    [
+      brandId,
+      stepKey,
+      state.input,
+      state.isLoading,
+      state.messages,
+      onError,
+      onBrandUpdated,
+      queryClient,
+    ],
   );
 
+  // Create setInput callback
+  const setInput = useCallback((input: string) => {
+    dispatch({ type: 'SET_INPUT', payload: input });
+  }, []);
+
   return {
-    messages,
-    input,
+    messages: state.messages,
+    input: state.input,
     setInput,
-    isLoading,
-    error,
+    isLoading: state.isLoading,
+    error: state.error,
     sendMessage,
     clearMessages,
     stop,

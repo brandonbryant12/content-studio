@@ -6,12 +6,12 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useMemo } from 'react';
-import { VoiceoverIcon } from './voiceover-icon';
 import {
   type VoiceoverStatusType,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
+import { VoiceoverIcon } from './voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
 /** Voiceover data for list display */

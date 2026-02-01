@@ -1,11 +1,11 @@
 // features/brands/__tests__/brand-selector.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import {
   BrandSelector,
   type BrandSelectorOption,
 } from '../components/brand-selector';
+import { render, screen, fireEvent } from '@/test-utils';
 
 const mockBrands: BrandSelectorOption[] = [
   {

@@ -11,11 +11,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
 import {
   useDocuments,
   getDocumentListQueryKey,
 } from '@/features/documents/hooks/use-document-list';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 const SUPPORTED_TYPES = [
   'text/plain',

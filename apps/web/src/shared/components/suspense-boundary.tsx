@@ -1,7 +1,7 @@
-import { Suspense, type ReactNode } from 'react';
 import { Spinner } from '@repo/ui/components/spinner';
-import { ErrorBoundary } from './error-boundary';
+import { Suspense, type ReactNode } from 'react';
 import type { ErrorFallbackProps } from './error-boundary';
+import { ErrorBoundary } from './error-boundary';
 
 interface SuspenseBoundaryProps {
   children: ReactNode;

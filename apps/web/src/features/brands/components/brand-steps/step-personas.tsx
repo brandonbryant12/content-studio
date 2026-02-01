@@ -1,23 +1,23 @@
 // features/brands/components/brand-steps/step-personas.tsx
 // Step component for managing brand personas
 
-import { memo, useCallback } from 'react';
 import { PlusIcon } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import type { BrandPersona } from '@repo/db/schema';
-import { cn } from '@repo/ui/lib/utils';
-import { Button } from '@repo/ui/components/button';
-import {
-  SortableList,
-  SortableItemWrapper,
-  DragHandle,
-} from '@/shared/components';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 import { PersonaCard } from '../brand-inputs/persona-card';
 import {
   AIAssistantPanel,
   type QuickAction,
 } from '../brand-wizard/ai-assistant-panel';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
+import {
+  SortableList,
+  SortableItemWrapper,
+  DragHandle,
+} from '@/shared/components';
 
 type Brand = RouterOutput['brands']['get'];
 

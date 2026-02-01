@@ -1,7 +1,7 @@
 // features/voiceovers/components/workbench/text-editor.tsx
 
-import { memo, useCallback, type ChangeEvent } from 'react';
 import { cn } from '@repo/ui/lib/utils';
+import { memo, useCallback, type ChangeEvent } from 'react';
 
 interface TextEditorProps {
   text: string;

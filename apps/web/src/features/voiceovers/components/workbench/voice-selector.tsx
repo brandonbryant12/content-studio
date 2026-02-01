@@ -1,8 +1,8 @@
 // features/voiceovers/components/workbench/voice-selector.tsx
 
+import { cn } from '@repo/ui/lib/utils';
 import { memo, useCallback, type MouseEvent } from 'react';
 
-import { cn } from '@repo/ui/lib/utils';
 
 import { VOICES } from '../../lib/voices';
 import { VoiceSymbol } from './voice-symbols';

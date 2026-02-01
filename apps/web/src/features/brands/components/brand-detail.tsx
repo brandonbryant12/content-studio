@@ -1,12 +1,12 @@
 // features/brands/components/brand-detail.tsx
 // Presenter: Pure UI component for brand detail view
 
-import { useState } from 'react';
 import { ArrowLeftIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
-import { Button } from '@repo/ui/components/button';
 import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { BrandIcon } from './brand-icon';
 import { BrandWizard } from './brand-wizard';

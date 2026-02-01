@@ -1,11 +1,11 @@
 // features/voiceovers/__tests__/approve-button.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import {
   ApproveButton,
   type ApproveButtonProps,
 } from '../components/collaborators/approve-button';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Mock the Spinner component
 vi.mock('@repo/ui/components/spinner', () => ({

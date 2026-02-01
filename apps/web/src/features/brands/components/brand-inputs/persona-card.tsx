@@ -1,15 +1,15 @@
 // features/brands/components/brand-inputs/persona-card.tsx
 
-import { memo, useState, useCallback, type ChangeEvent } from 'react';
 import {
   Pencil1Icon,
   TrashIcon,
   CheckIcon,
   Cross2Icon,
 } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useState, useCallback, type ChangeEvent } from 'react';
 import type { BrandPersona } from '@repo/db/schema';
 
 interface PersonaCardProps {

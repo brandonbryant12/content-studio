@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { handleJobCompletion, handleEntityChange } from '../sse-handlers';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type {
   JobCompletionEvent,
   EntityChangeEvent,
 } from '@repo/api/contracts';
+import { handleJobCompletion, handleEntityChange } from '../sse-handlers';
 
 // Mock the apiClient
 vi.mock('@/clients/apiClient', () => ({

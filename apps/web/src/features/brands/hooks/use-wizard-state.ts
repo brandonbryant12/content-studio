@@ -1,8 +1,8 @@
 // features/brands/hooks/use-wizard-state.ts
 // Hook to manage wizard navigation state with URL persistence
 
-import { useCallback, useMemo } from 'react';
 import { useSearch, useNavigate } from '@tanstack/react-router';
+import { useCallback, useMemo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import {
   WIZARD_STEPS,

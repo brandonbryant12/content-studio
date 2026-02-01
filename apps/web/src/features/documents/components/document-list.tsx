@@ -1,7 +1,6 @@
 // features/documents/components/document-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { useCallback, useMemo, useTransition } from 'react';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -10,6 +9,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Link } from '@tanstack/react-router';
+import { useCallback, useMemo, useTransition } from 'react';
 import { DocumentItem, type DocumentListItem } from './document-item';
 import { UploadDocumentDialog } from './upload-document-dialog';
 

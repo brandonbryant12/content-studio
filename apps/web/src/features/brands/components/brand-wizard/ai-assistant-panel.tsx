@@ -1,6 +1,9 @@
 // features/brands/components/brand-wizard/ai-assistant-panel.tsx
 // Simplified AI chat panel for use within wizard steps
 
+import { PaperPlaneIcon, StopIcon } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
+import { cn } from '@repo/ui/lib/utils';
 import {
   memo,
   useCallback,
@@ -8,9 +11,6 @@ import {
   useEffect,
   type KeyboardEvent,
 } from 'react';
-import { PaperPlaneIcon, StopIcon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
-import { Button } from '@repo/ui/components/button';
 import { useBrandChat } from '../../hooks/use-brand-chat';
 
 interface QuickAction {
@@ -45,7 +45,11 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
   onStepComplete,
   className,
 }: AIAssistantPanelProps) {
-  const chat = useBrandChat({ brandId, stepKey, onBrandUpdated: onStepComplete });
+  const chat = useBrandChat({
+    brandId,
+    stepKey,
+    onBrandUpdated: onStepComplete,
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 

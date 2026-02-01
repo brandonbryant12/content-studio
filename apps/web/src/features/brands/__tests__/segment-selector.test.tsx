@@ -1,11 +1,11 @@
 // features/brands/__tests__/segment-selector.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import {
   SegmentSelector,
   type SegmentSelectorOption,
 } from '../components/segment-selector';
+import { render, screen, fireEvent } from '@/test-utils';
 
 const mockSegments: SegmentSelectorOption[] = [
   {

@@ -1,7 +1,7 @@
 // features/brands/components/persona-selector.tsx
 
-import { memo, useCallback, type MouseEvent } from 'react';
 import { cn } from '@repo/ui/lib/utils';
+import { memo, useCallback, type MouseEvent } from 'react';
 
 export interface PersonaSelectorOption {
   id: string;

@@ -1,10 +1,10 @@
 // features/documents/__tests__/document-list.test.tsx
 
-import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
-import { DocumentList } from '../components/document-list';
 import type { DocumentListItem } from '../components/document-item';
+import type { ReactNode } from 'react';
+import { DocumentList } from '../components/document-list';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Mock TanStack Router Link component
 vi.mock('@tanstack/react-router', () => ({

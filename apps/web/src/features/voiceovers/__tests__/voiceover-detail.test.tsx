@@ -1,15 +1,15 @@
 // features/voiceovers/__tests__/voiceover-detail.test.tsx
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
+import type { Collaborator } from '../hooks/use-collaborators';
+import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
+import type { RouterOutput } from '@repo/api/client';
 import {
   VoiceoverDetail,
   type VoiceoverDetailProps,
 } from '../components/voiceover-detail';
-import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
-import type { Collaborator } from '../hooks/use-collaborators';
 import { VoiceoverStatus } from '../lib/status';
-import type { RouterOutput } from '@repo/api/client';
+import { render, screen, fireEvent } from '@/test-utils';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 

@@ -1,7 +1,7 @@
 // features/brands/components/brand-icon.tsx
 
-import { memo } from 'react';
 import { cn } from '@repo/ui/lib/utils';
+import { memo } from 'react';
 
 interface BrandIconProps {
   colors?: { primary: string } | null;

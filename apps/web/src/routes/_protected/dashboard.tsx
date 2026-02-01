@@ -9,12 +9,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { apiClient } from '@/clients/apiClient';
 import { DocumentItem } from '@/features/documents/components/document-item';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
 import { PodcastItem } from '@/features/podcasts/components/podcast-item';
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
-import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 export const Route = createFileRoute('/_protected/dashboard')({

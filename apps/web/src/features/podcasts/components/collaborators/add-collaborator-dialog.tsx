@@ -8,8 +8,8 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { useState } from 'react';
-import { BaseDialog } from '@/shared/components/base-dialog';
 import { useAddCollaborator } from '../../hooks/use-add-collaborator';
+import { BaseDialog } from '@/shared/components/base-dialog';
 
 interface AddCollaboratorDialogProps {
   podcastId: string;

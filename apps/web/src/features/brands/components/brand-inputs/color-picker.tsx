@@ -1,8 +1,8 @@
 // features/brands/components/brand-inputs/color-picker.tsx
 
-import { memo, useCallback, useRef, type ChangeEvent } from 'react';
-import { cn } from '@repo/ui/lib/utils';
 import { Input } from '@repo/ui/components/input';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useCallback, useRef, type ChangeEvent } from 'react';
 
 const DEFAULT_PRESETS = [
   { name: 'Royal Blue', hex: '#4F46E5' },

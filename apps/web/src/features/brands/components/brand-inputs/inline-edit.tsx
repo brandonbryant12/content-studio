@@ -1,12 +1,12 @@
 // features/brands/components/brand-inputs/inline-edit.tsx
 // Inline editable text component for review step
 
-import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { Pencil1Icon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
+import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { Button } from '@repo/ui/components/button';
+import { cn } from '@repo/ui/lib/utils';
+import { useState, useCallback, useRef, useEffect, memo } from 'react';
 
 export interface InlineEditProps {
   /** Current value */

@@ -2,8 +2,8 @@
 // Horizontal step navigation for brand wizard
 
 import { CheckIcon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
 import { Progress } from '@repo/ui/components/progress';
+import { cn } from '@repo/ui/lib/utils';
 import type { UseWizardStateReturn } from '../../hooks/use-wizard-state';
 
 export interface WizardNavProps {

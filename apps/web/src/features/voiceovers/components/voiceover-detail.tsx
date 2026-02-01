@@ -1,8 +1,8 @@
 // features/voiceovers/components/voiceover-detail.tsx
 
-import type { RouterOutput } from '@repo/api/client';
-import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { Collaborator } from '../hooks/use-collaborators';
+import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
+import type { RouterOutput } from '@repo/api/client';
 import {
   WorkbenchLayout,
   TextEditor,

@@ -1,16 +1,16 @@
 // features/brands/components/brand-steps/step-mission.tsx
 // Step component for defining brand mission statement
 
+import { Label } from '@repo/ui/components/label';
+import { Textarea } from '@repo/ui/components/textarea';
+import { cn } from '@repo/ui/lib/utils';
 import { memo, useState, useCallback, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { cn } from '@repo/ui/lib/utils';
-import { Textarea } from '@repo/ui/components/textarea';
-import { Label } from '@repo/ui/components/label';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 import {
   AIAssistantPanel,
   type QuickAction,
 } from '../brand-wizard/ai-assistant-panel';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 

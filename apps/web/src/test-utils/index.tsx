@@ -1,13 +1,13 @@
 // test-utils/index.tsx
 // Custom render function with providers for component tests
 
-import { type ReactElement, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   render,
   type RenderOptions,
   type RenderResult,
 } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type ReactElement, type ReactNode } from 'react';
 
 // Re-export everything from testing-library
 export * from '@testing-library/react';

@@ -1,8 +1,8 @@
 // shared/__tests__/error-boundary.test.tsx
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { renderWithQuery, screen, fireEvent } from '@/test-utils';
 import { ErrorBoundary } from '../components/error-boundary/error-boundary';
+import { renderWithQuery, screen, fireEvent } from '@/test-utils';
 
 // Component that throws an error when rendered
 function ThrowingComponent({ error }: { error: Error }): never {

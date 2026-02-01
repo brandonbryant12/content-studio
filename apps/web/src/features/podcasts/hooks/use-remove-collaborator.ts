@@ -2,12 +2,12 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
 import {
   getCollaboratorsQueryKey,
   type Collaborator,
 } from './use-collaborators';
+import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 /**
  * Optimistic mutation to remove a collaborator from a podcast.

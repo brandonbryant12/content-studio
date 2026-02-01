@@ -4,19 +4,19 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { lazy, Suspense, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
+import { useOptimisticGeneration } from '../hooks/use-optimistic-generation';
+import { useVoiceover } from '../hooks/use-voiceover';
+import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
+import { isGeneratingStatus } from '../lib/status';
+import { VoiceoverDetail } from './voiceover-detail';
 import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-import { useVoiceover } from '../hooks/use-voiceover';
-import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
-import { useOptimisticGeneration } from '../hooks/use-optimistic-generation';
-import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
-import { isGeneratingStatus } from '../lib/status';
-import { VoiceoverDetail } from './voiceover-detail';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 // Dynamic import for collaborator dialog (only needed when opened)
 const AddCollaboratorDialog = lazy(() =>

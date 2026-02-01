@@ -1,5 +1,6 @@
 // providers/sse-provider.tsx
 
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createContext,
   useContext,
@@ -7,9 +8,8 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useSSE, type SSEConnectionState } from '@/shared/hooks/use-sse';
 import { authClient } from '@/clients/authClient';
+import { useSSE, type SSEConnectionState } from '@/shared/hooks/use-sse';
 
 interface SSEContextValue {
   connectionState: SSEConnectionState;

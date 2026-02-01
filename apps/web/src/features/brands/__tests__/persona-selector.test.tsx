@@ -1,11 +1,11 @@
 // features/brands/__tests__/persona-selector.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import {
   PersonaSelector,
   type PersonaSelectorOption,
 } from '../components/persona-selector';
+import { render, screen, fireEvent } from '@/test-utils';
 
 const mockPersonas: PersonaSelectorOption[] = [
   {

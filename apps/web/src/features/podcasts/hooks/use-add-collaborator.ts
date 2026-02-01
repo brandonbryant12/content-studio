@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { getCollaboratorsQueryKey } from './use-collaborators';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { getCollaboratorsQueryKey } from './use-collaborators';
 
 /**
  * Mutation to add a collaborator to a podcast.

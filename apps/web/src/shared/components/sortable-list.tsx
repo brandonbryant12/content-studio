@@ -77,14 +77,14 @@ interface SortableItemContextValue {
 }
 
 const SortableItemContext = createContext<SortableItemContextValue | null>(
-  null
+  null,
 );
 
 function useSortableItemContext() {
   const context = useContext(SortableItemContext);
   if (!context) {
     throw new Error(
-      'useSortableItemContext must be used within a SortableItemWrapper'
+      'useSortableItemContext must be used within a SortableItemWrapper',
     );
   }
   return context;
@@ -184,7 +184,7 @@ export function SortableList<T extends SortableItem>({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragEnd(event: DragEndEvent) {

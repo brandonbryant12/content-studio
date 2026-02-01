@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useSSE } from '../use-sse';
 
 // Mock the environment

@@ -16,14 +16,14 @@ import {
   type MouseEvent,
 } from 'react';
 import { toast } from 'sonner';
-import { BaseDialog } from '@/shared/components/base-dialog';
+import type { DocumentInfo } from '../../hooks/use-document-selection';
+import { apiClient } from '@/clients/apiClient';
 import {
   useDocuments,
   getDocumentListQueryKey,
 } from '@/features/documents/hooks/use-document-list';
-import { apiClient } from '@/clients/apiClient';
+import { BaseDialog } from '@/shared/components/base-dialog';
 import { getErrorMessage } from '@/shared/lib/errors';
-import type { DocumentInfo } from '../../hooks/use-document-selection';
 
 const SUPPORTED_TYPES = [
   'text/plain',

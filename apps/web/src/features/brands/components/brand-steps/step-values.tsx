@@ -1,15 +1,15 @@
 // features/brands/components/brand-steps/step-values.tsx
 // Step component for defining brand core values
 
+import { cn } from '@repo/ui/lib/utils';
 import { memo, useState, useCallback, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { cn } from '@repo/ui/lib/utils';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 import { ValueChips } from '../brand-inputs/value-chips';
 import {
   AIAssistantPanel,
   type QuickAction,
 } from '../brand-wizard/ai-assistant-panel';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 

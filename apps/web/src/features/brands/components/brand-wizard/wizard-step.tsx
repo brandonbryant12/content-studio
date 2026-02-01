@@ -1,10 +1,10 @@
 // features/brands/components/brand-wizard/wizard-step.tsx
 // Wrapper component for individual wizard steps
 
-import { useEffect, type ReactNode } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
+import { useEffect, type ReactNode } from 'react';
 import type { WizardStep as WizardStepDef } from '../../lib/wizard-steps';
 import { WizardOnboarding } from './wizard-onboarding';
 

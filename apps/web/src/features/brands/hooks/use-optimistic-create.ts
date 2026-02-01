@@ -3,9 +3,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
+import { getBrandListQueryKey } from './use-brand-list';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { getBrandListQueryKey } from './use-brand-list';
 
 /**
  * Create brand mutation with navigation on success.

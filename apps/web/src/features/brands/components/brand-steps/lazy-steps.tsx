@@ -1,8 +1,8 @@
 // features/brands/components/brand-steps/lazy-steps.tsx
 // Lazy-loaded step components for code splitting
 
-import { lazy, Suspense, type ComponentType } from 'react';
 import { cn } from '@repo/ui/lib/utils';
+import { lazy, Suspense, type ComponentType } from 'react';
 
 // Simple skeleton component (inline to avoid missing dependency)
 function Skeleton({ className }: { className?: string }) {

@@ -1,22 +1,22 @@
-import type { PodcastFullOutput } from '@repo/db/schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import type {
+  PersonaSelectorOption,
+  SegmentSelectorOption,
+} from '@/features/brands/components';
+import type { RouterOutput } from '@repo/api/client';
+import type { PodcastFullOutput } from '@repo/db/schema';
+import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
+import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
 import { StepBrand } from './steps/step-brand';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
-import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
-import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-import type { RouterOutput } from '@repo/api/client';
-import type {
-  PersonaSelectorOption,
-  SegmentSelectorOption,
-} from '@/features/brands/components';
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';

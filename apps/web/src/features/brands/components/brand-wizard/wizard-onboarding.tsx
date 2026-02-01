@@ -1,10 +1,10 @@
 // features/brands/components/brand-wizard/wizard-onboarding.tsx
 // First-time user onboarding tooltip for the brand wizard
 
-import { memo, useState, useEffect, useCallback } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'brand-wizard-onboarding-dismissed';
 

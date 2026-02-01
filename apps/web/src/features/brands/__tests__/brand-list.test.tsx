@@ -1,9 +1,9 @@
 // features/brands/__tests__/brand-list.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
-import { BrandList } from '../components/brand-list';
 import type { BrandListItem } from '../components/brand-item';
+import { BrandList } from '../components/brand-list';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Mock BrandItem to avoid router dependency
 vi.mock('../components/brand-item', () => ({

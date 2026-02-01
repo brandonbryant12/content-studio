@@ -1,16 +1,16 @@
 // features/brands/components/brand-steps/step-review.tsx
 // Final review step with brand summary, celebration, and inline editing
 
-import { memo, useCallback } from 'react';
 import { CheckCircledIcon, RocketIcon } from '@radix-ui/react-icons';
-import type { RouterOutput } from '@repo/api/client';
-import { cn } from '@repo/ui/lib/utils';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useCallback } from 'react';
+import type { RouterOutput } from '@repo/api/client';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
+import { calculateWizardProgress } from '../../lib/wizard-steps';
 import { BrandIcon } from '../brand-icon';
 import { InlineEdit } from '../brand-inputs';
-import { calculateWizardProgress } from '../../lib/wizard-steps';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 

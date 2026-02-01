@@ -1,6 +1,7 @@
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/clients/apiClient';
 import {
   BrandSelector,
   PersonaSelector,
@@ -9,7 +10,6 @@ import {
   type PersonaSelectorOption,
   type SegmentSelectorOption,
 } from '@/features/brands/components';
-import { apiClient } from '@/clients/apiClient';
 
 interface StepBrandProps {
   selectedBrandId: string | null;

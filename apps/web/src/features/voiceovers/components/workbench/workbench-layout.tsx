@@ -5,10 +5,10 @@ import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import type { ReactNode } from 'react';
 import { isGeneratingStatus } from '../../lib/status';
+import { ApproveButton } from '../collaborators/approve-button';
+import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
-import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
-import { ApproveButton } from '../collaborators/approve-button';
 
 type VoiceoverFull = RouterOutput['voiceovers']['get'];
 

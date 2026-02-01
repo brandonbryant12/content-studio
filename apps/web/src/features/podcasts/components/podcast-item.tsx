@@ -6,12 +6,12 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback } from 'react';
-import { PodcastIcon } from './podcast-icon';
 import {
   type VersionStatus,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
+import { PodcastIcon } from './podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
 /** Podcast data for list display */

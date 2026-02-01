@@ -1,15 +1,15 @@
 // features/brands/components/brand-steps/step-colors.tsx
 // Step component for selecting brand colors
 
+import { cn } from '@repo/ui/lib/utils';
 import { memo, useState, useCallback, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { cn } from '@repo/ui/lib/utils';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 import { ColorPicker } from '../brand-inputs/color-picker';
 import {
   AIAssistantPanel,
   type QuickAction,
 } from '../brand-wizard/ai-assistant-panel';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 

@@ -1,12 +1,13 @@
 // features/brands/components/brand-wizard/brand-wizard.tsx
 // Main brand wizard component that orchestrates the step-based editing experience
 
-import { memo, useCallback, Suspense } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import type { RouterOutput } from '@repo/api/client';
 import { cn } from '@repo/ui/lib/utils';
+import { useNavigate } from '@tanstack/react-router';
+import { memo, useCallback, Suspense } from 'react';
+import type { UseWizardStateReturn } from '../../hooks/use-wizard-state';
+import type { RouterOutput } from '@repo/api/client';
+import { ErrorBoundary } from '../../../../shared/components/error-boundary';
 import { WizardProvider } from '../../context';
-import { WizardContainer } from './wizard-container';
 import {
   LazyStepBasics,
   LazyStepMission,
@@ -19,7 +20,8 @@ import {
   StepLoadingFallback,
   ReviewLoadingFallback,
 } from '../brand-steps';
-import type { UseWizardStateReturn } from '../../hooks/use-wizard-state';
+import { BrandErrorFallback } from './brand-error-fallback';
+import { WizardContainer } from './wizard-container';
 
 type Brand = RouterOutput['brands']['get'];
 
@@ -55,56 +57,114 @@ export const BrandWizard = memo(function BrandWizard({
   const renderStep = useCallback(
     (stepKey: string, wizardState: UseWizardStateReturn) => {
       // Auto-progress to next step when AI completes an update
-      const onStepComplete = wizardState.isLastStep ? undefined : wizardState.nextStep;
-      
+      const onStepComplete = wizardState.isLastStep
+        ? undefined
+        : wizardState.nextStep;
+
       switch (stepKey) {
         case 'basics':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepBasics brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepBasics brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'mission':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepMission brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepMission brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'values':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepValues brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepValues brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'colors':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepColors brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepColors brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'voice':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepVoice brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepVoice brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'personas':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepPersonas brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepPersonas brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'segments':
           return (
-            <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepSegments brand={brand} onStepComplete={onStepComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                <LazyStepSegments brand={brand} onStepComplete={onStepComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         case 'review':
           return (
-            <Suspense fallback={<ReviewLoadingFallback />}>
-              <LazyStepReview brand={brand} onFinish={handleComplete} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <BrandErrorFallback {...props} brandId={brand.id} />
+              )}
+              resetKeys={[stepKey, brand.id]}
+            >
+              <Suspense fallback={<ReviewLoadingFallback />}>
+                <LazyStepReview brand={brand} onFinish={handleComplete} />
+              </Suspense>
+            </ErrorBoundary>
           );
         default:
           return null;

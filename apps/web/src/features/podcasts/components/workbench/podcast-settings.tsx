@@ -5,9 +5,15 @@ import {
 } from '@radix-ui/react-icons';
 import { Slider } from '@repo/ui/components/slider';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useRef } from 'react';
 import type { RouterOutput } from '@repo/api/client';
+import {
+  VOICES,
+  MIN_DURATION,
+  MAX_DURATION,
+  type UsePodcastSettingsReturn,
+} from '../../hooks/use-podcast-settings';
 import { apiClient } from '@/clients/apiClient';
 import {
   BrandSelector,
@@ -17,12 +23,6 @@ import {
   type PersonaSelectorOption,
   type SegmentSelectorOption,
 } from '@/features/brands/components';
-import {
-  VOICES,
-  MIN_DURATION,
-  MAX_DURATION,
-  type UsePodcastSettingsReturn,
-} from '../../hooks/use-podcast-settings';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 

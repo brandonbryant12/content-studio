@@ -1,8 +1,8 @@
 // features/voiceovers/components/workbench/audio-stage.tsx
 
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { PlayIcon, PauseIcon } from '@radix-ui/react-icons';
 import { cn } from '@repo/ui/lib/utils';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 interface AudioStageProps {
   src: string;

@@ -4,8 +4,8 @@ import {
   VersionStatus,
   type VersionStatus as VersionStatusType,
 } from '@repo/db/schema';
-import type { BadgeVariant } from '@repo/ui/components/badge';
 import type { RouterOutput } from '@repo/api/client';
+import type { BadgeVariant } from '@repo/ui/components/badge';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 

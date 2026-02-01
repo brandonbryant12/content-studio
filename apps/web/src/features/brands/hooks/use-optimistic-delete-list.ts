@@ -1,9 +1,9 @@
 // features/brands/hooks/use-optimistic-delete-list.ts
 
+import type { RouterOutput } from '@repo/api/client';
+import { getBrandListQueryKey } from './use-brand-list';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks';
-import { getBrandListQueryKey } from './use-brand-list';
-import type { RouterOutput } from '@repo/api/client';
 
 type BrandList = RouterOutput['brands']['list'];
 

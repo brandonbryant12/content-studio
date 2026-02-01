@@ -1,6 +1,5 @@
 // features/podcasts/components/collaborators/collaborator-list.tsx
 
-import { memo, useCallback } from 'react';
 import { CheckIcon, Cross2Icon, PersonIcon } from '@radix-ui/react-icons';
 import {
   Avatar,
@@ -9,8 +8,9 @@ import {
 } from '@repo/ui/components/avatar';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useRemoveCollaborator } from '../../hooks/use-remove-collaborator';
+import { memo, useCallback } from 'react';
 import type { Collaborator } from '../../hooks/use-collaborators';
+import { useRemoveCollaborator } from '../../hooks/use-remove-collaborator';
 
 interface Owner {
   id: string;

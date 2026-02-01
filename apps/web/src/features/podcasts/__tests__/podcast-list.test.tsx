@@ -1,10 +1,10 @@
 // features/podcasts/__tests__/podcast-list.test.tsx
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import { VersionStatus } from '@repo/db/schema';
-import { PodcastList } from '../components/podcast-list';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PodcastListItem } from '../components/podcast-item';
+import { PodcastList } from '../components/podcast-list';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Mock PodcastItem to avoid router dependency
 vi.mock('../components/podcast-item', () => ({

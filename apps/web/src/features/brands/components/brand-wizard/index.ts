@@ -11,3 +11,4 @@ export {
   type AIAssistantPanelProps,
   type QuickAction,
 } from './ai-assistant-panel';
+export { BrandErrorFallback } from './brand-error-fallback';

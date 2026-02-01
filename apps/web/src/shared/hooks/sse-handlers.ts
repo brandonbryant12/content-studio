@@ -1,11 +1,11 @@
 // shared/hooks/sse-handlers.ts
 
-import type { QueryClient } from '@tanstack/react-query';
 import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
   EntityChangeEvent,
 } from '@repo/api/contracts';
+import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
 
 // ============================================================================

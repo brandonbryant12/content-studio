@@ -1,8 +1,8 @@
 // shared/__tests__/confirmation-dialog.test.tsx
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import { ConfirmationDialog } from '../components/confirmation-dialog';
+import { render, screen, fireEvent } from '@/test-utils';
 
 describe('ConfirmationDialog', () => {
   const defaultProps = {

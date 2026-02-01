@@ -4,8 +4,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
-import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 import { VoiceoverDetailContainer } from '@/features/voiceovers/components/voiceover-detail-container';
+import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
 export const Route = createFileRoute('/_protected/voiceovers/$voiceoverId')({
   loader: ({ params }) =>

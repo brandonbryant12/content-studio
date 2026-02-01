@@ -1,17 +1,17 @@
 // features/brands/components/brand-steps/step-basics.tsx
 // Step component for entering brand name and description
 
+import { Input } from '@repo/ui/components/input';
+import { Label } from '@repo/ui/components/label';
+import { Textarea } from '@repo/ui/components/textarea';
+import { cn } from '@repo/ui/lib/utils';
 import { memo, useState, useCallback, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { cn } from '@repo/ui/lib/utils';
-import { Input } from '@repo/ui/components/input';
-import { Textarea } from '@repo/ui/components/textarea';
-import { Label } from '@repo/ui/components/label';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 import {
   AIAssistantPanel,
   type QuickAction,
 } from '../brand-wizard/ai-assistant-panel';
-import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 

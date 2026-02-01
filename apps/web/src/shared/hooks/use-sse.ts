@@ -1,7 +1,7 @@
 // shared/hooks/use-sse.ts
 
-import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { SSEEvent } from '@repo/api/contracts';
 import {
   handleJobCompletion,

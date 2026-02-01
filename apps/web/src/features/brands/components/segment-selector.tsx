@@ -1,7 +1,7 @@
 // features/brands/components/segment-selector.tsx
 
-import { memo, type ChangeEvent } from 'react';
 import { Select } from '@repo/ui/components/select';
+import { memo, type ChangeEvent } from 'react';
 
 export interface SegmentSelectorOption {
   id: string;

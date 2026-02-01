@@ -3,10 +3,10 @@
 
 import { cn } from '@repo/ui/lib/utils';
 import type { RouterOutput } from '@repo/api/client';
+import type { ReactNode } from 'react';
 import { useWizardState } from '../../hooks/use-wizard-state';
 import { WizardNav } from './wizard-nav';
 import { WizardStep } from './wizard-step';
-import type { ReactNode } from 'react';
 
 type Brand = RouterOutput['brands']['get'];
 

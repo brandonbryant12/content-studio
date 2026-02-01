@@ -1,19 +1,19 @@
 // features/podcasts/components/podcast-detail-container.tsx
 
 import { lazy, Suspense } from 'react';
+import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
+import { useDocumentSelection } from '../hooks/use-document-selection';
+import { usePodcast } from '../hooks/use-podcast';
+import { usePodcastActions } from '../hooks/use-podcast-actions';
+import { usePodcastSettings } from '../hooks/use-podcast-settings';
+import { useScriptEditor } from '../hooks/use-script-editor';
+import { isSetupMode } from '../lib/status';
+import { PodcastDetail } from './podcast-detail';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-import { usePodcast } from '../hooks/use-podcast';
-import { useScriptEditor } from '../hooks/use-script-editor';
-import { usePodcastSettings } from '../hooks/use-podcast-settings';
-import { useDocumentSelection } from '../hooks/use-document-selection';
-import { usePodcastActions } from '../hooks/use-podcast-actions';
-import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
-import { isSetupMode } from '../lib/status';
-import { PodcastDetail } from './podcast-detail';
 
 // Dynamic imports for conditionally rendered components
 const SetupWizardContainer = lazy(() =>

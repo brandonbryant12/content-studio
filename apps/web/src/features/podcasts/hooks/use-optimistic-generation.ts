@@ -1,11 +1,11 @@
 // features/podcasts/hooks/use-optimistic-generation.ts
 
+import { VersionStatus } from '@repo/db/schema';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
-import { VersionStatus } from '@repo/db/schema';
+import { getPodcastQueryKey } from './use-podcast';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks/use-optimistic-mutation';
-import { getPodcastQueryKey } from './use-podcast';
 
 type Podcast = RouterOutput['podcasts']['get'];
 

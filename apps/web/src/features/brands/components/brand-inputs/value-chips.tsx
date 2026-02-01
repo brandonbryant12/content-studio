@@ -1,5 +1,10 @@
 // features/brands/components/brand-inputs/value-chips.tsx
 
+import { Cross2Icon, PlusIcon } from '@radix-ui/react-icons';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Input } from '@repo/ui/components/input';
+import { cn } from '@repo/ui/lib/utils';
 import {
   memo,
   useState,
@@ -7,11 +12,6 @@ import {
   type KeyboardEvent,
   type ChangeEvent,
 } from 'react';
-import { Cross2Icon, PlusIcon } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
-import { Badge } from '@repo/ui/components/badge';
-import { Button } from '@repo/ui/components/button';
-import { Input } from '@repo/ui/components/input';
 
 interface ValueChipsProps {
   values: string[];

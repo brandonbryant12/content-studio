@@ -1,7 +1,6 @@
 // features/brands/components/brand-builder.tsx
 // Brand builder with chat interface and document preview
 
-import { useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import {
   PaperPlaneIcon,
   StopIcon,
@@ -12,6 +11,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
+import { useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { useBrandChat } from '../hooks/use-brand-chat';
 import { useBrandProgress } from '../hooks/use-brand-progress';

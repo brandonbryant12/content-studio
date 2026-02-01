@@ -1,16 +1,16 @@
 // features/brands/components/brand-inputs/segment-card.tsx
 
-import { memo, useState, useCallback, type ChangeEvent } from 'react';
 import {
   Pencil1Icon,
   TrashIcon,
   CheckIcon,
   Cross2Icon,
 } from '@radix-ui/react-icons';
-import { cn } from '@repo/ui/lib/utils';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
+import { cn } from '@repo/ui/lib/utils';
+import { memo, useState, useCallback, type ChangeEvent } from 'react';
 import type { BrandSegment } from '@repo/db/schema';
 
 interface SegmentCardProps {

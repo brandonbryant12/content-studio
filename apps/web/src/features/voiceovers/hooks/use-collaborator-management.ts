@@ -1,9 +1,9 @@
 // features/voiceovers/hooks/use-collaborator-management.ts
 
 import { useState, useCallback, useMemo } from 'react';
-import { useCollaborators, type Collaborator } from './use-collaborators';
-import { useApproveVoiceover } from './use-approve-voiceover';
 import type { RouterOutput } from '@repo/api/client';
+import { useApproveVoiceover } from './use-approve-voiceover';
+import { useCollaborators, type Collaborator } from './use-collaborators';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 

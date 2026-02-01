@@ -1,14 +1,14 @@
 // features/brands/components/brand-detail-container.tsx
 
-import { useCallback } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
 import { useBrand, getBrandQueryKey } from '../hooks/use-brand';
 import { getBrandListQueryKey } from '../hooks/use-brand-list';
 import { BrandDetail } from './brand-detail';
+import { apiClient } from '@/clients/apiClient';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 interface BrandDetailContainerProps {
   brandId: string;

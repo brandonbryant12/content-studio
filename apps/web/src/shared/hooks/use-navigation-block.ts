@@ -1,7 +1,7 @@
 // apps/web/src/shared/hooks/use-navigation-block.ts
 
-import { useEffect } from 'react';
 import { useBlocker } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 interface UseNavigationBlockOptions {
   /** Whether navigation should be blocked */

@@ -1,9 +1,9 @@
 // features/voiceovers/__tests__/action-bar.test.tsx
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
 import { ActionBar } from '../components/workbench/action-bar';
 import { VoiceoverStatus } from '../lib/status';
+import { render, screen, fireEvent } from '@/test-utils';
 
 // Mock the Spinner component
 vi.mock('@repo/ui/components/spinner', () => ({

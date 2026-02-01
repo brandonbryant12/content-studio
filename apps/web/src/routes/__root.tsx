@@ -2,9 +2,9 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
-import { ErrorBoundary } from '@/shared/components/error-boundary';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
+import { ErrorBoundary } from '@/shared/components/error-boundary';
 
 // Defer Toaster loading until after hydration
 const Toaster = lazy(() =>

@@ -11,8 +11,8 @@ import {
   Share2Icon,
   CheckCircledIcon,
 } from '@radix-ui/react-icons';
-import type { ComponentType } from 'react';
 import type { RouterOutput } from '@repo/api/client';
+import type { ComponentType } from 'react';
 
 type Brand = RouterOutput['brands']['get'];
 

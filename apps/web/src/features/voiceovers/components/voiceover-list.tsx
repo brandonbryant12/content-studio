@@ -1,12 +1,12 @@
 // features/voiceovers/components/voiceover-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 import { VoiceoverItem, type VoiceoverListItem } from './voiceover-item';
 
 interface EmptyStateProps {
