@@ -31,7 +31,9 @@ export const PersonaCard = memo(function PersonaCard({
   editable = true,
   disabled,
 }: PersonaCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Auto-enter edit mode for new/empty personas
+  const isEmptyPersona = !persona.name || persona.name.trim().length === 0;
+  const [isEditing, setIsEditing] = useState(isEmptyPersona);
   const [editedPersona, setEditedPersona] = useState<BrandPersona>(persona);
 
   const handleEdit = useCallback(() => {

@@ -32,7 +32,9 @@ export const SegmentCard = memo(function SegmentCard({
   editable = true,
   disabled,
 }: SegmentCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Auto-enter edit mode for new/empty segments
+  const isEmptySegment = !segment.name || segment.name.trim().length === 0;
+  const [isEditing, setIsEditing] = useState(isEmptySegment);
   const [editedSegment, setEditedSegment] = useState<BrandSegment>(segment);
   const [benefitsInput, setBenefitsInput] = useState('');
 

@@ -43,11 +43,9 @@ export const WIZARD_STEPS: WizardStep[] = [
     title: 'Brand Basics',
     description: "Let's start with your brand's name and description",
     icon: HomeIcon,
+    // Complete when brand has a custom name (not default)
     isComplete: (brand) =>
-      brand.name !== 'Untitled Brand' &&
-      brand.name.length > 0 &&
-      !!brand.description &&
-      brand.description.length > 0,
+      brand.name !== 'Untitled Brand' && brand.name.trim().length > 0,
     inputType: 'hybrid',
   },
   {
@@ -87,7 +85,9 @@ export const WIZARD_STEPS: WizardStep[] = [
     title: 'Personas',
     description: 'Create characters that represent your brand voices',
     icon: PersonIcon,
-    isComplete: (brand) => brand.personas.length > 0,
+    // Complete when at least one persona has a name
+    isComplete: (brand) =>
+      brand.personas.some((p) => p.name && p.name.trim().length > 0),
     inputType: 'chat-first',
   },
   {
@@ -95,7 +95,9 @@ export const WIZARD_STEPS: WizardStep[] = [
     title: 'Audience Segments',
     description: 'Define the audiences your brand speaks to',
     icon: Share2Icon,
-    isComplete: (brand) => brand.segments.length > 0,
+    // Complete when at least one segment has a name
+    isComplete: (brand) =>
+      brand.segments.some((s) => s.name && s.name.trim().length > 0),
     inputType: 'chat-first',
   },
   {
