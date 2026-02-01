@@ -1,7 +1,11 @@
 // features/brands/components/brand-wizard/brand-error-fallback.tsx
 // Brand-specific error fallback with retry and navigation options
 
-import { ExclamationTriangleIcon, ReloadIcon, ArrowLeftIcon } from '@radix-ui/react-icons';
+import {
+  ExclamationTriangleIcon,
+  ReloadIcon,
+  ArrowLeftIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { useNavigate } from '@tanstack/react-router';
 import type { ErrorFallbackProps } from '../../../../shared/components/error-boundary/types';
@@ -45,7 +49,9 @@ export function BrandErrorFallback({
       </h2>
 
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
-        {description ?? error.message ?? 'An unexpected error occurred while editing your brand.'}
+        {description ??
+          error.message ??
+          'An unexpected error occurred while editing your brand.'}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3">

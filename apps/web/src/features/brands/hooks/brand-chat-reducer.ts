@@ -59,7 +59,10 @@ export function brandChatReducer(
       return {
         ...state,
         messages: state.messages.map((message, index) => {
-          if (index === state.messages.length - 1 && message.role === 'assistant') {
+          if (
+            index === state.messages.length - 1 &&
+            message.role === 'assistant'
+          ) {
             return {
               ...message,
               content: action.payload,

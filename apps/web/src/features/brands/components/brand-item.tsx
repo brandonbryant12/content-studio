@@ -62,20 +62,17 @@ export const BrandItem = memo(function BrandItem({
             <Badge variant="default">
               {brand.personaCount > 0
                 ? `${brand.personaCount} persona${brand.personaCount !== 1 ? 's' : ''}`
-                : 'No personas'
-              }
+                : 'No personas'}
             </Badge>
             <Badge variant="default">
               {brand.segmentCount > 0
                 ? `${brand.segmentCount} segment${brand.segmentCount !== 1 ? 's' : ''}`
-                : 'No segments'
-              }
+                : 'No segments'}
             </Badge>
             <span className="text-meta">
               {brand.values.length > 0
                 ? `${brand.values.length} values`
-                : 'No values'
-              }
+                : 'No values'}
             </span>
           </div>
           {brand.description && (

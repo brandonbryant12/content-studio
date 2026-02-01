@@ -84,7 +84,10 @@ export const BrandWizard = memo(function BrandWizard({
               resetKeys={[stepKey, brand.id]}
             >
               <Suspense fallback={<StepLoadingFallback />}>
-                <LazyStepMission brand={brand} onStepComplete={onStepComplete} />
+                <LazyStepMission
+                  brand={brand}
+                  onStepComplete={onStepComplete}
+                />
               </Suspense>
             </ErrorBoundary>
           );
@@ -136,7 +139,10 @@ export const BrandWizard = memo(function BrandWizard({
               resetKeys={[stepKey, brand.id]}
             >
               <Suspense fallback={<StepLoadingFallback />}>
-                <LazyStepPersonas brand={brand} onStepComplete={onStepComplete} />
+                <LazyStepPersonas
+                  brand={brand}
+                  onStepComplete={onStepComplete}
+                />
               </Suspense>
             </ErrorBoundary>
           );
@@ -149,7 +155,10 @@ export const BrandWizard = memo(function BrandWizard({
               resetKeys={[stepKey, brand.id]}
             >
               <Suspense fallback={<StepLoadingFallback />}>
-                <LazyStepSegments brand={brand} onStepComplete={onStepComplete} />
+                <LazyStepSegments
+                  brand={brand}
+                  onStepComplete={onStepComplete}
+                />
               </Suspense>
             </ErrorBoundary>
           );

@@ -114,62 +114,74 @@ export const StepReview = memo(function StepReview({
             </section>
 
             {/* Values */}
-            {brand.values.length > 0 && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Core Values
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {brand.values.map((value, idx) => (
-                    <Badge key={idx} variant="default">
-                      {value}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Go to the Values step to edit these.
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Core Values
+              </h4>
+              {brand.values.length > 0 ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {brand.values.map((value, idx) => (
+                      <Badge key={idx} variant="default">
+                        {value}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Go to the Values step to edit these.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No values added yet. Visit the Values step to add your brand's core values.
                 </p>
-              </section>
-            )}
+              )}
+            </section>
 
             {/* Colors */}
-            {brand.colors && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Brand Colors
-                </h4>
-                <div className="flex gap-3">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-8 h-8 rounded-md border"
-                      style={{ backgroundColor: brand.colors.primary }}
-                    />
-                    <span className="text-sm">Primary</span>
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Brand Colors
+              </h4>
+              {brand.colors && brand.colors.primary ? (
+                <>
+                  <div className="flex gap-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-md border"
+                        style={{ backgroundColor: brand.colors.primary }}
+                      />
+                      <span className="text-sm">Primary</span>
+                    </div>
+                    {brand.colors.secondary && (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded-md border"
+                          style={{ backgroundColor: brand.colors.secondary }}
+                        />
+                        <span className="text-sm">Secondary</span>
+                      </div>
+                    )}
+                    {brand.colors.accent && (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded-md border"
+                          style={{ backgroundColor: brand.colors.accent }}
+                        />
+                        <span className="text-sm">Accent</span>
+                      </div>
+                    )}
                   </div>
-                  {brand.colors.secondary && (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded-md border"
-                        style={{ backgroundColor: brand.colors.secondary }}
-                      />
-                      <span className="text-sm">Secondary</span>
-                    </div>
-                  )}
-                  {brand.colors.accent && (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded-md border"
-                        style={{ backgroundColor: brand.colors.accent }}
-                      />
-                      <span className="text-sm">Accent</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Go to the Colors step to change these.
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Go to the Colors step to change these.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No colors selected yet. Visit the Colors step to choose your brand colors.
                 </p>
-              </section>
-            )}
+              )}
+            </section>
 
             {/* Voice guide preview */}
             <section>
@@ -187,42 +199,54 @@ export const StepReview = memo(function StepReview({
             </section>
 
             {/* Personas */}
-            {brand.personas.length > 0 && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Personas
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {brand.personas.map((persona) => (
-                    <Badge key={persona.id} variant="info">
-                      {persona.name} - {persona.role}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Go to the Personas step to edit these.
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Personas
+              </h4>
+              {brand.personas.length > 0 ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {brand.personas.map((persona) => (
+                      <Badge key={persona.id} variant="info">
+                        {persona.name || 'Untitled'} - {persona.role || 'No role'}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Go to the Personas step to edit these.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No personas created yet. Visit the Personas step to define your target audience personas.
                 </p>
-              </section>
-            )}
+              )}
+            </section>
 
             {/* Segments */}
-            {brand.segments.length > 0 && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Audience Segments
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {brand.segments.map((segment) => (
-                    <Badge key={segment.id} variant="info">
-                      {segment.name}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Go to the Segments step to edit these.
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Audience Segments
+              </h4>
+              {brand.segments.length > 0 ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {brand.segments.map((segment) => (
+                      <Badge key={segment.id} variant="info">
+                        {segment.name || 'Untitled Segment'}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Go to the Segments step to edit these.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No audience segments defined yet. Visit the Segments step to identify your target market segments.
                 </p>
-              </section>
-            )}
+              )}
+            </section>
           </div>
         </div>
 

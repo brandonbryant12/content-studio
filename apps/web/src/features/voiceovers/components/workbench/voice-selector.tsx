@@ -3,7 +3,6 @@
 import { cn } from '@repo/ui/lib/utils';
 import { memo, useCallback, type MouseEvent } from 'react';
 
-
 import { VOICES } from '../../lib/voices';
 import { VoiceSymbol } from './voice-symbols';
 

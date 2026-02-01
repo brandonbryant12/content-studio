@@ -65,7 +65,7 @@ export const StepColors = memo(function StepColors({
   // Sync local state when brand prop changes (e.g., after AI update)
   useEffect(() => {
     if (brand.colors) {
-      setPrimary(brand.colors.primary);
+      setPrimary(brand.colors.primary ?? DEFAULT_PRIMARY);
       setSecondary(brand.colors.secondary ?? DEFAULT_SECONDARY);
       setAccent(brand.colors.accent ?? DEFAULT_ACCENT);
     }

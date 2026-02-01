@@ -3,8 +3,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useReducer, useCallback, useRef, useEffect } from 'react';
-import type {
-  ChatMessage} from './brand-chat-reducer';
+import type { ChatMessage } from './brand-chat-reducer';
 import {
   BrandChatState,
   BrandChatAction,
