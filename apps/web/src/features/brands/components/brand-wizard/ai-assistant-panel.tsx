@@ -126,10 +126,13 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
           chat.messages[chat.messages.length - 1]?.role === 'user' && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-xl px-4 py-2.5">
-                <div className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" />
-                  <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:150ms]" />
-                  <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:300ms]" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Thinking</span>
+                  <span className="flex gap-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse [animation-delay:200ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse [animation-delay:400ms]" />
+                  </span>
                 </div>
               </div>
             </div>
