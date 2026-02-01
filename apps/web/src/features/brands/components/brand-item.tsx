@@ -59,21 +59,24 @@ export const BrandItem = memo(function BrandItem({
         <div className="flex-1 min-w-0">
           <h3 className="list-card-title">{brand.name}</h3>
           <div className="list-card-meta gap-2 flex-wrap">
-            {brand.personaCount > 0 && (
-              <Badge variant="default">
-                {brand.personaCount} persona
-                {brand.personaCount !== 1 ? 's' : ''}
-              </Badge>
-            )}
-            {brand.segmentCount > 0 && (
-              <Badge variant="default">
-                {brand.segmentCount} segment
-                {brand.segmentCount !== 1 ? 's' : ''}
-              </Badge>
-            )}
-            {brand.values.length > 0 && (
-              <span className="text-meta">{brand.values.length} values</span>
-            )}
+            <Badge variant="default">
+              {brand.personaCount > 0
+                ? `${brand.personaCount} persona${brand.personaCount !== 1 ? 's' : ''}`
+                : 'No personas'
+              }
+            </Badge>
+            <Badge variant="default">
+              {brand.segmentCount > 0
+                ? `${brand.segmentCount} segment${brand.segmentCount !== 1 ? 's' : ''}`
+                : 'No segments'
+              }
+            </Badge>
+            <span className="text-meta">
+              {brand.values.length > 0
+                ? `${brand.values.length} values`
+                : 'No values'
+              }
+            </span>
           </div>
           {brand.description && (
             <p className="text-body mt-2 line-clamp-1">{brand.description}</p>
