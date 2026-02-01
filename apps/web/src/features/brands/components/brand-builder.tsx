@@ -13,6 +13,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@repo/ui/lib/utils';
 import { useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import type { RouterOutput } from '@repo/api/client';
+import { Markdown } from '../../../components/markdown';
 import { useBrandChat } from '../hooks/use-brand-chat';
 import { useBrandProgress } from '../hooks/use-brand-progress';
 import { useQuickReplies } from '../hooks/use-quick-replies';
@@ -174,7 +175,11 @@ function ChatPanel({
                   : 'bg-muted',
               )}
             >
-              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              {message.role === 'user' ? (
+                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              ) : (
+                <Markdown compact>{message.content}</Markdown>
+              )}
             </div>
           </div>
         ))}

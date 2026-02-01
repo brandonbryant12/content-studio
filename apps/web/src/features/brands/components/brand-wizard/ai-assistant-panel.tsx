@@ -11,6 +11,7 @@ import {
   useEffect,
   type KeyboardEvent,
 } from 'react';
+import { Markdown } from '../../../../components/markdown';
 import { useBrandChat } from '../../hooks/use-brand-chat';
 
 interface QuickAction {
@@ -112,15 +113,19 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
             >
               <div
                 className={cn(
-                  'max-w-[85%] rounded-xl px-4 py-2.5 text-sm',
+                  'max-w-[85%] rounded-xl px-4 py-2.5',
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground',
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
+                {message.role === 'user' ? (
+                  <p className="whitespace-pre-wrap break-words text-sm">
+                    {message.content}
+                  </p>
+                ) : (
+                  <Markdown compact>{message.content}</Markdown>
+                )}
               </div>
             </div>
           ))
