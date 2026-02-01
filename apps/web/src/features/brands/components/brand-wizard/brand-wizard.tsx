@@ -1,21 +1,23 @@
 // features/brands/components/brand-wizard/brand-wizard.tsx
 // Main brand wizard component that orchestrates the step-based editing experience
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, Suspense } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import { cn } from '@repo/ui/lib/utils';
 import { WizardProvider } from '../../context';
 import { WizardContainer } from './wizard-container';
 import {
-  StepBasics,
-  StepMission,
-  StepValues,
-  StepColors,
-  StepVoice,
-  StepPersonas,
-  StepSegments,
-  StepReview,
+  LazyStepBasics,
+  LazyStepMission,
+  LazyStepValues,
+  LazyStepColors,
+  LazyStepVoice,
+  LazyStepPersonas,
+  LazyStepSegments,
+  LazyStepReview,
+  StepLoadingFallback,
+  ReviewLoadingFallback,
 } from '../brand-steps';
 import type { UseWizardStateReturn } from '../../hooks/use-wizard-state';
 
@@ -32,6 +34,7 @@ interface BrandWizardProps {
  * Brand wizard component that replaces BrandBuilder.
  * Provides a step-based editing experience with AI assistance.
  * Wrapped in WizardProvider for centralized state management.
+ * Uses lazy loading with Suspense for better initial load performance.
  */
 export const BrandWizard = memo(function BrandWizard({
   brand,
@@ -53,21 +56,53 @@ export const BrandWizard = memo(function BrandWizard({
     (stepKey: string, _wizardState: UseWizardStateReturn) => {
       switch (stepKey) {
         case 'basics':
-          return <StepBasics brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepBasics brand={brand} />
+            </Suspense>
+          );
         case 'mission':
-          return <StepMission brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepMission brand={brand} />
+            </Suspense>
+          );
         case 'values':
-          return <StepValues brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepValues brand={brand} />
+            </Suspense>
+          );
         case 'colors':
-          return <StepColors brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepColors brand={brand} />
+            </Suspense>
+          );
         case 'voice':
-          return <StepVoice brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepVoice brand={brand} />
+            </Suspense>
+          );
         case 'personas':
-          return <StepPersonas brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepPersonas brand={brand} />
+            </Suspense>
+          );
         case 'segments':
-          return <StepSegments brand={brand} />;
+          return (
+            <Suspense fallback={<StepLoadingFallback />}>
+              <LazyStepSegments brand={brand} />
+            </Suspense>
+          );
         case 'review':
-          return <StepReview brand={brand} onFinish={handleComplete} />;
+          return (
+            <Suspense fallback={<ReviewLoadingFallback />}>
+              <LazyStepReview brand={brand} onFinish={handleComplete} />
+            </Suspense>
+          );
         default:
           return null;
       }
