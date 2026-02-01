@@ -1,7 +1,18 @@
-import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, LockClosedIcon, StarFilledIcon } from '@radix-ui/react-icons';
 import { Slider } from '@repo/ui/components/slider';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
+import { apiClient } from '@/clients/apiClient';
+import {
+  BrandSelector,
+  PersonaSelector,
+  SegmentSelector,
+  type BrandSelectorOption,
+  type PersonaSelectorOption,
+  type SegmentSelectorOption,
+} from '@/features/brands/components';
 import {
   VOICES,
   MIN_DURATION,
@@ -101,6 +112,72 @@ export function PodcastSettings({
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
 
+  // Fetch brand list for selector
+  const { data: brands, isLoading: loadingBrands } = useQuery(
+    apiClient.brands.list.queryOptions({ input: {} }),
+  );
+
+  // Fetch selected brand details for personas/segments
+  const { data: selectedBrand, isLoading: loadingBrand } = useQuery({
+    ...apiClient.brands.get.queryOptions({
+      input: { id: settings.brandId ?? '' },
+    }),
+    enabled: !!settings.brandId,
+  });
+
+  // Transform brands to selector options
+  const brandOptions: BrandSelectorOption[] = (brands ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    description: b.description,
+  }));
+
+  // Get personas and segments from selected brand
+  const personas: PersonaSelectorOption[] = (selectedBrand?.personas ?? []).map(
+    (p) => ({
+      id: p.id,
+      name: p.name,
+      role: p.role,
+      voiceId: p.voiceId,
+      personalityDescription: p.personalityDescription,
+    }),
+  );
+
+  const segments: SegmentSelectorOption[] = (selectedBrand?.segments ?? []).map(
+    (s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      messagingTone: s.messagingTone,
+    }),
+  );
+
+  // Handle persona selection - also update voice if persona has voiceId
+  const handleHostPersonaChange = (persona: PersonaSelectorOption | null) => {
+    settings.setHostPersonaId(persona?.id ?? null);
+    // Auto-select voice if persona has a voiceId and it's a valid voice
+    if (persona?.voiceId) {
+      const matchingVoice = VOICES.find((v) => v.id === persona.voiceId);
+      if (matchingVoice) {
+        settings.setHostVoice(matchingVoice.id);
+      }
+    }
+  };
+
+  const handleCoHostPersonaChange = (persona: PersonaSelectorOption | null) => {
+    settings.setCoHostPersonaId(persona?.id ?? null);
+    if (persona?.voiceId) {
+      const matchingVoice = VOICES.find((v) => v.id === persona.voiceId);
+      if (matchingVoice) {
+        settings.setCoHostVoice(matchingVoice.id);
+      }
+    }
+  };
+
+  const handleSegmentChange = (segment: SegmentSelectorOption | null) => {
+    settings.setTargetSegmentId(segment?.id ?? null);
+  };
+
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
       {/* Header */}
@@ -111,6 +188,100 @@ export function PodcastSettings({
             <LockClosedIcon className="w-3 h-3" />
             Locked during generation
           </span>
+        )}
+      </div>
+
+      {/* Brand & Persona Section */}
+      <div className="mixer-brand-section">
+        <span className="mixer-section-label">Brand & Character</span>
+
+        {/* Brand Selector */}
+        <div className="mixer-field">
+          <label className="mixer-field-label">
+            Brand{' '}
+            <span className="text-muted-foreground font-normal">(optional)</span>
+          </label>
+          {loadingBrands ? (
+            <div className="flex items-center justify-center py-2">
+              <Spinner className="w-4 h-4" />
+            </div>
+          ) : brandOptions.length === 0 ? (
+            <div className="flex items-center gap-2 py-2 px-3 text-sm text-muted-foreground bg-muted/30 rounded-lg">
+              <StarFilledIcon className="w-4 h-4" />
+              <span>No brands yet</span>
+            </div>
+          ) : (
+            <BrandSelector
+              value={settings.brandId}
+              onChange={settings.setBrandId}
+              brands={brandOptions}
+              placeholder="Select a brand"
+              disabled={disabled}
+            />
+          )}
+        </div>
+
+        {/* Show persona and segment selectors when brand is selected */}
+        {settings.brandId && (
+          <>
+            {loadingBrand ? (
+              <div className="flex items-center justify-center py-4">
+                <Spinner className="w-4 h-4" />
+              </div>
+            ) : (
+              <>
+                {/* Host Persona Selector */}
+                <div className="mixer-field">
+                  <label className="mixer-field-label">
+                    {isConversation ? 'Host Persona' : 'Voice Persona'}
+                  </label>
+                  <PersonaSelector
+                    value={settings.hostPersonaId}
+                    onChange={handleHostPersonaChange}
+                    personas={personas}
+                    disabled={disabled}
+                  />
+                  {settings.hostPersonaId && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Persona personality will shape the script style
+                    </p>
+                  )}
+                </div>
+
+                {/* Co-Host Persona Selector (conversation only) */}
+                {isConversation && (
+                  <div className="mixer-field">
+                    <label className="mixer-field-label">Co-Host Persona</label>
+                    <PersonaSelector
+                      value={settings.coHostPersonaId}
+                      onChange={handleCoHostPersonaChange}
+                      personas={personas.filter(
+                        (p) => p.id !== settings.hostPersonaId,
+                      )}
+                      disabled={disabled}
+                    />
+                  </div>
+                )}
+
+                {/* Target Audience Selector */}
+                <div className="mixer-field">
+                  <label className="mixer-field-label">Target Audience</label>
+                  <SegmentSelector
+                    value={settings.targetSegmentId}
+                    onChange={handleSegmentChange}
+                    segments={segments}
+                    placeholder="Select target audience"
+                    disabled={disabled}
+                  />
+                  {settings.targetSegmentId && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Script will be tailored for this audience
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 

@@ -73,11 +73,23 @@ export interface UsePodcastSettingsReturn {
   targetDuration: number;
   instructions: string;
 
+  // Brand/persona/segment values
+  brandId: string | null;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  targetSegmentId: string | null;
+
   // Setters
   setHostVoice: (voice: string) => void;
   setCoHostVoice: (voice: string) => void;
   setTargetDuration: (duration: number) => void;
   setInstructions: (instructions: string) => void;
+
+  // Brand/persona/segment setters
+  setBrandId: (brandId: string | null) => void;
+  setHostPersonaId: (personaId: string | null) => void;
+  setCoHostPersonaId: (personaId: string | null) => void;
+  setTargetSegmentId: (segmentId: string | null) => void;
 
   // State
   hasChanges: boolean;
@@ -96,6 +108,10 @@ function getInitialValues(podcast: PodcastFull | undefined) {
     coHostVoice: podcast?.coHostVoice ?? 'Charon',
     targetDuration: podcast?.targetDurationMinutes ?? 5,
     instructions: podcast?.promptInstructions ?? '',
+    brandId: podcast?.brandId ?? null,
+    hostPersonaId: podcast?.hostPersonaId ?? null,
+    coHostPersonaId: podcast?.coHostPersonaId ?? null,
+    targetSegmentId: podcast?.targetSegmentId ?? null,
   };
 }
 
@@ -117,6 +133,18 @@ export function usePodcastSettings({
   );
   const [instructions, setInstructionsInternal] = useState(
     initial.instructions,
+  );
+  const [brandId, setBrandIdInternal] = useState<string | null>(
+    initial.brandId,
+  );
+  const [hostPersonaId, setHostPersonaIdInternal] = useState<string | null>(
+    initial.hostPersonaId,
+  );
+  const [coHostPersonaId, setCoHostPersonaIdInternal] = useState<string | null>(
+    initial.coHostPersonaId,
+  );
+  const [targetSegmentId, setTargetSegmentIdInternal] = useState<string | null>(
+    initial.targetSegmentId,
   );
 
   // Wrapped setters that track user edits
@@ -140,6 +168,30 @@ export function usePodcastSettings({
     setInstructionsInternal(value);
   }, []);
 
+  const setBrandId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setBrandIdInternal(value);
+    // Clear persona and segment when brand changes
+    setHostPersonaIdInternal(null);
+    setCoHostPersonaIdInternal(null);
+    setTargetSegmentIdInternal(null);
+  }, []);
+
+  const setHostPersonaId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setHostPersonaIdInternal(value);
+  }, []);
+
+  const setCoHostPersonaId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setCoHostPersonaIdInternal(value);
+  }, []);
+
+  const setTargetSegmentId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setTargetSegmentIdInternal(value);
+  }, []);
+
   // Reset state when navigating to a different podcast
   if (podcast?.id !== podcastIdRef.current) {
     podcastIdRef.current = podcast?.id;
@@ -149,6 +201,10 @@ export function usePodcastSettings({
     setCoHostVoiceInternal(newInitial.coHostVoice);
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
+    setBrandIdInternal(newInitial.brandId);
+    setHostPersonaIdInternal(newInitial.hostPersonaId);
+    setCoHostPersonaIdInternal(newInitial.coHostPersonaId);
+    setTargetSegmentIdInternal(newInitial.targetSegmentId);
   }
 
   // Sync local state when server data changes externally (wizard saves, SSE updates)
@@ -161,22 +217,34 @@ export function usePodcastSettings({
     setCoHostVoiceInternal(newInitial.coHostVoice);
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
+    setBrandIdInternal(newInitial.brandId);
+    setHostPersonaIdInternal(newInitial.hostPersonaId);
+    setCoHostPersonaIdInternal(newInitial.coHostPersonaId);
+    setTargetSegmentIdInternal(newInitial.targetSegmentId);
   }, [
     podcast?.hostVoice,
     podcast?.coHostVoice,
     podcast?.targetDurationMinutes,
     podcast?.promptInstructions,
+    podcast?.brandId,
+    podcast?.hostPersonaId,
+    podcast?.coHostPersonaId,
+    podcast?.targetSegmentId,
   ]);
 
   // Track if script-affecting settings changed (requires script regeneration)
   const hasScriptSettingsChanges =
     targetDuration !== (podcast?.targetDurationMinutes ?? 5) ||
-    instructions !== (podcast?.promptInstructions ?? '');
+    instructions !== (podcast?.promptInstructions ?? '') ||
+    hostPersonaId !== (podcast?.hostPersonaId ?? null) ||
+    coHostPersonaId !== (podcast?.coHostPersonaId ?? null) ||
+    targetSegmentId !== (podcast?.targetSegmentId ?? null);
 
   // Track if there are changes compared to the current podcast values
   const hasChanges =
     hostVoice !== (podcast?.hostVoice ?? 'Aoede') ||
     coHostVoice !== (podcast?.coHostVoice ?? 'Charon') ||
+    brandId !== (podcast?.brandId ?? null) ||
     hasScriptSettingsChanges;
 
   const updateMutation = useMutation(
@@ -201,6 +269,10 @@ export function usePodcastSettings({
       coHostVoiceName: coHostVoiceInfo?.name,
       targetDurationMinutes: targetDuration,
       promptInstructions: instructions || undefined,
+      brandId,
+      hostPersonaId,
+      coHostPersonaId,
+      targetSegmentId,
     });
   }, [
     podcast?.id,
@@ -208,15 +280,24 @@ export function usePodcastSettings({
     coHostVoice,
     targetDuration,
     instructions,
+    brandId,
+    hostPersonaId,
+    coHostPersonaId,
+    targetSegmentId,
     updateMutation,
   ]);
 
   const discardChanges = useCallback(() => {
     hasUserEditsRef.current = false;
-    setHostVoiceInternal(podcast?.hostVoice ?? 'Aoede');
-    setCoHostVoiceInternal(podcast?.coHostVoice ?? 'Charon');
-    setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
-    setInstructionsInternal(podcast?.promptInstructions ?? '');
+    const newInitial = getInitialValues(podcast);
+    setHostVoiceInternal(newInitial.hostVoice);
+    setCoHostVoiceInternal(newInitial.coHostVoice);
+    setTargetDurationInternal(newInitial.targetDuration);
+    setInstructionsInternal(newInitial.instructions);
+    setBrandIdInternal(newInitial.brandId);
+    setHostPersonaIdInternal(newInitial.hostPersonaId);
+    setCoHostPersonaIdInternal(newInitial.coHostPersonaId);
+    setTargetSegmentIdInternal(newInitial.targetSegmentId);
   }, [podcast]);
 
   return useMemo(
@@ -226,12 +307,20 @@ export function usePodcastSettings({
       coHostVoice,
       targetDuration,
       instructions,
+      brandId,
+      hostPersonaId,
+      coHostPersonaId,
+      targetSegmentId,
 
       // Setters
       setHostVoice,
       setCoHostVoice,
       setTargetDuration,
       setInstructions,
+      setBrandId,
+      setHostPersonaId,
+      setCoHostPersonaId,
+      setTargetSegmentId,
 
       // State
       hasChanges,
@@ -247,10 +336,18 @@ export function usePodcastSettings({
       coHostVoice,
       targetDuration,
       instructions,
+      brandId,
+      hostPersonaId,
+      coHostPersonaId,
+      targetSegmentId,
       setHostVoice,
       setCoHostVoice,
       setTargetDuration,
       setInstructions,
+      setBrandId,
+      setHostPersonaId,
+      setCoHostPersonaId,
+      setTargetSegmentId,
       hasChanges,
       hasScriptSettingsChanges,
       updateMutation.isPending,
