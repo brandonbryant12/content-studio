@@ -29,6 +29,8 @@ interface UseBrandChatOptions {
   stepKey?: string;
   initialMessages?: ChatMessage[];
   onError?: (error: Error) => void;
+  /** Callback when AI successfully updates brand data */
+  onBrandUpdated?: () => void;
 }
 
 /**
@@ -40,6 +42,7 @@ export function useBrandChat({
   stepKey,
   initialMessages = [],
   onError,
+  onBrandUpdated,
 }: UseBrandChatOptions): UseBrandChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState('');
@@ -164,6 +167,11 @@ export function useBrandChat({
 
         // Invalidate brand query to refresh data after AI updates
         queryClient.invalidateQueries({ queryKey: getBrandQueryKey(brandId) });
+        
+        // Notify that brand was updated (for auto-progress)
+        if (accumulatedContent.trim()) {
+          onBrandUpdated?.();
+        }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
           // Request was aborted, don't set error
@@ -187,7 +195,7 @@ export function useBrandChat({
         abortControllerRef.current = null;
       }
     },
-    [brandId, stepKey, input, isLoading, messages, onError, queryClient],
+    [brandId, stepKey, input, isLoading, messages, onError, onBrandUpdated, queryClient],
   );
 
   return {

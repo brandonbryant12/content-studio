@@ -27,6 +27,8 @@ interface AIAssistantPanelProps {
   quickActions?: QuickAction[];
   /** Callback when AI provides a suggestion (extracted from response) */
   onSuggestion?: (suggestion: unknown) => void;
+  /** Callback when AI completes an update - triggers auto-progress to next step */
+  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -40,9 +42,10 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
   stepKey,
   quickActions = [],
   onSuggestion: _onSuggestion,
+  onStepComplete,
   className,
 }: AIAssistantPanelProps) {
-  const chat = useBrandChat({ brandId, stepKey });
+  const chat = useBrandChat({ brandId, stepKey, onBrandUpdated: onStepComplete });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 

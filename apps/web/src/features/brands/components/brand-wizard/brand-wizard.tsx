@@ -53,48 +53,51 @@ export const BrandWizard = memo(function BrandWizard({
   }, [brand.id, navigate]);
 
   const renderStep = useCallback(
-    (stepKey: string, _wizardState: UseWizardStateReturn) => {
+    (stepKey: string, wizardState: UseWizardStateReturn) => {
+      // Auto-progress to next step when AI completes an update
+      const onStepComplete = wizardState.isLastStep ? undefined : wizardState.nextStep;
+      
       switch (stepKey) {
         case 'basics':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepBasics brand={brand} />
+              <LazyStepBasics brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'mission':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepMission brand={brand} />
+              <LazyStepMission brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'values':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepValues brand={brand} />
+              <LazyStepValues brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'colors':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepColors brand={brand} />
+              <LazyStepColors brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'voice':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepVoice brand={brand} />
+              <LazyStepVoice brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'personas':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepPersonas brand={brand} />
+              <LazyStepPersonas brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'segments':
           return (
             <Suspense fallback={<StepLoadingFallback />}>
-              <LazyStepSegments brand={brand} />
+              <LazyStepSegments brand={brand} onStepComplete={onStepComplete} />
             </Suspense>
           );
         case 'review':

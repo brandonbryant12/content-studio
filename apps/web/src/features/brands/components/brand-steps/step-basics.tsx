@@ -18,6 +18,8 @@ type Brand = RouterOutput['brands']['get'];
 interface StepBasicsProps {
   /** Current brand data */
   brand: Brand;
+  /** Callback when AI completes step - auto-progress to next */
+  onStepComplete?: () => void;
   /** Optional className for container */
   className?: string;
 }
@@ -45,6 +47,7 @@ const QUICK_ACTIONS: QuickAction[] = [
  */
 export const StepBasics = memo(function StepBasics({
   brand,
+  onStepComplete,
   className,
 }: StepBasicsProps) {
   const [name, setName] = useState(brand.name);
@@ -143,6 +146,7 @@ export const StepBasics = memo(function StepBasics({
           brandId={brand.id}
           stepKey="basics"
           quickActions={QUICK_ACTIONS}
+          onStepComplete={onStepComplete}
           className="h-full"
         />
       </div>
