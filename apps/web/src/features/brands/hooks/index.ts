@@ -18,6 +18,9 @@ export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 // Chat hook
 export { useBrandChat, type UseBrandChatReturn } from './use-brand-chat';
 
+// Wizard hook
+export { useWizardState, type UseWizardStateReturn } from './use-wizard-state';
+
 // Progress hooks
 export {
   useBrandProgress,

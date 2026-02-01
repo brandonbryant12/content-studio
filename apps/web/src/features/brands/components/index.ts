@@ -20,6 +20,32 @@ export { BrandIcon } from './brand-icon';
 export { BrandProgressIndicator, CompactProgress } from './brand-progress';
 export { QuickReplies } from './quick-replies';
 
+// Wizard components
+export {
+  BrandWizard,
+  WizardContainer,
+  WizardNav,
+  WizardStep,
+  AIAssistantPanel,
+  type WizardContainerProps,
+  type WizardNavProps,
+  type WizardStepProps,
+  type AIAssistantPanelProps,
+  type QuickAction,
+} from './brand-wizard';
+
+// Step components
+export {
+  StepBasics,
+  StepMission,
+  StepValues,
+  StepColors,
+  StepVoice,
+  StepPersonas,
+  StepSegments,
+  StepReview,
+} from './brand-steps';
+
 // Selectors
 export { BrandSelector, type BrandSelectorOption } from './brand-selector';
 export {
@@ -30,3 +56,12 @@ export {
   SegmentSelector,
   type SegmentSelectorOption,
 } from './segment-selector';
+
+// Input components
+export {
+  ColorPicker,
+  ValueChips,
+  PersonaCard,
+  SegmentCard,
+  type ColorPreset,
+} from './brand-inputs';

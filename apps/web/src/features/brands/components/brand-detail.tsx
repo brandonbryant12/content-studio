@@ -9,7 +9,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import { BrandIcon } from './brand-icon';
-import { BrandBuilder } from './brand-builder';
+import { BrandWizard } from './brand-wizard';
 
 type Brand = RouterOutput['brands']['get'];
 
@@ -93,7 +93,7 @@ export function BrandDetail({ brand, isDeleting, onDelete }: BrandDetailProps) {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {isEditing ? (
-          <BrandBuilder brand={brand} />
+          <BrandWizard brand={brand} />
         ) : (
           <BrandPreview brand={brand} />
         )}
