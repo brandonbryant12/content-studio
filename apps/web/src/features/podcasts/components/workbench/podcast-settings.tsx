@@ -1,4 +1,8 @@
-import { ChevronDownIcon, LockClosedIcon, StarFilledIcon } from '@radix-ui/react-icons';
+import {
+  ChevronDownIcon,
+  LockClosedIcon,
+  StarFilledIcon,
+} from '@radix-ui/react-icons';
 import { Slider } from '@repo/ui/components/slider';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useEffect, useRef } from 'react';
@@ -199,7 +203,9 @@ export function PodcastSettings({
         <div className="mixer-field">
           <label className="mixer-field-label">
             Brand{' '}
-            <span className="text-muted-foreground font-normal">(optional)</span>
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
           </label>
           {loadingBrands ? (
             <div className="flex items-center justify-center py-2">

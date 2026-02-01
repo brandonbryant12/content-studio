@@ -119,7 +119,7 @@ export type BrandToolName =
 
 /**
  * Get tools available for a specific wizard step.
- * 
+ *
  * Step-to-tools mapping:
  * - basics: getBrandStatus, updateBrandBasics
  * - mission: getBrandStatus, updateBrandBasics (mission is part of basics)
@@ -150,7 +150,7 @@ export function getToolsForStep(
   const toolNames = getToolNamesForStep(stepKey);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filteredTools: Record<string, any> = {};
-  
+
   for (const name of toolNames) {
     if (name in allTools) {
       filteredTools[name] = allTools[name as keyof typeof allTools];

@@ -2,8 +2,17 @@
 // Lazy-loaded step components for code splitting
 
 import { lazy, Suspense, type ComponentType } from 'react';
-import { Skeleton } from '@repo/ui/components/skeleton';
 import { cn } from '@repo/ui/lib/utils';
+
+// Simple skeleton component (inline to avoid missing dependency)
+function Skeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn('animate-pulse rounded-md bg-muted', className)}
+      aria-hidden="true"
+    />
+  );
+}
 
 // Lazy load each step component
 export const LazyStepBasics = lazy(() =>
@@ -44,7 +53,9 @@ export const LazyStepReview = lazy(() =>
  */
 export function StepLoadingFallback({ className }: { className?: string }) {
   return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-2 gap-6 h-full', className)}>
+    <div
+      className={cn('grid grid-cols-1 lg:grid-cols-2 gap-6 h-full', className)}
+    >
       {/* Left side: Form skeleton */}
       <div className="flex flex-col space-y-6 p-6 bg-muted/30 rounded-xl">
         <div>

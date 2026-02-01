@@ -98,7 +98,9 @@ export const InlineEdit = memo(function InlineEdit({
     return (
       <div className="flex items-start gap-2">
         <InputComponent
-          ref={inputRef as React.RefObject<HTMLInputElement & HTMLTextAreaElement>}
+          ref={
+            inputRef as React.RefObject<HTMLInputElement & HTMLTextAreaElement>
+          }
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}

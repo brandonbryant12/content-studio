@@ -127,7 +127,9 @@ export const AIAssistantPanel = memo(function AIAssistantPanel({
             <div className="flex justify-start">
               <div className="bg-muted rounded-xl px-4 py-2.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Thinking</span>
+                  <span className="text-xs text-muted-foreground">
+                    Thinking
+                  </span>
                   <span className="flex gap-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse" />
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse [animation-delay:200ms]" />

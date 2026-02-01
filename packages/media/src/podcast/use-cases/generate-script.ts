@@ -126,9 +126,9 @@ export const generateScript = (input: GenerateScriptInput) =>
     let targetSegment: SegmentContext | null = null;
 
     if (podcast.brandId) {
-      const brand = yield* brandRepo.findById(podcast.brandId).pipe(
-        Effect.catchTag('BrandNotFound', () => Effect.succeed(null)),
-      );
+      const brand = yield* brandRepo
+        .findById(podcast.brandId)
+        .pipe(Effect.catchTag('BrandNotFound', () => Effect.succeed(null)));
 
       if (brand) {
         // Find host persona

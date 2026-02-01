@@ -113,7 +113,9 @@
       "WebFetch(domain:vercel.com)",
       "Bash(ulimit:*)",
       "Bash(pkill:*)",
-      "Bash(pm2 start:*)"
+      "Bash(pm2 start:*)",
+      "Bash(ps:*)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []

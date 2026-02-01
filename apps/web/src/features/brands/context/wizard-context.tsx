@@ -1,11 +1,7 @@
 // features/brands/context/wizard-context.tsx
 // Context provider for wizard state management
 
-import {
-  createContext,
-  useContext,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import {
   useWizardState,
   type UseWizardStateReturn,
@@ -29,10 +25,7 @@ export interface WizardProviderProps {
  * Provider component for wizard state.
  * Wraps wizard components to provide shared state access.
  */
-export function WizardProvider({
-  brand,
-  children,
-}: WizardProviderProps) {
+export function WizardProvider({ brand, children }: WizardProviderProps) {
   const wizardState = useWizardState({ brand });
 
   return (
@@ -48,11 +41,11 @@ export function WizardProvider({
  */
 export function useWizardContext(): UseWizardStateReturn {
   const context = useContext(WizardContext);
-  
+
   if (!context) {
     throw new Error('useWizardContext must be used within a WizardProvider');
   }
-  
+
   return context;
 }
 

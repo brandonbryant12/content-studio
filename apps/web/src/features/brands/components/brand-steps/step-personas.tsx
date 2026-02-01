@@ -7,6 +7,11 @@ import type { RouterOutput } from '@repo/api/client';
 import type { BrandPersona } from '@repo/db/schema';
 import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
+import {
+  SortableList,
+  SortableItemWrapper,
+  DragHandle,
+} from '@/shared/components';
 import { PersonaCard } from '../brand-inputs/persona-card';
 import {
   AIAssistantPanel,
@@ -109,6 +114,16 @@ export const StepPersonas = memo(function StepPersonas({
     [brand.id, personas, updateMutation],
   );
 
+  const handleReorderPersonas = useCallback(
+    async (reorderedPersonas: BrandPersona[]) => {
+      await updateMutation.mutateAsync({
+        id: brand.id,
+        personas: reorderedPersonas,
+      });
+    },
+    [brand.id, updateMutation],
+  );
+
   return (
     <div
       className={cn('grid grid-cols-1 lg:grid-cols-2 gap-6 h-full', className)}
@@ -124,7 +139,7 @@ export const StepPersonas = memo(function StepPersonas({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {personas.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="mb-2">No personas yet.</p>
@@ -133,15 +148,28 @@ export const StepPersonas = memo(function StepPersonas({
               </p>
             </div>
           ) : (
-            personas.map((persona) => (
-              <PersonaCard
-                key={persona.id}
-                persona={persona}
-                onUpdate={handleUpdatePersona}
-                onDelete={handleDeletePersona}
-                disabled={updateMutation.isPending}
-              />
-            ))
+            <SortableList
+              items={personas}
+              onReorder={handleReorderPersonas}
+              className="space-y-4"
+              useDragHandle
+            >
+              {(persona) => (
+                <SortableItemWrapper key={persona.id} id={persona.id}>
+                  <div className="flex items-start gap-2">
+                    <DragHandle className="mt-3 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <PersonaCard
+                        persona={persona}
+                        onUpdate={handleUpdatePersona}
+                        onDelete={handleDeletePersona}
+                        disabled={updateMutation.isPending}
+                      />
+                    </div>
+                  </div>
+                </SortableItemWrapper>
+              )}
+            </SortableList>
           )}
         </div>
 

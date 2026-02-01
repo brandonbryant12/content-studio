@@ -7,6 +7,11 @@ import type { RouterOutput } from '@repo/api/client';
 import type { BrandSegment } from '@repo/db/schema';
 import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
+import {
+  SortableList,
+  SortableItemWrapper,
+  DragHandle,
+} from '@/shared/components';
 import { SegmentCard } from '../brand-inputs/segment-card';
 import {
   AIAssistantPanel,
@@ -108,6 +113,16 @@ export const StepSegments = memo(function StepSegments({
     [brand.id, segments, updateMutation],
   );
 
+  const handleReorderSegments = useCallback(
+    async (reorderedSegments: BrandSegment[]) => {
+      await updateMutation.mutateAsync({
+        id: brand.id,
+        segments: reorderedSegments,
+      });
+    },
+    [brand.id, updateMutation],
+  );
+
   return (
     <div
       className={cn('grid grid-cols-1 lg:grid-cols-2 gap-6 h-full', className)}
@@ -123,7 +138,7 @@ export const StepSegments = memo(function StepSegments({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {segments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="mb-2">No segments yet.</p>
@@ -132,15 +147,28 @@ export const StepSegments = memo(function StepSegments({
               </p>
             </div>
           ) : (
-            segments.map((segment) => (
-              <SegmentCard
-                key={segment.id}
-                segment={segment}
-                onUpdate={handleUpdateSegment}
-                onDelete={handleDeleteSegment}
-                disabled={updateMutation.isPending}
-              />
-            ))
+            <SortableList
+              items={segments}
+              onReorder={handleReorderSegments}
+              className="space-y-4"
+              useDragHandle
+            >
+              {(segment) => (
+                <SortableItemWrapper key={segment.id} id={segment.id}>
+                  <div className="flex items-start gap-2">
+                    <DragHandle className="mt-3 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <SegmentCard
+                        segment={segment}
+                        onUpdate={handleUpdateSegment}
+                        onDelete={handleDeleteSegment}
+                        disabled={updateMutation.isPending}
+                      />
+                    </div>
+                  </div>
+                </SortableItemWrapper>
+              )}
+            </SortableList>
           )}
         </div>
 

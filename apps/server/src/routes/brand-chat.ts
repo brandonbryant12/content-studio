@@ -63,7 +63,7 @@ const getSessionUser = async (headers: Headers): Promise<User | null> => {
 /**
  * Brand chat route for AI-powered brand building conversations.
  * Uses a proactive multi-tool agent that drives the conversation.
- * 
+ *
  * When stepKey is provided, the agent is step-aware:
  * - Only tools relevant to the current step are available
  * - System prompt includes wizard context and step-specific instructions

@@ -131,9 +131,7 @@ export const StepBasics = memo(function StepBasics({
         </div>
 
         {updateMutation.isPending ? (
-          <p className="text-xs text-muted-foreground animate-pulse">
-            Saving…
-          </p>
+          <p className="text-xs text-muted-foreground animate-pulse">Saving…</p>
         ) : updateMutation.isSuccess ? (
           <p className="text-xs text-green-600">✓ Saved</p>
         ) : null}

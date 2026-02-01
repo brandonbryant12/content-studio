@@ -9,3 +9,15 @@ export type {
   DialogFooterConfig,
   DialogMaxWidth,
 } from './base-dialog';
+export {
+  SortableList,
+  SortableItemWrapper,
+  DragHandle,
+  useSortableItem,
+} from './sortable-list';
+export type {
+  SortableItem,
+  SortableListProps,
+  SortableItemWrapperProps,
+  DragHandleProps,
+} from './sortable-list';
