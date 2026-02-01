@@ -1,14 +1,16 @@
 // features/brands/components/brand-steps/step-review.tsx
-// Final review step with brand summary and celebration
+// Final review step with brand summary, celebration, and inline editing
 
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { CheckCircledIcon, RocketIcon } from '@radix-ui/react-icons';
 import type { RouterOutput } from '@repo/api/client';
 import { cn } from '@repo/ui/lib/utils';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { BrandIcon } from '../brand-icon';
+import { InlineEdit } from '../brand-inputs';
 import { calculateWizardProgress } from '../../lib/wizard-steps';
+import { useOptimisticUpdate } from '../../hooks/use-optimistic-update';
 
 type Brand = RouterOutput['brands']['get'];
 
@@ -23,6 +25,7 @@ interface StepReviewProps {
 
 /**
  * Final review step showing brand summary and completion status.
+ * All text fields are inline-editable for quick fixes.
  */
 export const StepReview = memo(function StepReview({
   brand,
@@ -31,6 +34,17 @@ export const StepReview = memo(function StepReview({
 }: StepReviewProps) {
   const progress = calculateWizardProgress(brand);
   const isComplete = progress.percentage === 100;
+  const updateMutation = useOptimisticUpdate();
+
+  const handleUpdateField = useCallback(
+    async (field: string, value: string) => {
+      await updateMutation.mutateAsync({
+        id: brand.id,
+        [field]: value || undefined,
+      });
+    },
+    [brand.id, updateMutation],
+  );
 
   return (
     <div className={cn('h-full overflow-y-auto', className)}>
@@ -50,8 +64,8 @@ export const StepReview = memo(function StepReview({
             </h2>
             <p className="text-muted-foreground mt-1">
               {isComplete
-                ? "You've completed all the steps. Your brand profile is ready to use."
-                : `You've completed ${progress.completedSteps} of ${progress.totalSteps} steps.`}
+                ? "You've completed all the steps. Click any field to make quick edits."
+                : `You've completed ${progress.completedSteps} of ${progress.totalSteps} steps. Click any field to edit.`}
             </p>
           </div>
         </div>
@@ -62,11 +76,23 @@ export const StepReview = memo(function StepReview({
           <div className="flex items-center gap-4 pb-4 border-b">
             <BrandIcon colors={brand.colors} className="w-16 h-16" />
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-semibold truncate">{brand.name}</h3>
-              {brand.mission && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                  {brand.mission}
-                </p>
+              <InlineEdit
+                value={brand.name}
+                onSave={(value) => handleUpdateField('name', value)}
+                isSaving={updateMutation.isPending}
+                placeholder="Enter brand name…"
+                className="text-xl font-semibold"
+                as="h3"
+              />
+              {(brand.mission || !isComplete) && (
+                <InlineEdit
+                  value={brand.mission ?? ''}
+                  onSave={(value) => handleUpdateField('mission', value)}
+                  isSaving={updateMutation.isPending}
+                  placeholder="Add a mission statement…"
+                  className="text-sm text-muted-foreground mt-1"
+                  multiline
+                />
               )}
             </div>
           </div>
@@ -74,14 +100,18 @@ export const StepReview = memo(function StepReview({
           {/* Brand details grid */}
           <div className="grid gap-6 mt-6">
             {/* Description */}
-            {brand.description && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Description
-                </h4>
-                <p className="text-foreground">{brand.description}</p>
-              </section>
-            )}
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Description
+              </h4>
+              <InlineEdit
+                value={brand.description ?? ''}
+                onSave={(value) => handleUpdateField('description', value)}
+                isSaving={updateMutation.isPending}
+                placeholder="Add a brand description…"
+                multiline
+              />
+            </section>
 
             {/* Values */}
             {brand.values.length > 0 && (
@@ -96,6 +126,9 @@ export const StepReview = memo(function StepReview({
                     </Badge>
                   ))}
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Go to the Values step to edit these.
+                </p>
               </section>
             )}
 
@@ -132,22 +165,28 @@ export const StepReview = memo(function StepReview({
                     </div>
                   )}
                 </div>
-              </section>
-            )}
-
-            {/* Voice guide preview */}
-            {brand.brandGuide && (
-              <section>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  Voice & Tone
-                </h4>
-                <p className="text-foreground line-clamp-3 whitespace-pre-wrap">
-                  {brand.brandGuide}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Go to the Colors step to change these.
                 </p>
               </section>
             )}
 
-            {/* Personas count */}
+            {/* Voice guide preview */}
+            <section>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                Voice & Tone
+              </h4>
+              <InlineEdit
+                value={brand.brandGuide ?? ''}
+                onSave={(value) => handleUpdateField('brandGuide', value)}
+                isSaving={updateMutation.isPending}
+                placeholder="Add voice and tone guidelines…"
+                multiline
+                className="whitespace-pre-wrap"
+              />
+            </section>
+
+            {/* Personas */}
             {brand.personas.length > 0 && (
               <section>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">
@@ -160,10 +199,13 @@ export const StepReview = memo(function StepReview({
                     </Badge>
                   ))}
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Go to the Personas step to edit these.
+                </p>
               </section>
             )}
 
-            {/* Segments count */}
+            {/* Segments */}
             {brand.segments.length > 0 && (
               <section>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">
@@ -176,6 +218,9 @@ export const StepReview = memo(function StepReview({
                     </Badge>
                   ))}
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Go to the Segments step to edit these.
+                </p>
               </section>
             )}
           </div>
@@ -189,9 +234,9 @@ export const StepReview = memo(function StepReview({
           </Button>
         </div>
 
-        {/* Next steps hint */}
+        {/* Help text */}
         <div className="text-center text-sm text-muted-foreground">
-          <p>You can always come back and edit your brand profile later.</p>
+          <p>Click any text field above to edit it directly.</p>
         </div>
       </div>
     </div>
