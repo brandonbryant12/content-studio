@@ -6,6 +6,7 @@ packages:
 catalog:
   # Effect ecosystem
   effect: ^3.16.0
+  '@effect/cli': ^0.56.0
   '@effect/platform': ^0.77.0
   '@effect/platform-node': ^0.72.0
 

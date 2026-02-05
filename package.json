@@ -33,6 +33,7 @@
     "test:db:setup": "pnpm test:db:up && DB_POSTGRES_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm db:push",
     "e2e:seed": "pnpm --filter web e2e:seed",
     "typecheck": "turbo run typecheck",
+    "cli": "pnpm --filter @repo/cli dev --",
     "ui-add": "turbo run ui-add -F @repo/ui --"
   },
   "packageManager": "pnpm@10.23.0",
