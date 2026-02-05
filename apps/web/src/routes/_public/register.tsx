@@ -10,7 +10,7 @@ function RouteComponent() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="page-eyebrow">Get started</p>
+          <p className="page-eyebrow">Content Studio</p>
           <h1 className="page-title">Create account</h1>
         </div>
         <div className="card-padded">

@@ -3,7 +3,7 @@ export const generateRootHtml = (webUrl: string, serverUrl: string) => `
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
-      <title>RT Stack Backend Server</title>
+      <title>Content Studio API</title>
       <style>
         :root { color-scheme: light dark; }
         body {
@@ -49,15 +49,10 @@ export const generateRootHtml = (webUrl: string, serverUrl: string) => `
       </style>
     </head>
     <body>
-      <h1>RT Stack Backend Server</h1>
+      <h1>Content Studio API</h1>
       <hr />
       <h2>Resources</h2>
       <ul>
-        <li>
-          <a href="https://github.com/nktnet1/rt-stack" target="_blank" rel="noreferrer">
-            GitHub (source code)
-          </a>
-        </li>
         <li>
           <a href="${webUrl}" target="_blank" rel="noreferrer">
             Web (frontend)
