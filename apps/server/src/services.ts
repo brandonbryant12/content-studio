@@ -3,6 +3,7 @@ import {
   createServerRuntime,
   createSSEManager,
 } from '@repo/api/server';
+import type { VertexAIConfig } from '@repo/ai';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { buildStorageConfig } from './config';

@@ -44,6 +44,10 @@ export const createStorageLayer = (
       });
     case 'database':
     default:
-      return DatabaseStorageLive.pipe(Layer.provide(dbLayer));
+      return DatabaseStorageLive.pipe(Layer.provide(dbLayer)) as Layer.Layer<
+        Storage,
+        never,
+        never
+      >;
   }
 };
