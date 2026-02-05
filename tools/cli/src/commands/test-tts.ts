@@ -9,7 +9,8 @@ import { loadEnv } from '../lib/env';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.resolve(__dirname, '../../.output');
 
-const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const GENERATE_CONTENT_MODEL = 'gemini-2.5-flash-preview-tts';
+const CLOUD_TTS_MODEL = 'gemini-2.5-flash-tts';
 
 const SAMPLE_DIALOGUE = [
   {
@@ -69,7 +70,7 @@ const tryGenerateContent = (
       ).join('\n');
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${GENERATE_CONTENT_MODEL}:generateContent`,
         {
           method: 'POST',
           headers: {
@@ -118,41 +119,56 @@ const tryGenerateContent = (
         }>;
       };
 
-      const inlineData =
-        data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
       if (!inlineData?.data) {
         throw new Error('No audio data in response');
       }
 
       return { audioContent: Buffer.from(inlineData.data, 'base64') };
     },
-    catch: (e) =>
-      new Error(e instanceof Error ? e.message : 'Unknown error'),
+    catch: (e) => new Error(e instanceof Error ? e.message : 'Unknown error'),
   });
 
 /**
- * Single-voice via texttospeech.googleapis.com text:synthesize.
+ * Multi-speaker via texttospeech.googleapis.com text:synthesize.
+ * Uses the Cloud TTS multiSpeakerMarkup format with Gemini TTS voices.
+ * Docs: https://docs.cloud.google.com/text-to-speech/docs/gemini-tts
  */
 const tryTextToSpeech = (
   apiKey: string,
-  voiceId: string,
+  hostVoice: string,
+  guestVoice: string,
 ): Effect.Effect<{ audioContent: Buffer }, Error> =>
   Effect.tryPromise({
     try: async () => {
-      const text = SAMPLE_DIALOGUE.map((t) => t.text).join(' ');
-
       const response = await fetch(
-        `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            input: { text },
+            input: {
+              multiSpeakerMarkup: {
+                turns: SAMPLE_DIALOGUE.map((t) => ({
+                  speaker: t.speaker,
+                  text: t.text,
+                })),
+              },
+            },
             voice: {
               languageCode: 'en-US',
-              name: `en-US-${TTS_MODEL}__${voiceId}`,
+              modelName: CLOUD_TTS_MODEL,
+              multiSpeakerVoiceConfig: {
+                speakerVoiceConfigs: [
+                  { speakerAlias: 'Host', speakerId: hostVoice },
+                  { speakerAlias: 'Guest', speakerId: guestVoice },
+                ],
+              },
             },
-            audioConfig: { audioEncoding: 'MP3' },
+            audioConfig: {
+              audioEncoding: 'LINEAR16',
+              sampleRateHertz: 24000,
+            },
           }),
         },
       );
@@ -165,8 +181,7 @@ const tryTextToSpeech = (
       const data = (await response.json()) as { audioContent: string };
       return { audioContent: Buffer.from(data.audioContent, 'base64') };
     },
-    catch: (e) =>
-      new Error(e instanceof Error ? e.message : 'Unknown error'),
+    catch: (e) => new Error(e instanceof Error ? e.message : 'Unknown error'),
   });
 
 const saveAudio = (
@@ -217,11 +232,9 @@ export const testTts = Command.make('tts', {}).pipe(
       yield* Console.log(
         '--- [1] generativelanguage.googleapis.com (generateContent) ---',
       );
-      const gc = yield* tryGenerateContent(
-        apiKey,
-        hostVoice,
-        guestVoice,
-      ).pipe(Effect.either);
+      const gc = yield* tryGenerateContent(apiKey, hostVoice, guestVoice).pipe(
+        Effect.either,
+      );
       if (gc._tag === 'Right') {
         const fp = yield* saveAudio(
           `tts-generateContent-${timestamp}.wav`,
@@ -238,10 +251,12 @@ export const testTts = Command.make('tts', {}).pipe(
       yield* Console.log(
         '\n--- [2] texttospeech.googleapis.com (text:synthesize) ---',
       );
-      yield* Console.log(`  Voice name: en-US-${TTS_MODEL}__${hostVoice}`);
-      const tts = yield* tryTextToSpeech(apiKey, hostVoice).pipe(
-        Effect.either,
-      );
+      yield* Console.log(`  Model: ${CLOUD_TTS_MODEL}`);
+      const tts = yield* tryTextToSpeech(
+        apiKey,
+        hostVoice,
+        guestVoice,
+      ).pipe(Effect.either);
       if (tts._tag === 'Right') {
         const fp = yield* saveAudio(
           `tts-texttospeech-${timestamp}.mp3`,
