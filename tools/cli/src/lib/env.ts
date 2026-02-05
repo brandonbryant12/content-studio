@@ -1,7 +1,8 @@
 import { Effect, Schema } from 'effect';
 
 const EnvSchema = Schema.Struct({
-  GEMINI_API_KEY: Schema.String,
+  GEMINI_API_KEY: Schema.optional(Schema.String),
+  GOOGLE_VERTEX_API_KEY: Schema.optional(Schema.String),
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),
   NO_PROXY: Schema.optional(Schema.String),
@@ -18,9 +19,6 @@ export const loadEnv = (): Effect.Effect<Env, EnvError> =>
   // eslint-disable-next-line no-restricted-properties
   Schema.decodeUnknown(EnvSchema)(process.env).pipe(
     Effect.mapError(
-      () =>
-        new EnvError(
-          'GEMINI_API_KEY is not set. Copy .env.example to .env and add your key.',
-        ),
+      () => new EnvError('Failed to parse environment variables.'),
     ),
   );

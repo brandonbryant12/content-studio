@@ -154,21 +154,20 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
       Effect.tryPromise({
         try: async () => {
           const text = options.text ?? DEFAULT_PREVIEW_TEXT;
-          const audioEncoding: AudioEncoding = options.audioEncoding ?? 'MP3';
 
-          // For preview, we use the Cloud Text-to-Speech API
-          // Build auth headers based on mode
+          // Use generateContent endpoint (same approach as Google provider)
           let headers: Record<string, string>;
           let url: string;
 
           if (config.mode === 'express') {
-            url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${config.apiKey}`;
+            url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
             headers = {
               'Content-Type': 'application/json',
+              'x-goog-api-key': config.apiKey,
             };
           } else {
             const accessToken = await getAccessToken();
-            url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize`;
+            url = buildEndpoint(config.project, config.location, modelName);
             headers = {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${accessToken}`,
@@ -179,13 +178,20 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
             method: 'POST',
             headers,
             body: JSON.stringify({
-              input: { text },
-              voice: {
-                languageCode: 'en-US',
-                name: `en-US-${modelName}-${options.voiceId}`,
-              },
-              audioConfig: {
-                audioEncoding,
+              contents: [
+                {
+                  parts: [{ text }],
+                },
+              ],
+              generationConfig: {
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: {
+                      voiceName: options.voiceId,
+                    },
+                  },
+                },
               },
             }),
           });
@@ -197,12 +203,32 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
             );
           }
 
-          const data = (await response.json()) as { audioContent: string };
-          const audioContent = Buffer.from(data.audioContent, 'base64');
+          const data = (await response.json()) as {
+            candidates: Array<{
+              content: {
+                parts: Array<{
+                  inlineData?: { mimeType: string; data: string };
+                }>;
+              };
+            }>;
+          };
+
+          const inlineData =
+            data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+          if (!inlineData?.data) {
+            throw new Error('No audio data in response');
+          }
+
+          const audioData = Buffer.from(inlineData.data, 'base64');
+          const isAlreadyWav =
+            audioData.slice(0, 4).toString('ascii') === 'RIFF';
+          const audioContent = isAlreadyWav
+            ? audioData
+            : wrapPcmAsWav(audioData);
 
           return {
             audioContent,
-            audioEncoding,
+            audioEncoding: 'LINEAR16' as AudioEncoding,
             voiceId: options.voiceId,
           } satisfies PreviewVoiceResult;
         },
