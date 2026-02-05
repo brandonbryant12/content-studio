@@ -2,6 +2,9 @@ import { Effect, Schema } from 'effect';
 
 const EnvSchema = Schema.Struct({
   GEMINI_API_KEY: Schema.String,
+  HTTPS_PROXY: Schema.optional(Schema.String),
+  HTTP_PROXY: Schema.optional(Schema.String),
+  NO_PROXY: Schema.optional(Schema.String),
 });
 
 type Env = typeof EnvSchema.Type;

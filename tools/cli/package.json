@@ -19,7 +19,8 @@
     "@effect/platform-node": "catalog:",
     "@repo/ai": "workspace:*",
     "@repo/storage": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
