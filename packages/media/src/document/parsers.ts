@@ -153,7 +153,13 @@ const parsePdf = (
         source: 'upload_pdf' as const,
         metadata: {
           pageCount: result.numpages,
-          info: result.info,
+          ...(result.info && {
+            info: Object.fromEntries(
+              Object.entries(result.info).filter(
+                ([, v]) => typeof v === 'string' || typeof v === 'number',
+              ),
+            ),
+          }),
         },
       };
     },
