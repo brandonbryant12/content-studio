@@ -161,19 +161,3 @@ export type VoiceoverCollaboratorId = typeof VoiceoverCollaboratorIdSchema.Type;
 
 export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
   `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;
-
-// =============================================================================
-// Brand ID
-// =============================================================================
-
-export const BrandIdSchema = Schema.String.pipe(
-  Schema.pattern(/^brd_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid brand ID format',
-  }),
-  Schema.brand('BrandId'),
-);
-
-export type BrandId = typeof BrandIdSchema.Type;
-
-export const generateBrandId = (): BrandId =>
-  `brd_${generateRandomBase32()}` as BrandId;

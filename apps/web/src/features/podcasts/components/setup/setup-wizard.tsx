@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
-import { StepBrand } from './steps/step-brand';
 import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
@@ -13,15 +12,11 @@ import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 import type { RouterOutput } from '@repo/api/client';
-import type {
-  PersonaSelectorOption,
-  SegmentSelectorOption,
-} from '@/features/brands/components';
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 interface SetupWizardProps {
   podcast: PodcastFull;
@@ -41,50 +36,22 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   // Format is set at creation and read-only during setup
   const format = (podcast.format as PodcastFormat) ?? 'conversation';
 
-  // Step 1 state - Documents
+  // Step 2 state
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
     podcast.documents.map((d) => d.id),
   );
 
-  // Step 2 state - Brand
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(
-    null,
-  );
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(
-    null,
-  );
-
-  // Step 3 state - Audio
+  // Step 3 state
   const [duration, setDuration] = useState(podcast.targetDurationMinutes ?? 5);
   const [hostVoice, setHostVoice] = useState(podcast.hostVoice ?? 'Aoede');
   const [coHostVoice, setCoHostVoice] = useState(
     podcast.coHostVoice ?? 'Charon',
   );
 
-  // Step 4 state - Instructions
+  // Step 4 state
   const [instructions, setInstructions] = useState(
     podcast.promptInstructions ?? '',
   );
-
-  // Handle persona change - auto-fill host voice
-  const handlePersonaChange = (persona: PersonaSelectorOption | null) => {
-    setSelectedPersonaId(persona?.id ?? null);
-    if (persona) {
-      setHostVoice(persona.voiceId);
-    }
-  };
-
-  // Handle segment change - can pre-populate instructions
-  const handleSegmentChange = (segment: SegmentSelectorOption | null) => {
-    setSelectedSegmentId(segment?.id ?? null);
-    // Pre-populate instructions with messaging tone if no instructions set yet
-    if (segment && !instructions.trim()) {
-      setInstructions(
-        `Target audience: ${segment.name}. Messaging tone: ${segment.messagingTone}`,
-      );
-    }
-  };
 
   // Update mutation for saving progress
   const queryKey = getPodcastQueryKey(podcast.id);
@@ -122,10 +89,8 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
       case 1:
         return selectedDocIds.length > 0;
       case 2:
-        return true; // Brand step is optional
-      case 3:
         return duration > 0 && hostVoice.length > 0;
-      case 4:
+      case 3:
         return true; // Instructions are optional
       default:
         return false;
@@ -143,10 +108,6 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           });
           break;
         case 2:
-          // Brand step is optional - no data saved to podcast
-          // Persona/segment selections affect voice/instructions which are saved in later steps
-          break;
-        case 3:
           await updateMutation.mutateAsync({
             id: podcast.id,
             targetDurationMinutes: duration,
@@ -154,7 +115,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             coHostVoice: format === 'conversation' ? coHostVoice : undefined,
           });
           break;
-        case 4:
+        case 3:
           // Save instructions and trigger generation
           await updateMutation.mutateAsync({
             id: podcast.id,
@@ -201,17 +162,6 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
         )}
 
         {currentStep === 2 && (
-          <StepBrand
-            selectedBrandId={selectedBrandId}
-            selectedPersonaId={selectedPersonaId}
-            selectedSegmentId={selectedSegmentId}
-            onBrandChange={setSelectedBrandId}
-            onPersonaChange={handlePersonaChange}
-            onSegmentChange={handleSegmentChange}
-          />
-        )}
-
-        {currentStep === 3 && (
           <StepAudio
             format={format}
             duration={duration}
@@ -223,7 +173,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           />
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <StepInstructions
             instructions={instructions}
             onInstructionsChange={setInstructions}

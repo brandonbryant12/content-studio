@@ -104,13 +104,7 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Skill(agent-browser)",
       "WebFetch(domain:discuss.ai.google.dev)",
-      "WebFetch(domain:ai-sdk.dev)",
-      "Bash(mc alias set:*)",
-      "Bash(mc anonymous set:*)",
-      "Bash(docker run --rm --network host minio/mc:latest sh -c \"mc alias set local http://localhost:9000 minioadmin minioadmin && mc anonymous set download local/content-studio\")",
-      "Bash(docker run --rm --network host --entrypoint /bin/sh minio/mc:latest -c \"mc alias set local http://localhost:9000 minioadmin minioadmin && mc anonymous set download local/content-studio\")",
-      "WebFetch(domain:sdk.vercel.ai)",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:ai-sdk.dev)"
     ],
     "deny": [],
     "ask": []

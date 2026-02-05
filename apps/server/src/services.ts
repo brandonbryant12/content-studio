@@ -5,8 +5,7 @@ import {
 } from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
-import type { VertexAIConfig } from '@repo/ai';
-import { storageConfig } from './config';
+import { buildStorageConfig } from './config';
 import { env } from './env';
 
 /**
@@ -14,7 +13,7 @@ import { env } from './env';
  * These are used by both the HTTP server and background workers.
  */
 
-export { storageConfig };
+export const storageConfig = buildStorageConfig();
 
 export const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
 

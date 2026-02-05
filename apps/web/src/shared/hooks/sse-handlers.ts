@@ -31,12 +31,6 @@ const getVoiceoverQueryKey = (voiceoverId: string) =>
 const getVoiceoversListQueryKey = () =>
   apiClient.voiceovers.list.queryOptions({ input: {} }).queryKey;
 
-const getBrandQueryKey = (brandId: string) =>
-  apiClient.brands.get.queryOptions({ input: { id: brandId } }).queryKey;
-
-const getBrandsListQueryKey = () =>
-  apiClient.brands.list.queryOptions({ input: {} }).queryKey;
-
 // ============================================================================
 // Event Handlers
 // ============================================================================
@@ -119,17 +113,6 @@ export function handleEntityChange(
       if (changeType === 'insert' || changeType === 'delete') {
         queryClient.invalidateQueries({
           queryKey: getVoiceoversListQueryKey(),
-        });
-      }
-      break;
-
-    case 'brand':
-      queryClient.invalidateQueries({
-        queryKey: getBrandQueryKey(entityId),
-      });
-      if (changeType === 'insert' || changeType === 'delete') {
-        queryClient.invalidateQueries({
-          queryKey: getBrandsListQueryKey(),
         });
       }
       break;
