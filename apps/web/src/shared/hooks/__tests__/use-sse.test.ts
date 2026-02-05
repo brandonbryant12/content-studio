@@ -1,7 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  handleJobCompletion,
+  handleVoiceoverJobCompletion,
+  handleEntityChange,
+} from '../sse-handlers';
 import { useSSE } from '../use-sse';
 
 // Mock SSE handlers
@@ -10,12 +15,6 @@ vi.mock('../sse-handlers', () => ({
   handleVoiceoverJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
 }));
-
-import {
-  handleJobCompletion,
-  handleVoiceoverJobCompletion,
-  handleEntityChange,
-} from '../sse-handlers';
 
 // Create a controllable async iterator for mocking the ORPC client
 function createMockIterator() {

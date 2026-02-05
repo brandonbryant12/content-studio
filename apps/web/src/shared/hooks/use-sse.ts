@@ -1,11 +1,11 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { rawApiClient } from '@/clients/apiClient';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   handleJobCompletion,
   handleVoiceoverJobCompletion,
   handleEntityChange,
 } from './sse-handlers';
+import { rawApiClient } from '@/clients/apiClient';
 
 export type SSEConnectionState =
   | 'connecting'
