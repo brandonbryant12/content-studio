@@ -7,14 +7,18 @@ import type { ServerRuntime } from './runtime';
 
 type Session = AuthInstance['$Infer']['Session'];
 
-/** Storage configuration (S3/MinIO) */
-export interface StorageConfig {
-  bucket: string;
-  region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  endpoint?: string;
-}
+/** Storage configuration for different providers */
+export type StorageConfig =
+  | { provider: 'database' }
+  | { provider: 'filesystem'; basePath: string; baseUrl: string }
+  | {
+      provider: 's3';
+      bucket: string;
+      region: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      endpoint?: string;
+    };
 
 /**
  * oRPC context passed to all handlers.

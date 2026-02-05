@@ -86,7 +86,7 @@ export function StepAudio({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 3 of 4</p>
+        <p className="setup-step-eyebrow">Step 2 of 3</p>
         <h2 className="setup-step-title">Audio Settings</h2>
         <p className="setup-step-description">
           Choose the duration and voice{isConversation ? 's' : ''} for your

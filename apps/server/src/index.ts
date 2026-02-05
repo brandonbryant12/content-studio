@@ -8,10 +8,10 @@ import {
   apiPath,
   eventsRoute,
   eventsPath,
-  brandChatRoute,
-  brandChatPath,
+  staticRoute,
+  staticPath,
 } from './routes';
-import { auth } from './services';
+import { auth, storageConfig } from './services';
 import { generateRootHtml } from './utils';
 
 // =============================================================================
@@ -46,14 +46,16 @@ app.get('/', (c) =>
   c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL)),
 );
 
+// Static files (filesystem storage only)
+if (storageConfig.provider === 'filesystem') {
+  app.route(staticPath, staticRoute);
+}
+
 // Auth routes
 app.route(authPath, authRoute);
 
 // SSE events
 app.route(eventsPath, eventsRoute);
-
-// Brand chat (AI streaming)
-app.route(brandChatPath, brandChatRoute);
 
 // API routes (must be last - catches all /api/*)
 app.route(apiPath, apiRoute);

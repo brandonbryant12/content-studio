@@ -104,6 +104,7 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Skill(agent-browser)",
       "WebFetch(domain:discuss.ai.google.dev)",
+<<<<<<< HEAD
       "WebFetch(domain:ai-sdk.dev)",
       "Bash(mc alias set:*)",
       "Bash(mc anonymous set:*)",
@@ -117,6 +118,9 @@
       "Bash(ps:*)",
       "Bash(kill:*)",
       "Bash(docker exec:*)"
+=======
+      "WebFetch(domain:ai-sdk.dev)"
+>>>>>>> d06a12c (Revert "brand questions")
     ],
     "deny": [],
     "ask": []

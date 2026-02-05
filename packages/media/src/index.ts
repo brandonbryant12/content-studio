@@ -135,7 +135,6 @@ import {
   VoiceoverCollaboratorRepo,
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
-import { BrandRepo, BrandRepoLive } from './brand';
 
 // =============================================================================
 // Combined Media Layer
@@ -153,8 +152,7 @@ export type Media =
   | PodcastRepo
   | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo
-  | BrandRepo;
+  | VoiceoverCollaboratorRepo;
 
 /**
  * Combined layer for all media services.
@@ -183,7 +181,6 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     CollaboratorRepoLive,
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
-    BrandRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)
@@ -295,26 +292,3 @@ export {
   type ClaimVoiceoverPendingInvitesInput,
   type ClaimVoiceoverPendingInvitesResult,
 } from './voiceover';
-
-// Brand module - Repos and Use Cases
-export {
-  BrandRepo,
-  BrandRepoLive,
-  type BrandRepoService,
-  type BrandListOptions,
-  // Use Cases
-  listBrands,
-  getBrand,
-  createBrand,
-  updateBrand,
-  deleteBrand,
-  appendChatMessage,
-  // Input Types
-  type ListBrandsInput,
-  type ListBrandsResult,
-  type GetBrandInput,
-  type CreateBrandInput,
-  type UpdateBrandInput,
-  type DeleteBrandInput,
-  type AppendChatMessageInput,
-} from './brand';
