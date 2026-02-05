@@ -7,9 +7,7 @@ import {
   TTS,
   FEMALE_VOICES,
   MALE_VOICES,
-  DEFAULT_PREVIEW_TEXT,
   type GeminiVoiceId,
-  type AIProvider,
 } from '@repo/ai';
 import { createAILayer } from '../lib/ai-layer';
 import { loadEnv } from '../lib/env';
@@ -17,44 +15,41 @@ import { loadEnv } from '../lib/env';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.resolve(__dirname, '../../.output');
 
-const PROVIDERS = [
-  { title: 'Gemini (Google AI)', value: 'gemini' as const },
-  { title: 'Vertex AI (Express)', value: 'vertex' as const },
-];
+const SAMPLE_DIALOGUE = [
+  { speaker: 'Host', text: 'Welcome to the show! Today we have a very special guest.' },
+  { speaker: 'Guest', text: 'Thanks for having me, it is great to be here!' },
+  { speaker: 'Host', text: 'So tell us, what have you been working on lately?' },
+  { speaker: 'Guest', text: 'I have been exploring the latest advances in AI-generated speech. It is truly remarkable how natural it sounds now.' },
+] as const;
 
-const providerPrompt = Prompt.select({
-  message: 'Select a provider',
-  choices: PROVIDERS.map((p) => ({
-    title: p.title,
-    value: p.value,
-    description: p.value,
-  })),
-});
+const genderPrompt = (label: string) =>
+  Prompt.select({
+    message: `${label} voice gender`,
+    choices: [
+      { title: 'Female', value: 'female' as const },
+      { title: 'Male', value: 'male' as const },
+    ],
+  });
 
-const getDefaultKey = (
-  provider: AIProvider,
-): Effect.Effect<string | undefined> =>
+const voicePrompt = (label: string, voices: readonly string[]) =>
+  Prompt.select({
+    message: `${label} voice`,
+    choices: voices.map((id) => ({
+      title: id,
+      value: id as GeminiVoiceId,
+    })),
+  });
+
+const getDefaultKey = (): Effect.Effect<string | undefined> =>
   Effect.gen(function* () {
     const env = yield* loadEnv();
-    return provider === 'vertex'
-      ? env.GOOGLE_VERTEX_API_KEY
-      : env.GEMINI_API_KEY;
+    return env.GEMINI_API_KEY;
   }).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
-
-const genderPrompt = Prompt.select({
-  message: 'Filter voices by gender',
-  choices: [
-    { title: 'Female', value: 'female' as const },
-    { title: 'Male', value: 'male' as const },
-  ],
-});
 
 export const testTts = Command.make('tts', {}).pipe(
   Command.withHandler(() =>
     Effect.gen(function* () {
-      const provider = yield* Prompt.run(providerPrompt);
-
-      const defaultKey = yield* getDefaultKey(provider);
+      const defaultKey = yield* getDefaultKey();
       const apiKey = yield* Prompt.run(
         Prompt.text({
           message: 'API key',
@@ -62,35 +57,40 @@ export const testTts = Command.make('tts', {}).pipe(
         }),
       );
 
-      const gender = yield* Prompt.run(genderPrompt);
-      const voices = gender === 'female' ? FEMALE_VOICES : MALE_VOICES;
+      // Pick host voice
+      const hostGender = yield* Prompt.run(genderPrompt('Host'));
+      const hostVoices = hostGender === 'female' ? FEMALE_VOICES : MALE_VOICES;
+      const hostVoice = yield* Prompt.run(voicePrompt('Host', hostVoices));
 
-      const voiceId = yield* Prompt.run(
-        Prompt.select({
-          message: 'Select a voice',
-          choices: voices.map((id) => ({
-            title: id,
-            value: id as GeminiVoiceId,
-          })),
-        }),
-      );
+      // Pick guest voice
+      const guestGender = yield* Prompt.run(genderPrompt('Guest'));
+      const guestVoices =
+        guestGender === 'female' ? FEMALE_VOICES : MALE_VOICES;
+      const guestVoice = yield* Prompt.run(voicePrompt('Guest', guestVoices));
 
-      yield* Console.log(`\nGenerating preview for voice: ${voiceId}`);
-      yield* Console.log(`Provider: ${provider}`);
-      yield* Console.log(`Text: "${DEFAULT_PREVIEW_TEXT}"\n`);
+      yield* Console.log(`\nMulti-speaker synthesis`);
+      yield* Console.log(`Host:  ${hostVoice}`);
+      yield* Console.log(`Guest: ${guestVoice}`);
+      yield* Console.log(`Turns: ${SAMPLE_DIALOGUE.length}\n`);
 
-      const aiLayer = createAILayer({ provider, apiKey });
+      const aiLayer = createAILayer({ provider: 'gemini', apiKey });
 
       const result = yield* Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.previewVoice({
-          voiceId,
-          text: DEFAULT_PREVIEW_TEXT,
+        return yield* tts.synthesize({
+          turns: SAMPLE_DIALOGUE.map((t) => ({
+            speaker: t.speaker,
+            text: t.text,
+          })),
+          voiceConfigs: [
+            { speakerAlias: 'Host', voiceId: hostVoice },
+            { speakerAlias: 'Guest', voiceId: guestVoice },
+          ],
         });
       }).pipe(Effect.provide(aiLayer));
 
       const timestamp = Date.now();
-      const filename = `tts-preview-${voiceId}-${timestamp}.wav`;
+      const filename = `tts-multi-${hostVoice}-${guestVoice}-${timestamp}.wav`;
       const filePath = path.join(OUTPUT_DIR, filename);
 
       yield* Effect.tryPromise({
@@ -104,7 +104,6 @@ export const testTts = Command.make('tts', {}).pipe(
       });
 
       yield* Console.log('--- Result ---');
-      yield* Console.log(`Voice:    ${result.voiceId}`);
       yield* Console.log(`Encoding: ${result.audioEncoding}`);
       yield* Console.log(
         `Size:     ${(result.audioContent.length / 1024).toFixed(1)} KB`,
@@ -112,5 +111,5 @@ export const testTts = Command.make('tts', {}).pipe(
       yield* Console.log(`Saved to: ${filePath}`);
     }),
   ),
-  Command.withDescription('Test TTS voice preview and audio generation'),
+  Command.withDescription('Test TTS multi-speaker synthesis'),
 );
