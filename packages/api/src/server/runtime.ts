@@ -2,8 +2,6 @@ import { ManagedRuntime, Layer, Logger } from 'effect';
 import { DbLive, type Db } from '@repo/db/effect';
 import { QueueLive, type Queue } from '@repo/queue';
 import {
-  GoogleAILive,
-  VertexAILive,
   type AI,
   type AIProvider,
   type VertexAIConfig,
