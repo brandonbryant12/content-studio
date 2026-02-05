@@ -43,12 +43,11 @@ export const testTts = Command.prompt('tts', voicePrompt, (voiceId) =>
       return yield* tts.previewVoice({
         voiceId,
         text: DEFAULT_PREVIEW_TEXT,
-        audioEncoding: 'MP3',
       });
     }).pipe(Effect.provide(aiLayer));
 
     const timestamp = Date.now();
-    const filename = `tts-preview-${voiceId}-${timestamp}.mp3`;
+    const filename = `tts-preview-${voiceId}-${timestamp}.wav`;
     const filePath = path.join(OUTPUT_DIR, filename);
 
     yield* Effect.tryPromise({

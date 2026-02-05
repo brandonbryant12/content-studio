@@ -110,23 +110,30 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       Effect.tryPromise({
         try: async () => {
           const text = options.text ?? DEFAULT_PREVIEW_TEXT;
-          const audioEncoding: AudioEncoding = options.audioEncoding ?? 'MP3';
 
           const response = await fetch(
-            `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
             {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey,
               },
               body: JSON.stringify({
-                input: { text },
-                voice: {
-                  languageCode: 'en-US',
-                  name: `en-US-${modelName}-${options.voiceId}`,
-                },
-                audioConfig: {
-                  audioEncoding,
+                contents: [
+                  {
+                    parts: [{ text }],
+                  },
+                ],
+                generationConfig: {
+                  responseModalities: ['AUDIO'],
+                  speechConfig: {
+                    voiceConfig: {
+                      prebuiltVoiceConfig: {
+                        voiceName: options.voiceId,
+                      },
+                    },
+                  },
                 },
               }),
             },
@@ -139,12 +146,32 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
             );
           }
 
-          const data = (await response.json()) as { audioContent: string };
-          const audioContent = Buffer.from(data.audioContent, 'base64');
+          const data = (await response.json()) as {
+            candidates: Array<{
+              content: {
+                parts: Array<{
+                  inlineData?: { mimeType: string; data: string };
+                }>;
+              };
+            }>;
+          };
+
+          const inlineData =
+            data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+          if (!inlineData?.data) {
+            throw new Error('No audio data in response');
+          }
+
+          const audioData = Buffer.from(inlineData.data, 'base64');
+          const isAlreadyWav =
+            audioData.slice(0, 4).toString('ascii') === 'RIFF';
+          const audioContent = isAlreadyWav
+            ? audioData
+            : wrapPcmAsWav(audioData);
 
           return {
             audioContent,
-            audioEncoding,
+            audioEncoding: 'LINEAR16' as AudioEncoding,
             voiceId: options.voiceId,
           } satisfies PreviewVoiceResult;
         },
