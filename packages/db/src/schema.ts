@@ -2,6 +2,8 @@ export * from './schemas/brands';
 export * from './schemas/pagination';
 export * from './schemas/auth';
 export * from './schemas/documents';
+export * from './schemas/personas';
+export * from './schemas/audience-segments';
 export * from './schemas/podcasts';
 export * from './schemas/voiceovers';
 export * from './schemas/jobs';

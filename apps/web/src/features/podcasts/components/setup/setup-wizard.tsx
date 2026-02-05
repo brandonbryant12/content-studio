@@ -47,6 +47,15 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const [coHostVoice, setCoHostVoice] = useState(
     podcast.coHostVoice ?? 'Charon',
   );
+  const [hostPersonaId, setHostPersonaId] = useState<string | null>(
+    podcast.hostPersonaId ?? null,
+  );
+  const [coHostPersonaId, setCoHostPersonaId] = useState<string | null>(
+    podcast.coHostPersonaId ?? null,
+  );
+  const [audienceSegmentId, setAudienceSegmentId] = useState<string | null>(
+    podcast.audienceSegmentId ?? null,
+  );
 
   // Step 4 state
   const [instructions, setInstructions] = useState(
@@ -113,6 +122,10 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             targetDurationMinutes: duration,
             hostVoice,
             coHostVoice: format === 'conversation' ? coHostVoice : undefined,
+            hostPersonaId: hostPersonaId ?? undefined,
+            coHostPersonaId:
+              format === 'conversation' ? (coHostPersonaId ?? undefined) : undefined,
+            audienceSegmentId: audienceSegmentId ?? undefined,
           });
           break;
         case 3:
@@ -167,9 +180,15 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             duration={duration}
             hostVoice={hostVoice}
             coHostVoice={coHostVoice}
+            hostPersonaId={hostPersonaId}
+            coHostPersonaId={coHostPersonaId}
+            audienceSegmentId={audienceSegmentId}
             onDurationChange={setDuration}
             onHostVoiceChange={setHostVoice}
             onCoHostVoiceChange={setCoHostVoice}
+            onHostPersonaChange={setHostPersonaId}
+            onCoHostPersonaChange={setCoHostPersonaId}
+            onAudienceSegmentChange={setAudienceSegmentId}
           />
         )}
 

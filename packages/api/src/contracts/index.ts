@@ -1,5 +1,7 @@
 import { oc } from '@orpc/contract';
+import audienceSegmentContract from './audience-segments';
 import documentContract from './documents';
+import personaContract from './personas';
 import podcastContract from './podcasts';
 import voiceoverContract from './voiceovers';
 import voicesContract from './voices';
@@ -60,7 +62,9 @@ export const appContract = oc
     },
   })
   .router({
+    audienceSegments: audienceSegmentContract,
     documents: documentContract,
+    personas: personaContract,
     podcasts: podcastContract,
     voiceovers: voiceoverContract,
     voices: voicesContract,

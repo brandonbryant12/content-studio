@@ -513,6 +513,54 @@ export class InvalidVoiceoverAudioGeneration extends Schema.TaggedError<InvalidV
 }
 
 // =============================================================================
+// Persona Errors
+// =============================================================================
+
+/**
+ * Persona not found.
+ */
+export class PersonaNotFound extends Schema.TaggedError<PersonaNotFound>()(
+  'PersonaNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'PERSONA_NOT_FOUND' as const;
+  static readonly httpMessage = (e: PersonaNotFound) =>
+    e.message ?? `Persona ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: PersonaNotFound) {
+    return { personaId: e.id };
+  }
+}
+
+// =============================================================================
+// Audience Segment Errors
+// =============================================================================
+
+/**
+ * Audience segment not found.
+ */
+export class AudienceSegmentNotFound extends Schema.TaggedError<AudienceSegmentNotFound>()(
+  'AudienceSegmentNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'AUDIENCE_SEGMENT_NOT_FOUND' as const;
+  static readonly httpMessage = (e: AudienceSegmentNotFound) =>
+    e.message ?? `Audience segment ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: AudienceSegmentNotFound) {
+    return { audienceSegmentId: e.id };
+  }
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -543,4 +591,6 @@ export type MediaError =
   | VoiceoverCollaboratorAlreadyExists
   | VoiceoverCollaboratorNotFound
   | CannotAddOwnerAsVoiceoverCollaborator
-  | InvalidVoiceoverAudioGeneration;
+  | InvalidVoiceoverAudioGeneration
+  | PersonaNotFound
+  | AudienceSegmentNotFound;

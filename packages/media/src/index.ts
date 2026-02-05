@@ -26,6 +26,10 @@ export {
   // Project/Media errors
   ProjectNotFound,
   MediaNotFound,
+  // Persona errors
+  PersonaNotFound,
+  // Audience segment errors
+  AudienceSegmentNotFound,
   // Error union
   type MediaError,
 } from './errors';
@@ -121,6 +125,42 @@ export type {
   VoiceoverCollaboratorWithUserOutput,
 } from './voiceover';
 
+// Persona module - Repos and Use Cases
+export {
+  PersonaRepo,
+  PersonaRepoLive,
+  type PersonaRepoService,
+  type PersonaListOptions,
+  createPersona,
+  getPersona,
+  listPersonas,
+  updatePersona,
+  deletePersona,
+  type CreatePersonaInput,
+  type GetPersonaInput,
+  type ListPersonasInput,
+  type UpdatePersonaInput,
+  type DeletePersonaInput,
+} from './persona';
+
+// Audience module - Repos and Use Cases
+export {
+  AudienceSegmentRepo,
+  AudienceSegmentRepoLive,
+  type AudienceSegmentRepoService,
+  type AudienceSegmentListOptions,
+  createAudienceSegment,
+  getAudienceSegment,
+  listAudienceSegments,
+  updateAudienceSegment,
+  deleteAudienceSegment,
+  type CreateAudienceSegmentInput,
+  type GetAudienceSegmentInput,
+  type ListAudienceSegmentsInput,
+  type UpdateAudienceSegmentInput,
+  type DeleteAudienceSegmentInput,
+} from './audience';
+
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import {
@@ -135,6 +175,8 @@ import {
   VoiceoverCollaboratorRepo,
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
+import { PersonaRepo, PersonaRepoLive } from './persona';
+import { AudienceSegmentRepo, AudienceSegmentRepoLive } from './audience';
 
 // =============================================================================
 // Combined Media Layer
@@ -152,7 +194,9 @@ export type Media =
   | PodcastRepo
   | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo;
+  | VoiceoverCollaboratorRepo
+  | PersonaRepo
+  | AudienceSegmentRepo;
 
 /**
  * Combined layer for all media services.
@@ -181,6 +225,8 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     CollaboratorRepoLive,
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
+    PersonaRepoLive,
+    AudienceSegmentRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)

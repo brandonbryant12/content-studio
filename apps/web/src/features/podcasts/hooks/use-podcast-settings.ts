@@ -72,12 +72,18 @@ export interface UsePodcastSettingsReturn {
   coHostVoice: string;
   targetDuration: number;
   instructions: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  audienceSegmentId: string | null;
 
   // Setters
   setHostVoice: (voice: string) => void;
   setCoHostVoice: (voice: string) => void;
   setTargetDuration: (duration: number) => void;
   setInstructions: (instructions: string) => void;
+  setHostPersonaId: (id: string | null) => void;
+  setCoHostPersonaId: (id: string | null) => void;
+  setAudienceSegmentId: (id: string | null) => void;
 
   // State
   hasChanges: boolean;
@@ -96,6 +102,9 @@ function getInitialValues(podcast: PodcastFull | undefined) {
     coHostVoice: podcast?.coHostVoice ?? 'Charon',
     targetDuration: podcast?.targetDurationMinutes ?? 5,
     instructions: podcast?.promptInstructions ?? '',
+    hostPersonaId: podcast?.hostPersonaId ?? null,
+    coHostPersonaId: podcast?.coHostPersonaId ?? null,
+    audienceSegmentId: podcast?.audienceSegmentId ?? null,
   };
 }
 
@@ -118,6 +127,15 @@ export function usePodcastSettings({
   const [instructions, setInstructionsInternal] = useState(
     initial.instructions,
   );
+  const [hostPersonaId, setHostPersonaIdInternal] = useState<string | null>(
+    initial.hostPersonaId,
+  );
+  const [coHostPersonaId, setCoHostPersonaIdInternal] = useState<string | null>(
+    initial.coHostPersonaId,
+  );
+  const [audienceSegmentId, setAudienceSegmentIdInternal] = useState<
+    string | null
+  >(initial.audienceSegmentId);
 
   // Wrapped setters that track user edits
   const setHostVoice = useCallback((value: string) => {
@@ -140,6 +158,21 @@ export function usePodcastSettings({
     setInstructionsInternal(value);
   }, []);
 
+  const setHostPersonaId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setHostPersonaIdInternal(value);
+  }, []);
+
+  const setCoHostPersonaId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setCoHostPersonaIdInternal(value);
+  }, []);
+
+  const setAudienceSegmentId = useCallback((value: string | null) => {
+    hasUserEditsRef.current = true;
+    setAudienceSegmentIdInternal(value);
+  }, []);
+
   // Reset state when navigating to a different podcast
   if (podcast?.id !== podcastIdRef.current) {
     podcastIdRef.current = podcast?.id;
@@ -149,6 +182,9 @@ export function usePodcastSettings({
     setCoHostVoiceInternal(newInitial.coHostVoice);
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
+    setHostPersonaIdInternal(newInitial.hostPersonaId);
+    setCoHostPersonaIdInternal(newInitial.coHostPersonaId);
+    setAudienceSegmentIdInternal(newInitial.audienceSegmentId);
   }
 
   // Sync local state when server data changes externally (wizard saves, SSE updates)
@@ -161,17 +197,26 @@ export function usePodcastSettings({
     setCoHostVoiceInternal(newInitial.coHostVoice);
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
+    setHostPersonaIdInternal(newInitial.hostPersonaId);
+    setCoHostPersonaIdInternal(newInitial.coHostPersonaId);
+    setAudienceSegmentIdInternal(newInitial.audienceSegmentId);
   }, [
     podcast?.hostVoice,
     podcast?.coHostVoice,
     podcast?.targetDurationMinutes,
     podcast?.promptInstructions,
+    podcast?.hostPersonaId,
+    podcast?.coHostPersonaId,
+    podcast?.audienceSegmentId,
   ]);
 
   // Track if script-affecting settings changed (requires script regeneration)
   const hasScriptSettingsChanges =
     targetDuration !== (podcast?.targetDurationMinutes ?? 5) ||
-    instructions !== (podcast?.promptInstructions ?? '');
+    instructions !== (podcast?.promptInstructions ?? '') ||
+    hostPersonaId !== (podcast?.hostPersonaId ?? null) ||
+    coHostPersonaId !== (podcast?.coHostPersonaId ?? null) ||
+    audienceSegmentId !== (podcast?.audienceSegmentId ?? null);
 
   // Track if there are changes compared to the current podcast values
   const hasChanges =
@@ -201,6 +246,9 @@ export function usePodcastSettings({
       coHostVoiceName: coHostVoiceInfo?.name,
       targetDurationMinutes: targetDuration,
       promptInstructions: instructions || undefined,
+      hostPersonaId: hostPersonaId ?? undefined,
+      coHostPersonaId: coHostPersonaId ?? undefined,
+      audienceSegmentId: audienceSegmentId ?? undefined,
     });
   }, [
     podcast?.id,
@@ -208,6 +256,9 @@ export function usePodcastSettings({
     coHostVoice,
     targetDuration,
     instructions,
+    hostPersonaId,
+    coHostPersonaId,
+    audienceSegmentId,
     updateMutation,
   ]);
 
@@ -217,6 +268,9 @@ export function usePodcastSettings({
     setCoHostVoiceInternal(podcast?.coHostVoice ?? 'Charon');
     setTargetDurationInternal(podcast?.targetDurationMinutes ?? 5);
     setInstructionsInternal(podcast?.promptInstructions ?? '');
+    setHostPersonaIdInternal(podcast?.hostPersonaId ?? null);
+    setCoHostPersonaIdInternal(podcast?.coHostPersonaId ?? null);
+    setAudienceSegmentIdInternal(podcast?.audienceSegmentId ?? null);
   }, [podcast]);
 
   return useMemo(
@@ -226,12 +280,18 @@ export function usePodcastSettings({
       coHostVoice,
       targetDuration,
       instructions,
+      hostPersonaId,
+      coHostPersonaId,
+      audienceSegmentId,
 
       // Setters
       setHostVoice,
       setCoHostVoice,
       setTargetDuration,
       setInstructions,
+      setHostPersonaId,
+      setCoHostPersonaId,
+      setAudienceSegmentId,
 
       // State
       hasChanges,
@@ -247,10 +307,16 @@ export function usePodcastSettings({
       coHostVoice,
       targetDuration,
       instructions,
+      hostPersonaId,
+      coHostPersonaId,
+      audienceSegmentId,
       setHostVoice,
       setCoHostVoice,
       setTargetDuration,
       setInstructions,
+      setHostPersonaId,
+      setCoHostPersonaId,
+      setAudienceSegmentId,
       hasChanges,
       hasScriptSettingsChanges,
       updateMutation.isPending,

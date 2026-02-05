@@ -2,7 +2,9 @@ import {
   FileTextIcon,
   HomeIcon,
   MixerHorizontalIcon,
+  PersonIcon,
   SpeakerLoudIcon,
+  TargetIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import {
@@ -14,7 +16,7 @@ import {
 import { authClient } from '@/clients/authClient';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 
-export const Route = createFileRoute('/_protected')({
+export const Route = createFileRoute('/_protected/layout')({
   component: Layout,
 });
 
@@ -95,6 +97,46 @@ function Sidebar() {
           aria-label="Voiceovers"
         >
           <SpeakerLoudIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
+        </Link>
+
+        <div className="my-3 border-t border-border/60 w-6 mx-auto" />
+
+        <Link
+          to="/personas"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          activeProps={{
+            className:
+              'bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-amber-600 dark:text-amber-400 shadow-sm',
+          }}
+          inactiveProps={{
+            className:
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
+          }}
+          aria-label="Personas"
+        >
+          <PersonIcon
+            className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          />
+        </Link>
+
+        <Link
+          to="/audiences"
+          className="group relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          activeProps={{
+            className:
+              'bg-gradient-to-br from-violet-500/20 to-violet-500/10 text-violet-600 dark:text-violet-400 shadow-sm',
+          }}
+          inactiveProps={{
+            className:
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
+          }}
+          aria-label="Audiences"
+        >
+          <TargetIcon
             className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
             aria-hidden="true"
           />

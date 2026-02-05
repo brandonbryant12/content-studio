@@ -1,4 +1,6 @@
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import { PersonaSelector } from '../selectors/persona-selector';
+import { AudienceSelector } from '../selectors/audience-selector';
 import { Slider } from '@repo/ui/components/slider';
 import { useState, useEffect, useRef } from 'react';
 import type { RouterOutput } from '@repo/api/client';
@@ -147,6 +149,35 @@ export function PodcastSettings({
             />
           </div>
         )}
+      </div>
+
+      {/* Persona & Audience */}
+      <div className="space-y-3 py-3 border-t border-border/40">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Personas & Audience
+        </h4>
+        <PersonaSelector
+          value={settings.hostPersonaId}
+          onChange={settings.setHostPersonaId}
+          role="host"
+          label={isConversation ? 'Host Persona' : 'Persona'}
+          disabled={disabled}
+        />
+        {isConversation && (
+          <PersonaSelector
+            value={settings.coHostPersonaId}
+            onChange={settings.setCoHostPersonaId}
+            role="cohost"
+            label="Co-host Persona"
+            disabled={disabled}
+          />
+        )}
+        <AudienceSelector
+          value={settings.audienceSegmentId}
+          onChange={settings.setAudienceSegmentId}
+          label="Target Audience"
+          disabled={disabled}
+        />
       </div>
 
       {/* Duration Control */}

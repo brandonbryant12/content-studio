@@ -1,3 +1,6 @@
+import { PersonaSelector } from '../../selectors/persona-selector';
+import { AudienceSelector } from '../../selectors/audience-selector';
+
 type PodcastFormat = 'conversation' | 'voiceover' | 'voice_over';
 
 // Voice options - these match the Gemini TTS voices
@@ -65,9 +68,15 @@ interface StepAudioProps {
   duration: number;
   hostVoice: string;
   coHostVoice: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  audienceSegmentId: string | null;
   onDurationChange: (duration: number) => void;
   onHostVoiceChange: (voice: string) => void;
   onCoHostVoiceChange: (voice: string) => void;
+  onHostPersonaChange: (id: string | null) => void;
+  onCoHostPersonaChange: (id: string | null) => void;
+  onAudienceSegmentChange: (id: string | null) => void;
 }
 
 export function StepAudio({
@@ -75,9 +84,15 @@ export function StepAudio({
   duration,
   hostVoice,
   coHostVoice,
+  hostPersonaId,
+  coHostPersonaId,
+  audienceSegmentId,
   onDurationChange,
   onHostVoiceChange,
   onCoHostVoiceChange,
+  onHostPersonaChange,
+  onCoHostPersonaChange,
+  onAudienceSegmentChange,
 }: StepAudioProps) {
   const isConversation = format === 'conversation';
   const femaleVoices = VOICES.filter((v) => v.gender === 'female');
@@ -110,6 +125,36 @@ export function StepAudio({
               {option.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Persona & Audience Selection */}
+      <div className="mb-8 space-y-4">
+        <label className="setup-label block text-center mb-4">
+          Personas & Audience
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+          <PersonaSelector
+            value={hostPersonaId}
+            onChange={onHostPersonaChange}
+            role="host"
+            label="Host Persona"
+          />
+          {isConversation && (
+            <PersonaSelector
+              value={coHostPersonaId}
+              onChange={onCoHostPersonaChange}
+              role="cohost"
+              label="Co-host Persona"
+            />
+          )}
+        </div>
+        <div className="max-w-lg mx-auto">
+          <AudienceSelector
+            value={audienceSegmentId}
+            onChange={onAudienceSegmentChange}
+            label="Target Audience"
+          />
         </div>
       </div>
 

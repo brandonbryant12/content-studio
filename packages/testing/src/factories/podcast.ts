@@ -1,6 +1,8 @@
 import {
   generatePodcastId,
   type PodcastId,
+  type PersonaId,
+  type AudienceSegmentId,
   type Podcast,
   type PodcastFormat,
   type VersionStatus,
@@ -34,6 +36,9 @@ export interface CreateTestPodcastOptions {
   duration?: number | null;
   errorMessage?: string | null;
   ownerHasApproved?: boolean;
+  hostPersonaId?: PersonaId | null;
+  coHostPersonaId?: PersonaId | null;
+  audienceSegmentId?: AudienceSegmentId | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -86,6 +91,9 @@ export const createTestPodcast = (
     duration: options.duration ?? null,
     errorMessage: options.errorMessage ?? null,
     ownerHasApproved: options.ownerHasApproved ?? false,
+    hostPersonaId: options.hostPersonaId ?? null,
+    coHostPersonaId: options.coHostPersonaId ?? null,
+    audienceSegmentId: options.audienceSegmentId ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,

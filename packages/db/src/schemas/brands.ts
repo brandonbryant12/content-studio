@@ -161,3 +161,35 @@ export type VoiceoverCollaboratorId = typeof VoiceoverCollaboratorIdSchema.Type;
 
 export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
   `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;
+
+// =============================================================================
+// Persona ID
+// =============================================================================
+
+export const PersonaIdSchema = Schema.String.pipe(
+  Schema.pattern(/^per_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid persona ID format',
+  }),
+  Schema.brand('PersonaId'),
+);
+
+export type PersonaId = typeof PersonaIdSchema.Type;
+
+export const generatePersonaId = (): PersonaId =>
+  `per_${generateRandomBase32()}` as PersonaId;
+
+// =============================================================================
+// Audience Segment ID
+// =============================================================================
+
+export const AudienceSegmentIdSchema = Schema.String.pipe(
+  Schema.pattern(/^aud_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid audience segment ID format',
+  }),
+  Schema.brand('AudienceSegmentId'),
+);
+
+export type AudienceSegmentId = typeof AudienceSegmentIdSchema.Type;
+
+export const generateAudienceSegmentId = (): AudienceSegmentId =>
+  `aud_${generateRandomBase32()}` as AudienceSegmentId;

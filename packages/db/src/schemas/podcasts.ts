@@ -26,12 +26,18 @@ import {
   type PodcastId,
   type DocumentId,
   type CollaboratorId,
+  type PersonaId,
+  type AudienceSegmentId,
   PodcastIdSchema,
   DocumentIdSchema,
   CollaboratorIdSchema,
+  PersonaIdSchema,
+  AudienceSegmentIdSchema,
   generatePodcastId,
   generateCollaboratorId,
 } from './brands';
+import { persona } from './personas';
+import { audienceSegment } from './audience-segments';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
@@ -137,6 +143,17 @@ export const podcast = pgTable(
     errorMessage: text('errorMessage'),
     ownerHasApproved: boolean('ownerHasApproved').notNull().default(false),
 
+    // Persona & audience references
+    hostPersonaId: varchar('hostPersonaId', { length: 20 })
+      .$type<PersonaId>()
+      .references(() => persona.id, { onDelete: 'set null' }),
+    coHostPersonaId: varchar('coHostPersonaId', { length: 20 })
+      .$type<PersonaId>()
+      .references(() => persona.id, { onDelete: 'set null' }),
+    audienceSegmentId: varchar('audienceSegmentId', { length: 20 })
+      .$type<AudienceSegmentId>()
+      .references(() => audienceSegment.id, { onDelete: 'set null' }),
+
     createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -150,6 +167,9 @@ export const podcast = pgTable(
   (table) => [
     index('podcast_createdBy_idx').on(table.createdBy),
     index('podcast_status_idx').on(table.status),
+    index('podcast_hostPersonaId_idx').on(table.hostPersonaId),
+    index('podcast_coHostPersonaId_idx').on(table.coHostPersonaId),
+    index('podcast_audienceSegmentId_idx').on(table.audienceSegmentId),
   ],
 );
 
@@ -222,6 +242,9 @@ export const CreatePodcastSchema = Schema.Struct({
   hostVoiceName: Schema.optional(Schema.String),
   coHostVoice: Schema.optional(Schema.String),
   coHostVoiceName: Schema.optional(Schema.String),
+  hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  audienceSegmentId: Schema.optional(Schema.NullOr(AudienceSegmentIdSchema)),
 });
 
 /**
@@ -246,6 +269,9 @@ export const UpdatePodcastFields = {
   coHostVoiceName: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
   documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+  hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  audienceSegmentId: Schema.optional(Schema.NullOr(AudienceSegmentIdSchema)),
 };
 
 export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
@@ -331,6 +357,11 @@ export const PodcastOutputSchema = Schema.Struct({
   tags: Schema.Array(Schema.String),
   sourceDocumentIds: Schema.Array(DocumentIdSchema),
   generationContext: Schema.NullOr(GenerationContextOutputSchema),
+
+  // Persona & audience references
+  hostPersonaId: Schema.NullOr(PersonaIdSchema),
+  coHostPersonaId: Schema.NullOr(PersonaIdSchema),
+  audienceSegmentId: Schema.NullOr(AudienceSegmentIdSchema),
 
   // Script fields (flattened)
   status: VersionStatusSchema,
@@ -433,6 +464,10 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
   generationContext: podcast.generationContext ?? null,
+  // Persona & audience references
+  hostPersonaId: podcast.hostPersonaId ?? null,
+  coHostPersonaId: podcast.coHostPersonaId ?? null,
+  audienceSegmentId: podcast.audienceSegmentId ?? null,
   // Script fields (flattened)
   status: podcast.status,
   segments: podcast.segments ?? null,
