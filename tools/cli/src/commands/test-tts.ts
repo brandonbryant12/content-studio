@@ -3,23 +3,31 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command, Prompt } from '@effect/cli';
 import { Console, Effect } from 'effect';
-import {
-  TTS,
-  FEMALE_VOICES,
-  MALE_VOICES,
-  type GeminiVoiceId,
-} from '@repo/ai';
-import { createAILayer } from '../lib/ai-layer';
+import { FEMALE_VOICES, MALE_VOICES, type GeminiVoiceId } from '@repo/ai';
 import { loadEnv } from '../lib/env';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.resolve(__dirname, '../../.output');
 
+const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+
 const SAMPLE_DIALOGUE = [
-  { speaker: 'Host', text: 'Welcome to the show! Today we have a very special guest.' },
-  { speaker: 'Guest', text: 'Thanks for having me, it is great to be here!' },
-  { speaker: 'Host', text: 'So tell us, what have you been working on lately?' },
-  { speaker: 'Guest', text: 'I have been exploring the latest advances in AI-generated speech. It is truly remarkable how natural it sounds now.' },
+  {
+    speaker: 'Host',
+    text: 'Welcome to the show! Today we have a very special guest.',
+  },
+  {
+    speaker: 'Guest',
+    text: 'Thanks for having me, it is great to be here!',
+  },
+  {
+    speaker: 'Host',
+    text: 'So tell us, what have you been working on lately?',
+  },
+  {
+    speaker: 'Guest',
+    text: 'I have been exploring the latest advances in AI-generated speech. It is truly remarkable how natural it sounds now.',
+  },
 ] as const;
 
 const genderPrompt = (label: string) =>
@@ -46,6 +54,138 @@ const getDefaultKey = (): Effect.Effect<string | undefined> =>
     return env.GEMINI_API_KEY;
   }).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
 
+/**
+ * Multi-speaker via generativelanguage.googleapis.com generateContent.
+ */
+const tryGenerateContent = (
+  apiKey: string,
+  hostVoice: string,
+  guestVoice: string,
+): Effect.Effect<{ audioContent: Buffer }, Error> =>
+  Effect.tryPromise({
+    try: async () => {
+      const conversationText = SAMPLE_DIALOGUE.map(
+        (t) => `${t.speaker}: ${t.text}`,
+      ).join('\n');
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: conversationText }] }],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                multiSpeakerVoiceConfig: {
+                  speakerVoiceConfigs: [
+                    {
+                      speaker: 'Host',
+                      voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: hostVoice },
+                      },
+                    },
+                    {
+                      speaker: 'Guest',
+                      voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: guestVoice },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`${response.status} - ${errorBody}`);
+      }
+
+      const data = (await response.json()) as {
+        candidates: Array<{
+          content: {
+            parts: Array<{
+              inlineData?: { mimeType: string; data: string };
+            }>;
+          };
+        }>;
+      };
+
+      const inlineData =
+        data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!inlineData?.data) {
+        throw new Error('No audio data in response');
+      }
+
+      return { audioContent: Buffer.from(inlineData.data, 'base64') };
+    },
+    catch: (e) =>
+      new Error(e instanceof Error ? e.message : 'Unknown error'),
+  });
+
+/**
+ * Single-voice via texttospeech.googleapis.com text:synthesize.
+ */
+const tryTextToSpeech = (
+  apiKey: string,
+  voiceId: string,
+): Effect.Effect<{ audioContent: Buffer }, Error> =>
+  Effect.tryPromise({
+    try: async () => {
+      const text = SAMPLE_DIALOGUE.map((t) => t.text).join(' ');
+
+      const response = await fetch(
+        `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text },
+            voice: {
+              languageCode: 'en-US',
+              name: `en-US-${TTS_MODEL}__${voiceId}`,
+            },
+            audioConfig: { audioEncoding: 'MP3' },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`${response.status} - ${errorBody}`);
+      }
+
+      const data = (await response.json()) as { audioContent: string };
+      return { audioContent: Buffer.from(data.audioContent, 'base64') };
+    },
+    catch: (e) =>
+      new Error(e instanceof Error ? e.message : 'Unknown error'),
+  });
+
+const saveAudio = (
+  filename: string,
+  audioContent: Buffer,
+): Effect.Effect<string, Error> =>
+  Effect.gen(function* () {
+    const filePath = path.join(OUTPUT_DIR, filename);
+    yield* Effect.tryPromise({
+      try: () => fs.mkdir(OUTPUT_DIR, { recursive: true }),
+      catch: (e) => new Error(`Failed to create output dir: ${e}`),
+    });
+    yield* Effect.tryPromise({
+      try: () => fs.writeFile(filePath, audioContent),
+      catch: (e) => new Error(`Failed to write audio file: ${e}`),
+    });
+    return filePath;
+  });
+
 export const testTts = Command.make('tts', {}).pipe(
   Command.withHandler(() =>
     Effect.gen(function* () {
@@ -68,48 +208,54 @@ export const testTts = Command.make('tts', {}).pipe(
         guestGender === 'female' ? FEMALE_VOICES : MALE_VOICES;
       const guestVoice = yield* Prompt.run(voicePrompt('Guest', guestVoices));
 
-      yield* Console.log(`\nMulti-speaker synthesis`);
-      yield* Console.log(`Host:  ${hostVoice}`);
-      yield* Console.log(`Guest: ${guestVoice}`);
+      yield* Console.log(`\nHost: ${hostVoice}, Guest: ${guestVoice}`);
       yield* Console.log(`Turns: ${SAMPLE_DIALOGUE.length}\n`);
 
-      const aiLayer = createAILayer({ provider: 'gemini', apiKey });
-
-      const result = yield* Effect.gen(function* () {
-        const tts = yield* TTS;
-        return yield* tts.synthesize({
-          turns: SAMPLE_DIALOGUE.map((t) => ({
-            speaker: t.speaker,
-            text: t.text,
-          })),
-          voiceConfigs: [
-            { speakerAlias: 'Host', voiceId: hostVoice },
-            { speakerAlias: 'Guest', voiceId: guestVoice },
-          ],
-        });
-      }).pipe(Effect.provide(aiLayer));
-
       const timestamp = Date.now();
-      const filename = `tts-multi-${hostVoice}-${guestVoice}-${timestamp}.wav`;
-      const filePath = path.join(OUTPUT_DIR, filename);
 
-      yield* Effect.tryPromise({
-        try: () => fs.mkdir(OUTPUT_DIR, { recursive: true }),
-        catch: (e) => new Error(`Failed to create output dir: ${e}`),
-      });
-
-      yield* Effect.tryPromise({
-        try: () => fs.writeFile(filePath, result.audioContent),
-        catch: (e) => new Error(`Failed to write audio file: ${e}`),
-      });
-
-      yield* Console.log('--- Result ---');
-      yield* Console.log(`Encoding: ${result.audioEncoding}`);
+      // --- Endpoint 1: generateContent ---
       yield* Console.log(
-        `Size:     ${(result.audioContent.length / 1024).toFixed(1)} KB`,
+        '--- [1] generativelanguage.googleapis.com (generateContent) ---',
       );
-      yield* Console.log(`Saved to: ${filePath}`);
+      const gc = yield* tryGenerateContent(
+        apiKey,
+        hostVoice,
+        guestVoice,
+      ).pipe(Effect.either);
+      if (gc._tag === 'Right') {
+        const fp = yield* saveAudio(
+          `tts-generateContent-${timestamp}.wav`,
+          gc.right.audioContent,
+        );
+        yield* Console.log(
+          `  OK  ${(gc.right.audioContent.length / 1024).toFixed(1)} KB → ${fp}`,
+        );
+      } else {
+        yield* Console.log(`  FAIL  ${gc.left.message}`);
+      }
+
+      // --- Endpoint 2: texttospeech ---
+      yield* Console.log(
+        '\n--- [2] texttospeech.googleapis.com (text:synthesize) ---',
+      );
+      yield* Console.log(`  Voice name: en-US-${TTS_MODEL}__${hostVoice}`);
+      const tts = yield* tryTextToSpeech(apiKey, hostVoice).pipe(
+        Effect.either,
+      );
+      if (tts._tag === 'Right') {
+        const fp = yield* saveAudio(
+          `tts-texttospeech-${timestamp}.mp3`,
+          tts.right.audioContent,
+        );
+        yield* Console.log(
+          `  OK  ${(tts.right.audioContent.length / 1024).toFixed(1)} KB → ${fp}`,
+        );
+      } else {
+        yield* Console.log(`  FAIL  ${tts.left.message}`);
+      }
     }),
   ),
-  Command.withDescription('Test TTS multi-speaker synthesis'),
+  Command.withDescription(
+    'Test TTS on both Google endpoints (generateContent + text:synthesize)',
+  ),
 );
