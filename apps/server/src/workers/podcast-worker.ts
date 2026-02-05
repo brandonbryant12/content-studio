@@ -1,4 +1,4 @@
-import { type SSEManagerService } from '@repo/api/server';
+import { ssePublisher } from '@repo/api/server';
 import { withCurrentUser } from '@repo/auth/policy';
 import {
   JobProcessingError,
@@ -65,8 +65,6 @@ const JOB_TYPES: JobType[] = [
  * User context is scoped per job via FiberRef (withCurrentUser).
  */
 export const createPodcastWorker = (config: PodcastWorkerConfig): Worker => {
-  const { sseManager } = config;
-
   /**
    * Emit SSE event to notify frontend of entity change.
    */
@@ -79,7 +77,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig): Worker => {
       userId,
       timestamp: new Date().toISOString(),
     };
-    sseManager.emit(userId, entityChangeEvent);
+    ssePublisher.publish(userId, entityChangeEvent);
   };
 
   /**
@@ -149,7 +147,7 @@ export const createPodcastWorker = (config: PodcastWorkerConfig): Worker => {
       podcastId,
       error: job.error ?? undefined,
     };
-    sseManager.emit(userId, jobCompletionEvent);
+    ssePublisher.publish(userId, jobCompletionEvent);
 
     // Emit entity change event for the podcast
     emitEntityChange(userId, podcastId);

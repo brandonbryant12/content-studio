@@ -1,3 +1,4 @@
+import { ssePublisher } from '@repo/api/server';
 import { withCurrentUser } from '@repo/auth/policy';
 import {
   type GenerateVoiceoverPayload,
@@ -33,8 +34,6 @@ const JOB_TYPES: JobType[] = ['generate-voiceover'];
 export const createVoiceoverWorker = (
   config: VoiceoverWorkerConfig,
 ): Worker => {
-  const { sseManager } = config;
-
   /**
    * Emit SSE event to notify frontend of entity change.
    */
@@ -47,7 +46,7 @@ export const createVoiceoverWorker = (
       userId,
       timestamp: new Date().toISOString(),
     };
-    sseManager.emit(userId, entityChangeEvent);
+    ssePublisher.publish(userId, entityChangeEvent);
   };
 
   /**
@@ -90,7 +89,7 @@ export const createVoiceoverWorker = (
       voiceoverId,
       error: job.error ?? undefined,
     };
-    sseManager.emit(userId, jobCompletionEvent);
+    ssePublisher.publish(userId, jobCompletionEvent);
 
     // Emit entity change event for the voiceover
     emitEntityChange(userId, voiceoverId);

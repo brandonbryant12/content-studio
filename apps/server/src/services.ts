@@ -1,8 +1,4 @@
-import {
-  createApi,
-  createServerRuntime,
-  createSSEManager,
-} from '@repo/api/server';
+import { createApi, createServerRuntime } from '@repo/api/server';
 import type { VertexAIConfig } from '@repo/ai';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
@@ -54,8 +50,6 @@ export const serverRuntime = createServerRuntime({
   geminiApiKey: env.GEMINI_API_KEY,
   vertexConfig: buildVertexConfig(),
 });
-
-export const sseManager = createSSEManager();
 
 export const api = createApi({
   auth,

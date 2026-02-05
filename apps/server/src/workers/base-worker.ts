@@ -2,7 +2,6 @@ import {
   createServerRuntime,
   type StorageConfig,
   type ServerRuntime,
-  type SSEManagerService,
   type SharedServices,
 } from '@repo/api/server';
 import type { AIProvider, VertexAIConfig } from '@repo/ai';
@@ -10,7 +9,7 @@ import { Role, type User } from '@repo/auth/policy';
 import { createDb } from '@repo/db/client';
 import { Queue, JobProcessingError, type Job, type JobType } from '@repo/queue';
 import type { JobId } from '@repo/db/schema';
-import { Effect, Schedule } from 'effect';
+import { Effect, Ref, Schedule } from 'effect';
 import { WORKER_DEFAULTS } from '../constants';
 
 /**
@@ -22,8 +21,6 @@ export interface BaseWorkerConfig {
   pollInterval?: number;
   /** Max consecutive errors before exiting */
   maxConsecutiveErrors?: number;
-  /** Shared SSE manager instance */
-  sseManager: SSEManagerService;
   /** Shared server runtime (preferred - shares DB connection with API) */
   runtime?: ServerRuntime;
   /** Database URL (used only if runtime not provided) */
@@ -169,33 +166,48 @@ export const createWorker = <
     }
   }
 
+  // How many idle polls before logging a summary at INFO level
+  const IDLE_SUMMARY_INTERVAL = Math.max(1, Math.round(60_000 / pollInterval));
+
   /**
    * Poll for and process the next job from any of the supported types.
    */
-  const pollOnce = Effect.gen(function* () {
-    const queue = yield* Queue;
+  const pollOnce = (idleCount: Ref.Ref<number>) =>
+    Effect.gen(function* () {
+      const queue = yield* Queue;
 
-    // Try each job type until we find one
-    for (const jobType of jobTypes) {
-      const job = yield* queue.processNextJob(jobType, (j) =>
-        processJob(j as Job<TPayload>),
-      );
-
-      if (job) {
-        yield* Effect.logInfo(
-          `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
+      // Try each job type until we find one
+      for (const jobType of jobTypes) {
+        const job = yield* queue.processNextJob(jobType, (j) =>
+          processJob(j as Job<TPayload>),
         );
 
-        // Call completion callback if provided
-        onJobComplete?.(job as Job<TPayload>);
+        if (job) {
+          // Reset idle counter when a job is processed
+          yield* Ref.set(idleCount, 0);
+          yield* Effect.logInfo(
+            `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
+          );
 
-        return job;
+          // Call completion callback if provided
+          onJobComplete?.(job as Job<TPayload>);
+
+          return job;
+        }
       }
-    }
 
-    yield* Effect.logInfo('No pending jobs found');
-    return null;
-  }).pipe(Effect.annotateLogs('worker', name));
+      // Increment idle counter and log at DEBUG, with a periodic INFO summary
+      const count = yield* Ref.updateAndGet(idleCount, (n) => n + 1);
+      if (count % IDLE_SUMMARY_INTERVAL === 0) {
+        yield* Effect.logInfo(
+          `Idle for ${Math.round((count * pollInterval) / 1000)}s, no pending jobs`,
+        );
+      } else {
+        yield* Effect.logDebug('No pending jobs found');
+      }
+
+      return null;
+    }).pipe(Effect.annotateLogs('worker', name));
 
   /**
    * Start the worker loop with error handling and backoff.
@@ -207,12 +219,14 @@ export const createWorker = <
     );
 
     const loop = Effect.gen(function* () {
+      const idleCount = yield* Ref.make(0);
+
       yield* Effect.logInfo(
         `Starting ${name}, polling every ${pollInterval}ms`,
       );
 
       // Main polling loop - runs forever on success
-      yield* pollOnce.pipe(
+      yield* pollOnce(idleCount).pipe(
         Effect.tap(() => Effect.sleep(pollInterval)),
         Effect.forever,
       );

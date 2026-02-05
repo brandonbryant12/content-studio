@@ -6,8 +6,6 @@ import {
   authPath,
   apiRoute,
   apiPath,
-  eventsRoute,
-  eventsPath,
   staticRoute,
   staticPath,
 } from './routes';
@@ -54,9 +52,6 @@ if (storageConfig.provider === 'filesystem') {
 // Auth routes
 app.route(authPath, authRoute);
 
-// SSE events
-app.route(eventsPath, eventsRoute);
-
 // API routes (must be last - catches all /api/*)
 app.route(apiPath, apiRoute);
 
@@ -64,5 +59,5 @@ app.route(apiPath, apiRoute);
 // Exports
 // =============================================================================
 
-export { db, serverRuntime, sseManager, storageConfig } from './services';
+export { db, serverRuntime, storageConfig } from './services';
 export default app;

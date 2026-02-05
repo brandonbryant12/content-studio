@@ -7,7 +7,7 @@ import { verifyDbConnection } from '@repo/db/client';
 import { QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
 import { createUnifiedWorker } from './workers/unified-worker';
-import app, { db, serverRuntime, sseManager } from '.';
+import app, { db, serverRuntime } from '.';
 
 // =============================================================================
 // Global Error Handlers
@@ -61,7 +61,6 @@ const startServer = async () => {
   // Start the unified worker (handles all job types, can be scaled horizontally)
   const worker = createUnifiedWorker({
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
-    sseManager,
     runtime: serverRuntime,
   });
 

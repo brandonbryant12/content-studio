@@ -51,3 +51,9 @@ export const createTanstackQueryAPIClient = (
   const apiClient = createAPIClient(opts);
   return createTanstackQueryUtils(apiClient);
 };
+
+export const createBothClients = (opts: APIClientOptions) => {
+  const client = createAPIClient(opts);
+  const queryUtils = createTanstackQueryUtils(client);
+  return { client, queryUtils };
+};

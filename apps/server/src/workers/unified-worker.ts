@@ -8,6 +8,7 @@ import {
   type JobType,
 } from '@repo/queue';
 import { Effect } from 'effect';
+import { ssePublisher } from '@repo/api/server';
 import type {
   EntityChangeEvent,
   JobCompletionEvent,
@@ -96,14 +97,12 @@ export interface UnifiedWorkerConfig extends BaseWorkerConfig {}
  * - generate-voiceover: TTS audio generation for voiceovers
  */
 export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
-  const { sseManager } = config;
-
   // ===========================================================================
   // SSE Event Emitters
   // ===========================================================================
 
   const emitEvent = (userId: string, event: SSEEvent) => {
-    sseManager.emit(userId, event);
+    ssePublisher.publish(userId, event);
   };
 
   const emitEntityChange = (

@@ -1,20 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, act } from '@testing-library/react';
-import { createElement, type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
 import { SSEProvider, useSSEContext, useSSERecovery } from '../sse-provider';
-
-// Mock the environment
-vi.mock('@/env', () => ({
-  env: {
-    PUBLIC_SERVER_URL: 'http://localhost:3000',
-    PUBLIC_SERVER_API_PATH: '/api',
-  },
-}));
 
 // Mock SSE handlers
 vi.mock('@/shared/hooks/sse-handlers', () => ({
   handleJobCompletion: vi.fn(),
+  handleVoiceoverJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
 }));
 
@@ -26,49 +19,62 @@ vi.mock('@/clients/authClient', () => ({
   },
 }));
 
-// Mock EventSource
-class MockEventSource {
-  static instances: MockEventSource[] = [];
+// Create a controllable async iterator for mocking the ORPC client
+function createMockIterator() {
+  const events: Array<Record<string, unknown>> = [];
+  let resolve: (() => void) | null = null;
+  let done = false;
+  let error: Error | null = null;
 
-  url: string;
-  withCredentials: boolean;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  onerror: (() => void) | null = null;
-  readyState = 0;
+  const iterator: AsyncIterableIterator<Record<string, unknown>> = {
+    [Symbol.asyncIterator]() {
+      return iterator;
+    },
+    async next() {
+      while (events.length === 0 && !done && !error) {
+        await new Promise<void>((r) => {
+          resolve = r;
+        });
+        resolve = null;
+      }
+      if (error) throw error;
+      if (events.length > 0) return { value: events.shift()!, done: false };
+      return { value: undefined, done: true };
+    },
+    async return() {
+      done = true;
+      resolve?.();
+      return { value: undefined, done: true };
+    },
+  };
 
-  constructor(url: string, options?: { withCredentials?: boolean }) {
-    this.url = url;
-    this.withCredentials = options?.withCredentials ?? false;
-    MockEventSource.instances.push(this);
-  }
-
-  close = vi.fn(() => {
-    this.readyState = 2;
-  });
-
-  simulateMessage(data: string) {
-    if (this.onmessage) {
-      this.onmessage({ data } as MessageEvent);
-    }
-  }
-
-  simulateError() {
-    if (this.onerror) {
-      this.onerror();
-    }
-  }
-
-  static reset() {
-    MockEventSource.instances = [];
-  }
-
-  static getLatest(): MockEventSource | undefined {
-    return MockEventSource.instances[MockEventSource.instances.length - 1];
-  }
+  return {
+    iterator,
+    push(event: Record<string, unknown>) {
+      events.push(event);
+      resolve?.();
+    },
+    end() {
+      done = true;
+      resolve?.();
+    },
+    fail(err: Error) {
+      error = err;
+      resolve?.();
+    },
+  };
 }
 
-// @ts-expect-error - Mocking global EventSource
-global.EventSource = MockEventSource;
+// Mock the raw API client
+const mockSubscribe = vi.fn();
+vi.mock('@/clients/apiClient', () => ({
+  rawApiClient: {
+    events: {
+      subscribe: (...args: unknown[]) => mockSubscribe(...args),
+    },
+  },
+  apiClient: {},
+}));
 
 describe('SSEProvider', () => {
   let queryClient: QueryClient;
@@ -84,18 +90,15 @@ describe('SSEProvider', () => {
   };
 
   beforeEach(() => {
-    vi.useFakeTimers();
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
       },
     });
-    MockEventSource.reset();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     queryClient.clear();
   });
 
@@ -114,6 +117,8 @@ describe('SSEProvider', () => {
     });
 
     it('returns connection state and reconnect function', () => {
+      const mock = createMockIterator();
+      mockSubscribe.mockResolvedValue(mock.iterator);
       mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
 
       const { result } = renderHook(() => useSSEContext(), {
@@ -133,22 +138,29 @@ describe('SSEProvider', () => {
         wrapper: createWrapper(),
       });
 
-      expect(MockEventSource.instances).toHaveLength(0);
+      expect(mockSubscribe).not.toHaveBeenCalled();
     });
 
     it('connects when user is authenticated', () => {
+      const mock = createMockIterator();
+      mockSubscribe.mockResolvedValue(mock.iterator);
       mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
 
       renderHook(() => useSSEContext(), {
         wrapper: createWrapper(),
       });
 
-      expect(MockEventSource.instances).toHaveLength(1);
+      expect(mockSubscribe).toHaveBeenCalled();
     });
   });
 
   describe('useSSERecovery', () => {
-    it('invalidates all queries when reconnected after disconnection', () => {
+    it('invalidates all queries when reconnected after disconnection', async () => {
+      const mock1 = createMockIterator();
+      const mock2 = createMockIterator();
+      mockSubscribe
+        .mockResolvedValueOnce(mock1.iterator)
+        .mockResolvedValueOnce(mock2.iterator);
       mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -161,37 +173,32 @@ describe('SSEProvider', () => {
       );
 
       // Get connected first
-      const eventSource = MockEventSource.getLatest()!;
-      act(() => {
-        eventSource.simulateMessage(
-          JSON.stringify({ type: 'connected', userId: 'user-123' }),
-        );
+      await act(async () => {
+        mock1.push({ type: 'connected', userId: 'user-123' });
       });
 
-      // Clear calls from initial connection (if any)
+      // Clear calls from initial connection
       invalidateSpy.mockClear();
 
-      // Simulate disconnect (error triggers close and schedules reconnect)
-      act(() => {
-        eventSource.simulateError();
+      // Simulate disconnect by ending the stream
+      await act(async () => {
+        mock1.fail(new Error('Connection lost'));
       });
 
-      // Advance time to trigger reconnect
-      act(() => {
-        vi.advanceTimersByTime(2000);
+      // Wait for reconnect delay
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 3000));
       });
 
-      // Now we have a new EventSource. Simulate successful reconnection.
-      const newEventSource = MockEventSource.getLatest()!;
-      act(() => {
-        newEventSource.simulateMessage(
-          JSON.stringify({ type: 'connected', userId: 'user-123' }),
-        );
+      // Simulate successful reconnection on new stream
+      await act(async () => {
+        mock2.push({ type: 'connected', userId: 'user-123' });
       });
 
-      // The recovery hook should have invalidated queries when transitioning
-      // from 'disconnected' to 'connected'
-      expect(invalidateSpy).toHaveBeenCalled();
+      // The recovery hook should have invalidated queries
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalled();
+      });
     });
   });
 });

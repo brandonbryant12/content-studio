@@ -36,14 +36,8 @@ export {
   type EffectSuccess,
 } from './effect-handler';
 
-// Export SSE manager
-export {
-  SSEManager,
-  SSEManagerLive,
-  createSSEManager,
-  type SSEManagerService,
-  type SSEWriter,
-} from './sse';
+// Export SSE publisher
+export { ssePublisher } from './publisher';
 
 export type AppRouter = typeof appRouter;
 
@@ -62,11 +56,11 @@ export const createApi = ({
     plugins: [
       new StrictGetMethodPlugin(),
       new OpenAPIReferencePlugin({
-        docsTitle: 'RT Stack | API Reference',
+        docsTitle: 'Content Studio | API Reference',
         docsProvider: 'scalar',
         specGenerateOptions: {
           info: {
-            title: 'RT Stack API',
+            title: 'Content Studio API',
             version: '1.0.0',
           },
           servers: [{ url: urlJoin(serverUrl, apiPath) }],
