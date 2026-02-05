@@ -1,10 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import type {
-  PersonaSelectorOption,
-  SegmentSelectorOption,
-} from '@/features/brands/components';
 import type { RouterOutput } from '@repo/api/client';
 import type { PodcastFullOutput } from '@repo/db/schema';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
@@ -16,10 +12,6 @@ import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
-<<<<<<< HEAD
-=======
-import type { RouterOutput } from '@repo/api/client';
->>>>>>> d06a12c (Revert "brand questions")
 
 type PodcastFull = PodcastFullOutput;
 type PodcastFormat = 'conversation' | 'voiceover';

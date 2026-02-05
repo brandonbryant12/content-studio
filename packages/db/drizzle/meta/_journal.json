@@ -8,13 +8,6 @@
       "when": 1769832533529,
       "tag": "0000_fluffy_whirlwind",
       "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1769943950687,
-      "tag": "0001_tan_nuke",
-      "breakpoints": true
     }
   ]
 }

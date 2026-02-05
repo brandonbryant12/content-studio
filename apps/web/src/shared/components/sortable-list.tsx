@@ -43,8 +43,6 @@ export interface SortableListProps<T extends SortableItem> {
   children: (item: T, index: number) => ReactNode;
   /** Optional class name for the list container */
   className?: string;
-  /** Whether drag handle is required (vs whole item draggable) */
-  useDragHandle?: boolean;
 }
 
 export interface SortableItemWrapperProps {
@@ -174,7 +172,6 @@ export function SortableList<T extends SortableItem>({
   onReorder,
   children,
   className,
-  useDragHandle = false,
 }: SortableListProps<T>) {
   const sensors = useSensors(
     useSensor(PointerSensor, {

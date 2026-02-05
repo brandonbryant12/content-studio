@@ -104,7 +104,6 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Skill(agent-browser)",
       "WebFetch(domain:discuss.ai.google.dev)",
-<<<<<<< HEAD
       "WebFetch(domain:ai-sdk.dev)",
       "Bash(mc alias set:*)",
       "Bash(mc anonymous set:*)",
@@ -117,10 +116,18 @@
       "Bash(pm2 start:*)",
       "Bash(ps:*)",
       "Bash(kill:*)",
-      "Bash(docker exec:*)"
-=======
-      "WebFetch(domain:ai-sdk.dev)"
->>>>>>> d06a12c (Revert "brand questions")
+      "Bash(docker exec:*)",
+      "Bash(git -C /Users/brandon/Development/content-studio-cli rebase main)",
+      "Bash(git -C /Users/brandon/Development/content-studio-cli rebase --abort)",
+      "Bash(git -C /Users/brandon/Development/content-studio-cli reset --hard main)",
+      "Bash(git status:*)",
+      "Bash(git -C /Users/brandon/Development/content-studio-cli cherry-pick 99cc993 1a90a21)",
+      "Bash(git cherry-pick:*)",
+      "Bash(npx vitest:*)",
+      "Bash(gh pr view:*)",
+      "Bash(npx --filter web tsr:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(npx drizzle-kit generate:*)"
     ],
     "deny": [],
     "ask": []

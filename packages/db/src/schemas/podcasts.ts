@@ -124,12 +124,6 @@ export const podcast = pgTable(
       .notNull()
       .default([]),
 
-    // Brand/persona/segment references (optional)
-    brandId: varchar('brandId', { length: 20 }),
-    hostPersonaId: text('hostPersonaId'),
-    coHostPersonaId: text('coHostPersonaId'),
-    targetSegmentId: text('targetSegmentId'),
-
     // Generation context for audit trail
     generationContext: jsonb('generationContext').$type<GenerationContext>(),
 
@@ -228,11 +222,6 @@ export const CreatePodcastSchema = Schema.Struct({
   hostVoiceName: Schema.optional(Schema.String),
   coHostVoice: Schema.optional(Schema.String),
   coHostVoiceName: Schema.optional(Schema.String),
-  // Brand/persona/segment references
-  brandId: Schema.optional(Schema.String),
-  hostPersonaId: Schema.optional(Schema.String),
-  coHostPersonaId: Schema.optional(Schema.String),
-  targetSegmentId: Schema.optional(Schema.String),
 });
 
 /**
@@ -257,11 +246,6 @@ export const UpdatePodcastFields = {
   coHostVoiceName: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
   documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
-  // Brand/persona/segment references
-  brandId: Schema.optional(Schema.NullOr(Schema.String)),
-  hostPersonaId: Schema.optional(Schema.NullOr(Schema.String)),
-  coHostPersonaId: Schema.optional(Schema.NullOr(Schema.String)),
-  targetSegmentId: Schema.optional(Schema.NullOr(Schema.String)),
 };
 
 export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
@@ -346,12 +330,6 @@ export const PodcastOutputSchema = Schema.Struct({
   targetDurationMinutes: Schema.NullOr(Schema.Number),
   tags: Schema.Array(Schema.String),
   sourceDocumentIds: Schema.Array(DocumentIdSchema),
-
-  // Brand/persona/segment references
-  brandId: Schema.NullOr(Schema.String),
-  hostPersonaId: Schema.NullOr(Schema.String),
-  coHostPersonaId: Schema.NullOr(Schema.String),
-  targetSegmentId: Schema.NullOr(Schema.String),
 
   generationContext: Schema.NullOr(GenerationContextOutputSchema),
 
@@ -455,11 +433,6 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   targetDurationMinutes: podcast.targetDurationMinutes,
   tags: podcast.tags ?? [],
   sourceDocumentIds: podcast.sourceDocumentIds ?? [],
-  // Brand/persona/segment references
-  brandId: podcast.brandId ?? null,
-  hostPersonaId: podcast.hostPersonaId ?? null,
-  coHostPersonaId: podcast.coHostPersonaId ?? null,
-  targetSegmentId: podcast.targetSegmentId ?? null,
   generationContext: podcast.generationContext ?? null,
   // Script fields (flattened)
   status: podcast.status,
