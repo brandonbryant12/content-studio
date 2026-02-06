@@ -118,6 +118,7 @@ export function DocumentList({
           placeholder="Search documents…"
           className="search-input"
           autoComplete="off"
+          aria-label="Search documents"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>

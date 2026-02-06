@@ -2,6 +2,7 @@
 // Thin route file - delegates to feature container
 
 import { createFileRoute } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { VoiceoverDetailContainer } from '@/features/voiceovers/components/voiceover-detail-container';
@@ -19,6 +20,10 @@ export const Route = createFileRoute('/_protected/voiceovers/$voiceoverId')({
 
 function VoiceoverPage() {
   const { voiceoverId } = Route.useParams();
+
+  useEffect(() => {
+    document.title = 'Voiceover - Content Studio';
+  }, []);
 
   return (
     <SuspenseBoundary resetKeys={[voiceoverId]}>

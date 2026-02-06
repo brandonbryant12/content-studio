@@ -7,7 +7,11 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
   return (
-    <div className="setup-steps">
+    <div
+      className="setup-steps"
+      role="group"
+      aria-label={`Step ${currentStep} of ${totalSteps}`}
+    >
       {Array.from({ length: totalSteps }, (_, i) => {
         const stepNum = i + 1;
         const isCompleted = stepNum < currentStep;
@@ -19,6 +23,8 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
               className={`setup-step-dot ${
                 isCompleted ? 'completed' : isCurrent ? 'current' : 'upcoming'
               }`}
+              aria-label={`Step ${stepNum}${isCompleted ? ', completed' : isCurrent ? ', current' : ''}`}
+              aria-current={isCurrent ? 'step' : undefined}
             >
               {isCompleted ? <CheckIcon className="w-4 h-4" /> : stepNum}
             </div>

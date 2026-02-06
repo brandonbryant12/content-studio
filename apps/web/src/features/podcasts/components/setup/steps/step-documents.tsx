@@ -150,9 +150,11 @@ export function StepDocuments({
       )}
 
       {/* Tabs */}
-      <div className="setup-tabs">
+      <div className="setup-tabs" role="tablist" aria-label="Document source">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'existing'}
           onClick={() => setActiveTab('existing')}
           className={`setup-tab ${activeTab === 'existing' ? 'active' : ''}`}
         >
@@ -160,6 +162,8 @@ export function StepDocuments({
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'upload'}
           onClick={() => setActiveTab('upload')}
           className={`setup-tab ${activeTab === 'upload' ? 'active' : ''}`}
         >
@@ -184,6 +188,7 @@ export function StepDocuments({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="setup-input pl-9"
+                aria-label="Search documents"
               />
             </div>
 
@@ -249,7 +254,7 @@ export function StepDocuments({
         )
       ) : (
         // Upload tab
-        <div>
+        <div role="tabpanel" aria-label="Upload New">
           {uploadFile ? (
             <div className="space-y-4">
               <div className="setup-file-preview">
@@ -322,6 +327,15 @@ export function StepDocuments({
               onClick={() =>
                 document.getElementById('setup-file-input')?.click()
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  document.getElementById('setup-file-input')?.click();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
               className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
             >
               <input

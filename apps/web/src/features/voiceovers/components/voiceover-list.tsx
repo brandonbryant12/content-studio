@@ -139,6 +139,7 @@ export function VoiceoverList({
           placeholder="Search voiceovers…"
           className="search-input"
           autoComplete="off"
+          aria-label="Search voiceovers"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>

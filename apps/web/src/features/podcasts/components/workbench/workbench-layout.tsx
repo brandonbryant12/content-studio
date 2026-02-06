@@ -125,9 +125,11 @@ export function WorkbenchLayout({
       </header>
 
       {/* Tab Navigation */}
-      <nav className="workbench-v3-tabs">
+      <nav className="workbench-v3-tabs" role="tablist" aria-label="Podcast workbench">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'script'}
           onClick={() => handleTabClick('script')}
           className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
         >
@@ -136,6 +138,8 @@ export function WorkbenchLayout({
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'settings'}
           onClick={() => handleTabClick('settings')}
           className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
         >
@@ -147,10 +151,10 @@ export function WorkbenchLayout({
       {/* Main Content Area - Full Width */}
       <div className="workbench-v3-main">
         {activeTab === 'script' && (
-          <div className="workbench-v3-content">{leftPanel}</div>
+          <div className="workbench-v3-content" role="tabpanel" aria-label="Script">{leftPanel}</div>
         )}
         {activeTab === 'settings' && (
-          <div className="workbench-v3-content workbench-v3-settings">
+          <div className="workbench-v3-content workbench-v3-settings" role="tabpanel" aria-label="Settings">
             {rightPanel}
           </div>
         )}

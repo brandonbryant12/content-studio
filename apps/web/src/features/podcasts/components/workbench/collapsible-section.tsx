@@ -24,6 +24,7 @@ export function CollapsibleSection({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="collapsible-section-trigger"
+        aria-expanded={isOpen}
       >
         <div className="collapsible-section-header">
           <div className="collapsible-section-icon">{icon}</div>

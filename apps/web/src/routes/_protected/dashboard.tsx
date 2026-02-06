@@ -7,7 +7,7 @@ import {
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
@@ -35,6 +35,10 @@ function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = 'Dashboard - Content Studio';
+  }, []);
 
   const { data: documents, isLoading: docsLoading } = useDocumentsOrdered({
     limit: 5,

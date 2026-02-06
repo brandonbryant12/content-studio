@@ -127,8 +127,17 @@ function Layout() {
 
   return (
     <div className="flex">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground focus:border focus:border-border focus:rounded-md focus:m-2"
+      >
+        Skip to main content
+      </a>
       <Sidebar />
-      <main className="flex-1 overflow-auto h-[calc(100vh-65px)] bg-background">
+      <main
+        id="main-content"
+        className="flex-1 overflow-auto h-[calc(100vh-65px)] bg-background"
+      >
         <ErrorBoundary resetKeys={[session?.user?.id]}>
           <Outlet />
         </ErrorBoundary>
