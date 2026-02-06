@@ -79,10 +79,6 @@ export const createSharedLayers = (
 
   const loggerLayer = Logger.pretty;
 
-  if (config.useMockAI) {
-    console.log('[API] Using mock AI layers for testing');
-  }
-
   return Layer.mergeAll(
     dbLayer,
     policyLayer,

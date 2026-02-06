@@ -38,7 +38,7 @@
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "drizzle-orm": "catalog:",
-    "effect": "^3.16.0",
+    "effect": "catalog:",
     "pg": "catalog:"
   },
   "devDependencies": {

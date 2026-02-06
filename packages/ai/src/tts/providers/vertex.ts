@@ -326,14 +326,6 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
           // Decode base64 audio data
           const audioData = Buffer.from(inlineData.data, 'base64');
 
-          // Log format info for debugging
-          console.log('[TTS] Vertex response:', {
-            mimeType: inlineData.mimeType,
-            dataSize: audioData.length,
-            first4Bytes: audioData.slice(0, 4).toString('hex'),
-            headerCheck: audioData.slice(0, 4).toString('ascii'),
-          });
-
           // Check if already WAV (starts with RIFF header) - don't double-wrap
           const isAlreadyWav =
             audioData.slice(0, 4).toString('ascii') === 'RIFF';

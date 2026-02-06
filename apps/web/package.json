@@ -34,7 +34,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/router-devtools": "catalog:",
     "dotenv-cli": "catalog:",
-    "effect": "^3.16.0",
+    "effect": "catalog:",
     "framer-motion": "^12.23.26",
     "next-themes": "catalog:",
     "react": "catalog:",
