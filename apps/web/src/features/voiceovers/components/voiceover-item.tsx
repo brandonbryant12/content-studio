@@ -5,7 +5,8 @@ import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
   type VoiceoverStatusType,
   getStatusConfig,
@@ -50,6 +51,8 @@ export const VoiceoverItem = memo(function VoiceoverItem({
   onDelete,
   isDeleting,
 }: VoiceoverItemProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   // Memoize text truncation to avoid recalculation
   const textPreview = useMemo(() => {
     if (voiceover.text.length > 100) {
@@ -58,60 +61,76 @@ export const VoiceoverItem = memo(function VoiceoverItem({
     return voiceover.text;
   }, [voiceover.text]);
 
-  // Stable callback - calls parent with id (rerender-memo-with-default-value)
-  const handleDelete = useCallback(
+  const handleDeleteClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      onDelete(voiceover.id);
+      setConfirmOpen(true);
     },
-    [onDelete, voiceover.id],
+    [],
   );
 
+  const handleDeleteConfirm = useCallback(() => {
+    setConfirmOpen(false);
+    onDelete(voiceover.id);
+  }, [onDelete, voiceover.id]);
+
   return (
-    <div className="list-card group overflow-hidden">
-      <Link
-        to="/voiceovers/$voiceoverId"
-        params={{ voiceoverId: voiceover.id }}
-        className="flex items-start gap-4 flex-1"
-      >
-        <VoiceoverIcon status={voiceover.status} />
-        <div className="flex-1 min-w-0">
-          <h3 className="list-card-title">{voiceover.title}</h3>
-          <div className="list-card-meta gap-2 flex-wrap">
-            <StatusBadge status={voiceover.status} />
-            {voiceover.duration && (
-              <span className="text-meta">
-                {formatDuration(voiceover.duration)}
-              </span>
-            )}
-            {voiceover.voiceName && (
-              <span className="text-meta">{voiceover.voiceName}</span>
+    <>
+      <div className="list-card group overflow-hidden">
+        <Link
+          to="/voiceovers/$voiceoverId"
+          params={{ voiceoverId: voiceover.id }}
+          className="flex items-start gap-4 flex-1"
+        >
+          <VoiceoverIcon status={voiceover.status} />
+          <div className="flex-1 min-w-0">
+            <h3 className="list-card-title">{voiceover.title}</h3>
+            <div className="list-card-meta gap-2 flex-wrap">
+              <StatusBadge status={voiceover.status} />
+              {voiceover.duration && (
+                <span className="text-meta">
+                  {formatDuration(voiceover.duration)}
+                </span>
+              )}
+              {voiceover.voiceName && (
+                <span className="text-meta">{voiceover.voiceName}</span>
+              )}
+            </div>
+            {textPreview && (
+              <p className="text-body mt-2 line-clamp-1">{textPreview}</p>
             )}
           </div>
-          {textPreview && (
-            <p className="text-body mt-2 line-clamp-1">{textPreview}</p>
-          )}
+        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-meta">
+            {new Date(voiceover.createdAt).toLocaleDateString()}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            className="btn-delete"
+          >
+            {isDeleting ? (
+              <Spinner className="w-4 h-4" />
+            ) : (
+              <TrashIcon className="w-4 h-4" />
+            )}
+          </Button>
         </div>
-      </Link>
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="text-meta">
-          {new Date(voiceover.createdAt).toLocaleDateString()}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="btn-delete"
-        >
-          {isDeleting ? (
-            <Spinner className="w-4 h-4" />
-          ) : (
-            <TrashIcon className="w-4 h-4" />
-          )}
-        </Button>
       </div>
-    </div>
+      <ConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Voiceover"
+        description="Are you sure you want to delete this voiceover? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 });

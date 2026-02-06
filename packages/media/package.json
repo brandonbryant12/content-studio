@@ -18,6 +18,10 @@
     "./podcast": {
       "types": "./dist/src/podcast/index.d.ts",
       "default": "./src/podcast/index.ts"
+    },
+    "./test-utils": {
+      "types": "./dist/src/test-utils/index.d.ts",
+      "default": "./src/test-utils/index.ts"
     }
   },
   "scripts": {
