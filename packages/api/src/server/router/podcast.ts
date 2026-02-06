@@ -16,64 +16,18 @@ import {
   claimPendingInvites,
 } from '@repo/media';
 import { Effect } from 'effect';
-import type { Job, CollaboratorId } from '@repo/db/schema';
-import type { GeneratePodcastResult, GenerateAudioResult } from '@repo/queue';
-import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
+import type { CollaboratorId } from '@repo/db/schema';
+import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
-  serializePodcast,
-  serializePodcastFull,
-  serializePodcastListItem,
-  serializeCollaboratorWithUser,
+  serializePodcastEffect,
+  serializePodcastFullEffect,
+  serializePodcastListItemsEffect,
+  serializeCollaboratorWithUserEffect,
+  serializeCollaboratorsWithUserEffect,
+  serializeJob,
+  type Job,
 } from '@repo/db/schema';
-
-/**
- * Job result union type - matches contract schema.
- */
-type JobResult = GeneratePodcastResult | GenerateAudioResult;
-
-/**
- * Serialized job output type.
- */
-interface JobOutput {
-  id: string;
-  type: string;
-  status: Job['status'];
-  result: JobResult | null;
-  error: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-}
-
-/**
- * Serialize a job for API output.
- */
-const serializeJob = (job: {
-  id: string;
-  type: string;
-  status: Job['status'];
-  result: unknown;
-  error: string | null;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  startedAt: Date | null;
-  completedAt: Date | null;
-}): JobOutput => ({
-  id: job.id,
-  type: job.type,
-  status: job.status,
-  result: job.result as JobResult | null,
-  error: job.error,
-  createdBy: job.createdBy,
-  createdAt: job.createdAt.toISOString(),
-  updatedAt: job.updatedAt.toISOString(),
-  startedAt: job.startedAt?.toISOString() ?? null,
-  completedAt: job.completedAt?.toISOString() ?? null,
-});
 
 const podcastRouter = {
   list: protectedProcedure.podcasts.list.handler(
@@ -86,11 +40,11 @@ const podcastRouter = {
           limit: input.limit,
           offset: input.offset,
         }).pipe(
-          Effect.map((result) =>
-            [...result.podcasts].map(serializePodcastListItem),
+          Effect.flatMap((result) =>
+            serializePodcastListItemsEffect([...result.podcasts]),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.list',
           attributes: {
@@ -108,13 +62,9 @@ const podcastRouter = {
         context.runtime,
         context.user,
         getPodcast({ podcastId: input.id, includeDocuments: true }).pipe(
-          Effect.map((podcast) =>
-            serializePodcastFull(
-              podcast as Parameters<typeof serializePodcastFull>[0],
-            ),
-          ),
+          Effect.flatMap(serializePodcastFullEffect),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.get',
           attributes: { 'podcast.id': input.id },
@@ -128,14 +78,8 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createPodcast(input).pipe(
-          Effect.map((podcastFull) =>
-            serializePodcastFull(
-              podcastFull as Parameters<typeof serializePodcastFull>[0],
-            ),
-          ),
-        ),
-        errors as unknown as ErrorFactory,
+        createPodcast(input).pipe(Effect.flatMap(serializePodcastFullEffect)),
+        errors,
         {
           span: 'api.podcasts.create',
           attributes: { 'podcast.title': input.title ?? 'Untitled' },
@@ -152,11 +96,9 @@ const podcastRouter = {
         context.runtime,
         context.user,
         updatePodcast({ podcastId: id as string, data }).pipe(
-          Effect.map((podcast) =>
-            serializePodcast(podcast as Parameters<typeof serializePodcast>[0]),
-          ),
+          Effect.flatMap(serializePodcastEffect),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.update',
           attributes: { 'podcast.id': id },
@@ -171,7 +113,7 @@ const podcastRouter = {
         context.runtime,
         context.user,
         deletePodcast({ podcastId: input.id }).pipe(Effect.map(() => ({}))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.delete',
           attributes: { 'podcast.id': input.id },
@@ -189,7 +131,7 @@ const podcastRouter = {
           podcastId: input.id,
           promptInstructions: input.promptInstructions,
         }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.generate',
           attributes: { 'podcast.id': input.id },
@@ -203,8 +145,10 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getJob({ jobId: input.jobId }).pipe(Effect.map(serializeJob)),
-        errors as unknown as ErrorFactory,
+        getJob({ jobId: input.jobId }).pipe(
+          Effect.map((job) => serializeJob(job as unknown as Job)),
+        ),
+        errors,
         { span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
       );
     },
@@ -223,7 +167,7 @@ const podcastRouter = {
           coHostVoice: input.coHostVoice,
           coHostVoiceName: input.coHostVoiceName,
         }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.saveChanges',
           attributes: { 'podcast.id': input.id },
@@ -242,11 +186,11 @@ const podcastRouter = {
         context.runtime,
         context.user,
         listCollaborators({ podcastId: input.id }).pipe(
-          Effect.map((result) =>
-            [...result.collaborators].map(serializeCollaboratorWithUser),
+          Effect.flatMap((result) =>
+            serializeCollaboratorsWithUserEffect([...result.collaborators]),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.listCollaborators',
           attributes: { 'podcast.id': input.id },
@@ -265,11 +209,11 @@ const podcastRouter = {
           email: input.email,
           addedBy: context.session.user.id,
         }).pipe(
-          Effect.map((result) =>
-            serializeCollaboratorWithUser(result.collaborator),
+          Effect.flatMap((result) =>
+            serializeCollaboratorWithUserEffect(result.collaborator),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.addCollaborator',
           attributes: {
@@ -290,7 +234,7 @@ const podcastRouter = {
           collaboratorId: input.collaboratorId as CollaboratorId,
           removedBy: context.session.user.id,
         }).pipe(Effect.map(() => ({}))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.removeCollaborator',
           attributes: {
@@ -311,7 +255,7 @@ const podcastRouter = {
           podcastId: input.id,
           userId: context.session.user.id,
         }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.approve',
           attributes: { 'podcast.id': input.id },
@@ -329,7 +273,7 @@ const podcastRouter = {
           podcastId: input.id,
           userId: context.session.user.id,
         }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.revokeApproval',
           attributes: { 'podcast.id': input.id },
@@ -347,7 +291,7 @@ const podcastRouter = {
           email: context.session.user.email,
           userId: context.session.user.id,
         }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.podcasts.claimInvites',
           attributes: { 'user.id': context.session.user.id },

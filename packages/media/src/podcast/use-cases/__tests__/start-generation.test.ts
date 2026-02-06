@@ -47,7 +47,6 @@ const createMockPodcastRepo = (
           ? Effect.succeed({ ...state.podcast, documents: [] })
           : Effect.fail(new PodcastNotFound({ id })),
       ),
-    findByIdFull: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     insert: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),

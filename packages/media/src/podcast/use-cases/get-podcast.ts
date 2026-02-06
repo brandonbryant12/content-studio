@@ -28,10 +28,6 @@ export const getPodcast = (input: GetPodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
-    if (input.includeDocuments) {
-      return yield* podcastRepo.findByIdFull(input.podcastId);
-    }
-
     return yield* podcastRepo.findById(input.podcastId);
   }).pipe(
     Effect.withSpan('useCase.getPodcast', {

@@ -37,20 +37,7 @@ export interface GetVoiceoverJobResult {
 export const getVoiceoverJob = (input: GetVoiceoverJobInput) =>
   Effect.gen(function* () {
     const queue = yield* Queue;
-    const job = yield* queue.getJob(input.jobId as JobId);
-
-    return {
-      id: job.id,
-      type: job.type,
-      status: job.status,
-      result: job.result,
-      error: job.error,
-      createdBy: job.createdBy,
-      createdAt: job.createdAt,
-      updatedAt: job.updatedAt,
-      startedAt: job.startedAt,
-      completedAt: job.completedAt,
-    };
+    return yield* queue.getJob(input.jobId as JobId);
   }).pipe(
     Effect.withSpan('useCase.getVoiceoverJob', {
       attributes: { 'job.id': input.jobId },

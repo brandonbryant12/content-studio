@@ -25,7 +25,6 @@ interface MockRepoState {
 const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
   insert: () => Effect.die('Not implemented in mock'),
   findById: () => Effect.die('Not implemented in mock'),
-  findByIdFull: () => Effect.die('Not implemented in mock'),
   update: () => Effect.die('Not implemented in mock'),
   delete: () => Effect.die('Not implemented in mock'),
   verifyDocumentsExist: () => Effect.die('Not implemented in mock'),

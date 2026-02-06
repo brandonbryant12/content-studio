@@ -3,7 +3,42 @@ import { document, type Document, type DocumentId } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { DocumentNotFound } from '../../errors';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
-import type { InsertDocumentInput, UpdateDocumentInput } from '../repository';
+import type { DocumentSource } from '@repo/db/schema';
+
+// =============================================================================
+// Input Types (previously in repository.ts)
+// =============================================================================
+
+/**
+ * Input for inserting a document with content stored in external storage.
+ */
+export interface InsertDocumentInput {
+  title: string;
+  /** Storage key/path where content is stored (e.g., S3 path) */
+  contentKey: string;
+  /** MIME type of the stored content */
+  mimeType: string;
+  /** Pre-calculated word count */
+  wordCount: number;
+  source: DocumentSource;
+  originalFileName?: string;
+  originalFileSize?: number;
+  metadata?: Record<string, unknown>;
+  createdBy: string;
+}
+
+/**
+ * Input for updating document metadata.
+ * Content updates are handled separately via storage.
+ */
+export interface UpdateDocumentInput {
+  title?: string;
+  /** New content key if content was re-uploaded */
+  contentKey?: string;
+  /** New word count if content changed */
+  wordCount?: number;
+  metadata?: Record<string, unknown>;
+}
 
 // =============================================================================
 // Types

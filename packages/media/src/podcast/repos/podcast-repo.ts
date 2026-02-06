@@ -94,13 +94,6 @@ export interface PodcastRepoService {
   ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Find podcast by ID with resolved documents (full podcast data).
-   */
-  readonly findByIdFull: (
-    id: string,
-  ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
-
-  /**
    * Update podcast by ID.
    */
   readonly update: (
@@ -262,42 +255,6 @@ const make: PodcastRepoService = {
         .filter((d): d is Document => d !== undefined);
 
       return { ...pod, documents: sortedDocs };
-    }).pipe(
-      Effect.flatMap((result) =>
-        result
-          ? Effect.succeed(result)
-          : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
-
-  findByIdFull: (id) =>
-    withDb('podcastRepo.findByIdFull', async (db) => {
-      const podcastId = id as PodcastId;
-      const [pod] = await db
-        .select()
-        .from(podcast)
-        .where(eq(podcast.id, podcastId))
-        .limit(1);
-
-      if (!pod) return null;
-
-      const docs =
-        pod.sourceDocumentIds.length > 0
-          ? await db
-              .select()
-              .from(document)
-              .where(inArray(document.id, pod.sourceDocumentIds))
-          : [];
-
-      const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = pod.sourceDocumentIds
-        .map((id) => docMap.get(id))
-        .filter((d): d is Document => d !== undefined);
-
-      return {
-        ...pod,
-        documents: sortedDocs,
-      };
     }).pipe(
       Effect.flatMap((result) =>
         result

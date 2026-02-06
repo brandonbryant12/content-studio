@@ -15,63 +15,17 @@ import {
   claimVoiceoverPendingInvites,
 } from '@repo/media';
 import { Effect } from 'effect';
-import type { Job, VoiceoverCollaboratorId } from '@repo/db/schema';
-import type { GenerateVoiceoverResult } from '@repo/queue';
-import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
+import type { VoiceoverCollaboratorId } from '@repo/db/schema';
+import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import {
-  serializeVoiceover,
-  serializeVoiceoverListItem,
-  serializeVoiceoverCollaboratorWithUser,
+  serializeVoiceoverEffect,
+  serializeVoiceoverListItemsEffect,
+  serializeVoiceoverCollaboratorWithUserEffect,
+  serializeVoiceoverCollaboratorsWithUserEffect,
+  serializeJob,
+  type Job,
 } from '@repo/db/schema';
-
-/**
- * Job result type - matches contract schema.
- */
-type JobResult = GenerateVoiceoverResult;
-
-/**
- * Serialized job output type.
- */
-interface JobOutput {
-  id: string;
-  type: string;
-  status: Job['status'];
-  result: JobResult | null;
-  error: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-}
-
-/**
- * Serialize a job for API output.
- */
-const serializeJob = (job: {
-  id: string;
-  type: string;
-  status: Job['status'];
-  result: unknown;
-  error: string | null;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  startedAt: Date | null;
-  completedAt: Date | null;
-}): JobOutput => ({
-  id: job.id,
-  type: job.type,
-  status: job.status,
-  result: job.result as JobResult | null,
-  error: job.error,
-  createdBy: job.createdBy,
-  createdAt: job.createdAt.toISOString(),
-  updatedAt: job.updatedAt.toISOString(),
-  startedAt: job.startedAt?.toISOString() ?? null,
-  completedAt: job.completedAt?.toISOString() ?? null,
-});
 
 const voiceoverRouter = {
   list: protectedProcedure.voiceovers.list.handler(
@@ -84,11 +38,11 @@ const voiceoverRouter = {
           limit: input.limit,
           offset: input.offset,
         }).pipe(
-          Effect.map((result) =>
-            [...result.voiceovers].map(serializeVoiceoverListItem),
+          Effect.flatMap((result) =>
+            serializeVoiceoverListItemsEffect([...result.voiceovers]),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.list',
           attributes: {
@@ -106,9 +60,9 @@ const voiceoverRouter = {
         context.runtime,
         context.user,
         getVoiceover({ voiceoverId: input.id }).pipe(
-          Effect.map((voiceover) => serializeVoiceover(voiceover)),
+          Effect.flatMap(serializeVoiceoverEffect),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.get',
           attributes: { 'voiceover.id': input.id },
@@ -122,8 +76,8 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createVoiceover(input).pipe(Effect.map((voiceover) => serializeVoiceover(voiceover))),
-        errors as unknown as ErrorFactory,
+        createVoiceover(input).pipe(Effect.flatMap(serializeVoiceoverEffect)),
+        errors,
         {
           span: 'api.voiceovers.create',
           attributes: { 'voiceover.title': input.title },
@@ -143,8 +97,8 @@ const voiceoverRouter = {
           voiceoverId: id as string,
           userId: context.session.user.id,
           data,
-        }).pipe(Effect.map((voiceover) => serializeVoiceover(voiceover))),
-        errors as unknown as ErrorFactory,
+        }).pipe(Effect.flatMap(serializeVoiceoverEffect)),
+        errors,
         {
           span: 'api.voiceovers.update',
           attributes: { 'voiceover.id': id },
@@ -162,7 +116,7 @@ const voiceoverRouter = {
           voiceoverId: input.id,
           userId: context.session.user.id,
         }).pipe(Effect.map(() => ({}))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.delete',
           attributes: { 'voiceover.id': input.id },
@@ -180,7 +134,7 @@ const voiceoverRouter = {
           voiceoverId: input.id,
           userId: context.session.user.id,
         }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.generate',
           attributes: { 'voiceover.id': input.id },
@@ -194,8 +148,10 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getVoiceoverJob({ jobId: input.jobId }).pipe(Effect.map(serializeJob)),
-        errors as unknown as ErrorFactory,
+        getVoiceoverJob({ jobId: input.jobId }).pipe(
+          Effect.map((job) => serializeJob(job as unknown as Job)),
+        ),
+        errors,
         {
           span: 'api.voiceovers.getJob',
           attributes: { 'job.id': input.jobId },
@@ -214,13 +170,13 @@ const voiceoverRouter = {
         context.runtime,
         context.user,
         listVoiceoverCollaborators({ voiceoverId: input.id }).pipe(
-          Effect.map((result) =>
-            [...result.collaborators].map(
-              serializeVoiceoverCollaboratorWithUser,
-            ),
+          Effect.flatMap((result) =>
+            serializeVoiceoverCollaboratorsWithUserEffect([
+              ...result.collaborators,
+            ]),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.listCollaborators',
           attributes: { 'voiceover.id': input.id },
@@ -239,11 +195,11 @@ const voiceoverRouter = {
           email: input.email,
           addedBy: context.session.user.id,
         }).pipe(
-          Effect.map((result) =>
-            serializeVoiceoverCollaboratorWithUser(result.collaborator),
+          Effect.flatMap((result) =>
+            serializeVoiceoverCollaboratorWithUserEffect(result.collaborator),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.addCollaborator',
           attributes: {
@@ -264,7 +220,7 @@ const voiceoverRouter = {
           collaboratorId: input.collaboratorId as VoiceoverCollaboratorId,
           removedBy: context.session.user.id,
         }).pipe(Effect.map(() => ({}))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.removeCollaborator',
           attributes: {
@@ -285,7 +241,7 @@ const voiceoverRouter = {
           voiceoverId: input.id,
           userId: context.session.user.id,
         }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.approve',
           attributes: { 'voiceover.id': input.id },
@@ -303,7 +259,7 @@ const voiceoverRouter = {
           voiceoverId: input.id,
           userId: context.session.user.id,
         }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.revokeApproval',
           attributes: { 'voiceover.id': input.id },
@@ -321,7 +277,7 @@ const voiceoverRouter = {
           email: context.session.user.email,
           userId: context.session.user.id,
         }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voiceovers.claimInvites',
           attributes: { 'user.id': context.session.user.id },
