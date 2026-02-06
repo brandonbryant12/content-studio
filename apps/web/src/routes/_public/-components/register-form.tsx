@@ -102,7 +102,10 @@ export default function RegisterCredentialsForm() {
                 placeholder="John Doe"
                 autoComplete="name"
                 aria-describedby={`${field.name}-error`}
-                aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
+                aria-invalid={
+                  field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0
+                }
               />
               <FormFieldInfo field={field} />
             </>
@@ -131,7 +134,10 @@ export default function RegisterCredentialsForm() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 aria-describedby={`${field.name}-error`}
-                aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
+                aria-invalid={
+                  field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0
+                }
               />
               <FormFieldInfo field={field} />
             </>
@@ -161,7 +167,10 @@ export default function RegisterCredentialsForm() {
                   placeholder="Create a password"
                   autoComplete="new-password"
                   aria-describedby={`${field.name}-error`}
-                  aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
+                  aria-invalid={
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0
+                  }
                 />
                 <Button
                   className="absolute mr-2 w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -212,7 +221,10 @@ export default function RegisterCredentialsForm() {
                   placeholder="Confirm your password"
                   autoComplete="new-password"
                   aria-describedby={`${field.name}-error`}
-                  aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
+                  aria-invalid={
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0
+                  }
                 />
                 <Button
                   className="absolute mr-2 w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"

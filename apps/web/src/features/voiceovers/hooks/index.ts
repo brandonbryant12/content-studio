@@ -33,3 +33,8 @@ export { useAddCollaborator } from './use-add-collaborator';
 export { useRemoveCollaborator } from './use-remove-collaborator';
 
 export { useApproveVoiceover } from './use-approve-voiceover';
+
+export {
+  useVoiceoverActions,
+  type UseVoiceoverActionsReturn,
+} from './use-voiceover-actions';

@@ -62,14 +62,11 @@ export const PodcastItem = memo(function PodcastItem({
 }: PodcastItemProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleDeleteClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setConfirmOpen(true);
-    },
-    [],
-  );
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmOpen(true);
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     setConfirmOpen(false);

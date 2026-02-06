@@ -61,14 +61,11 @@ export const VoiceoverItem = memo(function VoiceoverItem({
     return voiceover.text;
   }, [voiceover.text]);
 
-  const handleDeleteClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setConfirmOpen(true);
-    },
-    [],
-  );
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmOpen(true);
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     setConfirmOpen(false);

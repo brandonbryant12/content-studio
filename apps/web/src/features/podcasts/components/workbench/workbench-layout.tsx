@@ -26,7 +26,6 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
-  currentUserId: string;
   owner: {
     id: string;
     name: string;
@@ -44,6 +43,9 @@ interface WorkbenchLayoutProps {
   }[];
   currentUserHasApproved: boolean;
   onManageCollaborators: () => void;
+  onApprove: () => void;
+  onRevoke: () => void;
+  isApprovalPending: boolean;
 }
 
 export function WorkbenchLayout({
@@ -53,11 +55,13 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  currentUserId,
   owner,
   collaborators,
   currentUserHasApproved,
   onManageCollaborators,
+  onApprove,
+  onRevoke,
+  isApprovalPending,
 }: WorkbenchLayoutProps) {
   const statusConfig = getStatusConfig(podcast.status);
   const isGenerating = isGeneratingStatus(podcast.status);
@@ -69,7 +73,6 @@ export function WorkbenchLayout({
 
   return (
     <div className="workbench-v3">
-      {/* Header with integrated tabs */}
       <header className="workbench-v3-header">
         <div className="workbench-v3-header-left">
           <Link
@@ -106,9 +109,10 @@ export function WorkbenchLayout({
             onManageClick={onManageCollaborators}
           />
           <ApproveButton
-            podcastId={podcast.id}
-            userId={currentUserId}
             hasApproved={currentUserHasApproved}
+            onApprove={onApprove}
+            onRevoke={onRevoke}
+            isPending={isApprovalPending}
           />
           <div className="workbench-v3-divider" />
           <Button
@@ -148,7 +152,6 @@ export function WorkbenchLayout({
         </button>
       </nav>
 
-      {/* Main Content Area - Full Width */}
       <div className="workbench-v3-main">
         {activeTab === 'script' && (
           <div className="workbench-v3-content" role="tabpanel" aria-label="Script">{leftPanel}</div>
@@ -160,7 +163,6 @@ export function WorkbenchLayout({
         )}
       </div>
 
-      {/* Action Bar */}
       {actionBar}
     </div>
   );

@@ -48,6 +48,7 @@
   "prettier": "@repo/prettier-config",
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "@radix-ui/react-select": "^2.2.6",
     "@repo/api": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",

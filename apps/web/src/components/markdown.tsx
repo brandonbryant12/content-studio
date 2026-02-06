@@ -6,41 +6,39 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import { cn } from '@repo/ui/lib/utils';
 
 const LazyCodeBlock = lazy(() =>
-  import('react-syntax-highlighter/dist/esm/prism-light').then(
-    async (mod) => {
-      const { default: oneDark } = await import(
-        'react-syntax-highlighter/dist/esm/styles/prism/one-dark'
-      );
-      const SyntaxHighlighter = mod.default;
-      return {
-        default: function CodeBlock({
-          language,
-          children,
-          compact,
-        }: {
-          language: string;
-          children: string;
-          compact: boolean;
-        }) {
-          return (
-            <SyntaxHighlighter
-              style={oneDark}
-              language={language}
-              PreTag="div"
-              customStyle={{
-                margin: 0,
-                padding: compact ? '0.75rem' : '1rem',
-                background: '#1e1e1e',
-                fontSize: 'inherit',
-              }}
-            >
-              {children}
-            </SyntaxHighlighter>
-          );
-        },
-      };
-    },
-  ),
+  import('react-syntax-highlighter/dist/esm/prism-light').then(async (mod) => {
+    const { default: oneDark } = await import(
+      'react-syntax-highlighter/dist/esm/styles/prism/one-dark'
+    );
+    const SyntaxHighlighter = mod.default;
+    return {
+      default: function CodeBlock({
+        language,
+        children,
+        compact,
+      }: {
+        language: string;
+        children: string;
+        compact: boolean;
+      }) {
+        return (
+          <SyntaxHighlighter
+            style={oneDark}
+            language={language}
+            PreTag="div"
+            customStyle={{
+              margin: 0,
+              padding: compact ? '0.75rem' : '1rem',
+              background: '#1e1e1e',
+              fontSize: 'inherit',
+            }}
+          >
+            {children}
+          </SyntaxHighlighter>
+        );
+      },
+    };
+  }),
 );
 
 interface MarkdownProps {

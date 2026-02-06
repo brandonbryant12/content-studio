@@ -145,11 +145,7 @@ function Dashboard() {
         ) : (
           <div className="space-y-2">
             {documents?.map((doc) => (
-              <DocumentItem
-                key={doc.id}
-                document={doc}
-                hideDelete
-              />
+              <DocumentItem key={doc.id} document={doc} hideDelete />
             ))}
           </div>
         )}
@@ -181,11 +177,7 @@ function Dashboard() {
         ) : (
           <div className="space-y-2">
             {podcasts?.map((podcast) => (
-              <PodcastItem
-                key={podcast.id}
-                podcast={podcast}
-                hideDelete
-              />
+              <PodcastItem key={podcast.id} podcast={podcast} hideDelete />
             ))}
           </div>
         )}

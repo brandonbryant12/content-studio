@@ -1,13 +1,7 @@
 // providers/sse-provider.tsx
 
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  type ReactNode,
-} from 'react';
+import { createContext, use, useEffect, useRef, type ReactNode } from 'react';
 import { authClient } from '@/clients/authClient';
 import { useSSE, type SSEConnectionState } from '@/shared/hooks/use-sse';
 
@@ -28,7 +22,7 @@ export function SSEProvider({ children }: { children: ReactNode }) {
 }
 
 export function useSSEContext(): SSEContextValue {
-  const context = useContext(SSEContext);
+  const context = use(SSEContext);
   if (!context) {
     throw new Error('useSSEContext must be used within SSEProvider');
   }

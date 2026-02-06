@@ -1,5 +1,3 @@
-// features/podcasts/components/podcast-detail.tsx
-
 import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
@@ -18,31 +16,20 @@ interface DisplayAudio {
   duration: number | null;
 }
 
-/**
- * Props: All data in, all events out.
- */
 export interface PodcastDetailProps {
-  // Data
   podcast: Podcast;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;
   documentSelection: UseDocumentSelectionReturn;
   displayAudio: DisplayAudio | null;
-
-  // State flags
   hasChanges: boolean;
   isGenerating: boolean;
   isPendingGeneration: boolean;
   isSaving: boolean;
   isDeleting: boolean;
-
-  // Event callbacks
   onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
-
-  // Collaborator props
-  currentUserId: string;
   owner: {
     id: string;
     name: string;
@@ -60,11 +47,11 @@ export interface PodcastDetailProps {
   }[];
   currentUserHasApproved: boolean;
   onManageCollaborators: () => void;
+  onApprove: () => void;
+  onRevoke: () => void;
+  isApprovalPending: boolean;
 }
 
-/**
- * Presenter: Pure rendering component for the podcast workbench.
- */
 export function PodcastDetail({
   podcast,
   scriptEditor,
@@ -79,22 +66,26 @@ export function PodcastDetail({
   onSave,
   onGenerate,
   onDelete,
-  currentUserId,
   owner,
   collaborators,
   currentUserHasApproved,
   onManageCollaborators,
+  onApprove,
+  onRevoke,
+  isApprovalPending,
 }: PodcastDetailProps) {
   return (
     <WorkbenchLayout
       podcast={podcast}
       onDelete={onDelete}
       isDeleting={isDeleting}
-      currentUserId={currentUserId}
       owner={owner}
       collaborators={collaborators}
       currentUserHasApproved={currentUserHasApproved}
       onManageCollaborators={onManageCollaborators}
+      onApprove={onApprove}
+      onRevoke={onRevoke}
+      isApprovalPending={isApprovalPending}
       leftPanel={
         <ScriptPanel
           segments={scriptEditor.segments}
