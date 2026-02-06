@@ -2,7 +2,35 @@
 
 import { PlayIcon, PauseIcon } from '@radix-ui/react-icons';
 import { cn } from '@repo/ui/lib/utils';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, type RefObject } from 'react';
+
+/**
+ * Throttle audio timeupdate to ~1Hz state updates.
+ * The browser fires timeupdate ~4/sec; since we display seconds only,
+ * we skip setState until the floored second changes.
+ */
+function useThrottledTime(audioRef: RefObject<HTMLAudioElement | null>) {
+  const [displayTime, setDisplayTime] = useState(0);
+  const lastSecondRef = useRef(-1);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      const sec = Math.floor(audio.currentTime);
+      if (sec !== lastSecondRef.current) {
+        lastSecondRef.current = sec;
+        setDisplayTime(audio.currentTime);
+      }
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    return () => audio.removeEventListener('timeupdate', handleTimeUpdate);
+  }, [audioRef]);
+
+  return displayTime;
+}
 
 interface AudioStageProps {
   src: string;
@@ -25,18 +53,17 @@ export function AudioStage({
 }: AudioStageProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  const currentTime = useThrottledTime(audioRef);
   const [duration, setDuration] = useState(initialDuration ?? 0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Sync with audio element
+  // Sync with audio element (excluding timeupdate, handled by useThrottledTime)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
       setIsLoaded(true);
@@ -45,14 +72,12 @@ export function AudioStage({
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('play', handlePlay);
@@ -62,7 +87,6 @@ export function AudioStage({
 
   // Reset when src changes
   useEffect(() => {
-    setCurrentTime(0);
     setIsPlaying(false);
     setIsLoaded(false);
     if (initialDuration) {
@@ -91,7 +115,6 @@ export function AudioStage({
       const percentage = clickX / rect.width;
       const newTime = percentage * duration;
       audio.currentTime = newTime;
-      setCurrentTime(newTime);
     },
     [duration, isLoaded],
   );

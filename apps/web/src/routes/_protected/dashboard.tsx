@@ -10,6 +10,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { queryClient } from '@/clients/queryClient';
 import { DocumentItem } from '@/features/documents/components/document-item';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
@@ -18,11 +19,17 @@ import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 export const Route = createFileRoute('/_protected/dashboard')({
+  loader: () =>
+    Promise.all([
+      queryClient.ensureQueryData(
+        apiClient.documents.list.queryOptions({ input: {} }),
+      ),
+      queryClient.ensureQueryData(
+        apiClient.podcasts.list.queryOptions({ input: {} }),
+      ),
+    ]),
   component: Dashboard,
 });
-
-// Stable noop callback to avoid re-renders (rerender-memo-with-default-value)
-const noop = (_id: string) => {};
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -137,8 +144,7 @@ function Dashboard() {
               <DocumentItem
                 key={doc.id}
                 document={doc}
-                onDelete={noop}
-                isDeleting={false}
+                hideDelete
               />
             ))}
           </div>
@@ -174,8 +180,7 @@ function Dashboard() {
               <PodcastItem
                 key={podcast.id}
                 podcast={podcast}
-                onDelete={noop}
-                isDeleting={false}
+                hideDelete
               />
             ))}
           </div>
