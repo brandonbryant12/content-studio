@@ -1,5 +1,3 @@
-// features/podcasts/components/podcast-detail-container.tsx
-
 import { lazy, Suspense } from 'react';
 import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
 import { useDocumentSelection } from '../hooks/use-document-selection';
@@ -15,7 +13,6 @@ import {
   useSessionGuard,
 } from '@/shared/hooks';
 
-// Dynamic imports for conditionally rendered components
 const SetupWizardContainer = lazy(() =>
   import('./setup-wizard-container').then((m) => ({
     default: m.SetupWizardContainer,
@@ -32,21 +29,14 @@ interface PodcastDetailContainerProps {
   podcastId: string;
 }
 
-/**
- * Container: Fetches podcast data and coordinates all state/mutations.
- * Renders SetupWizardContainer for new podcasts, PodcastDetail for configured ones.
- */
 export function PodcastDetailContainer({
   podcastId,
 }: PodcastDetailContainerProps) {
-  // Get current user
   const { user } = useSessionGuard();
   const currentUserId = user?.id ?? '';
 
-  // Data fetching (Suspense handles loading)
   const { data: podcast } = usePodcast(podcastId);
 
-  // State management via custom hooks
   const scriptEditor = useScriptEditor({
     podcastId,
     initialSegments: [...(podcast.segments ?? [])],
@@ -58,7 +48,6 @@ export function PodcastDetailContainer({
     initialDocuments: [...(podcast.documents ?? [])],
   });
 
-  // Consolidated actions hook
   const actions = usePodcastActions({
     podcastId,
     podcast,
@@ -67,10 +56,11 @@ export function PodcastDetailContainer({
     documentSelection,
   });
 
-  // Collaborator management
-  const collaboratorManagement = useCollaboratorManagement(podcastId);
+  const collaboratorManagement = useCollaboratorManagement(
+    podcastId,
+    currentUserId,
+  );
 
-  // Owner info for collaborator display
   const owner = {
     id: podcast.createdBy,
     name: user?.id === podcast.createdBy ? (user?.name ?? 'You') : 'Owner',
@@ -78,7 +68,6 @@ export function PodcastDetailContainer({
     hasApproved: podcast.ownerHasApproved,
   };
 
-  // Check if current user has approved
   const currentUserHasApproved =
     podcast.createdBy === currentUserId
       ? podcast.ownerHasApproved
@@ -86,7 +75,6 @@ export function PodcastDetailContainer({
           (c) => c.userId === currentUserId,
         )?.hasApproved ?? false);
 
-  // Keyboard shortcut: Cmd/Ctrl+S to save
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
@@ -94,12 +82,10 @@ export function PodcastDetailContainer({
     enabled: actions.hasAnyChanges,
   });
 
-  // Block navigation if there are unsaved changes
   useNavigationBlock({
     shouldBlock: actions.hasAnyChanges,
   });
 
-  // Show setup wizard for new podcasts (lazy loaded)
   if (isSetupMode(podcast)) {
     return (
       <Suspense fallback={null}>
@@ -108,7 +94,6 @@ export function PodcastDetailContainer({
     );
   }
 
-  // Audio from podcast
   const displayAudio = podcast.audioUrl
     ? {
         url: podcast.audioUrl,
@@ -132,11 +117,13 @@ export function PodcastDetailContainer({
         onSave={actions.handleSave}
         onGenerate={actions.handleGenerate}
         onDelete={actions.handleDelete}
-        currentUserId={currentUserId}
         owner={owner}
         collaborators={collaboratorManagement.collaborators}
         currentUserHasApproved={currentUserHasApproved}
         onManageCollaborators={collaboratorManagement.openAddDialog}
+        onApprove={collaboratorManagement.handleApprove}
+        onRevoke={collaboratorManagement.handleRevoke}
+        isApprovalPending={collaboratorManagement.isApprovalPending}
       />
       {collaboratorManagement.isAddDialogOpen && (
         <Suspense fallback={null}>

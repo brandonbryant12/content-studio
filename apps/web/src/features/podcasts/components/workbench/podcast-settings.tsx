@@ -1,6 +1,6 @@
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
-import { useState, useEffect, useRef } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import {
   VOICES,
@@ -30,29 +30,15 @@ function VoiceSelector({
   disabledVoice,
   disabled,
 }: VoiceSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const selectedVoice = VOICES.find((v) => v.id === value);
 
-  // Close on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
-    <div className="mixer-voice-selector" ref={ref}>
-      <button
-        type="button"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
-        className={`mixer-voice-current ${isOpen ? 'open' : ''}`}
-      >
+    <SelectPrimitive.Root
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled}
+    >
+      <SelectPrimitive.Trigger className="mixer-voice-current">
         <div className={`mixer-voice-avatar ${selectedVoice?.gender}`}>
           {selectedVoice?.name.charAt(0)}
         </div>
@@ -60,37 +46,44 @@ function VoiceSelector({
           <p className="mixer-voice-name">{selectedVoice?.name}</p>
           <p className="mixer-voice-desc">{selectedVoice?.description}</p>
         </div>
-        <ChevronDownIcon className="mixer-voice-chevron" />
-      </button>
+        <SelectPrimitive.Icon>
+          <ChevronDownIcon className="mixer-voice-chevron" />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
 
-      {isOpen && (
-        <div className="mixer-voice-dropdown">
-          {VOICES.map((voice) => {
-            const isDisabled = voice.id === disabledVoice;
-            return (
-              <button
-                key={voice.id}
-                type="button"
-                onClick={() => {
-                  if (!isDisabled) {
-                    onChange(voice.id);
-                    setIsOpen(false);
-                  }
-                }}
-                className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-              >
-                <div
-                  className={`mixer-voice-option-avatar ${voice.gender === 'female' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'}`}
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          className="mixer-voice-dropdown"
+          position="popper"
+          sideOffset={4}
+        >
+          <SelectPrimitive.Viewport>
+            {VOICES.map((voice) => {
+              const isDisabled = voice.id === disabledVoice;
+              return (
+                <SelectPrimitive.Item
+                  key={voice.id}
+                  value={voice.id}
+                  disabled={isDisabled}
+                  className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                 >
-                  {voice.name.charAt(0)}
-                </div>
-                <span className="mixer-voice-option-name">{voice.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                  <div
+                    className={`mixer-voice-option-avatar ${voice.gender === 'female' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'}`}
+                  >
+                    {voice.name.charAt(0)}
+                  </div>
+                  <SelectPrimitive.ItemText>
+                    <span className="mixer-voice-option-name">
+                      {voice.name}
+                    </span>
+                  </SelectPrimitive.ItemText>
+                </SelectPrimitive.Item>
+              );
+            })}
+          </SelectPrimitive.Viewport>
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
   );
 }
 
@@ -103,7 +96,6 @@ export function PodcastSettings({
 
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-      {/* Header */}
       <div className="mixer-header">
         <h3 className="mixer-title">Voice Mixer</h3>
         {disabled && (
@@ -114,9 +106,7 @@ export function PodcastSettings({
         )}
       </div>
 
-      {/* Channel Strips */}
       <div className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}>
-        {/* Host Channel */}
         <div className={`mixer-channel ${!isConversation ? 'single' : ''}`}>
           <div className="mixer-channel-header">
             <div className="mixer-channel-indicator host" />
@@ -132,7 +122,6 @@ export function PodcastSettings({
           />
         </div>
 
-        {/* Co-Host Channel */}
         {isConversation && (
           <div className="mixer-channel">
             <div className="mixer-channel-header">
@@ -149,7 +138,6 @@ export function PodcastSettings({
         )}
       </div>
 
-      {/* Duration Control */}
       <div className="mixer-duration">
         <span className="mixer-duration-label">Target Length</span>
         <div className="mixer-duration-slider">
@@ -174,7 +162,6 @@ export function PodcastSettings({
         </div>
       </div>
 
-      {/* Custom Instructions */}
       <div className="mixer-notes">
         <span className="mixer-notes-label">Custom Instructions</span>
         <textarea

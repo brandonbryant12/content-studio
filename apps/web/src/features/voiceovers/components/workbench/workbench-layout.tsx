@@ -18,7 +18,6 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
-  currentUserId: string;
   owner: {
     id: string;
     name: string;
@@ -48,7 +47,6 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  currentUserId: _currentUserId,
   owner,
   collaborators,
   currentUserHasApproved,
@@ -57,9 +55,6 @@ export function WorkbenchLayout({
   onRevoke,
   isApprovalPending,
 }: WorkbenchLayoutProps) {
-  // Note: currentUserId is passed for future owner-only UI features
-  void _currentUserId;
-
   const isGenerating = isGeneratingStatus(voiceover.status);
 
   return (

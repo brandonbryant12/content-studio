@@ -398,6 +398,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.57.0
+      '@radix-ui/react-select':
+        specifier: ^2.2.6
+        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api

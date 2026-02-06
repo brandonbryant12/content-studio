@@ -36,7 +36,6 @@ export interface VoiceoverDetailProps {
   isDeleting: boolean;
   onGenerate: () => void;
   onDelete: () => void;
-  currentUserId: string;
   owner: Owner;
   collaborators: readonly Collaborator[];
   currentUserHasApproved: boolean;
@@ -58,7 +57,6 @@ export function VoiceoverDetail({
   isDeleting,
   onGenerate,
   onDelete,
-  currentUserId,
   owner,
   collaborators,
   currentUserHasApproved,
@@ -72,7 +70,6 @@ export function VoiceoverDetail({
       voiceover={voiceover}
       onDelete={onDelete}
       isDeleting={isDeleting}
-      currentUserId={currentUserId}
       owner={owner}
       collaborators={collaborators}
       currentUserHasApproved={currentUserHasApproved}

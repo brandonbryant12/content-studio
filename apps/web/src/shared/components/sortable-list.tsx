@@ -19,12 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  createContext,
-  useContext,
-  type CSSProperties,
-  type ReactNode,
-} from 'react';
+import { createContext, use, type CSSProperties, type ReactNode } from 'react';
 
 /* -----------------------------------------------------------------------------
  * Types
@@ -79,7 +74,7 @@ const SortableItemContext = createContext<SortableItemContextValue | null>(
 );
 
 function useSortableItemContext() {
-  const context = useContext(SortableItemContext);
+  const context = use(SortableItemContext);
   if (!context) {
     throw new Error(
       'useSortableItemContext must be used within a SortableItemWrapper',

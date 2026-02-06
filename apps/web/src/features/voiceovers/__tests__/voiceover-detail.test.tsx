@@ -145,7 +145,6 @@ function createDefaultProps(
     isDeleting: false,
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
-    currentUserId: 'user-1',
     owner: createMockOwner(),
     collaborators: [] as readonly Collaborator[],
     currentUserHasApproved: false,

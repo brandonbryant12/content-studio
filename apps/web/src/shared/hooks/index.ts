@@ -8,3 +8,8 @@ export { usePrevious } from './use-previous';
 export { useSSE } from './use-sse';
 export type { SSEConnectionState } from './use-sse';
 export { handleJobCompletion, handleEntityChange } from './sse-handlers';
+export {
+  useAudioPlayer,
+  formatTime,
+  type UseAudioPlayerReturn,
+} from './use-audio-player';
