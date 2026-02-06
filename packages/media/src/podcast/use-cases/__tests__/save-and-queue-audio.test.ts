@@ -46,13 +46,6 @@ const createMockPodcastRepo = (
           ? Effect.succeed({ ...state.podcast, documents: [] })
           : Effect.fail(new PodcastNotFound({ id })),
       ),
-    findByIdFull: (id) =>
-      Effect.suspend(() => {
-        if (!state.podcast) {
-          return Effect.fail(new PodcastNotFound({ id }));
-        }
-        return Effect.succeed({ ...state.podcast, documents: [] });
-      }),
     list: () => Effect.die('not implemented'),
     insert: () => Effect.die('not implemented'),
     update: (id, data) =>

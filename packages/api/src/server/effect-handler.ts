@@ -16,34 +16,25 @@ export interface HandleEffectOptions {
 }
 
 /**
+ * Error factory function signature.
+ * Compatible with oRPC's ORPCErrorConstructorMapItem which uses rest params
+ * via MaybeOptionalOptions. We accept any callable that takes an options object.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ErrorFactoryFn = (...args: any[]) => unknown;
+
+/**
  * oRPC error factory interface.
- * The errors object passed to handlers has factory functions for each error code.
+ * Uses an index signature so it's compatible with oRPC's ORPCErrorConstructorMap,
+ * which only includes keys for error codes defined in the contract. Handlers can
+ * pass `errors` directly without `as unknown as ErrorFactory` casts.
+ *
+ * All keys are optional via the index signature because different routes define
+ * different error codes. The handler code (handleTaggedError) checks for key
+ * existence before calling factories.
  */
 export interface ErrorFactory {
-  INTERNAL_ERROR: (opts: { message: string; data?: unknown }) => unknown;
-  BAD_REQUEST: (opts: { message: string; data?: unknown }) => unknown;
-  FORBIDDEN: (opts: { message: string; data?: unknown }) => unknown;
-  UNAUTHORIZED: (opts: { message: string; data?: unknown }) => unknown;
-  NOT_FOUND: (opts: { message: string; data?: unknown }) => unknown;
-  BAD_GATEWAY?: (opts: { message: string; data?: unknown }) => unknown;
-  SERVICE_UNAVAILABLE?: (opts: { message: string; data?: unknown }) => unknown;
-  RATE_LIMITED?: (opts: { message: string; data?: unknown }) => unknown;
-  CONFLICT?: (opts: { message: string; data?: unknown }) => unknown;
-  // Domain-specific error codes
-  DOCUMENT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  DOCUMENT_TOO_LARGE?: (opts: { message: string; data?: unknown }) => unknown;
-  DOCUMENT_PARSE_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
-  UNSUPPORTED_FORMAT?: (opts: { message: string; data?: unknown }) => unknown;
-  PODCAST_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  SCRIPT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  PROJECT_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  MEDIA_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  JOB_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  VALIDATION_ERROR?: (opts: { message: string; data?: unknown }) => unknown;
-  VOICE_NOT_FOUND?: (opts: { message: string; data?: unknown }) => unknown;
-  [key: string]:
-    | ((opts: { message: string; data?: unknown }) => unknown)
-    | undefined;
+  [key: string]: ErrorFactoryFn | undefined;
 }
 
 /**
@@ -111,11 +102,18 @@ export const handleTaggedError = <E extends { _tag: string }>(
     getData?: (error: E) => Record<string, unknown>;
   };
 
+  // Helper to throw using the best available factory
+  const throwWithFactory = (message: string, data?: Record<string, unknown>): never => {
+    const factory = errors['INTERNAL_ERROR'] ?? errors['NOT_FOUND'];
+    if (factory) throw factory({ message, data });
+    throw new ORPCError('INTERNAL_SERVER_ERROR', { message });
+  };
+
   // Check if class implements HttpErrorProtocol
   if (!hasHttpProtocol(ErrorClass)) {
     // Fallback for errors without protocol - log and throw internal error
     console.error(`[${error._tag}] Error class missing HTTP protocol`, error);
-    throw errors.INTERNAL_ERROR({ message: 'An unexpected error occurred' });
+    throwWithFactory('An unexpected error occurred');
   }
 
   // Log based on level
@@ -141,16 +139,21 @@ export const handleTaggedError = <E extends { _tag: string }>(
   const status = ErrorClass.httpStatus!;
   const statusFactory =
     status === 400
-      ? errors.BAD_REQUEST
+      ? errors['BAD_REQUEST']
       : status === 401
-        ? errors.UNAUTHORIZED
+        ? errors['UNAUTHORIZED']
         : status === 403
-          ? errors.FORBIDDEN
+          ? errors['FORBIDDEN']
           : status === 404
-            ? errors.NOT_FOUND
-            : errors.INTERNAL_ERROR;
+            ? errors['NOT_FOUND']
+            : errors['INTERNAL_ERROR'];
 
-  throw statusFactory({ message, data });
+  if (statusFactory) {
+    throw statusFactory({ message, data });
+  }
+
+  // Ultimate fallback - construct ORPCError directly
+  throw new ORPCError('INTERNAL_SERVER_ERROR', { message });
 };
 
 /**

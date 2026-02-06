@@ -1,6 +1,6 @@
 import { listVoices, previewVoice, type AudioEncoding } from '@repo/ai/tts';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
+import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 interface PreviewResult {
@@ -15,7 +15,7 @@ const voicesRouter = {
       context.runtime,
       context.user,
       listVoices({}).pipe(Effect.map((result) => [...result.voices])),
-      errors as unknown as ErrorFactory,
+      errors,
       { span: 'api.voices.list' },
     );
   }),
@@ -38,7 +38,7 @@ const voicesRouter = {
             }),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.voices.preview',
           attributes: { 'voice.id': input.voiceId },

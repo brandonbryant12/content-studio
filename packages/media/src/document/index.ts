@@ -7,6 +7,8 @@ export {
   DocumentRepoLive,
   type DocumentRepoService,
   type ListOptions,
+  type InsertDocumentInput,
+  type UpdateDocumentInput,
 } from './repos';
 
 // Use cases
@@ -26,9 +28,6 @@ export {
   type ParsedDocument,
   type FileUploadInput,
 } from './parsers';
-
-// Repository types (for advanced use cases)
-export type { InsertDocumentInput, UpdateDocumentInput } from './repository';
 
 // Re-export DB types for convenience
 export type {

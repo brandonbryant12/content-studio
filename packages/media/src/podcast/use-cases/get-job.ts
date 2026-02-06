@@ -41,20 +41,7 @@ export interface GetJobResult {
 export const getJob = (input: GetJobInput) =>
   Effect.gen(function* () {
     const queue = yield* Queue;
-    const job = yield* queue.getJob(input.jobId);
-
-    return {
-      id: job.id,
-      type: job.type,
-      status: job.status,
-      result: job.result,
-      error: job.error,
-      createdBy: job.createdBy,
-      createdAt: job.createdAt,
-      updatedAt: job.updatedAt,
-      startedAt: job.startedAt,
-      completedAt: job.completedAt,
-    };
+    return yield* queue.getJob(input.jobId);
   }).pipe(
     Effect.withSpan('useCase.getJob', {
       attributes: { 'job.id': input.jobId },

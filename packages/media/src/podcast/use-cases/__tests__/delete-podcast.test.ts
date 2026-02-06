@@ -38,7 +38,6 @@ const createMockPodcastRepo = (
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
     insert: () => Effect.die('not implemented'),
-    findByIdFull: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
@@ -174,7 +173,6 @@ describe('deletePodcast', () => {
 
       const service: PodcastRepoService = {
         insert: () => Effect.die('not implemented'),
-        findByIdFull: () => Effect.die('not implemented'),
         list: () => Effect.die('not implemented'),
         update: () => Effect.die('not implemented'),
         count: () => Effect.die('not implemented'),

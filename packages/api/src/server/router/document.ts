@@ -13,7 +13,7 @@ import {
   deleteDocument,
 } from '@repo/media';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol, type ErrorFactory } from '../effect-handler';
+import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const documentRouter = {
@@ -27,7 +27,7 @@ const documentRouter = {
             serializeDocumentsEffect(result.documents as readonly Document[]),
           ),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.list',
           attributes: {
@@ -47,7 +47,7 @@ const documentRouter = {
         getDocument({ id: input.id }).pipe(
           Effect.flatMap(serializeDocumentEffect),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.get',
           attributes: { 'document.id': input.id },
@@ -62,7 +62,7 @@ const documentRouter = {
         context.runtime,
         context.user,
         getDocumentContent({ id: input.id }),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.getContent',
           attributes: { 'document.id': input.id },
@@ -77,7 +77,7 @@ const documentRouter = {
         context.runtime,
         context.user,
         createDocument(input).pipe(Effect.flatMap(serializeDocumentEffect)),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.create',
           attributes: { 'document.title': input.title },
@@ -99,7 +99,7 @@ const documentRouter = {
           title: input.title,
           metadata: input.metadata,
         }).pipe(Effect.flatMap(serializeDocumentEffect)),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.upload',
           attributes: {
@@ -121,7 +121,7 @@ const documentRouter = {
         updateDocument({ id, ...data }).pipe(
           Effect.flatMap(serializeDocumentEffect),
         ),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.update',
           attributes: { 'document.id': id },
@@ -136,7 +136,7 @@ const documentRouter = {
         context.runtime,
         context.user,
         deleteDocument({ id: input.id }).pipe(Effect.map(() => ({}))),
-        errors as unknown as ErrorFactory,
+        errors,
         {
           span: 'api.documents.delete',
           attributes: { 'document.id': input.id },

@@ -66,7 +66,7 @@ export const generateScript = (input: GenerateScriptInput) =>
     const llm = yield* LLM;
 
     // 1. Load podcast with documents
-    const podcast = yield* podcastRepo.findByIdFull(input.podcastId);
+    const podcast = yield* podcastRepo.findById(input.podcastId);
     yield* requireOwnership(podcast.createdBy);
 
     // 2. Set status to generating_script

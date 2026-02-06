@@ -67,18 +67,6 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
         return Effect.succeed(result);
       }),
 
-    findByIdFull: (id: string) =>
-      Effect.suspend(() => {
-        const podcast = state.podcasts.find((p) => p.id === id);
-        if (!podcast) {
-          return Effect.fail(new PodcastNotFound({ id }));
-        }
-        const result: PodcastWithDocuments = {
-          ...podcast,
-          documents: [],
-        };
-        return Effect.succeed(result);
-      }),
   };
 
   return Layer.succeed(PodcastRepo, service);
