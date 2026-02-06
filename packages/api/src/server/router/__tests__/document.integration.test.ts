@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer, ManagedRuntime } from 'effect';
+import { Layer } from 'effect';
 import {
   createTestContext,
   createTestUser,
@@ -16,13 +16,18 @@ import {
   user as userTable,
   document as documentTable,
   type DocumentOutput,
+  type DocumentId,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { DocumentRepoLive } from '@repo/media';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
 import documentRouter from '../document';
-import { createMockContext, createMockErrors } from './helpers';
+import {
+  createMockContext,
+  createMockErrors,
+  createTestServerRuntime,
+} from './helpers';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -140,10 +145,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     documentRepoLayer,
   );
 
-  // Type assertion needed because Layer type inference doesn't perfectly match ServerRuntime
-  // The test runtime only includes the services needed for document operations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ManagedRuntime.make(allLayers as any) as ServerRuntime;
+  return createTestServerRuntime(allLayers);
 };
 
 /**
@@ -301,8 +303,7 @@ describe('document router', () => {
       const [dbDocument] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, result.id as any));
+        .where(eq(documentTable.id, result.id as DocumentId));
 
       expect(dbDocument).toBeDefined();
       expect(dbDocument!.title).toBe('Persistence Test');
@@ -545,8 +546,7 @@ describe('document router', () => {
       const [dbDocument] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, result.id as any));
+        .where(eq(documentTable.id, result.id as DocumentId));
 
       expect(dbDocument).toBeDefined();
       expect(dbDocument!.originalFileName).toBe('persist-test.txt');
@@ -1153,8 +1153,7 @@ describe('document router', () => {
       const [dbDocument] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, doc.id as any));
+        .where(eq(documentTable.id, doc.id as DocumentId));
 
       expect(dbDocument).toBeDefined();
       expect(dbDocument!.title).toBe('Persisted Title');
@@ -1261,8 +1260,7 @@ describe('document router', () => {
       const [beforeDelete] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, doc.id as any));
+        .where(eq(documentTable.id, doc.id as DocumentId));
       expect(beforeDelete).toBeDefined();
 
       // Act
@@ -1276,8 +1274,7 @@ describe('document router', () => {
       const [afterDelete] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, doc.id as any));
+        .where(eq(documentTable.id, doc.id as DocumentId));
       expect(afterDelete).toBeUndefined();
     });
 
@@ -1308,8 +1305,7 @@ describe('document router', () => {
       const [afterDelete] = await ctx.db
         .select()
         .from(documentTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(documentTable.id, doc.id as any));
+        .where(eq(documentTable.id, doc.id as DocumentId));
       expect(afterDelete).toBeUndefined();
     });
 

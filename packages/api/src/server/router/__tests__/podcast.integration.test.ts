@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer, ManagedRuntime } from 'effect';
+import { Layer } from 'effect';
 import {
   createTestContext,
   createTestUser,
@@ -26,6 +26,8 @@ import {
   type PodcastListItemOutput,
   type PodcastOutput,
   type CollaboratorWithUserOutput,
+  type PodcastId,
+  type JobId,
 } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
@@ -37,7 +39,11 @@ import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
 import podcastRouter from '../podcast';
-import { createMockContext, createMockErrors } from './helpers';
+import {
+  createMockContext,
+  createMockErrors,
+  createTestServerRuntime,
+} from './helpers';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -179,9 +185,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     queueLayer,
   );
 
-  // Type assertion needed because Layer type inference doesn't perfectly match ServerRuntime
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ManagedRuntime.make(allLayers as any) as ServerRuntime;
+  return createTestServerRuntime(allLayers);
 };
 
 /**
@@ -660,8 +664,7 @@ describe('podcast router', () => {
       const [dbPodcast] = await ctx.db
         .select()
         .from(podcastTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(podcastTable.id, result.id as any));
+        .where(eq(podcastTable.id, result.id as PodcastId));
 
       expect(dbPodcast).toBeDefined();
       expect(dbPodcast!.title).toBe('Persistence Test');
@@ -863,8 +866,7 @@ describe('podcast router', () => {
       const [dbPodcast] = await ctx.db
         .select()
         .from(podcastTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(podcastTable.id, podcast.id as any));
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
 
       expect(dbPodcast).toBeDefined();
       expect(dbPodcast!.title).toBe('Persisted Title');
@@ -955,8 +957,7 @@ describe('podcast router', () => {
       const [beforeDelete] = await ctx.db
         .select()
         .from(podcastTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(podcastTable.id, podcast.id as any));
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
       expect(beforeDelete).toBeDefined();
 
       // Act
@@ -970,8 +971,7 @@ describe('podcast router', () => {
       const [afterDelete] = await ctx.db
         .select()
         .from(podcastTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(podcastTable.id, podcast.id as any));
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
       expect(afterDelete).toBeUndefined();
     });
 
@@ -999,8 +999,7 @@ describe('podcast router', () => {
       const [afterDelete] = await ctx.db
         .select()
         .from(podcastTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(podcastTable.id, podcast.id as any));
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
       expect(afterDelete).toBeUndefined();
     });
 
@@ -1131,8 +1130,7 @@ describe('podcast router', () => {
       const [job] = await ctx.db
         .select()
         .from(jobTable)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq(jobTable.id, result.jobId as any));
+        .where(eq(jobTable.id, result.jobId as JobId));
 
       expect(job).toBeDefined();
       expect(

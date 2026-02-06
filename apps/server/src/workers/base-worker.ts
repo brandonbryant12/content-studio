@@ -9,7 +9,7 @@ import { Role, type User } from '@repo/auth/policy';
 import { createDb } from '@repo/db/client';
 import { Queue, JobProcessingError, type Job, type JobType } from '@repo/queue';
 import type { JobId } from '@repo/db/schema';
-import { Effect, Ref, Schedule } from 'effect';
+import { Deferred, Effect, Fiber, Ref, Schedule } from 'effect';
 import { WORKER_DEFAULTS } from '../constants';
 
 /**
@@ -43,6 +43,8 @@ export interface BaseWorkerConfig {
 export interface Worker {
   /** Start the worker polling loop */
   start: () => Promise<void>;
+  /** Gracefully stop the worker, waiting for in-flight jobs to finish */
+  stop: () => Promise<void>;
   /** Process a single job by ID (for testing) */
   processJobById: (jobId: string) => Promise<void>;
   /** The worker's runtime */
@@ -169,6 +171,10 @@ export const createWorker = <
   // How many idle polls before logging a summary at INFO level
   const IDLE_SUMMARY_INTERVAL = Math.max(1, Math.round(60_000 / pollInterval));
 
+  // Shutdown signal — completing this deferred stops the polling loop
+  let shutdownDeferred: Deferred.Deferred<void> | null = null;
+  let loopFiber: Fiber.RuntimeFiber<void, unknown> | null = null;
+
   /**
    * Poll for and process the next job from any of the supported types.
    */
@@ -220,14 +226,32 @@ export const createWorker = <
 
     const loop = Effect.gen(function* () {
       const idleCount = yield* Ref.make(0);
+      const stopSignal = yield* Deferred.make<void>();
+      shutdownDeferred = stopSignal;
 
       yield* Effect.logInfo(
         `Starting ${name}, polling every ${pollInterval}ms`,
       );
 
-      // Main polling loop - runs forever on success
+      // Main polling loop — exits when stopSignal is completed
       yield* pollOnce(idleCount).pipe(
-        Effect.tap(() => Effect.sleep(pollInterval)),
+        Effect.tap(() =>
+          Effect.raceFirst(
+            Effect.sleep(pollInterval),
+            Deferred.await(stopSignal),
+          ),
+        ),
+        Effect.tap(() =>
+          Deferred.isDone(stopSignal).pipe(
+            Effect.flatMap((done) =>
+              done
+                ? Effect.logInfo(`${name} received stop signal, exiting`).pipe(
+                    Effect.flatMap(() => Effect.interrupt),
+                  )
+                : Effect.void,
+            ),
+          ),
+        ),
         Effect.forever,
       );
     }).pipe(
@@ -251,7 +275,38 @@ export const createWorker = <
       ),
     );
 
-    await runtime.runPromise(loop);
+    const fiber = await runtime.runPromise(
+      Effect.fork(loop).pipe(
+        Effect.tap((f) =>
+          Effect.sync(() => {
+            loopFiber = f;
+          }),
+        ),
+      ),
+    );
+
+    // Wait for fiber to complete (either naturally or via interruption)
+    await runtime.runPromise(Fiber.join(fiber)).catch(() => {
+      // Interruption is expected during shutdown
+    });
+  };
+
+  /**
+   * Gracefully stop the worker.
+   * Completes the shutdown deferred so the current poll cycle finishes,
+   * then waits for the loop fiber to exit.
+   */
+  const stop = async () => {
+    if (shutdownDeferred) {
+      await runtime.runPromise(
+        Deferred.complete(shutdownDeferred, Effect.void),
+      );
+    }
+    if (loopFiber) {
+      await runtime.runPromise(Fiber.interrupt(loopFiber)).catch(() => {
+        // Expected — interruption resolves with Exit.interrupt
+      });
+    }
   };
 
   /**
@@ -269,6 +324,7 @@ export const createWorker = <
 
   return {
     start,
+    stop,
     processJobById,
     runtime,
   };

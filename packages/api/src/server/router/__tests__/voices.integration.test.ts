@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer, ManagedRuntime } from 'effect';
+import { Layer } from 'effect';
 import {
   createTestContext,
   createTestUser,
@@ -13,7 +13,11 @@ import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
 import type { ServerRuntime } from '../../runtime';
 import voicesRouter from '../voices';
-import { createMockContext, createMockErrors } from './helpers';
+import {
+  createMockContext,
+  createMockErrors,
+  createTestServerRuntime,
+} from './helpers';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -101,10 +105,7 @@ const createTestRuntime = (
     policyLayer,
   );
 
-  // Type assertion needed because Layer type inference doesn't perfectly match ServerRuntime
-  // The test runtime only includes the services needed for voice operations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ManagedRuntime.make(allLayers as any) as ServerRuntime;
+  return createTestServerRuntime(allLayers);
 };
 
 /**

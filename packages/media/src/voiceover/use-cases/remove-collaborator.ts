@@ -1,8 +1,9 @@
 import { Effect } from 'effect';
 import type { VoiceoverCollaboratorId } from '@repo/db/schema';
+import { requireOwnership } from '@repo/auth/policy';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
-import { NotVoiceoverOwner, VoiceoverCollaboratorNotFound } from '../../errors';
+import { VoiceoverCollaboratorNotFound } from '../../errors';
 
 // =============================================================================
 // Types
@@ -10,7 +11,6 @@ import { NotVoiceoverOwner, VoiceoverCollaboratorNotFound } from '../../errors';
 
 export interface RemoveVoiceoverCollaboratorInput {
   collaboratorId: string;
-  removedBy: string; // User ID of the person removing the collaborator
 }
 
 // =============================================================================
@@ -22,13 +22,12 @@ export interface RemoveVoiceoverCollaboratorInput {
  *
  * This use case:
  * 1. Looks up the collaborator to find the voiceover
- * 2. Verifies the removedBy user is the voiceover owner
+ * 2. Verifies the current user is the voiceover owner (via FiberRef)
  * 3. Deletes the collaborator record
  *
  * @example
  * yield* removeVoiceoverCollaborator({
  *   collaboratorId: 'vcl_xxx',
- *   removedBy: 'user-123',
  * });
  */
 export const removeVoiceoverCollaborator = (
@@ -49,17 +48,9 @@ export const removeVoiceoverCollaborator = (
       );
     }
 
-    // 2. Load voiceover and verify ownership
+    // 2. Load voiceover and verify ownership via FiberRef
     const voiceover = yield* voiceoverRepo.findById(collaborator.voiceoverId);
-
-    if (voiceover.createdBy !== input.removedBy) {
-      return yield* Effect.fail(
-        new NotVoiceoverOwner({
-          voiceoverId: collaborator.voiceoverId,
-          userId: input.removedBy,
-        }),
-      );
-    }
+    yield* requireOwnership(voiceover.createdBy);
 
     // 3. Delete the collaborator
     yield* collaboratorRepo.remove(collaborator.id);

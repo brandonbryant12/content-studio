@@ -1,8 +1,9 @@
 import { Effect } from 'effect';
 import type { CollaboratorId } from '@repo/db/schema';
+import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { CollaboratorRepo } from '../repos/collaborator-repo';
-import { NotPodcastOwner, CollaboratorNotFound } from '../../errors';
+import { CollaboratorNotFound } from '../../errors';
 
 // =============================================================================
 // Types
@@ -10,7 +11,6 @@ import { NotPodcastOwner, CollaboratorNotFound } from '../../errors';
 
 export interface RemoveCollaboratorInput {
   collaboratorId: string;
-  removedBy: string; // User ID of the person removing the collaborator
 }
 
 // =============================================================================
@@ -22,13 +22,12 @@ export interface RemoveCollaboratorInput {
  *
  * This use case:
  * 1. Looks up the collaborator to find the podcast
- * 2. Verifies the removedBy user is the podcast owner
+ * 2. Verifies the current user is the podcast owner (via FiberRef)
  * 3. Deletes the collaborator record
  *
  * @example
  * yield* removeCollaborator({
  *   collaboratorId: 'col_abc123',
- *   removedBy: 'user-123',
  * });
  */
 export const removeCollaborator = (input: RemoveCollaboratorInput) =>
@@ -47,17 +46,9 @@ export const removeCollaborator = (input: RemoveCollaboratorInput) =>
       );
     }
 
-    // 2. Load podcast and verify ownership
+    // 2. Load podcast and verify ownership via FiberRef
     const podcast = yield* podcastRepo.findById(collaborator.podcastId);
-
-    if (podcast.createdBy !== input.removedBy) {
-      return yield* Effect.fail(
-        new NotPodcastOwner({
-          podcastId: collaborator.podcastId,
-          userId: input.removedBy,
-        }),
-      );
-    }
+    yield* requireOwnership(podcast.createdBy);
 
     // 3. Delete the collaborator
     yield* collaboratorRepo.remove(collaborator.id);

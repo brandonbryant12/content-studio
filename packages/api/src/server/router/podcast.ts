@@ -232,7 +232,6 @@ const podcastRouter = {
         context.user,
         removeCollaborator({
           collaboratorId: input.collaboratorId as CollaboratorId,
-          removedBy: context.session.user.id,
         }).pipe(Effect.map(() => ({}))),
         errors,
         {

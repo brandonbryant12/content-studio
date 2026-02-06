@@ -13,11 +13,9 @@ import type {
   CollaboratorId,
 } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import {
-  NotPodcastOwner,
-  CollaboratorNotFound,
-  PodcastNotFound,
-} from '../../../errors';
+import { withCurrentUser, Role } from '@repo/auth/policy';
+import { ForbiddenError } from '@repo/db/errors';
+import { CollaboratorNotFound, PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
@@ -66,7 +64,6 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
         };
         return Effect.succeed(result);
       }),
-
   };
 
   return Layer.succeed(PodcastRepo, service);
@@ -127,6 +124,12 @@ describe('removeCollaborator', () => {
   describe('success cases', () => {
     it('removes collaborator when owner removes', async () => {
       const owner = createTestUser({ id: 'owner-id' });
+      const ownerUser = {
+        id: owner.id,
+        email: owner.email,
+        name: owner.name,
+        role: Role.USER,
+      };
       const podcast = createTestPodcast({
         id: 'pod_test0000000001' as PodcastId,
         createdBy: owner.id,
@@ -149,10 +152,11 @@ describe('removeCollaborator', () => {
       );
 
       await Effect.runPromise(
-        removeCollaborator({
-          collaboratorId: collaborator.id,
-          removedBy: owner.id,
-        }).pipe(Effect.provide(layers)),
+        withCurrentUser(ownerUser)(
+          removeCollaborator({
+            collaboratorId: collaborator.id,
+          }),
+        ).pipe(Effect.provide(layers)),
       );
 
       expect(removeSpy).toHaveBeenCalledWith(collaborator.id);
@@ -161,9 +165,15 @@ describe('removeCollaborator', () => {
   });
 
   describe('error cases', () => {
-    it('fails with NotPodcastOwner when non-owner tries to remove', async () => {
+    it('fails with ForbiddenError when non-owner tries to remove', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const nonOwner = createTestUser({ id: 'non-owner-id' });
+      const nonOwnerUser = {
+        id: nonOwner.id,
+        email: nonOwner.email,
+        name: nonOwner.name,
+        role: Role.USER,
+      };
       const podcast = createTestPodcast({
         id: 'pod_test0000000001' as PodcastId,
         createdBy: owner.id,
@@ -185,21 +195,28 @@ describe('removeCollaborator', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        removeCollaborator({
-          collaboratorId: collaborator.id,
-          removedBy: nonOwner.id,
-        }).pipe(Effect.provide(layers)),
+        withCurrentUser(nonOwnerUser)(
+          removeCollaborator({
+            collaboratorId: collaborator.id,
+          }),
+        ).pipe(Effect.provide(layers)),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotPodcastOwner);
+        expect(error).toBeInstanceOf(ForbiddenError);
       }
     });
 
     it('fails with CollaboratorNotFound when collaborator does not exist', async () => {
       const owner = createTestUser({ id: 'owner-id' });
+      const ownerUser = {
+        id: owner.id,
+        email: owner.email,
+        name: owner.name,
+        role: Role.USER,
+      };
       const podcast = createTestPodcast({
         id: 'pod_test0000000001' as PodcastId,
         createdBy: owner.id,
@@ -217,10 +234,11 @@ describe('removeCollaborator', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        removeCollaborator({
-          collaboratorId: 'col_nonexistent0000' as string,
-          removedBy: owner.id,
-        }).pipe(Effect.provide(layers)),
+        withCurrentUser(ownerUser)(
+          removeCollaborator({
+            collaboratorId: 'col_nonexistent0000' as string,
+          }),
+        ).pipe(Effect.provide(layers)),
       );
 
       expect(result._tag).toBe('Failure');

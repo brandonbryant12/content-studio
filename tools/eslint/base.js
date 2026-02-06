@@ -132,4 +132,11 @@ export default defineConfig([
       ],
     },
   },
+  // Ban `as any` in test files — use branded types or typed helpers instead
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.integration.test.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
 ]);

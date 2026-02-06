@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer, ManagedRuntime } from 'effect';
+import { Layer } from 'effect';
 import {
   createTestContext,
   createTestUser,
@@ -30,7 +30,11 @@ import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
 import type { ServerRuntime } from '../../runtime';
 import voiceoverRouter from '../voiceover';
-import { createMockContext, createMockErrors } from './helpers';
+import {
+  createMockContext,
+  createMockErrors,
+  createTestServerRuntime,
+} from './helpers';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -192,9 +196,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     queueLayer,
   );
 
-  // Type assertion needed because Layer type inference doesn't perfectly match ServerRuntime
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ManagedRuntime.make(allLayers as any) as ServerRuntime;
+  return createTestServerRuntime(allLayers);
 };
 
 /**

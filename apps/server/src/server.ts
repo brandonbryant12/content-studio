@@ -87,15 +87,45 @@ Hono
     },
   );
 
-  const shutdown = () => {
-    server.close((error) => {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log('\nServer has stopped gracefully.');
-      }
+  let isShuttingDown = false;
+  const SHUTDOWN_TIMEOUT_MS = 30_000;
+
+  const shutdown = async () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log('\nShutting down gracefully...');
+
+    // Force exit if graceful shutdown stalls
+    const forceTimer = setTimeout(() => {
+      console.error('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceTimer.unref();
+
+    try {
+      // 1. Stop accepting new requests
+      await new Promise<void>((resolve) => {
+        server.close((error) => {
+          if (error) console.error('Error closing HTTP server:', error);
+          else console.log('HTTP server closed');
+          resolve();
+        });
+      });
+
+      // 2. Stop the worker (waits for in-flight job)
+      await worker.stop();
+      console.log('Worker stopped');
+
+      // 3. Close the DB pool
+      await db.$client.end();
+      console.log('Database pool closed');
+
+      console.log('Server has stopped gracefully.');
+    } catch (error) {
+      console.error('Error during shutdown:', error);
+    } finally {
       process.exit(0);
-    });
+    }
   };
 
   process.on('SIGINT', shutdown);

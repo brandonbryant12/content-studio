@@ -218,7 +218,6 @@ const voiceoverRouter = {
         context.user,
         removeVoiceoverCollaborator({
           collaboratorId: input.collaboratorId as VoiceoverCollaboratorId,
-          removedBy: context.session.user.id,
         }).pipe(Effect.map(() => ({}))),
         errors,
         {

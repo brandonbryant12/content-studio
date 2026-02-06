@@ -201,34 +201,40 @@ const make: PodcastRepoService = {
   insert: (data, documentIds) =>
     withDb('podcastRepo.insert', async (db) => {
       const docIds = [...documentIds] as DocumentId[];
-      const [pod] = await db
-        .insert(podcast)
-        .values({
-          title: data.title ?? 'Generating...',
-          description: data.description,
-          format: data.format,
-          promptInstructions: data.promptInstructions,
-          targetDurationMinutes: data.targetDurationMinutes,
-          hostVoice: data.hostVoice,
-          hostVoiceName: data.hostVoiceName,
-          coHostVoice: data.coHostVoice,
-          coHostVoiceName: data.coHostVoiceName,
-          sourceDocumentIds: docIds,
-          createdBy: data.createdBy,
-        })
-        .returning();
 
-      const docs =
-        docIds.length > 0
-          ? await db.select().from(document).where(inArray(document.id, docIds))
-          : [];
+      return db.transaction(async (tx) => {
+        const [pod] = await tx
+          .insert(podcast)
+          .values({
+            title: data.title ?? 'Generating...',
+            description: data.description,
+            format: data.format,
+            promptInstructions: data.promptInstructions,
+            targetDurationMinutes: data.targetDurationMinutes,
+            hostVoice: data.hostVoice,
+            hostVoiceName: data.hostVoiceName,
+            coHostVoice: data.coHostVoice,
+            coHostVoiceName: data.coHostVoiceName,
+            sourceDocumentIds: docIds,
+            createdBy: data.createdBy,
+          })
+          .returning();
 
-      const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = docIds
-        .map((id) => docMap.get(id))
-        .filter((d): d is Document => d !== undefined);
+        const docs =
+          docIds.length > 0
+            ? await tx
+                .select()
+                .from(document)
+                .where(inArray(document.id, docIds))
+            : [];
 
-      return { ...pod!, documents: sortedDocs };
+        const docMap = new Map(docs.map((d) => [d.id, d]));
+        const sortedDocs = docIds
+          .map((id) => docMap.get(id))
+          .filter((d): d is Document => d !== undefined);
+
+        return { ...pod!, documents: sortedDocs };
+      });
     }),
 
   findById: (id) =>

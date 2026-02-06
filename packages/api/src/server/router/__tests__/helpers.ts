@@ -1,4 +1,5 @@
 import { ORPCError } from '@orpc/client';
+import { ManagedRuntime, type Layer } from 'effect';
 import type { User } from '@repo/auth/policy';
 import type { ServerRuntime } from '../../runtime';
 import type { ORPCContext, AuthenticatedORPCContext } from '../../orpc';
@@ -275,6 +276,17 @@ export const assertORPCError = (
     );
   }
 };
+
+/**
+ * Create a test server runtime from a set of layers.
+ *
+ * Test runtimes intentionally provide a subset of SharedServices
+ * (only what the specific test needs). This helper centralizes the
+ * type bridge so individual tests don't need `as any`.
+ */
+export const createTestServerRuntime = <R>(
+  layers: Layer.Layer<R>,
+): ServerRuntime => ManagedRuntime.make(layers) as unknown as ServerRuntime;
 
 /**
  * Re-export ORPCError for convenient access in tests.
