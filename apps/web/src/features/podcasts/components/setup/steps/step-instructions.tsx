@@ -97,6 +97,7 @@ export function StepInstructions({
           placeholder="Add any specific instructions for the AI when generating your podcast script..."
           rows={5}
           className="setup-textarea"
+          aria-label="Custom instructions for podcast generation"
         />
         <p className="setup-char-count">
           {instructions.length} / {MAX_CHARS}

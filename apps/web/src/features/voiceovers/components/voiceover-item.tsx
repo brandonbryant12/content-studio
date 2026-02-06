@@ -112,6 +112,7 @@ export const VoiceoverItem = memo(function VoiceoverItem({
             onClick={handleDeleteClick}
             disabled={isDeleting}
             className="btn-delete"
+            aria-label={`Delete ${voiceover.title}`}
           >
             {isDeleting ? (
               <Spinner className="w-4 h-4" />

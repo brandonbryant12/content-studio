@@ -138,6 +138,7 @@ export function PodcastList({
           placeholder="Search podcasts…"
           className="search-input"
           autoComplete="off"
+          aria-label="Search podcasts"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>

@@ -113,6 +113,28 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
     [duration],
   );
 
+  const handleSliderKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const audio = audioRef.current;
+      if (!audio || !duration) return;
+
+      const step = e.shiftKey ? 10 : 5;
+      let newTime = audio.currentTime;
+
+      if (e.key === 'ArrowRight') {
+        newTime = Math.min(duration, audio.currentTime + step);
+      } else if (e.key === 'ArrowLeft') {
+        newTime = Math.max(0, audio.currentTime - step);
+      } else {
+        return;
+      }
+
+      e.preventDefault();
+      audio.currentTime = newTime;
+    },
+    [duration],
+  );
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -122,6 +144,7 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
 
       {/* Play/Pause Button */}
       <button
+        type="button"
         onClick={togglePlay}
         className="audio-player-play-btn"
         aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -139,6 +162,7 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
           ref={progressRef}
           className="audio-player-waveform"
           onClick={handleSeek}
+          onKeyDown={handleSliderKeyDown}
           role="slider"
           aria-label="Seek audio"
           aria-valuemin={0}

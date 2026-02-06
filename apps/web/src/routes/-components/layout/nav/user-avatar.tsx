@@ -23,7 +23,7 @@ export default function UserAvatar({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="cursor-pointer w-8.5 h-8.5">
+        <Avatar className="cursor-pointer w-8.5 h-8.5" role="button" tabIndex={0} aria-label="User menu">
           <AvatarImage referrerPolicy="no-referrer" src={user.image ?? ''} />
           <AvatarFallback className="text-sm">
             {(user.name?.split(' ')[0]?.[0] || '') +

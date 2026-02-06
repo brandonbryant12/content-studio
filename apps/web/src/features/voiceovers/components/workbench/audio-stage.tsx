@@ -119,6 +119,29 @@ export function AudioStage({
     [duration, isLoaded],
   );
 
+  const handleSliderKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const audio = audioRef.current;
+      if (!audio || !isLoaded) return;
+
+      const step = e.shiftKey ? 10 : 5;
+      let newTime = audio.currentTime;
+
+      if (e.key === 'ArrowRight') {
+        newTime = Math.min(duration, audio.currentTime + step);
+      } else if (e.key === 'ArrowLeft') {
+        newTime = Math.max(0, audio.currentTime - step);
+      } else {
+        return;
+      }
+
+      e.preventDefault();
+      audio.currentTime = newTime;
+      setCurrentTime(newTime);
+    },
+    [duration, isLoaded],
+  );
+
   // Generate waveform bars (25 bars)
   const waveformBars = Array.from({ length: 25 }, (_, i) => i);
 
@@ -158,6 +181,7 @@ export function AudioStage({
         <div
           className="stage-progress"
           onClick={seek}
+          onKeyDown={handleSliderKeyDown}
           role="slider"
           aria-label="Audio progress"
           aria-valuenow={Math.round(progress)}

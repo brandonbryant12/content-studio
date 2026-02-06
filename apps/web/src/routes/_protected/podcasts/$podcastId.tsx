@@ -2,6 +2,7 @@
 // Thin route file - delegates to feature container
 
 import { createFileRoute } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { PodcastDetailContainer } from '@/features/podcasts/components/podcast-detail-container';
@@ -17,6 +18,10 @@ export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
 
 function PodcastPage() {
   const { podcastId } = Route.useParams();
+
+  useEffect(() => {
+    document.title = 'Podcast - Content Studio';
+  }, []);
 
   return (
     <SuspenseBoundary resetKeys={[podcastId]}>

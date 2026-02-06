@@ -115,6 +115,7 @@ export const PodcastItem = memo(function PodcastItem({
               onClick={handleDeleteClick}
               disabled={isDeleting}
               className="btn-delete"
+              aria-label={`Delete ${podcast.title}`}
             >
               {isDeleting ? (
                 <Spinner className="w-4 h-4" />

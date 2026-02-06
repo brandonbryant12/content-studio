@@ -82,6 +82,7 @@ export const DocumentItem = memo(function DocumentItem({
             onClick={handleDelete}
             disabled={isDeleting}
             className="btn-delete"
+            aria-label={`Delete ${document.title}`}
           >
             {isDeleting ? (
               <Spinner className="w-4 h-4" />
