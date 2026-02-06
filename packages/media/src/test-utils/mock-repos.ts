@@ -43,7 +43,6 @@ export const createMockPodcastRepo = (
   const defaults: PodcastRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
-    findByIdFull: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
