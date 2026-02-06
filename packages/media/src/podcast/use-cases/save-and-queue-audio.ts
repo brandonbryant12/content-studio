@@ -1,4 +1,4 @@
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import type { JobId, JobStatus, ScriptSegment } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
@@ -26,10 +26,12 @@ export interface SaveAndQueueAudioResult {
 /**
  * Error when no changes were provided to save.
  */
-export class NoChangesToSaveError {
-  readonly _tag = 'NoChangesToSaveError';
-
-  // HTTP Protocol
+export class NoChangesToSaveError extends Schema.TaggedError<NoChangesToSaveError>()(
+  'NoChangesToSaveError',
+  {
+    podcastId: Schema.String,
+  },
+) {
   static readonly httpStatus = 400 as const;
   static readonly httpCode = 'NO_CHANGES' as const;
   static readonly httpMessage = 'No changes to save';
@@ -38,8 +40,6 @@ export class NoChangesToSaveError {
   static getData(e: NoChangesToSaveError) {
     return { podcastId: e.podcastId };
   }
-
-  constructor(readonly podcastId: string) {}
 }
 
 // =============================================================================
@@ -80,7 +80,7 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
     });
 
     if (!result.hasChanges) {
-      return yield* Effect.fail(new NoChangesToSaveError(input.podcastId));
+      return yield* Effect.fail(new NoChangesToSaveError({ podcastId: input.podcastId }));
     }
 
     // 3. Check for existing pending/processing job (idempotency)

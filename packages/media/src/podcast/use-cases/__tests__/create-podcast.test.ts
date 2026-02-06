@@ -6,6 +6,7 @@ import {
   createTestDocument,
   resetPodcastCounters,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
 import type {
   Podcast,
@@ -125,10 +126,11 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.format).toBe('conversation');
@@ -153,16 +155,17 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          title: 'Custom Title',
-          description: 'Custom Description',
-          hostVoice: 'Puck',
-          coHostVoice: 'Aoede',
-          promptInstructions: 'Be casual',
-          targetDurationMinutes: 15,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+            title: 'Custom Title',
+            description: 'Custom Description',
+            hostVoice: 'Puck',
+            coHostVoice: 'Aoede',
+            promptInstructions: 'Be casual',
+            targetDurationMinutes: 15,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(insertSpy).toHaveBeenCalledWith(
@@ -195,11 +198,12 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          documentIds: [doc1.id, doc2.id],
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+            documentIds: [doc1.id, doc2.id],
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.documents).toHaveLength(2);
@@ -221,11 +225,12 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromiseExit(
-        createPodcast({
-          format: 'conversation',
-          documentIds: ['doc_missing' as DocumentId],
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+            documentIds: ['doc_missing' as DocumentId],
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -243,10 +248,11 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Should succeed without document verification
@@ -262,10 +268,11 @@ describe('createPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
-        createPodcast({
-          format: 'conversation',
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Status is now directly on the podcast (flattened schema)

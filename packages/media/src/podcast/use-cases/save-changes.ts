@@ -1,5 +1,6 @@
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment, VersionStatus } from '@repo/db/schema';
+import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { CollaboratorRepo } from '../repos/collaborator-repo';
 
@@ -24,10 +25,14 @@ export interface SaveChangesResult {
 /**
  * Error when save is not possible from current state.
  */
-export class InvalidSaveError {
-  readonly _tag = 'InvalidSaveError';
-
-  // HTTP Protocol
+export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
+  'InvalidSaveError',
+  {
+    podcastId: Schema.String,
+    currentStatus: Schema.String,
+    message: Schema.String,
+  },
+) {
   static readonly httpStatus = 409 as const;
   static readonly httpCode = 'INVALID_SAVE' as const;
   static readonly httpMessage = (e: InvalidSaveError) => e.message;
@@ -36,12 +41,6 @@ export class InvalidSaveError {
   static getData(e: InvalidSaveError) {
     return { podcastId: e.podcastId, currentStatus: e.currentStatus };
   }
-
-  constructor(
-    readonly podcastId: string,
-    readonly currentStatus: VersionStatus,
-    readonly message: string,
-  ) {}
 }
 
 // =============================================================================
@@ -74,17 +73,18 @@ export const saveChanges = (input: SaveChangesInput) =>
     const podcastRepo = yield* PodcastRepo;
     const collaboratorRepo = yield* CollaboratorRepo;
 
-    // 1. Load podcast
+    // 1. Load podcast and check ownership
     const podcast = yield* podcastRepo.findById(input.podcastId);
+    yield* requireOwnership(podcast.createdBy);
 
     // 2. Validate status is 'ready'
     if (podcast.status !== 'ready') {
       return yield* Effect.fail(
-        new InvalidSaveError(
-          podcast.id,
-          podcast.status,
-          `Cannot save changes when status is '${podcast.status}'. Podcast must be in 'ready' status.`,
-        ),
+        new InvalidSaveError({
+          podcastId: podcast.id,
+          currentStatus: podcast.status,
+          message: `Cannot save changes when status is '${podcast.status}'. Podcast must be in 'ready' status.`,
+        }),
       );
     }
 

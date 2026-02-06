@@ -63,7 +63,7 @@ export const createDocument = (input: CreateDocumentInput) =>
     // Calculate word count
     const wordCount = calculateWordCount(data.content);
 
-    // Insert metadata to DB
+    // Insert metadata to DB; clean up storage if insert fails
     const doc = yield* documentRepo.insert({
       title: data.title,
       contentKey,
@@ -73,7 +73,14 @@ export const createDocument = (input: CreateDocumentInput) =>
       originalFileSize: contentBuffer.length,
       metadata: data.metadata,
       createdBy: ownerId,
-    });
+    }).pipe(
+      Effect.catchAll((error) =>
+        storage.delete(contentKey).pipe(
+          Effect.ignore,
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
 
     return doc;
   }).pipe(

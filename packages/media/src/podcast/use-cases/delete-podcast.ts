@@ -1,4 +1,5 @@
 import { Effect } from 'effect';
+import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -31,8 +32,9 @@ export const deletePodcast = (input: DeletePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
-    // Verify podcast exists before deleting
-    yield* podcastRepo.findById(input.podcastId);
+    // Verify podcast exists and check ownership
+    const podcast = yield* podcastRepo.findById(input.podcastId);
+    yield* requireOwnership(podcast.createdBy);
 
     // Delete (versions cascade)
     yield* podcastRepo.delete(input.podcastId);

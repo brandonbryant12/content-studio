@@ -122,10 +122,7 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createVoiceover({
-          ...input,
-          userId: context.session.user.id,
-        }).pipe(Effect.map((voiceover) => serializeVoiceover(voiceover))),
+        createVoiceover(input).pipe(Effect.map((voiceover) => serializeVoiceover(voiceover))),
         errors as unknown as ErrorFactory,
         {
           span: 'api.voiceovers.create',

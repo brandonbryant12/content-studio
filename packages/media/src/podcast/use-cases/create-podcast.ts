@@ -1,14 +1,13 @@
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
+import { getCurrentUser } from '@repo/auth/policy';
 import { PodcastRepo, type PodcastWithDocuments } from '../repos/podcast-repo';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface CreatePodcastInput extends CreatePodcast {
-  userId: string;
-}
+export interface CreatePodcastInput extends CreatePodcast {}
 
 // =============================================================================
 // Use Case
@@ -18,37 +17,36 @@ export interface CreatePodcastInput extends CreatePodcast {
  * Create a new podcast in drafting status.
  *
  * This use case:
- * 1. Validates document ownership if documentIds provided
- * 2. Creates the podcast record (starts in drafting status)
- * 3. Returns the podcast with resolved documents
+ * 1. Gets the current user from FiberRef context
+ * 2. Validates document ownership if documentIds provided
+ * 3. Creates the podcast record (starts in drafting status)
+ * 4. Returns the podcast with resolved documents
  *
  * @example
  * const podcast = yield* createPodcast({
  *   format: 'conversation',
  *   documentIds: ['doc-1', 'doc-2'],
- *   userId: 'user-123',
  * });
  */
 export const createPodcast = (input: CreatePodcastInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
 
-    const { userId, documentIds, ...data } = input;
+    const { documentIds, ...data } = input;
 
     // 1. Validate documents if provided
     if (documentIds && documentIds.length > 0) {
-      yield* podcastRepo.verifyDocumentsExist(documentIds, userId);
+      yield* podcastRepo.verifyDocumentsExist(documentIds, user.id);
     }
 
     // 2. Create podcast (starts in drafting status by default)
     const podcastWithDocs = yield* podcastRepo.insert(
-      { ...data, createdBy: userId },
+      { ...data, createdBy: user.id },
       documentIds ?? [],
     );
 
     return podcastWithDocs;
   }).pipe(
-    Effect.withSpan('useCase.createPodcast', {
-      attributes: { 'user.id': input.userId },
-    }),
+    Effect.withSpan('useCase.createPodcast'),
   );
