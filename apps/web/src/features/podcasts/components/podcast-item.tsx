@@ -48,8 +48,9 @@ function FormatBadge({ format }: { format: 'voice_over' | 'conversation' }) {
 
 export interface PodcastItemProps {
   podcast: PodcastListItem;
-  onDelete: (id: string) => void;
-  isDeleting: boolean;
+  onDelete?: (id: string) => void;
+  isDeleting?: boolean;
+  hideDelete?: boolean;
 }
 
 // Memoized to prevent re-renders when parent list re-renders (rerender-memo)
@@ -57,6 +58,7 @@ export const PodcastItem = memo(function PodcastItem({
   podcast,
   onDelete,
   isDeleting,
+  hideDelete,
 }: PodcastItemProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export const PodcastItem = memo(function PodcastItem({
 
   const handleDeleteConfirm = useCallback(() => {
     setConfirmOpen(false);
-    onDelete(podcast.id);
+    onDelete?.(podcast.id);
   }, [onDelete, podcast.id]);
 
   return (
@@ -106,19 +108,21 @@ export const PodcastItem = memo(function PodcastItem({
           <span className="text-meta">
             {new Date(podcast.createdAt).toLocaleDateString()}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDeleteClick}
-            disabled={isDeleting}
-            className="btn-delete"
-          >
-            {isDeleting ? (
-              <Spinner className="w-4 h-4" />
-            ) : (
-              <TrashIcon className="w-4 h-4" />
-            )}
-          </Button>
+          {!hideDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDeleteClick}
+              disabled={isDeleting}
+              className="btn-delete"
+            >
+              {isDeleting ? (
+                <Spinner className="w-4 h-4" />
+              ) : (
+                <TrashIcon className="w-4 h-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
       <ConfirmationDialog

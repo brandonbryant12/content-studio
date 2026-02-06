@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-router';
 import { authClient } from '@/clients/authClient';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
+import { useSSERecovery } from '@/providers/sse-provider';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,
@@ -110,6 +111,7 @@ function Sidebar() {
 
 function Layout() {
   const { data: session, isPending } = authClient.useSession();
+  useSSERecovery();
 
   if (isPending) {
     return (

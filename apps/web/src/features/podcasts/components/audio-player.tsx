@@ -1,5 +1,33 @@
 import { PauseIcon, PlayIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+
+/**
+ * Throttle audio timeupdate to ~1Hz state updates.
+ * The browser fires timeupdate ~4/sec; since we display seconds only,
+ * we skip setState until the floored second changes.
+ */
+function useThrottledTime(audioRef: RefObject<HTMLAudioElement | null>) {
+  const [displayTime, setDisplayTime] = useState(0);
+  const lastSecondRef = useRef(-1);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      const sec = Math.floor(audio.currentTime);
+      if (sec !== lastSecondRef.current) {
+        lastSecondRef.current = sec;
+        setDisplayTime(audio.currentTime);
+      }
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    return () => audio.removeEventListener('timeupdate', handleTimeUpdate);
+  }, [audioRef]);
+
+  return displayTime;
+}
 
 interface AudioPlayerProps {
   url: string;
@@ -31,22 +59,20 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  const currentTime = useThrottledTime(audioRef);
   const [duration, setDuration] = useState(0);
   const [waveformHeights] = useState(generateWaveformHeights);
 
-  // Handle audio events
+  // Handle audio events (excluding timeupdate, handled by useThrottledTime)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleDurationChange = () => setDuration(audio.duration);
     const handleEnded = () => setIsPlaying(false);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('loadedmetadata', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
@@ -54,7 +80,6 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
     audio.addEventListener('pause', handlePause);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('loadedmetadata', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);

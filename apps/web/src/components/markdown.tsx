@@ -1,11 +1,47 @@
 // components/markdown.tsx
 // Renders markdown content with proper styling for chat messages
 
-import { memo, type ComponentPropsWithoutRef } from 'react';
+import { memo, lazy, Suspense } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { cn } from '@repo/ui/lib/utils';
+
+const LazyCodeBlock = lazy(() =>
+  import('react-syntax-highlighter/dist/esm/prism-light').then(
+    async (mod) => {
+      const { default: oneDark } = await import(
+        'react-syntax-highlighter/dist/esm/styles/prism/one-dark'
+      );
+      const SyntaxHighlighter = mod.default;
+      return {
+        default: function CodeBlock({
+          language,
+          children,
+          compact,
+        }: {
+          language: string;
+          children: string;
+          compact: boolean;
+        }) {
+          return (
+            <SyntaxHighlighter
+              style={oneDark}
+              language={language}
+              PreTag="div"
+              customStyle={{
+                margin: 0,
+                padding: compact ? '0.75rem' : '1rem',
+                background: '#1e1e1e',
+                fontSize: 'inherit',
+              }}
+            >
+              {children}
+            </SyntaxHighlighter>
+          );
+        },
+      };
+    },
+  ),
+);
 
 interface MarkdownProps {
   children: string;
@@ -151,7 +187,7 @@ export const Markdown = memo(function Markdown({
         );
       }
 
-      const language = match[1];
+      const language = match[1]!;
       const codeString = String(children).replace(/\n$/, '');
 
       return (
@@ -166,20 +202,26 @@ export const Markdown = memo(function Markdown({
               {language}
             </div>
           )}
-          <SyntaxHighlighter
-            style={oneDark}
-            language={language}
-            PreTag="div"
-            customStyle={{
-              margin: 0,
-              padding: compact ? '0.75rem' : '1rem',
-              background: '#1e1e1e',
-              fontSize: 'inherit',
-            }}
-            {...(props as ComponentPropsWithoutRef<typeof SyntaxHighlighter>)}
+          <Suspense
+            fallback={
+              <pre
+                style={{
+                  margin: 0,
+                  padding: compact ? '0.75rem' : '1rem',
+                  background: '#1e1e1e',
+                  fontSize: 'inherit',
+                  color: '#abb2bf',
+                  overflow: 'auto',
+                }}
+              >
+                <code>{codeString}</code>
+              </pre>
+            }
           >
-            {codeString}
-          </SyntaxHighlighter>
+            <LazyCodeBlock language={language} compact={compact}>
+              {codeString}
+            </LazyCodeBlock>
+          </Suspense>
         </div>
       );
     },

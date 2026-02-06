@@ -37,8 +37,9 @@ function getFileLabel(source: string): string {
 
 export interface DocumentItemProps {
   document: DocumentListItem;
-  onDelete: (id: string) => void;
-  isDeleting: boolean;
+  onDelete?: (id: string) => void;
+  isDeleting?: boolean;
+  hideDelete?: boolean;
 }
 
 // Memoized to prevent re-renders when parent list re-renders (rerender-memo)
@@ -46,10 +47,11 @@ export const DocumentItem = memo(function DocumentItem({
   document,
   onDelete,
   isDeleting,
+  hideDelete,
 }: DocumentItemProps) {
   // Stable callback - calls parent with id (rerender-memo-with-default-value)
   const handleDelete = useCallback(() => {
-    onDelete(document.id);
+    onDelete?.(document.id);
   }, [onDelete, document.id]);
 
   return (
@@ -73,19 +75,21 @@ export const DocumentItem = memo(function DocumentItem({
         <span className="text-meta">
           {new Date(document.createdAt).toLocaleDateString()}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="btn-delete"
-        >
-          {isDeleting ? (
-            <Spinner className="w-4 h-4" />
-          ) : (
-            <TrashIcon className="w-4 h-4" />
-          )}
-        </Button>
+        {!hideDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="btn-delete"
+          >
+            {isDeleting ? (
+              <Spinner className="w-4 h-4" />
+            ) : (
+              <TrashIcon className="w-4 h-4" />
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );
