@@ -6,6 +6,7 @@ import {
   createTestDocument,
   resetPodcastCounters,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
 import type { Podcast, Document } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
@@ -109,7 +110,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(
-        deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(deleteCalls).toContain(podcast.id);
@@ -133,7 +136,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(
-        deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Podcast should be deleted
@@ -150,7 +155,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result).toBeUndefined();
@@ -200,7 +207,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(
-        deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          deletePodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // findById should be called first to verify existence
@@ -274,7 +283,9 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(
-        deletePodcast({ podcastId: podcast2.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          deletePodcast({ podcastId: podcast2.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Only podcast2 should be deleted

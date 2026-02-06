@@ -1,6 +1,7 @@
 import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import { LLM } from '@repo/ai/llm';
+import { requireOwnership } from '@repo/auth/policy';
 import { getDocumentContent } from '../../document';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
@@ -66,6 +67,7 @@ export const generateScript = (input: GenerateScriptInput) =>
 
     // 1. Load podcast with documents
     const podcast = yield* podcastRepo.findByIdFull(input.podcastId);
+    yield* requireOwnership(podcast.createdBy);
 
     // 2. Set status to generating_script
     yield* podcastRepo.updateStatus(input.podcastId, 'generating_script');
@@ -75,6 +77,7 @@ export const generateScript = (input: GenerateScriptInput) =>
       podcast.documents.map((doc) =>
         getDocumentContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
       ),
+      { concurrency: 'unbounded' },
     );
     const combinedContent = documentContents.join('\n\n---\n\n');
 

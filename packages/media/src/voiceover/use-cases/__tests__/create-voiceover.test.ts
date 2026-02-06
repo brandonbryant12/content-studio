@@ -90,7 +90,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'My New Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -121,7 +120,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'New Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -149,7 +147,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'User Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -177,7 +174,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'New Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -204,7 +200,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'New Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -232,7 +227,6 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'New Voiceover',
-            userId: user.id,
           }).pipe(Effect.provide(layers)),
         ),
       );

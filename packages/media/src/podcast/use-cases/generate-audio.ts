@@ -1,7 +1,8 @@
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import type { Podcast, VersionStatus, ScriptSegment } from '@repo/db/schema';
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { Storage } from '@repo/storage';
+import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -21,13 +22,22 @@ export interface GenerateAudioResult {
 /**
  * Error when audio generation is not possible from current state.
  */
-export class InvalidAudioGenerationError {
-  readonly _tag = 'InvalidAudioGenerationError';
-  constructor(
-    readonly podcastId: string,
-    readonly currentStatus: VersionStatus,
-    readonly message: string,
-  ) {}
+export class InvalidAudioGenerationError extends Schema.TaggedError<InvalidAudioGenerationError>()(
+  'InvalidAudioGenerationError',
+  {
+    podcastId: Schema.String,
+    currentStatus: Schema.String,
+    message: Schema.String,
+  },
+) {
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'INVALID_AUDIO_GENERATION' as const;
+  static readonly httpMessage = (e: InvalidAudioGenerationError) => e.message;
+  static readonly logLevel = 'warn' as const;
+
+  static getData(e: InvalidAudioGenerationError) {
+    return { podcastId: e.podcastId, currentStatus: e.currentStatus };
+  }
 }
 
 // =============================================================================
@@ -56,24 +66,25 @@ export const generateAudio = (input: GenerateAudioInput) =>
 
     // 1. Load podcast and validate state
     const podcast = yield* podcastRepo.findById(input.podcastId);
+    yield* requireOwnership(podcast.createdBy);
 
     if (podcast.status !== 'script_ready') {
       return yield* Effect.fail(
-        new InvalidAudioGenerationError(
-          input.podcastId,
-          podcast.status,
-          `Cannot generate audio from status '${podcast.status}'. Podcast must be in 'script_ready' status.`,
-        ),
+        new InvalidAudioGenerationError({
+          podcastId: input.podcastId,
+          currentStatus: podcast.status,
+          message: `Cannot generate audio from status '${podcast.status}'. Podcast must be in 'script_ready' status.`,
+        }),
       );
     }
 
     if (!podcast.segments || podcast.segments.length === 0) {
       return yield* Effect.fail(
-        new InvalidAudioGenerationError(
-          input.podcastId,
-          podcast.status,
-          'Podcast has no script segments to generate audio from.',
-        ),
+        new InvalidAudioGenerationError({
+          podcastId: input.podcastId,
+          currentStatus: podcast.status,
+          message: 'Podcast has no script segments to generate audio from.',
+        }),
       );
     }
 

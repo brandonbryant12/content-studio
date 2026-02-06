@@ -4,6 +4,7 @@ import {
   createTestUser,
   createTestPodcast,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
 import type { Podcast, JobId, JobStatus, PodcastId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
@@ -170,10 +171,12 @@ describe('saveAndQueueAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          segments: [{ speaker: 'Host', line: 'Updated line', index: 0 }],
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: podcast.id,
+            segments: [{ speaker: 'Host', line: 'Updated line', index: 0 }],
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_audio123');
@@ -207,11 +210,13 @@ describe('saveAndQueueAudio', () => {
       );
 
       await Effect.runPromise(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          hostVoice: 'Puck',
-          hostVoiceName: 'New Host',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: podcast.id,
+            hostVoice: 'Puck',
+            hostVoiceName: 'New Host',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(podcastUpdateSpy).toHaveBeenCalledWith(
@@ -258,10 +263,12 @@ describe('saveAndQueueAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          hostVoice: 'Puck',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: podcast.id,
+            hostVoice: 'Puck',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_existing');
@@ -308,10 +315,12 @@ describe('saveAndQueueAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          segments: [{ speaker: 'Host', line: 'Test', index: 0 }],
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: podcast.id,
+            segments: [{ speaker: 'Host', line: 'Test', index: 0 }],
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -337,10 +346,12 @@ describe('saveAndQueueAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        saveAndQueueAudio({
-          podcastId: podcast.id,
-          // No segments or voice changes
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: podcast.id,
+            // No segments or voice changes
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -354,7 +365,7 @@ describe('saveAndQueueAudio', () => {
 
   describe('HTTP protocol', () => {
     it('NoChangesToSaveError has correct HTTP properties', () => {
-      const error = new NoChangesToSaveError('pod_123');
+      const error = new NoChangesToSaveError({ podcastId: 'pod_123' });
 
       expect(NoChangesToSaveError.httpStatus).toBe(400);
       expect(NoChangesToSaveError.httpCode).toBe('NO_CHANGES');

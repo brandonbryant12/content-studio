@@ -128,10 +128,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createPodcast({
-          ...input,
-          userId: context.session.user.id,
-        }).pipe(
+        createPodcast(input).pipe(
           Effect.map((podcastFull) =>
             serializePodcastFull(
               podcastFull as Parameters<typeof serializePodcastFull>[0],
