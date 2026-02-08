@@ -28,7 +28,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => ({
             'Content-Type': contentType,
             'x-amz-acl': 'private',
           },
-          body: data,
+          body: new Uint8Array(data),
         });
 
         if (!response.ok) {
