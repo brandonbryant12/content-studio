@@ -108,7 +108,7 @@ export function PodcastList({
   const hasNoResults = filteredPodcasts.length === 0 && searchQuery.length > 0;
 
   return (
-    <div className="page-container-narrow">
+    <div className="page-container">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -150,7 +150,7 @@ export function PodcastList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
-          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredPodcasts.map((podcast) => (
             <PodcastItem

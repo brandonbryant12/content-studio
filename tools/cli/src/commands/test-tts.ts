@@ -252,11 +252,9 @@ export const testTts = Command.make('tts', {}).pipe(
         '\n--- [2] texttospeech.googleapis.com (text:synthesize) ---',
       );
       yield* Console.log(`  Model: ${CLOUD_TTS_MODEL}`);
-      const tts = yield* tryTextToSpeech(
-        apiKey,
-        hostVoice,
-        guestVoice,
-      ).pipe(Effect.either);
+      const tts = yield* tryTextToSpeech(apiKey, hostVoice, guestVoice).pipe(
+        Effect.either,
+      );
       if (tts._tag === 'Right') {
         const fp = yield* saveAudio(
           `tts-texttospeech-${timestamp}.mp3`,

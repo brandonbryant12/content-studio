@@ -126,7 +126,7 @@ describe('DocumentList', () => {
     const onSearch = vi.fn();
     render(<DocumentList {...defaultProps} onSearch={onSearch} />);
 
-    const searchInput = screen.getByPlaceholderText('Search documents...');
+    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
     fireEvent.change(searchInput, { target: { value: 'test query' } });
 
     expect(onSearch).toHaveBeenCalledWith('test query');
@@ -152,13 +152,10 @@ describe('DocumentList', () => {
     const onDelete = vi.fn();
     render(<DocumentList {...defaultProps} onDelete={onDelete} />);
 
-    // Find all delete buttons (there should be one per document)
-    const deleteButtons = screen.getAllByRole('button', { name: '' });
-    // The delete button is the icon button with no accessible name
-    // Filter to buttons that have the delete icon class
-    const trashButtons = deleteButtons.filter((btn) =>
-      btn.classList.contains('btn-delete'),
-    );
+    // Find delete buttons by their aria-label pattern
+    const trashButtons = screen.getAllByRole('button', {
+      name: /^Delete /,
+    });
 
     // Click the first document's delete button
     expect(trashButtons.length).toBeGreaterThan(0);
@@ -182,14 +179,14 @@ describe('DocumentList', () => {
   it('shows search input with correct placeholder', () => {
     render(<DocumentList {...defaultProps} />);
 
-    const searchInput = screen.getByPlaceholderText('Search documents...');
+    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
     expect(searchInput).toBeInTheDocument();
   });
 
   it('displays search query value in input', () => {
     render(<DocumentList {...defaultProps} searchQuery="existing query" />);
 
-    const searchInput = screen.getByPlaceholderText('Search documents...');
+    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
     expect(searchInput).toHaveValue('existing query');
   });
 

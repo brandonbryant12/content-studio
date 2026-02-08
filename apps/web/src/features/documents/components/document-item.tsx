@@ -1,5 +1,5 @@
 // features/documents/components/document-item.tsx
-// Presenter: Pure UI component for document list item
+// Presenter: Pure UI component for document card
 
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
@@ -50,51 +50,59 @@ export const DocumentItem = memo(function DocumentItem({
   isDeleting,
   hideDelete,
 }: DocumentItemProps) {
-  // Stable callback - calls parent with id (rerender-memo-with-default-value)
-  const handleDelete = useCallback(() => {
-    onDelete?.(document.id);
-  }, [onDelete, document.id]);
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete?.(document.id);
+    },
+    [onDelete, document.id],
+  );
 
   return (
-    <div className="list-card group">
+    <div className="content-card group">
       <Link
         to="/documents/$documentId"
         params={{ documentId: document.id }}
-        className="flex items-center gap-3 flex-1 min-w-0"
+        className="flex flex-col flex-1"
       >
-        <DocumentIcon source={document.source} />
-        <div className="flex-1 min-w-0">
-          <h3 className="list-card-title">{document.title}</h3>
-          <div className="list-card-meta">
+        <div className="content-card-thumb">
+          <DocumentIcon source={document.source} />
+        </div>
+        <div className="content-card-body">
+          <h3 className="content-card-title">{document.title}</h3>
+          <div className="content-card-meta">
             <span className={getFileBadgeClass(document.source)}>
               {getFileLabel(document.source)}
             </span>
             <span className="text-meta">
               {document.wordCount.toLocaleString()} words
             </span>
-            <span className="text-meta">
-              {formatFileSize(document.originalFileSize)}
-            </span>
           </div>
         </div>
       </Link>
-      <div className="flex items-center gap-2">
-        <span className="text-meta">
-          {new Date(document.createdAt).toLocaleDateString()}
-        </span>
+      <div className="content-card-footer">
+        <div className="flex items-center gap-2">
+          <span className="text-meta">
+            {formatFileSize(document.originalFileSize)}
+          </span>
+          <span className="text-meta">
+            {new Date(document.createdAt).toLocaleDateString()}
+          </span>
+        </div>
         {!hideDelete && (
           <Button
             variant="ghost"
             size="icon"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="btn-delete"
+            className="content-card-delete h-7 w-7"
             aria-label={`Delete ${document.title}`}
           >
             {isDeleting ? (
-              <Spinner className="w-4 h-4" />
+              <Spinner className="w-3.5 h-3.5" />
             ) : (
-              <TrashIcon className="w-4 h-4" />
+              <TrashIcon className="w-3.5 h-3.5" />
             )}
           </Button>
         )}

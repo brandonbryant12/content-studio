@@ -135,6 +135,7 @@ export const podcast = pgTable(
     audioUrl: text('audioUrl'),
     duration: integer('duration'), // seconds
     errorMessage: text('errorMessage'),
+    coverImageStorageKey: text('coverImageStorageKey'),
     ownerHasApproved: boolean('ownerHasApproved').notNull().default(false),
 
     createdBy: text('createdBy')
@@ -246,6 +247,7 @@ export const UpdatePodcastFields = {
   coHostVoiceName: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
   documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+  coverImageStorageKey: Schema.optional(Schema.NullOr(Schema.String)),
 };
 
 export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
@@ -341,6 +343,7 @@ export const PodcastOutputSchema = Schema.Struct({
   audioUrl: Schema.NullOr(Schema.String),
   duration: Schema.NullOr(Schema.Number),
   errorMessage: Schema.NullOr(Schema.String),
+  coverImageStorageKey: Schema.NullOr(Schema.String),
   ownerHasApproved: Schema.Boolean,
 
   createdBy: Schema.String,
@@ -442,6 +445,7 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   audioUrl: podcast.audioUrl ?? null,
   duration: podcast.duration ?? null,
   errorMessage: podcast.errorMessage ?? null,
+  coverImageStorageKey: podcast.coverImageStorageKey ?? null,
   ownerHasApproved: podcast.ownerHasApproved,
   createdBy: podcast.createdBy,
   createdAt: podcast.createdAt.toISOString(),

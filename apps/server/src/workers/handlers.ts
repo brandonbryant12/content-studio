@@ -1,11 +1,15 @@
 import {
   generateScript,
   generateAudio,
+  PodcastRepo,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
+import { ImageGen } from '@repo/ai';
+import { Storage } from '@repo/storage';
 import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
+import type { Podcast } from '@repo/db/schema';
 import type {
   GeneratePodcastPayload,
   GeneratePodcastResult,
@@ -23,6 +27,36 @@ export interface HandlerOptions {
   /** Called when script generation completes (before audio generation starts) */
   onScriptComplete?: (podcastId: string) => void;
 }
+
+/**
+ * Generate a cover image for a podcast and store it.
+ * Failures are silently caught — cover image is a nice-to-have.
+ */
+const generateCoverImage = (podcast: Podcast) =>
+  Effect.gen(function* () {
+    const imageGen = yield* ImageGen;
+    const storage = yield* Storage;
+    const podcastRepo = yield* PodcastRepo;
+
+    const prompt =
+      `Create a podcast cover image for "${podcast.title}". ${podcast.description ?? ''}. ${podcast.summary ?? ''}`.trim();
+
+    const { imageData, mimeType } = yield* imageGen.generateImage({
+      prompt,
+      format: 'square',
+    });
+
+    const ext = mimeType.includes('png') ? 'png' : 'jpg';
+    const storageKey = `podcasts/${podcast.id}/cover.${ext}`;
+    yield* storage.upload(storageKey, imageData, mimeType);
+
+    yield* podcastRepo.update(podcast.id, { coverImageStorageKey: storageKey });
+  }).pipe(
+    Effect.catchAll(() => Effect.void),
+    Effect.withSpan('worker.generateCoverImage', {
+      attributes: { 'podcast.id': podcast.id },
+    }),
+  );
 
 /**
  * Handler for generate-podcast jobs.
@@ -45,6 +79,9 @@ export const handleGeneratePodcast = (
 
     // Notify that script is complete (so frontend can show script while audio generates)
     options?.onScriptComplete?.(scriptResult.podcast.id);
+
+    // Generate cover image (non-blocking, failures silently caught)
+    yield* generateCoverImage(scriptResult.podcast);
 
     // Phase 2: Generate audio from the new script
     const audioResult: UseCaseAudioResult = yield* generateAudio({
@@ -94,6 +131,9 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
       podcastId,
       promptInstructions,
     });
+
+    // Generate cover image (non-blocking, failures silently caught)
+    yield* generateCoverImage(result.podcast);
 
     return {
       podcastId: result.podcast.id,

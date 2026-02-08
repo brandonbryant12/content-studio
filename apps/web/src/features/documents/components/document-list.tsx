@@ -89,7 +89,7 @@ export function DocumentList({
   const hasNoResults = filteredDocuments.length === 0 && searchQuery.length > 0;
 
   return (
-    <div className="page-container-narrow">
+    <div className="page-container">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -130,7 +130,7 @@ export function DocumentList({
         <EmptyState hasSearch={true} />
       ) : (
         <div
-          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredDocuments.map((doc) => (
             <DocumentItem

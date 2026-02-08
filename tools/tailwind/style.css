@@ -641,13 +641,88 @@
     @apply text-sm text-muted-foreground mt-0.5;
   }
 
-  /* List item card */
+  /* -----------------------------------------
+     CONTENT CARD GRID
+     Responsive grid for card-based list pages
+     ----------------------------------------- */
+  .card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  /* Content card — vertical card with thumbnail area */
+  .content-card {
+    @apply border border-border bg-card rounded-xl overflow-hidden flex flex-col transition-all duration-300;
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 3px 10px hsl(var(--foreground) / 0.02);
+    content-visibility: auto;
+    contain-intrinsic-size: 0 320px;
+  }
+
+  .content-card:hover {
+    @apply border-primary/30;
+    box-shadow:
+      0 2px 6px hsl(var(--primary) / 0.08),
+      0 10px 28px hsl(var(--foreground) / 0.06);
+    transform: translateY(-2px);
+  }
+
+  .content-card-thumb {
+    @apply relative w-full aspect-[4/3] bg-muted/50 overflow-hidden flex items-center justify-center;
+  }
+
+  .content-card-thumb img {
+    @apply w-full h-full object-cover;
+  }
+
+  .content-card-thumb-icon {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center;
+  }
+
+  .content-card-thumb-icon svg {
+    @apply w-6 h-6;
+  }
+
+  .content-card-body {
+    @apply flex flex-col flex-1 p-4 gap-2;
+  }
+
+  .content-card-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 30;
+    @apply font-medium text-foreground truncate transition-colors text-[15px] leading-snug;
+  }
+
+  .content-card:hover .content-card-title {
+    @apply text-primary;
+  }
+
+  .content-card-meta {
+    @apply flex items-center gap-2 flex-wrap;
+  }
+
+  .content-card-footer {
+    @apply flex items-center justify-between px-4 pb-3;
+  }
+
+  .content-card-description {
+    @apply text-xs text-muted-foreground line-clamp-2 leading-relaxed;
+  }
+
+  .content-card-delete {
+    @apply opacity-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all;
+  }
+
+  .content-card:hover .content-card-delete {
+    @apply opacity-100;
+  }
+
+  /* List item card (legacy row layout — used in dashboard recent items) */
   .list-card {
     @apply border border-border bg-card p-4 rounded-xl flex items-center gap-4 transition-all duration-300;
     box-shadow:
       0 1px 2px hsl(var(--foreground) / 0.03),
       0 2px 8px hsl(var(--foreground) / 0.02);
-    /* Rendering optimization for long lists (rendering-content-visibility) */
     content-visibility: auto;
     contain-intrinsic-size: 0 76px;
   }

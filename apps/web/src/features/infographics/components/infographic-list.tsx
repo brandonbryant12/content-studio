@@ -104,7 +104,7 @@ export function InfographicList({
     filteredInfographics.length === 0 && searchQuery.length > 0;
 
   return (
-    <div className="page-container-narrow">
+    <div className="page-container">
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="page-eyebrow">Visual Content</p>
@@ -143,7 +143,7 @@ export function InfographicList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
-          className={`space-y-2 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredInfographics.map((infographic) => (
             <InfographicItem

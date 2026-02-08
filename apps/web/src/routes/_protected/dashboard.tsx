@@ -6,19 +6,20 @@ import {
   SpeakerLoudIcon,
   UploadIcon,
 } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
+import { useOptimisticCreate as useCreatePodcast } from '@/features/podcasts/hooks/use-optimistic-create';
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
+import { useOptimisticCreate as useCreateVoiceover } from '@/features/voiceovers/hooks/use-optimistic-create';
 import { useVoiceoversOrdered } from '@/features/voiceovers/hooks';
+import { useOptimisticCreate as useCreateInfographic } from '@/features/infographics/hooks/use-optimistic-create';
 import { useInfographicList } from '@/features/infographics/hooks';
-import { getErrorMessage } from '@/shared/lib/errors';
 import { formatDuration } from '@/shared/lib/formatters';
 
 export const Route = createFileRoute('/_protected/dashboard')({
@@ -41,8 +42,6 @@ export const Route = createFileRoute('/_protected/dashboard')({
 });
 
 function Dashboard() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
@@ -60,28 +59,9 @@ function Dashboard() {
   const { data: infographics, isLoading: infographicsLoading } =
     useInfographicList();
 
-  const createPodcastMutation = useMutation(
-    apiClient.podcasts.create.mutationOptions({
-      onSuccess: async (data) => {
-        queryClient.invalidateQueries({ queryKey: ['podcasts'] });
-        navigate({
-          to: '/podcasts/$podcastId',
-          params: { podcastId: data.id },
-          search: { version: undefined },
-        });
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create podcast'));
-      },
-    }),
-  );
-
-  const handleCreatePodcast = () => {
-    createPodcastMutation.mutate({
-      title: 'Untitled Podcast',
-      format: 'conversation',
-    });
-  };
+  const createPodcast = useCreatePodcast();
+  const createVoiceover = useCreateVoiceover();
+  const createInfographic = useCreateInfographic();
 
   const docCount = documents?.length ?? 0;
   const podcastCount = podcasts?.length ?? 0;
@@ -163,33 +143,8 @@ function Dashboard() {
         </Link>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex gap-3 mb-8 animate-fade-in-up stagger-2">
-        <button
-          onClick={() => setUploadOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
-          aria-label="Upload Document"
-        >
-          <UploadIcon className="w-4 h-4" aria-hidden="true" />
-          Upload Document
-        </button>
-        <button
-          onClick={handleCreatePodcast}
-          disabled={createPodcastMutation.isPending}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
-          aria-label="New Podcast"
-        >
-          {createPodcastMutation.isPending ? (
-            <Spinner className="w-4 h-4" />
-          ) : (
-            <PlusIcon className="w-4 h-4" aria-hidden="true" />
-          )}
-          {createPodcastMutation.isPending ? 'Creating...' : 'New Podcast'}
-        </button>
-      </div>
-
       {/* Content Grid - 2 columns on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
         {/* Recent Documents */}
         <div className="recent-section">
           <div className="recent-section-header">
@@ -203,9 +158,21 @@ function Dashboard() {
                 <span className="recent-section-count">{docCount}</span>
               )}
             </div>
-            <Link to="/documents" className="text-link">
-              View all
-            </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUploadOpen(true)}
+                className="gap-1.5 text-xs"
+                aria-label="Upload document"
+              >
+                <UploadIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                Upload
+              </Button>
+              <Link to="/documents" className="text-link">
+                View all
+              </Link>
+            </div>
           </div>
           <div className="recent-section-body">
             {docsLoading ? (
@@ -218,6 +185,7 @@ function Dashboard() {
                 <button
                   onClick={() => setUploadOpen(true)}
                   className="text-link mt-2"
+                  type="button"
                 >
                   Upload your first document
                 </button>
@@ -258,9 +226,31 @@ function Dashboard() {
                 <span className="recent-section-count">{podcastCount}</span>
               )}
             </div>
-            <Link to="/podcasts" className="text-link">
-              View all
-            </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  createPodcast.mutate({
+                    title: 'Untitled Podcast',
+                    format: 'conversation',
+                  })
+                }
+                disabled={createPodcast.isPending}
+                className="gap-1.5 text-xs"
+                aria-label="Create podcast"
+              >
+                {createPodcast.isPending ? (
+                  <Spinner className="w-3.5 h-3.5" />
+                ) : (
+                  <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+                New
+              </Button>
+              <Link to="/podcasts" className="text-link">
+                View all
+              </Link>
+            </div>
           </div>
           <div className="recent-section-body">
             {podcastsLoading ? (
@@ -310,9 +300,28 @@ function Dashboard() {
                 <span className="recent-section-count">{voiceoverCount}</span>
               )}
             </div>
-            <Link to="/voiceovers" className="text-link">
-              View all
-            </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  createVoiceover.mutate({ title: 'Untitled Voiceover' })
+                }
+                disabled={createVoiceover.isPending}
+                className="gap-1.5 text-xs"
+                aria-label="Create voiceover"
+              >
+                {createVoiceover.isPending ? (
+                  <Spinner className="w-3.5 h-3.5" />
+                ) : (
+                  <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+                New
+              </Button>
+              <Link to="/voiceovers" className="text-link">
+                View all
+              </Link>
+            </div>
           </div>
           <div className="recent-section-body">
             {voiceoversLoading ? (
@@ -360,9 +369,33 @@ function Dashboard() {
                 <span className="recent-section-count">{infographicCount}</span>
               )}
             </div>
-            <Link to="/infographics" className="text-link">
-              View all
-            </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  createInfographic.mutate({
+                    title: 'Untitled Infographic',
+                    infographicType: 'key_takeaways',
+                    stylePreset: 'modern_minimal',
+                    format: 'portrait',
+                  })
+                }
+                disabled={createInfographic.isPending}
+                className="gap-1.5 text-xs"
+                aria-label="Create infographic"
+              >
+                {createInfographic.isPending ? (
+                  <Spinner className="w-3.5 h-3.5" />
+                ) : (
+                  <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+                New
+              </Button>
+              <Link to="/infographics" className="text-link">
+                View all
+              </Link>
+            </div>
           </div>
           <div className="recent-section-body">
             {infographicsLoading ? (

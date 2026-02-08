@@ -15,6 +15,13 @@
       "when": 1770395425552,
       "tag": "0001_nervous_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770586654894,
+      "tag": "0002_wakeful_virginia_dare",
+      "breakpoints": true
     }
   ]
 }

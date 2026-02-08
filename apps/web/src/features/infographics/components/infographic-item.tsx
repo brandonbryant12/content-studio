@@ -5,6 +5,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useState } from 'react';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 import {
   type InfographicStatusType,
   getStatusConfig,
@@ -77,60 +78,81 @@ export const InfographicItem = memo(function InfographicItem({
     onDelete(infographic.id);
   }, [onDelete, infographic.id]);
 
+  const imageUrl = infographic.imageStorageKey
+    ? getStorageUrl(infographic.imageStorageKey)
+    : null;
+
   return (
     <>
-      <div className="list-card group overflow-hidden">
+      <div className="content-card group">
         <Link
           to="/infographics/$infographicId"
           params={{ infographicId: infographic.id }}
-          className="flex items-start gap-4 flex-1"
+          className="flex flex-col flex-1"
         >
-          <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-            <svg
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+          <div className="content-card-thumb">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={`${infographic.title} preview`}
+                loading="lazy"
               />
-            </svg>
+            ) : (
+              <div className="content-card-thumb-icon bg-amber-500/10">
+                <svg
+                  className="w-6 h-6 text-amber-600 dark:text-amber-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+                  />
+                </svg>
+              </div>
+            )}
+            {isGeneratingStatus(infographic.status) && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
+                <Spinner className="w-6 h-6 text-primary" />
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="list-card-title">{infographic.title}</h3>
-            <div className="list-card-meta gap-2 flex-wrap">
+          <div className="content-card-body">
+            <h3 className="content-card-title">{infographic.title}</h3>
+            <div className="content-card-meta">
               <StatusBadge status={infographic.status} />
               <span className="text-meta">
                 {TYPE_LABELS[infographic.infographicType] ??
                   infographic.infographicType}
               </span>
-              <span className="text-meta">
-                {FORMAT_LABELS[infographic.format] ?? infographic.format}
-              </span>
             </div>
           </div>
         </Link>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-meta">
-            {new Date(infographic.createdAt).toLocaleDateString()}
-          </span>
+        <div className="content-card-footer">
+          <div className="flex items-center gap-2">
+            <span className="text-meta">
+              {FORMAT_LABELS[infographic.format] ?? infographic.format}
+            </span>
+            <span className="text-meta">
+              {new Date(infographic.createdAt).toLocaleDateString()}
+            </span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="btn-delete"
+            className="content-card-delete h-7 w-7"
             aria-label={`Delete ${infographic.title}`}
           >
             {isDeleting ? (
-              <Spinner className="w-4 h-4" />
+              <Spinner className="w-3.5 h-3.5" />
             ) : (
-              <TrashIcon className="w-4 h-4" />
+              <TrashIcon className="w-3.5 h-3.5" />
             )}
           </Button>
         </div>

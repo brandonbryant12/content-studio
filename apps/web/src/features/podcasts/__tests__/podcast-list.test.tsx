@@ -14,13 +14,13 @@ vi.mock('../components/podcast-item', () => ({
     isDeleting,
   }: {
     podcast: PodcastListItem;
-    onDelete: () => void;
+    onDelete: (id: string) => void;
     isDeleting: boolean;
   }) => (
     <div data-testid={`podcast-item-${podcast.id}`}>
       <span>{podcast.title}</span>
       <button
-        onClick={onDelete}
+        onClick={() => onDelete(podcast.id)}
         disabled={isDeleting}
         data-testid={`delete-${podcast.id}`}
       >
@@ -40,6 +40,7 @@ const mockPodcasts: PodcastListItem[] = [
     createdAt: '2024-01-15T10:00:00Z',
     status: VersionStatus.READY,
     duration: 1800,
+    coverImageStorageKey: null,
   },
   {
     id: 'podcast-2',
@@ -49,6 +50,7 @@ const mockPodcasts: PodcastListItem[] = [
     createdAt: '2024-01-16T10:00:00Z',
     status: VersionStatus.GENERATING_SCRIPT,
     duration: null,
+    coverImageStorageKey: null,
   },
   {
     id: 'podcast-3',
@@ -58,6 +60,7 @@ const mockPodcasts: PodcastListItem[] = [
     createdAt: '2024-01-17T10:00:00Z',
     status: VersionStatus.DRAFTING,
     duration: null,
+    coverImageStorageKey: null,
   },
 ];
 
@@ -161,7 +164,7 @@ describe('PodcastList', () => {
     const onSearch = vi.fn();
     render(<PodcastList {...createDefaultProps()} onSearch={onSearch} />);
 
-    const searchInput = screen.getByPlaceholderText('Search podcasts...');
+    const searchInput = screen.getByPlaceholderText('Search podcasts\u2026');
     fireEvent.change(searchInput, { target: { value: 'test query' } });
 
     expect(onSearch).toHaveBeenCalledWith('test query');
@@ -191,7 +194,7 @@ describe('PodcastList', () => {
   it('shows search input with current query value', () => {
     render(<PodcastList {...createDefaultProps()} searchQuery="my search" />);
 
-    const searchInput = screen.getByPlaceholderText('Search podcasts...');
+    const searchInput = screen.getByPlaceholderText('Search podcasts\u2026');
     expect(searchInput).toHaveValue('my search');
   });
 

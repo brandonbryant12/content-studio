@@ -1,5 +1,3 @@
-// features/podcasts/components/podcast-item.tsx
-
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
@@ -14,6 +12,7 @@ import {
 } from '../lib/status';
 import { PodcastIcon } from './podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 
 /** Podcast data for list display */
 export interface PodcastListItem {
@@ -24,6 +23,7 @@ export interface PodcastListItem {
   createdAt: string;
   status: VersionStatus;
   duration: number | null;
+  coverImageStorageKey: string | null;
 }
 
 function StatusBadge({ status }: { status: VersionStatus | undefined }) {
@@ -75,49 +75,64 @@ export const PodcastItem = memo(function PodcastItem({
 
   return (
     <>
-      <div className="list-card group overflow-hidden">
+      <div className="content-card group">
         <Link
           to="/podcasts/$podcastId"
           params={{ podcastId: podcast.id }}
           search={{ version: undefined }}
-          className="flex items-start gap-4 flex-1"
+          className="flex flex-col flex-1"
         >
-          <PodcastIcon format={podcast.format} status={podcast.status} />
-          <div className="flex-1 min-w-0">
-            <h3 className="list-card-title">{podcast.title}</h3>
-            <div className="list-card-meta gap-2 flex-wrap">
+          <div className="content-card-thumb">
+            {podcast.coverImageStorageKey ? (
+              <img
+                src={getStorageUrl(podcast.coverImageStorageKey)}
+                alt={`${podcast.title} cover`}
+                loading="lazy"
+              />
+            ) : (
+              <PodcastIcon format={podcast.format} status={podcast.status} />
+            )}
+            {isGeneratingStatus(podcast.status) && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
+                <Spinner className="w-6 h-6 text-primary" />
+              </div>
+            )}
+          </div>
+          <div className="content-card-body">
+            <h3 className="content-card-title">{podcast.title}</h3>
+            <div className="content-card-meta">
               <StatusBadge status={podcast.status} />
               <FormatBadge format={podcast.format} />
-              {podcast.duration && (
-                <span className="text-meta">
-                  {formatDuration(podcast.duration)}
-                </span>
-              )}
             </div>
             {podcast.description && (
-              <p className="text-body mt-2 line-clamp-1">
-                {podcast.description}
-              </p>
+              <p className="content-card-description">{podcast.description}</p>
             )}
           </div>
         </Link>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-meta">
-            {new Date(podcast.createdAt).toLocaleDateString()}
-          </span>
+        <div className="content-card-footer">
+          <div className="flex items-center gap-2">
+            {podcast.duration && (
+              <span className="text-meta">
+                {formatDuration(podcast.duration)}
+              </span>
+            )}
+            <span className="text-meta">
+              {new Date(podcast.createdAt).toLocaleDateString()}
+            </span>
+          </div>
           {!hideDelete && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleDeleteClick}
               disabled={isDeleting}
-              className="btn-delete"
+              className="content-card-delete h-7 w-7"
               aria-label={`Delete ${podcast.title}`}
             >
               {isDeleting ? (
-                <Spinner className="w-4 h-4" />
+                <Spinner className="w-3.5 h-3.5" />
               ) : (
-                <TrashIcon className="w-4 h-4" />
+                <TrashIcon className="w-3.5 h-3.5" />
               )}
             </Button>
           )}
