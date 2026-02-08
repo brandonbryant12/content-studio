@@ -40,6 +40,4 @@ export const createVoiceover = (input: CreateVoiceoverInput) =>
     });
 
     return voiceover;
-  }).pipe(
-    Effect.withSpan('useCase.createVoiceover'),
-  );
+  }).pipe(Effect.withSpan('useCase.createVoiceover'));

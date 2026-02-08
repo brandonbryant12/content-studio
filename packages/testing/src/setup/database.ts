@@ -107,7 +107,7 @@ export const createTestContext = async (
   await client.query('BEGIN');
 
   // Create a drizzle instance for this client
-  const db = drizzle(client, { schema }) as DatabaseInstance;
+  const db = drizzle(client, { schema }) as unknown as DatabaseInstance;
 
   // Create the Effect layer
   const dbLayer = DbLive(db);

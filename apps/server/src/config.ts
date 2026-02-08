@@ -37,7 +37,12 @@ export const buildStorageConfig = (): StorageConfig => {
     };
   }
 
-  return { provider: 'database' };
+  // Default to filesystem storage in dev
+  return {
+    provider: 'filesystem',
+    basePath: './uploads',
+    baseUrl: `${env.PUBLIC_SERVER_URL}/storage`,
+  };
 };
 
 /**

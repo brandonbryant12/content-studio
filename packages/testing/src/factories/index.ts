@@ -37,6 +37,21 @@ export {
 } from './collaborator';
 import { resetCollaboratorCounter as _resetCollaboratorCounter } from './collaborator';
 
+// Infographic factories
+export {
+  createTestInfographic,
+  createReadyInfographic,
+  createTestInfographicVersion,
+  resetInfographicCounter,
+  resetInfographicVersionCounter,
+  type CreateTestInfographicOptions,
+  type CreateTestInfographicVersionOptions,
+} from './infographic';
+import {
+  resetInfographicCounter as _resetInfographicCounter,
+  resetInfographicVersionCounter as _resetInfographicVersionCounter,
+} from './infographic';
+
 /**
  * Reset all factory counters.
  * Call this in beforeEach for consistent test IDs.
@@ -46,4 +61,6 @@ export const resetAllFactories = () => {
   _resetDocumentCounter();
   _resetPodcastCounters();
   _resetCollaboratorCounter();
+  _resetInfographicCounter();
+  _resetInfographicVersionCounter();
 };

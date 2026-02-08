@@ -282,7 +282,9 @@ describe('deletePodcast', () => {
 
       await Effect.runPromise(
         withTestUser(user)(
-          deletePodcast({ podcastId: podcast2.id }).pipe(Effect.provide(layers)),
+          deletePodcast({ podcastId: podcast2.id }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 

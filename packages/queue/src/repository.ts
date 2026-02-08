@@ -178,6 +178,14 @@ const makeQueueService = Effect.gen(function* () {
                   err instanceof JobProcessingError ? err.message : String(err),
                 ),
               ),
+              Effect.catchAllDefect((defect) =>
+                updateJobStatus(
+                  updatedJob.id,
+                  'failed',
+                  undefined,
+                  `Unexpected defect: ${defect instanceof Error ? defect.message : String(defect)}`,
+                ),
+              ),
             ),
           ),
         );
@@ -204,6 +212,14 @@ const makeQueueService = Effect.gen(function* () {
                   'failed',
                   undefined,
                   err instanceof JobProcessingError ? err.message : String(err),
+                ),
+              ),
+              Effect.catchAllDefect((defect) =>
+                updateJobStatus(
+                  updatedJob.id,
+                  'failed',
+                  undefined,
+                  `Unexpected defect: ${defect instanceof Error ? defect.message : String(defect)}`,
                 ),
               ),
             ),

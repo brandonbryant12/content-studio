@@ -182,23 +182,36 @@ export const createWorker = <
     Effect.gen(function* () {
       const queue = yield* Queue;
 
-      // Try each job type until we find one
+      // Try each job type until we find one.
+      // Errors for individual job types are caught so that a failure polling
+      // one type does not prevent processing of later types.
       for (const jobType of jobTypes) {
-        const job = yield* queue.processNextJob(jobType, (j) =>
-          processJob(j as Job<TPayload>),
-        );
+        const result = yield* queue
+          .processNextJob(jobType, (j) => processJob(j as Job<TPayload>))
+          .pipe(
+            Effect.catchAll((err) =>
+              Effect.logWarning(
+                `Error polling ${jobType}: ${err instanceof Error ? err.message : String(err)}`,
+              ).pipe(Effect.map(() => null)),
+            ),
+            Effect.catchAllDefect((defect) =>
+              Effect.logWarning(
+                `Defect polling ${jobType}: ${defect instanceof Error ? defect.message : String(defect)}`,
+              ).pipe(Effect.map(() => null)),
+            ),
+          );
 
-        if (job) {
+        if (result) {
           // Reset idle counter when a job is processed
           yield* Ref.set(idleCount, 0);
           yield* Effect.logInfo(
-            `Finished processing ${job.type} job ${job.id}, status: ${job.status}`,
+            `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,
           );
 
           // Call completion callback if provided
-          onJobComplete?.(job as Job<TPayload>);
+          onJobComplete?.(result as Job<TPayload>);
 
-          return job;
+          return result;
         }
       }
 
@@ -235,6 +248,12 @@ export const createWorker = <
 
       // Main polling loop — exits when stopSignal is completed
       yield* pollOnce(idleCount).pipe(
+        // Catch defects (unhandled exceptions) so they don't kill the fiber
+        Effect.catchAllDefect((defect) =>
+          Effect.logError(
+            `${name} caught defect during poll: ${defect instanceof Error ? defect.message : String(defect)}`,
+          ),
+        ),
         Effect.tap(() =>
           Effect.raceFirst(
             Effect.sleep(pollInterval),
@@ -275,15 +294,20 @@ export const createWorker = <
       ),
     );
 
-    const fiber = await runtime.runPromise(
-      Effect.fork(loop).pipe(
-        Effect.tap((f) =>
-          Effect.sync(() => {
-            loopFiber = f;
-          }),
+    const fiber = await runtime
+      .runPromise(
+        Effect.forkDaemon(loop).pipe(
+          Effect.tap((f) =>
+            Effect.sync(() => {
+              loopFiber = f;
+            }),
+          ),
         ),
-      ),
-    );
+      )
+      .catch((err) => {
+        console.error(`[${name}] Failed to fork poll loop:`, err);
+        throw err;
+      });
 
     // Wait for fiber to complete (either naturally or via interruption)
     await runtime.runPromise(Fiber.join(fiber)).catch(() => {

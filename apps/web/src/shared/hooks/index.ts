@@ -13,3 +13,8 @@ export {
   formatTime,
   type UseAudioPlayerReturn,
 } from './use-audio-player';
+export {
+  useDocumentSelection,
+  type DocumentInfo,
+  type UseDocumentSelectionReturn,
+} from './use-document-selection';

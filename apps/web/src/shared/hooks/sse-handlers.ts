@@ -3,6 +3,7 @@
 import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
+  InfographicJobCompletionEvent,
   EntityChangeEvent,
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
@@ -30,6 +31,13 @@ const getVoiceoverQueryKey = (voiceoverId: string) =>
 
 const getVoiceoversListQueryKey = () =>
   apiClient.voiceovers.list.queryOptions({ input: {} }).queryKey;
+
+const getInfographicQueryKey = (infographicId: string) =>
+  apiClient.infographics.get.queryOptions({ input: { id: infographicId } })
+    .queryKey;
+
+const getInfographicsListQueryKey = () =>
+  apiClient.infographics.list.queryOptions({ input: {} }).queryKey;
 
 // ============================================================================
 // Event Handlers
@@ -77,6 +85,23 @@ export function handleVoiceoverJobCompletion(
   });
 }
 
+export function handleInfographicJobCompletion(
+  event: InfographicJobCompletionEvent,
+  queryClient: QueryClient,
+): void {
+  const { infographicId } = event;
+
+  // Invalidate specific infographic
+  queryClient.invalidateQueries({
+    queryKey: getInfographicQueryKey(infographicId),
+  });
+
+  // Also invalidate the list
+  queryClient.invalidateQueries({
+    queryKey: getInfographicsListQueryKey(),
+  });
+}
+
 export function handleEntityChange(
   event: EntityChangeEvent,
   queryClient: QueryClient,
@@ -113,6 +138,17 @@ export function handleEntityChange(
       if (changeType === 'insert' || changeType === 'delete') {
         queryClient.invalidateQueries({
           queryKey: getVoiceoversListQueryKey(),
+        });
+      }
+      break;
+
+    case 'infographic':
+      queryClient.invalidateQueries({
+        queryKey: getInfographicQueryKey(entityId),
+      });
+      if (changeType === 'insert' || changeType === 'delete') {
+        queryClient.invalidateQueries({
+          queryKey: getInfographicsListQueryKey(),
         });
       }
       break;

@@ -161,3 +161,35 @@ export type VoiceoverCollaboratorId = typeof VoiceoverCollaboratorIdSchema.Type;
 
 export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
   `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;
+
+// =============================================================================
+// Infographic ID
+// =============================================================================
+
+export const InfographicIdSchema = Schema.String.pipe(
+  Schema.pattern(/^inf_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid infographic ID format',
+  }),
+  Schema.brand('InfographicId'),
+);
+
+export type InfographicId = typeof InfographicIdSchema.Type;
+
+export const generateInfographicId = (): InfographicId =>
+  `inf_${generateRandomBase32()}` as InfographicId;
+
+// =============================================================================
+// Infographic Version ID
+// =============================================================================
+
+export const InfographicVersionIdSchema = Schema.String.pipe(
+  Schema.pattern(/^inv_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid infographic version ID format',
+  }),
+  Schema.brand('InfographicVersionId'),
+);
+
+export type InfographicVersionId = typeof InfographicVersionIdSchema.Type;
+
+export const generateInfographicVersionId = (): InfographicVersionId =>
+  `inv_${generateRandomBase32()}` as InfographicVersionId;

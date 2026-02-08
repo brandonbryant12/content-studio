@@ -75,7 +75,6 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
         };
         return Effect.succeed(result);
       }),
-
   };
 
   return Layer.succeed(PodcastRepo, service);

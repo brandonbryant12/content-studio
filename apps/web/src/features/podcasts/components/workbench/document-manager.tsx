@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import type { DocumentInfo } from '../../hooks/use-document-selection';
-import { AddDocumentDialog } from './add-document-dialog';
-import { DocumentList } from './document-list';
+import type { DocumentInfo } from '@/shared/hooks/use-document-selection';
+import { AddDocumentDialog } from '@/shared/components/document-manager';
+import { DocumentList } from '@/shared/components/document-manager';
 
 interface DocumentManagerProps {
   documents: DocumentInfo[];

@@ -22,8 +22,16 @@ const generateWaveformHeights = () => {
 export function AudioPlayer({ url }: AudioPlayerProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const [waveformHeights] = useState(generateWaveformHeights);
-  const { audioRef, isPlaying, currentTime, duration, progress, togglePlay, seek, handleSliderKeyDown } =
-    useAudioPlayer(url);
+  const {
+    audioRef,
+    isPlaying,
+    currentTime,
+    duration,
+    progress,
+    togglePlay,
+    seek,
+    handleSliderKeyDown,
+  } = useAudioPlayer(url);
 
   return (
     <div className="audio-player">

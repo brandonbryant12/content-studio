@@ -4,6 +4,7 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Link } from '@tanstack/react-router';
 import { memo, useCallback } from 'react';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
@@ -56,21 +57,27 @@ export const DocumentItem = memo(function DocumentItem({
 
   return (
     <div className="list-card group">
-      <DocumentIcon source={document.source} />
-      <div className="flex-1 min-w-0">
-        <h3 className="list-card-title">{document.title}</h3>
-        <div className="list-card-meta">
-          <span className={getFileBadgeClass(document.source)}>
-            {getFileLabel(document.source)}
-          </span>
-          <span className="text-meta">
-            {document.wordCount.toLocaleString()} words
-          </span>
-          <span className="text-meta">
-            {formatFileSize(document.originalFileSize)}
-          </span>
+      <Link
+        to="/documents/$documentId"
+        params={{ documentId: document.id }}
+        className="flex items-center gap-3 flex-1 min-w-0"
+      >
+        <DocumentIcon source={document.source} />
+        <div className="flex-1 min-w-0">
+          <h3 className="list-card-title">{document.title}</h3>
+          <div className="list-card-meta">
+            <span className={getFileBadgeClass(document.source)}>
+              {getFileLabel(document.source)}
+            </span>
+            <span className="text-meta">
+              {document.wordCount.toLocaleString()} words
+            </span>
+            <span className="text-meta">
+              {formatFileSize(document.originalFileSize)}
+            </span>
+          </div>
         </div>
-      </div>
+      </Link>
       <div className="flex items-center gap-2">
         <span className="text-meta">
           {new Date(document.createdAt).toLocaleDateString()}

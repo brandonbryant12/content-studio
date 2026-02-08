@@ -103,7 +103,10 @@ export const handleTaggedError = <E extends { _tag: string }>(
   };
 
   // Helper to throw using the best available factory
-  const throwWithFactory = (message: string, data?: Record<string, unknown>): never => {
+  const throwWithFactory = (
+    message: string,
+    data?: Record<string, unknown>,
+  ): never => {
     const factory = errors['INTERNAL_ERROR'] ?? errors['NOT_FOUND'];
     if (factory) throw factory({ message, data });
     throw new ORPCError('INTERNAL_SERVER_ERROR', { message });

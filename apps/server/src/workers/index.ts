@@ -1,6 +1,7 @@
 // Handlers
 export { handleGeneratePodcast } from './handlers';
 export { handleGenerateVoiceover } from './voiceover-handlers';
+export { handleGenerateInfographic } from './infographic-handlers';
 
 // Unified worker (recommended - handles all job types)
 export {
@@ -28,3 +29,7 @@ export {
   createVoiceoverWorker,
   type VoiceoverWorkerConfig,
 } from './voiceover-worker';
+export {
+  createInfographicWorker,
+  type InfographicWorkerConfig,
+} from './infographic-worker';

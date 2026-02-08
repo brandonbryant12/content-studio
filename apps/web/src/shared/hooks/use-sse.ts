@@ -3,6 +3,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   handleJobCompletion,
   handleVoiceoverJobCompletion,
+  handleInfographicJobCompletion,
   handleEntityChange,
 } from './sse-handlers';
 import { rawApiClient } from '@/clients/apiClient';
@@ -59,6 +60,9 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 break;
               case 'voiceover_job_completion':
                 handleVoiceoverJobCompletion(event, qc);
+                break;
+              case 'infographic_job_completion':
+                handleInfographicJobCompletion(event, qc);
                 break;
               case 'entity_change':
                 handleEntityChange(event, qc);

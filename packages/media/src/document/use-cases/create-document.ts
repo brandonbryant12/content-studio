@@ -64,23 +64,25 @@ export const createDocument = (input: CreateDocumentInput) =>
     const wordCount = calculateWordCount(data.content);
 
     // Insert metadata to DB; clean up storage if insert fails
-    const doc = yield* documentRepo.insert({
-      title: data.title,
-      contentKey,
-      mimeType: 'text/plain',
-      wordCount,
-      source: 'manual',
-      originalFileSize: contentBuffer.length,
-      metadata: data.metadata,
-      createdBy: ownerId,
-    }).pipe(
-      Effect.catchAll((error) =>
-        storage.delete(contentKey).pipe(
-          Effect.ignore,
-          Effect.flatMap(() => Effect.fail(error)),
+    const doc = yield* documentRepo
+      .insert({
+        title: data.title,
+        contentKey,
+        mimeType: 'text/plain',
+        wordCount,
+        source: 'manual',
+        originalFileSize: contentBuffer.length,
+        metadata: data.metadata,
+        createdBy: ownerId,
+      })
+      .pipe(
+        Effect.catchAll((error) =>
+          storage.delete(contentKey).pipe(
+            Effect.ignore,
+            Effect.flatMap(() => Effect.fail(error)),
+          ),
         ),
-      ),
-    );
+      );
 
     return doc;
   }).pipe(

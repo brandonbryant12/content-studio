@@ -15,8 +15,16 @@ export function AudioStage({
   src,
   duration: initialDuration,
 }: AudioStageProps) {
-  const { audioRef, isPlaying, currentTime, duration, progress, togglePlay, seek, handleSliderKeyDown } =
-    useAudioPlayer(src, initialDuration);
+  const {
+    audioRef,
+    isPlaying,
+    currentTime,
+    duration,
+    progress,
+    togglePlay,
+    seek,
+    handleSliderKeyDown,
+  } = useAudioPlayer(src, initialDuration);
 
   // Generate waveform bars (25 bars)
   const waveformBars = Array.from({ length: 25 }, (_, i) => i);

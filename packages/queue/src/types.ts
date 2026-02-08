@@ -6,7 +6,8 @@ export type JobType =
   | 'generate-podcast'
   | 'generate-script'
   | 'generate-audio'
-  | 'generate-voiceover';
+  | 'generate-voiceover'
+  | 'generate-infographic';
 
 export interface Job<TPayload = unknown, TResult = unknown> {
   readonly id: JobId;
@@ -69,4 +70,19 @@ export interface GenerateVoiceoverResult {
   readonly voiceoverId: string;
   readonly audioUrl: string;
   readonly duration: number;
+}
+
+// =============================================================================
+// Infographic Job Types
+// =============================================================================
+
+export interface GenerateInfographicPayload {
+  readonly infographicId: string;
+  readonly userId: string;
+}
+
+export interface GenerateInfographicResult {
+  readonly infographicId: string;
+  readonly imageUrl: string;
+  readonly versionNumber: number;
 }

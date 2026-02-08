@@ -7,5 +7,8 @@ export {
   getDocumentListQueryKey,
   useDocumentsOrdered,
 } from './use-document-list';
+export { useDocument, useDocumentContent } from './use-document';
+export { useDocumentActions } from './use-document-actions';
+export type { UseDocumentActionsReturn } from './use-document-actions';
 export { useOptimisticDeleteDocument } from './use-optimistic-delete-document';
 export { useOptimisticUpload, fileToBase64 } from './use-optimistic-upload';

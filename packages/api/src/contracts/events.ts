@@ -9,7 +9,7 @@ import { Schema } from 'effect';
 // TypeScript Types (used by handlers, workers, etc.)
 // =============================================================================
 
-export type EntityType = 'podcast' | 'document' | 'voiceover';
+export type EntityType = 'podcast' | 'document' | 'voiceover' | 'infographic';
 export type ChangeType = 'insert' | 'update' | 'delete';
 
 export interface EntityChangeEvent {
@@ -39,6 +39,15 @@ export interface VoiceoverJobCompletionEvent {
   error?: string;
 }
 
+export interface InfographicJobCompletionEvent {
+  type: 'infographic_job_completion';
+  jobId: string;
+  jobType: 'generate-infographic';
+  status: 'completed' | 'failed';
+  infographicId: string;
+  error?: string;
+}
+
 export interface ConnectionEvent {
   type: 'connected';
   userId: string;
@@ -48,6 +57,7 @@ export type SSEEvent =
   | EntityChangeEvent
   | JobCompletionEvent
   | VoiceoverJobCompletionEvent
+  | InfographicJobCompletionEvent
   | ConnectionEvent;
 
 // =============================================================================
@@ -58,7 +68,7 @@ const std = Schema.standardSchemaV1;
 
 const EntityChangeEventSchema = Schema.Struct({
   type: Schema.Literal('entity_change'),
-  entityType: Schema.Literal('podcast', 'document', 'voiceover'),
+  entityType: Schema.Literal('podcast', 'document', 'voiceover', 'infographic'),
   changeType: Schema.Literal('insert', 'update', 'delete'),
   entityId: Schema.String,
   userId: Schema.String,
@@ -87,6 +97,15 @@ const VoiceoverJobCompletionEventSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
 });
 
+const InfographicJobCompletionEventSchema = Schema.Struct({
+  type: Schema.Literal('infographic_job_completion'),
+  jobId: Schema.String,
+  jobType: Schema.Literal('generate-infographic'),
+  status: Schema.Literal('completed', 'failed'),
+  infographicId: Schema.String,
+  error: Schema.optional(Schema.String),
+});
+
 const ConnectionEventSchema = Schema.Struct({
   type: Schema.Literal('connected'),
   userId: Schema.String,
@@ -96,6 +115,7 @@ const SSEEventSchema = Schema.Union(
   EntityChangeEventSchema,
   JobCompletionEventSchema,
   VoiceoverJobCompletionEventSchema,
+  InfographicJobCompletionEventSchema,
   ConnectionEventSchema,
 );
 

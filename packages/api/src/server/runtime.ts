@@ -5,10 +5,10 @@ import {
   type AI,
   type AIProvider,
   type VertexAIConfig,
-  LLMGoogleLive,
-  LLMVertexLive,
+  GoogleAILive,
+  VertexAILive,
 } from '@repo/ai';
-import { MockAIWithLatency, MockTTSWithLatency } from '@repo/testing';
+import { MockAIWithLatency } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { MediaLive, type Media } from '@repo/media';
 import type { Storage } from '@repo/storage';
@@ -48,7 +48,7 @@ export interface ServerRuntimeConfig {
  * - Db: Database connection
  * - Policy: Authorization service (depends on Db)
  * - Queue: Job queue service (depends on Db)
- * - Storage: File storage (S3, filesystem, or database-backed)
+ * - Storage: File storage (S3 or filesystem)
  * - AI: LLM + TTS services (standalone)
  * - Media: Documents, PodcastRepo, CollaboratorRepo (depends on Db, Storage)
  */
@@ -58,19 +58,16 @@ export const createSharedLayers = (
   const dbLayer = DbLive(config.db);
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(dbLayer));
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
-  const storageLayer = createStorageLayer(config.storageConfig, dbLayer);
+  const storageLayer = createStorageLayer(config.storageConfig);
 
-  // AI layer bundles LLM and TTS
-  // Mock AI has realistic latency (10s LLM, 15s TTS) for dev testing
+  // AI layer bundles LLM, TTS, and ImageGen
+  // Mock AI has realistic latency for dev testing
   // TTS is always mocked for now (real TTS not yet available)
   const aiLayer = config.useMockAI
     ? MockAIWithLatency
-    : Layer.mergeAll(
-        config.aiProvider === 'vertex'
-          ? LLMVertexLive(config.vertexConfig!)
-          : LLMGoogleLive({ apiKey: config.geminiApiKey! }),
-        MockTTSWithLatency,
-      );
+    : config.aiProvider === 'vertex'
+      ? VertexAILive(config.vertexConfig!)
+      : GoogleAILive({ apiKey: config.geminiApiKey! });
 
   // Media layer bundles Documents, PodcastRepo, and CollaboratorRepo
   const mediaLayer = MediaLive.pipe(

@@ -26,6 +26,10 @@ export {
   // Project/Media errors
   ProjectNotFound,
   MediaNotFound,
+  // Infographic errors
+  InfographicNotFound,
+  NotInfographicOwner,
+  InfographicError,
   // Error union
   type MediaError,
 } from './errors';
@@ -121,6 +125,46 @@ export type {
   VoiceoverCollaboratorWithUserOutput,
 } from './voiceover';
 
+// Infographic module - Repos
+export {
+  InfographicRepo,
+  InfographicRepoLive,
+  type InfographicRepoService,
+  type InfographicListOptions,
+} from './infographic';
+
+// Infographic module - Use Cases
+export {
+  createInfographic,
+  getInfographic,
+  listInfographics,
+  updateInfographic,
+  deleteInfographic,
+  generateInfographic,
+  getInfographicVersions,
+  getInfographicJob,
+  type CreateInfographicInput,
+  type GetInfographicInput,
+  type ListInfographicsInput,
+  type UpdateInfographicInput,
+  type DeleteInfographicInput,
+  type GenerateInfographicInput,
+  type GetInfographicVersionsInput,
+  type GetInfographicJobInput,
+} from './infographic';
+
+// Infographic module - Types
+export type {
+  Infographic,
+  InfographicType,
+  InfographicStyle,
+  InfographicFormat,
+  InfographicStatusType,
+  InfographicOutput,
+  InfographicVersion,
+  InfographicVersionOutput,
+} from './infographic';
+
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import {
@@ -135,6 +179,7 @@ import {
   VoiceoverCollaboratorRepo,
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
+import { InfographicRepo, InfographicRepoLive } from './infographic';
 
 // =============================================================================
 // Combined Media Layer
@@ -152,7 +197,8 @@ export type Media =
   | PodcastRepo
   | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo;
+  | VoiceoverCollaboratorRepo
+  | InfographicRepo;
 
 /**
  * Combined layer for all media services.
@@ -181,6 +227,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     CollaboratorRepoLive,
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
+    InfographicRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)

@@ -9,7 +9,6 @@ type Session = AuthInstance['$Infer']['Session'];
 
 /** Storage configuration for different providers */
 export type StorageConfig =
-  | { provider: 'database' }
   | { provider: 'filesystem'; basePath: string; baseUrl: string }
   | {
       provider: 's3';

@@ -3,7 +3,10 @@ import type { Db } from '@repo/db/effect';
 import type { Document } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import { DocumentRepo, type UpdateDocumentInput as RepoUpdateInput } from '../repos';
+import {
+  DocumentRepo,
+  type UpdateDocumentInput as RepoUpdateInput,
+} from '../repos';
 import { calculateWordCount } from '../../shared';
 
 // =============================================================================

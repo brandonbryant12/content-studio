@@ -19,6 +19,14 @@
       "types": "./dist/src/podcast/index.d.ts",
       "default": "./src/podcast/index.ts"
     },
+    "./infographic": {
+      "types": "./dist/src/infographic/index.d.ts",
+      "default": "./src/infographic/index.ts"
+    },
+    "./infographic/prompts": {
+      "types": "./dist/src/infographic/prompts.d.ts",
+      "default": "./src/infographic/prompts.ts"
+    },
     "./test-utils": {
       "types": "./dist/src/test-utils/index.d.ts",
       "default": "./src/test-utils/index.ts"

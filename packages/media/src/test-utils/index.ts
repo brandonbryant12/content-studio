@@ -6,3 +6,4 @@ export {
   createMockDocumentRepo,
   MockDbLive,
 } from './mock-repos';
+export { createMockInfographicRepo } from './mock-infographic-repo';

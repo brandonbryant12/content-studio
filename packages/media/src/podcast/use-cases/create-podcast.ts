@@ -47,6 +47,4 @@ export const createPodcast = (input: CreatePodcastInput) =>
     );
 
     return podcastWithDocs;
-  }).pipe(
-    Effect.withSpan('useCase.createPodcast'),
-  );
+  }).pipe(Effect.withSpan('useCase.createPodcast'));

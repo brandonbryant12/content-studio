@@ -4,6 +4,7 @@ import {
   type GenerateScriptPayload,
   type GenerateAudioPayload,
   type GenerateVoiceoverPayload,
+  type GenerateInfographicPayload,
   type Job,
   type JobType,
 } from '@repo/queue';
@@ -13,6 +14,7 @@ import type {
   EntityChangeEvent,
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
+  InfographicJobCompletionEvent,
   SSEEvent,
 } from '@repo/api/contracts';
 import {
@@ -29,6 +31,7 @@ import {
   type HandlerOptions,
 } from './handlers';
 import { handleGenerateVoiceover } from './voiceover-handlers';
+import { handleGenerateInfographic } from './infographic-handlers';
 
 // =============================================================================
 // Job Type Definitions
@@ -39,7 +42,10 @@ type PodcastPayload =
   | GenerateScriptPayload
   | GenerateAudioPayload;
 
-type WorkerPayload = PodcastPayload | GenerateVoiceoverPayload;
+type WorkerPayload =
+  | PodcastPayload
+  | GenerateVoiceoverPayload
+  | GenerateInfographicPayload;
 
 // All job types this worker handles
 const JOB_TYPES: JobType[] = [
@@ -47,6 +53,7 @@ const JOB_TYPES: JobType[] = [
   'generate-script',
   'generate-audio',
   'generate-voiceover',
+  'generate-infographic',
 ];
 
 // =============================================================================
@@ -59,6 +66,10 @@ const isPodcastPayload = (payload: WorkerPayload): payload is PodcastPayload =>
 const isVoiceoverPayload = (
   payload: WorkerPayload,
 ): payload is GenerateVoiceoverPayload => 'voiceoverId' in payload;
+
+const isInfographicPayload = (
+  payload: WorkerPayload,
+): payload is GenerateInfographicPayload => 'infographicId' in payload;
 
 const isGeneratePodcastJob = (
   job: Job<WorkerPayload>,
@@ -75,6 +86,11 @@ const isGenerateAudioJob = (
 const isGenerateVoiceoverJob = (
   job: Job<WorkerPayload>,
 ): job is Job<GenerateVoiceoverPayload> => job.type === 'generate-voiceover';
+
+const isGenerateInfographicJob = (
+  job: Job<WorkerPayload>,
+): job is Job<GenerateInfographicPayload> =>
+  job.type === 'generate-infographic';
 
 // =============================================================================
 // Worker Configuration
@@ -107,7 +123,7 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
 
   const emitEntityChange = (
     userId: string,
-    entityType: 'podcast' | 'voiceover',
+    entityType: 'podcast' | 'voiceover' | 'infographic',
     entityId: string,
   ) => {
     const event: EntityChangeEvent = {
@@ -130,7 +146,12 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
       const { userId } = job.payload;
       const user = makeJobUser(userId);
 
-      if (isGenerateVoiceoverJob(job)) {
+      if (isGenerateInfographicJob(job)) {
+        yield* Effect.logInfo(
+          `Processing ${job.type} job ${job.id} for infographic ${job.payload.infographicId}`,
+        );
+        yield* withCurrentUser(user)(handleGenerateInfographic(job));
+      } else if (isGenerateVoiceoverJob(job)) {
         yield* Effect.logInfo(
           `Processing ${job.type} job ${job.id} for voiceover ${job.payload.voiceoverId}`,
         );
@@ -167,6 +188,14 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
       Effect.catchAll((error: unknown) =>
         Effect.fail(wrapJobError(job.id, error)),
       ),
+      Effect.catchAllDefect((defect) =>
+        Effect.fail(
+          wrapJobError(
+            job.id,
+            defect instanceof Error ? defect : new Error(String(defect)),
+          ),
+        ),
+      ),
       Effect.annotateLogs('worker', 'UnifiedWorker'),
     );
 
@@ -178,10 +207,22 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
     const { userId } = job.payload;
     const status = job.status === 'completed' ? 'completed' : 'failed';
 
-    if (isVoiceoverPayload(job.payload)) {
+    if (isInfographicPayload(job.payload)) {
+      const { infographicId } = job.payload;
+
+      const completionEvent: InfographicJobCompletionEvent = {
+        type: 'infographic_job_completion',
+        jobId: job.id,
+        jobType: 'generate-infographic',
+        status,
+        infographicId,
+        error: job.error ?? undefined,
+      };
+      emitEvent(userId, completionEvent);
+      emitEntityChange(userId, 'infographic', infographicId);
+    } else if (isVoiceoverPayload(job.payload)) {
       const { voiceoverId } = job.payload;
 
-      // Emit voiceover job completion event
       const completionEvent: VoiceoverJobCompletionEvent = {
         type: 'voiceover_job_completion',
         jobId: job.id,
@@ -192,10 +233,6 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
       };
       emitEvent(userId, completionEvent);
       emitEntityChange(userId, 'voiceover', voiceoverId);
-
-      console.log(
-        `[UnifiedWorker] Emitted SSE events for voiceover job ${job.id} to user ${userId}`,
-      );
     } else if (isPodcastPayload(job.payload)) {
       const { podcastId } = job.payload;
 
@@ -213,10 +250,6 @@ export const createUnifiedWorker = (config: UnifiedWorkerConfig): Worker => {
       };
       emitEvent(userId, completionEvent);
       emitEntityChange(userId, 'podcast', podcastId);
-
-      console.log(
-        `[UnifiedWorker] Emitted SSE events for podcast job ${job.id} to user ${userId}`,
-      );
     }
   };
 

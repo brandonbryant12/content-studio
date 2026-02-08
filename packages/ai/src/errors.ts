@@ -131,6 +131,66 @@ export class AudioProcessingError extends Schema.TaggedError<AudioProcessingErro
 }
 
 // =============================================================================
+// ImageGen Errors
+// =============================================================================
+
+/**
+ * Image generation service failure.
+ */
+export class ImageGenError extends Schema.TaggedError<ImageGenError>()(
+  'ImageGenError',
+  {
+    message: Schema.String,
+    model: Schema.optional(Schema.String),
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 502 as const;
+  static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
+  static readonly httpMessage = 'Image generation service unavailable';
+  static readonly logLevel = 'error' as const;
+  static getData(e: ImageGenError) {
+    return e.model ? { model: e.model } : {};
+  }
+}
+
+/**
+ * Image generation rate limit exceeded.
+ */
+export class ImageGenRateLimitError extends Schema.TaggedError<ImageGenRateLimitError>()(
+  'ImageGenRateLimitError',
+  {
+    message: Schema.String,
+    retryAfter: Schema.optional(Schema.Number),
+  },
+) {
+  static readonly httpStatus = 429 as const;
+  static readonly httpCode = 'RATE_LIMITED' as const;
+  static readonly httpMessage = 'Image generation rate limit exceeded';
+  static readonly logLevel = 'warn' as const;
+  static getData(e: ImageGenRateLimitError) {
+    return e.retryAfter !== undefined ? { retryAfter: e.retryAfter } : {};
+  }
+}
+
+/**
+ * Image content was filtered by safety system.
+ */
+export class ImageGenContentFilteredError extends Schema.TaggedError<ImageGenContentFilteredError>()(
+  'ImageGenContentFilteredError',
+  {
+    message: Schema.String,
+    prompt: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'CONTENT_FILTERED' as const;
+  static readonly httpMessage =
+    'Image could not be generated. Please adjust your prompt and try again.';
+  static readonly logLevel = 'silent' as const;
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -144,4 +204,7 @@ export type AIError =
   | TTSQuotaExceededError
   | VoiceNotFoundError
   | AudioError
-  | AudioProcessingError;
+  | AudioProcessingError
+  | ImageGenError
+  | ImageGenRateLimitError
+  | ImageGenContentFilteredError;

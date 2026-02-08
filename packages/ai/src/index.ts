@@ -9,6 +9,9 @@ export {
   VoiceNotFoundError,
   AudioError,
   AudioProcessingError,
+  ImageGenError,
+  ImageGenRateLimitError,
+  ImageGenContentFilteredError,
   type AIError,
 } from './errors';
 
@@ -61,9 +64,20 @@ export {
   type PreviewVoiceUseCaseResult,
 } from './tts';
 
+// ImageGen
+export {
+  ImageGen,
+  type ImageGenService,
+  type GenerateImageOptions,
+  type GenerateImageResult,
+  GoogleImageGenLive,
+  type GoogleImageGenConfig,
+} from './image-gen';
+
 // Import for combined layer
 import { LLM, GoogleLive, VertexLive } from './llm';
 import { TTS, GoogleTTSLive, VertexTTSLive } from './tts';
+import { ImageGen, GoogleImageGenLive } from './image-gen';
 
 // =============================================================================
 // Combined AI Layer
@@ -73,7 +87,7 @@ import { TTS, GoogleTTSLive, VertexTTSLive } from './tts';
  * All AI services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
  */
-export type AI = LLM | TTS;
+export type AI = LLM | TTS | ImageGen;
 
 /**
  * Configuration for all Google AI services.
@@ -85,6 +99,8 @@ export interface GoogleAIConfig {
   readonly llmModel?: string;
   /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
   readonly ttsModel?: string;
+  /** ImageGen model. Default: 'gemini-2.0-flash-exp' */
+  readonly imageGenModel?: string;
 }
 
 /**
@@ -100,6 +116,10 @@ export const GoogleAILive = (config: GoogleAIConfig): Layer.Layer<AI> =>
   Layer.mergeAll(
     GoogleLive({ apiKey: config.apiKey, model: config.llmModel }),
     GoogleTTSLive({ apiKey: config.apiKey, model: config.ttsModel }),
+    GoogleImageGenLive({
+      apiKey: config.apiKey,
+      model: config.imageGenModel,
+    }),
   );
 
 // =============================================================================
@@ -175,9 +195,13 @@ export const VertexAILive = (config: VertexAIConfig): Layer.Layer<AI> => {
         apiKey: config.apiKey,
         model: config.ttsModel,
       }),
+      GoogleImageGenLive({ apiKey: config.apiKey }),
     );
   }
 
+  // Service account mode doesn't have a simple API key for image gen.
+  // Use GEMINI_API_KEY env var as fallback for image gen in SA mode.
+  const imageGenApiKey = process.env.GEMINI_API_KEY ?? '';
   return Layer.mergeAll(
     VertexLive({
       mode: 'serviceAccount',
@@ -191,5 +215,6 @@ export const VertexAILive = (config: VertexAIConfig): Layer.Layer<AI> => {
       location: config.location,
       model: config.ttsModel,
     }),
+    GoogleImageGenLive({ apiKey: imageGenApiKey }),
   );
 };

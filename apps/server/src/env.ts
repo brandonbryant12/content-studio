@@ -43,7 +43,6 @@ const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
 
 // Storage provider schema
 const StorageProviderSchema = Schema.Union(
-  Schema.Literal('database'),
   Schema.Literal('filesystem'),
   Schema.Literal('s3'),
 );
@@ -98,7 +97,7 @@ export const envSchema = Schema.Struct({
 
   // Storage configuration
   STORAGE_PROVIDER: Schema.optionalWith(StorageProviderSchema, {
-    default: () => 'database' as const,
+    default: () => 'filesystem' as const,
   }),
   STORAGE_PATH: Schema.optional(Schema.String), // For filesystem provider
   STORAGE_BASE_URL: Schema.optional(Schema.String), // For filesystem provider

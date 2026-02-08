@@ -15,10 +15,6 @@
       "types": "./dist/src/providers/filesystem.d.ts",
       "default": "./src/providers/filesystem.ts"
     },
-    "./providers/database": {
-      "types": "./dist/src/providers/database.d.ts",
-      "default": "./src/providers/database.ts"
-    },
     "./providers/s3": {
       "types": "./dist/src/providers/s3.d.ts",
       "default": "./src/providers/s3.ts"
@@ -38,8 +34,6 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
-    "@repo/db": "workspace:*",
-    "drizzle-orm": "catalog:",
     "effect": "^3.16.0"
   },
   "devDependencies": {
