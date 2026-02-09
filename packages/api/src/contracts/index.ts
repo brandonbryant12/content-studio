@@ -1,4 +1,5 @@
 import { oc } from '@orpc/contract';
+import activityContract from './activity';
 import documentContract from './documents';
 import eventsContract from './events';
 import infographicContract from './infographics';
@@ -62,6 +63,7 @@ export const appContract = oc
     },
   })
   .router({
+    admin: activityContract,
     documents: documentContract,
     events: eventsContract,
     infographics: infographicContract,

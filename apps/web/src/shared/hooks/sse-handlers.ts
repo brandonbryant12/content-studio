@@ -5,6 +5,7 @@ import type {
   VoiceoverJobCompletionEvent,
   InfographicJobCompletionEvent,
   EntityChangeEvent,
+  ActivityLoggedEvent,
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
@@ -99,6 +100,20 @@ export function handleInfographicJobCompletion(
   // Also invalidate the list
   queryClient.invalidateQueries({
     queryKey: getInfographicsListQueryKey(),
+  });
+}
+
+export function handleActivityLogged(
+  _event: ActivityLoggedEvent,
+  queryClient: QueryClient,
+): void {
+  // Invalidate all admin activity queries so the dashboard auto-refreshes.
+  // Uses a broad prefix to catch both ORPC-generated and custom infinite query keys.
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      const key = query.queryKey;
+      return Array.isArray(key) && key[0] === 'admin';
+    },
   });
 }
 

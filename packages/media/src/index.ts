@@ -34,6 +34,23 @@ export {
   type MediaError,
 } from './errors';
 
+// Activity module
+export {
+  ActivityLogNotFound,
+  ActivityLogRepo,
+  ActivityLogRepoLive,
+  logActivity,
+  listActivity,
+  getActivityStats,
+  logEntityActivity,
+  type ActivityLogRepoService,
+  type LogActivityInput,
+  type ListActivityInput,
+  type ListActivityResult,
+  type GetActivityStatsInput,
+  type ActivityStats,
+} from './activity';
+
 // Document module - Repository
 export {
   DocumentRepo,
@@ -180,6 +197,7 @@ import {
   VoiceoverCollaboratorRepoLive,
 } from './voiceover';
 import { InfographicRepo, InfographicRepoLive } from './infographic';
+import { ActivityLogRepo, ActivityLogRepoLive } from './activity';
 
 // =============================================================================
 // Combined Media Layer
@@ -198,7 +216,8 @@ export type Media =
   | CollaboratorRepo
   | VoiceoverRepo
   | VoiceoverCollaboratorRepo
-  | InfographicRepo;
+  | InfographicRepo
+  | ActivityLogRepo;
 
 /**
  * Combined layer for all media services.
@@ -228,6 +247,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     VoiceoverRepoLive,
     VoiceoverCollaboratorRepoLive,
     InfographicRepoLive,
+    ActivityLogRepoLive,
   );
 
 // Podcast module - Use Cases (error types inferred by Effect)

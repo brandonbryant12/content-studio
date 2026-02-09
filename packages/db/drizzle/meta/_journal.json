@@ -22,6 +22,13 @@
       "when": 1770586654894,
       "tag": "0002_wakeful_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770591205006,
+      "tag": "0003_supreme_anita_blake",
+      "breakpoints": true
     }
   ]
 }

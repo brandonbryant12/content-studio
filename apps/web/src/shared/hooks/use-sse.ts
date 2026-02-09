@@ -5,6 +5,7 @@ import {
   handleVoiceoverJobCompletion,
   handleInfographicJobCompletion,
   handleEntityChange,
+  handleActivityLogged,
 } from './sse-handlers';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -66,6 +67,9 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 break;
               case 'entity_change':
                 handleEntityChange(event, qc);
+                break;
+              case 'activity_logged':
+                handleActivityLogged(event, qc);
                 break;
             }
           }

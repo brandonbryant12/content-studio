@@ -19,6 +19,7 @@ import { Effect } from 'effect';
 import type { CollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
+import { tapLogActivity } from './log-activity';
 import {
   serializePodcastEffect,
   serializePodcastFullEffect,
@@ -78,7 +79,10 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createPodcast(input).pipe(Effect.flatMap(serializePodcastFullEffect)),
+        createPodcast(input).pipe(
+          Effect.flatMap(serializePodcastFullEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'podcast'),
+        ),
         errors,
         {
           span: 'api.podcasts.create',
@@ -97,6 +101,7 @@ const podcastRouter = {
         context.user,
         updatePodcast({ podcastId: id as string, data }).pipe(
           Effect.flatMap(serializePodcastEffect),
+          tapLogActivity(context.runtime, context.user, 'updated', 'podcast'),
         ),
         errors,
         {
@@ -112,7 +117,16 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        deletePodcast({ podcastId: input.id }).pipe(Effect.map(() => ({}))),
+        deletePodcast({ podcastId: input.id }).pipe(
+          Effect.map(() => ({})),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'deleted',
+            'podcast',
+            input.id,
+          ),
+        ),
         errors,
         {
           span: 'api.podcasts.delete',

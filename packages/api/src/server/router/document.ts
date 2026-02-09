@@ -15,6 +15,7 @@ import {
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
+import { tapLogActivity } from './log-activity';
 
 const documentRouter = {
   list: protectedProcedure.documents.list.handler(
@@ -76,7 +77,10 @@ const documentRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createDocument(input).pipe(Effect.flatMap(serializeDocumentEffect)),
+        createDocument(input).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'document'),
+        ),
         errors,
         {
           span: 'api.documents.create',
@@ -98,7 +102,10 @@ const documentRouter = {
           data,
           title: input.title,
           metadata: input.metadata,
-        }).pipe(Effect.flatMap(serializeDocumentEffect)),
+        }).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'document'),
+        ),
         errors,
         {
           span: 'api.documents.upload',
@@ -120,6 +127,7 @@ const documentRouter = {
         context.user,
         updateDocument({ id, ...data }).pipe(
           Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(context.runtime, context.user, 'updated', 'document'),
         ),
         errors,
         {
@@ -135,7 +143,16 @@ const documentRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        deleteDocument({ id: input.id }).pipe(Effect.map(() => ({}))),
+        deleteDocument({ id: input.id }).pipe(
+          Effect.map(() => ({})),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'deleted',
+            'document',
+            input.id,
+          ),
+        ),
         errors,
         {
           span: 'api.documents.delete',

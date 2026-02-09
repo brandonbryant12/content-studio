@@ -18,6 +18,7 @@ import { Effect } from 'effect';
 import type { VoiceoverCollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
+import { tapLogActivity } from './log-activity';
 import {
   serializeVoiceoverEffect,
   serializeVoiceoverListItemsEffect,
@@ -76,7 +77,10 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        createVoiceover(input).pipe(Effect.flatMap(serializeVoiceoverEffect)),
+        createVoiceover(input).pipe(
+          Effect.flatMap(serializeVoiceoverEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'voiceover'),
+        ),
         errors,
         {
           span: 'api.voiceovers.create',
@@ -97,7 +101,10 @@ const voiceoverRouter = {
           voiceoverId: id as string,
           userId: context.session.user.id,
           data,
-        }).pipe(Effect.flatMap(serializeVoiceoverEffect)),
+        }).pipe(
+          Effect.flatMap(serializeVoiceoverEffect),
+          tapLogActivity(context.runtime, context.user, 'updated', 'voiceover'),
+        ),
         errors,
         {
           span: 'api.voiceovers.update',
@@ -115,7 +122,16 @@ const voiceoverRouter = {
         deleteVoiceover({
           voiceoverId: input.id,
           userId: context.session.user.id,
-        }).pipe(Effect.map(() => ({}))),
+        }).pipe(
+          Effect.map(() => ({})),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'deleted',
+            'voiceover',
+            input.id,
+          ),
+        ),
         errors,
         {
           span: 'api.voiceovers.delete',

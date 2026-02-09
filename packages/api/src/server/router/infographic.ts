@@ -11,6 +11,7 @@ import {
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
+import { tapLogActivity } from './log-activity';
 import {
   serializeInfographicEffect,
   serializeInfographicsEffect,
@@ -67,6 +68,12 @@ const infographicRouter = {
         context.user,
         createInfographic(input).pipe(
           Effect.flatMap(serializeInfographicEffect),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'created',
+            'infographic',
+          ),
         ),
         errors,
         {
@@ -84,6 +91,12 @@ const infographicRouter = {
         context.user,
         updateInfographic(input).pipe(
           Effect.flatMap(serializeInfographicEffect),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'updated',
+            'infographic',
+          ),
         ),
         errors,
         {
@@ -99,7 +112,16 @@ const infographicRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        deleteInfographic({ id: input.id }).pipe(Effect.map(() => ({}))),
+        deleteInfographic({ id: input.id }).pipe(
+          Effect.map(() => ({})),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'deleted',
+            'infographic',
+            input.id,
+          ),
+        ),
         errors,
         {
           span: 'api.infographics.delete',

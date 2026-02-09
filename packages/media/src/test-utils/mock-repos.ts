@@ -19,6 +19,10 @@ import {
   DocumentRepo,
   type DocumentRepoService,
 } from '../document/repos/document-repo';
+import {
+  ActivityLogRepo,
+  type ActivityLogRepoService,
+} from '../activity/repos/activity-log-repo';
 import { Db } from '@repo/db/effect';
 
 // =============================================================================
@@ -184,6 +188,25 @@ export const createMockDocumentRepo = (
   };
 
   return Layer.succeed(DocumentRepo, { ...defaults, ...overrides });
+};
+
+/**
+ * Create a mock ActivityLogRepo layer with `Effect.die('not implemented')` defaults.
+ * Override individual methods by passing them in the overrides object.
+ */
+export const createMockActivityLogRepo = (
+  overrides: Partial<ActivityLogRepoService> = {},
+): Layer.Layer<ActivityLogRepo> => {
+  const defaults: ActivityLogRepoService = {
+    insert: () => Effect.die('not implemented'),
+    list: () => Effect.die('not implemented'),
+    countByEntityType: () => Effect.die('not implemented'),
+    countByAction: () => Effect.die('not implemented'),
+    countByUser: () => Effect.die('not implemented'),
+    countTotal: () => Effect.die('not implemented'),
+  };
+
+  return Layer.succeed(ActivityLogRepo, { ...defaults, ...overrides });
 };
 
 /**

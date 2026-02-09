@@ -45,6 +45,15 @@ export const createAuth = ({
     baseURL: urlJoin(serverUrl, apiPath, 'auth'),
     secret: authSecret,
     trustedOrigins: [webUrl].map((url) => new URL(url).origin),
+    user: {
+      additionalFields: {
+        role: {
+          type: 'string',
+          defaultValue: 'user',
+          input: false,
+        },
+      },
+    },
     session: {
       cookieCache: {
         enabled: true,

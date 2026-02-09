@@ -23,6 +23,7 @@ import { Route as ProtectedVoiceoversVoiceoverIdRouteImport } from './routes/_pr
 import { Route as ProtectedPodcastsPodcastIdRouteImport } from './routes/_protected/podcasts/$podcastId'
 import { Route as ProtectedInfographicsInfographicIdRouteImport } from './routes/_protected/infographics/$infographicId'
 import { Route as ProtectedDocumentsDocumentIdRouteImport } from './routes/_protected/documents/$documentId'
+import { Route as ProtectedAdminActivityRouteImport } from './routes/_protected/admin/activity'
 
 const PublicLayoutRoute = PublicLayoutRouteImport.update({
   id: '/_public',
@@ -98,12 +99,18 @@ const ProtectedDocumentsDocumentIdRoute =
     path: '/documents/$documentId',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
+const ProtectedAdminActivityRoute = ProtectedAdminActivityRouteImport.update({
+  id: '/admin/activity',
+  path: '/admin/activity',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/admin/activity': typeof ProtectedAdminActivityRoute
   '/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/admin/activity': typeof ProtectedAdminActivityRoute
   '/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
+  '/_protected/admin/activity': typeof ProtectedAdminActivityRoute
   '/_protected/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/_protected/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/_protected/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/admin/activity'
     | '/documents/$documentId'
     | '/infographics/$infographicId'
     | '/podcasts/$podcastId'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/register'
+    | '/admin/activity'
     | '/documents/$documentId'
     | '/infographics/$infographicId'
     | '/podcasts/$podcastId'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_public/login'
     | '/_public/register'
+    | '/_protected/admin/activity'
     | '/_protected/documents/$documentId'
     | '/_protected/infographics/$infographicId'
     | '/_protected/podcasts/$podcastId'
@@ -297,11 +309,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedDocumentsDocumentIdRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
+    '/_protected/admin/activity': {
+      id: '/_protected/admin/activity'
+      path: '/admin/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof ProtectedAdminActivityRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
   }
 }
 
 interface ProtectedLayoutRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedAdminActivityRoute: typeof ProtectedAdminActivityRoute
   ProtectedDocumentsDocumentIdRoute: typeof ProtectedDocumentsDocumentIdRoute
   ProtectedInfographicsInfographicIdRoute: typeof ProtectedInfographicsInfographicIdRoute
   ProtectedPodcastsPodcastIdRoute: typeof ProtectedPodcastsPodcastIdRoute
@@ -314,6 +334,7 @@ interface ProtectedLayoutRouteChildren {
 
 const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedAdminActivityRoute: ProtectedAdminActivityRoute,
   ProtectedDocumentsDocumentIdRoute: ProtectedDocumentsDocumentIdRoute,
   ProtectedInfographicsInfographicIdRoute:
     ProtectedInfographicsInfographicIdRoute,

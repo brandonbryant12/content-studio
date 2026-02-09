@@ -1,3 +1,4 @@
+import activityRouter from './activity';
 import documentRouter from './document';
 import eventsRouter from './events';
 import infographicRouter from './infographic';
@@ -6,6 +7,7 @@ import voiceoverRouter from './voiceover';
 import voicesRouter from './voices';
 
 export const appRouter = {
+  admin: activityRouter,
   documents: documentRouter,
   events: eventsRouter,
   infographics: infographicRouter,

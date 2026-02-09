@@ -179,6 +179,22 @@ export const generateInfographicId = (): InfographicId =>
   `inf_${generateRandomBase32()}` as InfographicId;
 
 // =============================================================================
+// Activity Log ID
+// =============================================================================
+
+export const ActivityLogIdSchema = Schema.String.pipe(
+  Schema.pattern(/^act_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid activity log ID format',
+  }),
+  Schema.brand('ActivityLogId'),
+);
+
+export type ActivityLogId = typeof ActivityLogIdSchema.Type;
+
+export const generateActivityLogId = (): ActivityLogId =>
+  `act_${generateRandomBase32()}` as ActivityLogId;
+
+// =============================================================================
 // Infographic Version ID
 // =============================================================================
 

@@ -1,4 +1,5 @@
 import {
+  ActivityLogIcon,
   FileTextIcon,
   HomeIcon,
   ImageIcon,
@@ -53,7 +54,7 @@ function NavItem({ to, icon: Icon, label, color, activeColor }: NavItemProps) {
   );
 }
 
-function Sidebar() {
+function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   return (
     <aside className="w-[220px] border-r border-border/60 h-[calc(100vh-57px)] flex flex-col bg-sidebar shrink-0">
       <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4">
@@ -98,6 +99,20 @@ function Sidebar() {
           color="bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/15"
           activeColor="[&_div]:bg-amber-500/15 [&_div]:text-amber-600 dark:[&_div]:text-amber-400"
         />
+
+        {isAdmin && (
+          <>
+            <div className="my-3 border-t border-border/50 mx-1" />
+
+            <NavItem
+              to="/admin/activity"
+              icon={ActivityLogIcon}
+              label="Admin"
+              color="bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/15"
+              activeColor="[&_div]:bg-rose-500/15 [&_div]:text-rose-600 dark:[&_div]:text-rose-400"
+            />
+          </>
+        )}
       </nav>
     </aside>
   );
@@ -119,6 +134,9 @@ function Layout() {
     return <Navigate to="/" />;
   }
 
+  const isAdmin =
+    (session?.user as { role?: string } | undefined)?.role === 'admin';
+
   return (
     <div className="flex">
       <a
@@ -127,7 +145,7 @@ function Layout() {
       >
         Skip to main content
       </a>
-      <Sidebar />
+      <Sidebar isAdmin={isAdmin} />
       <main
         id="main-content"
         className="flex-1 overflow-auto h-[calc(100vh-57px)] bg-background"
