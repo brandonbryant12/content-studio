@@ -33,21 +33,25 @@ export const logActivity = (
  *
  * Usage: `effect.pipe(tapLogActivity(runtime, user, 'created', 'document'))`
  */
-export const tapLogActivity = (
-  runtime: ServerRuntime,
-  user: User | null,
-  action: string,
-  entityType: string,
-  entityId?: string,
-) =>
-  Effect.tap((result: unknown) =>
-    Effect.sync(() => {
-      const obj =
-        result && typeof result === 'object'
-          ? (result as Record<string, unknown>)
-          : {};
-      const id = entityId ?? ('id' in obj ? String(obj.id) : undefined);
-      const title = 'title' in obj ? String(obj.title) : undefined;
-      logActivity(runtime, user, action, entityType, id, title);
-    }),
-  );
+export const tapLogActivity =
+  (
+    runtime: ServerRuntime,
+    user: User | null,
+    action: string,
+    entityType: string,
+    entityId?: string,
+  ) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    self.pipe(
+      Effect.tap((result) =>
+        Effect.sync(() => {
+          const obj =
+            result && typeof result === 'object'
+              ? (result as Record<string, unknown>)
+              : {};
+          const id = entityId ?? ('id' in obj ? String(obj.id) : undefined);
+          const title = 'title' in obj ? String(obj.title) : undefined;
+          logActivity(runtime, user, action, entityType, id, title);
+        }),
+      ),
+    );
