@@ -8,12 +8,33 @@
 |------|-----------|
 | Backend logic | `standards/patterns/use-case.md`, `standards/patterns/repository.md` |
 | API endpoints | `standards/patterns/router-handler.md`, `standards/patterns/serialization.md` |
-| Error handling | `standards/patterns/error-handling.md` |
+| Error handling | `standards/patterns/error-handling.md`, `standards/patterns/enum-constants.md` |
+| Effect runtime | `standards/patterns/effect-runtime.md` |
 | Frontend components | `standards/frontend/components.md`, `standards/frontend/styling.md` |
 | Data fetching | `standards/frontend/data-fetching.md`, `standards/frontend/mutations.md` |
 | Forms | `standards/frontend/forms.md` |
-| Testing | `standards/testing/use-case-tests.md`, `standards/testing/integration-tests.md`, `standards/frontend/testing.md` |
+| Frontend architecture | `standards/frontend/project-structure.md`, `standards/frontend/suspense.md`, `standards/frontend/error-handling.md` |
+| Real-time | `standards/frontend/real-time.md` |
+| Testing | `standards/testing/use-case-tests.md`, `standards/testing/integration-tests.md`, `standards/testing/job-workflow-tests.md`, `standards/testing/live-tests.md`, `standards/frontend/testing.md` |
 | Implementation plans | `standards/implementation-plan.md` |
+
+## Project Structure
+
+```
+apps/
+  server/          # Hono HTTP server — entry: src/server.ts
+  web/             # React SPA (Vite + TanStack Router)
+packages/
+  ai/              # LLM + TTS providers (Google, OpenAI)
+  api/             # oRPC contracts, router, handlers
+  auth/            # better-auth integration
+  db/              # Drizzle schema + migrations (PostgreSQL)
+  media/           # Domain logic — podcasts, voiceovers, documents, infographics
+  queue/           # Job queue (BullMQ-style)
+  storage/         # S3-compatible file storage
+  testing/         # Shared test utilities
+  ui/              # Radix UI + Tailwind component library
+```
 
 ## Stack
 
@@ -29,6 +50,11 @@ pnpm typecheck    # Type check all packages (required before PR)
 pnpm test         # Run all tests (includes web app tests)
 pnpm build        # Build all packages
 pnpm lint         # Lint all packages
+pnpm dev          # Start all dev servers (Turborepo watch mode)
+pnpm db:push      # Push Drizzle schema to database
+pnpm db:studio    # Open Drizzle Studio GUI
+pnpm test:e2e     # Run Playwright e2e tests
+pnpm test:db:setup # Start test DB container + push schema
 ```
 
 ---
@@ -67,31 +93,21 @@ pnpm lint         # Lint all packages
 - **Lazy-load heavy third-party libraries** with `React.lazy()`. Syntax highlighters, DnD kits, rich editors, etc. should not be in the main bundle. Show a lightweight fallback while loading.
 - **Use refs for high-frequency transient values** (e.g., audio `currentTime`). Only update state when the displayed value changes (e.g., once per second for time displays). Don't trigger 4 re-renders/second for a seconds counter.
 
-### Accessibility (WCAG 2.1 Level A)
-- **Every icon-only button MUST have `aria-label`** describing the action (e.g., `aria-label={`Delete ${item.title}`}`).
-- **Every `<input>` MUST have a label** — either `<label htmlFor>`, `aria-label`, or `aria-labelledby`. Placeholders are NOT labels.
-- **Form errors MUST be linked** to their inputs via `aria-describedby`. Error containers need `aria-live="polite"`. Inputs need `aria-invalid` when errored.
-- **Interactive elements MUST be keyboard accessible.** Custom sliders need `onKeyDown` (Arrow keys). Upload zones need `role="button"`, `tabIndex={0}`, and `onKeyDown` (Enter/Space). Buttons need `type="button"` to prevent form submission.
-- **Custom tabs MUST use ARIA tab pattern:** `role="tablist"` on container, `role="tab"` + `aria-selected` on triggers, `role="tabpanel"` + `aria-labelledby` on panels.
-- **Collapsible sections MUST have `aria-expanded`** on their toggle button.
-- **Every page MUST set `document.title`** (e.g., `"Documents - Content Studio"`).
-- **Layout MUST include a skip-to-content link** for keyboard navigation.
+### Accessibility
+- **WCAG 2.1 Level A required.** See `standards/frontend/components.md` for full rules.
+- Key: every icon button needs `aria-label`, every input needs a label, every page sets `document.title`.
 
 ### Destructive Actions
 - **Every delete action MUST show a confirmation dialog.** Use the existing `ConfirmationDialog` component. Never execute destructive actions on a single click.
 - **If a delete button has no handler, hide it.** Don't render non-functional interactive elements.
 
 ### Component Architecture
-- **No god components (>300 lines).** Split into focused sub-components with single responsibilities.
-- **No prop drilling beyond 2 levels.** Use context providers (e.g., `WorkbenchProvider`, `CollaboratorProvider`) for deeply-shared state.
-- **No duplicating components between features.** If voiceover and podcast need the same component, extract to `shared/components/` parameterized by entity type.
-- **Container/presenter separation.** Containers handle data/mutations; presenters receive props. Don't mix `useMutation`/`useQueryClient` into presenters.
-- **Extract mutation logic into `useXxxActions` hooks** (e.g., `usePodcastActions`, `useVoiceoverActions`). Don't define mutations inline in containers.
-- **Use Radix UI primitives** for dropdowns, selects, tabs, dialogs. Don't build custom versions with manual click-outside handlers.
-- **Use React 19 `use()` instead of `useContext()`.**
+- **See `standards/frontend/components.md` and `standards/frontend/project-structure.md`** for full rules.
+- Key: container/presenter split, max 300 lines, `useXxxActions` hooks for mutations, Radix UI primitives, `use()` not `useContext()`.
 
 ### File Conventions
 - **kebab-case for all files** (`podcast-detail-container.tsx`, not `podcastDetailContainer.tsx`)
+- Exception: client singletons (`authClient.ts`, `queryClient.ts`, `apiClient.ts`) and TanStack Router param files (`$podcastId.tsx`)
 - Shared components: `shared/components/`
 - Shared hooks: `shared/hooks/`
 - Feature hooks: `features/xxx/hooks/`
