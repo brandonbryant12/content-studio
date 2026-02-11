@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('security headers', () => {
   let app: Hono;

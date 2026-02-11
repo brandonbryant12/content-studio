@@ -59,6 +59,15 @@ export interface ActivityLoggedEvent {
   timestamp: string;
 }
 
+export interface DocumentJobCompletionEvent {
+  type: 'document_job_completion';
+  jobId: string;
+  jobType: 'process-url';
+  status: 'completed' | 'failed';
+  documentId: string;
+  error?: string;
+}
+
 export interface ConnectionEvent {
   type: 'connected';
   userId: string;
@@ -69,6 +78,7 @@ export type SSEEvent =
   | JobCompletionEvent
   | VoiceoverJobCompletionEvent
   | InfographicJobCompletionEvent
+  | DocumentJobCompletionEvent
   | ActivityLoggedEvent
   | ConnectionEvent;
 
@@ -129,6 +139,15 @@ const ActivityLoggedEventSchema = Schema.Struct({
   timestamp: Schema.String,
 });
 
+const DocumentJobCompletionEventSchema = Schema.Struct({
+  type: Schema.Literal('document_job_completion'),
+  jobId: Schema.String,
+  jobType: Schema.Literal('process-url'),
+  status: Schema.Literal('completed', 'failed'),
+  documentId: Schema.String,
+  error: Schema.optional(Schema.String),
+});
+
 const ConnectionEventSchema = Schema.Struct({
   type: Schema.Literal('connected'),
   userId: Schema.String,
@@ -139,6 +158,7 @@ const SSEEventSchema = Schema.Union(
   JobCompletionEventSchema,
   VoiceoverJobCompletionEventSchema,
   InfographicJobCompletionEventSchema,
+  DocumentJobCompletionEventSchema,
   ActivityLoggedEventSchema,
   ConnectionEventSchema,
 );

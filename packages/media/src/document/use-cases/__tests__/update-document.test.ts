@@ -115,6 +115,10 @@ const createMockDocumentRepoLayer = (options: {
         return existed;
       }),
     count: () => Effect.succeed(options.documents.size),
+    updateStatus: () => Effect.die('not implemented'),
+    updateContent: () => Effect.die('not implemented'),
+    findBySourceUrl: () => Effect.die('not implemented'),
+    updateResearchConfig: () => Effect.die('not implemented'),
   };
   return Layer.succeed(DocumentRepo, service);
 };

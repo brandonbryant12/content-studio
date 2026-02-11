@@ -1,3 +1,4 @@
+import { ImageGen } from '@repo/ai';
 import {
   generateScript,
   generateAudio,
@@ -6,9 +7,8 @@ import {
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
-import { ImageGen } from '@repo/ai';
-import { Storage } from '@repo/storage';
 import { JobProcessingError, formatError } from '@repo/queue';
+import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import type {
@@ -21,18 +21,10 @@ import type {
   Job,
 } from '@repo/queue';
 
-/**
- * Options for handlers that support progress callbacks.
- */
 export interface HandlerOptions {
-  /** Called when script generation completes (before audio generation starts) */
   onScriptComplete?: (podcastId: string) => void;
 }
 
-/**
- * Generate a cover image for a podcast and store it.
- * Failures are silently caught — cover image is a nice-to-have.
- */
 const generateCoverImage = (podcast: Podcast) =>
   Effect.gen(function* () {
     const imageGen = yield* ImageGen;
@@ -59,12 +51,6 @@ const generateCoverImage = (podcast: Podcast) =>
     }),
   );
 
-/**
- * Handler for generate-podcast jobs.
- * Generates both script and audio in sequence (full podcast generation).
- *
- * Requires: All dependencies for generateScript and generateAudio
- */
 export const handleGeneratePodcast = (
   job: Job<GeneratePodcastPayload>,
   options?: HandlerOptions,
@@ -72,22 +58,15 @@ export const handleGeneratePodcast = (
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
 
-    // Phase 1: Generate script
     const scriptResult: UseCaseScriptResult = yield* generateScript({
       podcastId,
       promptInstructions,
     });
 
-    // Sync the new title to activity log entries
     yield* syncEntityTitle(scriptResult.podcast.id, scriptResult.podcast.title);
-
-    // Notify that script is complete (so frontend can show script while audio generates)
     options?.onScriptComplete?.(scriptResult.podcast.id);
-
-    // Generate cover image (non-blocking, failures silently caught)
     yield* generateCoverImage(scriptResult.podcast);
 
-    // Phase 2: Generate audio from the new script
     const audioResult: UseCaseAudioResult = yield* generateAudio({
       podcastId: scriptResult.podcast.id,
     });
@@ -99,18 +78,15 @@ export const handleGeneratePodcast = (
       duration: audioResult.duration,
     } satisfies GeneratePodcastResult;
   }).pipe(
-    Effect.catchAll((error) => {
-      const errorMessage = formatError(error);
-      console.error('[Worker] Generation failed:', errorMessage, error);
-
-      return Effect.fail(
+    Effect.catchAll((error) =>
+      Effect.fail(
         new JobProcessingError({
           jobId: job.id,
-          message: `Failed to generate podcast: ${errorMessage}`,
+          message: `Failed to generate podcast: ${formatError(error)}`,
           cause: error,
         }),
-      );
-    }),
+      ),
+    ),
     Effect.withSpan('worker.handleGeneratePodcast', {
       attributes: {
         'job.id': job.id,
@@ -120,26 +96,16 @@ export const handleGeneratePodcast = (
     }),
   );
 
-/**
- * Handler for generate-script jobs (Phase 1).
- * Generates script only - stops at script_ready status.
- *
- * Requires: All dependencies for generateScript
- */
 export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
 
-    // Generate script only
     const result: UseCaseScriptResult = yield* generateScript({
       podcastId,
       promptInstructions,
     });
 
-    // Sync the new title to activity log entries
     yield* syncEntityTitle(result.podcast.id, result.podcast.title);
-
-    // Generate cover image (non-blocking, failures silently caught)
     yield* generateCoverImage(result.podcast);
 
     return {
@@ -147,18 +113,15 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
       segmentCount: result.segmentCount,
     } satisfies GenerateScriptResult;
   }).pipe(
-    Effect.catchAll((error) => {
-      const errorMessage = formatError(error);
-      console.error('[Worker] Script generation failed:', errorMessage, error);
-
-      return Effect.fail(
+    Effect.catchAll((error) =>
+      Effect.fail(
         new JobProcessingError({
           jobId: job.id,
-          message: `Failed to generate script: ${errorMessage}`,
+          message: `Failed to generate script: ${formatError(error)}`,
           cause: error,
         }),
-      );
-    }),
+      ),
+    ),
     Effect.withSpan('worker.handleGenerateScript', {
       attributes: {
         'job.id': job.id,
@@ -168,38 +131,26 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
     }),
   );
 
-/**
- * Handler for generate-audio jobs (Phase 2).
- * Generates audio from existing script.
- *
- * Requires: All dependencies for generateAudio
- */
 export const handleGenerateAudio = (job: Job<GenerateAudioPayload>) =>
   Effect.gen(function* () {
     const { podcastId } = job.payload;
 
-    // Generate audio from existing script
-    const result: UseCaseAudioResult = yield* generateAudio({
-      podcastId,
-    });
+    const result: UseCaseAudioResult = yield* generateAudio({ podcastId });
 
     return {
       audioUrl: result.audioUrl,
       duration: result.duration,
     } satisfies GenerateAudioResult;
   }).pipe(
-    Effect.catchAll((error) => {
-      const errorMessage = formatError(error);
-      console.error('[Worker] Audio generation failed:', errorMessage, error);
-
-      return Effect.fail(
+    Effect.catchAll((error) =>
+      Effect.fail(
         new JobProcessingError({
           jobId: job.id,
-          message: `Failed to generate audio: ${errorMessage}`,
+          message: `Failed to generate audio: ${formatError(error)}`,
           cause: error,
         }),
-      );
-    }),
+      ),
+    ),
     Effect.withSpan('worker.handleGenerateAudio', {
       attributes: {
         'job.id': job.id,

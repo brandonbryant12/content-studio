@@ -9,6 +9,8 @@ import { DocumentRepo } from '../repos';
 
 export interface ListDocumentsInput {
   userId?: string;
+  source?: string;
+  status?: string;
   limit?: number;
   offset?: number;
 }
@@ -29,15 +31,25 @@ export const listDocuments = (input: ListDocumentsInput) =>
     const documentRepo = yield* DocumentRepo;
 
     const isAdmin = user.role === Role.ADMIN;
-    const createdBy =
-      isAdmin && input.userId ? input.userId : isAdmin ? undefined : user.id;
+    let createdBy: string | undefined;
+    if (isAdmin) {
+      createdBy = input.userId;
+    } else {
+      createdBy = user.id;
+    }
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
 
     const [documents, total] = yield* Effect.all(
       [
-        documentRepo.list({ createdBy, limit, offset }),
+        documentRepo.list({
+          createdBy,
+          source: input.source,
+          status: input.status,
+          limit,
+          offset,
+        }),
         documentRepo.count({ createdBy }),
       ],
       { concurrency: 'unbounded' },

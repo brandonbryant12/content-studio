@@ -1,16 +1,16 @@
-// Presenter: Pure UI component that renders file type icon
+function getIconColor(source: string): string {
+  if (source === 'url') return 'text-blue-600 dark:text-blue-400';
+  if (source === 'research') return 'text-purple-600 dark:text-purple-400';
+  if (source.includes('pdf')) return 'text-red-600 dark:text-red-400';
+  if (source.includes('docx')) return 'text-sky-600 dark:text-sky-400';
+  if (source.includes('pptx')) return 'text-amber-600 dark:text-amber-400';
+  if (source.includes('txt')) return 'text-sky-600 dark:text-sky-400';
+  return 'text-muted-foreground';
+}
 
 export function DocumentIcon({ source }: { source: string }) {
-  const getIconColor = () => {
-    if (source.includes('pdf')) return 'text-red-600 dark:text-red-400';
-    if (source.includes('docx')) return 'text-sky-600 dark:text-sky-400';
-    if (source.includes('pptx')) return 'text-amber-600 dark:text-amber-400';
-    if (source.includes('txt')) return 'text-sky-600 dark:text-sky-400';
-    return 'text-muted-foreground';
-  };
-
   return (
-    <div className={`icon-box ${getIconColor()}`}>
+    <div className={`icon-box ${getIconColor(source)}`}>
       <svg
         className="w-5 h-5"
         fill="none"

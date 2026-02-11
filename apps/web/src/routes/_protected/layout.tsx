@@ -127,7 +127,7 @@ function Sidebar({
           <NavItem
             to="/documents"
             icon={FileTextIcon}
-            label="Documents"
+            label="Knowledge Base"
             color="bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500/15"
             activeColor="[&_div]:bg-sky-500/15 [&_div]:text-sky-600 dark:[&_div]:text-sky-400"
             collapsed={collapsed}

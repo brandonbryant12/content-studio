@@ -70,15 +70,17 @@ export const JobType = {
   GENERATE_AUDIO: 'generate-audio',
   GENERATE_VOICEOVER: 'generate-voiceover',
   GENERATE_INFOGRAPHIC: 'generate-infographic',
+  PROCESS_URL: 'process-url',
+  PROCESS_RESEARCH: 'process-research',
 } as const;
 
 export type JobType = typeof JobType;
 
-export const JobStatusSchema = Schema.Union(
-  Schema.Literal('pending'),
-  Schema.Literal('processing'),
-  Schema.Literal('completed'),
-  Schema.Literal('failed'),
+export const JobStatusSchema = Schema.Literal(
+  'pending',
+  'processing',
+  'completed',
+  'failed',
 );
 
 export const GeneratePodcastResultSchema = Schema.Struct({

@@ -2,6 +2,7 @@ import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
   InfographicJobCompletionEvent,
+  DocumentJobCompletionEvent,
   EntityChangeEvent,
   ActivityLoggedEvent,
 } from '@repo/api/contracts';
@@ -90,6 +91,23 @@ export function handleInfographicJobCompletion(
   // Also invalidate the list
   queryClient.invalidateQueries({
     queryKey: getInfographicsListQueryKey(),
+  });
+}
+
+export function handleDocumentJobCompletion(
+  event: DocumentJobCompletionEvent,
+  queryClient: QueryClient,
+): void {
+  const { documentId } = event;
+
+  // Invalidate specific document
+  queryClient.invalidateQueries({
+    queryKey: getDocumentQueryKey(documentId),
+  });
+
+  // Also invalidate the list (status changed)
+  queryClient.invalidateQueries({
+    queryKey: getDocumentsListQueryKey(),
   });
 }
 

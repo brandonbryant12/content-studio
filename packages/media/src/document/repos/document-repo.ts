@@ -4,10 +4,12 @@ import {
   type Document,
   type DocumentId,
   type DocumentSource,
+  type DocumentStatus,
+  type ResearchConfig,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { DocumentNotFound } from '../../errors';
-import { eq, desc, count as drizzleCount } from 'drizzle-orm';
+import { eq, desc, and, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================
 // Input Types (previously in repository.ts)
@@ -29,6 +31,25 @@ export interface InsertDocumentInput {
   originalFileSize?: number;
   metadata?: Record<string, unknown>;
   createdBy: string;
+  status?: DocumentStatus;
+  sourceUrl?: string;
+  jobId?: string;
+  extractedText?: string;
+  contentHash?: string;
+  errorMessage?: string;
+  researchConfig?: ResearchConfig;
+}
+
+/**
+ * Input for updating document content after async processing.
+ */
+export interface UpdateContentInput {
+  contentKey?: string;
+  extractedText?: string;
+  contentHash?: string;
+  wordCount?: number;
+  metadata?: Record<string, unknown>;
+  title?: string;
 }
 
 /**
@@ -53,6 +74,8 @@ export interface UpdateDocumentInput {
  */
 export interface ListOptions {
   createdBy?: string;
+  source?: string;
+  status?: string;
   limit?: number;
   offset?: number;
 }
@@ -110,6 +133,40 @@ export interface DocumentRepoService {
   readonly count: (options?: {
     createdBy?: string;
   }) => Effect.Effect<number, DatabaseError, Db>;
+
+  /**
+   * Update document processing status.
+   */
+  readonly updateStatus: (
+    id: string,
+    status: DocumentStatus,
+    errorMessage?: string,
+  ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
+
+  /**
+   * Update content-related fields after async processing completes.
+   */
+  readonly updateContent: (
+    id: string,
+    data: UpdateContentInput,
+  ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
+
+  /**
+   * Find document by source URL for dedup.
+   * Returns null if not found.
+   */
+  readonly findBySourceUrl: (
+    url: string,
+    createdBy: string,
+  ) => Effect.Effect<Document | null, DatabaseError, Db>;
+
+  /**
+   * Update research config metadata.
+   */
+  readonly updateResearchConfig: (
+    id: string,
+    config: ResearchConfig,
+  ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
 }
 
 // =============================================================================
@@ -128,20 +185,7 @@ export class DocumentRepo extends Context.Tag('@repo/media/DocumentRepo')<
 const make: DocumentRepoService = {
   insert: (data) =>
     withDb('documentRepo.insert', async (db) => {
-      const [doc] = await db
-        .insert(document)
-        .values({
-          title: data.title,
-          contentKey: data.contentKey,
-          mimeType: data.mimeType,
-          wordCount: data.wordCount,
-          source: data.source,
-          originalFileName: data.originalFileName,
-          originalFileSize: data.originalFileSize,
-          metadata: data.metadata,
-          createdBy: data.createdBy,
-        })
-        .returning();
+      const [doc] = await db.insert(document).values(data).returning();
       return doc!;
     }),
 
@@ -161,9 +205,15 @@ const make: DocumentRepoService = {
 
   list: (options) =>
     withDb('documentRepo.list', (db) => {
-      const conditions = options.createdBy
-        ? eq(document.createdBy, options.createdBy)
-        : undefined;
+      const filters = [];
+      if (options.createdBy)
+        filters.push(eq(document.createdBy, options.createdBy));
+      if (options.source)
+        filters.push(eq(document.source, options.source as DocumentSource));
+      if (options.status)
+        filters.push(eq(document.status, options.status as DocumentStatus));
+
+      const conditions = filters.length > 0 ? and(...filters) : undefined;
 
       return db
         .select()
@@ -177,13 +227,9 @@ const make: DocumentRepoService = {
   update: (id, data) =>
     withDb('documentRepo.update', async (db) => {
       const updates: Partial<typeof document.$inferInsert> = {
+        ...data,
         updatedAt: new Date(),
       };
-
-      if (data.title !== undefined) updates.title = data.title;
-      if (data.contentKey !== undefined) updates.contentKey = data.contentKey;
-      if (data.wordCount !== undefined) updates.wordCount = data.wordCount;
-      if (data.metadata !== undefined) updates.metadata = data.metadata;
 
       const [doc] = await db
         .update(document)
@@ -217,6 +263,75 @@ const make: DocumentRepoService = {
         .where(conditions);
       return result?.count ?? 0;
     }),
+
+  updateStatus: (id, status, errorMessage) =>
+    withDb('documentRepo.updateStatus', async (db) => {
+      const updates: Partial<typeof document.$inferInsert> = {
+        status,
+        updatedAt: new Date(),
+        // Set error message when failed, clear it otherwise
+        errorMessage: status === 'failed' ? (errorMessage ?? null) : null,
+      };
+
+      const [doc] = await db
+        .update(document)
+        .set(updates)
+        .where(eq(document.id, id as DocumentId))
+        .returning();
+      return doc;
+    }).pipe(
+      Effect.flatMap((doc) =>
+        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
+      ),
+    ),
+
+  updateContent: (id, data) =>
+    withDb('documentRepo.updateContent', async (db) => {
+      const updates: Partial<typeof document.$inferInsert> = {
+        ...data,
+        updatedAt: new Date(),
+      };
+
+      const [doc] = await db
+        .update(document)
+        .set(updates)
+        .where(eq(document.id, id as DocumentId))
+        .returning();
+      return doc;
+    }).pipe(
+      Effect.flatMap((doc) =>
+        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
+      ),
+    ),
+
+  findBySourceUrl: (url, createdBy) =>
+    withDb('documentRepo.findBySourceUrl', (db) =>
+      db
+        .select()
+        .from(document)
+        .where(
+          and(eq(document.sourceUrl, url), eq(document.createdBy, createdBy)),
+        )
+        .limit(1)
+        .then((rows) => rows[0] ?? null),
+    ),
+
+  updateResearchConfig: (id, config) =>
+    withDb('documentRepo.updateResearchConfig', async (db) => {
+      const [doc] = await db
+        .update(document)
+        .set({
+          researchConfig: config,
+          updatedAt: new Date(),
+        })
+        .where(eq(document.id, id as DocumentId))
+        .returning();
+      return doc;
+    }).pipe(
+      Effect.flatMap((doc) =>
+        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
+      ),
+    ),
 };
 
 // =============================================================================

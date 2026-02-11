@@ -77,3 +77,14 @@ export interface GenerateInfographicResult {
   readonly imageUrl: string;
   readonly versionNumber: number;
 }
+
+export interface ProcessUrlPayload {
+  readonly documentId: string;
+  readonly url: string;
+  readonly userId: string;
+}
+
+export interface ProcessUrlResult {
+  readonly documentId: string;
+  readonly wordCount: number;
+}

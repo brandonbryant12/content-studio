@@ -13,12 +13,12 @@ pnpm test:e2e  # Run Playwright e2e tests
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `PUBLIC_SERVER_URL` | Yes | — | Backend API server URL (e.g. `https://api.example.com`) |
-| `PUBLIC_SERVER_API_PATH` | No | `/api` | API endpoint path prefix |
-| `PUBLIC_BASE_PATH` | No | `/` | App base path for sub-path deployments |
-| `PUBLIC_WEB_URL` | No | `http://localhost:8085` | Vite dev server URL (dev only) |
+| Variable                 | Required | Default                 | Description                                             |
+| ------------------------ | -------- | ----------------------- | ------------------------------------------------------- |
+| `PUBLIC_SERVER_URL`      | Yes      | —                       | Backend API server URL (e.g. `https://api.example.com`) |
+| `PUBLIC_SERVER_API_PATH` | No       | `/api`                  | API endpoint path prefix                                |
+| `PUBLIC_BASE_PATH`       | No       | `/`                     | App base path for sub-path deployments                  |
+| `PUBLIC_WEB_URL`         | No       | `http://localhost:8085` | Vite dev server URL (dev only)                          |
 
 In development, these are read from `.env` files via Vite's `import.meta.env`.
 
@@ -57,9 +57,9 @@ The container runs a Node.js static file server directly — no nginx or reverse
 ```yaml
 env:
   - name: PUBLIC_SERVER_URL
-    value: "https://api.example.com"
+    value: 'https://api.example.com'
   - name: PUBLIC_SERVER_API_PATH
-    value: "/api"
+    value: '/api'
 ```
 
 The server listens on port `8080` (configurable via `PORT` env var) and exposes `/healthcheck` for liveness/readiness probes.

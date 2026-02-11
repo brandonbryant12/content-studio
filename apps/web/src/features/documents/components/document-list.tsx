@@ -1,6 +1,7 @@
 // Presenter: Pure UI component with no data fetching or state management
 
 import {
+  GlobeIcon,
   MagnifyingGlassIcon,
   TrashIcon,
   UploadIcon,
@@ -20,6 +21,8 @@ import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 
 function getFileLabel(source: string): string {
   if (source === 'manual') return 'Text';
+  if (source === 'url') return 'URL';
+  if (source === 'research') return 'Research';
   if (source.includes('txt')) return 'TXT';
   if (source.includes('pdf')) return 'PDF';
   if (source.includes('docx')) return 'DOCX';
@@ -28,11 +31,33 @@ function getFileLabel(source: string): string {
 }
 
 function getFileBadgeClass(source: string): string {
+  if (source === 'url') return 'file-badge-url';
+  if (source === 'research') return 'file-badge-research';
   if (source.includes('txt')) return 'file-badge-txt';
   if (source.includes('pdf')) return 'file-badge-pdf';
   if (source.includes('docx')) return 'file-badge-docx';
   if (source.includes('pptx')) return 'file-badge-pptx';
   return 'file-badge-default';
+}
+
+function StatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case 'processing':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          Processing
+        </span>
+      );
+    case 'failed':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
+          Failed
+        </span>
+      );
+    default:
+      return null;
+  }
 }
 
 function formatDate(iso: string): string {
@@ -124,9 +149,12 @@ const DocumentRow = memo(function DocumentRow({
         </Link>
       </td>
       <td className="py-3 px-4">
-        <span className={`${getFileBadgeClass(document.source)} text-xs`}>
-          {getFileLabel(document.source)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`${getFileBadgeClass(document.source)} text-xs`}>
+            {getFileLabel(document.source)}
+          </span>
+          <StatusBadge status={document.status} />
+        </div>
       </td>
       <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right">
         {document.wordCount.toLocaleString()}
@@ -164,6 +192,7 @@ export interface DocumentListProps {
   deletingId: string | null;
   onSearch: (query: string) => void;
   onUploadOpen: (open: boolean) => void;
+  onUrlDialogOpen: (open: boolean) => void;
   onDelete: (id: string) => void;
   selection: UseBulkSelectionReturn;
   isBulkDeleting: boolean;
@@ -177,6 +206,7 @@ export function DocumentList({
   deletingId,
   onSearch,
   onUploadOpen,
+  onUrlDialogOpen,
   onDelete,
   selection,
   isBulkDeleting,
@@ -226,7 +256,11 @@ export function DocumentList({
           <p className="page-eyebrow">Source Content</p>
           <h1 className="page-title">Knowledge Base</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => onUrlDialogOpen(true)}>
+            <GlobeIcon className="w-4 h-4 mr-2" />
+            From URL
+          </Button>
           <Button onClick={() => onUploadOpen(true)}>
             <UploadIcon className="w-4 h-4 mr-2" />
             Upload

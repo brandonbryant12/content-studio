@@ -4,6 +4,7 @@ import {
   handleJobCompletion,
   handleVoiceoverJobCompletion,
   handleInfographicJobCompletion,
+  handleDocumentJobCompletion,
   handleEntityChange,
   handleActivityLogged,
 } from './sse-handlers';
@@ -64,6 +65,9 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 break;
               case 'infographic_job_completion':
                 handleInfographicJobCompletion(event, qc);
+                break;
+              case 'document_job_completion':
+                handleDocumentJobCompletion(event, qc);
                 break;
               case 'entity_change':
                 handleEntityChange(event, qc);

@@ -9,14 +9,6 @@ import { env } from './env';
 import { createUnifiedWorker } from './workers/unified-worker';
 import app, { db, serverRuntime } from '.';
 
-// =============================================================================
-// Global Error Handlers
-// =============================================================================
-
-/**
- * Handle unhandled promise rejections.
- * Logs the error with stack trace but doesn't crash - allows graceful handling.
- */
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled Promise Rejection:', {
     reason:
@@ -27,10 +19,6 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-/**
- * Handle uncaught exceptions.
- * These are fatal - log and exit to prevent undefined state.
- */
 process.on('uncaughtException', (error) => {
   console.error('[FATAL] Uncaught Exception:', {
     message: error.message,
@@ -39,12 +27,7 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-// =============================================================================
-// Server Startup
-// =============================================================================
-
 const startServer = async () => {
-  // Verify database connection before starting (using shared db from index.ts)
   console.log('Verifying database connection...');
 
   try {
@@ -58,13 +41,11 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // Start the unified worker (handles all job types, can be scaled horizontally)
   const worker = createUnifiedWorker({
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     runtime: serverRuntime,
   });
 
-  // Start the worker
   worker.start().catch((error) => {
     console.error('Worker error:', error);
     process.exit(1);
@@ -95,7 +76,6 @@ Hono
     isShuttingDown = true;
     console.log('\nShutting down gracefully...');
 
-    // Force exit if graceful shutdown stalls
     const forceTimer = setTimeout(() => {
       console.error('Graceful shutdown timed out, forcing exit');
       process.exit(1);
@@ -103,7 +83,6 @@ Hono
     forceTimer.unref();
 
     try {
-      // 1. Stop accepting new requests
       await new Promise<void>((resolve) => {
         server.close((error) => {
           if (error) console.error('Error closing HTTP server:', error);
@@ -112,11 +91,9 @@ Hono
         });
       });
 
-      // 2. Stop the worker (waits for in-flight job)
       await worker.stop();
       console.log('Worker stopped');
 
-      // 3. Close the DB pool
       await db.$client.end();
       console.log('Database pool closed');
 

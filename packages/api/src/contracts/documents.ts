@@ -57,6 +57,21 @@ const documentErrors = {
   },
 } as const;
 
+const urlErrors = {
+  INVALID_URL: {
+    status: 400,
+    data: std(Schema.Struct({ url: Schema.String })),
+  },
+  URL_FETCH_ERROR: {
+    status: 422,
+    data: std(Schema.Struct({ url: Schema.String })),
+  },
+  DOCUMENT_ALREADY_PROCESSING: {
+    status: 409,
+    data: std(Schema.Struct({ documentId: Schema.String })),
+  },
+} as const;
+
 // Upload input schema (base64 encoded file)
 const UploadDocumentSchema = Schema.Struct({
   fileName: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
@@ -94,6 +109,8 @@ const documentContract = oc
             offset: Schema.optional(
               CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
             ),
+            source: Schema.optional(Schema.String),
+            status: Schema.optional(Schema.String),
           }),
         ),
       )
@@ -177,6 +194,42 @@ const documentContract = oc
       .errors(documentErrors)
       .input(std(Schema.Struct({ id: DocumentIdSchema })))
       .output(std(Schema.Struct({}))),
+
+    // Create from URL
+    fromUrl: oc
+      .route({
+        method: 'POST',
+        path: '/from-url',
+        summary: 'Create from URL',
+        description: 'Create a document by scraping a URL',
+      })
+      .errors({ ...documentErrors, ...urlErrors })
+      .input(
+        std(
+          Schema.Struct({
+            url: Schema.String.pipe(Schema.minLength(1)),
+            title: Schema.optional(
+              Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+            ),
+            metadata: Schema.optional(
+              Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+            ),
+          }),
+        ),
+      )
+      .output(std(DocumentOutputSchema)),
+
+    // Retry failed processing
+    retry: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/retry',
+        summary: 'Retry processing',
+        description: 'Retry processing a failed document',
+      })
+      .errors({ ...documentErrors, ...urlErrors })
+      .input(std(Schema.Struct({ id: DocumentIdSchema })))
+      .output(std(DocumentOutputSchema)),
   });
 
 export default documentContract;

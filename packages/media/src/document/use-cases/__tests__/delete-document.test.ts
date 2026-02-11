@@ -54,6 +54,10 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
         ? (overrides.delete(id) as ReturnType<DocumentRepoService['delete']>)
         : Effect.succeed(true),
     count: () => Effect.succeed(0),
+    updateStatus: () => Effect.die('not implemented'),
+    updateContent: () => Effect.die('not implemented'),
+    findBySourceUrl: () => Effect.die('not implemented'),
+    updateResearchConfig: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(DocumentRepo, service);

@@ -149,7 +149,9 @@ const make: ActivityLogRepoService = {
         );
       }
       if (options.afterCursor) {
-        conditions.push(lt(activityLog.createdAt, new Date(options.afterCursor)));
+        conditions.push(
+          lt(activityLog.createdAt, new Date(options.afterCursor)),
+        );
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;

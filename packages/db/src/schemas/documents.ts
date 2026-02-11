@@ -27,7 +27,22 @@ export const documentSourceEnum = pgEnum('document_source', [
   'upload_pdf',
   'upload_docx',
   'upload_pptx',
+  'url',
+  'research',
 ]);
+
+export const documentStatusEnum = pgEnum('document_status', [
+  'ready',
+  'processing',
+  'failed',
+]);
+
+export interface ResearchConfig {
+  query: string;
+  operationId?: string;
+  researchStatus?: string;
+  sourceCount?: number;
+}
 
 export const document = pgTable(
   'document',
@@ -44,6 +59,13 @@ export const document = pgTable(
     originalFileName: text('originalFileName'),
     originalFileSize: integer('originalFileSize'),
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    status: documentStatusEnum('status').notNull().default('ready'),
+    errorMessage: text('errorMessage'),
+    sourceUrl: text('sourceUrl'),
+    researchConfig: jsonb('researchConfig').$type<ResearchConfig>(),
+    jobId: varchar('jobId', { length: 20 }),
+    extractedText: text('extractedText'),
+    contentHash: text('contentHash'),
     createdBy: text('createdBy')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -57,6 +79,8 @@ export const document = pgTable(
   (table) => [
     index('document_createdBy_idx').on(table.createdBy),
     index('document_createdAt_idx').on(table.createdAt),
+    index('document_status_idx').on(table.status),
+    index('document_sourceUrl_idx').on(table.sourceUrl),
   ],
 );
 
@@ -66,6 +90,14 @@ export const DocumentSource = {
   UPLOAD_PDF: 'upload_pdf',
   UPLOAD_DOCX: 'upload_docx',
   UPLOAD_PPTX: 'upload_pptx',
+  URL: 'url',
+  RESEARCH: 'research',
+} as const;
+
+export const DocumentStatus = {
+  READY: 'ready',
+  PROCESSING: 'processing',
+  FAILED: 'failed',
 } as const;
 
 export const CreateDocumentSchema = Schema.Struct({
@@ -88,13 +120,28 @@ export const UpdateDocumentFields = {
 
 export const UpdateDocumentSchema = Schema.Struct(UpdateDocumentFields);
 
-export const DocumentSourceSchema = Schema.Union(
-  Schema.Literal('manual'),
-  Schema.Literal('upload_txt'),
-  Schema.Literal('upload_pdf'),
-  Schema.Literal('upload_docx'),
-  Schema.Literal('upload_pptx'),
+export const DocumentSourceSchema = Schema.Literal(
+  'manual',
+  'upload_txt',
+  'upload_pdf',
+  'upload_docx',
+  'upload_pptx',
+  'url',
+  'research',
 );
+
+export const DocumentStatusSchema = Schema.Literal(
+  'ready',
+  'processing',
+  'failed',
+);
+
+export const ResearchConfigSchema = Schema.Struct({
+  query: Schema.String,
+  operationId: Schema.optional(Schema.String),
+  researchStatus: Schema.optional(Schema.String),
+  sourceCount: Schema.optional(Schema.Number),
+});
 
 export const DocumentOutputSchema = Schema.Struct({
   id: DocumentIdSchema,
@@ -108,6 +155,13 @@ export const DocumentOutputSchema = Schema.Struct({
   metadata: Schema.NullOr(
     Schema.Record({ key: Schema.String, value: Schema.Unknown }),
   ),
+  status: DocumentStatusSchema,
+  errorMessage: Schema.NullOr(Schema.String),
+  sourceUrl: Schema.NullOr(Schema.String),
+  researchConfig: Schema.NullOr(ResearchConfigSchema),
+  jobId: Schema.NullOr(Schema.String),
+  extractedText: Schema.NullOr(Schema.String),
+  contentHash: Schema.NullOr(Schema.String),
   createdBy: Schema.String,
   createdAt: Schema.String,
   updatedAt: Schema.String,
@@ -115,6 +169,7 @@ export const DocumentOutputSchema = Schema.Struct({
 
 export type Document = typeof document.$inferSelect;
 export type DocumentSource = Document['source'];
+export type DocumentStatus = Document['status'];
 export type DocumentOutput = typeof DocumentOutputSchema.Type;
 export type CreateDocument = typeof CreateDocumentSchema.Type;
 export type UpdateDocument = typeof UpdateDocumentSchema.Type;
@@ -129,6 +184,13 @@ const documentTransform = (doc: Document): DocumentOutput => ({
   originalFileName: doc.originalFileName,
   originalFileSize: doc.originalFileSize,
   metadata: doc.metadata,
+  status: doc.status,
+  errorMessage: doc.errorMessage,
+  sourceUrl: doc.sourceUrl,
+  researchConfig: doc.researchConfig,
+  jobId: doc.jobId,
+  extractedText: doc.extractedText,
+  contentHash: doc.contentHash,
   createdBy: doc.createdBy,
   createdAt: doc.createdAt.toISOString(),
   updatedAt: doc.updatedAt.toISOString(),

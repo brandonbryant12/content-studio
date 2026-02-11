@@ -5,9 +5,6 @@ import { env } from '../env';
 import { apiRateLimit } from '../middleware/rate-limit';
 import { api } from '../services';
 
-/**
- * API routes (handled by oRPC).
- */
 export const apiRoute = new Hono()
   .use(
     cors({

@@ -11,6 +11,8 @@ import {
   uploadDocument,
   updateDocument,
   deleteDocument,
+  createFromUrl,
+  retryProcessing,
 } from '@repo/media';
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
@@ -23,7 +25,12 @@ const documentRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        listDocuments(input).pipe(
+        listDocuments({
+          limit: input.limit,
+          offset: input.offset,
+          source: input.source,
+          status: input.status,
+        }).pipe(
           Effect.flatMap((result) =>
             serializeDocumentsEffect(result.documents as readonly Document[]),
           ),
@@ -156,6 +163,41 @@ const documentRouter = {
         errors,
         {
           span: 'api.documents.delete',
+          attributes: { 'document.id': input.id },
+        },
+      );
+    },
+  ),
+
+  fromUrl: protectedProcedure.documents.fromUrl.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        createFromUrl(input).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'document'),
+        ),
+        errors,
+        {
+          span: 'api.documents.fromUrl',
+          attributes: { 'document.url': input.url },
+        },
+      );
+    },
+  ),
+
+  retry: protectedProcedure.documents.retry.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        retryProcessing({ id: input.id }).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+        ),
+        errors,
+        {
+          span: 'api.documents.retry',
           attributes: { 'document.id': input.id },
         },
       );

@@ -21,9 +21,16 @@ const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   mimeType: 'text/plain',
   wordCount: 3,
   source: 'manual',
+  status: 'ready',
   originalFileName: null,
   originalFileSize: 13,
   metadata: null,
+  errorMessage: null,
+  sourceUrl: null,
+  researchConfig: null,
+  jobId: null,
+  extractedText: null,
+  contentHash: null,
   createdBy: 'user_123',
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
@@ -43,6 +50,10 @@ const createMockDocumentRepo = (
     update: () => Effect.die('Not implemented'),
     delete: () => Effect.die('Not implemented'),
     count: () => Effect.die('Not implemented'),
+    updateStatus: () => Effect.die('not implemented'),
+    updateContent: () => Effect.die('not implemented'),
+    findBySourceUrl: () => Effect.die('not implemented'),
+    updateResearchConfig: () => Effect.die('not implemented'),
   });
 
 /**

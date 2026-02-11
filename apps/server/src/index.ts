@@ -1,7 +1,8 @@
+import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
-import { verifyDbConnection } from '@repo/db/client';
+import type { auth} from './services';
 import { env } from './env';
 import {
   authRoute,
@@ -11,12 +12,8 @@ import {
   staticRoute,
   staticPath,
 } from './routes';
-import { auth, db, storageConfig } from './services';
+import { db, storageConfig } from './services';
 import { generateRootHtml } from './utils';
-
-// =============================================================================
-// App Setup
-// =============================================================================
 
 const app = new Hono<{
   Variables: {
@@ -25,7 +22,6 @@ const app = new Hono<{
   };
 }>();
 
-// Global middleware
 app.use(logger());
 app.use(
   secureHeaders({
@@ -33,27 +29,19 @@ app.use(
   }),
 );
 
-// Global error handler
 app.onError((err, c) => {
   console.error('\t[ERROR]', err.stack || err.message || err);
   return c.json({ error: 'Internal Server Error' }, 500);
 });
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-// Health check — shallow (for load balancer liveness probes)
 app.get('/healthcheck', (c) => c.text('OK'));
 
-// Deep health check — verifies downstream dependencies (for readiness probes)
 app.get('/healthcheck/deep', async (c) => {
   const checks: Record<
     string,
     { status: string; latencyMs?: number; error?: string }
   > = {};
 
-  // Database check
   const dbStart = Date.now();
   try {
     await verifyDbConnection(db);
@@ -73,25 +61,18 @@ app.get('/healthcheck/deep', async (c) => {
   );
 });
 
-// Root page
 app.get('/', (c) =>
   c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL)),
 );
 
-// Static files (filesystem storage only)
 if (storageConfig.provider === 'filesystem') {
   app.route(staticPath, staticRoute);
 }
 
-// Auth routes
 app.route(authPath, authRoute);
 
-// API routes (must be last - catches all /api/*)
+// Must be last — catches all /api/*
 app.route(apiPath, apiRoute);
-
-// =============================================================================
-// Exports
-// =============================================================================
 
 export { db, serverRuntime, storageConfig } from './services';
 export default app;

@@ -12,6 +12,8 @@ export {
   ImageGenError,
   ImageGenRateLimitError,
   ImageGenContentFilteredError,
+  ResearchError,
+  ResearchTimeoutError,
   type AIError,
 } from './errors';
 

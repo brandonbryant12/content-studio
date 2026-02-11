@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { DocumentListItem } from '../components/document-item';
 import type { ReactNode } from 'react';
 import { DocumentList } from '../components/document-list';
-import { render, screen, fireEvent, userEvent } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 // Mock TanStack Router Link component
 vi.mock('@tanstack/react-router', () => ({
@@ -35,16 +35,22 @@ const mockDocuments: DocumentListItem[] = [
     id: 'doc-1',
     title: 'Getting Started Guide',
     source: 'application/pdf',
+    status: 'ready',
     wordCount: 2500,
     originalFileSize: 150000,
+    sourceUrl: null,
+    errorMessage: null,
     createdAt: '2024-01-15T10:00:00Z',
   },
   {
     id: 'doc-2',
     title: 'API Documentation',
     source: 'text/plain',
+    status: 'ready',
     wordCount: 5000,
     originalFileSize: 25000,
+    sourceUrl: null,
+    errorMessage: null,
     createdAt: '2024-01-16T14:30:00Z',
   },
   {
@@ -52,8 +58,11 @@ const mockDocuments: DocumentListItem[] = [
     title: 'Project Roadmap',
     source:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    status: 'ready',
     wordCount: 1200,
     originalFileSize: 45000,
+    sourceUrl: null,
+    errorMessage: null,
     createdAt: '2024-01-17T09:15:00Z',
   },
 ];
@@ -76,6 +85,7 @@ const defaultProps = {
   deletingId: null,
   onSearch: vi.fn(),
   onUploadOpen: vi.fn(),
+  onUrlDialogOpen: vi.fn(),
   onDelete: vi.fn(),
   selection: mockSelection,
   isBulkDeleting: false,
@@ -148,12 +158,13 @@ describe('DocumentList', () => {
     expect(onSearch).toHaveBeenCalled();
   });
 
-  it('calls onUploadOpen(true) when upload button clicked', () => {
+  it('calls onUploadOpen(true) when upload button clicked', async () => {
+    const user = userEvent.setup();
     const onUploadOpen = vi.fn();
     render(<DocumentList {...defaultProps} onUploadOpen={onUploadOpen} />);
 
     const uploadButton = screen.getByRole('button', { name: /upload/i });
-    fireEvent.click(uploadButton);
+    await user.click(uploadButton);
 
     expect(onUploadOpen).toHaveBeenCalledWith(true);
   });
@@ -164,7 +175,8 @@ describe('DocumentList', () => {
     expect(screen.getByTestId('upload-dialog')).toBeInTheDocument();
   });
 
-  it('calls onDelete when document delete is triggered', () => {
+  it('calls onDelete when document delete is triggered', async () => {
+    const user = userEvent.setup();
     const onDelete = vi.fn();
     render(<DocumentList {...defaultProps} onDelete={onDelete} />);
 
@@ -177,7 +189,7 @@ describe('DocumentList', () => {
     expect(trashButtons.length).toBeGreaterThan(0);
     const firstButton = trashButtons[0];
     if (firstButton) {
-      fireEvent.click(firstButton);
+      await user.click(firstButton);
       expect(onDelete).toHaveBeenCalledWith('doc-1');
     }
   });

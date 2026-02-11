@@ -5,9 +5,6 @@ import { env } from '../env';
 import { authRateLimit } from '../middleware/rate-limit';
 import { auth } from '../services';
 
-/**
- * Authentication routes (handled by better-auth).
- */
 export const authRoute = new Hono()
   .use(
     cors({

@@ -5,10 +5,6 @@ import { DocumentRepo } from '../repos';
 import { parseDocumentContent } from '../parsers';
 import { DocumentContentNotFound } from '../../errors';
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface GetDocumentContentInput {
   id: string;
 }
@@ -17,10 +13,6 @@ export interface GetDocumentContentResult {
   content: string;
 }
 
-// =============================================================================
-// Use Case
-// =============================================================================
-
 export const getDocumentContent = (input: GetDocumentContentInput) =>
   Effect.gen(function* () {
     const storage = yield* Storage;
@@ -28,6 +20,11 @@ export const getDocumentContent = (input: GetDocumentContentInput) =>
 
     const doc = yield* documentRepo.findById(input.id);
     yield* requireOwnership(doc.createdBy);
+
+    // Fast path: return denormalized extracted text if available
+    if (doc.extractedText) {
+      return { content: doc.extractedText };
+    }
 
     const buffer = yield* storage.download(doc.contentKey).pipe(
       Effect.catchTag('StorageNotFoundError', () =>

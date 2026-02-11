@@ -31,6 +31,10 @@ const createMockDocumentRepo = (
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
+    updateStatus: () => Effect.die('not implemented'),
+    updateContent: () => Effect.die('not implemented'),
+    findBySourceUrl: () => Effect.die('not implemented'),
+    updateResearchConfig: () => Effect.die('not implemented'),
   });
 
 /**

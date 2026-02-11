@@ -29,6 +29,10 @@ const createMockDocumentRepo = (state: MockRepoState): DocumentRepoService => ({
   findById: () => Effect.die('Not implemented in mock'),
   update: () => Effect.die('Not implemented in mock'),
   delete: () => Effect.die('Not implemented in mock'),
+  updateStatus: () => Effect.die('not implemented'),
+  updateContent: () => Effect.die('not implemented'),
+  findBySourceUrl: () => Effect.die('not implemented'),
+  updateResearchConfig: () => Effect.die('not implemented'),
 
   list: (options: ListOptions) =>
     Effect.succeed(

@@ -14,6 +14,15 @@ export {
 // Use cases
 export * from './use-cases';
 
+// Services
+export { validateUrl } from './services/url-validator';
+export {
+  UrlScraper,
+  type UrlScraperService,
+  type ScrapedContent,
+} from './services/url-scraper';
+export { UrlScraperLive } from './services/url-scraper-impl';
+
 // Parsers (for direct use if needed)
 export {
   parseUploadedFile,

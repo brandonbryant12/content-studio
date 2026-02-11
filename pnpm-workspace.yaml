@@ -11,6 +11,8 @@ catalog:
   '@effect/platform-node': ^0.72.0
   '@effect/vitest': ^0.27.0
 
+  '@extractus/article-extractor': ^8.0.20
+
   '@eslint/js': ^9.39.1
   '@hono/node-server': ^1.19.6
   '@orpc/client': ^1.11.3

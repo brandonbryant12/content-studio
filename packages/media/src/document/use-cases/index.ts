@@ -19,3 +19,11 @@ export { uploadDocument, type UploadDocumentInput } from './upload-document';
 export { updateDocument, type UpdateDocumentInput } from './update-document';
 
 export { deleteDocument, type DeleteDocumentInput } from './delete-document';
+
+export { createFromUrl, type CreateFromUrlInput } from './create-from-url';
+
+export {
+  retryProcessing,
+  type RetryProcessingInput,
+  type ProcessResearchPayload,
+} from './retry-processing';

@@ -10,7 +10,12 @@ import {
 } from '@repo/ai';
 import { MockAIWithLatency } from '@repo/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
-import { MediaLive, type Media } from '@repo/media';
+import {
+  MediaLive,
+  UrlScraperLive,
+  type Media,
+  type UrlScraper,
+} from '@repo/media';
 import type { Storage } from '@repo/storage';
 import type { DatabaseInstance } from '@repo/db/client';
 import { createStorageLayer } from './storage-factory';
@@ -23,7 +28,14 @@ import type { StorageConfig } from './orpc';
  * Note: CurrentUser is NOT included here - it's obtained via FiberRef
  * at runtime using withCurrentUser().
  */
-export type SharedServices = Db | Policy | Storage | Queue | AI | Media;
+export type SharedServices =
+  | Db
+  | Policy
+  | Storage
+  | Queue
+  | AI
+  | Media
+  | UrlScraper;
 
 /**
  * Configuration for creating the server runtime.
@@ -60,14 +72,14 @@ export const createSharedLayers = (
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const storageLayer = createStorageLayer(config.storageConfig);
 
-  // AI layer bundles LLM, TTS, and ImageGen
-  // Mock AI has realistic latency for dev testing
-  // TTS is always mocked for now (real TTS not yet available)
-  const aiLayer = config.useMockAI
-    ? MockAIWithLatency
-    : config.aiProvider === 'vertex'
-      ? VertexAILive(config.vertexConfig!)
-      : GoogleAILive({ apiKey: config.geminiApiKey! });
+  let aiLayer: Layer.Layer<AI>;
+  if (config.useMockAI) {
+    aiLayer = MockAIWithLatency;
+  } else if (config.aiProvider === 'vertex') {
+    aiLayer = VertexAILive(config.vertexConfig!);
+  } else {
+    aiLayer = GoogleAILive({ apiKey: config.geminiApiKey! });
+  }
 
   // Media layer bundles Documents, PodcastRepo, and VoiceoverRepo
   const mediaLayer = MediaLive.pipe(
@@ -83,6 +95,7 @@ export const createSharedLayers = (
     storageLayer,
     aiLayer,
     mediaLayer,
+    UrlScraperLive,
     loggerLayer,
   );
 };

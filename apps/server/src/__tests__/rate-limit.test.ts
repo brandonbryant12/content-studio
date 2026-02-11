@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { Hono } from 'hono';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { rateLimiter } from '../middleware/rate-limit';
 
 describe('rateLimiter middleware', () => {
@@ -121,5 +121,54 @@ describe('rateLimiter middleware', () => {
 
     expect(res1.status).toBe(200);
     expect(res2.status).toBe(429);
+  });
+
+  it('falls back to "unknown" key when no proxy headers are present', async () => {
+    app.use(rateLimiter({ limit: 1, windowMs: 60_000 }));
+    app.get('/', (c) => c.text('ok'));
+
+    // No x-forwarded-for or x-real-ip
+    const res1 = await app.request('/');
+    const res2 = await app.request('/');
+
+    // Both use "unknown" key, so second is rate limited
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(429);
+  });
+
+  it('uses first IP from x-forwarded-for chain', async () => {
+    app.use(rateLimiter({ limit: 1, windowMs: 60_000 }));
+    app.get('/', (c) => c.text('ok'));
+
+    // Multi-hop proxy chain — should use the first (client) IP
+    const res1 = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2, 3.3.3.3' },
+    });
+    const res2 = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.1.1.1, 9.9.9.9' },
+    });
+
+    // Same client IP (1.1.1.1), so second should be rate limited
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(429);
+  });
+
+  it('decrements remaining count on each request', async () => {
+    app.use(rateLimiter({ limit: 3, windowMs: 60_000 }));
+    app.get('/', (c) => c.text('ok'));
+
+    const res1 = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.2.3.4' },
+    });
+    const res2 = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.2.3.4' },
+    });
+    const res3 = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.2.3.4' },
+    });
+
+    expect(res1.headers.get('X-RateLimit-Remaining')).toBe('2');
+    expect(res2.headers.get('X-RateLimit-Remaining')).toBe('1');
+    expect(res3.headers.get('X-RateLimit-Remaining')).toBe('0');
   });
 });

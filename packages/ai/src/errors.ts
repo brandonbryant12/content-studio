@@ -191,6 +191,43 @@ export class ImageGenContentFilteredError extends Schema.TaggedError<ImageGenCon
 }
 
 // =============================================================================
+// Research Errors
+// =============================================================================
+
+/**
+ * Research operation failure.
+ */
+export class ResearchError extends Schema.TaggedError<ResearchError>()(
+  'ResearchError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'RESEARCH_ERROR' as const;
+  static readonly httpMessage = (e: ResearchError) => e.message;
+  static readonly logLevel = 'error-with-stack' as const;
+}
+
+/**
+ * Research operation timed out.
+ */
+export class ResearchTimeoutError extends Schema.TaggedError<ResearchTimeoutError>()(
+  'ResearchTimeoutError',
+  {
+    operationId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 504 as const;
+  static readonly httpCode = 'RESEARCH_TIMEOUT' as const;
+  static readonly httpMessage = (e: ResearchTimeoutError) =>
+    e.message ?? 'Research operation timed out';
+  static readonly logLevel = 'warn' as const;
+}
+
+// =============================================================================
 // Error Union Types
 // =============================================================================
 
@@ -207,4 +244,6 @@ export type AIError =
   | AudioProcessingError
   | ImageGenError
   | ImageGenRateLimitError
-  | ImageGenContentFilteredError;
+  | ImageGenContentFilteredError
+  | ResearchError
+  | ResearchTimeoutError;

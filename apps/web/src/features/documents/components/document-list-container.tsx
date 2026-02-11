@@ -4,10 +4,12 @@ import {
   getDocumentListQueryKey,
 } from '../hooks/use-document-list';
 import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-document';
+import { useCreateFromUrl } from '../hooks/use-create-from-url';
 import { rawApiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { DocumentList } from './document-list';
+import { AddFromUrlDialog } from './add-from-url-dialog';
 
 const deleteFn = (input: { id: string }) =>
   rawApiClient.documents.delete(input);
@@ -15,11 +17,13 @@ const deleteFn = (input: { id: string }) =>
 export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: documents = [], isLoading } = useDocumentList();
   const deleteMutation = useOptimisticDeleteDocument();
+  const createFromUrlMutation = useCreateFromUrl();
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getDocumentListQueryKey(),
@@ -51,13 +55,23 @@ export function DocumentListContainer() {
     selection.deselectAll();
   }, [executeBulkDelete, selection]);
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
+  const handleSearch = setSearchQuery;
+  const handleUploadOpen = setUploadOpen;
+  const handleUrlDialogOpen = setUrlDialogOpen;
 
-  const handleUploadOpen = useCallback((open: boolean) => {
-    setUploadOpen(open);
-  }, []);
+  const handleCreateFromUrl = useCallback(
+    (url: string, title?: string) => {
+      createFromUrlMutation.mutate(
+        { url, title },
+        {
+          onSuccess: () => {
+            setUrlDialogOpen(false);
+          },
+        },
+      );
+    },
+    [createFromUrlMutation],
+  );
 
   if (isLoading) {
     return (
@@ -84,10 +98,17 @@ export function DocumentListContainer() {
         deletingId={deletingId}
         onSearch={handleSearch}
         onUploadOpen={handleUploadOpen}
+        onUrlDialogOpen={handleUrlDialogOpen}
         onDelete={handleDeleteRequest}
         selection={selection}
         isBulkDeleting={isBulkDeleting}
         onBulkDelete={handleBulkDelete}
+      />
+      <AddFromUrlDialog
+        open={urlDialogOpen}
+        onOpenChange={setUrlDialogOpen}
+        onSubmit={handleCreateFromUrl}
+        isSubmitting={createFromUrlMutation.isPending}
       />
       <ConfirmationDialog
         open={pendingDeleteId !== null}

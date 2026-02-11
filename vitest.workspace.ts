@@ -9,6 +9,7 @@ export default defineWorkspace([
   'packages/testing/vitest.config.ts',
   'packages/media/vitest.config.ts',
   'packages/api/vitest.config.ts',
-  // Web app component tests
+  // App tests
+  'apps/server/vitest.config.ts',
   'apps/web/vitest.config.ts',
 ]);

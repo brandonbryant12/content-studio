@@ -3,6 +3,8 @@ import {
   type DocumentId,
   type Document,
   type DocumentSource,
+  type DocumentStatus,
+  type ResearchConfig,
 } from '@repo/db/schema';
 
 export interface CreateTestDocumentOptions {
@@ -15,6 +17,13 @@ export interface CreateTestDocumentOptions {
   originalFileName?: string | null;
   originalFileSize?: number | null;
   metadata?: Record<string, unknown> | null;
+  status?: DocumentStatus;
+  errorMessage?: string | null;
+  sourceUrl?: string | null;
+  researchConfig?: ResearchConfig | null;
+  jobId?: string | null;
+  extractedText?: string | null;
+  contentHash?: string | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -38,6 +47,13 @@ export function createTestDocument(
     originalFileName: options.originalFileName ?? null,
     originalFileSize: options.originalFileSize ?? null,
     metadata: options.metadata ?? null,
+    status: options.status ?? 'ready',
+    errorMessage: options.errorMessage ?? null,
+    sourceUrl: options.sourceUrl ?? null,
+    researchConfig: options.researchConfig ?? null,
+    jobId: options.jobId ?? null,
+    extractedText: options.extractedText ?? null,
+    contentHash: options.contentHash ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,

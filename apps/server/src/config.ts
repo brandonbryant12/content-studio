@@ -1,9 +1,6 @@
 import type { StorageConfig } from '@repo/api/server';
 import { env } from './env';
 
-/**
- * Build storage configuration from environment variables.
- */
 export const buildStorageConfig = (): StorageConfig => {
   if (env.STORAGE_PROVIDER === 'filesystem') {
     if (!env.STORAGE_PATH) {
@@ -37,7 +34,6 @@ export const buildStorageConfig = (): StorageConfig => {
     };
   }
 
-  // Default to filesystem storage in dev
   return {
     provider: 'filesystem',
     basePath: './uploads',
@@ -45,9 +41,6 @@ export const buildStorageConfig = (): StorageConfig => {
   };
 };
 
-/**
- * Trusted origins for CORS (derived from PUBLIC_WEB_URL).
- */
 export const trustedOrigins = [env.PUBLIC_WEB_URL].map(
   (url) => new URL(url).origin,
 );

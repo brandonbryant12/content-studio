@@ -238,6 +238,69 @@ export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
 }
 
 // =============================================================================
+// URL / Knowledge Base Errors
+// =============================================================================
+
+/**
+ * URL fetch failure during scraping.
+ */
+export class UrlFetchError extends Schema.TaggedError<UrlFetchError>()(
+  'UrlFetchError',
+  {
+    url: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'URL_FETCH_ERROR' as const;
+  static readonly httpMessage = (e: UrlFetchError) => e.message;
+  static readonly logLevel = 'warn' as const;
+  static getData(e: UrlFetchError) {
+    return { url: e.url };
+  }
+}
+
+/**
+ * Invalid URL provided.
+ */
+export class InvalidUrlError extends Schema.TaggedError<InvalidUrlError>()(
+  'InvalidUrlError',
+  {
+    url: Schema.String,
+    message: Schema.String,
+  },
+) {
+  static readonly httpStatus = 400 as const;
+  static readonly httpCode = 'INVALID_URL' as const;
+  static readonly httpMessage = (e: InvalidUrlError) => e.message;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: InvalidUrlError) {
+    return { url: e.url };
+  }
+}
+
+/**
+ * Document is already being processed.
+ */
+export class DocumentAlreadyProcessing extends Schema.TaggedError<DocumentAlreadyProcessing>()(
+  'DocumentAlreadyProcessing',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 409 as const;
+  static readonly httpCode = 'DOCUMENT_ALREADY_PROCESSING' as const;
+  static readonly httpMessage = (e: DocumentAlreadyProcessing) =>
+    e.message ?? `Document ${e.id} is already being processed`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: DocumentAlreadyProcessing) {
+    return { documentId: e.id };
+  }
+}
+
+// =============================================================================
 // Ownership Errors
 // =============================================================================
 
@@ -399,6 +462,9 @@ export type MediaError =
   | UnsupportedDocumentFormat
   | DocumentParseError
   | DocumentContentNotFound
+  | UrlFetchError
+  | InvalidUrlError
+  | DocumentAlreadyProcessing
   | PodcastNotFound
   | ScriptNotFound
   | PodcastError

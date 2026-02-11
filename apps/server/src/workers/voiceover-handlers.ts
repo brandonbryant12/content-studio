@@ -7,22 +7,12 @@ import type {
   Job,
 } from '@repo/queue';
 
-/**
- * Handler for generate-voiceover jobs.
- * Generates TTS audio from voiceover text.
- *
- * Requires: VoiceoverRepo, TTS, Storage
- */
 export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
   Effect.gen(function* () {
     const { voiceoverId } = job.payload;
 
-    // Generate audio for voiceover
-    const result = yield* generateVoiceoverAudio({
-      voiceoverId,
-    });
+    const result = yield* generateVoiceoverAudio({ voiceoverId });
 
-    // Sync the title to activity log entries (voiceover may auto-generate a title)
     yield* syncEntityTitle(result.voiceover.id, result.voiceover.title);
 
     return {
@@ -31,22 +21,15 @@ export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
       duration: result.duration,
     } satisfies GenerateVoiceoverResult;
   }).pipe(
-    Effect.catchAll((error) => {
-      const errorMessage = formatError(error);
-      console.error(
-        '[VoiceoverWorker] Audio generation failed:',
-        errorMessage,
-        error,
-      );
-
-      return Effect.fail(
+    Effect.catchAll((error) =>
+      Effect.fail(
         new JobProcessingError({
           jobId: job.id,
-          message: `Failed to generate voiceover audio: ${errorMessage}`,
+          message: `Failed to generate voiceover audio: ${formatError(error)}`,
           cause: error,
         }),
-      );
-    }),
+      ),
+    ),
     Effect.withSpan('worker.handleGenerateVoiceover', {
       attributes: {
         'job.id': job.id,

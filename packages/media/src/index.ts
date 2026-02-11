@@ -8,6 +8,9 @@ export {
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
   DocumentParseError,
+  UrlFetchError,
+  InvalidUrlError,
+  DocumentAlreadyProcessing,
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
@@ -54,6 +57,8 @@ export {
   uploadDocument,
   updateDocument,
   deleteDocument,
+  createFromUrl,
+  retryProcessing,
   type ListDocumentsInput,
   type ListDocumentsResult,
   type GetDocumentInput,
@@ -63,6 +68,16 @@ export {
   type UploadDocumentInput,
   type UpdateDocumentInput,
   type DeleteDocumentInput,
+  type CreateFromUrlInput,
+  type RetryProcessingInput,
+  type ProcessResearchPayload,
+} from './document';
+
+export {
+  UrlScraper,
+  UrlScraperLive,
+  type UrlScraperService,
+  type ScrapedContent,
 } from './document';
 
 export {
