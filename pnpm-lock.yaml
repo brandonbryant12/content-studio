@@ -15,6 +15,9 @@ catalogs:
     '@effect/platform-node':
       specifier: ^0.72.0
       version: 0.72.1
+    '@effect/vitest':
+      specifier: ^0.27.0
+      version: 0.27.0
     '@eslint/js':
       specifier: ^9.39.1
       version: 9.39.1
@@ -498,6 +501,9 @@ importers:
         specifier: ^9.15.0
         version: 9.15.1
     devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.27.0(effect@3.19.8)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../tools/eslint
@@ -1477,6 +1483,12 @@ packages:
     resolution: {integrity: sha512-ttBWRHcgxMdJUoxuvShkIezJ5tS4ZTfpLa/JQj02mDRjS6LklcBaDuG/ZgfXlEVzQ00yYNgWkFT5uF3Xc1uWdA==}
     peerDependencies:
       effect: ^3.13.12
+
+  '@effect/vitest@0.27.0':
+    resolution: {integrity: sha512-8bM7n9xlMUYw9GqPIVgXFwFm2jf27m/R7psI64PGpwU5+26iwyxp9eAXEsfT5S6lqztYfpQQ1Ubp5o6HfNYzJQ==}
+    peerDependencies:
+      effect: ^3.19.0
+      vitest: ^3.2.0
 
   '@emnapi/core@1.5.0':
     resolution: {integrity: sha512-sbP8GzB1WDzacS8fgNPpHlp6C9VZe+SJP3F90W9rLemaQj2PzIuTEl1qDOYQf58YIpyjViI24y9aPWCjEzY2cg==}
@@ -7861,6 +7873,11 @@ snapshots:
   '@effect/typeclass@0.32.12(effect@3.19.8)':
     dependencies:
       effect: 3.19.8
+
+  '@effect/vitest@0.27.0(effect@3.19.8)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))':
+    dependencies:
+      effect: 3.19.8
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2)
 
   '@emnapi/core@1.5.0':
     dependencies:

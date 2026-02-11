@@ -45,6 +45,7 @@
     "google-auth-library": "^9.15.0"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

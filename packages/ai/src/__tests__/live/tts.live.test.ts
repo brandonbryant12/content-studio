@@ -9,7 +9,8 @@
  *
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:tts
  */
-import { describe, it, expect } from 'vitest';
+import { describe, expect } from 'vitest';
+import { it } from '@effect/vitest';
 import { Effect, Exit } from 'effect';
 import { expectEffectFailure } from '../../test-utils/effect-assertions';
 import { GoogleTTSLive, TTS } from '../../tts';
@@ -22,115 +23,97 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
   const layer = GoogleTTSLive({ apiKey: GEMINI_API_KEY! });
 
   describe('listVoices', () => {
-    it('can list available voices', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('can list available voices', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.listVoices();
-      }).pipe(Effect.provide(layer));
+        const voices = yield* tts.listVoices();
 
-      const voices = await Effect.runPromise(effect);
+        expect(voices.length).toBe(VOICES.length);
+        expect(voices.length).toBe(FEMALE_VOICES.length + MALE_VOICES.length);
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(voices.length).toBe(VOICES.length);
-      expect(voices.length).toBe(FEMALE_VOICES.length + MALE_VOICES.length);
-    });
-
-    it('can filter voices by gender', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('can filter voices by gender', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return {
-          female: yield* tts.listVoices({ gender: 'female' }),
-          male: yield* tts.listVoices({ gender: 'male' }),
-        };
-      }).pipe(Effect.provide(layer));
+        const female = yield* tts.listVoices({ gender: 'female' });
+        const male = yield* tts.listVoices({ gender: 'male' });
 
-      const result = await Effect.runPromise(effect);
+        expect(female.length).toBe(FEMALE_VOICES.length);
+        expect(male.length).toBe(MALE_VOICES.length);
 
-      expect(result.female.length).toBe(FEMALE_VOICES.length);
-      expect(result.male.length).toBe(MALE_VOICES.length);
-
-      // Verify all female voices are actually female
-      for (const voice of result.female) {
-        expect(voice.gender).toBe('female');
-      }
-
-      // Verify all male voices are actually male
-      for (const voice of result.male) {
-        expect(voice.gender).toBe('male');
-      }
-    });
+        for (const voice of female) {
+          expect(voice.gender).toBe('female');
+        }
+        for (const voice of male) {
+          expect(voice.gender).toBe('male');
+        }
+      }).pipe(Effect.provide(layer)),
+    );
   });
 
   describe('previewVoice', () => {
-    it('can generate audio from text', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('can generate audio from text', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.previewVoice({
+        const result = yield* tts.previewVoice({
           voiceId: 'Charon',
           text: 'Hello, this is a test.',
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.audioContent).toBeInstanceOf(Buffer);
+        expect(result.audioContent.length).toBeGreaterThan(0);
+        expect(result.voiceId).toBe('Charon');
+        expect(result.audioEncoding).toBeDefined();
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.audioContent).toBeInstanceOf(Buffer);
-      expect(result.audioContent.length).toBeGreaterThan(0);
-      expect(result.voiceId).toBe('Charon');
-      expect(result.audioEncoding).toBeDefined();
-    });
-
-    it('returns valid audio format (WAV/LINEAR16)', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('returns valid audio format (WAV/LINEAR16)', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.previewVoice({
+        const result = yield* tts.previewVoice({
           voiceId: 'Kore',
           text: 'Testing audio format.',
           audioEncoding: 'LINEAR16',
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.audioEncoding).toBe('LINEAR16');
+        expect(result.audioContent.length).toBeGreaterThan(0);
 
-      expect(result.audioEncoding).toBe('LINEAR16');
-      expect(result.audioContent.length).toBeGreaterThan(0);
+        // WAV files should start with RIFF header
+        const header = result.audioContent.slice(0, 4).toString('ascii');
+        expect(header).toBe('RIFF');
+      }).pipe(Effect.provide(layer)),
+    );
 
-      // WAV files should start with RIFF header
-      const header = result.audioContent.slice(0, 4).toString('ascii');
-      expect(header).toBe('RIFF');
-    });
-
-    it('returns valid audio format (MP3)', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('returns valid audio format (MP3)', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.previewVoice({
+        const result = yield* tts.previewVoice({
           voiceId: 'Puck',
           text: 'Testing MP3 format.',
           audioEncoding: 'MP3',
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.audioEncoding).toBe('MP3');
+        expect(result.audioContent.length).toBeGreaterThan(0);
 
-      expect(result.audioEncoding).toBe('MP3');
-      expect(result.audioContent.length).toBeGreaterThan(0);
+        const firstByte = result.audioContent[0] ?? 0;
+        const secondByte = result.audioContent[1] ?? 0;
+        const thirdByte = result.audioContent[2] ?? 0;
 
-      // MP3 files typically start with ID3 tag or frame sync
-      const firstByte = result.audioContent[0] ?? 0;
-      const secondByte = result.audioContent[1] ?? 0;
-      const thirdByte = result.audioContent[2] ?? 0;
+        const hasId3Tag =
+          firstByte === 0x49 && secondByte === 0x44 && thirdByte === 0x33;
+        const hasFrameSync = firstByte === 0xff && (secondByte & 0xe0) === 0xe0;
 
-      // Either starts with ID3 tag or frame sync (0xFF 0xFB/0xFA/0xF3/etc)
-      const hasId3Tag =
-        firstByte === 0x49 && secondByte === 0x44 && thirdByte === 0x33; // "ID3"
-      const hasFrameSync = firstByte === 0xff && (secondByte & 0xe0) === 0xe0;
+        expect(hasId3Tag || hasFrameSync).toBe(true);
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(hasId3Tag || hasFrameSync).toBe(true);
-    });
-
-    it('can preview multiple different voices', async () => {
-      const voicesToTest = ['Charon', 'Kore', 'Fenrir', 'Aoede'] as const;
-
-      const effect = Effect.gen(function* () {
+    it.effect('can preview multiple different voices', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
+        const voicesToTest = ['Charon', 'Kore', 'Fenrir', 'Aoede'] as const;
         const results = [];
 
         for (const voiceId of voicesToTest) {
@@ -141,27 +124,20 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
           results.push(result);
         }
 
-        return results;
-      }).pipe(Effect.provide(layer));
-
-      const results = await Effect.runPromise(effect);
-
-      expect(results.length).toBe(voicesToTest.length);
-
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        const voice = voicesToTest[i];
-        expect(result?.voiceId).toBe(voice);
-        expect(result?.audioContent.length).toBeGreaterThan(0);
-      }
-    });
+        expect(results.length).toBe(voicesToTest.length);
+        for (let i = 0; i < results.length; i++) {
+          expect(results[i]?.voiceId).toBe(voicesToTest[i]);
+          expect(results[i]?.audioContent.length).toBeGreaterThan(0);
+        }
+      }).pipe(Effect.provide(layer)),
+    );
   });
 
   describe('synthesize', () => {
-    it('can synthesize multi-speaker audio', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('can synthesize multi-speaker audio', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.synthesize({
+        const result = yield* tts.synthesize({
           turns: [
             { speaker: 'host', text: 'Welcome to the show!' },
             { speaker: 'guest', text: 'Thanks for having me.' },
@@ -172,63 +148,53 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
             { speakerAlias: 'guest', voiceId: 'Kore' },
           ],
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.audioContent).toBeInstanceOf(Buffer);
+        expect(result.audioContent.length).toBeGreaterThan(0);
+        expect(result.audioEncoding).toBeDefined();
+        expect(result.mimeType).toBeDefined();
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.audioContent).toBeInstanceOf(Buffer);
-      expect(result.audioContent.length).toBeGreaterThan(0);
-      expect(result.audioEncoding).toBeDefined();
-      expect(result.mimeType).toBeDefined();
-    });
-
-    it('supports different audio encodings for synthesis', async () => {
-      const effect = Effect.gen(function* () {
+    it.effect('supports different audio encodings for synthesis', () =>
+      Effect.gen(function* () {
         const tts = yield* TTS;
-        return yield* tts.synthesize({
+        const result = yield* tts.synthesize({
           turns: [{ speaker: 'narrator', text: 'Testing audio format.' }],
           voiceConfigs: [{ speakerAlias: 'narrator', voiceId: 'Alnilam' }],
           audioEncoding: 'LINEAR16',
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
-
-      expect(result.audioContent.length).toBeGreaterThan(0);
-      // WAV files should start with RIFF header
-      const header = result.audioContent.slice(0, 4).toString('ascii');
-      expect(header).toBe('RIFF');
-    });
+        expect(result.audioContent.length).toBeGreaterThan(0);
+        const header = result.audioContent.slice(0, 4).toString('ascii');
+        expect(header).toBe('RIFF');
+      }).pipe(Effect.provide(layer)),
+    );
   });
 
   describe('error handling', () => {
-    it('handles invalid API key', async () => {
-      const invalidLayer = GoogleTTSLive({ apiKey: 'invalid-api-key' });
+    it.effect('handles invalid API key', () =>
+      Effect.gen(function* () {
+        const invalidLayer = GoogleTTSLive({ apiKey: 'invalid-api-key' });
 
-      const effect = Effect.gen(function* () {
-        const tts = yield* TTS;
-        return yield* tts.previewVoice({
-          voiceId: 'Charon',
-          text: 'Test',
-        });
-      }).pipe(Effect.provide(invalidLayer));
+        const exit = yield* Effect.gen(function* () {
+          const tts = yield* TTS;
+          return yield* tts.previewVoice({
+            voiceId: 'Charon',
+            text: 'Test',
+          });
+        }).pipe(Effect.provide(invalidLayer), Effect.exit);
 
-      const exit = await Effect.runPromiseExit(effect);
-
-      // Invalid API key produces a TTSError (not quota exceeded)
-      expectEffectFailure(exit, TTSError);
-    });
+        expectEffectFailure(exit, TTSError);
+      }),
+    );
   });
 });
 
 describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration - Rate Limiting', () => {
-  // Note: Rate limiting tests are harder to trigger reliably
-  // Included for manual verification when debugging quota issues
-
   it.skip('handles rate limiting gracefully', async () => {
     const layer = GoogleTTSLive({ apiKey: GEMINI_API_KEY! });
 
-    // Send many requests in parallel to potentially trigger rate limiting
     const effects = Array.from({ length: 20 }, () =>
       Effect.gen(function* () {
         const tts = yield* TTS;
@@ -251,7 +217,6 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration - Rate Limiting', () => {
 
     expect(successes.length).toBeGreaterThan(0);
 
-    // If there are failures, they should be quota/rate limit errors
     for (const failure of failures) {
       expectEffectFailure(failure, TTSQuotaExceededError);
     }

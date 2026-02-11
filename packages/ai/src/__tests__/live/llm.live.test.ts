@@ -9,7 +9,8 @@
  *
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:llm
  */
-import { describe, it, expect } from 'vitest';
+import { describe, expect } from 'vitest';
+import { it } from '@effect/vitest';
 import { Effect, Exit, Schema } from 'effect';
 import { expectEffectFailure } from '../../test-utils/effect-assertions';
 import { GoogleLive, LLM } from '../../llm';
@@ -21,105 +22,83 @@ describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration', () => {
   const layer = GoogleLive({ apiKey: GEMINI_API_KEY! });
 
   describe('generate', () => {
-    it('can generate text with simple prompt', async () => {
-      const GreetingSchema = Schema.Struct({
-        greeting: Schema.String,
-      });
-
-      const effect = Effect.gen(function* () {
+    it.effect('can generate text with simple prompt', () =>
+      Effect.gen(function* () {
+        const GreetingSchema = Schema.Struct({ greeting: Schema.String });
         const llm = yield* LLM;
-        return yield* llm.generate({
+        const result = yield* llm.generate({
           prompt: 'Say "Hello, World!" in a greeting object',
           schema: GreetingSchema,
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.object).toBeDefined();
+        expect(result.object.greeting).toBeDefined();
+        expect(typeof result.object.greeting).toBe('string');
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.object).toBeDefined();
-      expect(result.object.greeting).toBeDefined();
-      expect(typeof result.object.greeting).toBe('string');
-    });
-
-    it('returns structured JSON when requested', async () => {
-      const PersonSchema = Schema.Struct({
-        name: Schema.String,
-        age: Schema.Number,
-        occupation: Schema.String,
-      });
-
-      const effect = Effect.gen(function* () {
+    it.effect('returns structured JSON when requested', () =>
+      Effect.gen(function* () {
+        const PersonSchema = Schema.Struct({
+          name: Schema.String,
+          age: Schema.Number,
+          occupation: Schema.String,
+        });
         const llm = yield* LLM;
-        return yield* llm.generate({
+        const result = yield* llm.generate({
           prompt:
             'Generate a fictional person with name "Alice Smith", age 30, occupation "Software Engineer"',
           schema: PersonSchema,
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.object.name).toBe('Alice Smith');
+        expect(result.object.age).toBe(30);
+        expect(result.object.occupation).toBe('Software Engineer');
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.object).toBeDefined();
-      expect(result.object.name).toBe('Alice Smith');
-      expect(result.object.age).toBe(30);
-      expect(result.object.occupation).toBe('Software Engineer');
-    });
-
-    it('returns token usage metrics', async () => {
-      const SimpleSchema = Schema.Struct({
-        message: Schema.String,
-      });
-
-      const effect = Effect.gen(function* () {
+    it.effect('returns token usage metrics', () =>
+      Effect.gen(function* () {
+        const SimpleSchema = Schema.Struct({ message: Schema.String });
         const llm = yield* LLM;
-        return yield* llm.generate({
+        const result = yield* llm.generate({
           prompt: 'Generate a simple message saying "test"',
           schema: SimpleSchema,
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.usage).toBeDefined();
+        expect(result.usage?.inputTokens).toBeGreaterThan(0);
+        expect(result.usage?.outputTokens).toBeGreaterThan(0);
+        expect(result.usage?.totalTokens).toBe(
+          result.usage!.inputTokens + result.usage!.outputTokens,
+        );
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.usage).toBeDefined();
-      expect(result.usage?.inputTokens).toBeGreaterThan(0);
-      expect(result.usage?.outputTokens).toBeGreaterThan(0);
-      expect(result.usage?.totalTokens).toBe(
-        result.usage!.inputTokens + result.usage!.outputTokens,
-      );
-    });
-
-    it('respects system prompt', async () => {
-      const ResponseSchema = Schema.Struct({
-        response: Schema.String,
-      });
-
-      const effect = Effect.gen(function* () {
+    it.effect('respects system prompt', () =>
+      Effect.gen(function* () {
+        const ResponseSchema = Schema.Struct({ response: Schema.String });
         const llm = yield* LLM;
-        return yield* llm.generate({
+        const result = yield* llm.generate({
           system:
             'You are a pirate. Always respond like a pirate would, using pirate slang.',
           prompt: 'Say hello',
           schema: ResponseSchema,
         });
-      }).pipe(Effect.provide(layer));
 
-      const result = await Effect.runPromise(effect);
+        expect(result.object.response).toBeDefined();
+        // LLM output is non-deterministic — just verify we got a non-empty response
+        expect(result.object.response.length).toBeGreaterThan(0);
+      }).pipe(Effect.provide(layer)),
+    );
 
-      expect(result.object.response).toBeDefined();
-      // LLM output is non-deterministic — just verify we got a non-empty response
-      expect(result.object.response.length).toBeGreaterThan(0);
-    });
-
-    it('respects temperature setting', async () => {
-      const NumberSchema = Schema.Struct({
-        number: Schema.Number,
-      });
-
-      // With temperature 0, responses should be deterministic
-      const effect = Effect.gen(function* () {
+    it.effect('respects temperature setting', () =>
+      Effect.gen(function* () {
+        const NumberSchema = Schema.Struct({ number: Schema.Number });
         const llm = yield* LLM;
         const results = [];
 
+        // With temperature 0, responses should be deterministic
         for (let i = 0; i < 3; i++) {
           const result = yield* llm.generate({
             prompt: 'Generate the number 42',
@@ -129,53 +108,37 @@ describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration', () => {
           results.push(result.object.number);
         }
 
-        return results;
-      }).pipe(Effect.provide(layer));
-
-      const results = await Effect.runPromise(effect);
-
-      // All results should be identical with temperature 0
-      expect(results[0]).toBe(results[1]);
-      expect(results[1]).toBe(results[2]);
-    });
+        expect(results[0]).toBe(results[1]);
+        expect(results[1]).toBe(results[2]);
+      }).pipe(Effect.provide(layer)),
+    );
   });
 
   describe('error handling', () => {
-    it('handles invalid API key (401)', async () => {
-      const invalidLayer = GoogleLive({ apiKey: 'invalid-api-key' });
+    it.effect('handles invalid API key (401)', () =>
+      Effect.gen(function* () {
+        const invalidLayer = GoogleLive({ apiKey: 'invalid-api-key' });
+        const SimpleSchema = Schema.Struct({ message: Schema.String });
 
-      const SimpleSchema = Schema.Struct({
-        message: Schema.String,
-      });
+        const exit = yield* Effect.gen(function* () {
+          const llm = yield* LLM;
+          return yield* llm.generate({
+            prompt: 'Say hello',
+            schema: SimpleSchema,
+          });
+        }).pipe(Effect.provide(invalidLayer), Effect.exit);
 
-      const effect = Effect.gen(function* () {
-        const llm = yield* LLM;
-        return yield* llm.generate({
-          prompt: 'Say hello',
-          schema: SimpleSchema,
-        });
-      }).pipe(Effect.provide(invalidLayer));
-
-      const exit = await Effect.runPromiseExit(effect);
-
-      // Invalid API key produces an LLMError (not rate limit)
-      expectEffectFailure(exit, LLMError);
-    });
+        expectEffectFailure(exit, LLMError);
+      }),
+    );
   });
 });
 
 describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration - Rate Limiting', () => {
-  // Note: This test is harder to trigger reliably without hitting actual limits
-  // It's included for manual verification when debugging rate limit issues
-
   it.skip('handles rate limiting gracefully (429)', async () => {
     const layer = GoogleLive({ apiKey: GEMINI_API_KEY! });
+    const SimpleSchema = Schema.Struct({ message: Schema.String });
 
-    const SimpleSchema = Schema.Struct({
-      message: Schema.String,
-    });
-
-    // Send many requests in parallel to potentially trigger rate limiting
     const effects = Array.from({ length: 50 }, () =>
       Effect.gen(function* () {
         const llm = yield* LLM;
@@ -193,13 +156,11 @@ describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration - Rate Limiting', () => {
       ),
     );
 
-    // At least some should succeed, and any failures should be LLMRateLimitError
     const successes = exits.filter(Exit.isSuccess);
     const failures = exits.filter(Exit.isFailure);
 
     expect(successes.length).toBeGreaterThan(0);
 
-    // If there are failures, they should be rate limit errors
     for (const failure of failures) {
       expectEffectFailure(failure, LLMRateLimitError);
     }

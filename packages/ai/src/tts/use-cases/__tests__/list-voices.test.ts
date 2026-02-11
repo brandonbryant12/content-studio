@@ -1,5 +1,6 @@
 import { Effect, Layer } from 'effect';
-import { describe, it, expect } from 'vitest';
+import { describe, expect } from 'vitest';
+import { it, layer } from '@effect/vitest';
 import { TTS, type TTSService, VOICES } from '../../index';
 import { listVoices } from '../list-voices';
 
@@ -27,39 +28,28 @@ const MockTTSLayer: Layer.Layer<TTS> = Layer.succeed(
 // Tests
 // =============================================================================
 
-describe('listVoices', () => {
-  describe('without filter', () => {
-    it('returns all available voices', async () => {
-      const effect = listVoices({}).pipe(Effect.provide(MockTTSLayer));
-
-      const result = await Effect.runPromise(effect);
-
+layer(MockTTSLayer)('listVoices', (it) => {
+  it.effect('returns all available voices', () =>
+    Effect.gen(function* () {
+      const result = yield* listVoices({});
       expect(result.voices).toHaveLength(VOICES.length);
       expect(result.voices).toEqual(VOICES);
-    });
-  });
+    }),
+  );
 
-  describe('with gender filter', () => {
-    it('returns only female voices when gender is female', async () => {
-      const effect = listVoices({ gender: 'female' }).pipe(
-        Effect.provide(MockTTSLayer),
-      );
-
-      const result = await Effect.runPromise(effect);
-
+  it.effect('returns only female voices when gender is female', () =>
+    Effect.gen(function* () {
+      const result = yield* listVoices({ gender: 'female' });
       expect(result.voices.length).toBeGreaterThan(0);
       expect(result.voices.every((v) => v.gender === 'female')).toBe(true);
-    });
+    }),
+  );
 
-    it('returns only male voices when gender is male', async () => {
-      const effect = listVoices({ gender: 'male' }).pipe(
-        Effect.provide(MockTTSLayer),
-      );
-
-      const result = await Effect.runPromise(effect);
-
+  it.effect('returns only male voices when gender is male', () =>
+    Effect.gen(function* () {
+      const result = yield* listVoices({ gender: 'male' });
       expect(result.voices.length).toBeGreaterThan(0);
       expect(result.voices.every((v) => v.gender === 'male')).toBe(true);
-    });
-  });
+    }),
+  );
 });

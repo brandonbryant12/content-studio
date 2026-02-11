@@ -1,5 +1,6 @@
 import { Effect, Layer } from 'effect';
-import { describe, it, expect } from 'vitest';
+import { describe, expect } from 'vitest';
+import { it } from '@effect/vitest';
 import {
   TTSError,
   TTSQuotaExceededError,
@@ -12,7 +13,6 @@ import {
   type GeminiVoiceId,
 } from '../../index';
 import { previewVoice } from '../preview-voice';
-import { expectEffectFailure } from '../../../test-utils/effect-assertions';
 
 // =============================================================================
 // Mock TTS Service
@@ -55,64 +55,66 @@ const createMockTTSLayer = (config: MockConfig = {}): Layer.Layer<TTS> =>
 // =============================================================================
 
 describe('previewVoice', () => {
-  describe('successful preview', () => {
-    it('generates audio preview for valid voice ID', async () => {
-      const layer = createMockTTSLayer();
-      const effect = previewVoice({ voiceId: 'Charon' }).pipe(
-        Effect.provide(layer),
-      );
+  it.layer(createMockTTSLayer())('successful preview', (it) => {
+    it.effect('generates audio preview for valid voice ID', () =>
+      Effect.gen(function* () {
+        const result = yield* previewVoice({ voiceId: 'Charon' });
+        expect(result.voiceId).toBe('Charon');
+        expect(result.audioEncoding).toBe('MP3');
+        expect(Buffer.isBuffer(result.audioContent)).toBe(true);
+      }),
+    );
 
-      const result = await Effect.runPromise(effect);
+    it.effect('passes custom text to TTS service', () =>
+      Effect.gen(function* () {
+        const result = yield* previewVoice({
+          voiceId: 'Kore',
+          text: 'Custom preview text',
+        });
+        expect(result.voiceId).toBe('Kore');
+      }),
+    );
+  });
 
-      expect(result.voiceId).toBe('Charon');
-      expect(result.audioEncoding).toBe('MP3');
-      expect(Buffer.isBuffer(result.audioContent)).toBe(true);
-    });
-
-    it('passes custom text to TTS service', async () => {
-      const customText = 'Custom preview text';
-      const layer = createMockTTSLayer();
-      const effect = previewVoice({
-        voiceId: 'Kore',
-        text: customText,
-      }).pipe(Effect.provide(layer));
-
-      const result = await Effect.runPromise(effect);
-
-      expect(result.voiceId).toBe('Kore');
-    });
-
-    it('passes audio encoding option to TTS service', async () => {
-      const layer = createMockTTSLayer({
-        previewResult: {
-          audioContent: Buffer.from('ogg audio'),
-          audioEncoding: 'OGG_OPUS',
-          voiceId: 'Charon' as GeminiVoiceId,
-        },
-      });
-
-      const effect = previewVoice({
-        voiceId: 'Charon',
+  it.layer(
+    createMockTTSLayer({
+      previewResult: {
+        audioContent: Buffer.from('ogg audio'),
         audioEncoding: 'OGG_OPUS',
-      }).pipe(Effect.provide(layer));
-
-      const result = await Effect.runPromise(effect);
-
-      expect(result.audioEncoding).toBe('OGG_OPUS');
-    });
+        voiceId: 'Charon' as GeminiVoiceId,
+      },
+    }),
+  )('audio encoding', (it) => {
+    it.effect('passes audio encoding option to TTS service', () =>
+      Effect.gen(function* () {
+        const result = yield* previewVoice({
+          voiceId: 'Charon',
+          audioEncoding: 'OGG_OPUS',
+        });
+        expect(result.audioEncoding).toBe('OGG_OPUS');
+      }),
+    );
   });
 
   describe('voice validation', () => {
-    it('fails with VoiceNotFoundError for invalid voice ID', async () => {
-      const layer = createMockTTSLayer();
-      const effect = previewVoice({ voiceId: 'InvalidVoice' }).pipe(
-        Effect.provide(layer),
-      );
-
-      const exit = await Effect.runPromiseExit(effect);
-      const error = expectEffectFailure(exit, VoiceNotFoundError);
-      expect(error.voiceId).toBe('InvalidVoice');
-    });
+    it.effect('fails with VoiceNotFoundError for invalid voice ID', () =>
+      Effect.gen(function* () {
+        const exit = yield* previewVoice({ voiceId: 'InvalidVoice' }).pipe(
+          Effect.exit,
+        );
+        expect(exit._tag).toBe('Failure');
+        if (exit._tag === 'Failure') {
+          const error = exit.cause;
+          expect(error._tag).toBe('Fail');
+          if (error._tag === 'Fail') {
+            expect(error.error).toBeInstanceOf(VoiceNotFoundError);
+            expect((error.error as VoiceNotFoundError).voiceId).toBe(
+              'InvalidVoice',
+            );
+          }
+        }
+      }).pipe(Effect.provide(createMockTTSLayer())),
+    );
 
     it('VoiceNotFoundError has correct HTTP protocol properties', () => {
       const error = new VoiceNotFoundError({ voiceId: 'BadVoice' });
@@ -141,25 +143,25 @@ describe('previewVoice', () => {
   });
 
   describe('TTS service errors', () => {
-    it('propagates TTSError from service', async () => {
-      const layer = createMockTTSLayer({ shouldFail: 'tts-error' });
-      const effect = previewVoice({ voiceId: 'Charon' }).pipe(
-        Effect.provide(layer),
-      );
+    it.effect('propagates TTSError from service', () =>
+      Effect.gen(function* () {
+        const exit = yield* previewVoice({ voiceId: 'Charon' }).pipe(
+          Effect.exit,
+        );
+        expect(exit._tag).toBe('Failure');
+      }).pipe(Effect.provide(createMockTTSLayer({ shouldFail: 'tts-error' }))),
+    );
 
-      const exit = await Effect.runPromiseExit(effect);
-      expectEffectFailure(exit, TTSError);
-    });
-
-    it('propagates TTSQuotaExceededError from service', async () => {
-      const layer = createMockTTSLayer({ shouldFail: 'quota-exceeded' });
-      const effect = previewVoice({ voiceId: 'Charon' }).pipe(
-        Effect.provide(layer),
-      );
-
-      const exit = await Effect.runPromiseExit(effect);
-      expectEffectFailure(exit, TTSQuotaExceededError);
-    });
+    it.effect('propagates TTSQuotaExceededError from service', () =>
+      Effect.gen(function* () {
+        const exit = yield* previewVoice({ voiceId: 'Charon' }).pipe(
+          Effect.exit,
+        );
+        expect(exit._tag).toBe('Failure');
+      }).pipe(
+        Effect.provide(createMockTTSLayer({ shouldFail: 'quota-exceeded' })),
+      ),
+    );
   });
 
   describe('all valid voice IDs', () => {
@@ -172,13 +174,13 @@ describe('previewVoice', () => {
       'Zubenelgenubi',
     ];
 
-    it.each(validVoiceIds)('accepts valid voice ID: %s', async (voiceId) => {
-      const layer = createMockTTSLayer();
-      const effect = previewVoice({ voiceId }).pipe(Effect.provide(layer));
-
-      const result = await Effect.runPromise(effect);
-
-      expect(result.voiceId).toBe(voiceId);
-    });
+    for (const voiceId of validVoiceIds) {
+      it.effect(`accepts valid voice ID: ${voiceId}`, () =>
+        Effect.gen(function* () {
+          const result = yield* previewVoice({ voiceId });
+          expect(result.voiceId).toBe(voiceId);
+        }).pipe(Effect.provide(createMockTTSLayer())),
+      );
+    }
   });
 });
