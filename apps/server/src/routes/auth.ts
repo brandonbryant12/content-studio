@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { trustedOrigins } from '../config';
 import { env } from '../env';
+import { authRateLimit } from '../middleware/rate-limit';
 import { auth } from '../services';
 
 /**
@@ -18,6 +19,7 @@ export const authRoute = new Hono()
       maxAge: 600,
     }),
   )
+  .use(authRateLimit)
   .on(['POST', 'GET'], '/*', (c) => auth.handler(c.req.raw));
 
 export const authPath = `${env.PUBLIC_SERVER_API_PATH}/auth`;

@@ -1,5 +1,6 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
 import { Db } from '@repo/db/effect';
+import type { DatabaseInstance } from '@repo/db/client';
 import {
   job,
   type JobId,
@@ -173,25 +174,61 @@ const makeQueueService = Effect.gen(function* () {
       ),
     );
 
-  const processNextJob: QueueService['processNextJob'] = (type, handler) =>
+  const claimNextJob = (
+    type: JobType,
+  ): Effect.Effect<Job | null, QueueError> =>
     runQuery(
-      'processNextJob',
+      'claimNextJob',
       async () => {
-        const [row] = await db
-          .select()
-          .from(job)
-          .where(and(eq(job.type, type), eq(job.status, JobStatus.PENDING)))
-          .orderBy(asc(job.createdAt))
-          .limit(1);
+        const result = await (db as DatabaseInstance).execute(sql`
+          UPDATE ${job}
+          SET ${sql.raw(`"status" = '${JobStatus.PROCESSING}'`)},
+              ${sql.raw(`"startedAt" = NOW()`)},
+              ${sql.raw(`"updatedAt" = NOW()`)}
+          WHERE ${job.id} = (
+            SELECT ${job.id} FROM ${job}
+            WHERE ${job.type} = ${type}
+              AND ${job.status} = ${JobStatus.PENDING}
+            ORDER BY ${job.createdAt} ASC
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          )
+          RETURNING *
+        `);
 
-        return row;
+        const row = result.rows[0];
+        return row ? mapRowToJob(row as typeof job.$inferSelect) : null;
       },
-      'Failed to fetch next job',
+      'Failed to claim next job',
     ).pipe(
       Effect.tap(() => Effect.annotateCurrentSpan('queue.job.type', type)),
-      Effect.flatMap((row) => {
-        if (!row) return Effect.succeed(null);
-        return executeHandler(mapRowToJob(row), handler);
+    );
+
+  const processNextJob: QueueService['processNextJob'] = (type, handler) =>
+    claimNextJob(type).pipe(
+      Effect.flatMap((claimed) => {
+        if (!claimed) return Effect.succeed(null);
+        return handler(claimed).pipe(
+          Effect.flatMap((result) =>
+            updateJobStatus(claimed.id, JobStatus.COMPLETED, result),
+          ),
+          Effect.catchAll((err) =>
+            updateJobStatus(
+              claimed.id,
+              JobStatus.FAILED,
+              undefined,
+              err instanceof JobProcessingError ? err.message : String(err),
+            ),
+          ),
+          Effect.catchAllDefect((defect) =>
+            updateJobStatus(
+              claimed.id,
+              JobStatus.FAILED,
+              undefined,
+              `Unexpected defect: ${defect instanceof Error ? defect.message : String(defect)}`,
+            ),
+          ),
+        );
       }),
     );
 

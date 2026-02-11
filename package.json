@@ -8,6 +8,8 @@
     "build": "turbo run build",
     "clean": "turbo run clean",
     "db:push": "turbo -F @repo/db push",
+    "db:migrate": "turbo -F @repo/db migrate",
+    "db:generate": "turbo -F @repo/db generate",
     "db:studio": "turbo -F @repo/db studio",
     "dev": "turbo watch dev --continue",
     "env:copy-example": "turbo run env:copy-example",

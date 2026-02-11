@@ -1,0 +1,1 @@
+-- Initial snapshot (schema created via db:push before migration tracking was enabled)

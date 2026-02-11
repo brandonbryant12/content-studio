@@ -38,6 +38,10 @@
     "./error-protocol": {
       "types": "./dist/src/error-protocol.d.ts",
       "default": "./src/error-protocol.ts"
+    },
+    "./migrate": {
+      "types": "./dist/src/migrate.d.ts",
+      "default": "./src/migrate.ts"
     }
   },
   "scripts": {
@@ -50,6 +54,8 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "push": "pnpm env:run drizzle-kit push",
+    "migrate": "pnpm env:run drizzle-kit migrate",
+    "generate": "pnpm env:run drizzle-kit generate",
     "studio": "pnpm env:run drizzle-kit studio",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },

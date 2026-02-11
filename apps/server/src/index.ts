@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { secureHeaders } from 'hono/secure-headers';
+import { verifyDbConnection } from '@repo/db/client';
 import { env } from './env';
 import {
   authRoute,
@@ -9,7 +11,7 @@ import {
   staticRoute,
   staticPath,
 } from './routes';
-import { auth, storageConfig } from './services';
+import { auth, db, storageConfig } from './services';
 import { generateRootHtml } from './utils';
 
 // =============================================================================
@@ -25,6 +27,7 @@ const app = new Hono<{
 
 // Global middleware
 app.use(logger());
+app.use(secureHeaders());
 
 // Global error handler
 app.onError((err, c) => {
@@ -36,8 +39,29 @@ app.onError((err, c) => {
 // Routes
 // =============================================================================
 
-// Health check
+// Health check — shallow (for load balancer liveness probes)
 app.get('/healthcheck', (c) => c.text('OK'));
+
+// Deep health check — verifies downstream dependencies (for readiness probes)
+app.get('/healthcheck/deep', async (c) => {
+  const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
+
+  // Database check
+  const dbStart = Date.now();
+  try {
+    await verifyDbConnection(db);
+    checks.database = { status: 'ok', latencyMs: Date.now() - dbStart };
+  } catch (err) {
+    checks.database = {
+      status: 'error',
+      latencyMs: Date.now() - dbStart,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  const allHealthy = Object.values(checks).every((ch) => ch.status === 'ok');
+  return c.json({ status: allHealthy ? 'ok' : 'degraded', checks }, allHealthy ? 200 : 503);
+});
 
 // Root page
 app.get('/', (c) =>
