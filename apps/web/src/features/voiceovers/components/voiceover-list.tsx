@@ -23,7 +23,6 @@ import {
 } from 'react';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import type { VoiceoverListItem } from './voiceover-item';
-import { VoiceoverIcon } from './voiceover-icon';
 import {
   type VoiceoverStatusType,
   getStatusConfig,
@@ -198,21 +197,18 @@ const VoiceoverRow = memo(function VoiceoverRow({
         <Link
           to="/voiceovers/$voiceoverId"
           params={{ voiceoverId: voiceover.id }}
-          className="flex items-center gap-3 min-w-0"
+          className="min-w-0"
         >
-          <VoiceoverIcon status={voiceover.status} className="w-8 h-8" />
-          <div className="min-w-0">
-            <span className="font-medium text-sm truncate block">
-              {voiceover.title}
+          <span className="font-medium text-sm truncate block">
+            {voiceover.title}
+          </span>
+          {quickPlay.playingId === voiceover.id && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {quickPlay.formatTime(quickPlay.currentTime)}
+              {quickPlay.duration > 0 &&
+                ` / ${quickPlay.formatTime(quickPlay.duration)}`}
             </span>
-            {quickPlay.playingId === voiceover.id && (
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {quickPlay.formatTime(quickPlay.currentTime)}
-                {quickPlay.duration > 0 &&
-                  ` / ${quickPlay.formatTime(quickPlay.duration)}`}
-              </span>
-            )}
-          </div>
+          )}
         </Link>
       </td>
       {/* Status */}
