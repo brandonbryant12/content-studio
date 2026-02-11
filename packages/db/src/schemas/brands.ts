@@ -115,22 +115,6 @@ export const generateProjectId = (): ProjectId =>
   `prj_${generateRandomBase32()}` as ProjectId;
 
 // =============================================================================
-// Collaborator ID
-// =============================================================================
-
-export const CollaboratorIdSchema = Schema.String.pipe(
-  Schema.pattern(/^col_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid collaborator ID format',
-  }),
-  Schema.brand('CollaboratorId'),
-);
-
-export type CollaboratorId = typeof CollaboratorIdSchema.Type;
-
-export const generateCollaboratorId = (): CollaboratorId =>
-  `col_${generateRandomBase32()}` as CollaboratorId;
-
-// =============================================================================
 // Voiceover ID
 // =============================================================================
 
@@ -145,22 +129,6 @@ export type VoiceoverId = typeof VoiceoverIdSchema.Type;
 
 export const generateVoiceoverId = (): VoiceoverId =>
   `voc_${generateRandomBase32()}` as VoiceoverId;
-
-// =============================================================================
-// Voiceover Collaborator ID
-// =============================================================================
-
-export const VoiceoverCollaboratorIdSchema = Schema.String.pipe(
-  Schema.pattern(/^vcl_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid voiceover collaborator ID format',
-  }),
-  Schema.brand('VoiceoverCollaboratorId'),
-);
-
-export type VoiceoverCollaboratorId = typeof VoiceoverCollaboratorIdSchema.Type;
-
-export const generateVoiceoverCollaboratorId = (): VoiceoverCollaboratorId =>
-  `vcl_${generateRandomBase32()}` as VoiceoverCollaboratorId;
 
 // =============================================================================
 // Infographic ID

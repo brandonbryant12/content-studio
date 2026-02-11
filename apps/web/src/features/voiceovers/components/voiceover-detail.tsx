@@ -1,6 +1,5 @@
 // features/voiceovers/components/voiceover-detail.tsx
 
-import type { Collaborator } from '../hooks/use-collaborators';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
 import {
@@ -18,12 +17,6 @@ interface DisplayAudio {
   duration: number | null;
 }
 
-interface Owner {
-  id: string;
-  name: string;
-  image?: string | null;
-}
-
 export interface VoiceoverDetailProps {
   voiceover: Voiceover;
   settings: UseVoiceoverSettingsReturn;
@@ -35,11 +28,8 @@ export interface VoiceoverDetailProps {
   isDeleting: boolean;
   onGenerate: () => void;
   onDelete: () => void;
-  owner: Owner;
-  collaborators: readonly Collaborator[];
   isApproved: boolean;
   isAdmin: boolean;
-  onManageCollaborators: () => void;
   // Approval callbacks
   onApprove: () => void;
   onRevoke: () => void;
@@ -57,11 +47,8 @@ export function VoiceoverDetail({
   isDeleting,
   onGenerate,
   onDelete,
-  owner,
-  collaborators,
   isApproved,
   isAdmin,
-  onManageCollaborators,
   onApprove,
   onRevoke,
   isApprovalPending,
@@ -71,11 +58,8 @@ export function VoiceoverDetail({
       voiceover={voiceover}
       onDelete={onDelete}
       isDeleting={isDeleting}
-      owner={owner}
-      collaborators={collaborators}
       isApproved={isApproved}
       isAdmin={isAdmin}
-      onManageCollaborators={onManageCollaborators}
       onApprove={onApprove}
       onRevoke={onRevoke}
       isApprovalPending={isApprovalPending}

@@ -30,22 +30,8 @@ export interface PodcastDetailProps {
   onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
-  owner: {
-    id: string;
-    name: string;
-    image?: string | null;
-  };
-  collaborators: readonly {
-    id: string;
-    podcastId: string;
-    userId: string | null;
-    email: string;
-    userName: string | null;
-    userImage: string | null;
-  }[];
   isApproved: boolean;
   isAdmin: boolean;
-  onManageCollaborators: () => void;
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;
@@ -65,11 +51,8 @@ export function PodcastDetail({
   onSave,
   onGenerate,
   onDelete,
-  owner,
-  collaborators,
   isApproved,
   isAdmin,
-  onManageCollaborators,
   onApprove,
   onRevoke,
   isApprovalPending,
@@ -79,11 +62,8 @@ export function PodcastDetail({
       podcast={podcast}
       onDelete={onDelete}
       isDeleting={isDeleting}
-      owner={owner}
-      collaborators={collaborators}
       isApproved={isApproved}
       isAdmin={isAdmin}
-      onManageCollaborators={onManageCollaborators}
       onApprove={onApprove}
       onRevoke={onRevoke}
       isApprovalPending={isApprovalPending}

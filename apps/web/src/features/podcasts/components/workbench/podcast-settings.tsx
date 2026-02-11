@@ -24,6 +24,38 @@ interface VoiceSelectorProps {
   disabled?: boolean;
 }
 
+function VoicePreviewBtn({
+  voiceName,
+  disabled,
+}: {
+  voiceName: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className="mixer-voice-preview-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        // TODO: wire up voice preview playback
+      }}
+      aria-label={`Preview ${voiceName} voice`}
+      disabled={disabled}
+    >
+      <svg
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="mixer-voice-preview-icon"
+        aria-hidden="true"
+      >
+        <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
+        <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
+      </svg>
+    </button>
+  );
+}
+
 function VoiceSelector({
   value,
   onChange,
@@ -33,57 +65,67 @@ function VoiceSelector({
   const selectedVoice = VOICES.find((v) => v.id === value);
 
   return (
-    <SelectPrimitive.Root
-      value={value}
-      onValueChange={onChange}
-      disabled={disabled}
-    >
-      <SelectPrimitive.Trigger className="mixer-voice-current">
-        <div className={`mixer-voice-avatar ${selectedVoice?.gender}`}>
-          {selectedVoice?.name.charAt(0)}
-        </div>
-        <div className="mixer-voice-info">
-          <p className="mixer-voice-name">{selectedVoice?.name}</p>
-          <p className="mixer-voice-desc">{selectedVoice?.description}</p>
-        </div>
-        <SelectPrimitive.Icon>
-          <ChevronDownIcon className="mixer-voice-chevron" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
+    <div className="mixer-voice-selector-wrap">
+      <SelectPrimitive.Root
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+      >
+        <SelectPrimitive.Trigger className="mixer-voice-current">
+          <div className={`mixer-voice-avatar ${selectedVoice?.gender}`}>
+            {selectedVoice?.name.charAt(0)}
+          </div>
+          <div className="mixer-voice-info">
+            <p className="mixer-voice-name">{selectedVoice?.name}</p>
+            <p className="mixer-voice-desc">{selectedVoice?.description}</p>
+          </div>
+          <SelectPrimitive.Icon>
+            <ChevronDownIcon className="mixer-voice-chevron" />
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
 
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content
-          className="mixer-voice-dropdown"
-          position="popper"
-          sideOffset={4}
-        >
-          <SelectPrimitive.Viewport>
-            {VOICES.map((voice) => {
-              const isDisabled = voice.id === disabledVoice;
-              return (
-                <SelectPrimitive.Item
-                  key={voice.id}
-                  value={voice.id}
-                  disabled={isDisabled}
-                  className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                >
-                  <div
-                    className={`mixer-voice-option-avatar ${voice.gender === 'female' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'}`}
+        <SelectPrimitive.Portal>
+          <SelectPrimitive.Content
+            className="mixer-voice-dropdown"
+            position="popper"
+            sideOffset={4}
+          >
+            <SelectPrimitive.Viewport>
+              {VOICES.map((voice) => {
+                const isDisabled = voice.id === disabledVoice;
+                return (
+                  <SelectPrimitive.Item
+                    key={voice.id}
+                    value={voice.id}
+                    disabled={isDisabled}
+                    className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                   >
-                    {voice.name.charAt(0)}
-                  </div>
-                  <SelectPrimitive.ItemText>
-                    <span className="mixer-voice-option-name">
-                      {voice.name}
-                    </span>
-                  </SelectPrimitive.ItemText>
-                </SelectPrimitive.Item>
-              );
-            })}
-          </SelectPrimitive.Viewport>
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    </SelectPrimitive.Root>
+                    <div
+                      className={`mixer-voice-option-avatar ${voice.gender === 'female' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'}`}
+                    >
+                      {voice.name.charAt(0)}
+                    </div>
+                    <SelectPrimitive.ItemText>
+                      <span className="mixer-voice-option-name">
+                        {voice.name}
+                      </span>
+                    </SelectPrimitive.ItemText>
+                    <VoicePreviewBtn
+                      voiceName={voice.name}
+                      disabled={isDisabled}
+                    />
+                  </SelectPrimitive.Item>
+                );
+              })}
+            </SelectPrimitive.Viewport>
+          </SelectPrimitive.Content>
+        </SelectPrimitive.Portal>
+      </SelectPrimitive.Root>
+      <VoicePreviewBtn
+        voiceName={selectedVoice?.name ?? 'selected'}
+        disabled={disabled}
+      />
+    </div>
   );
 }
 

@@ -1,12 +1,5 @@
 import { Schema } from 'effect';
 
-// =============================================================================
-// Storage Errors
-// =============================================================================
-
-/**
- * Storage operation failure.
- */
 export class StorageError extends Schema.TaggedError<StorageError>()(
   'StorageError',
   {
@@ -20,9 +13,6 @@ export class StorageError extends Schema.TaggedError<StorageError>()(
   static readonly logLevel = 'error-with-stack' as const;
 }
 
-/**
- * Storage file not found.
- */
 export class StorageNotFoundError extends Schema.TaggedError<StorageNotFoundError>()(
   'StorageNotFoundError',
   {
@@ -33,16 +23,13 @@ export class StorageNotFoundError extends Schema.TaggedError<StorageNotFoundErro
   static readonly httpStatus = 404 as const;
   static readonly httpCode = 'NOT_FOUND' as const;
   static readonly httpMessage = (e: StorageNotFoundError) =>
-    e.message ?? `File not found: ${e.key}`;
+    e.message || `File not found: ${e.key}`;
   static readonly logLevel = 'silent' as const;
   static getData(e: StorageNotFoundError) {
     return { key: e.key };
   }
 }
 
-/**
- * Storage upload failure.
- */
 export class StorageUploadError extends Schema.TaggedError<StorageUploadError>()(
   'StorageUploadError',
   {
@@ -60,13 +47,6 @@ export class StorageUploadError extends Schema.TaggedError<StorageUploadError>()
   }
 }
 
-// =============================================================================
-// Error Union Types
-// =============================================================================
-
-/**
- * All storage package errors.
- */
 export type StoragePackageError =
   | StorageError
   | StorageNotFoundError

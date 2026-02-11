@@ -35,16 +35,6 @@ interface Voiceover {
   updatedAt: string;
 }
 
-interface VoiceoverCollaborator {
-  id: string;
-  voiceoverId: string;
-  userId: string | null;
-  email: string;
-  userName: string | null;
-  userImage: string | null;
-  hasApproved: boolean;
-}
-
 export class ApiHelper {
   private request: APIRequestContext;
   private baseURL: string;
@@ -338,44 +328,6 @@ export class ApiHelper {
         // Ignore errors - voiceover may have been deleted by another test
       }
     }
-  }
-
-  // Voiceover Collaborators
-
-  /**
-   * List collaborators for a voiceover
-   */
-  async listVoiceoverCollaborators(
-    voiceoverId: string,
-  ): Promise<VoiceoverCollaborator[]> {
-    return this.get<VoiceoverCollaborator[]>(
-      `/voiceovers/${voiceoverId}/collaborators`,
-    );
-  }
-
-  /**
-   * Add a collaborator to a voiceover
-   */
-  async addVoiceoverCollaborator(
-    voiceoverId: string,
-    email: string,
-  ): Promise<VoiceoverCollaborator> {
-    return this.post<VoiceoverCollaborator>(
-      `/voiceovers/${voiceoverId}/collaborators`,
-      { email },
-    );
-  }
-
-  /**
-   * Remove a collaborator from a voiceover
-   */
-  async removeVoiceoverCollaborator(
-    voiceoverId: string,
-    collaboratorId: string,
-  ): Promise<void> {
-    await this.delete(
-      `/voiceovers/${voiceoverId}/collaborators/${collaboratorId}`,
-    );
   }
 
   /**

@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
+import { lazy, Suspense, useCallback } from 'react';
+import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
 import { usePodcastActions } from '../hooks/use-podcast-actions';
@@ -16,12 +16,6 @@ import {
 const SetupWizardContainer = lazy(() =>
   import('./setup-wizard-container').then((m) => ({
     default: m.SetupWizardContainer,
-  })),
-);
-
-const AddCollaboratorDialog = lazy(() =>
-  import('./collaborators/add-collaborator-dialog').then((m) => ({
-    default: m.AddCollaboratorDialog,
   })),
 );
 
@@ -56,19 +50,18 @@ export function PodcastDetailContainer({
     documentSelection,
   });
 
-  const collaboratorManagement = useCollaboratorManagement(
-    podcastId,
-    currentUserId,
-  );
-
-  const owner = {
-    id: podcast.createdBy,
-    name: user?.id === podcast.createdBy ? (user?.name ?? 'You') : 'Owner',
-    image: user?.id === podcast.createdBy ? user?.image : undefined,
-  };
+  const { approve, revoke } = useApprovePodcast(podcastId, currentUserId);
 
   const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
   const isApproved = podcast.approvedBy !== null;
+
+  const handleApprove = useCallback(() => {
+    approve.mutate({ id: podcastId });
+  }, [approve, podcastId]);
+
+  const handleRevoke = useCallback(() => {
+    revoke.mutate({ id: podcastId });
+  }, [revoke, podcastId]);
 
   useKeyboardShortcut({
     key: 's',
@@ -97,39 +90,25 @@ export function PodcastDetailContainer({
     : null;
 
   return (
-    <>
-      <PodcastDetail
-        podcast={podcast}
-        scriptEditor={scriptEditor}
-        settings={settings}
-        documentSelection={documentSelection}
-        displayAudio={displayAudio}
-        hasChanges={actions.hasAnyChanges}
-        isGenerating={actions.isGenerating}
-        isPendingGeneration={actions.isPendingGeneration}
-        isSaving={actions.isSaving}
-        isDeleting={actions.isDeleting}
-        onSave={actions.handleSave}
-        onGenerate={actions.handleGenerate}
-        onDelete={actions.handleDelete}
-        owner={owner}
-        collaborators={collaboratorManagement.collaborators}
-        isApproved={isApproved}
-        isAdmin={isAdmin}
-        onManageCollaborators={collaboratorManagement.openAddDialog}
-        onApprove={collaboratorManagement.handleApprove}
-        onRevoke={collaboratorManagement.handleRevoke}
-        isApprovalPending={collaboratorManagement.isApprovalPending}
-      />
-      {collaboratorManagement.isAddDialogOpen && (
-        <Suspense fallback={null}>
-          <AddCollaboratorDialog
-            podcastId={podcastId}
-            isOpen={collaboratorManagement.isAddDialogOpen}
-            onClose={collaboratorManagement.closeAddDialog}
-          />
-        </Suspense>
-      )}
-    </>
+    <PodcastDetail
+      podcast={podcast}
+      scriptEditor={scriptEditor}
+      settings={settings}
+      documentSelection={documentSelection}
+      displayAudio={displayAudio}
+      hasChanges={actions.hasAnyChanges}
+      isGenerating={actions.isGenerating}
+      isPendingGeneration={actions.isPendingGeneration}
+      isSaving={actions.isSaving}
+      isDeleting={actions.isDeleting}
+      onSave={actions.handleSave}
+      onGenerate={actions.handleGenerate}
+      onDelete={actions.handleDelete}
+      isApproved={isApproved}
+      isAdmin={isAdmin}
+      onApprove={handleApprove}
+      onRevoke={handleRevoke}
+      isApprovalPending={approve.isPending || revoke.isPending}
+    />
   );
 }

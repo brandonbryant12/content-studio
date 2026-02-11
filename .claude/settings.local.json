@@ -132,7 +132,9 @@
       "Skill(ralph-plan)",
       "Bash(npx tsc:*)",
       "Bash(npx tsr:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
     ],
     "deny": [],
     "ask": []

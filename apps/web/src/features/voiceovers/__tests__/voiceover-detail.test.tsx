@@ -1,7 +1,6 @@
 // features/voiceovers/__tests__/voiceover-detail.test.tsx
 
 import { describe, it, expect, vi } from 'vitest';
-import type { Collaborator } from '../hooks/use-collaborators';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
 import {
@@ -122,15 +121,6 @@ function createMockSettings(
   };
 }
 
-function createMockOwner(overrides = {}) {
-  return {
-    id: 'user-1',
-    name: 'Test User',
-    image: null,
-    ...overrides,
-  };
-}
-
 function createDefaultProps(
   overrides: Partial<VoiceoverDetailProps> = {},
 ): VoiceoverDetailProps {
@@ -145,11 +135,8 @@ function createDefaultProps(
     isDeleting: false,
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
-    owner: createMockOwner(),
-    collaborators: [] as readonly Collaborator[],
     isApproved: false,
     isAdmin: false,
-    onManageCollaborators: vi.fn(),
     onApprove: vi.fn(),
     onRevoke: vi.fn(),
     isApprovalPending: false,

@@ -28,15 +28,6 @@ export {
 } from './podcast';
 import { resetPodcastCounters as _resetPodcastCounters } from './podcast';
 
-// Collaborator factories
-export {
-  createTestCollaborator,
-  createTestCollaboratorWithUser,
-  resetCollaboratorCounter,
-  type CreateTestCollaboratorOptions,
-} from './collaborator';
-import { resetCollaboratorCounter as _resetCollaboratorCounter } from './collaborator';
-
 // Infographic factories
 export {
   createTestInfographic,
@@ -60,7 +51,6 @@ export const resetAllFactories = () => {
   _resetUserCounter();
   _resetDocumentCounter();
   _resetPodcastCounters();
-  _resetCollaboratorCounter();
   _resetInfographicCounter();
   _resetInfographicVersionCounter();
 };

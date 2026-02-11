@@ -1,8 +1,6 @@
 export {
   createMockPodcastRepo,
-  createMockCollaboratorRepo,
   createMockVoiceoverRepo,
-  createMockVoiceoverCollaboratorRepo,
   createMockDocumentRepo,
   createMockActivityLogRepo,
   MockDbLive,

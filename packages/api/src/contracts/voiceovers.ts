@@ -7,13 +7,11 @@ import {
   // Output schemas
   VoiceoverOutputSchema,
   VoiceoverListItemOutputSchema,
-  VoiceoverCollaboratorWithUserOutputSchema,
   // Job schemas
   JobOutputSchema,
   JobStatusSchema,
   // Branded ID schemas
   VoiceoverIdSchema,
-  VoiceoverCollaboratorIdSchema,
   JobIdSchema,
 } from '@repo/db/schema';
 
@@ -46,51 +44,6 @@ const voiceoverErrors = {
 const authErrors = {
   FORBIDDEN: {
     status: 403,
-  },
-} as const;
-
-const collaboratorErrors = {
-  NOT_VOICEOVER_OWNER: {
-    status: 403,
-    data: std(
-      Schema.Struct({
-        voiceoverId: Schema.String,
-      }),
-    ),
-  },
-  NOT_VOICEOVER_COLLABORATOR: {
-    status: 403,
-    data: std(
-      Schema.Struct({
-        voiceoverId: Schema.String,
-      }),
-    ),
-  },
-  VOICEOVER_COLLABORATOR_ALREADY_EXISTS: {
-    status: 409,
-    data: std(
-      Schema.Struct({
-        voiceoverId: Schema.String,
-        email: Schema.String,
-      }),
-    ),
-  },
-  VOICEOVER_COLLABORATOR_NOT_FOUND: {
-    status: 404,
-    data: std(
-      Schema.Struct({
-        id: Schema.String,
-      }),
-    ),
-  },
-  CANNOT_ADD_OWNER_AS_VOICEOVER_COLLABORATOR: {
-    status: 400,
-    data: std(
-      Schema.Struct({
-        voiceoverId: Schema.String,
-        email: Schema.String,
-      }),
-    ),
   },
 } as const;
 
@@ -236,64 +189,6 @@ const voiceoverContract = oc
       .input(std(Schema.Struct({ jobId: JobIdSchema })))
       .output(std(JobOutputSchema)),
 
-    // =========================================================================
-    // Collaborator Endpoints
-    // =========================================================================
-
-    // List collaborators for a voiceover
-    listCollaborators: oc
-      .route({
-        method: 'GET',
-        path: '/{id}/collaborators',
-        summary: 'List collaborators',
-        description: 'List all collaborators for a voiceover',
-      })
-      .errors(voiceoverErrors)
-      .input(std(Schema.Struct({ id: VoiceoverIdSchema })))
-      .output(std(Schema.Array(VoiceoverCollaboratorWithUserOutputSchema))),
-
-    // Add a collaborator to a voiceover
-    addCollaborator: oc
-      .route({
-        method: 'POST',
-        path: '/{id}/collaborators',
-        summary: 'Add collaborator',
-        description:
-          'Add a collaborator by email. Only the voiceover owner can add collaborators.',
-      })
-      .errors({ ...voiceoverErrors, ...collaboratorErrors })
-      .input(
-        std(
-          Schema.Struct({
-            id: VoiceoverIdSchema,
-            email: Schema.String.pipe(
-              Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-            ),
-          }),
-        ),
-      )
-      .output(std(VoiceoverCollaboratorWithUserOutputSchema)),
-
-    // Remove a collaborator from a voiceover
-    removeCollaborator: oc
-      .route({
-        method: 'DELETE',
-        path: '/{id}/collaborators/{collaboratorId}',
-        summary: 'Remove collaborator',
-        description:
-          'Remove a collaborator from a voiceover. Only the voiceover owner can remove collaborators.',
-      })
-      .errors({ ...voiceoverErrors, ...collaboratorErrors })
-      .input(
-        std(
-          Schema.Struct({
-            id: VoiceoverIdSchema,
-            collaboratorId: VoiceoverCollaboratorIdSchema,
-          }),
-        ),
-      )
-      .output(std(Schema.Struct({}))),
-
     // Approve a voiceover (admin-only)
     approve: oc
       .route({
@@ -317,24 +212,6 @@ const voiceoverContract = oc
       .errors({ ...voiceoverErrors, ...authErrors })
       .input(std(Schema.Struct({ id: VoiceoverIdSchema })))
       .output(std(VoiceoverOutputSchema)),
-
-    // Claim pending invites for the current user
-    claimInvites: oc
-      .route({
-        method: 'POST',
-        path: '/claim-invites',
-        summary: 'Claim pending invites',
-        description:
-          'Claim any pending voiceover collaboration invites for the current user. Should be called after login/registration.',
-      })
-      .input(std(Schema.Struct({})))
-      .output(
-        std(
-          Schema.Struct({
-            claimedCount: Schema.Number,
-          }),
-        ),
-      ),
   });
 
 export default voiceoverContract;

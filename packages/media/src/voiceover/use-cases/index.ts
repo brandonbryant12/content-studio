@@ -30,24 +30,7 @@ export {
   type GetVoiceoverJobResult,
 } from './get-job';
 
-// Collaboration use cases
-export {
-  addVoiceoverCollaborator,
-  type AddVoiceoverCollaboratorInput,
-  type AddVoiceoverCollaboratorResult,
-} from './add-collaborator';
-
-export {
-  removeVoiceoverCollaborator,
-  type RemoveVoiceoverCollaboratorInput,
-} from './remove-collaborator';
-
-export {
-  listVoiceoverCollaborators,
-  type ListVoiceoverCollaboratorsInput,
-  type ListVoiceoverCollaboratorsResult,
-} from './list-collaborators';
-
+// Approval use cases
 export {
   approveVoiceover,
   type ApproveVoiceoverInput,
@@ -57,9 +40,3 @@ export {
   revokeVoiceoverApproval,
   type RevokeVoiceoverApprovalInput,
 } from './revoke-approval';
-
-export {
-  claimVoiceoverPendingInvites,
-  type ClaimVoiceoverPendingInvitesInput,
-  type ClaimVoiceoverPendingInvitesResult,
-} from './claim-pending-invites';

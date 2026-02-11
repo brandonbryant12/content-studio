@@ -19,10 +19,6 @@ import {
   VoiceoverRepo,
   type VoiceoverRepoService,
 } from '../../repos/voiceover-repo';
-import {
-  VoiceoverCollaboratorRepo,
-  type VoiceoverCollaboratorRepoService,
-} from '../../repos/voiceover-collaborator-repo';
 import { generateVoiceoverAudio } from '../generate-audio';
 
 // =============================================================================
@@ -174,23 +170,6 @@ const createMockVoiceoverRepo = (
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo =
-  (): Layer.Layer<VoiceoverCollaboratorRepo> => {
-    const service: VoiceoverCollaboratorRepoService = {
-      findById: () => Effect.succeed(null),
-      findByVoiceover: () => Effect.succeed([]),
-      findByEmail: () => Effect.succeed([]),
-      findByVoiceoverAndUser: () => Effect.succeed(null),
-      findByVoiceoverAndEmail: () => Effect.succeed(null),
-      lookupUserByEmail: () => Effect.succeed(null),
-      add: () => Effect.die('not implemented'),
-      remove: () => Effect.die('not implemented'),
-      claimByEmail: () => Effect.die('not implemented'),
-    };
-
-    return Layer.succeed(VoiceoverCollaboratorRepo, service);
-  };
-
 // =============================================================================
 // Tests
 // =============================================================================
@@ -222,7 +201,6 @@ describe('generateVoiceoverAudio', () => {
             onClearApprovals: clearApprovalsSpy,
           },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -284,7 +262,6 @@ describe('generateVoiceoverAudio', () => {
             onUpdateAudio: updateAudioSpy,
           },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -322,7 +299,6 @@ describe('generateVoiceoverAudio', () => {
           { voiceover },
           { onUpdateStatus: updateStatusSpy },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -358,7 +334,6 @@ describe('generateVoiceoverAudio', () => {
           { voiceover },
           { onUpdateAudio: updateAudioSpy },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -395,7 +370,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({}),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
         createMockLLM(),
@@ -428,7 +402,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
         createMockLLM(),
@@ -461,7 +434,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
         createMockLLM(),
@@ -498,7 +470,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
         createMockLLM(),
@@ -534,7 +505,6 @@ describe('generateVoiceoverAudio', () => {
           { voiceover },
           { onUpdateStatus: updateStatusSpy },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -572,7 +542,6 @@ describe('generateVoiceoverAudio', () => {
           { voiceover },
           { onUpdateStatus: updateStatusSpy },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS({ errorMessage: 'TTS service unavailable' }),
         createMockStorage(),
         createMockLLM(),
@@ -619,7 +588,6 @@ describe('generateVoiceoverAudio', () => {
           { voiceover },
           { onClearApprovals: clearApprovalsSpy },
         ),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
         createMockLLM(),
@@ -650,7 +618,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         createMockTTS(), // Mock TTS returns predefined audio
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM(),
@@ -695,7 +662,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         Layer.succeed(TTS, spyTTSService),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM({
@@ -730,7 +696,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://cdn.example.com/' }),
         createMockLLM(),
@@ -766,7 +731,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM({
@@ -803,7 +767,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM({
@@ -834,7 +797,6 @@ describe('generateVoiceoverAudio', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
-        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
         createMockLLM({ errorMessage: 'LLM service unavailable' }),

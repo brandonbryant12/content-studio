@@ -68,32 +68,9 @@ export {
 export { getJob, type GetJobInput, type GetJobResult } from './get-job';
 
 // =============================================================================
-// Collaboration Operations
+// Approval Operations
 // =============================================================================
-
-export {
-  listCollaborators,
-  type ListCollaboratorsInput,
-  type ListCollaboratorsResult,
-} from './list-collaborators';
-
-export {
-  addCollaborator,
-  type AddCollaboratorInput,
-  type AddCollaboratorResult,
-} from './add-collaborator';
-
-export {
-  removeCollaborator,
-  type RemoveCollaboratorInput,
-} from './remove-collaborator';
 
 export { approvePodcast, type ApprovePodcastInput } from './approve-podcast';
 
 export { revokeApproval, type RevokeApprovalInput } from './revoke-approval';
-
-export {
-  claimPendingInvites,
-  type ClaimPendingInvitesInput,
-  type ClaimPendingInvitesResult,
-} from './claim-pending-invites';

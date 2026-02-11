@@ -15,14 +15,10 @@ import {
   PodcastIdSchema,
   VoiceoverIdSchema,
   JobIdSchema,
-  CollaboratorIdSchema,
-  VoiceoverCollaboratorIdSchema,
   generateDocumentId,
   generatePodcastId,
   generateVoiceoverId,
   generateJobId,
-  generateCollaboratorId,
-  generateVoiceoverCollaboratorId,
 } from '@repo/db/schema';
 import { appContract } from '../index';
 
@@ -181,58 +177,6 @@ describe('JobIdSchema', () => {
   it('rejects UUIDs', () => {
     const uuid = '00000000-0000-0000-0000-000000000000';
     const result = validateSchema(JobIdSchema, uuid);
-    expect(result.success).toBe(false);
-  });
-});
-
-// =============================================================================
-// Collaborator ID Schema Tests
-// =============================================================================
-
-describe('CollaboratorIdSchema', () => {
-  it('accepts valid collaborator IDs', () => {
-    const validIds = [
-      'col_0000000000000000',
-      'col_abcdefghjkmnpqrs',
-      generateCollaboratorId(),
-      generateCollaboratorId(),
-    ];
-
-    for (const id of validIds) {
-      const result = validateSchema(CollaboratorIdSchema, id);
-      expect(result.success, `Expected "${id}" to be valid`).toBe(true);
-    }
-  });
-
-  it('rejects UUIDs', () => {
-    const uuid = '00000000-0000-0000-0000-000000000000';
-    const result = validateSchema(CollaboratorIdSchema, uuid);
-    expect(result.success).toBe(false);
-  });
-});
-
-// =============================================================================
-// Voiceover Collaborator ID Schema Tests
-// =============================================================================
-
-describe('VoiceoverCollaboratorIdSchema', () => {
-  it('accepts valid voiceover collaborator IDs', () => {
-    const validIds = [
-      'vcl_0000000000000000',
-      'vcl_abcdefghjkmnpqrs',
-      generateVoiceoverCollaboratorId(),
-      generateVoiceoverCollaboratorId(),
-    ];
-
-    for (const id of validIds) {
-      const result = validateSchema(VoiceoverCollaboratorIdSchema, id);
-      expect(result.success, `Expected "${id}" to be valid`).toBe(true);
-    }
-  });
-
-  it('rejects UUIDs', () => {
-    const uuid = '00000000-0000-0000-0000-000000000000';
-    const result = validateSchema(VoiceoverCollaboratorIdSchema, uuid);
     expect(result.success).toBe(false);
   });
 });

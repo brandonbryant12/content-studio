@@ -20,10 +20,6 @@ export {
   type ListOptions,
   type UpdateScriptOptions,
   type UpdateAudioOptions,
-  CollaboratorRepo,
-  CollaboratorRepoLive,
-  type CollaboratorRepoService,
-  type AddCollaboratorInput as AddCollaboratorRepoInput,
 } from './repos';
 
 // =============================================================================
@@ -50,13 +46,9 @@ export {
   InvalidAudioGenerationError,
   InvalidSaveError,
   NoChangesToSaveError,
-  // Collaboration
-  listCollaborators,
-  addCollaborator,
-  removeCollaborator,
+  // Approval
   approvePodcast,
   revokeApproval,
-  claimPendingInvites,
   // Input/Output types - error types inferred by Effect
   type CreatePodcastInput,
   type GetPodcastInput,
@@ -76,15 +68,8 @@ export {
   type SaveAndQueueAudioResult,
   type GetJobInput,
   type GetJobResult,
-  type ListCollaboratorsInput,
-  type ListCollaboratorsResult,
-  type AddCollaboratorInput,
-  type AddCollaboratorResult,
-  type RemoveCollaboratorInput,
   type ApprovePodcastInput,
   type RevokeApprovalInput,
-  type ClaimPendingInvitesInput,
-  type ClaimPendingInvitesResult,
 } from './use-cases';
 
 // =============================================================================

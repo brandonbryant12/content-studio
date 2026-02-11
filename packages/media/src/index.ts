@@ -18,10 +18,6 @@ export {
   VoiceoverNotFound,
   VoiceoverError,
   NotVoiceoverOwner,
-  NotVoiceoverCollaborator,
-  VoiceoverCollaboratorAlreadyExists,
-  VoiceoverCollaboratorNotFound,
-  CannotAddOwnerAsVoiceoverCollaborator,
   InvalidVoiceoverAudioGeneration,
   // Project/Media errors
   ProjectNotFound,
@@ -105,10 +101,7 @@ export {
 export {
   PodcastRepo,
   PodcastRepoLive,
-  CollaboratorRepo,
-  CollaboratorRepoLive,
   type PodcastRepoService,
-  type CollaboratorRepoService,
   type PodcastWithDocuments,
   type ListOptions,
   type UpdateScriptOptions,
@@ -119,14 +112,9 @@ export {
 export {
   VoiceoverRepo,
   VoiceoverRepoLive,
-  VoiceoverCollaboratorRepo,
-  VoiceoverCollaboratorRepoLive,
   type VoiceoverRepoService,
-  type VoiceoverCollaboratorRepoService,
   type VoiceoverListOptions,
   type VoiceoverUpdateAudioOptions,
-  type RepoAddVoiceoverCollaboratorInput,
-  type VoiceoverUserLookupInfo,
 } from './voiceover';
 
 // Voiceover module - Types
@@ -137,10 +125,6 @@ export type {
   UpdateVoiceover,
   VoiceoverOutput,
   VoiceoverListItemOutput,
-  VoiceoverCollaborator,
-  VoiceoverCollaboratorOutput,
-  VoiceoverCollaboratorWithUser,
-  VoiceoverCollaboratorWithUserOutput,
 } from './voiceover';
 
 // Infographic module - Repos
@@ -189,18 +173,8 @@ export type {
 
 // Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
-import {
-  PodcastRepo,
-  PodcastRepoLive,
-  CollaboratorRepo,
-  CollaboratorRepoLive,
-} from './podcast';
-import {
-  VoiceoverRepo,
-  VoiceoverRepoLive,
-  VoiceoverCollaboratorRepo,
-  VoiceoverCollaboratorRepoLive,
-} from './voiceover';
+import { PodcastRepo, PodcastRepoLive } from './podcast';
+import { VoiceoverRepo, VoiceoverRepoLive } from './voiceover';
 import { InfographicRepo, InfographicRepoLive } from './infographic';
 import { ActivityLogRepo, ActivityLogRepoLive } from './activity';
 
@@ -218,9 +192,7 @@ import { ActivityLogRepo, ActivityLogRepoLive } from './activity';
 export type Media =
   | DocumentRepo
   | PodcastRepo
-  | CollaboratorRepo
   | VoiceoverRepo
-  | VoiceoverCollaboratorRepo
   | InfographicRepo
   | ActivityLogRepo;
 
@@ -248,9 +220,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
     DocumentRepoLive,
     PodcastRepoLive,
-    CollaboratorRepoLive,
     VoiceoverRepoLive,
-    VoiceoverCollaboratorRepoLive,
     InfographicRepoLive,
     ActivityLogRepoLive,
   );
@@ -268,13 +238,9 @@ export {
   startGeneration,
   saveAndQueueAudio,
   getJob,
-  // Collaboration
-  listCollaborators,
-  addCollaborator,
-  removeCollaborator,
+  // Approval
   approvePodcast,
   revokeApproval,
-  claimPendingInvites,
   // Errors
   InvalidAudioGenerationError,
   InvalidSaveError,
@@ -297,16 +263,8 @@ export {
   type SaveAndQueueAudioResult,
   type GetJobInput,
   type GetJobResult,
-  // Collaboration types
-  type ListCollaboratorsInput,
-  type ListCollaboratorsResult,
-  type AddCollaboratorInput,
-  type AddCollaboratorResult,
-  type RemoveCollaboratorInput,
   type ApprovePodcastInput,
   type RevokeApprovalInput,
-  type ClaimPendingInvitesInput,
-  type ClaimPendingInvitesResult,
 } from './podcast';
 
 // Podcast module - Types
@@ -329,13 +287,9 @@ export {
   generateVoiceoverAudio,
   startVoiceoverGeneration,
   getVoiceoverJob,
-  // Collaboration
-  addVoiceoverCollaborator,
-  removeVoiceoverCollaborator,
-  listVoiceoverCollaborators,
+  // Approval
   approveVoiceover,
   revokeVoiceoverApproval,
-  claimVoiceoverPendingInvites,
   // Types
   type CreateVoiceoverInput,
   type GetVoiceoverInput,
@@ -349,14 +303,6 @@ export {
   type StartVoiceoverGenerationResult,
   type GetVoiceoverJobInput,
   type GetVoiceoverJobResult,
-  // Collaboration types
-  type AddVoiceoverCollaboratorInput,
-  type AddVoiceoverCollaboratorResult,
-  type RemoveVoiceoverCollaboratorInput,
-  type ListVoiceoverCollaboratorsInput,
-  type ListVoiceoverCollaboratorsResult,
   type ApproveVoiceoverInput,
   type RevokeVoiceoverApprovalInput,
-  type ClaimVoiceoverPendingInvitesInput,
-  type ClaimVoiceoverPendingInvitesResult,
 } from './voiceover';

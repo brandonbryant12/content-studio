@@ -10,10 +10,6 @@ import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
-import {
-  CollaboratorRepo,
-  type CollaboratorRepoService,
-} from '../../repos/collaborator-repo';
 import { startGeneration } from '../start-generation';
 
 // =============================================================================
@@ -79,22 +75,6 @@ const createMockPodcastRepo = (
   return Layer.succeed(PodcastRepo, service);
 };
 
-const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
-  const service: CollaboratorRepoService = {
-    findById: () => Effect.succeed(null),
-    findByPodcast: () => Effect.succeed([]),
-    findByEmail: () => Effect.succeed([]),
-    findByPodcastAndUser: () => Effect.succeed(null),
-    findByPodcastAndEmail: () => Effect.succeed(null),
-    lookupUserByEmail: () => Effect.succeed(null),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.succeed(0),
-  };
-
-  return Layer.succeed(CollaboratorRepo, service);
-};
-
 const createMockQueue = (
   state: MockState,
   options?: {
@@ -152,7 +132,6 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -181,7 +160,6 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -214,7 +192,6 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ podcast }),
-        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -252,7 +229,6 @@ describe('startGeneration', () => {
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -285,7 +261,6 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast, pendingJob: existingJob }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -303,7 +278,6 @@ describe('startGeneration', () => {
         MockDbLive,
         createMockPodcastRepo({}),
         createMockQueue({}),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(

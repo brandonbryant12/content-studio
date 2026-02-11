@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { useCollaboratorManagement } from '../hooks/use-collaborator-management';
+import { useCallback } from 'react';
+import { useApproveVoiceover } from '../hooks/use-approve-voiceover';
 import { useVoiceover } from '../hooks/use-voiceover';
 import { useVoiceoverActions } from '../hooks/use-voiceover-actions';
 import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
@@ -9,12 +9,6 @@ import {
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-
-const AddCollaboratorDialog = lazy(() =>
-  import('./collaborators/add-collaborator-dialog').then((m) => ({
-    default: m.AddCollaboratorDialog,
-  })),
-);
 
 interface VoiceoverDetailContainerProps {
   voiceoverId: string;
@@ -29,17 +23,25 @@ export function VoiceoverDetailContainer({
   const { data: voiceover } = useVoiceover(voiceoverId);
 
   const settings = useVoiceoverSettings({ voiceover });
-  const collaboratorManagement = useCollaboratorManagement(
-    voiceover,
-    currentUserId,
-    user,
-  );
+
+  const { approve, revoke } = useApproveVoiceover(voiceoverId, currentUserId);
 
   const actions = useVoiceoverActions({
     voiceoverId,
     voiceover,
     settings,
   });
+
+  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+  const isApproved = voiceover.approvedBy !== null;
+
+  const handleApprove = useCallback(() => {
+    approve.mutate({ id: voiceoverId });
+  }, [approve, voiceoverId]);
+
+  const handleRevoke = useCallback(() => {
+    revoke.mutate({ id: voiceoverId });
+  }, [revoke, voiceoverId]);
 
   useKeyboardShortcut({
     key: 's',
@@ -59,40 +61,23 @@ export function VoiceoverDetailContainer({
       }
     : null;
 
-  const isOwner = currentUserId === voiceover.createdBy;
-
   return (
-    <>
-      <VoiceoverDetail
-        voiceover={voiceover}
-        settings={settings}
-        displayAudio={displayAudio}
-        hasChanges={actions.hasChanges}
-        hasText={actions.hasText}
-        isGenerating={actions.isGenerating}
-        isSaving={actions.isSaving}
-        isDeleting={actions.isDeleting}
-        onGenerate={actions.handleGenerate}
-        onDelete={actions.handleDelete}
-        owner={collaboratorManagement.owner}
-        collaborators={collaboratorManagement.collaborators}
-        isApproved={collaboratorManagement.isApproved}
-        isAdmin={collaboratorManagement.isAdmin}
-        onManageCollaborators={collaboratorManagement.openAddDialog}
-        onApprove={collaboratorManagement.handleApprove}
-        onRevoke={collaboratorManagement.handleRevoke}
-        isApprovalPending={collaboratorManagement.isApprovalPending}
-      />
-
-      {isOwner && collaboratorManagement.isAddDialogOpen && (
-        <Suspense fallback={null}>
-          <AddCollaboratorDialog
-            voiceoverId={voiceoverId}
-            isOpen={collaboratorManagement.isAddDialogOpen}
-            onClose={collaboratorManagement.closeAddDialog}
-          />
-        </Suspense>
-      )}
-    </>
+    <VoiceoverDetail
+      voiceover={voiceover}
+      settings={settings}
+      displayAudio={displayAudio}
+      hasChanges={actions.hasChanges}
+      hasText={actions.hasText}
+      isGenerating={actions.isGenerating}
+      isSaving={actions.isSaving}
+      isDeleting={actions.isDeleting}
+      onGenerate={actions.handleGenerate}
+      onDelete={actions.handleDelete}
+      isApproved={isApproved}
+      isAdmin={isAdmin}
+      onApprove={handleApprove}
+      onRevoke={handleRevoke}
+      isApprovalPending={approve.isPending || revoke.isPending}
+    />
   );
 }

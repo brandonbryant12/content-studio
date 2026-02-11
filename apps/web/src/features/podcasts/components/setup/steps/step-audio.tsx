@@ -1,3 +1,5 @@
+import type { MouseEvent, KeyboardEvent } from 'react';
+
 type PodcastFormat = 'conversation' | 'voiceover' | 'voice_over';
 
 // Voice options - these match the Gemini TTS voices
@@ -52,6 +54,37 @@ const VOICES = [
   },
 ] as const;
 
+function SetupVoicePreviewBtn({
+  voiceName,
+  disabled,
+}: {
+  voiceName: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className="setup-voice-preview-btn"
+      onClick={(e: MouseEvent) => {
+        e.stopPropagation();
+        // TODO: wire up voice preview playback
+      }}
+      aria-label={`Preview ${voiceName} voice`}
+      disabled={disabled}
+    >
+      <svg
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="setup-voice-preview-icon"
+        aria-hidden="true"
+      >
+        <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
+        <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
+      </svg>
+    </button>
+  );
+}
+
 const DURATION_OPTIONS = [
   { value: 3, label: '3 min' },
   { value: 5, label: '5 min' },
@@ -68,6 +101,51 @@ interface StepAudioProps {
   onDurationChange: (duration: number) => void;
   onHostVoiceChange: (voice: string) => void;
   onCoHostVoiceChange: (voice: string) => void;
+}
+
+interface VoiceCardProps {
+  voice: (typeof VOICES)[number];
+  isSelected: boolean;
+  isDisabled: boolean;
+  onSelect: (voiceId: string) => void;
+}
+
+function VoiceCard({
+  voice,
+  isSelected,
+  isDisabled,
+  onSelect,
+}: VoiceCardProps) {
+  const handleClick = () => {
+    if (!isDisabled) onSelect(voice.id);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !isDisabled) {
+      e.preventDefault();
+      onSelect(voice.id);
+    }
+  };
+
+  return (
+    <div
+      role="radio"
+      tabIndex={isDisabled ? -1 : 0}
+      className={`setup-voice-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      aria-checked={isSelected}
+      aria-disabled={isDisabled}
+      aria-label={`${voice.name} — ${voice.description}`}
+    >
+      <div className={`setup-voice-avatar ${voice.gender}`}>
+        {voice.name.charAt(0)}
+      </div>
+      <p className="setup-voice-name">{voice.name}</p>
+      <p className="setup-voice-desc">{voice.description}</p>
+      <SetupVoicePreviewBtn voiceName={voice.name} disabled={isDisabled} />
+    </div>
+  );
 }
 
 export function StepAudio({
@@ -125,23 +203,19 @@ export function StepAudio({
           <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
             Female
           </p>
-          <div className="setup-voice-grid">
+          <div
+            className="setup-voice-grid"
+            role="radiogroup"
+            aria-label="Female host voices"
+          >
             {femaleVoices.map((voice) => (
-              <button
+              <VoiceCard
                 key={voice.id}
-                type="button"
-                onClick={() => onHostVoiceChange(voice.id)}
-                className={`setup-voice-card ${hostVoice === voice.id ? 'selected' : ''} ${
-                  isConversation && coHostVoice === voice.id ? 'disabled' : ''
-                }`}
-                disabled={isConversation && coHostVoice === voice.id}
-              >
-                <div className={`setup-voice-avatar ${voice.gender}`}>
-                  {voice.name.charAt(0)}
-                </div>
-                <p className="setup-voice-name">{voice.name}</p>
-                <p className="setup-voice-desc">{voice.description}</p>
-              </button>
+                voice={voice}
+                isSelected={hostVoice === voice.id}
+                isDisabled={isConversation && coHostVoice === voice.id}
+                onSelect={onHostVoiceChange}
+              />
             ))}
           </div>
         </div>
@@ -151,23 +225,19 @@ export function StepAudio({
           <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
             Male
           </p>
-          <div className="setup-voice-grid">
+          <div
+            className="setup-voice-grid"
+            role="radiogroup"
+            aria-label="Male host voices"
+          >
             {maleVoices.map((voice) => (
-              <button
+              <VoiceCard
                 key={voice.id}
-                type="button"
-                onClick={() => onHostVoiceChange(voice.id)}
-                className={`setup-voice-card ${hostVoice === voice.id ? 'selected' : ''} ${
-                  isConversation && coHostVoice === voice.id ? 'disabled' : ''
-                }`}
-                disabled={isConversation && coHostVoice === voice.id}
-              >
-                <div className={`setup-voice-avatar ${voice.gender}`}>
-                  {voice.name.charAt(0)}
-                </div>
-                <p className="setup-voice-name">{voice.name}</p>
-                <p className="setup-voice-desc">{voice.description}</p>
-              </button>
+                voice={voice}
+                isSelected={hostVoice === voice.id}
+                isDisabled={isConversation && coHostVoice === voice.id}
+                onSelect={onHostVoiceChange}
+              />
             ))}
           </div>
         </div>
@@ -186,23 +256,19 @@ export function StepAudio({
             <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
               Female
             </p>
-            <div className="setup-voice-grid">
+            <div
+              className="setup-voice-grid"
+              role="radiogroup"
+              aria-label="Female co-host voices"
+            >
               {femaleVoices.map((voice) => (
-                <button
+                <VoiceCard
                   key={voice.id}
-                  type="button"
-                  onClick={() => onCoHostVoiceChange(voice.id)}
-                  className={`setup-voice-card ${coHostVoice === voice.id ? 'selected' : ''} ${
-                    hostVoice === voice.id ? 'disabled' : ''
-                  }`}
-                  disabled={hostVoice === voice.id}
-                >
-                  <div className={`setup-voice-avatar ${voice.gender}`}>
-                    {voice.name.charAt(0)}
-                  </div>
-                  <p className="setup-voice-name">{voice.name}</p>
-                  <p className="setup-voice-desc">{voice.description}</p>
-                </button>
+                  voice={voice}
+                  isSelected={coHostVoice === voice.id}
+                  isDisabled={hostVoice === voice.id}
+                  onSelect={onCoHostVoiceChange}
+                />
               ))}
             </div>
           </div>
@@ -212,23 +278,19 @@ export function StepAudio({
             <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
               Male
             </p>
-            <div className="setup-voice-grid">
+            <div
+              className="setup-voice-grid"
+              role="radiogroup"
+              aria-label="Male co-host voices"
+            >
               {maleVoices.map((voice) => (
-                <button
+                <VoiceCard
                   key={voice.id}
-                  type="button"
-                  onClick={() => onCoHostVoiceChange(voice.id)}
-                  className={`setup-voice-card ${coHostVoice === voice.id ? 'selected' : ''} ${
-                    hostVoice === voice.id ? 'disabled' : ''
-                  }`}
-                  disabled={hostVoice === voice.id}
-                >
-                  <div className={`setup-voice-avatar ${voice.gender}`}>
-                    {voice.name.charAt(0)}
-                  </div>
-                  <p className="setup-voice-name">{voice.name}</p>
-                  <p className="setup-voice-desc">{voice.description}</p>
-                </button>
+                  voice={voice}
+                  isSelected={coHostVoice === voice.id}
+                  isDisabled={hostVoice === voice.id}
+                  onSelect={onCoHostVoiceChange}
+                />
               ))}
             </div>
           </div>

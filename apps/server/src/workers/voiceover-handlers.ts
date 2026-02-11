@@ -11,7 +11,7 @@ import type {
  * Handler for generate-voiceover jobs.
  * Generates TTS audio from voiceover text.
  *
- * Requires: VoiceoverRepo, VoiceoverCollaboratorRepo, TTS, Storage
+ * Requires: VoiceoverRepo, TTS, Storage
  */
 export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
   Effect.gen(function* () {

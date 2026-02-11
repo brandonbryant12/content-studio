@@ -6,24 +6,16 @@ import {
   deleteVoiceover,
   startVoiceoverGeneration,
   getVoiceoverJob,
-  // Collaboration
-  listVoiceoverCollaborators,
-  addVoiceoverCollaborator,
-  removeVoiceoverCollaborator,
   approveVoiceover,
   revokeVoiceoverApproval,
-  claimVoiceoverPendingInvites,
 } from '@repo/media';
 import { Effect } from 'effect';
-import type { VoiceoverCollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
 import {
   serializeVoiceoverEffect,
   serializeVoiceoverListItemsEffect,
-  serializeVoiceoverCollaboratorWithUserEffect,
-  serializeVoiceoverCollaboratorsWithUserEffect,
   serializeJob,
   type Job,
 } from '@repo/db/schema';
@@ -176,77 +168,6 @@ const voiceoverRouter = {
     },
   ),
 
-  // =========================================================================
-  // Collaborator Handlers
-  // =========================================================================
-
-  listCollaborators: protectedProcedure.voiceovers.listCollaborators.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        listVoiceoverCollaborators({ voiceoverId: input.id }).pipe(
-          Effect.flatMap((result) =>
-            serializeVoiceoverCollaboratorsWithUserEffect([
-              ...result.collaborators,
-            ]),
-          ),
-        ),
-        errors,
-        {
-          span: 'api.voiceovers.listCollaborators',
-          attributes: { 'voiceover.id': input.id },
-        },
-      );
-    },
-  ),
-
-  addCollaborator: protectedProcedure.voiceovers.addCollaborator.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        addVoiceoverCollaborator({
-          voiceoverId: input.id,
-          email: input.email,
-          addedBy: context.session.user.id,
-        }).pipe(
-          Effect.flatMap((result) =>
-            serializeVoiceoverCollaboratorWithUserEffect(result.collaborator),
-          ),
-        ),
-        errors,
-        {
-          span: 'api.voiceovers.addCollaborator',
-          attributes: {
-            'voiceover.id': input.id,
-            'collaborator.email': input.email,
-          },
-        },
-      );
-    },
-  ),
-
-  removeCollaborator: protectedProcedure.voiceovers.removeCollaborator.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        removeVoiceoverCollaborator({
-          collaboratorId: input.collaboratorId as VoiceoverCollaboratorId,
-        }).pipe(Effect.map(() => ({}))),
-        errors,
-        {
-          span: 'api.voiceovers.removeCollaborator',
-          attributes: {
-            'voiceover.id': input.id,
-            'collaborator.id': input.collaboratorId,
-          },
-        },
-      );
-    },
-  ),
-
   approve: protectedProcedure.voiceovers.approve.handler(
     async ({ context, input, errors }) => {
       return handleEffectWithProtocol(
@@ -280,24 +201,6 @@ const voiceoverRouter = {
         {
           span: 'api.voiceovers.revokeApproval',
           attributes: { 'voiceover.id': input.id },
-        },
-      );
-    },
-  ),
-
-  claimInvites: protectedProcedure.voiceovers.claimInvites.handler(
-    async ({ context, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        claimVoiceoverPendingInvites({
-          email: context.session.user.email,
-          userId: context.session.user.id,
-        }),
-        errors,
-        {
-          span: 'api.voiceovers.claimInvites',
-          attributes: { 'user.id': context.session.user.id },
         },
       );
     },

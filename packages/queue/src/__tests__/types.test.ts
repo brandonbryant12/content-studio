@@ -5,124 +5,108 @@ import type {
   JobStatus,
   GeneratePodcastPayload,
   GeneratePodcastResult,
+  GenerateScriptPayload,
+  GenerateScriptResult,
+  GenerateAudioPayload,
+  GenerateAudioResult,
+  GenerateVoiceoverPayload,
+  GenerateVoiceoverResult,
+  GenerateInfographicPayload,
+  GenerateInfographicResult,
 } from '../types';
 
-describe('queue types', () => {
-  describe('JobStatus', () => {
-    it('should support pending, processing, completed, and failed statuses', () => {
-      const statuses: JobStatus[] = [
-        'pending',
-        'processing',
-        'completed',
-        'failed',
-      ];
-      expect(statuses).toHaveLength(4);
-    });
+/**
+ * These are type-level compile-time checks. If any type definition changes
+ * incompatibly, these assignments will fail at type-check time (`pnpm typecheck`).
+ *
+ * We do NOT assert values at runtime — that would be test theater.
+ * Instead we verify structural compatibility via satisfies/assignment.
+ */
+describe('queue types - compile-time contracts', () => {
+  it('JobStatus union covers all expected values', () => {
+    // If a status is added or removed from the union, this will fail at typecheck
+    const allStatuses: Record<JobStatus, true> = {
+      pending: true,
+      processing: true,
+      completed: true,
+      failed: true,
+    };
+    expect(Object.keys(allStatuses)).toHaveLength(4);
   });
 
-  describe('JobType', () => {
-    it('should support generate-podcast type', () => {
-      const types: JobType[] = ['generate-podcast'];
-      expect(types).toHaveLength(1);
-    });
+  it('JobType union covers all expected values', () => {
+    const allTypes: Record<JobType, true> = {
+      'generate-podcast': true,
+      'generate-script': true,
+      'generate-audio': true,
+      'generate-voiceover': true,
+      'generate-infographic': true,
+    };
+    expect(Object.keys(allTypes)).toHaveLength(5);
   });
 
-  describe('Job', () => {
-    it('should have all required fields', () => {
-      const job: Job = {
-        id: 'job-123',
-        type: 'generate-podcast',
-        status: 'pending',
-        payload: { podcastId: 'pod-1' },
-        result: null,
-        error: null,
-        createdBy: 'user-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        startedAt: null,
-        completedAt: null,
-      };
-
-      expect(job.id).toBe('job-123');
-      expect(job.type).toBe('generate-podcast');
-      expect(job.status).toBe('pending');
-      expect(job.result).toBeNull();
-      expect(job.error).toBeNull();
-      expect(job.startedAt).toBeNull();
-      expect(job.completedAt).toBeNull();
-    });
-
-    it('should support typed payload and result', () => {
-      const job: Job<GeneratePodcastPayload, GeneratePodcastResult> = {
-        id: 'job-456',
-        type: 'generate-podcast',
-        status: 'completed',
-        payload: {
-          podcastId: 'pod-1',
-          userId: 'user-1',
-          promptInstructions: 'Keep it casual',
-        },
-        result: {
-          scriptId: 'script-1',
-          segmentCount: 5,
-          audioUrl: 'https://storage.example.com/audio/podcast-123.mp3',
-          duration: 1800,
-        },
-        error: null,
-        createdBy: 'user-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        startedAt: new Date(),
-        completedAt: new Date(),
-      };
-
-      expect(job.payload.podcastId).toBe('pod-1');
-      expect(job.result?.scriptId).toBe('script-1');
-      expect(job.result?.segmentCount).toBe(5);
-      expect(job.result?.audioUrl).toBe(
-        'https://storage.example.com/audio/podcast-123.mp3',
-      );
-      expect(job.result?.duration).toBe(1800);
-    });
-  });
-
-  describe('GeneratePodcastPayload', () => {
-    it('should have required podcastId and userId', () => {
-      const payload: GeneratePodcastPayload = {
-        podcastId: 'pod-123',
-        userId: 'user-456',
-      };
-
-      expect(payload.podcastId).toBe('pod-123');
-      expect(payload.userId).toBe('user-456');
-    });
-
-    it('should support optional promptInstructions', () => {
-      const payload: GeneratePodcastPayload = {
-        podcastId: 'pod-123',
-        userId: 'user-456',
-        promptInstructions: 'Make it educational',
-      };
-
-      expect(payload.promptInstructions).toBe('Make it educational');
-    });
-  });
-
-  describe('GeneratePodcastResult', () => {
-    it('should have scriptId, segmentCount, audioUrl, and duration', () => {
-      const result: GeneratePodcastResult = {
-        scriptId: 'script-123',
-        segmentCount: 10,
-        audioUrl: 'https://storage.example.com/audio/podcast-123.mp3',
+  it('Job generic parameters constrain payload and result', () => {
+    // This verifies that Job<P, R> correctly narrows payload/result types.
+    // A mismatch (e.g., wrong field name) would fail typecheck.
+    const job: Job<GeneratePodcastPayload, GeneratePodcastResult> = {
+      id: 'job_1',
+      type: 'generate-podcast',
+      status: 'completed',
+      payload: { podcastId: 'pod_1', userId: 'user_1' },
+      result: {
+        podcastId: 'pod_1',
+        segmentCount: 5,
+        audioUrl: 'https://example.com/audio.mp3',
         duration: 1800,
-      };
+      },
+      error: null,
+      createdBy: 'user_1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      startedAt: new Date(),
+      completedAt: new Date(),
+    };
 
-      expect(result.scriptId).toBe('script-123');
-      expect(result.segmentCount).toBe(10);
-      expect(result.audioUrl).toBe(
-        'https://storage.example.com/audio/podcast-123.mp3',
-      );
-      expect(result.duration).toBe(1800);
-    });
+    // Minimal runtime check — the real value is the type constraint above
+    expect(job.payload.podcastId).toBe('pod_1');
+    expect(job.result?.podcastId).toBe('pod_1');
+  });
+
+  it('all payload/result pairs have consistent shapes', () => {
+    // Compile-time verification that all payload types have userId
+    const payloads: Array<{ userId: string }> = [
+      { podcastId: 'p', userId: 'u' } satisfies GeneratePodcastPayload,
+      { podcastId: 'p', userId: 'u' } satisfies GenerateScriptPayload,
+      { podcastId: 'p', userId: 'u' } satisfies GenerateAudioPayload,
+      { voiceoverId: 'v', userId: 'u' } satisfies GenerateVoiceoverPayload,
+      { infographicId: 'i', userId: 'u' } satisfies GenerateInfographicPayload,
+    ];
+
+    // All payloads should have userId
+    expect(payloads.every((p) => typeof p.userId === 'string')).toBe(true);
+
+    // Compile-time verification of result types
+    const results = [
+      {
+        podcastId: 'p',
+        segmentCount: 1,
+        audioUrl: 'u',
+        duration: 0,
+      } satisfies GeneratePodcastResult,
+      { podcastId: 'p', segmentCount: 1 } satisfies GenerateScriptResult,
+      { audioUrl: 'u', duration: 0 } satisfies GenerateAudioResult,
+      {
+        voiceoverId: 'v',
+        audioUrl: 'u',
+        duration: 0,
+      } satisfies GenerateVoiceoverResult,
+      {
+        infographicId: 'i',
+        imageUrl: 'u',
+        versionNumber: 1,
+      } satisfies GenerateInfographicResult,
+    ];
+
+    expect(results).toHaveLength(5);
   });
 });

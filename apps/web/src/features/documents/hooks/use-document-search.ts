@@ -35,7 +35,9 @@ export function useDocumentSearch(content: string): UseDocumentSearchReturn {
     const q = query.toLowerCase();
     const result: SearchMatch[] = [];
     for (let pi = 0; pi < paragraphs.length; pi++) {
-      const text = paragraphs[pi].toLowerCase();
+      const paragraph = paragraphs[pi];
+      if (!paragraph) continue;
+      const text = paragraph.toLowerCase();
       let start = 0;
       while (true) {
         const idx = text.indexOf(q, start);

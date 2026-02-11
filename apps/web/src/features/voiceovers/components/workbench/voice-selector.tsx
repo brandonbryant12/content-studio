@@ -1,7 +1,7 @@
 // features/voiceovers/components/workbench/voice-selector.tsx
 
 import { cn } from '@repo/ui/lib/utils';
-import { memo, useCallback, type MouseEvent } from 'react';
+import { memo, useCallback, type MouseEvent, type KeyboardEvent } from 'react';
 
 import { VOICES } from '../../lib/voices';
 import { VoiceSymbol } from './voice-symbols';
@@ -34,28 +34,47 @@ export const VoiceSelector = memo(function VoiceSelector({
   disabled,
 }: VoiceSelectorProps) {
   const handleVoiceSelect = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       const voiceId = e.currentTarget.dataset.voiceId;
       if (voiceId) onChange(voiceId);
     },
     [onChange],
   );
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const voiceId = e.currentTarget.dataset.voiceId;
+        if (voiceId) onChange(voiceId);
+      }
+    },
+    [onChange],
+  );
+
+  const handlePreview = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    // TODO: wire up voice preview playback
+  }, []);
+
   return (
     <fieldset className="voice-ensemble" disabled={disabled}>
       <legend className="sr-only">Select a voice</legend>
-      <div className="voice-ensemble-stage">
+      <div className="voice-ensemble-stage" role="radiogroup">
         {VOICES.map((v) => {
           const isSelected = voice === v.id;
           return (
-            <button
+            <div
               key={v.id}
-              type="button"
+              role="radio"
+              tabIndex={disabled ? -1 : 0}
               data-voice-id={v.id}
               className={cn('voice-card', isSelected && 'voice-card-selected')}
               onClick={handleVoiceSelect}
-              aria-pressed={isSelected}
-              disabled={disabled}
+              onKeyDown={handleKeyDown}
+              aria-checked={isSelected}
+              aria-disabled={disabled}
+              aria-label={`${v.name} — ${VOICE_TRAITS[v.id] ?? v.description}`}
             >
               <div className="voice-card-symbol">
                 <VoiceSymbol voiceId={v.id} className="w-5 h-5" />
@@ -64,7 +83,25 @@ export const VoiceSelector = memo(function VoiceSelector({
               <span className="voice-card-trait">
                 {VOICE_TRAITS[v.id] ?? v.description}
               </span>
-            </button>
+              <button
+                type="button"
+                className="voice-preview-btn"
+                onClick={handlePreview}
+                aria-label={`Preview ${v.name} voice`}
+                disabled={disabled}
+                tabIndex={disabled ? -1 : 0}
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="voice-preview-icon"
+                  aria-hidden="true"
+                >
+                  <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
+                  <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
+                </svg>
+              </button>
+            </div>
           );
         })}
       </div>

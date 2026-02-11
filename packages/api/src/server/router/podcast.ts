@@ -7,16 +7,10 @@ import {
   startGeneration,
   saveAndQueueAudio,
   getJob,
-  // Collaboration
-  listCollaborators,
-  addCollaborator,
-  removeCollaborator,
   approvePodcast,
   revokeApproval,
-  claimPendingInvites,
 } from '@repo/media';
 import { Effect } from 'effect';
-import type { CollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
@@ -24,8 +18,6 @@ import {
   serializePodcastEffect,
   serializePodcastFullEffect,
   serializePodcastListItemsEffect,
-  serializeCollaboratorWithUserEffect,
-  serializeCollaboratorsWithUserEffect,
   serializeJob,
   type Job,
 } from '@repo/db/schema';
@@ -190,75 +182,6 @@ const podcastRouter = {
     },
   ),
 
-  // =========================================================================
-  // Collaborator Handlers
-  // =========================================================================
-
-  listCollaborators: protectedProcedure.podcasts.listCollaborators.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        listCollaborators({ podcastId: input.id }).pipe(
-          Effect.flatMap((result) =>
-            serializeCollaboratorsWithUserEffect([...result.collaborators]),
-          ),
-        ),
-        errors,
-        {
-          span: 'api.podcasts.listCollaborators',
-          attributes: { 'podcast.id': input.id },
-        },
-      );
-    },
-  ),
-
-  addCollaborator: protectedProcedure.podcasts.addCollaborator.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        addCollaborator({
-          podcastId: input.id,
-          email: input.email,
-          addedBy: context.session.user.id,
-        }).pipe(
-          Effect.flatMap((result) =>
-            serializeCollaboratorWithUserEffect(result.collaborator),
-          ),
-        ),
-        errors,
-        {
-          span: 'api.podcasts.addCollaborator',
-          attributes: {
-            'podcast.id': input.id,
-            'collaborator.email': input.email,
-          },
-        },
-      );
-    },
-  ),
-
-  removeCollaborator: protectedProcedure.podcasts.removeCollaborator.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        removeCollaborator({
-          collaboratorId: input.collaboratorId as CollaboratorId,
-        }).pipe(Effect.map(() => ({}))),
-        errors,
-        {
-          span: 'api.podcasts.removeCollaborator',
-          attributes: {
-            'podcast.id': input.id,
-            'collaborator.id': input.collaboratorId,
-          },
-        },
-      );
-    },
-  ),
-
   approve: protectedProcedure.podcasts.approve.handler(
     async ({ context, input, errors }) => {
       return handleEffectWithProtocol(
@@ -288,24 +211,6 @@ const podcastRouter = {
         {
           span: 'api.podcasts.revokeApproval',
           attributes: { 'podcast.id': input.id },
-        },
-      );
-    },
-  ),
-
-  claimInvites: protectedProcedure.podcasts.claimInvites.handler(
-    async ({ context, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
-        claimPendingInvites({
-          email: context.session.user.email,
-          userId: context.session.user.id,
-        }),
-        errors,
-        {
-          span: 'api.podcasts.claimInvites',
-          attributes: { 'user.id': context.session.user.id },
         },
       );
     },

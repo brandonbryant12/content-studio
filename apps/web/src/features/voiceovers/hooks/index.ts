@@ -21,17 +21,6 @@ export {
 } from './use-voiceover-settings';
 // Note: VOICES exported from lib/voices.ts
 
-export {
-  useCollaborators,
-  useCollaboratorsQuery,
-  getCollaboratorsQueryKey,
-  type Collaborator,
-} from './use-collaborators';
-
-export { useAddCollaborator } from './use-add-collaborator';
-
-export { useRemoveCollaborator } from './use-remove-collaborator';
-
 export { useApproveVoiceover } from './use-approve-voiceover';
 
 export {

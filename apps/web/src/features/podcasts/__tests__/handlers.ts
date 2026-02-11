@@ -17,6 +17,7 @@ export function createMockPodcastListItem(
     title: 'Test Podcast',
     description: 'A test podcast description',
     format: 'conversation',
+    audioUrl: null,
     createdAt: new Date().toISOString(),
     status: VersionStatus.READY,
     duration: 300,

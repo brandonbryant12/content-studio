@@ -40,20 +40,8 @@ export {
   type UsePodcastGenerationReturn,
 } from './use-podcast-generation';
 
-// Collaborator hooks
-export {
-  useCollaborators,
-  useCollaboratorsQuery,
-  getCollaboratorsQueryKey,
-  type Collaborator,
-} from './use-collaborators';
-export { useAddCollaborator } from './use-add-collaborator';
-export { useRemoveCollaborator } from './use-remove-collaborator';
+// Approval hooks
 export { useApprovePodcast } from './use-approve-podcast';
-export {
-  useCollaboratorManagement,
-  type UseCollaboratorManagementReturn,
-} from './use-collaborator-management';
 
 // Container action hooks
 export {

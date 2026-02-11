@@ -21,14 +21,3 @@ export type {
   SortableItemWrapperProps,
   DragHandleProps,
 } from './sortable-list';
-export {
-  CollaboratorAvatars,
-  AddCollaboratorDialog,
-  CollaboratorList,
-} from './collaborators';
-export type {
-  CollaboratorAvatarsProps,
-  CollaboratorData,
-  AddCollaboratorDialogProps,
-  CollaboratorListProps,
-} from './collaborators';

@@ -14,151 +14,125 @@ export interface S3StorageConfig {
   readonly endpoint?: string;
 }
 
-const makeS3Storage = (config: S3StorageConfig): StorageService => ({
-  upload: (key, data, contentType) =>
-    Effect.tryPromise({
-      try: async () => {
-        const endpoint =
-          config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
-        const url = `${endpoint}/${config.bucket}/${key}`;
+const makeS3Storage = (config: S3StorageConfig): StorageService => {
+  const baseUrl =
+    config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
 
-        const response = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': contentType,
-            'x-amz-acl': 'private',
-          },
-          body: new Uint8Array(data),
-        });
+  const objectUrl = (key: string) => `${baseUrl}/${config.bucket}/${key}`;
 
-        if (!response.ok) {
-          throw new Error(`S3 upload failed: ${response.statusText}`);
-        }
+  const spanAttributes = (key: string) => ({
+    'storage.key': key,
+    'storage.provider': 's3' as const,
+    'storage.bucket': config.bucket,
+  });
 
-        return url;
-      },
-      catch: (cause) =>
-        new StorageUploadError({
-          key,
-          message: `Failed to upload to S3: ${key}`,
-          cause,
-        }),
-    }).pipe(
-      Effect.withSpan('storage.upload', {
-        attributes: {
-          'storage.key': key,
-          'storage.provider': 's3',
-          'storage.bucket': config.bucket,
+  return {
+    upload: (key, data, contentType) =>
+      Effect.tryPromise({
+        try: async () => {
+          const url = objectUrl(key);
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': contentType,
+              'x-amz-acl': 'private',
+            },
+            body: new Uint8Array(data),
+          });
+
+          if (!response.ok) {
+            throw new Error(`S3 upload failed: ${response.statusText}`);
+          }
+
+          return url;
         },
-      }),
-    ),
+        catch: (cause) =>
+          new StorageUploadError({
+            key,
+            message: `Failed to upload to S3: ${key}`,
+            cause,
+          }),
+      }).pipe(
+        Effect.withSpan('storage.upload', { attributes: spanAttributes(key) }),
+      ),
 
-  download: (key) =>
-    Effect.tryPromise({
-      try: async () => {
-        const endpoint =
-          config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
-        const url = `${endpoint}/${config.bucket}/${key}`;
-
-        const response = await fetch(url);
+    download: (key) =>
+      Effect.gen(function* () {
+        const response = yield* Effect.tryPromise({
+          try: () => fetch(objectUrl(key)),
+          catch: (cause) =>
+            new StorageError({
+              message: `Failed to download from S3: ${key}`,
+              cause,
+            }),
+        });
 
         if (response.status === 404) {
-          throw { notFound: true };
+          return yield* Effect.fail(new StorageNotFoundError({ key }));
         }
 
         if (!response.ok) {
-          throw new Error(`S3 download failed: ${response.statusText}`);
+          return yield* Effect.fail(
+            new StorageError({
+              message: `S3 download failed: ${response.statusText}`,
+            }),
+          );
         }
 
-        const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
-      },
-      catch: (cause) => {
-        if (
-          typeof cause === 'object' &&
-          cause !== null &&
-          'notFound' in cause
-        ) {
-          return new StorageNotFoundError({ key });
-        }
-        return new StorageError({
-          message: `Failed to download from S3: ${key}`,
-          cause,
+        const arrayBuffer = yield* Effect.tryPromise({
+          try: () => response.arrayBuffer(),
+          catch: (cause) =>
+            new StorageError({
+              message: `Failed to read S3 response: ${key}`,
+              cause,
+            }),
         });
-      },
-    }).pipe(
-      Effect.withSpan('storage.download', {
-        attributes: {
-          'storage.key': key,
-          'storage.provider': 's3',
-          'storage.bucket': config.bucket,
-        },
-      }),
-    ),
 
-  delete: (key) =>
-    Effect.tryPromise({
-      try: async () => {
-        const endpoint =
-          config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
-        const url = `${endpoint}/${config.bucket}/${key}`;
-
-        const response = await fetch(url, { method: 'DELETE' });
-
-        if (!response.ok && response.status !== 404) {
-          throw new Error(`S3 delete failed: ${response.statusText}`);
-        }
-      },
-      catch: (cause) =>
-        new StorageError({
-          message: `Failed to delete from S3: ${key}`,
-          cause,
+        return Buffer.from(arrayBuffer);
+      }).pipe(
+        Effect.withSpan('storage.download', {
+          attributes: spanAttributes(key),
         }),
-    }).pipe(
-      Effect.withSpan('storage.delete', {
-        attributes: {
-          'storage.key': key,
-          'storage.provider': 's3',
-          'storage.bucket': config.bucket,
+      ),
+
+    delete: (key) =>
+      Effect.tryPromise({
+        try: async () => {
+          const response = await fetch(objectUrl(key), { method: 'DELETE' });
+
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`S3 delete failed: ${response.statusText}`);
+          }
         },
-      }),
-    ),
+        catch: (cause) =>
+          new StorageError({
+            message: `Failed to delete from S3: ${key}`,
+            cause,
+          }),
+      }).pipe(
+        Effect.withSpan('storage.delete', { attributes: spanAttributes(key) }),
+      ),
 
-  getUrl: (key) =>
-    Effect.succeed(
-      `${config.endpoint ?? `https://s3.${config.region}.amazonaws.com`}/${config.bucket}/${key}`,
-    ).pipe(
-      Effect.withSpan('storage.getUrl', {
-        attributes: {
-          'storage.key': key,
-          'storage.provider': 's3',
-          'storage.bucket': config.bucket,
+    getUrl: (key) =>
+      Effect.succeed(objectUrl(key)).pipe(
+        Effect.withSpan('storage.getUrl', { attributes: spanAttributes(key) }),
+      ),
+
+    exists: (key) =>
+      Effect.tryPromise({
+        try: async () => {
+          const response = await fetch(objectUrl(key), { method: 'HEAD' });
+          return response.ok;
         },
-      }),
-    ),
+        catch: () =>
+          new StorageError({ message: `Failed to check S3 object: ${key}` }),
+      }).pipe(
+        Effect.withSpan('storage.exists', { attributes: spanAttributes(key) }),
+      ),
+  };
+};
 
-  exists: (key) =>
-    Effect.tryPromise({
-      try: async () => {
-        const endpoint =
-          config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
-        const url = `${endpoint}/${config.bucket}/${key}`;
-
-        const response = await fetch(url, { method: 'HEAD' });
-        return response.ok;
-      },
-      catch: () =>
-        new StorageError({ message: `Failed to check S3 object: ${key}` }),
-    }).pipe(
-      Effect.withSpan('storage.exists', {
-        attributes: {
-          'storage.key': key,
-          'storage.provider': 's3',
-          'storage.bucket': config.bucket,
-        },
-      }),
-    ),
-});
-
-export const S3StorageLive = (config: S3StorageConfig): Layer.Layer<Storage> =>
-  Layer.succeed(Storage, makeS3Storage(config));
+export const S3StorageLive = (
+  config: S3StorageConfig,
+  // eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements
+): Layer.Layer<Storage> => Layer.succeed(Storage, makeS3Storage(config));

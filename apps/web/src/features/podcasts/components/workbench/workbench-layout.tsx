@@ -11,7 +11,6 @@ import { Link } from '@tanstack/react-router';
 import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
-import { CollaboratorAvatars } from '../collaborators';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
@@ -26,22 +25,8 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
-  owner: {
-    id: string;
-    name: string;
-    image?: string | null;
-  };
-  collaborators: readonly {
-    id: string;
-    podcastId: string;
-    userId: string | null;
-    email: string;
-    userName: string | null;
-    userImage: string | null;
-  }[];
   isApproved: boolean;
   isAdmin: boolean;
-  onManageCollaborators: () => void;
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;
@@ -54,11 +39,8 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  owner,
-  collaborators,
   isApproved,
   isAdmin,
-  onManageCollaborators,
   onApprove,
   onRevoke,
   isApprovalPending,
@@ -103,11 +85,6 @@ export function WorkbenchLayout({
               {formatDuration(podcast.duration)}
             </span>
           )}
-          <CollaboratorAvatars
-            owner={owner}
-            collaborators={collaborators}
-            onManageClick={onManageCollaborators}
-          />
           <ApproveButton
             isApproved={isApproved}
             isAdmin={isAdmin}

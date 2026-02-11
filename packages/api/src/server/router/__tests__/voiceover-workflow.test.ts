@@ -31,7 +31,6 @@ import {
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
 import {
   VoiceoverRepoLive,
-  VoiceoverCollaboratorRepoLive,
   startVoiceoverGeneration,
   generateVoiceoverAudio,
 } from '@repo/media';
@@ -57,7 +56,6 @@ const createWorkflowRuntime = (ctx: TestContext) => {
     ctx.dbLayer,
     mockAILayers,
     VoiceoverRepoLive.pipe(Layer.provide(ctx.dbLayer)),
-    VoiceoverCollaboratorRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     QueueLive.pipe(Layer.provide(ctx.dbLayer)),
   );
 

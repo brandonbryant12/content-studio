@@ -238,7 +238,7 @@ export class MediaNotFound extends Schema.TaggedError<MediaNotFound>()(
 }
 
 // =============================================================================
-// Collaboration Errors
+// Ownership Errors
 // =============================================================================
 
 /**
@@ -259,89 +259,6 @@ export class NotPodcastOwner extends Schema.TaggedError<NotPodcastOwner>()(
   static readonly logLevel = 'silent' as const;
   static getData(e: NotPodcastOwner) {
     return { podcastId: e.podcastId };
-  }
-}
-
-/**
- * User is not a collaborator or owner of the podcast.
- */
-export class NotPodcastCollaborator extends Schema.TaggedError<NotPodcastCollaborator>()(
-  'NotPodcastCollaborator',
-  {
-    podcastId: Schema.String,
-    userId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 403 as const;
-  static readonly httpCode = 'NOT_PODCAST_COLLABORATOR' as const;
-  static readonly httpMessage = (e: NotPodcastCollaborator) =>
-    e.message ?? 'User is not a collaborator on this podcast';
-  static readonly logLevel = 'silent' as const;
-  static getData(e: NotPodcastCollaborator) {
-    return { podcastId: e.podcastId };
-  }
-}
-
-/**
- * Collaborator already exists for this podcast.
- */
-export class CollaboratorAlreadyExists extends Schema.TaggedError<CollaboratorAlreadyExists>()(
-  'CollaboratorAlreadyExists',
-  {
-    podcastId: Schema.String,
-    email: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 409 as const;
-  static readonly httpCode = 'COLLABORATOR_ALREADY_EXISTS' as const;
-  static readonly httpMessage = (e: CollaboratorAlreadyExists) =>
-    e.message ?? `${e.email} is already a collaborator on this podcast`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: CollaboratorAlreadyExists) {
-    return { podcastId: e.podcastId, email: e.email };
-  }
-}
-
-/**
- * Collaborator not found.
- */
-export class CollaboratorNotFound extends Schema.TaggedError<CollaboratorNotFound>()(
-  'CollaboratorNotFound',
-  {
-    id: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'COLLABORATOR_NOT_FOUND' as const;
-  static readonly httpMessage = (e: CollaboratorNotFound) =>
-    e.message ?? `Collaborator ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: CollaboratorNotFound) {
-    return { collaboratorId: e.id };
-  }
-}
-
-/**
- * Cannot add owner as collaborator.
- */
-export class CannotAddOwnerAsCollaborator extends Schema.TaggedError<CannotAddOwnerAsCollaborator>()(
-  'CannotAddOwnerAsCollaborator',
-  {
-    podcastId: Schema.String,
-    email: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 400 as const;
-  static readonly httpCode = 'CANNOT_ADD_OWNER_AS_COLLABORATOR' as const;
-  static readonly httpMessage = (e: CannotAddOwnerAsCollaborator) =>
-    e.message ?? 'Cannot add the podcast owner as a collaborator';
-  static readonly logLevel = 'silent' as const;
-  static getData(e: CannotAddOwnerAsCollaborator) {
-    return { podcastId: e.podcastId, email: e.email };
   }
 }
 
@@ -403,90 +320,6 @@ export class NotVoiceoverOwner extends Schema.TaggedError<NotVoiceoverOwner>()(
   static readonly logLevel = 'silent' as const;
   static getData(e: NotVoiceoverOwner) {
     return { voiceoverId: e.voiceoverId };
-  }
-}
-
-/**
- * User is not a collaborator or owner of the voiceover.
- */
-export class NotVoiceoverCollaborator extends Schema.TaggedError<NotVoiceoverCollaborator>()(
-  'NotVoiceoverCollaborator',
-  {
-    voiceoverId: Schema.String,
-    userId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 403 as const;
-  static readonly httpCode = 'NOT_VOICEOVER_COLLABORATOR' as const;
-  static readonly httpMessage = (e: NotVoiceoverCollaborator) =>
-    e.message ?? 'User is not a collaborator on this voiceover';
-  static readonly logLevel = 'silent' as const;
-  static getData(e: NotVoiceoverCollaborator) {
-    return { voiceoverId: e.voiceoverId };
-  }
-}
-
-/**
- * Voiceover collaborator already exists.
- */
-export class VoiceoverCollaboratorAlreadyExists extends Schema.TaggedError<VoiceoverCollaboratorAlreadyExists>()(
-  'VoiceoverCollaboratorAlreadyExists',
-  {
-    voiceoverId: Schema.String,
-    email: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 409 as const;
-  static readonly httpCode = 'VOICEOVER_COLLABORATOR_ALREADY_EXISTS' as const;
-  static readonly httpMessage = (e: VoiceoverCollaboratorAlreadyExists) =>
-    e.message ?? `${e.email} is already a collaborator on this voiceover`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: VoiceoverCollaboratorAlreadyExists) {
-    return { voiceoverId: e.voiceoverId, email: e.email };
-  }
-}
-
-/**
- * Voiceover collaborator not found.
- */
-export class VoiceoverCollaboratorNotFound extends Schema.TaggedError<VoiceoverCollaboratorNotFound>()(
-  'VoiceoverCollaboratorNotFound',
-  {
-    id: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'VOICEOVER_COLLABORATOR_NOT_FOUND' as const;
-  static readonly httpMessage = (e: VoiceoverCollaboratorNotFound) =>
-    e.message ?? `Voiceover collaborator ${e.id} not found`;
-  static readonly logLevel = 'silent' as const;
-  static getData(e: VoiceoverCollaboratorNotFound) {
-    return { collaboratorId: e.id };
-  }
-}
-
-/**
- * Cannot add owner as voiceover collaborator.
- */
-export class CannotAddOwnerAsVoiceoverCollaborator extends Schema.TaggedError<CannotAddOwnerAsVoiceoverCollaborator>()(
-  'CannotAddOwnerAsVoiceoverCollaborator',
-  {
-    voiceoverId: Schema.String,
-    email: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 400 as const;
-  static readonly httpCode =
-    'CANNOT_ADD_OWNER_AS_VOICEOVER_COLLABORATOR' as const;
-  static readonly httpMessage = (e: CannotAddOwnerAsVoiceoverCollaborator) =>
-    e.message ?? 'Cannot add the voiceover owner as a collaborator';
-  static readonly logLevel = 'silent' as const;
-  static getData(e: CannotAddOwnerAsVoiceoverCollaborator) {
-    return { voiceoverId: e.voiceoverId, email: e.email };
   }
 }
 
@@ -593,17 +426,9 @@ export type MediaError =
   | ProjectNotFound
   | MediaNotFound
   | NotPodcastOwner
-  | NotPodcastCollaborator
-  | CollaboratorAlreadyExists
-  | CollaboratorNotFound
-  | CannotAddOwnerAsCollaborator
   | VoiceoverNotFound
   | VoiceoverError
   | NotVoiceoverOwner
-  | NotVoiceoverCollaborator
-  | VoiceoverCollaboratorAlreadyExists
-  | VoiceoverCollaboratorNotFound
-  | CannotAddOwnerAsVoiceoverCollaborator
   | InvalidVoiceoverAudioGeneration
   | InfographicNotFound
   | NotInfographicOwner

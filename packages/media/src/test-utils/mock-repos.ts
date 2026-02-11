@@ -4,17 +4,9 @@ import {
   type PodcastRepoService,
 } from '../podcast/repos/podcast-repo';
 import {
-  CollaboratorRepo,
-  type CollaboratorRepoService,
-} from '../podcast/repos/collaborator-repo';
-import {
   VoiceoverRepo,
   type VoiceoverRepoService,
 } from '../voiceover/repos/voiceover-repo';
-import {
-  VoiceoverCollaboratorRepo,
-  type VoiceoverCollaboratorRepoService,
-} from '../voiceover/repos/voiceover-collaborator-repo';
 import {
   DocumentRepo,
   type DocumentRepoService,
@@ -69,36 +61,6 @@ export const createMockPodcastRepo = (
 };
 
 /**
- * Create a mock CollaboratorRepo layer with `Effect.die('not implemented')` defaults.
- * Override individual methods by passing them in the overrides object.
- *
- * @example
- * ```ts
- * const mockRepo = createMockCollaboratorRepo({
- *   findByPodcast: (podcastId) => Effect.succeed([]),
- *   add: (data) => Effect.succeed(testCollaborator),
- * });
- * ```
- */
-export const createMockCollaboratorRepo = (
-  overrides: Partial<CollaboratorRepoService> = {},
-): Layer.Layer<CollaboratorRepo> => {
-  const defaults: CollaboratorRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findByPodcast: () => Effect.die('not implemented'),
-    findByEmail: () => Effect.die('not implemented'),
-    findByPodcastAndUser: () => Effect.die('not implemented'),
-    findByPodcastAndEmail: () => Effect.die('not implemented'),
-    lookupUserByEmail: () => Effect.die('not implemented'),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.die('not implemented'),
-  };
-
-  return Layer.succeed(CollaboratorRepo, { ...defaults, ...overrides });
-};
-
-/**
  * Create a mock VoiceoverRepo layer with `Effect.die('not implemented')` defaults.
  * Override individual methods by passing them in the overrides object.
  *
@@ -127,38 +89,6 @@ export const createMockVoiceoverRepo = (
   };
 
   return Layer.succeed(VoiceoverRepo, { ...defaults, ...overrides });
-};
-
-/**
- * Create a mock VoiceoverCollaboratorRepo layer with `Effect.die('not implemented')` defaults.
- * Override individual methods by passing them in the overrides object.
- *
- * @example
- * ```ts
- * const mockRepo = createMockVoiceoverCollaboratorRepo({
- *   findByVoiceover: (id) => Effect.succeed([]),
- * });
- * ```
- */
-export const createMockVoiceoverCollaboratorRepo = (
-  overrides: Partial<VoiceoverCollaboratorRepoService> = {},
-): Layer.Layer<VoiceoverCollaboratorRepo> => {
-  const defaults: VoiceoverCollaboratorRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findByVoiceover: () => Effect.die('not implemented'),
-    findByEmail: () => Effect.die('not implemented'),
-    findByVoiceoverAndUser: () => Effect.die('not implemented'),
-    findByVoiceoverAndEmail: () => Effect.die('not implemented'),
-    lookupUserByEmail: () => Effect.die('not implemented'),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.die('not implemented'),
-  };
-
-  return Layer.succeed(VoiceoverCollaboratorRepo, {
-    ...defaults,
-    ...overrides,
-  });
 };
 
 /**

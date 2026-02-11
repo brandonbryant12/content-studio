@@ -70,7 +70,7 @@ export interface GenerateVoiceoverAudioResult {
  *    - generating_audio is valid when called from worker after start-generation
  * 2. Validates text is not empty
  * 3. Updates status to 'generating_audio'
- * 4. Clears all approvals (owner + collaborators)
+ * 4. Clears all approvals
  * 5. Synthesizes audio via TTS
  * 6. Uploads to storage
  * 7. Updates voiceover with audio URL and 'ready' status

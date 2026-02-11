@@ -6,7 +6,6 @@ import type { RouterOutput } from '@repo/api/client';
 import type { ReactNode } from 'react';
 import { isGeneratingStatus } from '../../lib/status';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
-import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
@@ -18,22 +17,8 @@ interface WorkbenchLayoutProps {
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
-  owner: {
-    id: string;
-    name: string;
-    image?: string | null;
-  };
-  collaborators: readonly {
-    id: string;
-    voiceoverId: string;
-    userId: string | null;
-    email: string;
-    userName: string | null;
-    userImage: string | null;
-  }[];
   isApproved: boolean;
   isAdmin: boolean;
-  onManageCollaborators: () => void;
   // Approval callbacks
   onApprove: () => void;
   onRevoke: () => void;
@@ -46,11 +31,8 @@ export function WorkbenchLayout({
   actionBar,
   onDelete,
   isDeleting,
-  owner,
-  collaborators,
   isApproved,
   isAdmin,
-  onManageCollaborators,
   onApprove,
   onRevoke,
   isApprovalPending,
@@ -102,13 +84,8 @@ export function WorkbenchLayout({
                 </div>
               )}
 
-              {/* Collaborators and Approval */}
+              {/* Approval */}
               <div className="flex items-center gap-3 mr-3">
-                <CollaboratorAvatars
-                  owner={owner}
-                  collaborators={collaborators}
-                  onManageClick={onManageCollaborators}
-                />
                 <ApproveButton
                   isApproved={isApproved}
                   isAdmin={isAdmin}

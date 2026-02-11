@@ -99,7 +99,7 @@ describe('VoiceoverList quick play', () => {
     expect(quickPlay.toggle).toHaveBeenCalledWith('vo_1', FULL_AUDIO_URL);
     // Verify the URL was NOT double-prefixed
     const calledUrl = (quickPlay.toggle as ReturnType<typeof vi.fn>).mock
-      .calls[0][1] as string;
+      .calls[0]![1] as string;
     expect(calledUrl).not.toMatch(/\/storage\/.*\/storage\//);
   });
 

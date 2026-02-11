@@ -389,8 +389,7 @@ describe('deleteVoiceover', () => {
       expect(voiceovers.has(voiceover.id)).toBe(false);
     });
 
-    it('deletes voiceover with collaborators (cascade delete)', async () => {
-      // Note: The use case comment mentions collaborators cascade
+    it('deletes voiceover successfully', async () => {
       const owner = createTestUser({ id: 'owner-123' });
       const voiceover = createMockVoiceover({
         id: 'voc_withcollabs123' as VoiceoverId,

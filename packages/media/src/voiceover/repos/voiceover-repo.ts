@@ -1,14 +1,13 @@
 import { Context, Effect, Layer } from 'effect';
 import {
   voiceover,
-  voiceoverCollaborator,
   type Voiceover,
   type VoiceoverId,
   type VoiceoverStatus,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { VoiceoverNotFound } from '../../errors';
-import { eq, desc, and, or, exists, count as drizzleCount } from 'drizzle-orm';
+import { eq, desc, and, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================
 // Types
@@ -207,24 +206,10 @@ const make: VoiceoverRepoService = {
     withDb('voiceoverRepo.list', (db) => {
       const conditions = [];
 
-      // If userId is specified, include voiceovers where user is owner OR collaborator
       if (options.userId) {
-        const isOwner = eq(voiceover.createdBy, options.userId);
-        const isCollaborator = exists(
-          db
-            .select({ id: voiceoverCollaborator.id })
-            .from(voiceoverCollaborator)
-            .where(
-              and(
-                eq(voiceoverCollaborator.voiceoverId, voiceover.id),
-                eq(voiceoverCollaborator.userId, options.userId),
-              ),
-            ),
-        );
-        conditions.push(or(isOwner, isCollaborator));
+        conditions.push(eq(voiceover.createdBy, options.userId));
       }
 
-      // Legacy filter - only by createdBy (no collaborator check)
       if (options.createdBy && !options.userId) {
         conditions.push(eq(voiceover.createdBy, options.createdBy));
       }
@@ -242,24 +227,10 @@ const make: VoiceoverRepoService = {
     withDb('voiceoverRepo.count', async (db) => {
       const conditions = [];
 
-      // If userId is specified, count voiceovers where user is owner OR collaborator
       if (options?.userId) {
-        const isOwner = eq(voiceover.createdBy, options.userId);
-        const isCollaborator = exists(
-          db
-            .select({ id: voiceoverCollaborator.id })
-            .from(voiceoverCollaborator)
-            .where(
-              and(
-                eq(voiceoverCollaborator.voiceoverId, voiceover.id),
-                eq(voiceoverCollaborator.userId, options.userId),
-              ),
-            ),
-        );
-        conditions.push(or(isOwner, isCollaborator));
+        conditions.push(eq(voiceover.createdBy, options.userId));
       }
 
-      // Legacy filter - only by createdBy (no collaborator check)
       if (options?.createdBy && !options.userId) {
         conditions.push(eq(voiceover.createdBy, options.createdBy));
       }

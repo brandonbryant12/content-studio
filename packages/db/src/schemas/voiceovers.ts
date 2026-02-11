@@ -6,7 +6,6 @@ import {
   integer,
   index,
   pgEnum,
-  unique,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
 import { user } from './auth';
@@ -17,11 +16,8 @@ import {
 } from './serialization';
 import {
   type VoiceoverId,
-  type VoiceoverCollaboratorId,
   VoiceoverIdSchema,
-  VoiceoverCollaboratorIdSchema,
   generateVoiceoverId,
-  generateVoiceoverCollaboratorId,
 } from './brands';
 
 // =============================================================================
@@ -95,51 +91,6 @@ export const voiceover = pgTable(
 );
 
 // =============================================================================
-// Voiceover Collaborator Table
-// =============================================================================
-
-/**
- * Voiceover collaborator table.
- * Tracks users who have been invited to collaborate on a voiceover.
- * - userId is null for pending invites (email-only)
- * - When user signs up, pending invites are claimed by matching email
- */
-export const voiceoverCollaborator = pgTable(
-  'voiceover_collaborator',
-  {
-    id: varchar('id', { length: 20 })
-      .$type<VoiceoverCollaboratorId>()
-      .$default(generateVoiceoverCollaboratorId)
-      .primaryKey(),
-    voiceoverId: varchar('voiceover_id', { length: 20 })
-      .notNull()
-      .references(() => voiceover.id, { onDelete: 'cascade' })
-      .$type<VoiceoverId>(),
-    // userId is null for pending invites (email-only)
-    userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
-    // Email used for pending invites and display
-    email: text('email').notNull(),
-    // Audit fields
-    addedAt: timestamp('added_at', { mode: 'date', withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    addedBy: text('added_by')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    index('voiceover_collaborator_voiceoverId_idx').on(table.voiceoverId),
-    index('voiceover_collaborator_userId_idx').on(table.userId),
-    index('voiceover_collaborator_email_idx').on(table.email),
-    // Unique constraint: one invite per email per voiceover
-    unique('voiceover_collaborator_voiceover_email_unique').on(
-      table.voiceoverId,
-      table.email,
-    ),
-  ],
-);
-
-// =============================================================================
 // Input Schemas - for API contracts
 // =============================================================================
 
@@ -204,32 +155,6 @@ export const VoiceoverListItemOutputSchema = Schema.Struct({
 });
 
 // =============================================================================
-// Collaborator Output Schemas
-// =============================================================================
-
-/**
- * Base voiceover collaborator output schema.
- */
-export const VoiceoverCollaboratorOutputSchema = Schema.Struct({
-  id: VoiceoverCollaboratorIdSchema,
-  voiceoverId: VoiceoverIdSchema,
-  userId: Schema.NullOr(Schema.String),
-  email: Schema.String,
-  addedAt: Schema.String,
-  addedBy: Schema.String,
-});
-
-/**
- * Collaborator with user details output schema.
- * Includes user name and image when the collaborator is a registered user.
- */
-export const VoiceoverCollaboratorWithUserOutputSchema = Schema.Struct({
-  ...VoiceoverCollaboratorOutputSchema.fields,
-  userName: Schema.NullOr(Schema.String),
-  userImage: Schema.NullOr(Schema.String),
-});
-
-// =============================================================================
 // Types
 // =============================================================================
 
@@ -239,13 +164,6 @@ export type VoiceoverOutput = typeof VoiceoverOutputSchema.Type;
 export type VoiceoverListItemOutput = typeof VoiceoverListItemOutputSchema.Type;
 export type CreateVoiceover = typeof CreateVoiceoverSchema.Type;
 export type UpdateVoiceover = typeof UpdateVoiceoverSchema.Type;
-
-// Collaborator types
-export type VoiceoverCollaborator = typeof voiceoverCollaborator.$inferSelect;
-export type VoiceoverCollaboratorOutput =
-  typeof VoiceoverCollaboratorOutputSchema.Type;
-export type VoiceoverCollaboratorWithUserOutput =
-  typeof VoiceoverCollaboratorWithUserOutputSchema.Type;
 
 // =============================================================================
 // Transform Functions - pure DB → API output conversion
@@ -318,76 +236,4 @@ export const serializeVoiceoverListItemsEffect = createBatchEffectSerializer(
 /** Sync serializer for simple cases. */
 export const serializeVoiceoverListItem = createSyncSerializer(
   voiceoverListItemTransform,
-);
-
-// --- Collaborator ---
-
-/**
- * Input type for collaborator with user serialization.
- */
-export interface VoiceoverCollaboratorWithUser extends VoiceoverCollaborator {
-  userName: string | null;
-  userImage: string | null;
-}
-
-/**
- * Pure transform for VoiceoverCollaborator → VoiceoverCollaboratorOutput.
- */
-const voiceoverCollaboratorTransform = (
-  collaborator: VoiceoverCollaborator,
-): VoiceoverCollaboratorOutput => ({
-  id: collaborator.id,
-  voiceoverId: collaborator.voiceoverId,
-  userId: collaborator.userId ?? null,
-  email: collaborator.email,
-  addedAt: collaborator.addedAt.toISOString(),
-  addedBy: collaborator.addedBy,
-});
-
-/**
- * Pure transform for VoiceoverCollaboratorWithUser → VoiceoverCollaboratorWithUserOutput.
- */
-const voiceoverCollaboratorWithUserTransform = (
-  collaborator: VoiceoverCollaboratorWithUser,
-): VoiceoverCollaboratorWithUserOutput => ({
-  ...voiceoverCollaboratorTransform(collaborator),
-  userName: collaborator.userName,
-  userImage: collaborator.userImage,
-});
-
-/** Effect-based serializer with tracing. */
-export const serializeVoiceoverCollaboratorEffect = createEffectSerializer(
-  'voiceoverCollaborator',
-  voiceoverCollaboratorTransform,
-);
-
-/** Batch serializer for multiple collaborators. */
-export const serializeVoiceoverCollaboratorsEffect =
-  createBatchEffectSerializer(
-    'voiceoverCollaborator',
-    voiceoverCollaboratorTransform,
-  );
-
-/** Sync serializer for simple cases. */
-export const serializeVoiceoverCollaborator = createSyncSerializer(
-  voiceoverCollaboratorTransform,
-);
-
-/** Effect-based serializer for collaborator with user. */
-export const serializeVoiceoverCollaboratorWithUserEffect =
-  createEffectSerializer(
-    'voiceoverCollaboratorWithUser',
-    voiceoverCollaboratorWithUserTransform,
-  );
-
-/** Batch serializer for collaborators with user info. */
-export const serializeVoiceoverCollaboratorsWithUserEffect =
-  createBatchEffectSerializer(
-    'voiceoverCollaboratorWithUser',
-    voiceoverCollaboratorWithUserTransform,
-  );
-
-/** Sync serializer for collaborator with user. */
-export const serializeVoiceoverCollaboratorWithUser = createSyncSerializer(
-  voiceoverCollaboratorWithUserTransform,
 );

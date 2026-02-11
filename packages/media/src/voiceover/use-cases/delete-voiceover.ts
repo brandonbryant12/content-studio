@@ -45,7 +45,7 @@ export const deleteVoiceover = (input: DeleteVoiceoverInput) =>
       );
     }
 
-    // Delete (collaborators cascade)
+    // Delete
     yield* voiceoverRepo.delete(input.voiceoverId);
   }).pipe(
     Effect.withSpan('useCase.deleteVoiceover', {

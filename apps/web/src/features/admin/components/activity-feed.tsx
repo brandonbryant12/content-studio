@@ -18,7 +18,7 @@ interface ActivityItem {
   entityTitle?: string | null;
   metadata?: Record<string, unknown> | null;
   createdAt: string;
-  userName?: string;
+  userName?: string | null;
 }
 
 interface ActivityFeedProps {

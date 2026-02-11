@@ -4,8 +4,6 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { openAPI } from 'better-auth/plugins';
 import urlJoin from 'url-join';
 import type { DatabaseInstance } from '@repo/db/client';
-import { podcastCollaborator, user } from '@repo/db/schema';
-import { eq, and, isNull } from 'drizzle-orm';
 
 export interface AuthOptions {
   webUrl: string;
@@ -64,46 +62,6 @@ export const createAuth = ({
       enabled: true,
       autoSignIn: true,
       requireEmailVerification: false,
-    },
-    databaseHooks: {
-      session: {
-        create: {
-          /**
-           * Claim pending collaborator invites when a session is created.
-           *
-           * When a user logs in or signs up, we check if there are any
-           * pending collaborator invites (where userId is null) matching
-           * their email and claim them by setting the userId.
-           *
-           * This allows users to be invited as collaborators before they
-           * have an account, and have those invites automatically linked
-           * when they sign up or log in.
-           */
-          after: async (session) => {
-            // Get user email from database
-            const [sessionUser] = await db
-              .select({ email: user.email })
-              .from(user)
-              .where(eq(user.id, session.userId))
-              .limit(1);
-
-            if (!sessionUser?.email) {
-              return;
-            }
-
-            // Claim all pending invites for this email
-            await db
-              .update(podcastCollaborator)
-              .set({ userId: session.userId })
-              .where(
-                and(
-                  eq(podcastCollaborator.email, sessionUser.email),
-                  isNull(podcastCollaborator.userId),
-                ),
-              );
-          },
-        },
-      },
     },
   });
 };

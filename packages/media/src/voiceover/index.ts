@@ -2,14 +2,9 @@
 export {
   VoiceoverRepo,
   VoiceoverRepoLive,
-  VoiceoverCollaboratorRepo,
-  VoiceoverCollaboratorRepoLive,
   type VoiceoverRepoService,
-  type VoiceoverCollaboratorRepoService,
   type ListOptions as VoiceoverListOptions,
   type UpdateAudioOptions as VoiceoverUpdateAudioOptions,
-  type RepoAddVoiceoverCollaboratorInput,
-  type UserLookupInfo as VoiceoverUserLookupInfo,
 } from './repos';
 
 // Voiceover module - Use Cases
@@ -22,13 +17,9 @@ export {
   generateVoiceoverAudio,
   startVoiceoverGeneration,
   getVoiceoverJob,
-  // Collaboration
-  addVoiceoverCollaborator,
-  removeVoiceoverCollaborator,
-  listVoiceoverCollaborators,
+  // Approval
   approveVoiceover,
   revokeVoiceoverApproval,
-  claimVoiceoverPendingInvites,
   // Types
   type CreateVoiceoverInput,
   type GetVoiceoverInput,
@@ -42,16 +33,8 @@ export {
   type StartVoiceoverGenerationResult,
   type GetVoiceoverJobInput,
   type GetVoiceoverJobResult,
-  // Collaboration types
-  type AddVoiceoverCollaboratorInput,
-  type AddVoiceoverCollaboratorResult,
-  type RemoveVoiceoverCollaboratorInput,
-  type ListVoiceoverCollaboratorsInput,
-  type ListVoiceoverCollaboratorsResult,
   type ApproveVoiceoverInput,
   type RevokeVoiceoverApprovalInput,
-  type ClaimVoiceoverPendingInvitesInput,
-  type ClaimVoiceoverPendingInvitesResult,
 } from './use-cases';
 
 // Re-export types from schema
@@ -62,8 +45,4 @@ export type {
   UpdateVoiceover,
   VoiceoverOutput,
   VoiceoverListItemOutput,
-  VoiceoverCollaborator,
-  VoiceoverCollaboratorOutput,
-  VoiceoverCollaboratorWithUser,
-  VoiceoverCollaboratorWithUserOutput,
 } from '@repo/db/schema';

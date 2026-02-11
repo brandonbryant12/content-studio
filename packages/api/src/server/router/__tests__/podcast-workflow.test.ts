@@ -40,7 +40,6 @@ import {
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
 import {
   PodcastRepoLive,
-  CollaboratorRepoLive,
   DocumentRepoLive,
   startGeneration,
   saveAndQueueAudio,
@@ -74,7 +73,6 @@ const createWorkflowRuntime = (ctx: TestContext) => {
     ctx.dbLayer,
     mockAILayers,
     PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer)),
-    CollaboratorRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     QueueLive.pipe(Layer.provide(ctx.dbLayer)),
   );

@@ -76,7 +76,6 @@ export const ActivityLogEntityTypeSchema = Schema.Union(
   Schema.Literal('podcast'),
   Schema.Literal('voiceover'),
   Schema.Literal('infographic'),
-  Schema.Literal('podcast_collaborator'),
 );
 
 export const ActivityLogOutputSchema = Schema.Struct({

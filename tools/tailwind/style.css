@@ -2257,6 +2257,44 @@
     @apply text-sm text-foreground;
   }
 
+  /* Voice Preview Button — mixer trigger & dropdown */
+  .mixer-voice-selector-wrap {
+    @apply flex items-center gap-1.5;
+  }
+
+  .mixer-voice-selector-wrap > .mixer-voice-current {
+    @apply flex-1 min-w-0;
+  }
+
+  .mixer-voice-preview-btn {
+    @apply w-7 h-7 shrink-0 rounded-full flex items-center justify-center;
+    @apply text-muted-foreground/50 bg-transparent border border-transparent;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:text-warning hover:bg-warning/10 hover:border-warning/20;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .mixer-voice-preview-btn:hover {
+    @apply shadow-sm;
+  }
+
+  .mixer-voice-option .mixer-voice-preview-btn {
+    @apply ml-auto w-6 h-6 opacity-0;
+    transition:
+      opacity 0.15s ease-out,
+      color 0.15s ease-out,
+      background-color 0.15s ease-out;
+  }
+
+  .mixer-voice-option:hover .mixer-voice-preview-btn {
+    @apply opacity-100;
+  }
+
+  .mixer-voice-preview-icon {
+    @apply w-3.5 h-3.5;
+  }
+
   /* Duration Control - like a master fader */
   .mixer-duration {
     @apply mt-4 pt-4 border-t border-border;
@@ -3195,7 +3233,7 @@
   }
 
   .setup-voice-card {
-    @apply p-4 rounded-xl border-2 text-center transition-all duration-200 cursor-pointer
+    @apply relative p-4 rounded-xl border-2 text-center transition-all duration-200 cursor-pointer
            border-border hover:border-warning/30;
   }
 
@@ -3225,6 +3263,32 @@
 
   .setup-voice-desc {
     @apply text-xs text-muted-foreground mt-0.5 truncate;
+  }
+
+  /* Voice Preview Button — setup wizard cards */
+  .setup-voice-preview-btn {
+    @apply w-7 h-7 rounded-full flex items-center justify-center mt-2 mx-auto;
+    @apply text-muted-foreground/50 bg-transparent border border-transparent;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:text-warning hover:bg-warning/10 hover:border-warning/20;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:opacity-0 disabled:pointer-events-none;
+  }
+
+  .setup-voice-preview-btn:hover {
+    @apply shadow-sm;
+  }
+
+  .setup-voice-card.selected .setup-voice-preview-btn {
+    @apply text-warning/50;
+  }
+
+  .setup-voice-card.selected .setup-voice-preview-btn:hover {
+    @apply text-warning bg-warning/15 border-warning/30;
+  }
+
+  .setup-voice-preview-icon {
+    @apply w-3.5 h-3.5;
   }
 
   /* -----------------------------------------
@@ -3781,15 +3845,18 @@
   }
 
   .voice-card {
-    @apply flex flex-col items-center gap-2 px-4 py-3 min-w-[90px];
+    @apply flex flex-col items-center gap-2 px-4 py-3 min-w-[90px] cursor-pointer;
     @apply rounded-xl border border-border bg-card;
     @apply transition-all duration-300 ease-out;
     @apply hover:border-muted-foreground/30;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .voice-card:hover:not(:disabled) {
+  .voice-card[aria-disabled='true'] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .voice-card:hover:not([aria-disabled='true']) {
     transform: translateY(-2px);
     @apply shadow-md;
   }
@@ -3802,7 +3869,7 @@
       0 0 0 1px hsl(var(--primary) / 0.3);
   }
 
-  .voice-card-selected:hover:not(:disabled) {
+  .voice-card-selected:hover:not([aria-disabled='true']) {
     transform: translateY(-2px) scale(1.02);
   }
 
@@ -3824,6 +3891,32 @@
   .voice-card-trait {
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-[10px] uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* Voice Preview Button — voiceover ensemble cards */
+  .voice-preview-btn {
+    @apply w-7 h-7 rounded-full flex items-center justify-center mt-1;
+    @apply text-muted-foreground/60 bg-transparent border border-transparent;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:text-primary hover:bg-primary/10 hover:border-primary/20;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:opacity-0 disabled:pointer-events-none;
+  }
+
+  .voice-preview-btn:hover {
+    @apply shadow-sm;
+  }
+
+  .voice-card-selected .voice-preview-btn {
+    @apply text-primary/50;
+  }
+
+  .voice-card-selected .voice-preview-btn:hover {
+    @apply text-primary bg-primary/15 border-primary/30;
+  }
+
+  .voice-preview-icon {
+    @apply w-3.5 h-3.5;
   }
 
   /* -----------------------------------------

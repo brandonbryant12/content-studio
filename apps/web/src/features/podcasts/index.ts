@@ -53,15 +53,7 @@ export {
   type UsePodcastGenerationReturn,
 } from './hooks/use-podcast-generation';
 
-// Collaborator hooks
-export {
-  useCollaborators,
-  useCollaboratorsQuery,
-  getCollaboratorsQueryKey,
-  type Collaborator,
-} from './hooks/use-collaborators';
-export { useAddCollaborator } from './hooks/use-add-collaborator';
-export { useRemoveCollaborator } from './hooks/use-remove-collaborator';
+// Approval hooks
 export { useApprovePodcast } from './hooks/use-approve-podcast';
 
 // Container components

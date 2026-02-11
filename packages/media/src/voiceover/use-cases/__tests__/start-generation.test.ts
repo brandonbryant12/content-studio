@@ -20,10 +20,6 @@ import {
   VoiceoverRepo,
   type VoiceoverRepoService,
 } from '../../repos/voiceover-repo';
-import {
-  VoiceoverCollaboratorRepo,
-  type VoiceoverCollaboratorRepoService,
-} from '../../repos/voiceover-collaborator-repo';
 import { startVoiceoverGeneration } from '../start-generation';
 
 // =============================================================================
@@ -126,23 +122,6 @@ const createMockVoiceoverRepo = (
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo =
-  (): Layer.Layer<VoiceoverCollaboratorRepo> => {
-    const service: VoiceoverCollaboratorRepoService = {
-      findById: () => Effect.succeed(null),
-      findByVoiceover: () => Effect.succeed([]),
-      findByEmail: () => Effect.succeed([]),
-      findByVoiceoverAndUser: () => Effect.succeed(null),
-      findByVoiceoverAndEmail: () => Effect.succeed(null),
-      lookupUserByEmail: () => Effect.succeed(null),
-      add: () => Effect.die('not implemented'),
-      remove: () => Effect.die('not implemented'),
-      claimByEmail: () => Effect.succeed(0),
-    };
-
-    return Layer.succeed(VoiceoverCollaboratorRepo, service);
-  };
-
 const createMockQueue = (
   state: MockState,
   options?: {
@@ -207,7 +186,6 @@ describe('startVoiceoverGeneration', () => {
           { onUpdateStatus: updateStatusSpy },
         ),
         createMockQueue({ voiceover }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -246,7 +224,6 @@ describe('startVoiceoverGeneration', () => {
           { onUpdateStatus: updateStatusSpy },
         ),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -280,7 +257,6 @@ describe('startVoiceoverGeneration', () => {
           { onClearApprovals: clearApprovalsSpy },
         ),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -325,7 +301,6 @@ describe('startVoiceoverGeneration', () => {
           { voiceover, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -368,7 +343,6 @@ describe('startVoiceoverGeneration', () => {
           { voiceover, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -392,7 +366,6 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo({}),
         createMockQueue({}),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -421,7 +394,6 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -453,7 +425,6 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -485,7 +456,6 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -517,7 +487,6 @@ describe('startVoiceoverGeneration', () => {
         MockDbLive,
         createMockVoiceoverRepo({ voiceover }),
         createMockQueue({ voiceover }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -555,7 +524,6 @@ describe('startVoiceoverGeneration', () => {
           },
         ),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(

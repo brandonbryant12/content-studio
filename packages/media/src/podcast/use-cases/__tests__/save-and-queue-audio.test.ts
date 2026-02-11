@@ -12,10 +12,6 @@ import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
 import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
 import {
-  CollaboratorRepo,
-  type CollaboratorRepoService,
-} from '../../repos/collaborator-repo';
-import {
   saveAndQueueAudio,
   NoChangesToSaveError,
 } from '../save-and-queue-audio';
@@ -128,22 +124,6 @@ const createMockQueue = (
   return Layer.succeed(Queue, service);
 };
 
-const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
-  const service: CollaboratorRepoService = {
-    findById: () => Effect.succeed(null),
-    findByPodcast: () => Effect.succeed([]),
-    findByEmail: () => Effect.succeed([]),
-    findByPodcastAndUser: () => Effect.succeed(null),
-    findByPodcastAndEmail: () => Effect.succeed(null),
-    lookupUserByEmail: () => Effect.succeed(null),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.succeed(0),
-  };
-
-  return Layer.succeed(CollaboratorRepo, service);
-};
-
 // =============================================================================
 // Tests
 // =============================================================================
@@ -167,7 +147,6 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -206,7 +185,6 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }, { onUpdate: podcastUpdateSpy }),
         createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
-        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -259,7 +237,6 @@ describe('saveAndQueueAudio', () => {
           { podcast, pendingJob: existingJob },
           { onEnqueue: enqueueSpy },
         ),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromise(
@@ -283,7 +260,6 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({}),
         createMockQueue({}),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -311,7 +287,6 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -342,7 +317,6 @@ describe('saveAndQueueAudio', () => {
         MockDbLive,
         createMockPodcastRepo({ podcast }),
         createMockQueue({ podcast }),
-        createMockCollaboratorRepo(),
       );
 
       const result = await Effect.runPromiseExit(

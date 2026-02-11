@@ -5,7 +5,6 @@ import { http, HttpResponse } from 'msw';
 import type {
   VoiceoverOutput,
   VoiceoverListItemOutput,
-  VoiceoverCollaboratorWithUserOutput,
   JobOutput,
 } from '@repo/db/schema';
 
@@ -53,31 +52,6 @@ export function createMockVoiceoverListItem(
   overrides: Partial<VoiceoverListItemOutput> = {},
 ): VoiceoverListItemOutput {
   return createMockVoiceover(overrides);
-}
-
-/**
- * Create a mock collaborator with user details.
- * Matches VoiceoverCollaboratorWithUserOutput schema.
- */
-export function createMockCollaborator(
-  overrides: Partial<VoiceoverCollaboratorWithUserOutput> = {},
-): VoiceoverCollaboratorWithUserOutput {
-  const id =
-    overrides.id ??
-    (`voc_${idCounter++}` as VoiceoverCollaboratorWithUserOutput['id']);
-  return {
-    id,
-    voiceoverId:
-      overrides.voiceoverId ??
-      ('vo_1' as VoiceoverCollaboratorWithUserOutput['voiceoverId']),
-    userId: 'user-2',
-    email: 'collaborator@example.com',
-    addedAt: new Date().toISOString(),
-    addedBy: 'user-1',
-    userName: 'Test Collaborator',
-    userImage: null,
-    ...overrides,
-  };
 }
 
 /**
@@ -129,24 +103,6 @@ export const mockVoiceovers: VoiceoverListItemOutput[] = [
     title: 'Marketing Video',
     text: 'Transform your workflow...',
     status: 'generating_audio',
-  }),
-];
-
-export const mockCollaborators: VoiceoverCollaboratorWithUserOutput[] = [
-  createMockCollaborator({
-    id: 'voc_1' as VoiceoverCollaboratorWithUserOutput['id'],
-    voiceoverId: 'vo_1' as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
-    userId: 'user-2',
-    email: 'alice@example.com',
-    userName: 'Alice Smith',
-  }),
-  createMockCollaborator({
-    id: 'voc_2' as VoiceoverCollaboratorWithUserOutput['id'],
-    voiceoverId: 'vo_1' as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
-    userId: null,
-    email: 'pending@example.com',
-    userName: null,
-    userImage: null,
   }),
 ];
 
@@ -291,104 +247,6 @@ export const voiceoverHandlers = [
     );
   }),
 
-  // List collaborators
-  http.get(`${API_BASE}/voiceovers/:id/collaborators`, ({ params }) => {
-    const { id } = params;
-    const voiceover = mockVoiceovers.find((v) => v.id === id);
-    if (!voiceover) {
-      return HttpResponse.json(
-        {
-          code: 'VOICEOVER_NOT_FOUND',
-          data: { voiceoverId: id },
-        },
-        { status: 404 },
-      );
-    }
-    const collaborators = mockCollaborators.filter((c) => c.voiceoverId === id);
-    return HttpResponse.json(collaborators);
-  }),
-
-  // Add collaborator
-  http.post(
-    `${API_BASE}/voiceovers/:id/collaborators`,
-    async ({ params, request }) => {
-      const { id } = params;
-      const body = (await request.json()) as { email?: string };
-      const voiceover = mockVoiceovers.find((v) => v.id === id);
-
-      if (!voiceover) {
-        return HttpResponse.json(
-          {
-            code: 'VOICEOVER_NOT_FOUND',
-            data: { voiceoverId: id },
-          },
-          { status: 404 },
-        );
-      }
-
-      const email = body.email || 'new@example.com';
-
-      // Check if collaborator already exists
-      const existingCollaborator = mockCollaborators.find(
-        (c) => c.voiceoverId === id && c.email === email,
-      );
-      if (existingCollaborator) {
-        return HttpResponse.json(
-          {
-            code: 'VOICEOVER_COLLABORATOR_ALREADY_EXISTS',
-            data: { voiceoverId: id, email },
-          },
-          { status: 409 },
-        );
-      }
-
-      return HttpResponse.json(
-        createMockCollaborator({
-          id: `voc_${Date.now()}` as VoiceoverCollaboratorWithUserOutput['id'],
-          voiceoverId: id as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
-          email,
-          userId: null, // Pending invite
-          userName: null,
-          userImage: null,
-        }),
-      );
-    },
-  ),
-
-  // Remove collaborator
-  http.delete(
-    `${API_BASE}/voiceovers/:id/collaborators/:collaboratorId`,
-    ({ params }) => {
-      const { id, collaboratorId } = params;
-      const voiceover = mockVoiceovers.find((v) => v.id === id);
-
-      if (!voiceover) {
-        return HttpResponse.json(
-          {
-            code: 'VOICEOVER_NOT_FOUND',
-            data: { voiceoverId: id },
-          },
-          { status: 404 },
-        );
-      }
-
-      const collaborator = mockCollaborators.find(
-        (c) => c.id === collaboratorId && c.voiceoverId === id,
-      );
-      if (!collaborator) {
-        return HttpResponse.json(
-          {
-            code: 'VOICEOVER_COLLABORATOR_NOT_FOUND',
-            data: { id: collaboratorId },
-          },
-          { status: 404 },
-        );
-      }
-
-      return HttpResponse.json({});
-    },
-  ),
-
   // Approve voiceover
   http.post(`${API_BASE}/voiceovers/:id/approve`, ({ params }) => {
     const { id } = params;
@@ -432,13 +290,6 @@ export const voiceoverHandlers = [
       approvedAt: null,
     });
   }),
-
-  // Claim invites
-  http.post(`${API_BASE}/voiceovers/claim-invites`, () => {
-    return HttpResponse.json({
-      claimedCount: 0,
-    });
-  }),
 ];
 
 // =============================================================================
@@ -475,31 +326,7 @@ export function createVoiceoverNotFoundHandler(voiceoverId: string) {
 }
 
 /**
- * Create a handler that returns a 403 for non-owner operations
- */
-export function createNotOwnerHandler(voiceoverId: string) {
-  return http.post(`${API_BASE}/voiceovers/:id/collaborators`, ({ params }) => {
-    if (params.id === voiceoverId) {
-      return HttpResponse.json(
-        {
-          code: 'NOT_VOICEOVER_OWNER',
-          data: { voiceoverId },
-        },
-        { status: 403 },
-      );
-    }
-    // Fall through
-    return HttpResponse.json(
-      createMockCollaborator({
-        voiceoverId:
-          params.id as VoiceoverCollaboratorWithUserOutput['voiceoverId'],
-      }),
-    );
-  });
-}
-
-/**
- * Create a handler that returns a 403 for non-collaborator operations
+ * Create a handler that returns a 403 for forbidden operations
  */
 export function createForbiddenHandler(voiceoverId: string) {
   return http.post(`${API_BASE}/voiceovers/:id/approve`, ({ params }) => {
