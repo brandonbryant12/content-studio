@@ -1,5 +1,3 @@
-// features/voiceovers/components/workbench/voice-symbols.tsx
-
 /**
  * Voice Symbol Icons
  * Inspired by Greek pottery art for the Oracle Theatre design.

@@ -1,5 +1,3 @@
-// features/podcasts/components/setup-wizard-container.tsx
-
 import type { RouterOutput } from '@repo/api/client';
 import { SetupWizard } from './setup';
 

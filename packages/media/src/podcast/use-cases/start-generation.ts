@@ -22,47 +22,21 @@ export interface StartGenerationResult {
 // Use Case
 // =============================================================================
 
-/**
- * Start podcast generation by enqueuing a generation job.
- *
- * This use case:
- * 1. Verifies podcast exists and user has access
- * 2. Checks for existing pending/processing job (idempotency)
- * 3. Updates podcast status to drafting
- * 4. Enqueues the combined generation job
- *
- * @example
- * const result = yield* startGeneration({
- *   podcastId: 'podcast-123',
- *   promptInstructions: 'Make it more casual',
- * });
- * // result.jobId, result.status
- */
 export const startGeneration = (input: StartGenerationInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-
     const queue = yield* Queue;
 
-    // 1. Verify podcast exists and user has access
     const podcast = yield* podcastRepo.findById(input.podcastId);
 
-    // 2. Check for existing pending/processing job (idempotency)
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {
-      return {
-        jobId: existingJob.id,
-        status: existingJob.status,
-      };
+      return { jobId: existingJob.id, status: existingJob.status };
     }
 
-    // 3. Update podcast status to drafting
     yield* podcastRepo.updateStatus(podcast.id, 'drafting');
-
-    // 4. Clear approval since content will change
     yield* podcastRepo.clearApproval(podcast.id);
 
-    // 5. Enqueue the combined generation job
     const payload: GeneratePodcastPayload = {
       podcastId: podcast.id,
       userId: podcast.createdBy,
@@ -75,10 +49,7 @@ export const startGeneration = (input: StartGenerationInput) =>
       podcast.createdBy,
     );
 
-    return {
-      jobId: job.id,
-      status: job.status,
-    };
+    return { jobId: job.id, status: job.status };
   }).pipe(
     Effect.withSpan('useCase.startGeneration', {
       attributes: { 'podcast.id': input.podcastId },

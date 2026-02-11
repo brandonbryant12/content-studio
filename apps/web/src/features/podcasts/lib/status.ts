@@ -1,5 +1,3 @@
-// features/podcasts/lib/status.ts
-
 import {
   VersionStatus,
   type VersionStatus as VersionStatusType,
@@ -9,7 +7,6 @@ import type { BadgeVariant } from '@repo/ui/components/badge';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
-// Re-export the VersionStatus const and type for convenience
 export { VersionStatus };
 export type { VersionStatusType };
 
@@ -64,22 +61,6 @@ export function isGeneratingStatus(
     status === VersionStatus.SCRIPT_READY ||
     status === VersionStatus.GENERATING_AUDIO
   );
-}
-
-/** Check if actions should be disabled (during generation or transitional states) */
-export function isActionDisabled(
-  status: VersionStatusType | undefined,
-): boolean {
-  return (
-    status === VersionStatus.GENERATING_SCRIPT ||
-    status === VersionStatus.SCRIPT_READY ||
-    status === VersionStatus.GENERATING_AUDIO
-  );
-}
-
-/** Check if podcast is in ready state (can edit settings) */
-export function isReadyStatus(status: VersionStatusType | undefined): boolean {
-  return status === VersionStatus.READY;
 }
 
 /** Get the status configuration for a given status */

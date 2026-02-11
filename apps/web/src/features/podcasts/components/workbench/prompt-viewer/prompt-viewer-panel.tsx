@@ -45,8 +45,15 @@ export function PromptViewerPanel({
     userInstructions && userInstructions.trim().length > 0;
 
   return (
-    <div className="prompt-viewer-overlay">
-      <div className="prompt-viewer-backdrop" onClick={onClose} />
+    <div
+      className="prompt-viewer-overlay"
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+    >
+      <div
+        className="prompt-viewer-backdrop"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div className="prompt-viewer-panel">
         <div className="prompt-viewer-header">
           <h3 className="prompt-viewer-title">Generation Details</h3>

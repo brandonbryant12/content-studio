@@ -1,4 +1,3 @@
-// features/documents/components/document-icon.tsx
 // Presenter: Pure UI component that renders file type icon
 
 export function DocumentIcon({ source }: { source: string }) {

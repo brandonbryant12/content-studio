@@ -1,4 +1,3 @@
-// features/documents/components/document-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
 import {

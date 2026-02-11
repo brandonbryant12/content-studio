@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/use-optimistic-delete-list.ts
-
 import type { RouterOutput } from '@repo/api/client';
 import { getVoiceoverListQueryKey } from './use-voiceover-list';
 import { apiClient } from '@/clients/apiClient';

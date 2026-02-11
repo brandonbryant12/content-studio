@@ -1,5 +1,3 @@
-// features/podcasts/hooks/use-podcast-list.ts
-
 import {
   useQuery,
   useSuspenseQuery,

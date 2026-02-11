@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect';
-import type { Podcast, ScriptSegment, VersionStatus } from '@repo/db/schema';
+import type { Podcast, ScriptSegment } from '@repo/db/schema';
 import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -46,36 +46,13 @@ export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
 // Use Case
 // =============================================================================
 
-/**
- * Save changes to a podcast (script segments and/or voice settings).
- * Only allowed when podcast is in 'ready' status.
- *
- * This use case:
- * 1. Validates podcast is in 'ready' status
- * 2. Updates script segments in place (if provided)
- * 3. Updates podcast voice settings (if provided)
- * 4. Sets status to 'script_ready' for audio regeneration
- * 5. Clears audio since it needs regeneration
- *
- * After calling this, the handler should queue an audio generation job.
- *
- * @example
- * const result = yield* saveChanges({
- *   podcastId: 'podcast-123',
- *   segments: [{ speaker: 'Host', line: 'Updated line', index: 0 }],
- *   hostVoice: 'Kore',
- * });
- * // Then queue audio generation job
- */
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
-    // 1. Load podcast and check ownership
     const podcast = yield* podcastRepo.findById(input.podcastId);
     yield* requireOwnership(podcast.createdBy);
 
-    // 2. Validate status is 'ready'
     if (podcast.status !== 'ready') {
       return yield* Effect.fail(
         new InvalidSaveError({
@@ -86,7 +63,6 @@ export const saveChanges = (input: SaveChangesInput) =>
       );
     }
 
-    // 3. Check if there are any changes
     const hasSegmentChanges = input.segments !== undefined;
     const hasVoiceChanges =
       input.hostVoice !== undefined ||
@@ -94,17 +70,10 @@ export const saveChanges = (input: SaveChangesInput) =>
       input.coHostVoice !== undefined ||
       input.coHostVoiceName !== undefined;
 
-    const hasChanges = hasSegmentChanges || hasVoiceChanges;
-
-    if (!hasChanges) {
-      // No changes to save
-      return {
-        podcast,
-        hasChanges: false,
-      };
+    if (!hasSegmentChanges && !hasVoiceChanges) {
+      return { podcast, hasChanges: false };
     }
 
-    // 4. Update podcast voice settings if provided
     if (hasVoiceChanges) {
       yield* podcastRepo.update(input.podcastId, {
         ...(input.hostVoice !== undefined && { hostVoice: input.hostVoice }),
@@ -120,27 +89,20 @@ export const saveChanges = (input: SaveChangesInput) =>
       });
     }
 
-    // 5. Update script segments if provided
     if (hasSegmentChanges) {
       yield* podcastRepo.updateScript(input.podcastId, {
         segments: input.segments,
       });
     }
 
-    // 6. Clear audio and set status to script_ready for audio regeneration
     yield* podcastRepo.clearAudio(input.podcastId);
     const updatedPodcast = yield* podcastRepo.updateStatus(
       input.podcastId,
       'script_ready',
     );
-
-    // 7. Clear approval since content changed
     yield* podcastRepo.clearApproval(input.podcastId);
 
-    return {
-      podcast: updatedPodcast,
-      hasChanges: true,
-    };
+    return { podcast: updatedPodcast, hasChanges: true };
   }).pipe(
     Effect.withSpan('useCase.saveChanges', {
       attributes: { 'podcast.id': input.podcastId },

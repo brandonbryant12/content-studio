@@ -14,29 +14,13 @@ export interface DeletePodcastInput {
 // Use Case
 // =============================================================================
 
-/**
- * Delete a podcast and all its versions.
- *
- * This use case:
- * 1. Verifies the podcast exists
- * 2. Deletes all script versions (cascade)
- * 3. Deletes the podcast record
- *
- * Note: Audio files in storage should be cleaned up separately
- * (via a background job or storage lifecycle policy).
- *
- * @example
- * yield* deletePodcast({ podcastId: 'podcast-123' });
- */
 export const deletePodcast = (input: DeletePodcastInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
-    // Verify podcast exists and check ownership
     const podcast = yield* podcastRepo.findById(input.podcastId);
     yield* requireOwnership(podcast.createdBy);
 
-    // Delete (versions cascade)
     yield* podcastRepo.delete(input.podcastId);
   }).pipe(
     Effect.withSpan('useCase.deletePodcast', {

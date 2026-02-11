@@ -1,5 +1,3 @@
-// features/infographics/hooks/use-infographic-actions.ts
-
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';

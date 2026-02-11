@@ -1,5 +1,3 @@
-// features/podcasts/hooks/use-optimistic-save-changes.ts
-
 import { VersionStatus } from '@repo/db/schema';
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastQueryKey } from './use-podcast';

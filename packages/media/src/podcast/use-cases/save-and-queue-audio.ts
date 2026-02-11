@@ -3,7 +3,7 @@ import type { JobId, JobStatus, ScriptSegment } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { saveChanges, InvalidSaveError } from './save-changes';
+import { saveChanges } from './save-changes';
 
 // =============================================================================
 // Types
@@ -46,30 +46,13 @@ export class NoChangesToSaveError extends Schema.TaggedError<NoChangesToSaveErro
 // Use Case
 // =============================================================================
 
-/**
- * Save changes to a podcast and queue audio regeneration.
- *
- * This use case combines saveChanges with job queueing:
- * 1. Calls saveChanges to update script/voice settings
- * 2. Checks for existing pending/processing job (idempotency)
- * 3. Enqueues audio regeneration job if changes were made
- *
- * @example
- * const result = yield* saveAndQueueAudio({
- *   podcastId: 'podcast-123',
- *   segments: [{ speaker: 'Host', line: 'Updated line', index: 0 }],
- * });
- * // result.jobId, result.status
- */
 export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
     const queue = yield* Queue;
 
-    // 1. Verify podcast exists (for authorization)
     const podcast = yield* podcastRepo.findById(input.podcastId);
 
-    // 2. Call saveChanges use case
     const result = yield* saveChanges({
       podcastId: input.podcastId,
       segments: input.segments,
@@ -85,16 +68,11 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       );
     }
 
-    // 3. Check for existing pending/processing job (idempotency)
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {
-      return {
-        jobId: existingJob.id,
-        status: existingJob.status,
-      };
+      return { jobId: existingJob.id, status: existingJob.status };
     }
 
-    // 4. Enqueue audio regeneration job (now uses podcastId directly)
     const payload: GenerateAudioPayload = {
       podcastId: podcast.id,
       userId: podcast.createdBy,
@@ -106,15 +84,9 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       podcast.createdBy,
     );
 
-    return {
-      jobId: job.id,
-      status: job.status,
-    };
+    return { jobId: job.id, status: job.status };
   }).pipe(
     Effect.withSpan('useCase.saveAndQueueAudio', {
       attributes: { 'podcast.id': input.podcastId },
     }),
   );
-
-// Re-export InvalidSaveError for convenience
-export { InvalidSaveError };

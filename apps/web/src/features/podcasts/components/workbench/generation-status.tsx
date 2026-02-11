@@ -68,7 +68,7 @@ export function GenerationStatus({
   const steps: Step[] = ['saving', 'script', 'audio', 'complete'];
 
   return (
-    <div className="generation-status">
+    <div className="generation-status" role="status" aria-live="polite">
       {/* Active Step Message */}
       <div className="generation-status-header">
         {activeStep !== 'complete' ? (

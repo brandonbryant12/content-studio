@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { lazy, Suspense, useEffect } from 'react';
-import { Spinner } from '@repo/ui/components/spinner';
+import { lazy, useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
 const InfographicWorkbenchContainer = lazy(() =>
   import(
@@ -32,14 +32,8 @@ function InfographicDetailPage() {
   }, []);
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-[calc(100vh-57px)]">
-          <Spinner />
-        </div>
-      }
-    >
+    <SuspenseBoundary resetKeys={[infographicId]}>
       <InfographicWorkbenchContainer infographicId={infographicId} />
-    </Suspense>
+    </SuspenseBoundary>
   );
 }

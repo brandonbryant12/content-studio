@@ -1,6 +1,3 @@
-// features/documents/components/document-list-container.tsx
-// Container: Handles data fetching, state management, and mutations
-
 import { useState, useCallback } from 'react';
 import {
   useDocumentList,
@@ -15,23 +12,14 @@ import { DocumentList } from './document-list';
 const deleteFn = (input: { id: string }) =>
   rawApiClient.documents.delete(input);
 
-/**
- * Container: Fetches document list and coordinates mutations.
- * Manages search state and upload dialog locally.
- */
 export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  // Data fetching
   const { data: documents = [], isLoading } = useDocumentList();
-
-  // Mutations
   const deleteMutation = useOptimisticDeleteDocument();
-
-  // Bulk selection & delete
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getDocumentListQueryKey(),
@@ -71,7 +59,6 @@ export function DocumentListContainer() {
     setUploadOpen(open);
   }, []);
 
-  // Show loading state while initially fetching
   if (isLoading) {
     return (
       <div className="page-container-narrow">

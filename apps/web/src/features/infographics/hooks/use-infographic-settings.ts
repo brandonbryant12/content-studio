@@ -1,5 +1,3 @@
-// features/infographics/hooks/use-infographic-settings.ts
-
 import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';

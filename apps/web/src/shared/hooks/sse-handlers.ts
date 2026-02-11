@@ -1,5 +1,3 @@
-// shared/hooks/sse-handlers.ts
-
 import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
@@ -9,10 +7,6 @@ import type {
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
-
-// ============================================================================
-// Query Key Helpers
-// ============================================================================
 
 const getPodcastQueryKey = (podcastId: string) =>
   apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }).queryKey;
@@ -39,10 +33,6 @@ const getInfographicQueryKey = (infographicId: string) =>
 
 const getInfographicsListQueryKey = () =>
   apiClient.infographics.list.queryOptions({ input: {} }).queryKey;
-
-// ============================================================================
-// Event Handlers
-// ============================================================================
 
 export function handleJobCompletion(
   event: JobCompletionEvent,

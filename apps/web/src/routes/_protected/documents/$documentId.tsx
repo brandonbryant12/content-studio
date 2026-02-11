@@ -1,6 +1,3 @@
-// routes/_protected/documents/$documentId.tsx
-// Thin route file - delegates to feature container
-
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';

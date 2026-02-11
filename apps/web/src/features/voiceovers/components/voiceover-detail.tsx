@@ -1,5 +1,3 @@
-// features/voiceovers/components/voiceover-detail.tsx
-
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
 import {

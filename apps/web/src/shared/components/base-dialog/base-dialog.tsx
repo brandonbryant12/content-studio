@@ -52,7 +52,7 @@ export function BaseDialog({
             <Button
               onClick={footer.onSubmit}
               disabled={footer.isLoading || footer.submitDisabled}
-              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
+              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-primary-foreground"
             >
               {footer.isLoading ? (
                 <>

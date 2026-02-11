@@ -23,20 +23,6 @@ export interface ListPodcastsResult {
 // Use Case
 // =============================================================================
 
-/**
- * List podcasts with optional filtering and pagination.
- *
- * @example
- * // List all podcasts for a user
- * const result = yield* listPodcasts({ userId: 'user-123' });
- *
- * // List podcasts in a project with pagination
- * const result = yield* listPodcasts({
- *   projectId: 'project-456',
- *   limit: 10,
- *   offset: 0,
- * });
- */
 export const listPodcasts = (input: ListPodcastsInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
@@ -48,18 +34,15 @@ export const listPodcasts = (input: ListPodcastsInput) =>
       offset: input.offset ?? 0,
     };
 
-    // Fetch podcasts and count in parallel
-    const [podcasts, total] = yield* Effect.all([
-      podcastRepo.list(options),
-      podcastRepo.count(options),
-    ]);
-
-    const hasMore = (options.offset ?? 0) + podcasts.length < total;
+    const [podcasts, total] = yield* Effect.all(
+      [podcastRepo.list(options), podcastRepo.count(options)],
+      { concurrency: 'unbounded' },
+    );
 
     return {
       podcasts,
       total,
-      hasMore,
+      hasMore: (options.offset ?? 0) + podcasts.length < total,
     };
   }).pipe(
     Effect.withSpan('useCase.listPodcasts', {

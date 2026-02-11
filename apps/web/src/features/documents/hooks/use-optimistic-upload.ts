@@ -1,5 +1,3 @@
-// features/documents/hooks/use-optimistic-upload.ts
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getDocumentListQueryKey } from './use-document-list';

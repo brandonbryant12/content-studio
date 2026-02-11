@@ -6,7 +6,7 @@ interface ErrorDisplayProps {
 
 export function ErrorDisplay({ message }: ErrorDisplayProps) {
   return (
-    <section className="error-display">
+    <section className="error-display" role="alert">
       <div className="error-display-header">
         <ExclamationTriangleIcon className="error-display-icon" />
         <h3 className="error-display-title">Generation Failed</h3>

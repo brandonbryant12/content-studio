@@ -1,7 +1,3 @@
-// features/podcasts/hooks/index.ts
-// Barrel export for podcast feature hooks
-
-// Query hooks
 export { usePodcast, getPodcastQueryKey } from './use-podcast';
 export {
   usePodcastList,
@@ -10,14 +6,12 @@ export {
   usePodcastsOrdered,
 } from './use-podcast-list';
 
-// Optimistic mutation hooks (using factory)
 export { useOptimisticGeneration } from './use-optimistic-generation';
 export { useOptimisticSaveChanges } from './use-optimistic-save-changes';
 export { useOptimisticDelete } from './use-optimistic-delete';
 export { useOptimisticCreate } from './use-optimistic-create';
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 
-// Local state hooks
 export {
   useScriptEditor,
   type ScriptSegment,
@@ -40,10 +34,8 @@ export {
   type UsePodcastGenerationReturn,
 } from './use-podcast-generation';
 
-// Approval hooks
 export { useApprovePodcast } from './use-approve-podcast';
 
-// Container action hooks
 export {
   usePodcastActions,
   type UsePodcastActionsReturn,

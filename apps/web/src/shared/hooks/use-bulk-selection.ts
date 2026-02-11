@@ -1,5 +1,3 @@
-// shared/hooks/use-bulk-selection.ts
-
 import { useState, useCallback, useMemo } from 'react';
 
 export interface UseBulkSelectionReturn {

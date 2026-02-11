@@ -14,11 +14,9 @@ export function ErrorFallback({
         <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />
       </div>
 
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-        {title}
-      </h2>
+      <h2 className="text-lg font-semibold text-foreground mb-2">{title}</h2>
 
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-4">
+      <p className="text-sm text-muted-foreground max-w-md mb-4">
         {description ?? error.message ?? 'An unexpected error occurred.'}
       </p>
 
@@ -28,7 +26,7 @@ export function ErrorFallback({
       </Button>
 
       {import.meta.env.DEV && (
-        <pre className="mt-4 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg text-left text-xs overflow-auto max-w-full max-h-48 text-gray-700 dark:text-gray-300">
+        <pre className="mt-4 p-4 bg-muted rounded-lg text-left text-xs overflow-auto max-w-full max-h-48 text-muted-foreground">
           {error.stack}
         </pre>
       )}

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import RegisterCredentialsForm from '@/routes/_public/-components/register-form';
 
 export const Route = createFileRoute('/_public/register')({
@@ -6,6 +7,10 @@ export const Route = createFileRoute('/_public/register')({
 });
 
 function RouteComponent() {
+  useEffect(() => {
+    document.title = 'Create Account - Content Studio';
+  }, []);
+
   return (
     <div className="auth-container">
       <div className="auth-card">

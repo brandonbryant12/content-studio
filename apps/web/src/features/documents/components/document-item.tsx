@@ -1,4 +1,3 @@
-// features/documents/components/document-item.tsx
 // Presenter: Pure UI component for document card
 
 import { TrashIcon } from '@radix-ui/react-icons';

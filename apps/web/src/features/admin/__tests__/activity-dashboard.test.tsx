@@ -1,6 +1,30 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test-utils';
+import type { ReactNode } from 'react';
+import { render, screen, userEvent } from '@/test-utils';
 import { ActivityDashboard } from '../components/activity-dashboard';
+
+// Mock TanStack Router Link to avoid RouterProvider requirement
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    to,
+    params,
+    ...rest
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    [key: string]: unknown;
+  }) => {
+    const ariaLabel =
+      typeof rest['aria-label'] === 'string' ? rest['aria-label'] : undefined;
+    return (
+      <a href={to} aria-label={ariaLabel}>
+        {children}
+      </a>
+    );
+  },
+}));
 
 const mockActivities = [
   {
@@ -98,20 +122,23 @@ describe('ActivityDashboard', () => {
   it('renders activity feed items with entity titles and user names', () => {
     render(<ActivityDashboard {...defaultProps} />);
 
-    // Alice appears in two activities
-    expect(screen.getAllByText('Alice')).toHaveLength(2);
-    expect(screen.getByText('Bob')).toBeInTheDocument();
+    // Entity titles
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
     expect(screen.getByText('Weekly Roundup')).toBeInTheDocument();
     expect(screen.getByText('Intro Narration')).toBeInTheDocument();
+
+    // User names appear as "userName · EntityType" in feed rows
+    expect(screen.getAllByText(/Alice/)).toHaveLength(2);
+    expect(screen.getByText(/Bob/)).toBeInTheDocument();
   });
 
   it('renders entity type labels in feed', () => {
     render(<ActivityDashboard {...defaultProps} />);
 
-    expect(screen.getByText(/Document/)).toBeInTheDocument();
-    expect(screen.getByText(/Podcast/)).toBeInTheDocument();
-    expect(screen.getByText(/Voiceover/)).toBeInTheDocument();
+    // Feed rows show "userName · EntityType" — verify entity type labels appear
+    expect(screen.getByText(/Alice · Document/)).toBeInTheDocument();
+    expect(screen.getByText(/Bob · Podcast/)).toBeInTheDocument();
+    expect(screen.getByText(/Alice · Voiceover/)).toBeInTheDocument();
   });
 
   it('shows empty state when no activities', () => {
@@ -149,7 +176,8 @@ describe('ActivityDashboard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('calls onLoadMore when "Load more" is clicked', () => {
+  it('calls onLoadMore when "Load more" is clicked', async () => {
+    const user = userEvent.setup();
     const onLoadMore = vi.fn();
     render(
       <ActivityDashboard
@@ -159,7 +187,7 @@ describe('ActivityDashboard', () => {
       />,
     );
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: 'Load more activities' }),
     );
     expect(onLoadMore).toHaveBeenCalledOnce();
@@ -203,16 +231,17 @@ describe('ActivityDashboard', () => {
       expect(tabs[2]).toHaveAttribute('aria-selected', 'false');
     });
 
-    it('calls onPeriodChange when a tab is clicked', () => {
+    it('calls onPeriodChange when a tab is clicked', async () => {
+      const user = userEvent.setup();
       const onPeriodChange = vi.fn();
       render(
         <ActivityDashboard {...defaultProps} onPeriodChange={onPeriodChange} />,
       );
 
-      fireEvent.click(screen.getAllByRole('tab')[0]!);
+      await user.click(screen.getAllByRole('tab')[0]!);
       expect(onPeriodChange).toHaveBeenCalledWith('24h');
 
-      fireEvent.click(screen.getAllByRole('tab')[2]!);
+      await user.click(screen.getAllByRole('tab')[2]!);
       expect(onPeriodChange).toHaveBeenCalledWith('30d');
     });
   });
@@ -239,17 +268,18 @@ describe('ActivityDashboard', () => {
       ).toBeInTheDocument();
     });
 
-    it('calls onSearchChange when typing', () => {
+    it('calls onSearchChange when typing', async () => {
+      const user = userEvent.setup();
       const onSearchChange = vi.fn();
       render(
         <ActivityDashboard {...defaultProps} onSearchChange={onSearchChange} />,
       );
 
-      fireEvent.change(
+      await user.type(
         screen.getByRole('textbox', { name: 'Search activity' }),
-        { target: { value: 'Alice' } },
+        'A',
       );
-      expect(onSearchChange).toHaveBeenCalledWith('Alice');
+      expect(onSearchChange).toHaveBeenCalledWith('A');
     });
 
     it('displays current search value', () => {
@@ -259,6 +289,29 @@ describe('ActivityDashboard', () => {
         screen.getByRole('textbox', { name: 'Search activity' }),
       ).toHaveValue('Weekly');
     });
+  });
+
+  it('shows loading spinners for stats when statsLoading is true', () => {
+    render(<ActivityDashboard {...defaultProps} statsLoading={true} />);
+
+    // Stat values should not be visible
+    expect(screen.queryByText('46')).not.toBeInTheDocument();
+    expect(screen.queryByText('20')).not.toBeInTheDocument();
+  });
+
+  it('renders feed items as links for non-deleted activities', () => {
+    render(<ActivityDashboard {...defaultProps} />);
+
+    // "created" document should have a link
+    const docLink = screen.getByRole('link', {
+      name: /view document: getting started guide/i,
+    });
+    expect(docLink).toBeInTheDocument();
+
+    // "deleted" voiceover should NOT be a link
+    expect(
+      screen.queryByRole('link', { name: /view voiceover: intro narration/i }),
+    ).not.toBeInTheDocument();
   });
 
   describe('filters', () => {

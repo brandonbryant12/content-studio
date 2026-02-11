@@ -18,9 +18,10 @@ let userCounter = 0;
 
 export function createTestUser(options: CreateTestUserOptions = {}): TestUser {
   userCounter++;
+  const id = options.id ?? randomUUID();
   return {
-    id: options.id ?? randomUUID(),
-    email: options.email ?? `testuser${userCounter}@example.com`,
+    id,
+    email: options.email ?? `testuser-${id}@example.com`,
     name: options.name ?? `Test User ${userCounter}`,
     role: options.role ?? 'user',
   };

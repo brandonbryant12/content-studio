@@ -1,5 +1,3 @@
-// features/voiceovers/components/workbench/text-editor.tsx
-
 import { cn } from '@repo/ui/lib/utils';
 import { memo, useCallback, type ChangeEvent } from 'react';
 

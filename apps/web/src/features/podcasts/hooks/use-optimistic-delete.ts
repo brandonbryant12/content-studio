@@ -1,5 +1,3 @@
-// features/podcasts/hooks/use-optimistic-delete.ts
-
 import { useNavigate } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastListQueryKey } from './use-podcast-list';

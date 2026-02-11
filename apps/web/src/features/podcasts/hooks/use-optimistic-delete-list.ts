@@ -1,5 +1,3 @@
-// features/podcasts/hooks/use-optimistic-delete-list.ts
-
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastListQueryKey } from './use-podcast-list';
 import { apiClient } from '@/clients/apiClient';

@@ -2,35 +2,27 @@ import { Layer } from 'effect';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 
-// Re-export media errors from package errors
 export {
-  // Document errors
   DocumentNotFound,
   DocumentError,
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
   DocumentParseError,
-  // Podcast errors
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
-  // Voiceover errors
   VoiceoverNotFound,
   VoiceoverError,
   NotVoiceoverOwner,
   InvalidVoiceoverAudioGeneration,
-  // Project/Media errors
   ProjectNotFound,
   MediaNotFound,
-  // Infographic errors
   InfographicNotFound,
   NotInfographicOwner,
   InfographicError,
-  // Error union
   type MediaError,
 } from './errors';
 
-// Activity module
 export {
   ActivityLogNotFound,
   ActivityLogRepo,
@@ -48,7 +40,6 @@ export {
   type ActivityStats,
 } from './activity';
 
-// Document module - Repository
 export {
   DocumentRepo,
   DocumentRepoLive,
@@ -56,7 +47,6 @@ export {
   type ListOptions as DocumentListOptions,
 } from './document';
 
-// Document module - Use cases (error types inferred by Effect)
 export {
   listDocuments,
   getDocument,
@@ -76,7 +66,6 @@ export {
   type DeleteDocumentInput,
 } from './document';
 
-// Document module - Parsers and types
 export {
   parseUploadedFile,
   parseDocumentContent,
@@ -97,7 +86,6 @@ export {
   type DocumentSource,
 } from './document';
 
-// Podcast module - Repos
 export {
   PodcastRepo,
   PodcastRepoLive,
@@ -108,7 +96,6 @@ export {
   type UpdateAudioOptions,
 } from './podcast';
 
-// Voiceover module - Repos
 export {
   VoiceoverRepo,
   VoiceoverRepoLive,
@@ -117,7 +104,6 @@ export {
   type VoiceoverUpdateAudioOptions,
 } from './voiceover';
 
-// Voiceover module - Types
 export type {
   Voiceover,
   VoiceoverStatus,
@@ -127,7 +113,6 @@ export type {
   VoiceoverListItemOutput,
 } from './voiceover';
 
-// Infographic module - Repos
 export {
   InfographicRepo,
   InfographicRepoLive,
@@ -135,7 +120,6 @@ export {
   type InfographicListOptions,
 } from './infographic';
 
-// Infographic module - Use Cases
 export {
   createInfographic,
   getInfographic,
@@ -159,7 +143,6 @@ export {
   type RevokeInfographicApprovalInput,
 } from './infographic';
 
-// Infographic module - Types
 export type {
   Infographic,
   InfographicType,
@@ -171,24 +154,13 @@ export type {
   InfographicVersionOutput,
 } from './infographic';
 
-// Import for combined layer
 import { DocumentRepo, DocumentRepoLive } from './document';
 import { PodcastRepo, PodcastRepoLive } from './podcast';
 import { VoiceoverRepo, VoiceoverRepoLive } from './voiceover';
 import { InfographicRepo, InfographicRepoLive } from './infographic';
 import { ActivityLogRepo, ActivityLogRepoLive } from './activity';
 
-// =============================================================================
-// Combined Media Layer
-// =============================================================================
-
-/**
- * All media services bundled together.
- * Use this type in SharedServices instead of listing each service individually.
- *
- * IMPORTANT: When adding a new repo, add it here AND to MediaLive below.
- * Otherwise, use cases that depend on the repo will fail at runtime.
- */
+// When adding a new repo, add it to both Media and MediaLive.
 export type Media =
   | DocumentRepo
   | PodcastRepo
@@ -196,26 +168,6 @@ export type Media =
   | InfographicRepo
   | ActivityLogRepo;
 
-/**
- * Combined layer for all media services.
- *
- * Provides:
- * - DocumentRepo: Document repository operations
- * - PodcastRepo: Podcast repository operations
- * - VoiceoverRepo: Voiceover repository operations
- *
- * Requires:
- * - Db: Database connection
- * - Storage: File storage backend
- *
- * @example
- * ```typescript
- * // In runtime.ts
- * const mediaLayer = MediaLive.pipe(
- *   Layer.provide(Layer.mergeAll(dbLayer, storageLayer)),
- * );
- * ```
- */
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
     DocumentRepoLive,
@@ -225,7 +177,6 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     ActivityLogRepoLive,
   );
 
-// Podcast module - Use Cases (error types inferred by Effect)
 export {
   createPodcast,
   getPodcast,
@@ -238,10 +189,8 @@ export {
   startGeneration,
   saveAndQueueAudio,
   getJob,
-  // Approval
   approvePodcast,
   revokeApproval,
-  // Errors
   InvalidAudioGenerationError,
   InvalidSaveError,
   NoChangesToSaveError,
@@ -267,7 +216,6 @@ export {
   type RevokeApprovalInput,
 } from './podcast';
 
-// Podcast module - Types
 export {
   type Podcast,
   type PodcastFormat,
@@ -277,7 +225,6 @@ export {
   type ScriptSegment,
 } from './podcast';
 
-// Voiceover module - Use Cases
 export {
   createVoiceover,
   getVoiceover,
@@ -287,10 +234,8 @@ export {
   generateVoiceoverAudio,
   startVoiceoverGeneration,
   getVoiceoverJob,
-  // Approval
   approveVoiceover,
   revokeVoiceoverApproval,
-  // Types
   type CreateVoiceoverInput,
   type GetVoiceoverInput,
   type ListVoiceoversInput,

@@ -1,6 +1,3 @@
-// features/voiceovers/components/voiceover-list-container.tsx
-// Container: Handles data fetching, state management, and mutations
-
 import { useState, useCallback } from 'react';
 import { useOptimisticCreate } from '../hooks/use-optimistic-create';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
@@ -16,25 +13,14 @@ import { VoiceoverList } from './voiceover-list';
 const deleteFn = (input: { id: string }) =>
   rawApiClient.voiceovers.delete(input);
 
-/**
- * Container: Fetches voiceover list and coordinates mutations.
- * Manages search state locally.
- */
 export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Data fetching
   const { data: voiceovers = [], isLoading } = useVoiceoverList();
-
-  // Mutations
   const createMutation = useOptimisticCreate();
   const deleteMutation = useOptimisticDeleteList();
-
-  // Quick play
   const quickPlay = useQuickPlay();
-
-  // Bulk selection & delete
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getVoiceoverListQueryKey(),
@@ -50,7 +36,6 @@ export function VoiceoverListContainer() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      // Stop playback if deleting the currently playing item
       if (quickPlay.playingId === id) {
         quickPlay.stop();
       }
@@ -77,7 +62,6 @@ export function VoiceoverListContainer() {
     setSearchQuery(query);
   }, []);
 
-  // Show loading state while initially fetching
   if (isLoading) {
     return (
       <div className="page-container-narrow">

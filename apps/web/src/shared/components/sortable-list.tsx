@@ -1,5 +1,3 @@
-'use client';
-
 import {
   DndContext,
   closestCenter,
@@ -20,10 +18,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { createContext, use, type CSSProperties, type ReactNode } from 'react';
-
-/* -----------------------------------------------------------------------------
- * Types
- * ---------------------------------------------------------------------------*/
 
 export interface SortableItem {
   id: UniqueIdentifier;
@@ -58,10 +52,6 @@ export interface DragHandleProps {
   children?: ReactNode;
 }
 
-/* -----------------------------------------------------------------------------
- * Context
- * ---------------------------------------------------------------------------*/
-
 interface SortableItemContextValue {
   attributes: DraggableAttributes;
   listeners: ReturnType<typeof useSortable>['listeners'];
@@ -82,10 +72,6 @@ function useSortableItemContext() {
   }
   return context;
 }
-
-/* -----------------------------------------------------------------------------
- * DragHandle Component
- * ---------------------------------------------------------------------------*/
 
 export function DragHandle({ className, children }: DragHandleProps) {
   const { attributes, listeners } = useSortableItemContext();
@@ -115,10 +101,6 @@ export function DragHandle({ className, children }: DragHandleProps) {
     </button>
   );
 }
-
-/* -----------------------------------------------------------------------------
- * SortableItemWrapper Component
- * ---------------------------------------------------------------------------*/
 
 export function SortableItemWrapper({
   id,
@@ -157,10 +139,6 @@ export function SortableItemWrapper({
     </SortableItemContext.Provider>
   );
 }
-
-/* -----------------------------------------------------------------------------
- * SortableList Component
- * ---------------------------------------------------------------------------*/
 
 export function SortableList<T extends SortableItem>({
   items,
@@ -206,16 +184,4 @@ export function SortableList<T extends SortableItem>({
       </SortableContext>
     </DndContext>
   );
-}
-
-/* -----------------------------------------------------------------------------
- * Utility Hooks
- * ---------------------------------------------------------------------------*/
-
-/**
- * Hook to access sortable item state (isDragging, etc.)
- * Must be used within a SortableItemWrapper
- */
-export function useSortableItem() {
-  return useSortableItemContext();
 }

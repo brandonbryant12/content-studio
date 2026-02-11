@@ -1,5 +1,3 @@
-// features/podcasts/hooks/use-podcast-actions.ts
-
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
@@ -44,7 +42,6 @@ export function usePodcastActions({
 }: UsePodcastActionsOptions): UsePodcastActionsReturn {
   const navigate = useNavigate();
 
-  // Mutations
   const generateMutation = useOptimisticGeneration(podcastId);
   const saveChangesMutation = useOptimisticSaveChanges(podcastId);
 
@@ -68,7 +65,6 @@ export function usePodcastActions({
     }),
   );
 
-  // Computed state
   const hasAnyChanges =
     scriptEditor.hasChanges ||
     settings.hasChanges ||

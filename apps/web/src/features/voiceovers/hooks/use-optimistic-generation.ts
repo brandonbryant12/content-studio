@@ -1,9 +1,8 @@
-// features/voiceovers/hooks/use-optimistic-generation.ts
-
 import { VoiceoverStatus } from '@repo/db/schema';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { getVoiceoverQueryKey } from './use-voiceover';
+import { getVoiceoverListQueryKey } from './use-voiceover-list';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks/use-optimistic-mutation';
 
@@ -46,7 +45,7 @@ export function useOptimisticGeneration(voiceoverId: string) {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['voiceovers', 'list'],
+        queryKey: getVoiceoverListQueryKey(),
       });
     },
   });

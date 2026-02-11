@@ -132,9 +132,15 @@ export const SegmentItem = memo(function SegmentItem({
       {/* Speaker - toggle in edit mode, badge in view mode */}
       <div className="segment-row-speaker">
         {isEditing ? (
-          <div className="segment-speaker-toggle">
+          <div
+            className="segment-speaker-toggle"
+            role="radiogroup"
+            aria-label="Speaker"
+          >
             <button
               type="button"
+              role="radio"
+              aria-checked={isHost}
               onClick={() => setEditSpeaker('host')}
               className={`segment-speaker-btn host ${isHost ? 'active' : ''}`}
             >
@@ -142,6 +148,8 @@ export const SegmentItem = memo(function SegmentItem({
             </button>
             <button
               type="button"
+              role="radio"
+              aria-checked={isCohost}
               onClick={() => setEditSpeaker('cohost')}
               className={`segment-speaker-btn cohost ${isCohost ? 'active' : ''}`}
             >
@@ -169,6 +177,7 @@ export const SegmentItem = memo(function SegmentItem({
             placeholder="Enter dialogue..."
             className="segment-edit-textarea"
             rows={1}
+            aria-label={`Edit ${editSpeaker} dialogue`}
           />
           <div className="segment-edit-hints">
             <span className="segment-edit-hint">

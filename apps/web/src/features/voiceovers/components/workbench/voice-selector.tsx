@@ -1,5 +1,3 @@
-// features/voiceovers/components/workbench/voice-selector.tsx
-
 import { cn } from '@repo/ui/lib/utils';
 import { memo, useCallback, type MouseEvent, type KeyboardEvent } from 'react';
 

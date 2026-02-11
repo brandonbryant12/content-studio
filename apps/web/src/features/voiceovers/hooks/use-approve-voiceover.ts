@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/use-approve-voiceover.ts
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';

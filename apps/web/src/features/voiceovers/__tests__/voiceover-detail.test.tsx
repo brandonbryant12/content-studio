@@ -66,6 +66,12 @@ vi.mock('../components/workbench', () => ({
       <option value="Aoede">Aoede</option>
     </select>
   ),
+  AudioStage: ({ src, duration }: { src: string; duration: number }) => (
+    <div data-testid="audio-stage">
+      <p>Audio Preview</p>
+      <audio src={src} data-duration={duration} />
+    </div>
+  ),
   ActionBar: ({
     status,
     isGenerating,

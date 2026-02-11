@@ -1,5 +1,3 @@
-// features/infographics/hooks/use-infographic-versions.ts
-
 import {
   useQuery,
   type UseQueryResult,

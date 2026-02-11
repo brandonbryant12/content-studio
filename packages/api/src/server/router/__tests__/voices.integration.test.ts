@@ -7,7 +7,12 @@ import {
   toUser,
   type TestContext,
 } from '@repo/testing';
-import { createMockTTS, MOCK_VOICES, MockLLMLive } from '@repo/testing/mocks';
+import {
+  createInMemoryStorage,
+  createMockTTS,
+  MOCK_VOICES,
+  MockLLMLive,
+} from '@repo/testing/mocks';
 import { user as userTable } from '@repo/db/schema';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
@@ -96,6 +101,7 @@ const createTestRuntime = (
   ttsOptions?: Parameters<typeof createMockTTS>[0],
 ): ServerRuntime => {
   const mockTTSLayer = createMockTTS(ttsOptions);
+  const inMemoryStorage = createInMemoryStorage();
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -103,6 +109,7 @@ const createTestRuntime = (
     mockTTSLayer,
     MockLLMLive,
     policyLayer,
+    inMemoryStorage.layer,
   );
 
   return createTestServerRuntime(allLayers);

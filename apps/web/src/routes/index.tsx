@@ -7,6 +7,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
 import { APP_NAME } from '@/constants';
 
@@ -36,6 +37,10 @@ function WaveformBars() {
 
 function RouteComponent() {
   const { data: session } = authClient.useSession();
+
+  useEffect(() => {
+    document.title = 'Content Studio';
+  }, []);
 
   if (session?.user) {
     return <Navigate to="/dashboard" />;

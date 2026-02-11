@@ -1,5 +1,3 @@
-// features/voiceovers/lib/voices.ts
-
 /**
  * Voice options for voiceover generation.
  * These match the Gemini TTS voices available in the backend.

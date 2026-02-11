@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/use-voiceover-settings.ts
-
 import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';

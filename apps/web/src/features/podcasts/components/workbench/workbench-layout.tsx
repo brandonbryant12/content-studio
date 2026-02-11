@@ -12,6 +12,7 @@ import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
@@ -48,10 +49,20 @@ export function WorkbenchLayout({
   const statusConfig = getStatusConfig(podcast.status);
   const isGenerating = isGeneratingStatus(podcast.status);
   const [activeTab, setActiveTab] = useState<TabId>('script');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleTabClick = useCallback((tab: TabId) => {
     setActiveTab(tab);
   }, []);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    setDeleteConfirmOpen(false);
+    onDelete();
+  }, [onDelete]);
 
   return (
     <div className="workbench-v3">
@@ -96,7 +107,7 @@ export function WorkbenchLayout({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting || isGenerating}
             className="workbench-v3-delete"
             aria-label="Delete podcast"
@@ -106,7 +117,6 @@ export function WorkbenchLayout({
         </div>
       </header>
 
-      {/* Tab Navigation */}
       <nav
         className="workbench-v3-tabs"
         role="tablist"
@@ -156,6 +166,17 @@ export function WorkbenchLayout({
       </div>
 
       {actionBar}
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Podcast"
+        description={`Are you sure you want to delete "${podcast.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

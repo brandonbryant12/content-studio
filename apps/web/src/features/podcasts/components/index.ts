@@ -1,5 +1,3 @@
-// features/podcasts/components/index.ts
-
 // Container/Presenter pattern components - Detail
 export { PodcastDetailContainer } from './podcast-detail-container';
 export { PodcastDetail, type PodcastDetailProps } from './podcast-detail';

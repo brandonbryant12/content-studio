@@ -1,5 +1,3 @@
-// providers/sse-provider.tsx
-
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, use, useEffect, useRef, type ReactNode } from 'react';
 import { authClient } from '@/clients/authClient';

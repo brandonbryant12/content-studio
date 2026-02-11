@@ -1,5 +1,3 @@
-// features/infographics/hooks/use-optimistic-generation.ts
-
 import { InfographicStatus } from '@repo/db/schema';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';

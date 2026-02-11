@@ -89,14 +89,10 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
     })();
   }, []);
 
-  const reconnect = useCallback(() => {
-    connect();
-  }, [connect]);
-
   useEffect(() => {
     if (enabled) connect();
     return () => controllerRef.current?.abort();
   }, [enabled, connect]);
 
-  return { connectionState, reconnect };
+  return { connectionState, reconnect: connect };
 }

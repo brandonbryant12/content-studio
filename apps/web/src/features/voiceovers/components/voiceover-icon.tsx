@@ -1,5 +1,3 @@
-// features/voiceovers/components/voiceover-icon.tsx
-
 import { SpeakerLoudIcon } from '@radix-ui/react-icons';
 import { cn } from '@repo/ui/lib/utils';
 import { isGeneratingStatus, type VoiceoverStatusType } from '../lib/status';

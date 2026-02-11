@@ -1,5 +1,3 @@
-// shared/hooks/use-bulk-delete.ts
-
 import { useCallback, useState } from 'react';
 import { useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { toast } from 'sonner';

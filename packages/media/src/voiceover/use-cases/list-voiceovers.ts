@@ -22,20 +22,6 @@ export interface ListVoiceoversResult {
 // Use Case
 // =============================================================================
 
-/**
- * List voiceovers with optional filtering and pagination.
- *
- * @example
- * // List all voiceovers for a user
- * const result = yield* listVoiceovers({ userId: 'user-123' });
- *
- * // List voiceovers with pagination
- * const result = yield* listVoiceovers({
- *   userId: 'user-123',
- *   limit: 10,
- *   offset: 0,
- * });
- */
 export const listVoiceovers = (input: ListVoiceoversInput) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
@@ -46,23 +32,18 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
       offset: input.offset ?? 0,
     };
 
-    // Fetch voiceovers and count in parallel
-    const [voiceovers, total] = yield* Effect.all([
-      voiceoverRepo.list(options),
-      voiceoverRepo.count(options),
-    ]);
-
-    const hasMore = (options.offset ?? 0) + voiceovers.length < total;
+    const [voiceovers, total] = yield* Effect.all(
+      [voiceoverRepo.list(options), voiceoverRepo.count(options)],
+      { concurrency: 'unbounded' },
+    );
 
     return {
       voiceovers,
       total,
-      hasMore,
+      hasMore: (options.offset ?? 0) + voiceovers.length < total,
     };
   }).pipe(
     Effect.withSpan('useCase.listVoiceovers', {
-      attributes: {
-        'filter.userId': input.userId,
-      },
+      attributes: { 'filter.userId': input.userId },
     }),
   );

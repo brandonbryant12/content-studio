@@ -1,5 +1,3 @@
-// features/documents/hooks/use-document.ts
-
 import {
   useSuspenseQuery,
   type UseSuspenseQueryResult,

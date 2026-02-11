@@ -4,7 +4,7 @@ import type {
   InfographicStyle,
   InfographicFormat,
 } from '@repo/db/schema';
-import { LLM } from '@repo/ai';
+import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
 import { DocumentRepo } from '../document/repos';
 

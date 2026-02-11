@@ -1,9 +1,8 @@
-// features/podcasts/hooks/use-optimistic-generation.ts
-
 import { VersionStatus } from '@repo/db/schema';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastQueryKey } from './use-podcast';
+import { getPodcastListQueryKey } from './use-podcast-list';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks/use-optimistic-mutation';
 
@@ -46,7 +45,7 @@ export function useOptimisticGeneration(podcastId: string) {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['podcasts', 'list'],
+        queryKey: getPodcastListQueryKey(),
       });
     },
   });

@@ -1,17 +1,4 @@
-/**
- * Podcast Module
- *
- * This module provides podcast creation, script generation, and audio synthesis.
- *
- * Architecture:
- * - Repos (Context.Tag): Database operations with dependency injection
- * - Use Cases (pure functions): Business logic that yields dependencies
- */
-
-// =============================================================================
-// Repositories (Context.Tag pattern)
-// =============================================================================
-
+// Repositories
 export {
   PodcastRepo,
   PodcastRepoLive,
@@ -22,34 +9,24 @@ export {
   type UpdateAudioOptions,
 } from './repos';
 
-// =============================================================================
-// Use Cases (pure functions)
-// =============================================================================
-
+// Use Cases
 export {
-  // CRUD
   createPodcast,
   getPodcast,
   updatePodcast,
   deletePodcast,
   listPodcasts,
-  // Script operations
   saveChanges,
-  // Generation
   generateScript,
   generateAudio,
-  // Job orchestration
   startGeneration,
   saveAndQueueAudio,
   getJob,
-  // Error classes (not error type unions)
   InvalidAudioGenerationError,
   InvalidSaveError,
   NoChangesToSaveError,
-  // Approval
   approvePodcast,
   revokeApproval,
-  // Input/Output types - error types inferred by Effect
   type CreatePodcastInput,
   type GetPodcastInput,
   type UpdatePodcastInput,
@@ -72,16 +49,10 @@ export {
   type RevokeApprovalInput,
 } from './use-cases';
 
-// =============================================================================
 // Prompts
-// =============================================================================
-
 export { buildSystemPrompt, buildUserPrompt } from './prompts';
 
-// =============================================================================
-// Re-export DB types for convenience
-// =============================================================================
-
+// DB types
 export type {
   Podcast,
   PodcastFormat,

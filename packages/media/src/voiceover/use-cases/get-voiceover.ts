@@ -1,5 +1,4 @@
 import { Effect } from 'effect';
-import type { Voiceover } from '@repo/db/schema';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================

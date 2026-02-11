@@ -1,9 +1,6 @@
-// features/voiceovers/lib/status.ts
-
 import { VoiceoverStatus } from '@repo/db/schema';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
-// Re-export the VoiceoverStatus const for convenience
 export { VoiceoverStatus };
 export type VoiceoverStatusType =
   (typeof VoiceoverStatus)[keyof typeof VoiceoverStatus];
@@ -48,29 +45,6 @@ export function isGeneratingStatus(
   status: VoiceoverStatusType | undefined | null,
 ): boolean {
   return status === VoiceoverStatus.GENERATING_AUDIO;
-}
-
-/** Check if actions should be disabled (during generation) */
-export function isActionDisabled(
-  status: VoiceoverStatusType | undefined,
-): boolean {
-  return status === VoiceoverStatus.GENERATING_AUDIO;
-}
-
-/** Check if voiceover is in ready state (can edit settings) */
-export function isReadyStatus(
-  status: VoiceoverStatusType | undefined,
-): boolean {
-  return status === VoiceoverStatus.READY;
-}
-
-/** Check if voiceover can be edited (drafting, ready, or failed) */
-export function canEdit(status: VoiceoverStatusType | undefined): boolean {
-  return (
-    status === VoiceoverStatus.DRAFTING ||
-    status === VoiceoverStatus.READY ||
-    status === VoiceoverStatus.FAILED
-  );
 }
 
 /** Get the status configuration for a given status */

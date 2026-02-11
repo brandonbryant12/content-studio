@@ -1,20 +1,11 @@
 import { formatFileSize } from './formatters';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/** Structured API error with code and optional data */
 interface DefinedAPIError {
   code: string;
   message: string;
   data?: unknown;
 }
 
-/**
- * Type guard to check if error is a structured API error.
- * Matches errors returned by oRPC with code/message/data shape.
- */
 const isDefinedAPIError = (error: unknown): error is DefinedAPIError => {
   return (
     typeof error === 'object' &&
@@ -26,16 +17,6 @@ const isDefinedAPIError = (error: unknown): error is DefinedAPIError => {
   );
 };
 
-// ============================================================================
-// Error Message Formatter
-// ============================================================================
-
-/**
- * Extract a user-friendly error message from an API error.
- *
- * Checks for structured errors with code/message/data and formats them
- * appropriately. Falls back to `error.message` or the provided fallback string.
- */
 export const getErrorMessage = (error: unknown, fallback: string): string => {
   if (!isDefinedAPIError(error)) {
     return (error as Error)?.message ?? fallback;

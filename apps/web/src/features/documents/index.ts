@@ -1,5 +1,3 @@
-// features/documents/index.ts
-
 // Named exports from hooks
 export {
   useDocumentList,

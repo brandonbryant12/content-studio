@@ -1,4 +1,3 @@
-// features/documents/components/document-detail-container.tsx
 // Container: Fetches document + content, manages state, coordinates actions
 
 import { useState } from 'react';

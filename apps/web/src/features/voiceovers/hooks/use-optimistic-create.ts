@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/use-optimistic-create.ts
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';

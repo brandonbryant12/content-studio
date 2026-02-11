@@ -90,10 +90,12 @@ export function ConfigPanel({
           {podcast.generationContext && (
             <div className="config-section-v2">
               <button
+                type="button"
                 onClick={handleTogglePromptViewer}
                 className="config-prompt-toggle"
+                aria-expanded={showPromptViewer}
               >
-                <FileTextIcon className="w-4 h-4" />
+                <FileTextIcon className="w-4 h-4" aria-hidden="true" />
                 <span>View generation details</span>
               </button>
             </div>

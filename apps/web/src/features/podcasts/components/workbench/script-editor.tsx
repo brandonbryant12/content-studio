@@ -69,9 +69,15 @@ function NewSegmentRow({
   return (
     <div className="segment-row editing new-segment">
       <div className="segment-row-speaker">
-        <div className="segment-speaker-toggle">
+        <div
+          className="segment-speaker-toggle"
+          role="radiogroup"
+          aria-label="Speaker"
+        >
           <button
             type="button"
+            role="radio"
+            aria-checked={isHost}
             onClick={() => {
               if (!isHost) onSpeakerToggle();
             }}
@@ -81,6 +87,8 @@ function NewSegmentRow({
           </button>
           <button
             type="button"
+            role="radio"
+            aria-checked={isCohost}
             onClick={() => {
               if (!isCohost) onSpeakerToggle();
             }}
@@ -100,6 +108,7 @@ function NewSegmentRow({
           placeholder="Type your line..."
           className="segment-edit-textarea"
           rows={1}
+          aria-label="New dialogue line"
         />
         <div className="segment-edit-hints">
           <span className="segment-edit-hint">

@@ -1,4 +1,3 @@
-// features/documents/components/document-detail.tsx
 // Presenter: Pure UI for document detail view
 
 import {

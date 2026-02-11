@@ -1,5 +1,3 @@
-// features/documents/components/index.ts
-
 export { DocumentListContainer } from './document-list-container';
 export { DocumentDetailContainer } from './document-detail-container';
 export { DocumentDetail, type DocumentDetailProps } from './document-detail';

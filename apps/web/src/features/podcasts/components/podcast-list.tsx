@@ -1,4 +1,3 @@
-// features/podcasts/components/podcast-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
 import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';

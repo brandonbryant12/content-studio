@@ -1,5 +1,3 @@
-// features/infographics/hooks/use-infographic.ts
-
 import {
   useSuspenseQuery,
   type UseSuspenseQueryResult,

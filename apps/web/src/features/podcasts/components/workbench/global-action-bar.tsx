@@ -9,22 +9,13 @@ import { VersionStatus, type VersionStatusType } from '../../lib/status';
 import { AudioPlayer } from '../audio-player';
 
 interface GlobalActionBarProps {
-  // Status
   status: VersionStatusType | undefined;
   isGenerating: boolean;
-
-  // Unsaved changes (script or settings)
   hasChanges: boolean;
   isSaving: boolean;
   onSave: () => void;
-
-  // Generation action
   onGenerate: () => void;
-
-  // Disabled state (e.g., viewing history)
   disabled?: boolean;
-
-  // Audio
   audioUrl?: string;
 }
 
@@ -41,7 +32,6 @@ export function GlobalActionBar({
   const hasAudio = !!audioUrl;
   const showChangesState = hasChanges && status === VersionStatus.READY;
 
-  // Get status message
   const getStatusMessage = () => {
     if (isGenerating) {
       if (status === VersionStatus.GENERATING_SCRIPT)
@@ -60,7 +50,6 @@ export function GlobalActionBar({
     return 'Draft';
   };
 
-  // Get action button
   const renderAction = () => {
     if (isGenerating) return null;
 
@@ -120,7 +109,6 @@ export function GlobalActionBar({
 
   return (
     <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
-      {/* Left: Status indicator */}
       <div
         className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
       >
@@ -134,14 +122,12 @@ export function GlobalActionBar({
         <span>{getStatusMessage()}</span>
       </div>
 
-      {/* Center: Audio player (when available) */}
       {hasAudio && (
         <div className="action-bar-audio">
           <AudioPlayer url={audioUrl} />
         </div>
       )}
 
-      {/* Right: Actions */}
       <div className="action-bar-actions">{renderAction()}</div>
     </div>
   );

@@ -1,5 +1,3 @@
-// features/documents/hooks/use-document-list.ts
-
 import {
   useQuery,
   useSuspenseQuery,
@@ -32,9 +30,6 @@ export function useDocumentList(
   });
 }
 
-/**
- * Alias for useDocumentList for backward compatibility.
- */
 export const useDocuments = useDocumentList;
 
 /**

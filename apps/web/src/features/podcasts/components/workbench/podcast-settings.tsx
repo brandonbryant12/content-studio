@@ -97,7 +97,10 @@ function VoiceSelector({
         onValueChange={onChange}
         disabled={disabled}
       >
-        <SelectPrimitive.Trigger className="mixer-voice-current">
+        <SelectPrimitive.Trigger
+          className="mixer-voice-current"
+          aria-label="Select voice"
+        >
           <div className={`mixer-voice-avatar ${selectedVoice?.gender}`}>
             {selectedVoice?.name.charAt(0)}
           </div>
@@ -250,6 +253,7 @@ export function PodcastSettings({
             max={MAX_DURATION}
             step={1}
             disabled={disabled}
+            aria-label="Target duration in minutes"
           />
           <span className="mixer-duration-range-label">{MAX_DURATION}</span>
         </div>
@@ -269,6 +273,7 @@ export function PodcastSettings({
           disabled={disabled}
           placeholder="Add specific instructions for the AI..."
           className="mixer-notes-textarea"
+          aria-label="Custom instructions"
         />
       </div>
     </div>

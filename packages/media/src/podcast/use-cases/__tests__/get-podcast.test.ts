@@ -147,9 +147,7 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id, includeDocuments: true }).pipe(
-          Effect.provide(layers),
-        ),
+        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -172,9 +170,7 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id, includeDocuments: true }).pipe(
-          Effect.provide(layers),
-        ),
+        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -259,9 +255,7 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        getPodcast({ podcastId: nonExistentId, includeDocuments: true }).pipe(
-          Effect.provide(layers),
-        ),
+        getPodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
       );
 
       expect(result._tag).toBe('Failure');

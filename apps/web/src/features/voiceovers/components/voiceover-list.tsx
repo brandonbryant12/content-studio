@@ -1,4 +1,3 @@
-// features/voiceovers/components/voiceover-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
 import {
@@ -18,9 +17,11 @@ import {
   memo,
   useCallback,
   useMemo,
+  useState,
   useTransition,
   type ChangeEvent,
 } from 'react';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import type { VoiceoverListItem } from './voiceover-item';
 import { VoiceoverIcon } from './voiceover-icon';
 import {
@@ -123,14 +124,18 @@ const VoiceoverRow = memo(function VoiceoverRow({
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
 }) {
-  const handleDelete = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onDelete(voiceover.id);
-    },
-    [onDelete, voiceover.id],
-  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    setConfirmOpen(false);
+    onDelete(voiceover.id);
+  }, [onDelete, voiceover.id]);
 
   const hasAudio = !!voiceover.audioUrl;
   const isThisPlaying =
@@ -231,7 +236,7 @@ const VoiceoverRow = memo(function VoiceoverRow({
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={isDeleting}
           className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
           aria-label={`Delete ${voiceover.title}`}
@@ -242,6 +247,16 @@ const VoiceoverRow = memo(function VoiceoverRow({
             <TrashIcon className="w-3.5 h-3.5" />
           )}
         </Button>
+        <ConfirmationDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Delete Voiceover"
+          description={`Are you sure you want to delete "${voiceover.title}"? This action cannot be undone.`}
+          confirmText="Delete"
+          variant="destructive"
+          isLoading={isDeleting}
+          onConfirm={handleDeleteConfirm}
+        />
       </td>
     </tr>
   );

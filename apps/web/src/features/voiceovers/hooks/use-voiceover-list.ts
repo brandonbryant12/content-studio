@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/use-voiceover-list.ts
-
 import {
   useQuery,
   useSuspenseQuery,

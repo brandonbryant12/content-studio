@@ -1,4 +1,3 @@
-// Re-export from shared — document selection is used across features
 export {
   useDocumentSelection,
   type DocumentInfo,

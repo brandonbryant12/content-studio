@@ -1,15 +1,3 @@
-/**
- * Document Use Cases
- *
- * Pure functions that implement business logic for document operations.
- * Each use case yields its dependencies from context using Effect.gen.
- * Error types are inferred by Effect - no explicit error type exports.
- */
-
-// =============================================================================
-// CRUD Operations
-// =============================================================================
-
 export {
   listDocuments,
   type ListDocumentsInput,

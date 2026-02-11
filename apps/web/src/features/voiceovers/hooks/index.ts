@@ -1,5 +1,3 @@
-// features/voiceovers/hooks/index.ts
-
 export {
   useVoiceoverList,
   useSuspenseVoiceoverList,

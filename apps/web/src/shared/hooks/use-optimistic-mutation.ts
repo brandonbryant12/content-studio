@@ -1,5 +1,3 @@
-// shared/hooks/use-optimistic-mutation.ts
-
 import {
   useMutation,
   useQueryClient,

@@ -54,7 +54,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getPodcast({ podcastId: input.id, includeDocuments: true }).pipe(
+        getPodcast({ podcastId: input.id }).pipe(
           Effect.flatMap(serializePodcastFullEffect),
         ),
         errors,

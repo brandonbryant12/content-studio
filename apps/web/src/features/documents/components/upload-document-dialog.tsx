@@ -1,4 +1,3 @@
-// features/documents/components/upload-document-dialog.tsx
 // Presenter: Upload dialog UI with hooks extracted
 
 import { UploadIcon } from '@radix-ui/react-icons';
@@ -121,8 +120,8 @@ export function UploadDocumentDialog({
             onDrop={handleDrop}
             className={`
               border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
-              ${isDragging ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700'}
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+              ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}
               ${file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
             `}
             onClick={() => document.getElementById('file-input')?.click()}
@@ -146,20 +145,22 @@ export function UploadDocumentDialog({
                 <p className="font-medium text-green-600 dark:text-green-400">
                   {file.name}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {(file.size / 1024).toFixed(1)} KB
                 </p>
               </div>
             ) : (
               <div>
                 <UploadIcon
-                  className="w-8 h-8 mx-auto text-gray-400 mb-2"
+                  className="w-8 h-8 mx-auto text-muted-foreground mb-2"
                   aria-hidden="true"
                 />
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-muted-foreground">
                   Drag and drop or click to select
                 </p>
-                <p className="text-sm text-gray-400 mt-1">Max 10MB</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  Max 10MB
+                </p>
               </div>
             )}
           </div>

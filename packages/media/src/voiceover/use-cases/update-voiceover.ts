@@ -17,19 +17,12 @@ export interface UpdateVoiceoverInput {
 // Use Case
 // =============================================================================
 
-/**
- * Update a voiceover's settings.
- *
- * This use case updates voiceover metadata (title, text, voice).
- */
 export const updateVoiceover = (input: UpdateVoiceoverInput) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
 
-    // Verify voiceover exists
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
 
-    // Verify user is the owner
     if (voiceover.createdBy !== input.userId) {
       return yield* Effect.fail(
         new NotVoiceoverOwner({
@@ -39,13 +32,7 @@ export const updateVoiceover = (input: UpdateVoiceoverInput) =>
       );
     }
 
-    // Update voiceover metadata
-    const updatedVoiceover = yield* voiceoverRepo.update(
-      input.voiceoverId,
-      input.data,
-    );
-
-    return updatedVoiceover;
+    return yield* voiceoverRepo.update(input.voiceoverId, input.data);
   }).pipe(
     Effect.withSpan('useCase.updateVoiceover', {
       attributes: { 'voiceover.id': input.voiceoverId },

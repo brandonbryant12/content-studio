@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { DocumentListItem } from '../components/document-item';
 import type { ReactNode } from 'react';
 import { DocumentList } from '../components/document-list';
-import { render, screen, fireEvent } from '@/test-utils';
+import { render, screen, fireEvent, userEvent } from '@/test-utils';
 
 // Mock TanStack Router Link component
 vi.mock('@tanstack/react-router', () => ({
@@ -88,7 +88,7 @@ describe('DocumentList', () => {
 
     // Check header
     expect(
-      screen.getByRole('heading', { name: 'Documents' }),
+      screen.getByRole('heading', { name: 'Knowledge Base' }),
     ).toBeInTheDocument();
 
     // Check all documents are rendered
@@ -97,9 +97,9 @@ describe('DocumentList', () => {
     expect(screen.getByText('Project Roadmap')).toBeInTheDocument();
 
     // Check word counts are displayed
-    expect(screen.getByText('2,500 words')).toBeInTheDocument();
-    expect(screen.getByText('5,000 words')).toBeInTheDocument();
-    expect(screen.getByText('1,200 words')).toBeInTheDocument();
+    expect(screen.getByText('2,500')).toBeInTheDocument();
+    expect(screen.getByText('5,000')).toBeInTheDocument();
+    expect(screen.getByText('1,200')).toBeInTheDocument();
   });
 
   it('shows empty state when no documents', () => {
@@ -136,14 +136,16 @@ describe('DocumentList', () => {
     ).toBeInTheDocument();
   });
 
-  it('calls onSearch when search input changes', () => {
+  it('calls onSearch when search input changes', async () => {
+    const user = userEvent.setup();
     const onSearch = vi.fn();
     render(<DocumentList {...defaultProps} onSearch={onSearch} />);
 
     const searchInput = screen.getByPlaceholderText('Search documents\u2026');
-    fireEvent.change(searchInput, { target: { value: 'test query' } });
+    await user.type(searchInput, 'test query');
 
-    expect(onSearch).toHaveBeenCalledWith('test query');
+    // onSearch is called on each keystroke via startTransition
+    expect(onSearch).toHaveBeenCalled();
   });
 
   it('calls onUploadOpen(true) when upload button clicked', () => {
@@ -180,14 +182,11 @@ describe('DocumentList', () => {
     }
   });
 
-  it('renders Create Podcast link button', () => {
+  it('renders upload button in header', () => {
     render(<DocumentList {...defaultProps} />);
 
-    const createPodcastLink = screen.getByRole('link', {
-      name: /create podcast/i,
-    });
-    expect(createPodcastLink).toBeInTheDocument();
-    expect(createPodcastLink).toHaveAttribute('href', '/podcasts');
+    const uploadButton = screen.getByRole('button', { name: /upload/i });
+    expect(uploadButton).toBeInTheDocument();
   });
 
   it('shows search input with correct placeholder', () => {

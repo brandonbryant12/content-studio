@@ -85,7 +85,7 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
         </div>
       </div>
 
-      <div className="audio-player-volume">
+      <div className="audio-player-volume" aria-hidden="true">
         <SpeakerLoudIcon className="w-4 h-4" />
       </div>
     </div>

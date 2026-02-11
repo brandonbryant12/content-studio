@@ -1,5 +1,3 @@
-// features/documents/hooks/use-document-actions.ts
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';

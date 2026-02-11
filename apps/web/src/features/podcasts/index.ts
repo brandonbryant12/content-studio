@@ -1,20 +1,12 @@
-// features/podcasts/index.ts
-// Feature barrel - specific exports only to prevent bundle bloat
-// See: .claude/skills/vercel-react-best-practices/rules/bundle-barrel-imports.md
-
-// Status utilities
 export {
   VersionStatus,
   type VersionStatusType,
   VERSION_STATUS_CONFIG,
   isGeneratingStatus,
-  isActionDisabled,
-  isReadyStatus,
   getStatusConfig,
   isSetupMode,
 } from './lib/status';
 
-// Query hooks
 export { usePodcast, getPodcastQueryKey } from './hooks/use-podcast';
 export {
   usePodcastList,
@@ -23,14 +15,12 @@ export {
   usePodcastsOrdered,
 } from './hooks/use-podcast-list';
 
-// Mutation hooks
 export { useOptimisticGeneration } from './hooks/use-optimistic-generation';
 export { useOptimisticSaveChanges } from './hooks/use-optimistic-save-changes';
 export { useOptimisticDelete } from './hooks/use-optimistic-delete';
 export { useOptimisticCreate } from './hooks/use-optimistic-create';
 export { useOptimisticDeleteList } from './hooks/use-optimistic-delete-list';
 
-// Local state hooks
 export {
   useScriptEditor,
   type ScriptSegment,
@@ -53,15 +43,12 @@ export {
   type UsePodcastGenerationReturn,
 } from './hooks/use-podcast-generation';
 
-// Approval hooks
 export { useApprovePodcast } from './hooks/use-approve-podcast';
 
-// Container components
 export { PodcastDetailContainer } from './components/podcast-detail-container';
 export { PodcastListContainer } from './components/podcast-list-container';
 export { SetupWizardContainer } from './components/setup-wizard-container';
 
-// Presenter components
 export {
   PodcastDetail,
   type PodcastDetailProps,
@@ -73,6 +60,5 @@ export {
   type PodcastListItem,
 } from './components/podcast-item';
 
-// Reusable components
 export { AudioPlayer } from './components/audio-player';
 export { PodcastIcon } from './components/podcast-icon';
