@@ -22,7 +22,7 @@ function RouteComponent() {
           <LoginCredentialsForm />
         </div>
         <p className="auth-footer">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link to="/register" className="text-link-primary">
             Sign up
           </Link>

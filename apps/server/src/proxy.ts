@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- Lifecycle logging before Effect runtime is available */
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import { env } from './env';
 

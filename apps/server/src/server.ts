@@ -1,4 +1,6 @@
+/* eslint-disable no-console -- Server entry point: lifecycle logging before/after Effect runtime */
 // Configure proxy FIRST before any network requests
+// eslint-disable-next-line import/order -- Must execute before any other imports make network requests
 import { configureProxy } from './proxy';
 configureProxy();
 

@@ -37,7 +37,7 @@ describe('revokeInfographicApproval', () => {
           id === infographic.id
             ? Effect.succeed(infographic)
             : Effect.fail(new InfographicNotFound({ id })),
-        clearApproval: (id: string) =>
+        clearApproval: (_id: string) =>
           Effect.succeed({
             ...infographic,
             approvedBy: null,

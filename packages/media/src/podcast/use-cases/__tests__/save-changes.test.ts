@@ -8,7 +8,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Podcast, PodcastId } from '@repo/db/schema';
+import type { Podcast } from '@repo/db/schema';
 import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,

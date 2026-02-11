@@ -8,8 +8,10 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { DocumentParseError, UnsupportedDocumentFormat } from '../../../errors';
-import type { Document, DocumentId } from '@repo/db/schema';
+import type {
+  DocumentParseError,
+  UnsupportedDocumentFormat,
+} from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { uploadDocument } from '../upload-document';
 

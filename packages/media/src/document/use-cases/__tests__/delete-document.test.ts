@@ -10,7 +10,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { Document } from '@repo/db/schema';
+import type { Document, DocumentId } from '@repo/db/schema';
 import { DocumentNotFound } from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { deleteDocument } from '../delete-document';
@@ -92,7 +92,7 @@ describe('deleteDocument', () => {
     it('should delete document when user owns it', async () => {
       const user = createTestUser({ id: 'owner-123' });
       const doc = createTestDocument({
-        id: 'doc_test1' as any,
+        id: 'doc_test1' as DocumentId,
         contentKey: 'documents/test.txt',
         createdBy: user.id,
       });
@@ -132,7 +132,7 @@ describe('deleteDocument', () => {
       const admin = createTestAdmin({ id: 'admin-123' });
       const otherUserId = 'other-user-456';
       const doc = createTestDocument({
-        id: 'doc_test2' as any,
+        id: 'doc_test2' as DocumentId,
         contentKey: 'documents/other.txt',
         createdBy: otherUserId, // Document belongs to someone else
       });
@@ -170,7 +170,7 @@ describe('deleteDocument', () => {
       const user = createTestUser({ id: 'user-123' });
       const otherUserId = 'other-user-456';
       const doc = createTestDocument({
-        id: 'doc_test3' as any,
+        id: 'doc_test3' as DocumentId,
         createdBy: otherUserId, // Document belongs to someone else
       });
 
@@ -225,7 +225,7 @@ describe('deleteDocument', () => {
     it('should ignore storage delete errors (file might not exist)', async () => {
       const user = createTestUser({ id: 'owner-123' });
       const doc = createTestDocument({
-        id: 'doc_test4' as any,
+        id: 'doc_test4' as DocumentId,
         contentKey: 'documents/missing.txt',
         createdBy: user.id,
       });

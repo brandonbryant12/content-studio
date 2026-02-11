@@ -8,8 +8,8 @@ import {
 } from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
 import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Infographic, InfographicVersion } from '@repo/db/schema';
+import { describe, it, expect, beforeEach } from 'vitest';
+import type { InfographicVersion } from '@repo/db/schema';
 import { InfographicNotFound } from '../../../errors';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';

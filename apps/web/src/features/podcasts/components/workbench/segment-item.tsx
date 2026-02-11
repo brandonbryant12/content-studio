@@ -33,20 +33,41 @@ export const SegmentItem = memo(function SegmentItem({
 }: SegmentItemProps) {
   const [editSpeaker, setEditSpeaker] = useState(segment.speaker);
   const [editLine, setEditLine] = useState(segment.line);
+  const [prevIsEditing, setPrevIsEditing] = useState(false);
+  const [prevSpeaker, setPrevSpeaker] = useState(segment.speaker);
+  const [prevLine, setPrevLine] = useState(segment.line);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset edit state when segment changes or editing starts
+  // Reset edit state when segment changes or editing starts (adjust state during render)
+  if (
+    isEditing &&
+    (isEditing !== prevIsEditing ||
+      segment.speaker !== prevSpeaker ||
+      segment.line !== prevLine)
+  ) {
+    setEditSpeaker(segment.speaker);
+    setEditLine(segment.line);
+  }
+  if (
+    isEditing !== prevIsEditing ||
+    segment.speaker !== prevSpeaker ||
+    segment.line !== prevLine
+  ) {
+    setPrevIsEditing(isEditing);
+    setPrevSpeaker(segment.speaker);
+    setPrevLine(segment.line);
+  }
+
+  // Focus textarea when editing starts
   useEffect(() => {
     if (isEditing) {
-      setEditSpeaker(segment.speaker);
-      setEditLine(segment.line);
       // Focus textarea after a brief delay for animation
       setTimeout(() => {
         textareaRef.current?.focus();
         textareaRef.current?.select();
       }, 50);
     }
-  }, [isEditing, segment.speaker, segment.line]);
+  }, [isEditing]);
 
   // Stable callback that calls parent with segmentIndex
   const handleSave = useCallback(() => {

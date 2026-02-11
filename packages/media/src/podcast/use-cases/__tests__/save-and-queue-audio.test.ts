@@ -59,12 +59,12 @@ const createMockPodcastRepo = (
       Effect.sync(() => ({ ...state.podcast!, ...opts }) as Podcast),
     updateAudio: (id, opts) =>
       Effect.sync(() => ({ ...state.podcast!, ...opts }) as Podcast),
-    clearAudio: (id) =>
+    clearAudio: (_id) =>
       Effect.sync(
         () =>
           ({ ...state.podcast!, audioUrl: null, duration: null }) as Podcast,
       ),
-    clearApproval: (id) =>
+    clearApproval: (_id) =>
       Effect.sync(
         () =>
           ({

@@ -73,7 +73,7 @@ const createMockPodcastRepoLayer = (
  * our mock PodcastRepo methods return Effect.succeed directly.
  */
 const MockDbLayer: Layer.Layer<Db> = Layer.succeed(Db, {
-  db: {} as any,
+  db: {} as unknown as import('@repo/db/client').DatabaseInstance,
 });
 
 // =============================================================================

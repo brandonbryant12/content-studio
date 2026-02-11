@@ -17,7 +17,7 @@
  * Run with: S3_BUCKET=xxx S3_REGION=xxx S3_ACCESS_KEY_ID=xxx S3_SECRET_ACCESS_KEY=xxx pnpm --filter @repo/storage test:live:s3
  */
 import { Effect } from 'effect';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import { S3StorageLive, Storage } from '../../index';
 
 const S3_BUCKET = process.env.S3_BUCKET;

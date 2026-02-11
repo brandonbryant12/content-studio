@@ -25,7 +25,7 @@ describe('MEDIA_TYPE_CONFIG', () => {
   });
 
   it('has required fields on every config entry', () => {
-    for (const [type, config] of Object.entries(MEDIA_TYPE_CONFIG)) {
+    for (const [_type, config] of Object.entries(MEDIA_TYPE_CONFIG)) {
       expect(config.label).toBeTruthy();
       expect(config.description).toBeTruthy();
       expect(Array.isArray(config.acceptsInputFrom)).toBe(true);

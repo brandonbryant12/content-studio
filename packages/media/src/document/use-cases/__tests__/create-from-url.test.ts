@@ -46,7 +46,7 @@ const createMockDocumentRepo = (
         return doc;
       }),
     list: () => Effect.die('not implemented'),
-    update: (id) =>
+    update: (_id) =>
       state.insertedDoc
         ? Effect.succeed(state.insertedDoc)
         : Effect.die('update not mocked'),

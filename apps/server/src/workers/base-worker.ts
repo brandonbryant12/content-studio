@@ -86,7 +86,6 @@ export const createWorker = <
   let runtime: ServerRuntime;
   if (config.runtime) {
     runtime = config.runtime;
-    console.log(`[${name}] Using shared runtime`);
   } else {
     const aiProvider = config.aiProvider ?? 'gemini';
     const needsGeminiKey = aiProvider === 'gemini' && !config.useMockAI;
@@ -121,7 +120,7 @@ export const createWorker = <
     });
 
     if (config.useMockAI) {
-      console.log(`[${name}] Using mock AI layers for testing`);
+      console.warn(`[${name}] Using mock AI layers for testing`);
     }
   }
 

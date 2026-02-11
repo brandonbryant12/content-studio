@@ -9,7 +9,7 @@ import { Cause, Exit, Option } from 'effect';
  */
 export function expectEffectFailure<E, T extends E>(
   exit: Exit.Exit<unknown, E>,
-  ErrorClass: new (...args: any[]) => T,
+  ErrorClass: abstract new (...args: never[]) => T,
 ): T {
   if (!Exit.isFailure(exit)) {
     throw new Error(`Expected Effect failure, got success`);
@@ -20,7 +20,7 @@ export function expectEffectFailure<E, T extends E>(
   }
   if (!(option.value instanceof ErrorClass)) {
     throw new Error(
-      `Expected ${ErrorClass.name}, got ${(option.value as any)?.constructor?.name ?? typeof option.value}`,
+      `Expected ${ErrorClass.name}, got ${(option.value as object)?.constructor?.name ?? typeof option.value}`,
     );
   }
   return option.value as T;

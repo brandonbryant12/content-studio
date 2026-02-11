@@ -54,7 +54,7 @@ const createMockPodcastRepo = (
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApproval: (id) =>
+    clearApproval: (_id) =>
       Effect.sync(
         () =>
           ({

@@ -1,5 +1,11 @@
 import { cn } from '@repo/ui/lib/utils';
-import { memo, useCallback, type MouseEvent, type KeyboardEvent } from 'react';
+import {
+  memo,
+  useCallback,
+  useMemo,
+  type MouseEvent,
+  type KeyboardEvent,
+} from 'react';
 
 import { VOICES } from '../../lib/voices';
 import { VoiceSymbol } from './voice-symbols';
@@ -36,13 +42,17 @@ export const VoiceSelector = memo(function VoiceSelector({
   const { playingVoiceId, play, stop } = useVoicePreview();
 
   // Build a map of voiceId -> previewUrl from the API
-  const previewUrls = voicesData
-    ? Object.fromEntries(
-        voicesData
-          .filter((v) => v.previewUrl)
-          .map((v) => [v.id, v.previewUrl!]),
-      )
-    : {};
+  const previewUrls = useMemo(
+    () =>
+      voicesData
+        ? Object.fromEntries(
+            voicesData
+              .filter((v) => v.previewUrl)
+              .map((v) => [v.id, v.previewUrl!]),
+          )
+        : {},
+    [voicesData],
+  );
 
   const handleVoiceSelect = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {

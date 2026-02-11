@@ -17,7 +17,9 @@ export function useVoicePreview(): UseVoicePreviewReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
   const playingRef = useRef<string | null>(null);
-  playingRef.current = playingVoiceId;
+  useEffect(() => {
+    playingRef.current = playingVoiceId;
+  }, [playingVoiceId]);
 
   // Create audio element once
   useEffect(() => {

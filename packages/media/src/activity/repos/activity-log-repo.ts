@@ -3,7 +3,6 @@ import {
   activityLog,
   type ActivityLog,
   type ActivityLogWithUser,
-  type ActivityLogId,
   user,
 } from '@repo/db/schema';
 import {
@@ -17,7 +16,7 @@ import {
   gt,
 } from 'drizzle-orm';
 import { Context, Layer } from 'effect';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 
 // =============================================================================
 // Input Types

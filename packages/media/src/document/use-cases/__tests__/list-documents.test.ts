@@ -65,7 +65,7 @@ const createMockDocumentRepoLayer = (
  * This satisfies the type requirement from the use case signature.
  */
 const MockDbLayer: Layer.Layer<Db> = Layer.succeed(Db, {
-  db: {} as any,
+  db: {} as unknown as import('@repo/db/client').DatabaseInstance,
 });
 
 // =============================================================================

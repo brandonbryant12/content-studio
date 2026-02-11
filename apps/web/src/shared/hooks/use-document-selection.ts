@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface DocumentInfo {
   id: string;
@@ -29,16 +29,16 @@ export function useDocumentSelection({
   initialDocuments,
 }: UseDocumentSelectionOptions): UseDocumentSelectionReturn {
   const [documents, setDocuments] = useState<DocumentInfo[]>(initialDocuments);
-  const prevInitialRef = useRef<string>('');
+  const [prevInitialSerialized, setPrevInitialSerialized] = useState(() =>
+    JSON.stringify(initialDocuments.map((d) => d.id).sort()),
+  );
 
-  // Sync with server data when it changes (similar to useScriptEditor)
-  useEffect(() => {
-    const serialized = JSON.stringify(initialDocuments.map((d) => d.id).sort());
-    if (serialized !== prevInitialRef.current) {
-      prevInitialRef.current = serialized;
-      setDocuments(initialDocuments);
-    }
-  }, [initialDocuments]);
+  // Sync with server data when it changes (adjust state during render)
+  const serialized = JSON.stringify(initialDocuments.map((d) => d.id).sort());
+  if (serialized !== prevInitialSerialized) {
+    setPrevInitialSerialized(serialized);
+    setDocuments(initialDocuments);
+  }
 
   const documentIds = useMemo(() => documents.map((d) => d.id), [documents]);
 

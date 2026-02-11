@@ -42,7 +42,7 @@ export function useVoiceoverSettings({
   voiceover,
 }: UseVoiceoverSettingsOptions): UseVoiceoverSettingsReturn {
   // Track the voiceover ID to detect navigation
-  const voiceoverIdRef = useRef(voiceover?.id);
+  const [prevVoiceoverId, setPrevVoiceoverId] = useState(voiceover?.id);
 
   // Track whether user has made local edits
   const hasUserEditsRef = useRef(false);
@@ -64,13 +64,17 @@ export function useVoiceoverSettings({
   }, []);
 
   // Reset state when navigating to a different voiceover
-  if (voiceover?.id !== voiceoverIdRef.current) {
-    voiceoverIdRef.current = voiceover?.id;
-    hasUserEditsRef.current = false;
+  if (voiceover?.id !== prevVoiceoverId) {
+    setPrevVoiceoverId(voiceover?.id);
     const newInitial = getInitialValues(voiceover);
     setTextInternal(newInitial.text);
     setVoiceInternal(newInitial.voice);
   }
+
+  // Reset user-edits flag when navigating to a different voiceover
+  useEffect(() => {
+    hasUserEditsRef.current = false;
+  }, [prevVoiceoverId]);
 
   // Sync local state when server data changes externally
   useEffect(() => {
@@ -79,7 +83,7 @@ export function useVoiceoverSettings({
     const newInitial = getInitialValues(voiceover);
     setTextInternal(newInitial.text);
     setVoiceInternal(newInitial.voice);
-  }, [voiceover?.text, voiceover?.voice]);
+  }, [voiceover, voiceover?.text, voiceover?.voice]);
 
   // Track if there are changes
   const hasChanges =

@@ -48,7 +48,7 @@ function getInitialValues(infographic: InfographicFull | undefined) {
 export function useInfographicSettings({
   infographic,
 }: UseInfographicSettingsOptions): UseInfographicSettingsReturn {
-  const infographicIdRef = useRef(infographic?.id);
+  const [prevInfographicId, setPrevInfographicId] = useState(infographic?.id);
   const hasUserEditsRef = useRef(false);
 
   const initial = getInitialValues(infographic);
@@ -79,15 +79,19 @@ export function useInfographicSettings({
   }, []);
 
   // Reset state when navigating to a different infographic
-  if (infographic?.id !== infographicIdRef.current) {
-    infographicIdRef.current = infographic?.id;
-    hasUserEditsRef.current = false;
+  if (infographic?.id !== prevInfographicId) {
+    setPrevInfographicId(infographic?.id);
     const newInitial = getInitialValues(infographic);
     setPromptInternal(newInitial.prompt);
     setTypeInternal(newInitial.infographicType);
     setStyleInternal(newInitial.stylePreset);
     setFormatInternal(newInitial.format);
   }
+
+  // Reset user-edits flag when navigating to a different infographic
+  useEffect(() => {
+    hasUserEditsRef.current = false;
+  }, [prevInfographicId]);
 
   // Sync local state when server data changes externally (e.g., SSE update)
   useEffect(() => {
@@ -99,6 +103,7 @@ export function useInfographicSettings({
     setStyleInternal(newInitial.stylePreset);
     setFormatInternal(newInitial.format);
   }, [
+    infographic,
     infographic?.prompt,
     infographic?.infographicType,
     infographic?.stylePreset,

@@ -112,7 +112,21 @@ const SearchBar = memo(function SearchBar({
 }: {
   search: UseDocumentSearchReturn;
 }) {
-  if (!search.isOpen) return null;
+  // Destructure to separate the ref from render-safe values,
+  // preventing the linter from flagging all property accesses as ref reads.
+  const {
+    isOpen,
+    inputRef,
+    query,
+    setQuery,
+    matches,
+    currentMatchIndex,
+    goToPrevious,
+    goToNext,
+    close,
+  } = search;
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -125,32 +139,32 @@ const SearchBar = memo(function SearchBar({
         aria-hidden="true"
       />
       <input
-        ref={search.inputRef}
+        ref={inputRef}
         type="text"
-        value={search.query}
-        onChange={(e) => search.setQuery(e.target.value)}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             if (e.shiftKey) {
-              search.goToPrevious();
+              goToPrevious();
             } else {
-              search.goToNext();
+              goToNext();
             }
           }
           if (e.key === 'Escape') {
             e.preventDefault();
-            search.close();
+            close();
           }
         }}
         placeholder="Search in document..."
         className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         aria-label="Search in document"
       />
-      {search.query.length >= 2 && (
+      {query.length >= 2 && (
         <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-          {search.matches.length > 0
-            ? `${search.currentMatchIndex + 1} of ${search.matches.length}`
+          {matches.length > 0
+            ? `${currentMatchIndex + 1} of ${matches.length}`
             : 'No matches'}
         </span>
       )}
@@ -159,8 +173,8 @@ const SearchBar = memo(function SearchBar({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={search.goToPrevious}
-          disabled={search.matches.length === 0}
+          onClick={goToPrevious}
+          disabled={matches.length === 0}
           aria-label="Previous match"
         >
           <ChevronUpIcon className="w-4 h-4" />
@@ -169,8 +183,8 @@ const SearchBar = memo(function SearchBar({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={search.goToNext}
-          disabled={search.matches.length === 0}
+          onClick={goToNext}
+          disabled={matches.length === 0}
           aria-label="Next match"
         >
           <ChevronDownIcon className="w-4 h-4" />
@@ -180,7 +194,7 @@ const SearchBar = memo(function SearchBar({
         variant="ghost"
         size="icon"
         className="h-7 w-7"
-        onClick={search.close}
+        onClick={close}
         aria-label="Close search"
       >
         <Cross2Icon className="w-3.5 h-3.5" />

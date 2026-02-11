@@ -109,6 +109,5 @@ const isEnoent = (error: unknown): boolean =>
 
 export const FilesystemStorageLive = (
   config: FilesystemStorageConfig,
-   
 ): Layer.Layer<Storage> =>
   Layer.succeed(Storage, makeFilesystemStorage(config));

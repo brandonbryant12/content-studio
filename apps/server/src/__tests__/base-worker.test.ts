@@ -2,7 +2,6 @@ import { Role } from '@repo/auth/policy';
 import { JobProcessingError } from '@repo/queue';
 import { Schedule, Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
-import type { JobId } from '@repo/db/schema';
 import {
   makeJobUser,
   wrapJobError,

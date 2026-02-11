@@ -8,7 +8,7 @@ vi.mock('@tanstack/react-router', () => ({
   Link: ({
     children,
     to,
-    params,
+    params: _params,
     ...rest
   }: {
     children: ReactNode;

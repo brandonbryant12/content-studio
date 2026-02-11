@@ -103,7 +103,7 @@ export function usePodcastSettings({
   podcast,
 }: UsePodcastSettingsOptions): UsePodcastSettingsReturn {
   // Track the podcast ID to detect navigation to a different podcast
-  const podcastIdRef = useRef(podcast?.id);
+  const [prevPodcastId, setPrevPodcastId] = useState(podcast?.id);
 
   // Track whether user has made local edits (to avoid overwriting user changes)
   const hasUserEditsRef = useRef(false);
@@ -141,15 +141,19 @@ export function usePodcastSettings({
   }, []);
 
   // Reset state when navigating to a different podcast
-  if (podcast?.id !== podcastIdRef.current) {
-    podcastIdRef.current = podcast?.id;
-    hasUserEditsRef.current = false;
+  if (podcast?.id !== prevPodcastId) {
+    setPrevPodcastId(podcast?.id);
     const newInitial = getInitialValues(podcast);
     setHostVoiceInternal(newInitial.hostVoice);
     setCoHostVoiceInternal(newInitial.coHostVoice);
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
   }
+
+  // Reset user-edits flag when navigating to a different podcast
+  useEffect(() => {
+    hasUserEditsRef.current = false;
+  }, [prevPodcastId]);
 
   // Sync local state when server data changes externally (wizard saves, SSE updates)
   // Only sync if user hasn't made local edits in the workbench
@@ -162,6 +166,7 @@ export function usePodcastSettings({
     setTargetDurationInternal(newInitial.targetDuration);
     setInstructionsInternal(newInitial.instructions);
   }, [
+    podcast,
     podcast?.hostVoice,
     podcast?.coHostVoice,
     podcast?.targetDurationMinutes,

@@ -32,14 +32,6 @@ const MockPolicyLive = Layer.succeed(Policy, mockPolicyService);
 const runWithUser = <A, E>(user: User, effect: Effect.Effect<A, E, never>) =>
   Effect.runPromise(withCurrentUser(user)(effect));
 
-const runWithUserAndPolicy = <A, E>(
-  user: User,
-  effect: Effect.Effect<A, E, Policy>,
-) =>
-  Effect.runPromise(
-    withCurrentUser(user)(effect).pipe(Effect.provide(MockPolicyLive)),
-  );
-
 describe('requireOwnership', () => {
   it('should succeed when user owns the resource', async () => {
     const user = createTestUser({ id: 'owner-id' });

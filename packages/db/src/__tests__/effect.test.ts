@@ -4,12 +4,9 @@ import type {
   DbError,
   ConstraintViolationError,
   DeadlockError,
-  ConnectionError} from '../effect';
-import {
-  withDb,
-  Db,
-  DbLive,
+  ConnectionError,
 } from '../effect';
+import { withDb, Db, DbLive } from '../effect';
 
 const mockDbLayer = Layer.succeed(Db, { db: {} as never });
 

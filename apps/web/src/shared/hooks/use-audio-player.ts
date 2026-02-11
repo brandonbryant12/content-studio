@@ -29,6 +29,9 @@ export function useAudioPlayer(
   const lastSecondRef = useRef(-1);
   const [duration, setDuration] = useState(initialDuration ?? 0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
+  const [prevInitialDuration, setPrevInitialDuration] =
+    useState(initialDuration);
 
   const progress = duration > 0 ? (displayTime / duration) * 100 : 0;
 
@@ -73,16 +76,22 @@ export function useAudioPlayer(
     };
   }, []);
 
-  // Reset when src changes
-  useEffect(() => {
+  // Reset when src or initialDuration changes (adjust state during render)
+  if (src !== prevSrc || initialDuration !== prevInitialDuration) {
+    setPrevSrc(src);
+    setPrevInitialDuration(initialDuration);
     setDisplayTime(0);
-    lastSecondRef.current = -1;
     setIsPlaying(false);
     setIsLoaded(false);
     if (initialDuration) {
       setDuration(initialDuration);
     }
-  }, [src, initialDuration]);
+  }
+
+  // Reset throttle ref when src changes
+  useEffect(() => {
+    lastSecondRef.current = -1;
+  }, [src]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;

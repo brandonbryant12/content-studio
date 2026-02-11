@@ -1,4 +1,4 @@
-import { Db, type DatabaseError } from '@repo/db/effect';
+import { Db } from '@repo/db/effect';
 import { ForbiddenError, UnauthorizedError } from '@repo/db/errors';
 import {
   createTestUser,
@@ -9,7 +9,6 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { Document } from '@repo/db/schema';
 import { DocumentNotFound } from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { getDocument } from '../get-document';

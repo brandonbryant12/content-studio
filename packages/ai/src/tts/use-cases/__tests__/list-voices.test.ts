@@ -1,6 +1,6 @@
-import { it, layer } from '@effect/vitest';
+import { layer } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
-import { describe, expect } from 'vitest';
+import { expect } from 'vitest';
 import { TTS, type TTSService, VOICES } from '../../index';
 import { listVoices } from '../list-voices';
 

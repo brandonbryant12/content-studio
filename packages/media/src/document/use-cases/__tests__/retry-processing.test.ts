@@ -149,7 +149,7 @@ describe('retryProcessing', () => {
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
 
-      const result = await Effect.runPromise(
+      await Effect.runPromise(
         withTestUser(user)(
           retryProcessing({ id: doc.id }).pipe(Effect.provide(layers)),
         ),

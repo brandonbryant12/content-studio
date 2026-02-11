@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
+import { toast } from 'sonner';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { useOptimisticMutation } from '../use-optimistic-mutation';
 
 // Mock sonner
@@ -11,9 +13,6 @@ vi.mock('sonner', () => ({
     error: vi.fn(),
   },
 }));
-
-// Import the mocked toast for assertions
-import { toast } from 'sonner';
 
 describe('useOptimisticMutation', () => {
   let queryClient: QueryClient;

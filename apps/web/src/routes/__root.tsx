@@ -1,6 +1,6 @@
 import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy, useSyncExternalStore } from 'react';
 import { authClient } from '@/clients/authClient';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
@@ -24,14 +24,18 @@ const TanStackRouterDevtools = import.meta.env.PROD
       })),
     );
 
+const emptySubscribe = () => () => {};
+
 function RootComponent() {
   const { data: session, isPending } = authClient.useSession();
-  const [mounted, setMounted] = useState(false);
-
-  // Defer Toaster rendering until after hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Defer Toaster rendering until after hydration.
+  // useSyncExternalStore with getServerSnapshot returning false
+  // avoids the need for useState+useEffect to detect mount.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (isPending) {
     return (

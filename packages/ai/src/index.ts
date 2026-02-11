@@ -77,9 +77,9 @@ export {
 } from './image-gen';
 
 // Import for combined layer
-import type { ImageGen} from './image-gen';
-import type { LLM} from './llm';
-import type { TTS} from './tts';
+import type { ImageGen } from './image-gen';
+import type { LLM } from './llm';
+import type { TTS } from './tts';
 import { GoogleImageGenLive } from './image-gen';
 import { GoogleLive, VertexLive } from './llm';
 import { GoogleTTSLive, VertexTTSLive } from './tts';

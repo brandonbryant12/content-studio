@@ -1,7 +1,7 @@
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { BaseDialog } from '@/shared/components/base-dialog';
 
@@ -20,13 +20,16 @@ export function SegmentEditorDialog({
 }: SegmentEditorDialogProps) {
   const [speaker, setSpeaker] = useState('');
   const [line, setLine] = useState('');
+  const [prevSegment, setPrevSegment] = useState<ScriptSegment | null>(null);
 
-  useEffect(() => {
+  // Reset form state when segment changes (adjust state during render)
+  if (segment !== prevSegment) {
+    setPrevSegment(segment);
     if (segment) {
       setSpeaker(segment.speaker);
       setLine(segment.line);
     }
-  }, [segment]);
+  }
 
   const handleSubmit = () => {
     onSave({ speaker: speaker.trim() || 'host', line: line.trim() });
@@ -60,7 +63,7 @@ export function SegmentEditorDialog({
             className="mt-1.5"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Use "host" or "cohost" for consistent styling
+            Use &quot;host&quot; or &quot;cohost&quot; for consistent styling
           </p>
         </div>
         <div>

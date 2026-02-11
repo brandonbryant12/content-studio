@@ -9,7 +9,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { Voiceover, VoiceoverId } from '@repo/db/schema';
+import type { Voiceover } from '@repo/db/schema';
 import { VoiceoverNotFound } from '../../../errors';
 import {
   VoiceoverRepo,

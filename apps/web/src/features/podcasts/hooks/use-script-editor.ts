@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -40,22 +40,19 @@ export function useScriptEditor({
     () => initialSegments,
   );
   const hasUserEdits = useRef(false);
-  const prevInitialSegmentsRef = useRef<string>('');
+  const [prevInitialSerialized, setPrevInitialSerialized] = useState<string>(
+    () => JSON.stringify(initialSegments),
+  );
 
   // Sync with server data when it changes (e.g., after generation completes)
   // Only sync if user hasn't made local edits
   // Use JSON comparison to avoid infinite loops from array reference changes
-  useEffect(() => {
-    const serialized = JSON.stringify(initialSegments);
-    if (
-      serialized !== prevInitialSegmentsRef.current &&
-      !hasUserEdits.current
-    ) {
-      prevInitialSegmentsRef.current = serialized;
-      setSegments(initialSegments);
-      setOriginalSegments(initialSegments);
-    }
-  }, [initialSegments]);
+  const serialized = JSON.stringify(initialSegments);
+  if (serialized !== prevInitialSerialized && !hasUserEdits.current) {
+    setPrevInitialSerialized(serialized);
+    setSegments(initialSegments);
+    setOriginalSegments(initialSegments);
+  }
 
   const hasChanges = useMemo(() => {
     if (segments.length !== originalSegments.length) return true;
