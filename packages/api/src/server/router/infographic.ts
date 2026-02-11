@@ -18,8 +18,7 @@ import {
   serializeInfographicEffect,
   serializeInfographicsEffect,
   serializeInfographicVersionsEffect,
-  serializeJob,
-  type Job,
+  serializeJobEffect,
 } from '@repo/db/schema';
 
 const infographicRouter = {
@@ -149,7 +148,7 @@ const infographicRouter = {
         context.runtime,
         context.user,
         getInfographicJob({ jobId: input.jobId }).pipe(
-          Effect.map((job) => serializeJob(job as unknown as Job)),
+          Effect.flatMap(serializeJobEffect),
         ),
         errors,
         {

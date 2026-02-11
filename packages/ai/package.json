@@ -40,6 +40,7 @@
     "@ai-sdk/openai": "^1.0.0",
     "@google/genai": "^1.40.0",
     "@repo/db": "workspace:*",
+    "@repo/storage": "workspace:*",
     "ai": "^6.0.57",
     "effect": "catalog:",
     "google-auth-library": "^9.15.0"

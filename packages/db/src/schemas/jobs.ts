@@ -123,7 +123,24 @@ export type Job = typeof job.$inferSelect;
 export type JobStatus = Job['status'];
 export type JobOutput = typeof JobOutputSchema.Type;
 
-const jobTransform = (job: Job): JobOutput => ({
+/**
+ * Minimal shape needed by jobTransform. Accepts both the Drizzle `Job`
+ * (from DB select) and the queue `Job` interface without `as unknown as` casts.
+ */
+export interface JobSerializable {
+  readonly id: JobId;
+  readonly type: string;
+  readonly status: JobStatus;
+  readonly result: unknown;
+  readonly error: string | null;
+  readonly createdBy: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly startedAt: Date | null;
+  readonly completedAt: Date | null;
+}
+
+const jobTransform = (job: JobSerializable): JobOutput => ({
   id: job.id,
   type: job.type,
   status: job.status,

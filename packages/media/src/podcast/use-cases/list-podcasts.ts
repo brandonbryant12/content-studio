@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
 import type { Podcast } from '@repo/db/schema';
+import { getCurrentUser } from '@repo/auth/policy';
 import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -7,7 +8,6 @@ import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 // =============================================================================
 
 export interface ListPodcastsInput {
-  userId?: string;
   projectId?: string;
   limit?: number;
   offset?: number;
@@ -25,12 +25,13 @@ export interface ListPodcastsResult {
 
 export const listPodcasts = (input: ListPodcastsInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
     const options: ListOptions = {
-      userId: input.userId,
+      createdBy: user.id,
       projectId: input.projectId,
       limit,
       offset,
@@ -49,7 +50,6 @@ export const listPodcasts = (input: ListPodcastsInput) =>
   }).pipe(
     Effect.withSpan('useCase.listPodcasts', {
       attributes: {
-        'filter.userId': input.userId,
         'filter.projectId': input.projectId,
       },
     }),

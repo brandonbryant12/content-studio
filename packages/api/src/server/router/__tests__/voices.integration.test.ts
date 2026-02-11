@@ -67,7 +67,9 @@ const expectErrorWithMessage = async (
 type HandlerArgs = { context: unknown; input?: unknown; errors: unknown };
 
 // Output types
-interface VoiceOutput extends VoiceInfo {}
+interface VoiceOutput extends VoiceInfo {
+  previewUrl: string | null;
+}
 
 interface PreviewOutput {
   audioContent: string;

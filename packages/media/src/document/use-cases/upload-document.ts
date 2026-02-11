@@ -12,7 +12,8 @@ import { calculateWordCount } from '../../shared';
 export interface UploadDocumentInput {
   fileName: string;
   mimeType: string;
-  data: Buffer;
+  /** Base64-encoded file data */
+  data: string;
   title?: string;
   metadata?: Record<string, unknown>;
 }
@@ -27,20 +28,21 @@ export const uploadDocument = (input: UploadDocumentInput) =>
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 
+    const data = Buffer.from(input.data, 'base64');
     const mimeType = getMimeType(input.fileName, input.mimeType);
 
     // parseUploadedFile validates size, format, and extracts content
     const parsed = yield* parseUploadedFile({
       fileName: input.fileName,
       mimeType,
-      data: input.data,
+      data,
     });
 
     const lastDot = input.fileName.lastIndexOf('.');
     const ext = lastDot > 0 ? input.fileName.slice(lastDot) : '';
     const contentKey = `documents/${crypto.randomUUID()}${ext}`;
 
-    yield* storage.upload(contentKey, input.data, mimeType);
+    yield* storage.upload(contentKey, data, mimeType);
 
     const wordCount = calculateWordCount(parsed.content);
 
@@ -52,7 +54,7 @@ export const uploadDocument = (input: UploadDocumentInput) =>
         wordCount,
         source: parsed.source,
         originalFileName: input.fileName,
-        originalFileSize: input.data.length,
+        originalFileSize: data.length,
         metadata: { ...parsed.metadata, ...input.metadata },
         createdBy: user.id,
       })
@@ -68,7 +70,6 @@ export const uploadDocument = (input: UploadDocumentInput) =>
     Effect.withSpan('useCase.uploadDocument', {
       attributes: {
         'file.name': input.fileName,
-        'file.size': input.data.length,
       },
     }),
   );

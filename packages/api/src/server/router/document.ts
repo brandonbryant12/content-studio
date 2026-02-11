@@ -1,7 +1,6 @@
 import {
   serializeDocumentEffect,
   serializeDocumentsEffect,
-  type Document,
 } from '@repo/db/schema';
 import {
   listDocuments,
@@ -32,7 +31,7 @@ const documentRouter = {
           status: input.status,
         }).pipe(
           Effect.flatMap((result) =>
-            serializeDocumentsEffect(result.documents as readonly Document[]),
+            serializeDocumentsEffect(result.documents),
           ),
         ),
         errors,
@@ -99,14 +98,13 @@ const documentRouter = {
 
   upload: protectedProcedure.documents.upload.handler(
     async ({ context, input, errors }) => {
-      const data = Buffer.from(input.data, 'base64');
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
         uploadDocument({
           fileName: input.fileName,
           mimeType: input.mimeType,
-          data,
+          data: input.data,
           title: input.title,
           metadata: input.metadata,
         }).pipe(
@@ -118,7 +116,6 @@ const documentRouter = {
           span: 'api.documents.upload',
           attributes: {
             'file.name': input.fileName,
-            'file.size': data.length,
           },
         },
       );

@@ -16,8 +16,7 @@ import { tapLogActivity, tapSyncTitle } from './log-activity';
 import {
   serializeVoiceoverEffect,
   serializeVoiceoverListItemsEffect,
-  serializeJob,
-  type Job,
+  serializeJobEffect,
 } from '@repo/db/schema';
 
 const voiceoverRouter = {
@@ -27,7 +26,6 @@ const voiceoverRouter = {
         context.runtime,
         context.user,
         listVoiceovers({
-          userId: context.session.user.id,
           limit: input.limit,
           offset: input.offset,
         }).pipe(
@@ -154,7 +152,7 @@ const voiceoverRouter = {
         context.runtime,
         context.user,
         getVoiceoverJob({ jobId: input.jobId }).pipe(
-          Effect.map((job) => serializeJob(job as unknown as Job)),
+          Effect.flatMap(serializeJobEffect),
         ),
         errors,
         {

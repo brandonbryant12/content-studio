@@ -40,10 +40,13 @@ export {
   VoiceNotFoundError,
   // Use cases
   listVoices,
+  listVoicesWithPreviews,
   previewVoice,
   // Types
   type ListVoicesInput,
   type ListVoicesResult,
+  type ListVoicesWithPreviewsInput,
+  type VoiceWithPreview,
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,
 } from './use-cases';

@@ -7,6 +7,7 @@ import {
 } from '@repo/testing';
 import type { Podcast } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
+import { withCurrentUser } from '@repo/auth/policy';
 import {
   PodcastRepo,
   type PodcastRepoService,
@@ -101,8 +102,10 @@ describe('listPodcasts', () => {
         podcasts: [podcast1, podcast2],
       });
 
-      const effect = listPodcasts({ userId: user.id }).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+      const effect = withCurrentUser(user)(
+        listPodcasts({}).pipe(
+          Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+        ),
       );
 
       const result = await Effect.runPromise(effect);
@@ -124,8 +127,10 @@ describe('listPodcasts', () => {
         podcasts: [],
       });
 
-      const effect = listPodcasts({ userId: user.id }).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+      const effect = withCurrentUser(user)(
+        listPodcasts({}).pipe(
+          Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+        ),
       );
 
       const result = await Effect.runPromise(effect);
@@ -143,8 +148,10 @@ describe('listPodcasts', () => {
         podcasts: [podcast],
       });
 
-      const effect = listPodcasts({ userId: user.id }).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+      const effect = withCurrentUser(user)(
+        listPodcasts({}).pipe(
+          Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+        ),
       );
 
       const result = await Effect.runPromise(effect);
@@ -165,11 +172,12 @@ describe('listPodcasts', () => {
         podcasts,
       });
 
-      const effect = listPodcasts({
-        userId: user.id,
-        limit: 3,
-        offset: 2,
-      }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)));
+      const effect = withCurrentUser(user)(
+        listPodcasts({
+          limit: 3,
+          offset: 2,
+        }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer))),
+      );
 
       const result = await Effect.runPromise(effect);
 
@@ -189,11 +197,12 @@ describe('listPodcasts', () => {
         podcasts,
       });
 
-      const effect = listPodcasts({
-        userId: user.id,
-        limit: 5,
-        offset: 5,
-      }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)));
+      const effect = withCurrentUser(user)(
+        listPodcasts({
+          limit: 5,
+          offset: 5,
+        }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer))),
+      );
 
       const result = await Effect.runPromise(effect);
 
@@ -213,11 +222,12 @@ describe('listPodcasts', () => {
         podcasts,
       });
 
-      const effect = listPodcasts({
-        userId: user.id,
-        limit: 5,
-        offset: 5,
-      }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)));
+      const effect = withCurrentUser(user)(
+        listPodcasts({
+          limit: 5,
+          offset: 5,
+        }).pipe(Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer))),
+      );
 
       const result = await Effect.runPromise(effect);
 
@@ -237,8 +247,10 @@ describe('listPodcasts', () => {
         podcasts,
       });
 
-      const effect = listPodcasts({ userId: user.id }).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+      const effect = withCurrentUser(user)(
+        listPodcasts({}).pipe(
+          Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+        ),
       );
 
       const result = await Effect.runPromise(effect);
@@ -250,7 +262,7 @@ describe('listPodcasts', () => {
   });
 
   describe('filtering', () => {
-    it('filters by userId', async () => {
+    it('filters by current user from FiberRef', async () => {
       const user1 = createTestUser();
       const user2 = createTestUser();
       const podcast1 = createTestPodcast({ createdBy: user1.id });
@@ -260,8 +272,10 @@ describe('listPodcasts', () => {
         podcasts: [podcast1, podcast2],
       });
 
-      const effect = listPodcasts({ userId: user1.id }).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+      const effect = withCurrentUser(user1)(
+        listPodcasts({}).pipe(
+          Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
+        ),
       );
 
       const result = await Effect.runPromise(effect);
@@ -269,26 +283,6 @@ describe('listPodcasts', () => {
       expect(result.podcasts).toHaveLength(1);
       expect(result.podcasts[0]!.id).toBe(podcast1.id);
       expect(result.total).toBe(1);
-    });
-
-    it('returns all podcasts when no filters specified', async () => {
-      const user1 = createTestUser();
-      const user2 = createTestUser();
-      const podcast1 = createTestPodcast({ createdBy: user1.id });
-      const podcast2 = createTestPodcast({ createdBy: user2.id });
-
-      const mockRepoLayer = createMockPodcastRepoLayer({
-        podcasts: [podcast1, podcast2],
-      });
-
-      const effect = listPodcasts({}).pipe(
-        Effect.provide(Layer.mergeAll(mockRepoLayer, MockDbLayer)),
-      );
-
-      const result = await Effect.runPromise(effect);
-
-      expect(result.podcasts).toHaveLength(2);
-      expect(result.total).toBe(2);
     });
   });
 });

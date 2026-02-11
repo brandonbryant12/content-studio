@@ -9,6 +9,12 @@ export {
 } from './list-voices';
 
 export {
+  listVoicesWithPreviews,
+  type ListVoicesWithPreviewsInput,
+  type VoiceWithPreview,
+} from './list-voices-with-previews';
+
+export {
   previewVoice,
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,

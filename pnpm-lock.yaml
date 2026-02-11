@@ -494,6 +494,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
       ai:
         specifier: ^6.0.57
         version: 6.0.57(zod@4.1.12)

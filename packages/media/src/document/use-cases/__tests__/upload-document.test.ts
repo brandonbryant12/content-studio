@@ -99,7 +99,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'report.pdf',
           mimeType: 'application/pdf',
-          data: invalidPdf,
+          data: invalidPdf.toString('base64'),
           title: 'Q4 Report',
         }).pipe(Effect.provide(layers), withTestUser(testUser), Effect.either),
       );
@@ -129,7 +129,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'doc.pdf',
           mimeType: 'application/octet-stream', // Should infer from extension
-          data: Buffer.from('%PDF'),
+          data: Buffer.from('%PDF').toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser), Effect.either),
       );
 
@@ -172,7 +172,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'notes.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );
 
@@ -214,7 +214,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'my-document-title.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );
 
@@ -244,7 +244,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'words.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );
 
@@ -273,7 +273,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'empty.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );
 
@@ -304,7 +304,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'test.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(specificUser)),
       );
 
@@ -337,7 +337,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'upload-test.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );
 
@@ -373,7 +373,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'should-fail.txt',
           mimeType: 'text/plain',
-          data: Buffer.from('This should fail'),
+          data: Buffer.from('This should fail').toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser), Effect.either),
       );
 
@@ -402,7 +402,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'image.png',
           mimeType: 'image/png',
-          data: Buffer.from('PNG content'),
+          data: Buffer.from('PNG content').toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser), Effect.either),
       );
 
@@ -431,7 +431,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'file.xyz',
           mimeType: 'application/octet-stream',
-          data: Buffer.from('Unknown content'),
+          data: Buffer.from('Unknown content').toString('base64'),
         }).pipe(Effect.provide(layers), withTestUser(testUser), Effect.either),
       );
 
@@ -462,7 +462,7 @@ describe('uploadDocument', () => {
         uploadDocument({
           fileName: 'metadata-test.txt',
           mimeType: 'text/plain',
-          data: textContent,
+          data: textContent.toString('base64'),
           metadata: customMetadata,
         }).pipe(Effect.provide(layers), withTestUser(testUser)),
       );

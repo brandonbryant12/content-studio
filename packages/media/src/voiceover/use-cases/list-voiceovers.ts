@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
 import type { Voiceover } from '@repo/db/schema';
+import { getCurrentUser } from '@repo/auth/policy';
 import { VoiceoverRepo, type ListOptions } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -7,7 +8,6 @@ import { VoiceoverRepo, type ListOptions } from '../repos/voiceover-repo';
 // =============================================================================
 
 export interface ListVoiceoversInput {
-  userId?: string;
   limit?: number;
   offset?: number;
 }
@@ -24,12 +24,13 @@ export interface ListVoiceoversResult {
 
 export const listVoiceovers = (input: ListVoiceoversInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
     const options: ListOptions = {
-      userId: input.userId,
+      userId: user.id,
       limit,
       offset,
     };
@@ -46,6 +47,9 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
     };
   }).pipe(
     Effect.withSpan('useCase.listVoiceovers', {
-      attributes: { 'filter.userId': input.userId },
+      attributes: {
+        'pagination.limit': input.limit,
+        'pagination.offset': input.offset,
+      },
     }),
   );

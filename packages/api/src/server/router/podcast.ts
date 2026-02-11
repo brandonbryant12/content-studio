@@ -18,8 +18,7 @@ import {
   serializePodcastEffect,
   serializePodcastFullEffect,
   serializePodcastListItemsEffect,
-  serializeJob,
-  type Job,
+  serializeJobEffect,
 } from '@repo/db/schema';
 
 const podcastRouter = {
@@ -29,7 +28,6 @@ const podcastRouter = {
         context.runtime,
         context.user,
         listPodcasts({
-          userId: context.session.user.id,
           limit: input.limit,
           offset: input.offset,
         }).pipe(
@@ -151,9 +149,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        getJob({ jobId: input.jobId }).pipe(
-          Effect.map((job) => serializeJob(job as unknown as Job)),
-        ),
+        getJob({ jobId: input.jobId }).pipe(Effect.flatMap(serializeJobEffect)),
         errors,
         { span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
       );

@@ -102,7 +102,7 @@ describe('listVoiceovers', () => {
   });
 
   describe('success cases', () => {
-    it('returns paginated voiceovers for a user', async () => {
+    it('returns paginated voiceovers for the current user', async () => {
       const user = createTestUser({ id: 'user_123' });
       const voiceovers = [
         createMockVoiceover({ createdBy: user.id }),
@@ -114,9 +114,7 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({ userId: user.id }).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(2);
@@ -132,33 +130,12 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({ userId: user.id }).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(0);
       expect(result.total).toBe(0);
       expect(result.hasMore).toBe(false);
-    });
-
-    it('returns all voiceovers when no userId filter is provided', async () => {
-      const user = createTestUser({ id: 'user_123' });
-      const voiceovers = [
-        createMockVoiceover({ createdBy: 'user_1' }),
-        createMockVoiceover({ createdBy: 'user_2' }),
-        createMockVoiceover({ createdBy: 'user_3' }),
-      ];
-
-      const mockRepo = createMockVoiceoverRepo({ voiceovers });
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
-
-      const result = await Effect.runPromise(
-        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
-      );
-
-      expect(result.voiceovers).toHaveLength(3);
-      expect(result.total).toBe(3);
     });
   });
 
@@ -174,9 +151,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 3 }).pipe(
-            Effect.provide(layers),
-          ),
+          listVoiceovers({ limit: 3 }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -200,9 +175,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 3, offset: 5 }).pipe(
-            Effect.provide(layers),
-          ),
+          listVoiceovers({ limit: 3, offset: 5 }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -223,9 +196,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 5, offset: 5 }).pipe(
-            Effect.provide(layers),
-          ),
+          listVoiceovers({ limit: 5, offset: 5 }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -246,9 +217,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 5, offset: 5 }).pipe(
-            Effect.provide(layers),
-          ),
+          listVoiceovers({ limit: 5, offset: 5 }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -268,9 +237,7 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({ userId: user.id }).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(50);
@@ -293,9 +260,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 3 }).pipe(
-            Effect.provide(layers),
-          ),
+          listVoiceovers({ limit: 3 }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -311,9 +276,7 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({ userId: user.id }).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(0);
@@ -332,7 +295,7 @@ describe('listVoiceovers', () => {
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          listVoiceovers({ userId: user.id, limit: 10, offset: 100 }).pipe(
+          listVoiceovers({ limit: 10, offset: 100 }).pipe(
             Effect.provide(layers),
           ),
         ),
@@ -356,9 +319,7 @@ describe('listVoiceovers', () => {
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
-        withTestUser(user)(
-          listVoiceovers({ userId: user.id }).pipe(Effect.provide(layers)),
-        ),
+        withTestUser(user)(listVoiceovers({}).pipe(Effect.provide(layers))),
       );
 
       expect(result.voiceovers).toHaveLength(4);
