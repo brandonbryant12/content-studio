@@ -6,7 +6,7 @@ import {
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
-import type { Podcast, JobId, JobStatus, PodcastId } from '@repo/db/schema';
+import type { Podcast, JobId, JobStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
@@ -68,13 +68,23 @@ const createMockPodcastRepo = (
         () =>
           ({ ...state.podcast!, audioUrl: null, duration: null }) as Podcast,
       ),
-    clearApprovals: (id) =>
+    clearApproval: (id) =>
       Effect.sync(
-        () => ({ ...state.podcast!, ownerHasApproved: false }) as Podcast,
+        () =>
+          ({
+            ...state.podcast!,
+            approvedBy: null,
+            approvedAt: null,
+          }) as Podcast,
       ),
-    setOwnerApproval: (id, hasApproved) =>
+    setApproval: (id, approvedBy) =>
       Effect.sync(
-        () => ({ ...state.podcast!, ownerHasApproved: hasApproved }) as Podcast,
+        () =>
+          ({
+            ...state.podcast!,
+            approvedBy,
+            approvedAt: new Date(),
+          }) as Podcast,
       ),
   };
 
@@ -128,9 +138,6 @@ const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
     lookupUserByEmail: () => Effect.succeed(null),
     add: () => Effect.die('not implemented'),
     remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: (_podcastId: PodcastId) => Effect.succeed(0),
     claimByEmail: () => Effect.succeed(0),
   };
 

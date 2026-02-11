@@ -15,6 +15,7 @@ export interface ListActivityInput {
   userId?: string;
   entityType?: string;
   action?: string;
+  search?: string;
   limit?: number;
   afterCursor?: string;
 }
@@ -40,6 +41,7 @@ export const listActivity = (input: ListActivityInput) =>
       userId: input.userId,
       entityType: input.entityType,
       action: input.action,
+      search: input.search,
       limit,
       afterCursor: input.afterCursor,
     });

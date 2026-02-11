@@ -58,11 +58,11 @@ const defaultProps = {
   onPeriodChange: vi.fn(),
   entityType: undefined,
   onEntityTypeChange: vi.fn(),
-  action: undefined,
-  onActionChange: vi.fn(),
   userId: undefined,
   onUserIdChange: vi.fn(),
   topUsers: mockTopUsers,
+  searchQuery: '',
+  onSearchChange: vi.fn(),
   activities: mockActivities,
   hasMore: false,
   onLoadMore: vi.fn(),
@@ -95,7 +95,7 @@ describe('ActivityDashboard', () => {
     expect(screen.getByText('8')).toBeInTheDocument();
   });
 
-  it('renders activity feed items', () => {
+  it('renders activity feed items with entity titles and user names', () => {
     render(<ActivityDashboard {...defaultProps} />);
 
     // Alice appears in two activities
@@ -106,20 +106,12 @@ describe('ActivityDashboard', () => {
     expect(screen.getByText('Intro Narration')).toBeInTheDocument();
   });
 
-  it('renders action badges correctly', () => {
-    render(<ActivityDashboard {...defaultProps} />);
-
-    expect(screen.getByText('Created')).toBeInTheDocument();
-    expect(screen.getByText('Audio Generated')).toBeInTheDocument();
-    expect(screen.getByText('Deleted')).toBeInTheDocument();
-  });
-
   it('renders entity type labels in feed', () => {
     render(<ActivityDashboard {...defaultProps} />);
 
-    expect(screen.getByText('document')).toBeInTheDocument();
-    expect(screen.getByText('podcast')).toBeInTheDocument();
-    expect(screen.getByText('voiceover')).toBeInTheDocument();
+    expect(screen.getByText(/Document/)).toBeInTheDocument();
+    expect(screen.getByText(/Podcast/)).toBeInTheDocument();
+    expect(screen.getByText(/Voiceover/)).toBeInTheDocument();
   });
 
   it('shows empty state when no activities', () => {
@@ -238,17 +230,42 @@ describe('ActivityDashboard', () => {
     });
   });
 
+  describe('search', () => {
+    it('renders the search input', () => {
+      render(<ActivityDashboard {...defaultProps} />);
+
+      expect(
+        screen.getByRole('textbox', { name: 'Search activity' }),
+      ).toBeInTheDocument();
+    });
+
+    it('calls onSearchChange when typing', () => {
+      const onSearchChange = vi.fn();
+      render(
+        <ActivityDashboard {...defaultProps} onSearchChange={onSearchChange} />,
+      );
+
+      fireEvent.change(
+        screen.getByRole('textbox', { name: 'Search activity' }),
+        { target: { value: 'Alice' } },
+      );
+      expect(onSearchChange).toHaveBeenCalledWith('Alice');
+    });
+
+    it('displays current search value', () => {
+      render(<ActivityDashboard {...defaultProps} searchQuery="Weekly" />);
+
+      expect(
+        screen.getByRole('textbox', { name: 'Search activity' }),
+      ).toHaveValue('Weekly');
+    });
+  });
+
   describe('filters', () => {
     it('renders entity type filter', () => {
       render(<ActivityDashboard {...defaultProps} />);
 
       expect(screen.getByText('Entity Type')).toBeInTheDocument();
-    });
-
-    it('renders action filter', () => {
-      render(<ActivityDashboard {...defaultProps} />);
-
-      expect(screen.getByText('Action')).toBeInTheDocument();
     });
 
     it('renders user filter when topUsers is non-empty', () => {

@@ -6,7 +6,6 @@ import {
   integer,
   index,
   pgEnum,
-  boolean,
   unique,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
@@ -76,7 +75,8 @@ export const voiceover = pgTable(
     duration: integer('duration'), // seconds
     status: voiceoverStatusEnum('status').notNull().default('drafting'),
     errorMessage: text('error_message'),
-    ownerHasApproved: boolean('owner_has_approved').notNull().default(false),
+    approvedBy: text('approved_by').references(() => user.id),
+    approvedAt: timestamp('approved_at', { mode: 'date', withTimezone: true }),
 
     createdBy: text('created_by')
       .notNull()
@@ -119,9 +119,6 @@ export const voiceoverCollaborator = pgTable(
     userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
     // Email used for pending invites and display
     email: text('email').notNull(),
-    // Approval tracking
-    hasApproved: boolean('has_approved').notNull().default(false),
-    approvedAt: timestamp('approved_at', { mode: 'date', withTimezone: true }),
     // Audit fields
     addedAt: timestamp('added_at', { mode: 'date', withTimezone: true })
       .notNull()
@@ -195,7 +192,8 @@ export const VoiceoverOutputSchema = Schema.Struct({
   duration: Schema.NullOr(Schema.Number),
   status: VoiceoverStatusSchema,
   errorMessage: Schema.NullOr(Schema.String),
-  ownerHasApproved: Schema.Boolean,
+  approvedBy: Schema.NullOr(Schema.String),
+  approvedAt: Schema.NullOr(Schema.String),
   createdBy: Schema.String,
   createdAt: Schema.String,
   updatedAt: Schema.String,
@@ -217,8 +215,6 @@ export const VoiceoverCollaboratorOutputSchema = Schema.Struct({
   voiceoverId: VoiceoverIdSchema,
   userId: Schema.NullOr(Schema.String),
   email: Schema.String,
-  hasApproved: Schema.Boolean,
-  approvedAt: Schema.NullOr(Schema.String),
   addedAt: Schema.String,
   addedBy: Schema.String,
 });
@@ -268,7 +264,8 @@ const voiceoverTransform = (voiceover: Voiceover): VoiceoverOutput => ({
   duration: voiceover.duration ?? null,
   status: voiceover.status,
   errorMessage: voiceover.errorMessage ?? null,
-  ownerHasApproved: voiceover.ownerHasApproved,
+  approvedBy: voiceover.approvedBy ?? null,
+  approvedAt: voiceover.approvedAt?.toISOString() ?? null,
   createdBy: voiceover.createdBy,
   createdAt: voiceover.createdAt.toISOString(),
   updatedAt: voiceover.updatedAt.toISOString(),
@@ -343,8 +340,6 @@ const voiceoverCollaboratorTransform = (
   voiceoverId: collaborator.voiceoverId,
   userId: collaborator.userId ?? null,
   email: collaborator.email,
-  hasApproved: collaborator.hasApproved,
-  approvedAt: collaborator.approvedAt?.toISOString() ?? null,
   addedAt: collaborator.addedAt.toISOString(),
   addedBy: collaborator.addedBy,
 });

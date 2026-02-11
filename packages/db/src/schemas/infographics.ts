@@ -88,6 +88,8 @@ export const infographic = pgTable(
     thumbnailStorageKey: text('thumbnail_storage_key'),
     status: infographicStatusEnum('status').notNull().default('draft'),
     errorMessage: text('error_message'),
+    approvedBy: text('approved_by').references(() => user.id),
+    approvedAt: timestamp('approved_at', { mode: 'date', withTimezone: true }),
 
     createdBy: text('created_by')
       .notNull()
@@ -208,6 +210,8 @@ export const InfographicOutputSchema = Schema.Struct({
   thumbnailStorageKey: Schema.NullOr(Schema.String),
   status: InfographicStatusSchema,
   errorMessage: Schema.NullOr(Schema.String),
+  approvedBy: Schema.NullOr(Schema.String),
+  approvedAt: Schema.NullOr(Schema.String),
   createdBy: Schema.String,
   createdAt: Schema.String,
   updatedAt: Schema.String,
@@ -259,6 +263,8 @@ const infographicTransform = (row: Infographic): InfographicOutput => ({
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
   status: row.status,
   errorMessage: row.errorMessage ?? null,
+  approvedBy: row.approvedBy ?? null,
+  approvedAt: row.approvedAt?.toISOString() ?? null,
   createdBy: row.createdBy,
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),

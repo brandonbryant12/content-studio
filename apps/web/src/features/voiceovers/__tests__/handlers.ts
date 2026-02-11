@@ -36,7 +36,8 @@ export function createMockVoiceover(
     duration: null,
     status: 'drafting',
     errorMessage: null,
-    ownerHasApproved: false,
+    approvedBy: null,
+    approvedAt: null,
     createdBy: 'user-1',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -71,8 +72,6 @@ export function createMockCollaborator(
       ('vo_1' as VoiceoverCollaboratorWithUserOutput['voiceoverId']),
     userId: 'user-2',
     email: 'collaborator@example.com',
-    hasApproved: false,
-    approvedAt: null,
     addedAt: new Date().toISOString(),
     addedBy: 'user-1',
     userName: 'Test Collaborator',
@@ -114,7 +113,8 @@ export const mockVoiceovers: VoiceoverListItemOutput[] = [
     status: 'ready',
     audioUrl: 'https://example.com/audio/vo_1.mp3',
     duration: 120,
-    ownerHasApproved: true,
+    approvedBy: 'admin-1',
+    approvedAt: new Date().toISOString(),
   }),
   createMockVoiceoverListItem({
     id: 'vo_2' as VoiceoverOutput['id'],
@@ -139,8 +139,6 @@ export const mockCollaborators: VoiceoverCollaboratorWithUserOutput[] = [
     userId: 'user-2',
     email: 'alice@example.com',
     userName: 'Alice Smith',
-    hasApproved: true,
-    approvedAt: new Date().toISOString(),
   }),
   createMockCollaborator({
     id: 'voc_2' as VoiceoverCollaboratorWithUserOutput['id'],
@@ -149,7 +147,6 @@ export const mockCollaborators: VoiceoverCollaboratorWithUserOutput[] = [
     email: 'pending@example.com',
     userName: null,
     userImage: null,
-    hasApproved: false,
   }),
 ];
 
@@ -407,9 +404,10 @@ export const voiceoverHandlers = [
       );
     }
 
-    // Simulate owner approval
     return HttpResponse.json({
-      isOwner: true,
+      ...voiceover,
+      approvedBy: 'admin-1',
+      approvedAt: new Date().toISOString(),
     });
   }),
 
@@ -429,7 +427,9 @@ export const voiceoverHandlers = [
     }
 
     return HttpResponse.json({
-      isOwner: true,
+      ...voiceover,
+      approvedBy: null,
+      approvedAt: null,
     });
   }),
 
@@ -501,18 +501,19 @@ export function createNotOwnerHandler(voiceoverId: string) {
 /**
  * Create a handler that returns a 403 for non-collaborator operations
  */
-export function createNotCollaboratorHandler(voiceoverId: string) {
+export function createForbiddenHandler(voiceoverId: string) {
   return http.post(`${API_BASE}/voiceovers/:id/approve`, ({ params }) => {
     if (params.id === voiceoverId) {
       return HttpResponse.json(
         {
-          code: 'NOT_VOICEOVER_COLLABORATOR',
-          data: { voiceoverId },
+          code: 'FORBIDDEN',
+          data: {},
         },
         { status: 403 },
       );
     }
-    return HttpResponse.json({ isOwner: false });
+    const voiceover = mockVoiceovers.find((v) => v.id === params.id);
+    return HttpResponse.json(voiceover ?? {});
   });
 }
 

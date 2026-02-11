@@ -4,8 +4,16 @@
 import { useState, useCallback } from 'react';
 import { useOptimisticCreate } from '../hooks/use-optimistic-create';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
-import { usePodcastList } from '../hooks/use-podcast-list';
+import {
+  usePodcastList,
+  getPodcastListQueryKey,
+} from '../hooks/use-podcast-list';
+import { useQuickPlay } from '@/shared/hooks/use-quick-play';
+import { rawApiClient } from '@/clients/apiClient';
+import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { PodcastList } from './podcast-list';
+
+const deleteFn = (input: { id: string }) => rawApiClient.podcasts.delete(input);
 
 /**
  * Container: Fetches podcast list and coordinates mutations.
@@ -22,6 +30,17 @@ export function PodcastListContainer() {
   const createMutation = useOptimisticCreate();
   const deleteMutation = useOptimisticDeleteList();
 
+  // Quick play
+  const quickPlay = useQuickPlay();
+
+  // Bulk selection & delete
+  const selection = useBulkSelection();
+  const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
+    queryKey: getPodcastListQueryKey(),
+    deleteFn,
+    entityName: 'podcast',
+  });
+
   const handleCreate = useCallback(() => {
     createMutation.mutate({
       title: 'Untitled Podcast',
@@ -31,6 +50,10 @@ export function PodcastListContainer() {
 
   const handleDelete = useCallback(
     (id: string) => {
+      // Stop playback if deleting the currently playing item
+      if (quickPlay.playingId === id) {
+        quickPlay.stop();
+      }
       setDeletingId(id);
       deleteMutation.mutate(
         { id },
@@ -41,8 +64,14 @@ export function PodcastListContainer() {
         },
       );
     },
-    [deleteMutation],
+    [deleteMutation, quickPlay],
   );
+
+  const handleBulkDelete = useCallback(async () => {
+    quickPlay.stop();
+    await executeBulkDelete(selection.selectedIds);
+    selection.deselectAll();
+  }, [executeBulkDelete, selection, quickPlay]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -74,6 +103,10 @@ export function PodcastListContainer() {
       onSearch={handleSearch}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      quickPlay={quickPlay}
+      selection={selection}
+      isBulkDeleting={isBulkDeleting}
+      onBulkDelete={handleBulkDelete}
     />
   );
 }

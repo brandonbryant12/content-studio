@@ -4,6 +4,7 @@ import {
   MixerHorizontalIcon,
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
+import { Link } from '@tanstack/react-router';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { ComponentType } from 'react';
@@ -58,35 +59,11 @@ const ENTITY_ICON: Record<
   },
 };
 
-const ACTION_BADGE: Record<string, { label: string; className: string }> = {
-  created: {
-    label: 'Created',
-    className: 'bg-green-500/10 text-green-700 dark:text-green-400',
-  },
-  updated: {
-    label: 'Updated',
-    className: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  },
-  deleted: {
-    label: 'Deleted',
-    className: 'bg-red-500/10 text-red-700 dark:text-red-400',
-  },
-  generated_script: {
-    label: 'Script Generated',
-    className: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  },
-  generated_audio: {
-    label: 'Audio Generated',
-    className: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  },
-  generated_voiceover: {
-    label: 'Voiceover Generated',
-    className: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  },
-  generated_infographic: {
-    label: 'Infographic Generated',
-    className: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  },
+const ENTITY_LABEL: Record<string, string> = {
+  document: 'Document',
+  podcast: 'Podcast',
+  voiceover: 'Voiceover',
+  infographic: 'Infographic',
 };
 
 function formatRelativeTime(dateStr: string): string {
@@ -105,6 +82,26 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
+const ENTITY_ROUTE: Record<string, { path: string; paramKey: string }> = {
+  document: { path: '/documents/$documentId', paramKey: 'documentId' },
+  podcast: { path: '/podcasts/$podcastId', paramKey: 'podcastId' },
+  voiceover: { path: '/voiceovers/$voiceoverId', paramKey: 'voiceoverId' },
+  infographic: {
+    path: '/infographics/$infographicId',
+    paramKey: 'infographicId',
+  },
+};
+
+function getEntityLink(activity: ActivityItem) {
+  if (!activity.entityId || activity.action === 'deleted') return null;
+  const route = ENTITY_ROUTE[activity.entityType];
+  if (!route) return null;
+  return {
+    to: route.path,
+    params: { [route.paramKey]: activity.entityId },
+  };
+}
+
 function ActivityRow({ activity }: { activity: ActivityItem }) {
   const entityConfig = ENTITY_ICON[activity.entityType] ?? {
     icon: FileTextIcon,
@@ -113,13 +110,10 @@ function ActivityRow({ activity }: { activity: ActivityItem }) {
   };
   const Icon = entityConfig.icon;
 
-  const badge = ACTION_BADGE[activity.action] ?? {
-    label: activity.action.replace(/_/g, ' '),
-    className: 'bg-muted text-muted-foreground',
-  };
+  const link = getEntityLink(activity);
 
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 hover:bg-muted/30 transition-colors">
+  const rowContent = (
+    <>
       {/* Entity icon */}
       <div
         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${entityConfig.bgColor}`}
@@ -132,24 +126,14 @@ function ActivityRow({ activity }: { activity: ActivityItem }) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-foreground truncate">
-            {activity.userName ?? 'Unknown user'}
-          </span>
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.className}`}
-          >
-            {badge.label}
-          </span>
-          <span className="text-xs text-muted-foreground capitalize">
-            {activity.entityType}
-          </span>
-        </div>
-        {activity.entityTitle && (
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">
-            {activity.entityTitle}
-          </p>
-        )}
+        <p className="text-sm font-medium text-foreground truncate">
+          {activity.entityTitle ?? 'Untitled'}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {activity.userName ?? 'Unknown user'}
+          {' · '}
+          {ENTITY_LABEL[activity.entityType] ?? activity.entityType}
+        </p>
       </div>
 
       {/* Timestamp */}
@@ -160,7 +144,27 @@ function ActivityRow({ activity }: { activity: ActivityItem }) {
       >
         {formatRelativeTime(activity.createdAt)}
       </time>
-    </div>
+    </>
+  );
+
+  const baseClassName =
+    'flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 transition-colors';
+
+  if (link) {
+    return (
+      <Link
+        to={link.to}
+        params={link.params}
+        className={`${baseClassName} hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset no-underline`}
+        aria-label={`View ${activity.entityType}: ${activity.entityTitle ?? 'Untitled'}`}
+      >
+        {rowContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`${baseClassName} hover:bg-muted/30`}>{rowContent}</div>
   );
 }
 

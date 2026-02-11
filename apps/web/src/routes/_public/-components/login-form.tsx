@@ -70,14 +70,9 @@ export default function LoginCredentialsForm() {
           children={(field) => {
             return (
               <>
-                <Label
-                  htmlFor={field.name}
-                  className="text-gray-700 dark:text-gray-300"
-                >
-                  Email
-                </Label>
+                <Label htmlFor={field.name}>Email</Label>
                 <Input
-                  className="mt-1.5 h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
+                  className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background"
                   id={field.name}
                   type="email"
                   name={field.name}
@@ -103,16 +98,11 @@ export default function LoginCredentialsForm() {
           name="password"
           children={(field) => (
             <>
-              <Label
-                htmlFor={field.name}
-                className="text-gray-700 dark:text-gray-300"
-              >
-                Password
-              </Label>
+              <Label htmlFor={field.name}>Password</Label>
               <>
                 <div className="flex justify-end items-center relative w-full">
                   <Input
-                    className="mt-1.5 h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900 pr-10"
+                    className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background pr-10"
                     id={field.name}
                     type={isPasswordVisible ? 'text' : 'password'}
                     name={field.name}
@@ -128,7 +118,7 @@ export default function LoginCredentialsForm() {
                     }
                   />
                   <Button
-                    className="absolute mr-2 w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute mr-2 w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground"
                     type="button"
                     tabIndex={-1}
                     variant="ghost"
@@ -160,7 +150,7 @@ export default function LoginCredentialsForm() {
           <Button
             type="submit"
             disabled={!canSubmit}
-            className="h-11 mt-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-md shadow-violet-500/20"
+            className="h-11 mt-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
           >
             {isSubmitting ? <Spinner className="w-4 h-4" /> : 'Sign in'}
           </Button>

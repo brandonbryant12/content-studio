@@ -65,15 +65,10 @@ export function PodcastDetailContainer({
     id: podcast.createdBy,
     name: user?.id === podcast.createdBy ? (user?.name ?? 'You') : 'Owner',
     image: user?.id === podcast.createdBy ? user?.image : undefined,
-    hasApproved: podcast.ownerHasApproved,
   };
 
-  const currentUserHasApproved =
-    podcast.createdBy === currentUserId
-      ? podcast.ownerHasApproved
-      : (collaboratorManagement.collaborators.find(
-          (c) => c.userId === currentUserId,
-        )?.hasApproved ?? false);
+  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+  const isApproved = podcast.approvedBy !== null;
 
   useKeyboardShortcut({
     key: 's',
@@ -119,7 +114,8 @@ export function PodcastDetailContainer({
         onDelete={actions.handleDelete}
         owner={owner}
         collaborators={collaboratorManagement.collaborators}
-        currentUserHasApproved={currentUserHasApproved}
+        isApproved={isApproved}
+        isAdmin={isAdmin}
         onManageCollaborators={collaboratorManagement.openAddDialog}
         onApprove={collaboratorManagement.handleApprove}
         onRevoke={collaboratorManagement.handleRevoke}

@@ -114,18 +114,18 @@ export interface VoiceoverRepoService {
   ) => Effect.Effect<Voiceover, VoiceoverNotFound | DatabaseError, Db>;
 
   /**
-   * Clear approvals (set ownerHasApproved to false).
+   * Set approval (approvedBy + approvedAt).
    */
-  readonly clearApprovals: (
+  readonly setApproval: (
     id: string,
+    approvedBy: string,
   ) => Effect.Effect<Voiceover, VoiceoverNotFound | DatabaseError, Db>;
 
   /**
-   * Set owner approval status.
+   * Clear approval (set approvedBy/approvedAt to null).
    */
-  readonly setOwnerApproval: (
+  readonly clearApproval: (
     id: string,
-    hasApproved: boolean,
   ) => Effect.Effect<Voiceover, VoiceoverNotFound | DatabaseError, Db>;
 }
 
@@ -325,12 +325,13 @@ const make: VoiceoverRepoService = {
       ),
     ),
 
-  clearApprovals: (id) =>
-    withDb('voiceoverRepo.clearApprovals', async (db) => {
+  setApproval: (id, approvedBy) =>
+    withDb('voiceoverRepo.setApproval', async (db) => {
       const [vo] = await db
         .update(voiceover)
         .set({
-          ownerHasApproved: false,
+          approvedBy,
+          approvedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(voiceover.id, id as VoiceoverId))
@@ -342,12 +343,13 @@ const make: VoiceoverRepoService = {
       ),
     ),
 
-  setOwnerApproval: (id, hasApproved) =>
-    withDb('voiceoverRepo.setOwnerApproval', async (db) => {
+  clearApproval: (id) =>
+    withDb('voiceoverRepo.clearApproval', async (db) => {
       const [vo] = await db
         .update(voiceover)
         .set({
-          ownerHasApproved: hasApproved,
+          approvedBy: null,
+          approvedAt: null,
           updatedAt: new Date(),
         })
         .where(eq(voiceover.id, id as VoiceoverId))

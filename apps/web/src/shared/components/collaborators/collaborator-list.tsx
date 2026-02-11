@@ -1,4 +1,4 @@
-import { CheckIcon, Cross2Icon, PersonIcon } from '@radix-ui/react-icons';
+import { Cross2Icon, PersonIcon } from '@radix-ui/react-icons';
 import {
   Avatar,
   AvatarImage,
@@ -13,7 +13,6 @@ interface Owner {
   id: string;
   name: string;
   image?: string | null;
-  hasApproved: boolean;
 }
 
 export interface CollaboratorData {
@@ -22,7 +21,6 @@ export interface CollaboratorData {
   email: string;
   userName: string | null;
   userImage: string | null;
-  hasApproved: boolean;
 }
 
 export interface CollaboratorListProps {
@@ -38,7 +36,6 @@ interface CollaboratorRowProps {
   name: string | null;
   email: string;
   image: string | null | undefined;
-  hasApproved: boolean;
   isPending: boolean;
   isOwner: boolean;
   canRemove: boolean;
@@ -51,7 +48,6 @@ const CollaboratorRow = memo(function CollaboratorRow({
   name,
   email,
   image,
-  hasApproved,
   isPending,
   isOwner,
   canRemove,
@@ -85,12 +81,6 @@ const CollaboratorRow = memo(function CollaboratorRow({
           </AvatarFallback>
         </Avatar>
 
-        {hasApproved && (
-          <span className="collab-list-approved-badge">
-            <CheckIcon className="w-2.5 h-2.5" />
-          </span>
-        )}
-
         {isOwner && (
           <span className="collab-list-owner-badge">
             <svg
@@ -116,12 +106,6 @@ const CollaboratorRow = memo(function CollaboratorRow({
       </div>
 
       <div className="collab-list-actions">
-        {hasApproved && (
-          <span className="collab-list-status collab-list-status-approved">
-            Approved
-          </span>
-        )}
-
         {canRemove && !isOwner && (
           <Button
             variant="ghost"
@@ -156,7 +140,6 @@ export function CollaboratorList({
         name={owner.name}
         email=""
         image={owner.image}
-        hasApproved={owner.hasApproved}
         isPending={false}
         isOwner={true}
         canRemove={false}
@@ -170,7 +153,6 @@ export function CollaboratorList({
           name={collaborator.userName}
           email={collaborator.email}
           image={collaborator.userImage}
-          hasApproved={collaborator.hasApproved}
           isPending={collaborator.userId === null}
           isOwner={false}
           canRemove={isOwner}

@@ -7,11 +7,13 @@ import {
   generateInfographic,
   getInfographicJob,
   getInfographicVersions,
+  approveInfographic,
+  revokeInfographicApproval,
 } from '@repo/media';
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './log-activity';
 import {
   serializeInfographicEffect,
   serializeInfographicsEffect,
@@ -91,12 +93,7 @@ const infographicRouter = {
         context.user,
         updateInfographic(input).pipe(
           Effect.flatMap(serializeInfographicEffect),
-          tapLogActivity(
-            context.runtime,
-            context.user,
-            'updated',
-            'infographic',
-          ),
+          tapSyncTitle(context.runtime, context.user),
         ),
         errors,
         {
@@ -158,6 +155,44 @@ const infographicRouter = {
         {
           span: 'api.infographics.getJob',
           attributes: { 'job.id': input.jobId },
+        },
+      );
+    },
+  ),
+
+  approve: protectedProcedure.infographics.approve.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        approveInfographic({ infographicId: input.id }).pipe(
+          Effect.flatMap((result) =>
+            serializeInfographicEffect(result.infographic),
+          ),
+        ),
+        errors,
+        {
+          span: 'api.infographics.approve',
+          attributes: { 'infographic.id': input.id },
+        },
+      );
+    },
+  ),
+
+  revokeApproval: protectedProcedure.infographics.revokeApproval.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        revokeInfographicApproval({ infographicId: input.id }).pipe(
+          Effect.flatMap((result) =>
+            serializeInfographicEffect(result.infographic),
+          ),
+        ),
+        errors,
+        {
+          span: 'api.infographics.revokeApproval',
+          attributes: { 'infographic.id': input.id },
         },
       );
     },

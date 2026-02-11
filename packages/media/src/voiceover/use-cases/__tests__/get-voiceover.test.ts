@@ -26,7 +26,8 @@ const createMockVoiceover = (
   duration: null,
   status: 'drafting',
   errorMessage: null,
-  ownerHasApproved: false,
+  approvedBy: null,
+  approvedAt: null,
   createdBy: 'user_123',
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
@@ -56,8 +57,8 @@ const createMockVoiceoverRepo = (
     updateStatus: () => Effect.die('Not implemented'),
     updateAudio: () => Effect.die('Not implemented'),
     clearAudio: () => Effect.die('Not implemented'),
-    clearApprovals: () => Effect.die('Not implemented'),
-    setOwnerApproval: () => Effect.die('Not implemented'),
+    clearApproval: () => Effect.die('Not implemented'),
+    setApproval: () => Effect.die('Not implemented'),
   });
 
 // =============================================================================
@@ -107,7 +108,8 @@ describe('getVoiceover', () => {
         audioUrl: 'https://example.com/audio.mp3',
         duration: 120,
         status: 'ready',
-        ownerHasApproved: true,
+        approvedBy: 'admin-user-id',
+        approvedAt: new Date(),
         createdBy: user.id,
       });
 
@@ -130,7 +132,7 @@ describe('getVoiceover', () => {
       expect(result.audioUrl).toBe('https://example.com/audio.mp3');
       expect(result.duration).toBe(120);
       expect(result.status).toBe('ready');
-      expect(result.ownerHasApproved).toBe(true);
+      expect(result.approvedBy).toBe('admin-user-id');
     });
 
     it('returns voiceover in any status', async () => {

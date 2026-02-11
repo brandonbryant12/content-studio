@@ -20,6 +20,7 @@ export interface VoiceoverListItem {
   text: string;
   voice: string;
   voiceName: string | null;
+  audioUrl: string | null;
   createdAt: string;
   status: VoiceoverStatusType;
   duration: number | null;

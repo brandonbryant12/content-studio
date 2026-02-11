@@ -28,4 +28,4 @@ export {
 } from './use-cases/get-activity-stats';
 
 // Helpers
-export { logEntityActivity } from './log-helpers';
+export { logEntityActivity, syncEntityTitle } from './log-helpers';

@@ -31,3 +31,13 @@ export {
 } from './get-infographic-versions';
 
 export { getInfographicJob, type GetInfographicJobInput } from './get-job';
+
+export {
+  approveInfographic,
+  type ApproveInfographicInput,
+} from './approve-infographic';
+
+export {
+  revokeInfographicApproval,
+  type RevokeInfographicApprovalInput,
+} from './revoke-infographic-approval';

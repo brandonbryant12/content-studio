@@ -1,8 +1,6 @@
 import { Effect } from 'effect';
-import type { Podcast } from '@repo/db/schema';
+import { requireRole, Role } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { CollaboratorRepo } from '../repos/collaborator-repo';
-import { NotPodcastCollaborator } from '../../errors';
 
 // =============================================================================
 // Types
@@ -10,12 +8,6 @@ import { NotPodcastCollaborator } from '../../errors';
 
 export interface ApprovePodcastInput {
   podcastId: string;
-  userId: string; // User ID of the person approving
-}
-
-export interface ApprovePodcastResult {
-  podcast: Podcast;
-  isOwner: boolean;
 }
 
 // =============================================================================
@@ -23,59 +15,25 @@ export interface ApprovePodcastResult {
 // =============================================================================
 
 /**
- * Approve a podcast as an owner or collaborator.
+ * Approve a podcast (admin-only).
  *
- * This use case:
- * 1. Verifies the user is either the owner or a collaborator
- * 2. If owner, sets ownerHasApproved=true on the podcast
- * 3. If collaborator, sets hasApproved=true on the collaborator record
- *
- * @example
- * const result = yield* approvePodcast({
- *   podcastId: 'pod_abc123',
- *   userId: 'user-123',
- * });
- * // result.podcast, result.isOwner
+ * Records who approved it and when.
  */
 export const approvePodcast = (input: ApprovePodcastInput) =>
   Effect.gen(function* () {
+    const user = yield* requireRole(Role.ADMIN);
     const podcastRepo = yield* PodcastRepo;
-    const collaboratorRepo = yield* CollaboratorRepo;
 
-    // 1. Load podcast
-    const podcast = yield* podcastRepo.findById(input.podcastId);
+    // Verify podcast exists
+    yield* podcastRepo.findById(input.podcastId);
 
-    // 2. Check if user is owner
-    const isOwner = podcast.createdBy === input.userId;
-
-    if (isOwner) {
-      // 3a. Owner approval - set ownerHasApproved=true
-      const updatedPodcast = yield* podcastRepo.setOwnerApproval(
-        input.podcastId,
-        true,
-      );
-      return { podcast: updatedPodcast, isOwner: true };
-    }
-
-    // 3b. Check if user is a collaborator
-    const collaborator = yield* collaboratorRepo.findByPodcastAndUser(
-      podcast.id,
-      input.userId,
+    // Set approval
+    const updatedPodcast = yield* podcastRepo.setApproval(
+      input.podcastId,
+      user.id,
     );
 
-    if (!collaborator) {
-      return yield* Effect.fail(
-        new NotPodcastCollaborator({
-          podcastId: input.podcastId,
-          userId: input.userId,
-        }),
-      );
-    }
-
-    // 4. Update collaborator approval
-    yield* collaboratorRepo.approve(podcast.id, input.userId);
-
-    return { podcast, isOwner: false };
+    return { podcast: updatedPodcast };
   }).pipe(
     Effect.withSpan('useCase.approvePodcast', {
       attributes: { 'podcast.id': input.podcastId },

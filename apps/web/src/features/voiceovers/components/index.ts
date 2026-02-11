@@ -23,6 +23,4 @@ export {
   AddCollaboratorDialog,
   CollaboratorList,
   type CollaboratorListProps,
-  ApproveButton,
-  type ApproveButtonProps,
 } from './collaborators';

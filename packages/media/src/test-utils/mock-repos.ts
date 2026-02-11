@@ -23,6 +23,10 @@ import {
   ActivityLogRepo,
   type ActivityLogRepoService,
 } from '../activity/repos/activity-log-repo';
+import {
+  InfographicRepo,
+  type InfographicRepoService,
+} from '../infographic/repos/infographic-repo';
 import { Db } from '@repo/db/effect';
 
 // =============================================================================
@@ -57,8 +61,8 @@ export const createMockPodcastRepo = (
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
-    setOwnerApproval: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(PodcastRepo, { ...defaults, ...overrides });
@@ -88,9 +92,6 @@ export const createMockCollaboratorRepo = (
     lookupUserByEmail: () => Effect.die('not implemented'),
     add: () => Effect.die('not implemented'),
     remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
     claimByEmail: () => Effect.die('not implemented'),
   };
 
@@ -121,8 +122,8 @@ export const createMockVoiceoverRepo = (
     updateStatus: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
-    setOwnerApproval: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(VoiceoverRepo, { ...defaults, ...overrides });
@@ -151,9 +152,6 @@ export const createMockVoiceoverCollaboratorRepo = (
     lookupUserByEmail: () => Effect.die('not implemented'),
     add: () => Effect.die('not implemented'),
     remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
     claimByEmail: () => Effect.die('not implemented'),
   };
 
@@ -204,9 +202,33 @@ export const createMockActivityLogRepo = (
     countByAction: () => Effect.die('not implemented'),
     countByUser: () => Effect.die('not implemented'),
     countTotal: () => Effect.die('not implemented'),
+    updateEntityTitle: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(ActivityLogRepo, { ...defaults, ...overrides });
+};
+
+/**
+ * Create a mock InfographicRepo layer with `Effect.die('not implemented')` defaults.
+ * Override individual methods by passing them in the overrides object.
+ */
+export const createMockInfographicRepo = (
+  overrides: Partial<InfographicRepoService> = {},
+): Layer.Layer<InfographicRepo> => {
+  const defaults: InfographicRepoService = {
+    insert: () => Effect.die('not implemented'),
+    findById: () => Effect.die('not implemented'),
+    list: () => Effect.die('not implemented'),
+    update: () => Effect.die('not implemented'),
+    delete: () => Effect.die('not implemented'),
+    insertVersion: () => Effect.die('not implemented'),
+    listVersions: () => Effect.die('not implemented'),
+    deleteOldVersions: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
+  };
+
+  return Layer.succeed(InfographicRepo, { ...defaults, ...overrides });
 };
 
 /**

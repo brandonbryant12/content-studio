@@ -5,8 +5,9 @@ import {
   resetAllFactories,
   createMockTTS,
   createMockStorage,
+  createMockLLM,
 } from '@repo/testing';
-import { TTSError } from '@repo/ai';
+import { TTS, type TTSService, TTSError } from '@repo/ai';
 import type { Voiceover, VoiceoverId, VoiceoverStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import {
@@ -50,7 +51,8 @@ interface CreateTestVoiceoverOptions {
   duration?: number | null;
   status?: VoiceoverStatus;
   errorMessage?: string | null;
-  ownerHasApproved?: boolean;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -74,7 +76,8 @@ const createTestVoiceover = (
     duration: options.duration ?? null,
     status: options.status ?? 'drafting',
     errorMessage: options.errorMessage ?? null,
-    ownerHasApproved: options.ownerHasApproved ?? false,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
@@ -105,6 +108,15 @@ const createMockVoiceoverRepo = (
       id: string,
       data: { audioUrl: string; duration: number },
     ) => void;
+    onUpdate?: (
+      id: string,
+      data: {
+        title?: string;
+        text?: string;
+        voice?: string;
+        voiceName?: string | null;
+      },
+    ) => void;
     onClearApprovals?: (id: string) => void;
   },
 ): Layer.Layer<VoiceoverRepo> => {
@@ -116,7 +128,19 @@ const createMockVoiceoverRepo = (
           : Effect.fail(new VoiceoverNotFound({ id })),
       ),
     insert: () => Effect.die('not implemented'),
-    update: () => Effect.die('not implemented'),
+    update: (
+      id: string,
+      data: {
+        title?: string;
+        text?: string;
+        voice?: string;
+        voiceName?: string | null;
+      },
+    ) =>
+      Effect.sync(() => {
+        options?.onUpdate?.(id, data);
+        return { ...state.voiceover!, ...data };
+      }),
     delete: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
@@ -139,41 +163,33 @@ const createMockVoiceoverRepo = (
         return { ...state.voiceover!, ...data };
       }),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: (id: string) =>
+    clearApproval: (id: string) =>
       Effect.sync(() => {
         options?.onClearApprovals?.(id);
-        return { ...state.voiceover!, ownerHasApproved: false };
+        return { ...state.voiceover!, approvedBy: null, approvedAt: null };
       }),
-    setOwnerApproval: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo = (options?: {
-  onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
-}): Layer.Layer<VoiceoverCollaboratorRepo> => {
-  const service: VoiceoverCollaboratorRepoService = {
-    findById: () => Effect.succeed(null),
-    findByVoiceover: () => Effect.succeed([]),
-    findByEmail: () => Effect.succeed([]),
-    findByVoiceoverAndUser: () => Effect.succeed(null),
-    findByVoiceoverAndEmail: () => Effect.succeed(null),
-    lookupUserByEmail: () => Effect.succeed(null),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: (voiceoverId: VoiceoverId) =>
-      Effect.sync(() => {
-        options?.onClearAllApprovals?.(voiceoverId);
-        return 0;
-      }),
-    claimByEmail: () => Effect.die('not implemented'),
-  };
+const createMockCollaboratorRepo =
+  (): Layer.Layer<VoiceoverCollaboratorRepo> => {
+    const service: VoiceoverCollaboratorRepoService = {
+      findById: () => Effect.succeed(null),
+      findByVoiceover: () => Effect.succeed([]),
+      findByEmail: () => Effect.succeed([]),
+      findByVoiceoverAndUser: () => Effect.succeed(null),
+      findByVoiceoverAndEmail: () => Effect.succeed(null),
+      lookupUserByEmail: () => Effect.succeed(null),
+      add: () => Effect.die('not implemented'),
+      remove: () => Effect.die('not implemented'),
+      claimByEmail: () => Effect.die('not implemented'),
+    };
 
-  return Layer.succeed(VoiceoverCollaboratorRepo, service);
-};
+    return Layer.succeed(VoiceoverCollaboratorRepo, service);
+  };
 
 // =============================================================================
 // Tests
@@ -196,8 +212,6 @@ describe('generateVoiceoverAudio', () => {
       const updateStatusSpy = vi.fn();
       const updateAudioSpy = vi.fn();
       const clearApprovalsSpy = vi.fn();
-      const clearCollaboratorApprovalsSpy = vi.fn();
-
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo(
@@ -208,11 +222,10 @@ describe('generateVoiceoverAudio', () => {
             onClearApprovals: clearApprovalsSpy,
           },
         ),
-        createMockCollaboratorRepo({
-          onClearAllApprovals: clearCollaboratorApprovalsSpy,
-        }),
+        createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -225,7 +238,7 @@ describe('generateVoiceoverAudio', () => {
       // Verify result structure
       expect(result.voiceover).toBeDefined();
       expect(result.audioUrl).toContain('voiceovers/');
-      expect(result.audioUrl).toContain('/audio.wav');
+      expect(result.audioUrl).toContain('.wav');
       expect(result.duration).toBeGreaterThan(0);
 
       // Verify status transitions
@@ -246,9 +259,8 @@ describe('generateVoiceoverAudio', () => {
         duration: expect.any(Number),
       });
 
-      // Verify approvals were cleared
+      // Verify approval was cleared
       expect(clearApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
-      expect(clearCollaboratorApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
     });
 
     it('generates audio for a voiceover in ready status (regeneration)', async () => {
@@ -275,6 +287,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -312,6 +325,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -347,6 +361,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -356,9 +371,11 @@ describe('generateVoiceoverAudio', () => {
         }).pipe(Effect.provide(layers)),
       );
 
-      // Verify audio URL format
-      expect(result.audioUrl).toBe(
-        `https://storage.example.com/voiceovers/${voiceover.id}/audio.wav`,
+      // Verify audio URL format (includes timestamp for cache-busting)
+      expect(result.audioUrl).toMatch(
+        new RegExp(
+          `^https://storage\\.example\\.com/voiceovers/${voiceover.id}/audio-\\d+\\.wav$`,
+        ),
       );
 
       // Verify duration was calculated (from audio buffer size / 48000)
@@ -381,6 +398,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -413,6 +431,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -445,6 +464,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -481,6 +501,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -516,6 +537,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -553,6 +575,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS({ errorMessage: 'TTS service unavailable' }),
         createMockStorage(),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromiseExit(
@@ -585,7 +608,8 @@ describe('generateVoiceoverAudio', () => {
         createdBy: user.id,
         status: 'ready',
         text: 'Approved content to regenerate.',
-        ownerHasApproved: true,
+        approvedBy: 'some-admin-id',
+        approvedAt: new Date(),
       });
       const clearApprovalsSpy = vi.fn();
 
@@ -598,6 +622,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage(),
+        createMockLLM(),
       );
 
       await Effect.runPromise(
@@ -608,35 +633,6 @@ describe('generateVoiceoverAudio', () => {
       );
 
       expect(clearApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
-    });
-
-    it('clears all collaborator approvals when regenerating audio', async () => {
-      const user = createTestUser();
-      const voiceover = createTestVoiceover({
-        createdBy: user.id,
-        status: 'ready',
-        text: 'Content with collaborator approvals.',
-      });
-      const clearCollaboratorApprovalsSpy = vi.fn();
-
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo({ voiceover }),
-        createMockCollaboratorRepo({
-          onClearAllApprovals: clearCollaboratorApprovalsSpy,
-        }),
-        createMockTTS(),
-        createMockStorage(),
-      );
-
-      await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(clearCollaboratorApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
     });
   });
 
@@ -657,6 +653,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(), // Mock TTS returns predefined audio
         createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -669,6 +666,55 @@ describe('generateVoiceoverAudio', () => {
       // If we got a result, TTS was called successfully with the voice config
       expect(result.voiceover).toBeDefined();
       expect(result.audioUrl).toBeDefined();
+    });
+
+    it('sends LLM-annotated text to TTS', async () => {
+      const user = createTestUser();
+      const voiceover = createTestVoiceover({
+        createdBy: user.id,
+        status: 'drafting',
+        text: 'The climate is changing rapidly.',
+      });
+      const annotatedText =
+        'The climate is changing rapidly. [medium pause] Really rapidly.';
+
+      const synthesizeSpy = vi.fn();
+      const spyTTSService: TTSService = {
+        listVoices: () => Effect.succeed([]),
+        previewVoice: () => Effect.die('not implemented'),
+        synthesize: (options) => {
+          synthesizeSpy(options);
+          return Effect.succeed({
+            audioContent: Buffer.alloc(96000),
+            audioEncoding: 'LINEAR16' as const,
+            mimeType: 'audio/wav',
+          });
+        },
+      };
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo({ voiceover }),
+        createMockCollaboratorRepo(),
+        Layer.succeed(TTS, spyTTSService),
+        createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM({
+          response: { annotatedText, title: 'Climate Change' },
+        }),
+      );
+
+      await Effect.runPromise(
+        generateVoiceoverAudio({
+          voiceoverId: voiceover.id,
+          userId: user.id,
+        }).pipe(Effect.provide(layers)),
+      );
+
+      expect(synthesizeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          turns: [{ speaker: 'narrator', text: annotatedText }],
+        }),
+      );
     });
   });
 
@@ -687,6 +733,7 @@ describe('generateVoiceoverAudio', () => {
         createMockCollaboratorRepo(),
         createMockTTS(),
         createMockStorage({ baseUrl: 'https://cdn.example.com/' }),
+        createMockLLM(),
       );
 
       const result = await Effect.runPromise(
@@ -696,10 +743,116 @@ describe('generateVoiceoverAudio', () => {
         }).pipe(Effect.provide(layers)),
       );
 
-      // Verify the audio URL follows expected pattern
-      expect(result.audioUrl).toBe(
-        `https://cdn.example.com/voiceovers/${voiceover.id}/audio.wav`,
+      // Verify the audio URL follows expected pattern (includes timestamp)
+      expect(result.audioUrl).toMatch(
+        new RegExp(
+          `^https://cdn\\.example\\.com/voiceovers/${voiceover.id}/audio-\\d+\\.wav$`,
+        ),
       );
+    });
+  });
+
+  describe('title generation', () => {
+    it('auto-generates title when title is Untitled Voiceover', async () => {
+      const user = createTestUser();
+      const voiceover = createTestVoiceover({
+        createdBy: user.id,
+        status: 'drafting',
+        title: 'Untitled Voiceover',
+        text: 'This is a voiceover about climate change and its effects.',
+      });
+      const updateSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
+        createMockCollaboratorRepo(),
+        createMockTTS(),
+        createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM({
+          response: {
+            annotatedText:
+              'This is a voiceover about climate change [short pause] and its effects.',
+            title: 'Climate Change Effects',
+          },
+        }),
+      );
+
+      await Effect.runPromise(
+        generateVoiceoverAudio({
+          voiceoverId: voiceover.id,
+          userId: user.id,
+        }).pipe(Effect.provide(layers)),
+      );
+
+      expect(updateSpy).toHaveBeenCalledWith(voiceover.id, {
+        title: 'Climate Change Effects',
+      });
+    });
+
+    it('preserves custom title', async () => {
+      const user = createTestUser();
+      const voiceover = createTestVoiceover({
+        createdBy: user.id,
+        status: 'drafting',
+        title: 'My Custom Title',
+        text: 'Some voiceover content.',
+      });
+      const updateSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
+        createMockCollaboratorRepo(),
+        createMockTTS(),
+        createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM({
+          response: { annotatedText: 'Some voiceover content.' },
+        }),
+      );
+
+      await Effect.runPromise(
+        generateVoiceoverAudio({
+          voiceoverId: voiceover.id,
+          userId: user.id,
+        }).pipe(Effect.provide(layers)),
+      );
+
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    it('continues when title generation fails', async () => {
+      const user = createTestUser();
+      const voiceover = createTestVoiceover({
+        createdBy: user.id,
+        status: 'drafting',
+        title: 'Untitled Voiceover',
+        text: 'Some voiceover content.',
+      });
+      const updateSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo({ voiceover }, { onUpdate: updateSpy }),
+        createMockCollaboratorRepo(),
+        createMockTTS(),
+        createMockStorage({ baseUrl: 'https://storage.example.com/' }),
+        createMockLLM({ errorMessage: 'LLM service unavailable' }),
+      );
+
+      const result = await Effect.runPromise(
+        generateVoiceoverAudio({
+          voiceoverId: voiceover.id,
+          userId: user.id,
+        }).pipe(Effect.provide(layers)),
+      );
+
+      // Audio generation should still succeed
+      expect(result.voiceover).toBeDefined();
+      expect(result.audioUrl).toBeDefined();
+
+      // Title should not be updated (fallback returns current title)
+      expect(updateSpy).not.toHaveBeenCalled();
     });
   });
 });

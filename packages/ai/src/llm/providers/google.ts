@@ -1,5 +1,4 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { LLMError, LLMRateLimitError } from '../../errors';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
 import {
@@ -8,6 +7,7 @@ import {
   type GenerateOptions,
   type GenerateResult,
 } from '../service';
+import { mapError } from '../map-error';
 
 /**
  * Configuration for Google AI provider via AI SDK.
@@ -20,41 +20,14 @@ export interface GoogleConfig {
 }
 
 /**
- * Map AI SDK errors to domain errors.
- */
-const mapError = (error: unknown): LLMError | LLMRateLimitError => {
-  if (error instanceof Error) {
-    // Check for rate limit errors
-    if (error.message.includes('rate limit') || error.message.includes('429')) {
-      return new LLMRateLimitError({
-        message: error.message,
-      });
-    }
-
-    return new LLMError({
-      message: error.message,
-      cause: error,
-    });
-  }
-
-  return new LLMError({
-    message: 'Unknown LLM error',
-    cause: error,
-  });
-};
-
-/**
  * Create Google AI service implementation via AI SDK.
  */
 const makeGoogleService = (config: GoogleConfig): LLMService => {
   const modelId = config.model ?? 'gemini-2.5-flash';
 
-  // Create provider with API key
   const google = createGoogleGenerativeAI({
     apiKey: config.apiKey,
   });
-
-  // Create model instance
   const model = google(modelId);
 
   return {

@@ -52,6 +52,7 @@ export const activityLog = pgTable(
       table.createdAt,
     ),
     index('activity_log_createdAt_idx').on(table.createdAt),
+    index('activity_log_entityTitle_idx').on(table.entityTitle),
   ],
 );
 

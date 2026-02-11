@@ -2,6 +2,7 @@ import {
   generateScript,
   generateAudio,
   PodcastRepo,
+  syncEntityTitle,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
@@ -77,6 +78,9 @@ export const handleGeneratePodcast = (
       promptInstructions,
     });
 
+    // Sync the new title to activity log entries
+    yield* syncEntityTitle(scriptResult.podcast.id, scriptResult.podcast.title);
+
     // Notify that script is complete (so frontend can show script while audio generates)
     options?.onScriptComplete?.(scriptResult.podcast.id);
 
@@ -131,6 +135,9 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
       podcastId,
       promptInstructions,
     });
+
+    // Sync the new title to activity log entries
+    yield* syncEntityTitle(result.podcast.id, result.podcast.title);
 
     // Generate cover image (non-blocking, failures silently caught)
     yield* generateCoverImage(result.podcast);

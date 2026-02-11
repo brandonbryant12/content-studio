@@ -1,6 +1,7 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useState } from 'react';
@@ -58,12 +59,18 @@ export interface InfographicItemProps {
   infographic: InfographicListItem;
   onDelete: (id: string) => void;
   isDeleting: boolean;
+  isSelected?: boolean;
+  hasSelection?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 export const InfographicItem = memo(function InfographicItem({
   infographic,
   onDelete,
   isDeleting,
+  isSelected,
+  hasSelection,
+  onToggleSelect,
 }: InfographicItemProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -78,19 +85,44 @@ export const InfographicItem = memo(function InfographicItem({
     onDelete(infographic.id);
   }, [onDelete, infographic.id]);
 
+  const handleCheckboxClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleSelect?.(infographic.id);
+    },
+    [onToggleSelect, infographic.id],
+  );
+
   const imageUrl = infographic.imageStorageKey
     ? getStorageUrl(infographic.imageStorageKey)
     : null;
 
   return (
     <>
-      <div className="content-card group">
+      <div
+        className="content-card group"
+        data-selected={isSelected || undefined}
+      >
         <Link
           to="/infographics/$infographicId"
           params={{ infographicId: infographic.id }}
           className="flex flex-col flex-1"
         >
           <div className="content-card-thumb">
+            {onToggleSelect && (
+              <div
+                className="content-card-checkbox"
+                data-visible={hasSelection || isSelected || undefined}
+                onClick={handleCheckboxClick}
+              >
+                <Checkbox
+                  checked={isSelected}
+                  tabIndex={-1}
+                  aria-label={`Select ${infographic.title}`}
+                />
+              </div>
+            )}
             {imageUrl ? (
               <img
                 src={imageUrl}

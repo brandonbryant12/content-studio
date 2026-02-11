@@ -12,7 +12,7 @@ type ActivityList = RouterOutput['admin']['list'];
 interface UseActivityListOptions {
   userId?: string;
   entityType?: string;
-  action?: string;
+  search?: string;
   limit?: number;
   enabled?: boolean;
 }
@@ -21,15 +21,15 @@ interface UseActivityListOptions {
  * Fetch paginated activity list with cursor-based pagination.
  */
 export function useActivityList(options: UseActivityListOptions = {}) {
-  const { userId, entityType, action, limit = 50, enabled = true } = options;
+  const { userId, entityType, search, limit = 50, enabled = true } = options;
 
   return useInfiniteQuery({
-    queryKey: ['admin', 'activity', 'list', { userId, entityType, action }],
+    queryKey: ['admin', 'activity', 'list', { userId, entityType, search }],
     queryFn: async ({ pageParam }) => {
       return rawApiClient.admin.list({
         userId,
         entityType,
-        action,
+        search: search || undefined,
         limit,
         afterCursor: pageParam ?? undefined,
       });
@@ -48,11 +48,11 @@ export function useActivityList(options: UseActivityListOptions = {}) {
 export function useActivityListSimple(
   options: UseActivityListOptions = {},
 ): UseQueryResult<ActivityList, Error> {
-  const { userId, entityType, action, limit, enabled = true } = options;
+  const { userId, entityType, limit, enabled = true } = options;
 
   return useQuery({
     ...apiClient.admin.list.queryOptions({
-      input: { userId, entityType, action, limit },
+      input: { userId, entityType, limit },
     }),
     enabled,
   });
@@ -63,13 +63,12 @@ export function useActivityListSimple(
  * Useful for cache invalidation from SSE.
  */
 export function getActivityListQueryKey(
-  options: { userId?: string; entityType?: string; action?: string } = {},
+  options: { userId?: string; entityType?: string } = {},
 ): QueryKey {
   return apiClient.admin.list.queryOptions({
     input: {
       userId: options.userId,
       entityType: options.entityType,
-      action: options.action,
     },
   }).queryKey;
 }

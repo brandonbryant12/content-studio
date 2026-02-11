@@ -93,6 +93,21 @@ export interface InfographicRepoService {
     infographicId: string,
     keepCount: number,
   ) => Effect.Effect<number, DatabaseError, Db>;
+
+  /**
+   * Set approval (approvedBy + approvedAt).
+   */
+  readonly setApproval: (
+    id: string,
+    approvedBy: string,
+  ) => Effect.Effect<Infographic, InfographicNotFound | DatabaseError, Db>;
+
+  /**
+   * Clear approval (set approvedBy/approvedAt to null).
+   */
+  readonly clearApproval: (
+    id: string,
+  ) => Effect.Effect<Infographic, InfographicNotFound | DatabaseError, Db>;
 }
 
 // =============================================================================
@@ -267,6 +282,46 @@ const make: InfographicRepoService = {
 
       return toDelete.length;
     }),
+
+  setApproval: (id, approvedBy) =>
+    withDb('infographicRepo.setApproval', async (db) => {
+      const [row] = await db
+        .update(infographic)
+        .set({
+          approvedBy,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(infographic.id, id as InfographicId))
+        .returning();
+      return row ?? null;
+    }).pipe(
+      Effect.flatMap((row) =>
+        row
+          ? Effect.succeed(row)
+          : Effect.fail(new InfographicNotFound({ id })),
+      ),
+    ),
+
+  clearApproval: (id) =>
+    withDb('infographicRepo.clearApproval', async (db) => {
+      const [row] = await db
+        .update(infographic)
+        .set({
+          approvedBy: null,
+          approvedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(infographic.id, id as InfographicId))
+        .returning();
+      return row ?? null;
+    }).pipe(
+      Effect.flatMap((row) =>
+        row
+          ? Effect.succeed(row)
+          : Effect.fail(new InfographicNotFound({ id })),
+      ),
+    ),
 };
 
 // =============================================================================

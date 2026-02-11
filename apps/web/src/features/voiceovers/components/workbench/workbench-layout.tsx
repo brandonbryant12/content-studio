@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router';
 import type { RouterOutput } from '@repo/api/client';
 import type { ReactNode } from 'react';
 import { isGeneratingStatus } from '../../lib/status';
-import { ApproveButton } from '../collaborators/approve-button';
+import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { CollaboratorAvatars } from '../collaborators/collaborator-avatars';
 import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
@@ -22,7 +22,6 @@ interface WorkbenchLayoutProps {
     id: string;
     name: string;
     image?: string | null;
-    hasApproved: boolean;
   };
   collaborators: readonly {
     id: string;
@@ -31,9 +30,9 @@ interface WorkbenchLayoutProps {
     email: string;
     userName: string | null;
     userImage: string | null;
-    hasApproved: boolean;
   }[];
-  currentUserHasApproved: boolean;
+  isApproved: boolean;
+  isAdmin: boolean;
   onManageCollaborators: () => void;
   // Approval callbacks
   onApprove: () => void;
@@ -49,7 +48,8 @@ export function WorkbenchLayout({
   isDeleting,
   owner,
   collaborators,
-  currentUserHasApproved,
+  isApproved,
+  isAdmin,
   onManageCollaborators,
   onApprove,
   onRevoke,
@@ -110,7 +110,8 @@ export function WorkbenchLayout({
                   onManageClick={onManageCollaborators}
                 />
                 <ApproveButton
-                  hasApproved={currentUserHasApproved}
+                  isApproved={isApproved}
+                  isAdmin={isAdmin}
                   onApprove={onApprove}
                   onRevoke={onRevoke}
                   isPending={isApprovalPending}

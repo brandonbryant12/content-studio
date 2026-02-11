@@ -1,14 +1,24 @@
 // features/documents/components/document-detail.tsx
 // Presenter: Pure UI for document detail view
 
-import { ArrowLeftIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Cross2Icon,
+  MagnifyingGlassIcon,
+  Pencil1Icon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { memo, type ReactNode } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
+import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
 
 type Document = RouterOutput['documents']['get'];
 
@@ -47,6 +57,139 @@ function formatDateTime(iso: string): string {
   });
 }
 
+interface SearchMatch {
+  paragraphIndex: number;
+  start: number;
+  length: number;
+}
+
+/** Splits paragraph text into fragments with highlighted matches */
+function highlightParagraph(
+  text: string,
+  paragraphIndex: number,
+  matches: readonly SearchMatch[],
+  currentMatchIndex: number,
+  allMatches: readonly SearchMatch[],
+): ReactNode[] {
+  const paraMatches = matches.filter(
+    (m) => m.paragraphIndex === paragraphIndex,
+  );
+  if (paraMatches.length === 0) return [text];
+
+  const fragments: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const match of paraMatches) {
+    if (match.start > cursor) {
+      fragments.push(text.slice(cursor, match.start));
+    }
+    const globalIdx = allMatches.indexOf(match);
+    const isCurrent = globalIdx === currentMatchIndex;
+    fragments.push(
+      <mark
+        key={`${match.start}-${match.length}`}
+        className={
+          isCurrent
+            ? 'bg-primary/30 text-foreground rounded-sm ring-2 ring-primary'
+            : 'bg-yellow-200/60 dark:bg-yellow-500/30 text-foreground rounded-sm'
+        }
+        data-search-current={isCurrent ? 'true' : undefined}
+      >
+        {text.slice(match.start, match.start + match.length)}
+      </mark>,
+    );
+    cursor = match.start + match.length;
+  }
+
+  if (cursor < text.length) {
+    fragments.push(text.slice(cursor));
+  }
+
+  return fragments;
+}
+
+const SearchBar = memo(function SearchBar({
+  search,
+}: {
+  search: UseDocumentSearchReturn;
+}) {
+  if (!search.isOpen) return null;
+
+  return (
+    <div
+      className="flex items-center gap-2 px-6 py-2 border-b border-border bg-muted/50"
+      role="search"
+      aria-label="Search in document"
+    >
+      <MagnifyingGlassIcon
+        className="w-4 h-4 text-muted-foreground shrink-0"
+        aria-hidden="true"
+      />
+      <input
+        ref={search.inputRef}
+        type="text"
+        value={search.query}
+        onChange={(e) => search.setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (e.shiftKey) {
+              search.goToPrevious();
+            } else {
+              search.goToNext();
+            }
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            search.close();
+          }
+        }}
+        placeholder="Search in document..."
+        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        aria-label="Search in document"
+      />
+      {search.query.length >= 2 && (
+        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+          {search.matches.length > 0
+            ? `${search.currentMatchIndex + 1} of ${search.matches.length}`
+            : 'No matches'}
+        </span>
+      )}
+      <div className="flex items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={search.goToPrevious}
+          disabled={search.matches.length === 0}
+          aria-label="Previous match"
+        >
+          <ChevronUpIcon className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={search.goToNext}
+          disabled={search.matches.length === 0}
+          aria-label="Next match"
+        >
+          <ChevronDownIcon className="w-4 h-4" />
+        </Button>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={search.close}
+        aria-label="Close search"
+      >
+        <Cross2Icon className="w-3.5 h-3.5" />
+      </Button>
+    </div>
+  );
+});
+
 export interface DocumentDetailProps {
   document: Document;
   content: string;
@@ -58,6 +201,7 @@ export interface DocumentDetailProps {
   onSave: () => void;
   onDiscard: () => void;
   onDeleteRequest: () => void;
+  search: UseDocumentSearchReturn;
 }
 
 export function DocumentDetail({
@@ -71,6 +215,7 @@ export function DocumentDetail({
   onSave,
   onDiscard,
   onDeleteRequest,
+  search,
 }: DocumentDetailProps) {
   return (
     <div className="workbench">
@@ -114,6 +259,16 @@ export function DocumentDetail({
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={search.isOpen ? search.close : search.open}
+                  className={search.isOpen ? 'text-primary' : ''}
+                  aria-label="Search in document"
+                  aria-pressed={search.isOpen}
+                >
+                  <MagnifyingGlassIcon className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={onDeleteRequest}
                   disabled={isDeleting}
                   className="workbench-delete-btn"
@@ -130,6 +285,9 @@ export function DocumentDetail({
           </div>
         </div>
       </header>
+
+      {/* Search bar */}
+      <SearchBar search={search} />
 
       {/* Main content */}
       <div className="workbench-main">
@@ -194,7 +352,17 @@ export function DocumentDetail({
                     paragraph.trim() === '' ? (
                       <br key={i} />
                     ) : (
-                      <p key={i}>{paragraph}</p>
+                      <p key={i}>
+                        {search.query.length >= 2 && search.matches.length > 0
+                          ? highlightParagraph(
+                              paragraph,
+                              i,
+                              search.matches,
+                              search.currentMatchIndex,
+                              search.matches,
+                            )
+                          : paragraph}
+                      </p>
                     ),
                   )
               ) : (

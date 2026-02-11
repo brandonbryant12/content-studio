@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useDocument, useDocumentContent } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
+import { useDocumentSearch } from '../hooks/use-document-search';
 import { DocumentDetail } from './document-detail';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
@@ -19,6 +20,7 @@ export function DocumentDetailContainer({
   const { data: contentData } = useDocumentContent(documentId);
 
   const actions = useDocumentActions({ document });
+  const search = useDocumentSearch(contentData.content);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -27,6 +29,12 @@ export function DocumentDetailContainer({
     cmdOrCtrl: true,
     onTrigger: actions.handleSave,
     enabled: actions.hasChanges,
+  });
+
+  useKeyboardShortcut({
+    key: 'f',
+    cmdOrCtrl: true,
+    onTrigger: search.open,
   });
 
   useNavigationBlock({
@@ -46,6 +54,7 @@ export function DocumentDetailContainer({
         onSave={actions.handleSave}
         onDiscard={actions.discardChanges}
         onDeleteRequest={() => setIsDeleteDialogOpen(true)}
+        search={search}
       />
       <ConfirmationDialog
         open={isDeleteDialogOpen}

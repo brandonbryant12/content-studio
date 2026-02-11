@@ -51,6 +51,7 @@ const activityContract = oc
             userId: Schema.optional(Schema.String),
             entityType: Schema.optional(Schema.String),
             action: Schema.optional(Schema.String),
+            search: Schema.optional(Schema.String),
             limit: Schema.optional(
               CoerceNumber.pipe(
                 Schema.greaterThanOrEqualTo(1),

@@ -1,4 +1,4 @@
-import { Effect, Layer, Exit } from 'effect';
+import { Effect, Layer } from 'effect';
 import { describe, it, expect } from 'vitest';
 import {
   TTSError,
@@ -12,6 +12,7 @@ import {
   type GeminiVoiceId,
 } from '../../index';
 import { previewVoice } from '../preview-voice';
+import { expectEffectFailure } from '../../../test-utils/effect-assertions';
 
 // =============================================================================
 // Mock TTS Service
@@ -109,18 +110,8 @@ describe('previewVoice', () => {
       );
 
       const exit = await Effect.runPromiseExit(effect);
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = exit.cause;
-        expect(error._tag).toBe('Fail');
-        if (error._tag === 'Fail') {
-          expect(error.error).toBeInstanceOf(VoiceNotFoundError);
-          expect((error.error as VoiceNotFoundError).voiceId).toBe(
-            'InvalidVoice',
-          );
-        }
-      }
+      const error = expectEffectFailure(exit, VoiceNotFoundError);
+      expect(error.voiceId).toBe('InvalidVoice');
     });
 
     it('VoiceNotFoundError has correct HTTP protocol properties', () => {
@@ -157,15 +148,7 @@ describe('previewVoice', () => {
       );
 
       const exit = await Effect.runPromiseExit(effect);
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = exit.cause;
-        expect(error._tag).toBe('Fail');
-        if (error._tag === 'Fail') {
-          expect(error.error).toBeInstanceOf(TTSError);
-        }
-      }
+      expectEffectFailure(exit, TTSError);
     });
 
     it('propagates TTSQuotaExceededError from service', async () => {
@@ -175,15 +158,7 @@ describe('previewVoice', () => {
       );
 
       const exit = await Effect.runPromiseExit(effect);
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = exit.cause;
-        expect(error._tag).toBe('Fail');
-        if (error._tag === 'Fail') {
-          expect(error.error).toBeInstanceOf(TTSQuotaExceededError);
-        }
-      }
+      expectEffectFailure(exit, TTSQuotaExceededError);
     });
   });
 

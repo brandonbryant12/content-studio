@@ -14,8 +14,6 @@ export interface CreateTestCollaboratorOptions {
   podcastId?: PodcastId;
   userId?: string | null;
   email?: string;
-  hasApproved?: boolean;
-  approvedAt?: Date | null;
   addedAt?: Date;
   addedBy?: string;
 }
@@ -36,8 +34,6 @@ export const createTestCollaborator = (
     podcastId: options.podcastId ?? ('pod_test0000000001' as PodcastId),
     userId: options.userId ?? null,
     email: options.email ?? `collaborator${collaboratorCounter}@example.com`,
-    hasApproved: options.hasApproved ?? false,
-    approvedAt: options.approvedAt ?? null,
     addedAt: options.addedAt ?? now,
     addedBy: options.addedBy ?? 'test-owner-id',
   };
@@ -60,8 +56,6 @@ export const createTestCollaboratorWithUser = (
     podcastId: options.podcastId ?? ('pod_test0000000001' as PodcastId),
     userId: options.userId ?? null,
     email: options.email ?? `collaborator${collaboratorCounter}@example.com`,
-    hasApproved: options.hasApproved ?? false,
-    approvedAt: options.approvedAt ?? null,
     addedAt: options.addedAt ?? now,
     addedBy: options.addedBy ?? 'test-owner-id',
     userName: options.userName ?? null,

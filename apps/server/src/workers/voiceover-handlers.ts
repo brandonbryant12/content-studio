@@ -1,4 +1,4 @@
-import { generateVoiceoverAudio } from '@repo/media';
+import { generateVoiceoverAudio, syncEntityTitle } from '@repo/media';
 import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
 import type {
@@ -22,6 +22,9 @@ export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
       voiceoverId,
       userId,
     });
+
+    // Sync the title to activity log entries (voiceover may auto-generate a title)
+    yield* syncEntityTitle(result.voiceover.id, result.voiceover.title);
 
     return {
       voiceoverId: result.voiceover.id,

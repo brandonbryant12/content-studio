@@ -19,7 +19,7 @@ import { Effect } from 'effect';
 import type { CollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './log-activity';
 import {
   serializePodcastEffect,
   serializePodcastFullEffect,
@@ -101,7 +101,7 @@ const podcastRouter = {
         context.user,
         updatePodcast({ podcastId: id as string, data }).pipe(
           Effect.flatMap(serializePodcastEffect),
-          tapLogActivity(context.runtime, context.user, 'updated', 'podcast'),
+          tapSyncTitle(context.runtime, context.user),
         ),
         errors,
         {
@@ -264,10 +264,9 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        approvePodcast({
-          podcastId: input.id,
-          userId: context.session.user.id,
-        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        approvePodcast({ podcastId: input.id }).pipe(
+          Effect.flatMap((result) => serializePodcastEffect(result.podcast)),
+        ),
         errors,
         {
           span: 'api.podcasts.approve',
@@ -282,10 +281,9 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        revokeApproval({
-          podcastId: input.id,
-          userId: context.session.user.id,
-        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        revokeApproval({ podcastId: input.id }).pipe(
+          Effect.flatMap((result) => serializePodcastEffect(result.podcast)),
+        ),
         errors,
         {
           span: 'api.podcasts.revokeApproval',

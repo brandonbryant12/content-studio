@@ -34,7 +34,6 @@ export interface PodcastDetailProps {
     id: string;
     name: string;
     image?: string | null;
-    hasApproved: boolean;
   };
   collaborators: readonly {
     id: string;
@@ -43,9 +42,9 @@ export interface PodcastDetailProps {
     email: string;
     userName: string | null;
     userImage: string | null;
-    hasApproved: boolean;
   }[];
-  currentUserHasApproved: boolean;
+  isApproved: boolean;
+  isAdmin: boolean;
   onManageCollaborators: () => void;
   onApprove: () => void;
   onRevoke: () => void;
@@ -68,7 +67,8 @@ export function PodcastDetail({
   onDelete,
   owner,
   collaborators,
-  currentUserHasApproved,
+  isApproved,
+  isAdmin,
   onManageCollaborators,
   onApprove,
   onRevoke,
@@ -81,7 +81,8 @@ export function PodcastDetail({
       isDeleting={isDeleting}
       owner={owner}
       collaborators={collaborators}
-      currentUserHasApproved={currentUserHasApproved}
+      isApproved={isApproved}
+      isAdmin={isAdmin}
       onManageCollaborators={onManageCollaborators}
       onApprove={onApprove}
       onRevoke={onRevoke}

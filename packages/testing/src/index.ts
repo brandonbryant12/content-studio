@@ -47,3 +47,6 @@ export * from './setup';
 
 // Re-export testcontainers utilities
 export * from './testcontainers';
+
+// Re-export Effect test assertions
+export * from './effect-assertions';

@@ -18,3 +18,8 @@ export {
   type DocumentInfo,
   type UseDocumentSelectionReturn,
 } from './use-document-selection';
+export {
+  useBulkSelection,
+  type UseBulkSelectionReturn,
+} from './use-bulk-selection';
+export { useBulkDelete, type UseBulkDeleteReturn } from './use-bulk-delete';

@@ -51,13 +51,11 @@ export {
 export {
   approveVoiceover,
   type ApproveVoiceoverInput,
-  type ApproveVoiceoverResult,
 } from './approve-voiceover';
 
 export {
   revokeVoiceoverApproval,
   type RevokeVoiceoverApprovalInput,
-  type RevokeVoiceoverApprovalResult,
 } from './revoke-approval';
 
 export {

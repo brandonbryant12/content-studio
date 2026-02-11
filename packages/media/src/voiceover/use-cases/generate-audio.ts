@@ -1,13 +1,47 @@
 import { Effect } from 'effect';
 import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { TTS } from '@repo/ai/tts';
+import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
-import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
 import {
   InvalidVoiceoverAudioGeneration,
   NotVoiceoverOwner,
 } from '../../errors';
+import {
+  PreprocessResultSchema,
+  buildVoiceoverSystemPrompt,
+  buildVoiceoverUserPrompt,
+} from '../prompts';
+
+const DEFAULT_TITLE = 'Untitled Voiceover';
+
+/**
+ * Preprocess voiceover text with LLM to add TTS annotations.
+ * Optionally generates a title when the voiceover is still untitled.
+ * Falls back to raw text + current title on any error.
+ */
+const preprocessText = (text: string, currentTitle: string) =>
+  Effect.gen(function* () {
+    const llm = yield* LLM;
+    const needsTitle = currentTitle === DEFAULT_TITLE;
+    const { object } = yield* llm.generate({
+      system: buildVoiceoverSystemPrompt(),
+      prompt: buildVoiceoverUserPrompt({ text, needsTitle }),
+      schema: PreprocessResultSchema,
+      maxTokens: Math.max(1024, Math.ceil(text.length * 1.5)),
+      temperature: 0.3,
+    });
+    return {
+      annotatedText: object.annotatedText,
+      title: object.title ?? currentTitle,
+    };
+  }).pipe(
+    Effect.catchAll(() =>
+      Effect.succeed({ annotatedText: text, title: currentTitle }),
+    ),
+    Effect.withSpan('useCase.preprocessVoiceoverText'),
+  );
 
 // =============================================================================
 // Types
@@ -47,7 +81,7 @@ export interface GenerateVoiceoverAudioResult {
 export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
-    const collaboratorRepo = yield* VoiceoverCollaboratorRepo;
+
     const tts = yield* TTS;
     const storage = yield* Storage;
 
@@ -95,27 +129,41 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
     // 3. Update status to generating
     yield* voiceoverRepo.updateStatus(input.voiceoverId, 'generating_audio');
 
-    // 4. Clear all approvals (regeneration requires new approvals)
-    yield* voiceoverRepo.clearApprovals(input.voiceoverId);
-    yield* collaboratorRepo.clearAllApprovals(voiceover.id);
+    // 4. Clear approval (regeneration requires new approval)
+    yield* voiceoverRepo.clearApproval(input.voiceoverId);
 
-    // 5. Synthesize audio (single voice)
+    // 5. Preprocess text with LLM (add TTS annotations + optional title)
     const voice = voiceover.voice;
+    const { annotatedText, title: generatedTitle } = yield* preprocessText(
+      text,
+      voiceover.title,
+    );
+
+    // 6. Synthesize audio with annotated text
     const ttsResult = yield* tts.synthesize({
-      turns: [{ speaker: 'narrator', text }],
+      turns: [{ speaker: 'narrator', text: annotatedText }],
       voiceConfigs: [{ speakerAlias: 'narrator', voiceId: voice }],
     });
 
-    // 6. Upload to storage
-    const audioKey = `voiceovers/${voiceover.id}/audio.wav`;
+    // 7. Upload to storage (timestamp in key for cache-busting)
+    const audioKey = `voiceovers/${voiceover.id}/audio-${Date.now()}.wav`;
     yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
     const audioUrl = yield* storage.getUrl(audioKey);
 
-    // 7. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
+    // 8. Estimate duration (WAV 24kHz 16-bit mono = 48KB/sec)
     const duration = Math.round(ttsResult.audioContent.length / 48000);
 
-    // 8. Update voiceover with audio URL and ready status
+    // 9. Update voiceover with audio URL and ready status
     yield* voiceoverRepo.updateAudio(input.voiceoverId, { audioUrl, duration });
+
+    // 10. Update title if it was auto-generated
+    const shouldGenerateTitle = voiceover.title === DEFAULT_TITLE;
+    if (shouldGenerateTitle && generatedTitle !== voiceover.title) {
+      yield* voiceoverRepo.update(input.voiceoverId, {
+        title: generatedTitle,
+      });
+    }
+
     const updatedVoiceover = yield* voiceoverRepo.updateStatus(
       input.voiceoverId,
       'ready',

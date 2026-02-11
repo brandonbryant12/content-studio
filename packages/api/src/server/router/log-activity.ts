@@ -1,4 +1,4 @@
-import { logEntityActivity } from '@repo/media';
+import { logEntityActivity, syncEntityTitle } from '@repo/media';
 import { withCurrentUser, type User } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { ServerRuntime } from '../runtime';
@@ -52,6 +52,33 @@ export const tapLogActivity =
           const id = entityId ?? ('id' in obj ? String(obj.id) : undefined);
           const title = 'title' in obj ? String(obj.title) : undefined;
           logActivity(runtime, user, action, entityType, id, title);
+        }),
+      ),
+    );
+
+/**
+ * Fire-and-forget title sync for update handlers.
+ * Keeps activity log entityTitle current when an entity's title changes.
+ *
+ * Usage: `effect.pipe(tapSyncTitle(runtime, user))`
+ */
+export const tapSyncTitle =
+  (runtime: ServerRuntime, user: User | null) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    self.pipe(
+      Effect.tap((result) =>
+        Effect.sync(() => {
+          if (!user) return;
+          const obj =
+            result && typeof result === 'object'
+              ? (result as Record<string, unknown>)
+              : {};
+          const id = 'id' in obj ? String(obj.id) : undefined;
+          const title = 'title' in obj ? String(obj.title) : undefined;
+          if (!id || !title) return;
+          runtime
+            .runPromise(withCurrentUser(user)(syncEntityTitle(id, title)))
+            .catch(() => {});
         }),
       ),
     );

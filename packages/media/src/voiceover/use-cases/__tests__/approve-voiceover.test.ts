@@ -1,25 +1,19 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createTestUser, resetAllFactories } from '@repo/testing';
-import type {
-  Voiceover,
-  VoiceoverCollaborator,
-  VoiceoverId,
-} from '@repo/db/schema';
 import {
-  generateVoiceoverId,
-  generateVoiceoverCollaboratorId,
-} from '@repo/db/schema';
+  createTestUser,
+  createTestAdmin,
+  withTestUser,
+  resetAllFactories,
+} from '@repo/testing';
+import type { Voiceover, VoiceoverId } from '@repo/db/schema';
+import { generateVoiceoverId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { NotVoiceoverCollaborator, VoiceoverNotFound } from '../../../errors';
+import { VoiceoverNotFound } from '../../../errors';
 import {
   VoiceoverRepo,
   type VoiceoverRepoService,
 } from '../../repos/voiceover-repo';
-import {
-  VoiceoverCollaboratorRepo,
-  type VoiceoverCollaboratorRepoService,
-} from '../../repos/voiceover-collaborator-repo';
 import { approveVoiceover } from '../approve-voiceover';
 
 // =============================================================================
@@ -36,7 +30,8 @@ interface CreateTestVoiceoverOptions {
   duration?: number | null;
   status?: Voiceover['status'];
   errorMessage?: string | null;
-  ownerHasApproved?: boolean;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -60,47 +55,16 @@ const createTestVoiceover = (
     duration: options.duration ?? null,
     status: options.status ?? 'drafting',
     errorMessage: options.errorMessage ?? null,
-    ownerHasApproved: options.ownerHasApproved ?? false,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-owner-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
 };
 
-interface CreateTestVoiceoverCollaboratorOptions {
-  id?: VoiceoverCollaborator['id'];
-  voiceoverId?: VoiceoverId;
-  userId?: string | null;
-  email?: string;
-  hasApproved?: boolean;
-  approvedAt?: Date | null;
-  addedAt?: Date;
-  addedBy?: string;
-}
-
-let collaboratorCounter = 0;
-
-const createTestVoiceoverCollaborator = (
-  options: CreateTestVoiceoverCollaboratorOptions = {},
-): VoiceoverCollaborator => {
-  collaboratorCounter++;
-  const now = new Date();
-
-  return {
-    id: options.id ?? generateVoiceoverCollaboratorId(),
-    voiceoverId: options.voiceoverId ?? generateVoiceoverId(),
-    userId: options.userId ?? null,
-    email: options.email ?? `collaborator${collaboratorCounter}@example.com`,
-    hasApproved: options.hasApproved ?? false,
-    approvedAt: options.approvedAt ?? null,
-    addedAt: options.addedAt ?? now,
-    addedBy: options.addedBy ?? 'test-owner-id',
-  };
-};
-
 const resetLocalCounters = () => {
   voiceoverCounter = 0;
-  collaboratorCounter = 0;
 };
 
 // =============================================================================
@@ -109,13 +73,12 @@ const resetLocalCounters = () => {
 
 interface MockState {
   voiceovers: Voiceover[];
-  collaborators: VoiceoverCollaborator[];
 }
 
 const createMockVoiceoverRepo = (
   state: MockState,
   options?: {
-    onSetOwnerApproval?: (id: string, hasApproved: boolean) => void;
+    onSetApproval?: (id: string, approvedBy: string) => void;
   },
 ): Layer.Layer<VoiceoverRepo> => {
   const service: VoiceoverRepoService = {
@@ -127,7 +90,7 @@ const createMockVoiceoverRepo = (
     updateStatus: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
 
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -138,62 +101,19 @@ const createMockVoiceoverRepo = (
         return Effect.succeed(voiceover);
       }),
 
-    setOwnerApproval: (id: string, hasApproved: boolean) =>
+    setApproval: (id: string, approvedBy: string) =>
       Effect.sync(() => {
-        options?.onSetOwnerApproval?.(id, hasApproved);
+        options?.onSetApproval?.(id, approvedBy);
         const voiceover = state.voiceovers.find((v) => v.id === id);
-        if (voiceover) {
-          voiceover.ownerHasApproved = hasApproved;
-        }
-        return { ...voiceover!, ownerHasApproved: hasApproved };
+        return {
+          ...voiceover!,
+          approvedBy,
+          approvedAt: new Date(),
+        };
       }),
   };
 
   return Layer.succeed(VoiceoverRepo, service);
-};
-
-const createMockVoiceoverCollaboratorRepo = (
-  state: MockState,
-  options?: {
-    onApprove?: (voiceoverId: VoiceoverId, userId: string) => void;
-  },
-): Layer.Layer<VoiceoverCollaboratorRepo> => {
-  const service: VoiceoverCollaboratorRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findByVoiceover: () => Effect.die('not implemented'),
-    findByEmail: () => Effect.die('not implemented'),
-    findByVoiceoverAndEmail: () => Effect.die('not implemented'),
-    lookupUserByEmail: () => Effect.die('not implemented'),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.die('not implemented'),
-
-    findByVoiceoverAndUser: (voiceoverId: VoiceoverId, userId: string) =>
-      Effect.sync(() => {
-        const collaborator = state.collaborators.find(
-          (c) => c.voiceoverId === voiceoverId && c.userId === userId,
-        );
-        return collaborator ?? null;
-      }),
-
-    approve: (voiceoverId: VoiceoverId, userId: string) =>
-      Effect.sync(() => {
-        options?.onApprove?.(voiceoverId, userId);
-        const collaborator = state.collaborators.find(
-          (c) => c.voiceoverId === voiceoverId && c.userId === userId,
-        );
-        if (collaborator) {
-          collaborator.hasApproved = true;
-          collaborator.approvedAt = new Date();
-          return collaborator;
-        }
-        return null;
-      }),
-  };
-
-  return Layer.succeed(VoiceoverCollaboratorRepo, service);
 };
 
 const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
@@ -210,179 +130,115 @@ describe('approveVoiceover', () => {
     resetLocalCounters();
   });
 
-  describe('owner approval', () => {
-    it('sets ownerHasApproved when owner approves', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
+  describe('admin approval', () => {
+    it('approves voiceover when admin requests', async () => {
+      const admin = createTestAdmin({ id: 'admin-id' });
       const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-        ownerHasApproved: false,
+        createdBy: 'owner-id',
+        approvedBy: null,
       });
 
       const state: MockState = {
         voiceovers: [voiceover],
-        collaborators: [],
       };
 
-      const setOwnerApprovalSpy = vi.fn();
+      const setApprovalSpy = vi.fn();
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo(state, {
-          onSetOwnerApproval: setOwnerApprovalSpy,
-        }),
-        createMockVoiceoverCollaboratorRepo(state),
+        createMockVoiceoverRepo(state, { onSetApproval: setApprovalSpy }),
       );
 
       const result = await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: owner.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          approveVoiceover({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
-      expect(result.isOwner).toBe(true);
       expect(result.voiceover).toBeDefined();
-      expect(result.voiceover.ownerHasApproved).toBe(true);
-      expect(setOwnerApprovalSpy).toHaveBeenCalledWith(voiceover.id, true);
+      expect(result.voiceover.approvedBy).toBe(admin.id);
+      expect(result.voiceover.approvedAt).toBeDefined();
+      expect(setApprovalSpy).toHaveBeenCalledWith(voiceover.id, admin.id);
     });
 
     it('is idempotent - approving again when already approved succeeds', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
+      const admin = createTestAdmin({ id: 'admin-id' });
       const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-        ownerHasApproved: true, // Already approved
-      });
-
-      const state: MockState = {
-        voiceovers: [voiceover],
-        collaborators: [],
-      };
-
-      const setOwnerApprovalSpy = vi.fn();
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state, {
-          onSetOwnerApproval: setOwnerApprovalSpy,
-        }),
-        createMockVoiceoverCollaboratorRepo(state),
-      );
-
-      const result = await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: owner.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(result.isOwner).toBe(true);
-      expect(result.voiceover.ownerHasApproved).toBe(true);
-      // Should still call setOwnerApproval (idempotent behavior)
-      expect(setOwnerApprovalSpy).toHaveBeenCalledWith(voiceover.id, true);
-    });
-  });
-
-  describe('collaborator approval', () => {
-    it('sets hasApproved when collaborator approves', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const collaboratorUser = createTestUser({ id: 'collab-id' });
-      const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-      });
-      const collaborator = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: collaboratorUser.id,
-        email: 'collaborator@example.com',
-        hasApproved: false,
-      });
-
-      const state: MockState = {
-        voiceovers: [voiceover],
-        collaborators: [collaborator],
-      };
-
-      const approveSpy = vi.fn();
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state, { onApprove: approveSpy }),
-      );
-
-      const result = await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: collaboratorUser.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(result.isOwner).toBe(false);
-      expect(result.voiceover).toBeDefined();
-      expect(approveSpy).toHaveBeenCalledWith(
-        voiceover.id,
-        collaboratorUser.id,
-      );
-    });
-
-    it('is idempotent - approving again when already approved succeeds', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const collaboratorUser = createTestUser({ id: 'collab-id' });
-      const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-      });
-      const collaborator = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: collaboratorUser.id,
-        email: 'collaborator@example.com',
-        hasApproved: true, // Already approved
+        createdBy: 'owner-id',
+        approvedBy: 'other-admin-id',
         approvedAt: new Date(),
       });
 
       const state: MockState = {
         voiceovers: [voiceover],
-        collaborators: [collaborator],
       };
 
-      const approveSpy = vi.fn();
+      const setApprovalSpy = vi.fn();
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state, { onApprove: approveSpy }),
+        createMockVoiceoverRepo(state, { onSetApproval: setApprovalSpy }),
       );
 
       const result = await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: collaboratorUser.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          approveVoiceover({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
-      expect(result.isOwner).toBe(false);
-      // Should still call approve (idempotent behavior)
-      expect(approveSpy).toHaveBeenCalledWith(
+      expect(result.voiceover).toBeDefined();
+      expect(result.voiceover.approvedBy).toBe(admin.id);
+      // Should still call setApproval (idempotent behavior)
+      expect(setApprovalSpy).toHaveBeenCalledWith(voiceover.id, admin.id);
+    });
+
+    it('records the admin user ID as approvedBy', async () => {
+      const admin = createTestAdmin({ id: 'specific-admin-id' });
+      const voiceover = createTestVoiceover({ createdBy: 'owner-id' });
+
+      const state: MockState = {
+        voiceovers: [voiceover],
+      };
+
+      const setApprovalSpy = vi.fn();
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo(state, { onSetApproval: setApprovalSpy }),
+      );
+
+      await Effect.runPromise(
+        withTestUser(admin)(
+          approveVoiceover({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(setApprovalSpy).toHaveBeenCalledWith(
         voiceover.id,
-        collaboratorUser.id,
+        'specific-admin-id',
       );
     });
   });
 
   describe('error cases', () => {
     it('fails with VoiceoverNotFound when voiceover does not exist', async () => {
-      const user = createTestUser({ id: 'user-id' });
+      const admin = createTestAdmin({ id: 'admin-id' });
 
       const state: MockState = {
         voiceovers: [],
-        collaborators: [],
       };
 
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(state));
 
       const result = await Effect.runPromiseExit(
-        approveVoiceover({
-          voiceoverId: 'voc_nonexistent00000' as VoiceoverId,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          approveVoiceover({
+            voiceoverId: 'voc_nonexistent00000' as VoiceoverId,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -392,174 +248,55 @@ describe('approveVoiceover', () => {
       }
     });
 
-    it('fails with NotVoiceoverCollaborator when user is neither owner nor collaborator', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const stranger = createTestUser({ id: 'stranger-id' });
+    it('fails with ForbiddenError when non-admin user tries to approve', async () => {
+      const regularUser = createTestUser({ id: 'user-id', role: 'user' });
       const voiceover = createTestVoiceover({
-        createdBy: owner.id,
+        createdBy: regularUser.id,
       });
 
       const state: MockState = {
         voiceovers: [voiceover],
-        collaborators: [],
       };
 
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(state));
 
       const result = await Effect.runPromiseExit(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: stranger.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(regularUser)(
+          approveVoiceover({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotVoiceoverCollaborator);
-        if (error instanceof NotVoiceoverCollaborator) {
-          expect(error.voiceoverId).toBe(voiceover.id);
-          expect(error.userId).toBe(stranger.id);
-        }
+        expect(error).toBeDefined();
+        expect((error as { message: string }).message).toContain('role');
       }
     });
 
-    it('fails with NotVoiceoverCollaborator when collaborator is pending (no userId)', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const user = createTestUser({
-        id: 'user-id',
-        email: 'pending@example.com',
-      });
+    it('fails when owner (non-admin) tries to approve their own voiceover', async () => {
+      const owner = createTestUser({ id: 'owner-id', role: 'user' });
       const voiceover = createTestVoiceover({
         createdBy: owner.id,
-      });
-      // Pending collaborator - has email but no userId (not yet claimed)
-      const pendingCollaborator = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: null, // Pending - not claimed yet
-        email: 'pending@example.com',
-        hasApproved: false,
       });
 
       const state: MockState = {
         voiceovers: [voiceover],
-        collaborators: [pendingCollaborator],
       };
 
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockVoiceoverRepo(state));
 
-      // User tries to approve but their collaborator record has no userId (pending)
       const result = await Effect.runPromiseExit(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(owner)(
+          approveVoiceover({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotVoiceoverCollaborator);
-      }
-    });
-  });
-
-  describe('edge cases', () => {
-    it('handles voiceover with multiple collaborators - only approves requesting user', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const collaborator1 = createTestUser({ id: 'collab-1-id' });
-      const collaborator2 = createTestUser({ id: 'collab-2-id' });
-      const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-      });
-      const collab1Record = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: collaborator1.id,
-        email: 'collab1@example.com',
-        hasApproved: false,
-      });
-      const collab2Record = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: collaborator2.id,
-        email: 'collab2@example.com',
-        hasApproved: false,
-      });
-
-      const state: MockState = {
-        voiceovers: [voiceover],
-        collaborators: [collab1Record, collab2Record],
-      };
-
-      const approveSpy = vi.fn();
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state),
-        createMockVoiceoverCollaboratorRepo(state, { onApprove: approveSpy }),
-      );
-
-      // Collaborator 1 approves
-      await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: collaborator1.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      // Only collaborator 1 should have been approved
-      expect(approveSpy).toHaveBeenCalledTimes(1);
-      expect(approveSpy).toHaveBeenCalledWith(voiceover.id, collaborator1.id);
-      expect(collab1Record.hasApproved).toBe(true);
-      expect(collab2Record.hasApproved).toBe(false);
-    });
-
-    it('owner can approve even when collaborators exist', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const collaboratorUser = createTestUser({ id: 'collab-id' });
-      const voiceover = createTestVoiceover({
-        createdBy: owner.id,
-        ownerHasApproved: false,
-      });
-      const collaborator = createTestVoiceoverCollaborator({
-        voiceoverId: voiceover.id,
-        userId: collaboratorUser.id,
-        email: 'collaborator@example.com',
-        hasApproved: false,
-      });
-
-      const state: MockState = {
-        voiceovers: [voiceover],
-        collaborators: [collaborator],
-      };
-
-      const setOwnerApprovalSpy = vi.fn();
-      const approveSpy = vi.fn();
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockVoiceoverRepo(state, {
-          onSetOwnerApproval: setOwnerApprovalSpy,
-        }),
-        createMockVoiceoverCollaboratorRepo(state, { onApprove: approveSpy }),
-      );
-
-      const result = await Effect.runPromise(
-        approveVoiceover({
-          voiceoverId: voiceover.id,
-          userId: owner.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(result.isOwner).toBe(true);
-      expect(setOwnerApprovalSpy).toHaveBeenCalledWith(voiceover.id, true);
-      // Collaborator approve should NOT be called
-      expect(approveSpy).not.toHaveBeenCalled();
     });
   });
 });

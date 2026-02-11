@@ -64,6 +64,28 @@ const mockPodcasts: PodcastListItem[] = [
   },
 ];
 
+const mockSelection = {
+  selectedIds: new Set<string>() as ReadonlySet<string>,
+  selectedCount: 0,
+  isSelected: () => false,
+  toggle: vi.fn(),
+  selectAll: vi.fn(),
+  deselectAll: vi.fn(),
+  isAllSelected: () => false,
+  isIndeterminate: () => false,
+};
+
+const mockQuickPlay = {
+  playingId: null,
+  isPlaying: false,
+  currentTime: 0,
+  duration: 0,
+  toggle: vi.fn(),
+  stop: vi.fn(),
+  formatTime: (t: number) =>
+    `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`,
+};
+
 // Default props for PodcastList
 const createDefaultProps = () => ({
   podcasts: mockPodcasts,
@@ -73,6 +95,10 @@ const createDefaultProps = () => ({
   onSearch: vi.fn(),
   onCreate: vi.fn(),
   onDelete: vi.fn(),
+  quickPlay: mockQuickPlay as never,
+  selection: mockSelection,
+  isBulkDeleting: false,
+  onBulkDelete: vi.fn(),
 });
 
 describe('PodcastList', () => {

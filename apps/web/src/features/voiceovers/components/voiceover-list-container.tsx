@@ -4,8 +4,17 @@
 import { useState, useCallback } from 'react';
 import { useOptimisticCreate } from '../hooks/use-optimistic-create';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
-import { useVoiceoverList } from '../hooks/use-voiceover-list';
+import {
+  useVoiceoverList,
+  getVoiceoverListQueryKey,
+} from '../hooks/use-voiceover-list';
+import { useQuickPlay } from '@/shared/hooks/use-quick-play';
+import { rawApiClient } from '@/clients/apiClient';
+import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { VoiceoverList } from './voiceover-list';
+
+const deleteFn = (input: { id: string }) =>
+  rawApiClient.voiceovers.delete(input);
 
 /**
  * Container: Fetches voiceover list and coordinates mutations.
@@ -22,6 +31,17 @@ export function VoiceoverListContainer() {
   const createMutation = useOptimisticCreate();
   const deleteMutation = useOptimisticDeleteList();
 
+  // Quick play
+  const quickPlay = useQuickPlay();
+
+  // Bulk selection & delete
+  const selection = useBulkSelection();
+  const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
+    queryKey: getVoiceoverListQueryKey(),
+    deleteFn,
+    entityName: 'voiceover',
+  });
+
   const handleCreate = useCallback(() => {
     createMutation.mutate({
       title: 'Untitled Voiceover',
@@ -30,6 +50,10 @@ export function VoiceoverListContainer() {
 
   const handleDelete = useCallback(
     (id: string) => {
+      // Stop playback if deleting the currently playing item
+      if (quickPlay.playingId === id) {
+        quickPlay.stop();
+      }
       setDeletingId(id);
       deleteMutation.mutate(
         { id },
@@ -40,8 +64,14 @@ export function VoiceoverListContainer() {
         },
       );
     },
-    [deleteMutation],
+    [deleteMutation, quickPlay],
   );
+
+  const handleBulkDelete = useCallback(async () => {
+    quickPlay.stop();
+    await executeBulkDelete(selection.selectedIds);
+    selection.deselectAll();
+  }, [executeBulkDelete, selection, quickPlay]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -73,6 +103,10 @@ export function VoiceoverListContainer() {
       onSearch={handleSearch}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      quickPlay={quickPlay}
+      selection={selection}
+      isBulkDeleting={isBulkDeleting}
+      onBulkDelete={handleBulkDelete}
     />
   );
 }

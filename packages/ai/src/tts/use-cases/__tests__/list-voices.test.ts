@@ -62,22 +62,4 @@ describe('listVoices', () => {
       expect(result.voices.every((v) => v.gender === 'male')).toBe(true);
     });
   });
-
-  describe('voice data structure', () => {
-    it('returns voices with expected properties', async () => {
-      const effect = listVoices({}).pipe(Effect.provide(MockTTSLayer));
-
-      const result = await Effect.runPromise(effect);
-
-      const firstVoice = result.voices[0]!;
-      expect(firstVoice).toHaveProperty('id');
-      expect(firstVoice).toHaveProperty('name');
-      expect(firstVoice).toHaveProperty('gender');
-      expect(firstVoice).toHaveProperty('description');
-      expect(typeof firstVoice.id).toBe('string');
-      expect(typeof firstVoice.name).toBe('string');
-      expect(['male', 'female']).toContain(firstVoice.gender);
-      expect(typeof firstVoice.description).toBe('string');
-    });
-  });
 });

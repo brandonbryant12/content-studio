@@ -5,13 +5,7 @@ import {
   createTestPodcast,
   resetAllFactories,
 } from '@repo/testing';
-import type {
-  Podcast,
-  JobId,
-  JobStatus,
-  VersionStatus,
-  PodcastId,
-} from '@repo/db/schema';
+import type { Podcast, JobId, JobStatus, VersionStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
@@ -62,10 +56,24 @@ const createMockPodcastRepo = (
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: (id: string) =>
-      Effect.sync(() => ({ ...state.podcast!, ownerHasApproved: false })),
-    setOwnerApproval: (id, hasApproved) =>
-      Effect.sync(() => ({ ...state.podcast!, ownerHasApproved: hasApproved })),
+    clearApproval: (id) =>
+      Effect.sync(
+        () =>
+          ({
+            ...state.podcast!,
+            approvedBy: null,
+            approvedAt: null,
+          }) as Podcast,
+      ),
+    setApproval: (id, approvedBy) =>
+      Effect.sync(
+        () =>
+          ({
+            ...state.podcast!,
+            approvedBy,
+            approvedAt: new Date(),
+          }) as Podcast,
+      ),
   };
 
   return Layer.succeed(PodcastRepo, service);
@@ -81,9 +89,6 @@ const createMockCollaboratorRepo = (): Layer.Layer<CollaboratorRepo> => {
     lookupUserByEmail: () => Effect.succeed(null),
     add: () => Effect.die('not implemented'),
     remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: (_podcastId: PodcastId) => Effect.succeed(0),
     claimByEmail: () => Effect.succeed(0),
   };
 

@@ -1,5 +1,10 @@
 import * as Select from '@radix-ui/react-select';
-import { CheckIcon, ChevronDownIcon } from '@radix-ui/react-icons';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from '@radix-ui/react-icons';
+import { Input } from '@repo/ui/components/input';
 
 interface TopUser {
   readonly userId: string;
@@ -10,11 +15,11 @@ interface TopUser {
 interface ActivityFiltersProps {
   entityType: string | undefined;
   onEntityTypeChange: (value: string | undefined) => void;
-  action: string | undefined;
-  onActionChange: (value: string | undefined) => void;
   userId: string | undefined;
   onUserIdChange: (value: string | undefined) => void;
   topUsers: readonly TopUser[];
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
 }
 
 const ENTITY_TYPES = [
@@ -22,16 +27,6 @@ const ENTITY_TYPES = [
   { value: 'podcast', label: 'Podcasts' },
   { value: 'voiceover', label: 'Voiceovers' },
   { value: 'infographic', label: 'Infographics' },
-];
-
-const ACTIONS = [
-  { value: 'created', label: 'Created' },
-  { value: 'updated', label: 'Updated' },
-  { value: 'deleted', label: 'Deleted' },
-  { value: 'generated_script', label: 'Generated Script' },
-  { value: 'generated_audio', label: 'Generated Audio' },
-  { value: 'generated_voiceover', label: 'Generated Voiceover' },
-  { value: 'generated_infographic', label: 'Generated Infographic' },
 ];
 
 function FilterSelect({
@@ -105,11 +100,11 @@ function SelectItem({
 export function ActivityFilters({
   entityType,
   onEntityTypeChange,
-  action,
-  onActionChange,
   userId,
   onUserIdChange,
   topUsers,
+  searchQuery,
+  onSearchChange,
 }: ActivityFiltersProps) {
   const userOptions = topUsers.map((u) => ({
     value: u.userId,
@@ -117,30 +112,36 @@ export function ActivityFilters({
   }));
 
   return (
-    <div className="flex flex-wrap items-end gap-4 mb-6">
-      <FilterSelect
-        label="Entity Type"
-        value={entityType}
-        onValueChange={onEntityTypeChange}
-        options={ENTITY_TYPES}
-        placeholder="All types"
-      />
-      <FilterSelect
-        label="Action"
-        value={action}
-        onValueChange={onActionChange}
-        options={ACTIONS}
-        placeholder="All actions"
-      />
-      {userOptions.length > 0 && (
-        <FilterSelect
-          label="User"
-          value={userId}
-          onValueChange={onUserIdChange}
-          options={userOptions}
-          placeholder="All users"
+    <div className="flex flex-col gap-4 mb-6">
+      <div className="relative">
+        <Input
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search by user or title..."
+          className="search-input pl-10"
+          autoComplete="off"
+          aria-label="Search activity"
         />
-      )}
+        <MagnifyingGlassIcon className="search-icon" />
+      </div>
+      <div className="flex flex-wrap items-end gap-4">
+        <FilterSelect
+          label="Entity Type"
+          value={entityType}
+          onValueChange={onEntityTypeChange}
+          options={ENTITY_TYPES}
+          placeholder="All types"
+        />
+        {userOptions.length > 0 && (
+          <FilterSelect
+            label="User"
+            value={userId}
+            onValueChange={onUserIdChange}
+            options={userOptions}
+            placeholder="All users"
+          />
+        )}
+      </div>
     </div>
   );
 }

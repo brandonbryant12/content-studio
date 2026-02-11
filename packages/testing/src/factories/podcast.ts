@@ -34,7 +34,8 @@ export interface CreateTestPodcastOptions {
   duration?: number | null;
   errorMessage?: string | null;
   coverImageStorageKey?: string | null;
-  ownerHasApproved?: boolean;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -87,7 +88,8 @@ export const createTestPodcast = (
     duration: options.duration ?? null,
     errorMessage: options.errorMessage ?? null,
     coverImageStorageKey: options.coverImageStorageKey ?? null,
-    ownerHasApproved: options.ownerHasApproved ?? false,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,

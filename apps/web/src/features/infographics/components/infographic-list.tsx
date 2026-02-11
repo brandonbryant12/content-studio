@@ -4,6 +4,8 @@ import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 import { InfographicItem, type InfographicListItem } from './infographic-item';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -68,6 +70,9 @@ export interface InfographicListProps {
   onSearch: (query: string) => void;
   onCreate: () => void;
   onDelete: (id: string) => void;
+  selection: UseBulkSelectionReturn;
+  isBulkDeleting: boolean;
+  onBulkDelete: () => void;
 }
 
 export function InfographicList({
@@ -78,6 +83,9 @@ export function InfographicList({
   onSearch,
   onCreate,
   onDelete,
+  selection,
+  isBulkDeleting,
+  onBulkDelete,
 }: InfographicListProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -87,6 +95,11 @@ export function InfographicList({
         infographic.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
     [infographics, searchQuery],
+  );
+
+  const filteredIds = useMemo(
+    () => filteredInfographics.map((i) => i.id),
+    [filteredInfographics],
   );
 
   const handleSearch = useCallback(
@@ -99,13 +112,22 @@ export function InfographicList({
     [onSearch],
   );
 
+  const handleToggleAll = useCallback(() => {
+    if (selection.isAllSelected(filteredIds)) {
+      selection.deselectAll();
+    } else {
+      selection.selectAll(filteredIds);
+    }
+  }, [selection, filteredIds]);
+
   const isEmpty = infographics.length === 0;
   const hasNoResults =
     filteredInfographics.length === 0 && searchQuery.length > 0;
+  const hasSelection = selection.selectedCount > 0;
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <p className="page-eyebrow">Visual Content</p>
           <h1 className="page-title">Infographics</h1>
@@ -125,12 +147,12 @@ export function InfographicList({
         </Button>
       </div>
 
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <Input
           value={searchQuery}
           onChange={handleSearch}
           placeholder="Search infographics..."
-          className="search-input"
+          className="search-input pl-10"
           autoComplete="off"
           aria-label="Search infographics"
         />
@@ -151,10 +173,26 @@ export function InfographicList({
               infographic={infographic}
               onDelete={onDelete}
               isDeleting={deletingId === infographic.id}
+              isSelected={selection.isSelected(infographic.id)}
+              hasSelection={hasSelection}
+              onToggleSelect={selection.toggle}
             />
           ))}
         </div>
       )}
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selection.selectedCount}
+        totalCount={filteredInfographics.length}
+        isAllSelected={selection.isAllSelected(filteredIds)}
+        isIndeterminate={selection.isIndeterminate(filteredIds)}
+        isDeleting={isBulkDeleting}
+        entityName="infographic"
+        onToggleAll={handleToggleAll}
+        onDeselectAll={selection.deselectAll}
+        onDeleteSelected={onBulkDelete}
+      />
     </div>
   );
 }

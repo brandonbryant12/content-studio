@@ -1,4 +1,4 @@
-import { InfographicRepo } from '@repo/media';
+import { InfographicRepo, syncEntityTitle } from '@repo/media';
 import { ImageGen, LLM } from '@repo/ai';
 import { Storage } from '@repo/storage';
 import { JobProcessingError, formatError } from '@repo/queue';
@@ -161,6 +161,11 @@ export const handleGenerateInfographic = (
       errorMessage: null,
       ...(title !== infographic.title ? { title } : {}),
     });
+
+    // Sync the title to activity log entries if it changed
+    if (title !== infographic.title) {
+      yield* syncEntityTitle(infographicId, title);
+    }
 
     // 11. Prune old versions (keep max 10)
     yield* repo.deleteOldVersions(infographicId, 10);

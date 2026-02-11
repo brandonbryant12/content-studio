@@ -1,23 +1,21 @@
 import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createTestUser,
+  createTestAdmin,
   createTestPodcast,
-  createTestCollaborator,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
-import type { Podcast, Collaborator, PodcastId } from '@repo/db/schema';
+import type { Podcast, PodcastId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
-import { NotPodcastCollaborator, PodcastNotFound } from '../../../errors';
+import { ForbiddenError } from '@repo/db/errors';
+import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
   type PodcastWithDocuments,
 } from '../../repos/podcast-repo';
-import {
-  CollaboratorRepo,
-  type CollaboratorRepoService,
-} from '../../repos/collaborator-repo';
 import { revokeApproval } from '../revoke-approval';
 
 // =============================================================================
@@ -26,15 +24,9 @@ import { revokeApproval } from '../revoke-approval';
 
 interface MockState {
   podcasts: Podcast[];
-  collaborators: Collaborator[];
 }
 
-const createMockPodcastRepo = (
-  state: MockState,
-  options?: {
-    onSetOwnerApproval?: (id: string, hasApproved: boolean) => void;
-  },
-): Layer.Layer<PodcastRepo> => {
+const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
     insert: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
@@ -47,7 +39,7 @@ const createMockPodcastRepo = (
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
 
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -62,59 +54,25 @@ const createMockPodcastRepo = (
         return Effect.succeed(result);
       }),
 
-    setOwnerApproval: (id: string, hasApproved: boolean) =>
-      Effect.sync(() => {
-        options?.onSetOwnerApproval?.(id, hasApproved);
+    clearApproval: (id: string) =>
+      Effect.suspend(() => {
         const podcast = state.podcasts.find((p) => p.id === id);
-        return { ...podcast!, ownerHasApproved: hasApproved };
+        if (!podcast) {
+          return Effect.fail(new PodcastNotFound({ id }));
+        }
+        const updated = {
+          ...podcast,
+          approvedBy: null,
+          approvedAt: null,
+        };
+        // Update in-place
+        const index = state.podcasts.findIndex((p) => p.id === id);
+        state.podcasts[index] = updated;
+        return Effect.succeed(updated);
       }),
   };
 
   return Layer.succeed(PodcastRepo, service);
-};
-
-const createMockCollaboratorRepo = (
-  state: MockState,
-  options?: {
-    onRevokeApproval?: (podcastId: PodcastId, userId: string) => void;
-  },
-): Layer.Layer<CollaboratorRepo> => {
-  const service: CollaboratorRepoService = {
-    findById: () => Effect.die('not implemented'),
-    findByPodcast: () => Effect.die('not implemented'),
-    findByEmail: () => Effect.die('not implemented'),
-    findByPodcastAndEmail: () => Effect.die('not implemented'),
-    lookupUserByEmail: () => Effect.die('not implemented'),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
-    claimByEmail: () => Effect.die('not implemented'),
-
-    findByPodcastAndUser: (podcastId: PodcastId, userId: string) =>
-      Effect.sync(() => {
-        const collaborator = state.collaborators.find(
-          (c) => c.podcastId === podcastId && c.userId === userId,
-        );
-        return collaborator ?? null;
-      }),
-
-    revokeApproval: (podcastId: PodcastId, userId: string) =>
-      Effect.sync(() => {
-        options?.onRevokeApproval?.(podcastId, userId);
-        const collaborator = state.collaborators.find(
-          (c) => c.podcastId === podcastId && c.userId === userId,
-        );
-        if (collaborator) {
-          collaborator.hasApproved = false;
-          collaborator.approvedAt = null;
-          return collaborator;
-        }
-        return null;
-      }),
-  };
-
-  return Layer.succeed(CollaboratorRepo, service);
 };
 
 const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
@@ -130,131 +88,83 @@ describe('revokeApproval', () => {
     resetAllFactories();
   });
 
-  describe('owner revoke', () => {
-    it('clears ownerHasApproved when owner revokes', async () => {
+  describe('admin revoke', () => {
+    it('clears approval when admin revokes', async () => {
+      const admin = createTestAdmin({ id: 'admin-user-id' });
       const owner = createTestUser({ id: 'owner-id' });
       const podcast = createTestPodcast({
         id: 'pod_test0000000001' as PodcastId,
         createdBy: owner.id,
-        ownerHasApproved: true,
-      });
-
-      const state: MockState = {
-        podcasts: [podcast],
-        collaborators: [],
-      };
-
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo(state),
-        createMockCollaboratorRepo(state),
-      );
-
-      const result = await Effect.runPromise(
-        revokeApproval({
-          podcastId: podcast.id,
-          userId: owner.id,
-        }).pipe(Effect.provide(layers)),
-      );
-
-      expect(result.isOwner).toBe(true);
-      expect(result.podcast).toBeDefined();
-    });
-  });
-
-  describe('collaborator revoke', () => {
-    it('clears hasApproved when collaborator revokes', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const collaboratorUser = createTestUser({ id: 'collab-id' });
-      const podcast = createTestPodcast({
-        id: 'pod_test0000000001' as PodcastId,
-        createdBy: owner.id,
-      });
-      const collaborator = createTestCollaborator({
-        podcastId: podcast.id,
-        userId: collaboratorUser.id,
-        email: 'collaborator@example.com',
-        hasApproved: true,
+        approvedBy: 'admin-user-id',
         approvedAt: new Date(),
       });
 
       const state: MockState = {
         podcasts: [podcast],
-        collaborators: [collaborator],
       };
 
-      const revokeSpy = vi.fn();
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo(state),
-        createMockCollaboratorRepo(state, { onRevokeApproval: revokeSpy }),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockPodcastRepo(state));
 
       const result = await Effect.runPromise(
-        revokeApproval({
-          podcastId: podcast.id,
-          userId: collaboratorUser.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          revokeApproval({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
-      expect(result.isOwner).toBe(false);
-      expect(revokeSpy).toHaveBeenCalledWith(podcast.id, collaboratorUser.id);
+      expect(result.podcast).toBeDefined();
+      expect(result.podcast.approvedBy).toBeNull();
+      expect(result.podcast.approvedAt).toBeNull();
     });
   });
 
   describe('error cases', () => {
-    it('fails with NotPodcastCollaborator when user is neither owner nor collaborator', async () => {
-      const owner = createTestUser({ id: 'owner-id' });
-      const stranger = createTestUser({ id: 'stranger-id' });
+    it('fails with ForbiddenError when non-admin tries to revoke', async () => {
+      const regularUser = createTestUser({ id: 'regular-user-id' });
       const podcast = createTestPodcast({
         id: 'pod_test0000000001' as PodcastId,
-        createdBy: owner.id,
+        createdBy: regularUser.id,
+        approvedBy: 'admin-user-id',
+        approvedAt: new Date(),
       });
 
       const state: MockState = {
         podcasts: [podcast],
-        collaborators: [],
       };
 
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo(state),
-        createMockCollaboratorRepo(state),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockPodcastRepo(state));
 
       const result = await Effect.runPromiseExit(
-        revokeApproval({
-          podcastId: podcast.id,
-          userId: stranger.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(regularUser)(
+          revokeApproval({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotPodcastCollaborator);
+        expect(error).toBeInstanceOf(ForbiddenError);
       }
     });
 
     it('fails with PodcastNotFound when podcast does not exist', async () => {
-      const user = createTestUser({ id: 'user-id' });
+      const admin = createTestAdmin({ id: 'admin-user-id' });
 
       const state: MockState = {
         podcasts: [],
-        collaborators: [],
       };
 
-      const layers = Layer.mergeAll(
-        MockDbLive,
-        createMockPodcastRepo(state),
-        createMockCollaboratorRepo(state),
-      );
+      const layers = Layer.mergeAll(MockDbLive, createMockPodcastRepo(state));
 
       const result = await Effect.runPromiseExit(
-        revokeApproval({
-          podcastId: 'pod_nonexistent0000' as string,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          revokeApproval({
+            podcastId: 'pod_nonexistent0000' as string,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');

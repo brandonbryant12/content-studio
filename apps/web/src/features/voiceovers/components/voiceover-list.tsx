@@ -1,12 +1,57 @@
 // features/voiceovers/components/voiceover-list.tsx
 // Presenter: Pure UI component with no data fetching or state management
 
-import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  MagnifyingGlassIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
+import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
-import { VoiceoverItem, type VoiceoverListItem } from './voiceover-item';
+import { Link } from '@tanstack/react-router';
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useTransition,
+  type ChangeEvent,
+} from 'react';
+import type { VoiceoverListItem } from './voiceover-item';
+import { VoiceoverIcon } from './voiceover-icon';
+import {
+  type VoiceoverStatusType,
+  getStatusConfig,
+  isGeneratingStatus,
+} from '../lib/status';
+import { formatDuration } from '@/shared/lib/formatters';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+
+function StatusBadge({ status }: { status: VoiceoverStatusType | undefined }) {
+  const config = getStatusConfig(status);
+  if (!config) return null;
+
+  return (
+    <Badge variant={config.badgeVariant} className="gap-1.5">
+      {isGeneratingStatus(status) && <Spinner className="w-3 h-3" />}
+      {config.label}
+    </Badge>
+  );
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -57,11 +102,150 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   return (
     <div className="text-center py-16">
       <p className="text-muted-foreground">
-        No voiceovers found matching "{searchQuery}"
+        No voiceovers found matching &ldquo;{searchQuery}&rdquo;
       </p>
     </div>
   );
 }
+
+const VoiceoverRow = memo(function VoiceoverRow({
+  voiceover,
+  onDelete,
+  isDeleting,
+  quickPlay,
+  isSelected,
+  onToggleSelect,
+}: {
+  voiceover: VoiceoverListItem;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+  quickPlay: UseQuickPlayReturn;
+  isSelected: boolean;
+  onToggleSelect: (id: string) => void;
+}) {
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete(voiceover.id);
+    },
+    [onDelete, voiceover.id],
+  );
+
+  const hasAudio = !!voiceover.audioUrl;
+  const isThisPlaying =
+    quickPlay.playingId === voiceover.id && quickPlay.isPlaying;
+
+  const handlePlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!voiceover.audioUrl) return;
+      quickPlay.toggle(voiceover.id, voiceover.audioUrl);
+    },
+    [quickPlay, voiceover.id, voiceover.audioUrl],
+  );
+
+  const handleToggle = useCallback(() => {
+    onToggleSelect(voiceover.id);
+  }, [onToggleSelect, voiceover.id]);
+
+  return (
+    <tr
+      className={`group border-b border-border last:border-b-0 transition-colors ${
+        isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'
+      }`}
+    >
+      {/* Checkbox */}
+      <td className="py-3 pl-4 pr-1 w-10">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={handleToggle}
+          aria-label={`Select ${voiceover.title}`}
+        />
+      </td>
+      {/* Play button */}
+      <td className="py-3 pl-1 pr-1 w-10">
+        {hasAudio ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full"
+            onClick={handlePlayClick}
+            aria-label={
+              isThisPlaying
+                ? `Pause ${voiceover.title}`
+                : `Play ${voiceover.title}`
+            }
+          >
+            {isThisPlaying ? (
+              <PauseIcon className="w-4 h-4" />
+            ) : (
+              <PlayIcon className="w-4 h-4" />
+            )}
+          </Button>
+        ) : (
+          <div className="h-8 w-8" />
+        )}
+      </td>
+      {/* Title */}
+      <td className="py-3 px-3">
+        <Link
+          to="/voiceovers/$voiceoverId"
+          params={{ voiceoverId: voiceover.id }}
+          className="flex items-center gap-3 min-w-0"
+        >
+          <VoiceoverIcon status={voiceover.status} className="w-8 h-8" />
+          <div className="min-w-0">
+            <span className="font-medium text-sm truncate block">
+              {voiceover.title}
+            </span>
+            {quickPlay.playingId === voiceover.id && (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {quickPlay.formatTime(quickPlay.currentTime)}
+                {quickPlay.duration > 0 &&
+                  ` / ${quickPlay.formatTime(quickPlay.duration)}`}
+              </span>
+            )}
+          </div>
+        </Link>
+      </td>
+      {/* Status */}
+      <td className="py-3 px-4">
+        <StatusBadge status={voiceover.status} />
+      </td>
+      {/* Voice */}
+      <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">
+        {voiceover.voiceName ?? '-'}
+      </td>
+      {/* Duration */}
+      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right hidden sm:table-cell">
+        {formatDuration(voiceover.duration)}
+      </td>
+      {/* Created */}
+      <td className="py-3 px-4 text-sm text-muted-foreground text-right hidden lg:table-cell">
+        {formatDate(voiceover.createdAt)}
+      </td>
+      {/* Delete */}
+      <td className="py-3 px-2 w-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+          aria-label={`Delete ${voiceover.title}`}
+        >
+          {isDeleting ? (
+            <Spinner className="w-3.5 h-3.5" />
+          ) : (
+            <TrashIcon className="w-3.5 h-3.5" />
+          )}
+        </Button>
+      </td>
+    </tr>
+  );
+});
 
 export interface VoiceoverListProps {
   voiceovers: readonly VoiceoverListItem[];
@@ -71,6 +255,10 @@ export interface VoiceoverListProps {
   onSearch: (query: string) => void;
   onCreate: () => void;
   onDelete: (id: string) => void;
+  quickPlay: UseQuickPlayReturn;
+  selection: UseBulkSelectionReturn;
+  isBulkDeleting: boolean;
+  onBulkDelete: () => void;
 }
 
 export function VoiceoverList({
@@ -81,8 +269,11 @@ export function VoiceoverList({
   onSearch,
   onCreate,
   onDelete,
+  quickPlay,
+  selection,
+  isBulkDeleting,
+  onBulkDelete,
 }: VoiceoverListProps) {
-  // Use transition for non-urgent search updates (rerender-transitions)
   const [isPending, startTransition] = useTransition();
 
   const filteredVoiceovers = useMemo(
@@ -93,16 +284,28 @@ export function VoiceoverList({
     [voiceovers, searchQuery],
   );
 
+  const filteredIds = useMemo(
+    () => filteredVoiceovers.map((v) => v.id),
+    [filteredVoiceovers],
+  );
+
   const handleSearch = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      // Wrap in transition to keep input responsive during filtering
       startTransition(() => {
         onSearch(value);
       });
     },
     [onSearch],
   );
+
+  const handleToggleAll = useCallback(() => {
+    if (selection.isAllSelected(filteredIds)) {
+      selection.deselectAll();
+    } else {
+      selection.selectAll(filteredIds);
+    }
+  }, [selection, filteredIds]);
 
   const isEmpty = voiceovers.length === 0;
   const hasNoResults =
@@ -111,7 +314,7 @@ export function VoiceoverList({
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <p className="page-eyebrow">Audio Content</p>
           <h1 className="page-title">Voiceovers</h1>
@@ -132,12 +335,12 @@ export function VoiceoverList({
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <Input
           value={searchQuery}
           onChange={handleSearch}
           placeholder="Search voiceovers…"
-          className="search-input"
+          className="search-input pl-10"
           autoComplete="off"
           aria-label="Search voiceovers"
         />
@@ -151,18 +354,74 @@ export function VoiceoverList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
-          className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
-          {filteredVoiceovers.map((voiceover) => (
-            <VoiceoverItem
-              key={voiceover.id}
-              voiceover={voiceover}
-              onDelete={onDelete}
-              isDeleting={deletingId === voiceover.id}
-            />
-          ))}
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="py-2.5 pl-4 pr-1 w-10">
+                  <Checkbox
+                    checked={
+                      selection.isIndeterminate(filteredIds)
+                        ? 'indeterminate'
+                        : selection.isAllSelected(filteredIds)
+                    }
+                    onCheckedChange={handleToggleAll}
+                    aria-label="Select all voiceovers"
+                  />
+                </th>
+                <th className="w-10">
+                  <span className="sr-only">Play</span>
+                </th>
+                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                  Voice
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
+                  Duration
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
+                  Created
+                </th>
+                <th className="w-10">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVoiceovers.map((voiceover) => (
+                <VoiceoverRow
+                  key={voiceover.id}
+                  voiceover={voiceover}
+                  onDelete={onDelete}
+                  isDeleting={deletingId === voiceover.id}
+                  quickPlay={quickPlay}
+                  isSelected={selection.isSelected(voiceover.id)}
+                  onToggleSelect={selection.toggle}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selection.selectedCount}
+        totalCount={filteredVoiceovers.length}
+        isAllSelected={selection.isAllSelected(filteredIds)}
+        isIndeterminate={selection.isIndeterminate(filteredIds)}
+        isDeleting={isBulkDeleting}
+        entityName="voiceover"
+        onToggleAll={handleToggleAll}
+        onDeselectAll={selection.deselectAll}
+        onDeleteSelected={onBulkDelete}
+      />
     </div>
   );
 }

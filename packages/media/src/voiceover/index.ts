@@ -49,9 +49,7 @@ export {
   type ListVoiceoverCollaboratorsInput,
   type ListVoiceoverCollaboratorsResult,
   type ApproveVoiceoverInput,
-  type ApproveVoiceoverResult,
   type RevokeVoiceoverApprovalInput,
-  type RevokeVoiceoverApprovalResult,
   type ClaimVoiceoverPendingInvitesInput,
   type ClaimVoiceoverPendingInvitesResult,
 } from './use-cases';

@@ -36,9 +36,6 @@ const createMockCollaboratorRepo = (
     lookupUserByEmail: () => Effect.die('not implemented'),
     add: () => Effect.die('not implemented'),
     remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
 
     claimByEmail: (email: string, userId: string) =>
       Effect.sync(() => {

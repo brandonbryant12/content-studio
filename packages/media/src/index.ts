@@ -43,6 +43,7 @@ export {
   listActivity,
   getActivityStats,
   logEntityActivity,
+  syncEntityTitle,
   type ActivityLogRepoService,
   type LogActivityInput,
   type ListActivityInput,
@@ -160,6 +161,8 @@ export {
   generateInfographic,
   getInfographicVersions,
   getInfographicJob,
+  approveInfographic,
+  revokeInfographicApproval,
   type CreateInfographicInput,
   type GetInfographicInput,
   type ListInfographicsInput,
@@ -168,6 +171,8 @@ export {
   type GenerateInfographicInput,
   type GetInfographicVersionsInput,
   type GetInfographicJobInput,
+  type ApproveInfographicInput,
+  type RevokeInfographicApprovalInput,
 } from './infographic';
 
 // Infographic module - Types
@@ -299,9 +304,7 @@ export {
   type AddCollaboratorResult,
   type RemoveCollaboratorInput,
   type ApprovePodcastInput,
-  type ApprovePodcastResult,
   type RevokeApprovalInput,
-  type RevokeApprovalResult,
   type ClaimPendingInvitesInput,
   type ClaimPendingInvitesResult,
 } from './podcast';
@@ -353,9 +356,7 @@ export {
   type ListVoiceoverCollaboratorsInput,
   type ListVoiceoverCollaboratorsResult,
   type ApproveVoiceoverInput,
-  type ApproveVoiceoverResult,
   type RevokeVoiceoverApprovalInput,
-  type RevokeVoiceoverApprovalResult,
   type ClaimVoiceoverPendingInvitesInput,
   type ClaimVoiceoverPendingInvitesResult,
 } from './voiceover';

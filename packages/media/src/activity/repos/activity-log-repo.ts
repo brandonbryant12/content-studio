@@ -7,7 +7,16 @@ import {
   user,
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { desc, eq, and, sql, count as drizzleCount, gt } from 'drizzle-orm';
+import {
+  desc,
+  eq,
+  and,
+  or,
+  sql,
+  ilike,
+  count as drizzleCount,
+  gt,
+} from 'drizzle-orm';
 
 // =============================================================================
 // Input Types
@@ -26,6 +35,7 @@ export interface ListActivityLogOptions {
   userId?: string;
   entityType?: string;
   action?: string;
+  search?: string;
   limit: number;
   afterCursor?: string;
 }
@@ -70,6 +80,11 @@ export interface ActivityLogRepoService {
   readonly countTotal: (
     since: Date,
   ) => Effect.Effect<number, DatabaseError, Db>;
+
+  readonly updateEntityTitle: (
+    entityId: string,
+    title: string,
+  ) => Effect.Effect<void, DatabaseError, Db>;
 }
 
 // =============================================================================
@@ -99,6 +114,15 @@ const make: ActivityLogRepoService = {
           metadata: data.metadata ?? null,
         })
         .returning();
+
+      // Keep entityTitle current across all entries for this entity
+      if (data.entityId && data.entityTitle) {
+        await db
+          .update(activityLog)
+          .set({ entityTitle: data.entityTitle })
+          .where(eq(activityLog.entityId, data.entityId));
+      }
+
       return row!;
     }),
 
@@ -115,14 +139,25 @@ const make: ActivityLogRepoService = {
       if (options.action) {
         conditions.push(eq(activityLog.action, options.action));
       }
+      if (options.search) {
+        const pattern = `%${options.search}%`;
+        conditions.push(
+          or(
+            ilike(user.name, pattern),
+            ilike(activityLog.entityTitle, pattern),
+          )!,
+        );
+      }
       if (options.afterCursor) {
         conditions.push(sql`${activityLog.createdAt} < ${options.afterCursor}`);
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;
 
+      // Use DISTINCT ON (entityId) to show only the latest entry per entity.
+      // This gives a clean entity-level feed rather than individual action records.
       const rows = await db
-        .select({
+        .selectDistinctOn([activityLog.entityId], {
           id: activityLog.id,
           userId: activityLog.userId,
           action: activityLog.action,
@@ -136,8 +171,14 @@ const make: ActivityLogRepoService = {
         .from(activityLog)
         .innerJoin(user, eq(activityLog.userId, user.id))
         .where(where)
-        .orderBy(desc(activityLog.createdAt))
+        .orderBy(activityLog.entityId, desc(activityLog.createdAt))
         .limit(options.limit + 1);
+
+      // Re-sort by createdAt since DISTINCT ON requires ordering by entityId first
+      rows.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
 
       return rows;
     }),
@@ -189,6 +230,14 @@ const make: ActivityLogRepoService = {
         .from(activityLog)
         .where(gt(activityLog.createdAt, since));
       return result?.count ?? 0;
+    }),
+
+  updateEntityTitle: (entityId, title) =>
+    withDb('activityLogRepo.updateEntityTitle', async (db) => {
+      await db
+        .update(activityLog)
+        .set({ entityTitle: title })
+        .where(eq(activityLog.entityId, entityId));
     }),
 };
 

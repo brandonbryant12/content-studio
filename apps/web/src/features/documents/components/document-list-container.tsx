@@ -2,10 +2,18 @@
 // Container: Handles data fetching, state management, and mutations
 
 import { useState, useCallback } from 'react';
-import { useDocumentList } from '../hooks/use-document-list';
+import {
+  useDocumentList,
+  getDocumentListQueryKey,
+} from '../hooks/use-document-list';
 import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-document';
+import { rawApiClient } from '@/clients/apiClient';
+import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { DocumentList } from './document-list';
+
+const deleteFn = (input: { id: string }) =>
+  rawApiClient.documents.delete(input);
 
 /**
  * Container: Fetches document list and coordinates mutations.
@@ -22,6 +30,14 @@ export function DocumentListContainer() {
 
   // Mutations
   const deleteMutation = useOptimisticDeleteDocument();
+
+  // Bulk selection & delete
+  const selection = useBulkSelection();
+  const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
+    queryKey: getDocumentListQueryKey(),
+    deleteFn,
+    entityName: 'document',
+  });
 
   const handleDeleteRequest = useCallback((id: string) => {
     setPendingDeleteId(id);
@@ -42,6 +58,11 @@ export function DocumentListContainer() {
     );
   }, [pendingDeleteId, deleteMutation]);
 
+  const handleBulkDelete = useCallback(async () => {
+    await executeBulkDelete(selection.selectedIds);
+    selection.deselectAll();
+  }, [executeBulkDelete, selection]);
+
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
@@ -57,7 +78,7 @@ export function DocumentListContainer() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <p className="page-eyebrow">Source Content</p>
-            <h1 className="page-title">Documents</h1>
+            <h1 className="page-title">Knowledge Base</h1>
           </div>
         </div>
         <div className="loading-center-lg">
@@ -77,6 +98,9 @@ export function DocumentListContainer() {
         onSearch={handleSearch}
         onUploadOpen={handleUploadOpen}
         onDelete={handleDeleteRequest}
+        selection={selection}
+        isBulkDeleting={isBulkDeleting}
+        onBulkDelete={handleBulkDelete}
       />
       <ConfirmationDialog
         open={pendingDeleteId !== null}

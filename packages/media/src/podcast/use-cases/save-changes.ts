@@ -2,7 +2,6 @@ import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment, VersionStatus } from '@repo/db/schema';
 import { requireOwnership } from '@repo/auth/policy';
 import { PodcastRepo } from '../repos/podcast-repo';
-import { CollaboratorRepo } from '../repos/collaborator-repo';
 
 // =============================================================================
 // Types
@@ -71,7 +70,6 @@ export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
-    const collaboratorRepo = yield* CollaboratorRepo;
 
     // 1. Load podcast and check ownership
     const podcast = yield* podcastRepo.findById(input.podcastId);
@@ -136,9 +134,8 @@ export const saveChanges = (input: SaveChangesInput) =>
       'script_ready',
     );
 
-    // 7. Clear all approvals (owner and collaborators) since content changed
-    yield* podcastRepo.clearApprovals(input.podcastId);
-    yield* collaboratorRepo.clearAllApprovals(podcast.id);
+    // 7. Clear approval since content changed
+    yield* podcastRepo.clearApproval(input.podcastId);
 
     return {
       podcast: updatedPodcast,

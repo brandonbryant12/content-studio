@@ -116,8 +116,8 @@ export const generateAudio = (input: GenerateAudioInput) =>
       voiceConfigs,
     });
 
-    // 6. Upload to storage
-    const audioKey = `podcasts/${podcast.id}/audio.wav`;
+    // 6. Upload to storage (timestamp in key for cache-busting)
+    const audioKey = `podcasts/${podcast.id}/audio-${Date.now()}.wav`;
     yield* storage.upload(audioKey, ttsResult.audioContent, 'audio/wav');
     const audioUrl = yield* storage.getUrl(audioKey);
 

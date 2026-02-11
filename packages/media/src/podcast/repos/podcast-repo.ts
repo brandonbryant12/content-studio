@@ -169,18 +169,18 @@ export interface PodcastRepoService {
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Clear approvals (set ownerHasApproved to false).
+   * Set approval (approvedBy + approvedAt).
    */
-  readonly clearApprovals: (
+  readonly setApproval: (
     id: string,
+    approvedBy: string,
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Set owner approval status.
+   * Clear approval (set approvedBy/approvedAt to null).
    */
-  readonly setOwnerApproval: (
+  readonly clearApproval: (
     id: string,
-    hasApproved: boolean,
   ) => Effect.Effect<Podcast, PodcastNotFound | DatabaseError, Db>;
 }
 
@@ -506,12 +506,13 @@ const make: PodcastRepoService = {
       ),
     ),
 
-  clearApprovals: (id) =>
-    withDb('podcastRepo.clearApprovals', async (db) => {
+  setApproval: (id, approvedBy) =>
+    withDb('podcastRepo.setApproval', async (db) => {
       const [pod] = await db
         .update(podcast)
         .set({
-          ownerHasApproved: false,
+          approvedBy,
+          approvedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(podcast.id, id as PodcastId))
@@ -523,12 +524,13 @@ const make: PodcastRepoService = {
       ),
     ),
 
-  setOwnerApproval: (id, hasApproved) =>
-    withDb('podcastRepo.setOwnerApproval', async (db) => {
+  clearApproval: (id) =>
+    withDb('podcastRepo.clearApproval', async (db) => {
       const [pod] = await db
         .update(podcast)
         .set({
-          ownerHasApproved: hasApproved,
+          approvedBy: null,
+          approvedAt: null,
           updatedAt: new Date(),
         })
         .where(eq(podcast.id, id as PodcastId))

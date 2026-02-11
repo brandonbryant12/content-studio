@@ -1,16 +1,16 @@
-import { TTSError, TTSQuotaExceededError } from '../../errors';
 import { Effect, Layer } from 'effect';
 import {
   TTS,
   type TTSService,
   type SynthesizeOptions,
   type SynthesizeResult,
-  type AudioEncoding,
   type ListVoicesOptions,
   type PreviewVoiceOptions,
   type PreviewVoiceResult,
 } from '../service';
 import { VOICES, getVoicesByGender, DEFAULT_PREVIEW_TEXT } from '../voices';
+import { wrapPcmAsWav } from '../audio-utils';
+import { mapError } from '../map-error';
 
 /**
  * Configuration for Vertex AI TTS provider.
@@ -38,67 +38,6 @@ export type VertexTTSConfig =
       /** Default: 'gemini-2.5-flash-preview-tts' */
       readonly model?: string;
     };
-
-/**
- * Wrap raw PCM data in a WAV container.
- * Gemini TTS returns raw PCM: 24kHz, 16-bit, mono
- */
-const wrapPcmAsWav = (pcmData: Buffer): Buffer => {
-  const sampleRate = 24000;
-  const numChannels = 1;
-  const bitsPerSample = 16;
-  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-  const blockAlign = (numChannels * bitsPerSample) / 8;
-  const dataSize = pcmData.length;
-  const headerSize = 44;
-
-  const buffer = Buffer.alloc(headerSize + dataSize);
-
-  // RIFF header
-  buffer.write('RIFF', 0);
-  buffer.writeUInt32LE(36 + dataSize, 4); // file size - 8
-  buffer.write('WAVE', 8);
-
-  // fmt chunk
-  buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16); // fmt chunk size
-  buffer.writeUInt16LE(1, 20); // audio format (1 = PCM)
-  buffer.writeUInt16LE(numChannels, 22);
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(byteRate, 28);
-  buffer.writeUInt16LE(blockAlign, 32);
-  buffer.writeUInt16LE(bitsPerSample, 34);
-
-  // data chunk
-  buffer.write('data', 36);
-  buffer.writeUInt32LE(dataSize, 40);
-  pcmData.copy(buffer, 44);
-
-  return buffer;
-};
-
-/**
- * Map Vertex API errors to domain errors.
- */
-const mapError = (error: unknown): TTSError | TTSQuotaExceededError => {
-  if (error instanceof Error) {
-    if (error.message.includes('quota') || error.message.includes('429')) {
-      return new TTSQuotaExceededError({
-        message: error.message,
-      });
-    }
-
-    return new TTSError({
-      message: error.message,
-      cause: error,
-    });
-  }
-
-  return new TTSError({
-    message: 'Unknown TTS error',
-    cause: error,
-  });
-};
 
 /**
  * Get access token for Vertex AI API.
@@ -155,7 +94,6 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
         try: async () => {
           const text = options.text ?? DEFAULT_PREVIEW_TEXT;
 
-          // Use generateContent endpoint (same approach as Google provider)
           let headers: Record<string, string>;
           let url: string;
 
@@ -216,7 +154,8 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
           const inlineData =
             data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
           if (!inlineData?.data) {
-            throw new Error('No audio data in response');
+            const preview = JSON.stringify(data).slice(0, 500);
+            throw new Error(`No audio data in response: ${preview}`);
           }
 
           const audioData = Buffer.from(inlineData.data, 'base64');
@@ -228,7 +167,7 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
 
           return {
             audioContent,
-            audioEncoding: 'LINEAR16' as AudioEncoding,
+            audioEncoding: 'LINEAR16',
             voiceId: options.voiceId,
           } satisfies PreviewVoiceResult;
         },
@@ -246,24 +185,22 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
     synthesize: (options: SynthesizeOptions) =>
       Effect.tryPromise({
         try: async () => {
-          // Build conversation text in format "Speaker: text\nSpeaker2: text"
-          const conversationText = options.turns
-            .map((t) => `${t.speaker}: ${t.text}`)
-            .join('\n');
+          // Single-speaker: plain text; multi-speaker: "Speaker: text" format
+          const isSingleSpeaker = options.voiceConfigs.length === 1;
+          const contentText = isSingleSpeaker
+            ? options.turns.map((t) => t.text).join('\n')
+            : options.turns.map((t) => `${t.speaker}: ${t.text}`).join('\n');
 
-          // Build auth headers and URL based on mode
           let headers: Record<string, string>;
           let url: string;
 
           if (config.mode === 'express') {
-            // Express mode uses API key header
             url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
             headers = {
               'Content-Type': 'application/json',
               'x-goog-api-key': config.apiKey,
             };
           } else {
-            // Service account mode uses OAuth Bearer token
             const accessToken = await getAccessToken();
             url = buildEndpoint(config.project, config.location, modelName);
             headers = {
@@ -278,23 +215,31 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
             body: JSON.stringify({
               contents: [
                 {
-                  parts: [{ text: conversationText }],
+                  parts: [{ text: contentText }],
                 },
               ],
               generationConfig: {
                 responseModalities: ['AUDIO'],
-                speechConfig: {
-                  multiSpeakerVoiceConfig: {
-                    speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
-                      speaker: vc.speakerAlias,
+                speechConfig: isSingleSpeaker
+                  ? {
                       voiceConfig: {
                         prebuiltVoiceConfig: {
-                          voiceName: vc.voiceId,
+                          voiceName: options.voiceConfigs[0]!.voiceId,
                         },
                       },
-                    })),
-                  },
-                },
+                    }
+                  : {
+                      multiSpeakerVoiceConfig: {
+                        speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
+                          speaker: vc.speakerAlias,
+                          voiceConfig: {
+                            prebuiltVoiceConfig: {
+                              voiceName: vc.voiceId,
+                            },
+                          },
+                        })),
+                      },
+                    },
               },
             }),
           });
@@ -306,7 +251,6 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
             );
           }
 
-          // Vertex API returns audio in candidates[0].content.parts[0].inlineData
           const data = (await response.json()) as {
             candidates: Array<{
               content: {
@@ -320,13 +264,13 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
           const inlineData =
             data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
           if (!inlineData?.data) {
-            throw new Error('No audio data in response');
+            const preview = JSON.stringify(data).slice(0, 500);
+            throw new Error(`No audio data in response: ${preview}`);
           }
 
-          // Decode base64 audio data
           const audioData = Buffer.from(inlineData.data, 'base64');
 
-          // Check if already WAV (starts with RIFF header) - don't double-wrap
+          // Don't double-wrap: check if response is already WAV (RIFF header)
           const isAlreadyWav =
             audioData.slice(0, 4).toString('ascii') === 'RIFF';
           const audioContent = isAlreadyWav

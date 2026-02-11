@@ -15,7 +15,7 @@ import {
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './log-activity';
 
 const documentRouter = {
   list: protectedProcedure.documents.list.handler(
@@ -127,7 +127,7 @@ const documentRouter = {
         context.user,
         updateDocument({ id, ...data }).pipe(
           Effect.flatMap(serializeDocumentEffect),
-          tapLogActivity(context.runtime, context.user, 'updated', 'document'),
+          tapSyncTitle(context.runtime, context.user),
         ),
         errors,
         {

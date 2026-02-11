@@ -18,7 +18,7 @@ import { Effect } from 'effect';
 import type { VoiceoverCollaboratorId } from '@repo/db/schema';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './log-activity';
 import {
   serializeVoiceoverEffect,
   serializeVoiceoverListItemsEffect,
@@ -103,7 +103,7 @@ const voiceoverRouter = {
           data,
         }).pipe(
           Effect.flatMap(serializeVoiceoverEffect),
-          tapLogActivity(context.runtime, context.user, 'updated', 'voiceover'),
+          tapSyncTitle(context.runtime, context.user),
         ),
         errors,
         {
@@ -252,10 +252,11 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        approveVoiceover({
-          voiceoverId: input.id,
-          userId: context.session.user.id,
-        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        approveVoiceover({ voiceoverId: input.id }).pipe(
+          Effect.flatMap((result) =>
+            serializeVoiceoverEffect(result.voiceover),
+          ),
+        ),
         errors,
         {
           span: 'api.voiceovers.approve',
@@ -270,10 +271,11 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        revokeVoiceoverApproval({
-          voiceoverId: input.id,
-          userId: context.session.user.id,
-        }).pipe(Effect.map((result) => ({ isOwner: result.isOwner }))),
+        revokeVoiceoverApproval({ voiceoverId: input.id }).pipe(
+          Effect.flatMap((result) =>
+            serializeVoiceoverEffect(result.voiceover),
+          ),
+        ),
         errors,
         {
           span: 'api.voiceovers.revokeApproval',

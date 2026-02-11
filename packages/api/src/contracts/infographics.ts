@@ -35,6 +35,12 @@ const infographicErrors = {
   },
 } as const;
 
+const authErrors = {
+  FORBIDDEN: {
+    status: 403,
+  },
+} as const;
+
 const jobErrors = {
   JOB_NOT_FOUND: {
     status: 404,
@@ -168,6 +174,30 @@ const infographicContract = oc
       .errors(infographicErrors)
       .input(std(Schema.Struct({ id: InfographicIdSchema })))
       .output(std(Schema.Array(InfographicVersionOutputSchema))),
+
+    // Approve an infographic (admin-only)
+    approve: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/approve',
+        summary: 'Approve infographic',
+        description: 'Approve the current infographic content. Admin-only.',
+      })
+      .errors({ ...infographicErrors, ...authErrors })
+      .input(std(Schema.Struct({ id: InfographicIdSchema })))
+      .output(std(InfographicOutputSchema)),
+
+    // Revoke approval on an infographic (admin-only)
+    revokeApproval: oc
+      .route({
+        method: 'DELETE',
+        path: '/{id}/approve',
+        summary: 'Revoke approval',
+        description: 'Revoke approval on an infographic. Admin-only.',
+      })
+      .errors({ ...infographicErrors, ...authErrors })
+      .input(std(Schema.Struct({ id: InfographicIdSchema })))
+      .output(std(InfographicOutputSchema)),
   });
 
 export default infographicContract;

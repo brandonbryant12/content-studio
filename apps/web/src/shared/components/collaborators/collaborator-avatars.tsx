@@ -1,4 +1,4 @@
-import { CheckIcon, PersonIcon } from '@radix-ui/react-icons';
+import { PersonIcon } from '@radix-ui/react-icons';
 import {
   Avatar,
   AvatarImage,
@@ -10,7 +10,6 @@ interface Owner {
   id: string;
   name: string;
   image?: string | null;
-  hasApproved: boolean;
 }
 
 export interface CollaboratorData {
@@ -19,7 +18,6 @@ export interface CollaboratorData {
   email: string;
   userName: string | null;
   userImage: string | null;
-  hasApproved: boolean;
 }
 
 export interface CollaboratorAvatarsProps {
@@ -33,20 +31,17 @@ const MAX_VISIBLE = 4;
 function getTooltipText(
   name: string | null,
   email: string,
-  hasApproved: boolean,
   isOwner: boolean,
 ): string {
   const displayName = name || email;
   const roleText = isOwner ? ' (Owner)' : '';
-  const approvalText = hasApproved ? ' - Approved' : '';
-  return `${displayName}${roleText}${approvalText}`;
+  return `${displayName}${roleText}`;
 }
 
 interface AvatarItemProps {
   name: string | null;
   email: string;
   image: string | null | undefined;
-  hasApproved: boolean;
   isPending: boolean;
   isOwner: boolean;
   index: number;
@@ -56,13 +51,12 @@ function AvatarItem({
   name,
   email,
   image,
-  hasApproved,
   isPending,
   isOwner,
   index,
 }: AvatarItemProps) {
   const initials = getInitials(name, email);
-  const tooltipText = getTooltipText(name, email, hasApproved, isOwner);
+  const tooltipText = getTooltipText(name, email, isOwner);
 
   return (
     <div
@@ -84,12 +78,6 @@ function AvatarItem({
           )}
         </AvatarFallback>
       </Avatar>
-
-      {hasApproved && (
-        <span className="collab-approved-badge">
-          <CheckIcon className="w-2.5 h-2.5" />
-        </span>
-      )}
 
       {isOwner && (
         <span className="collab-owner-badge">
@@ -122,7 +110,6 @@ export function CollaboratorAvatars({
         name={owner.name}
         email=""
         image={owner.image}
-        hasApproved={owner.hasApproved}
         isPending={false}
         isOwner={true}
         index={0}
@@ -134,7 +121,6 @@ export function CollaboratorAvatars({
           name={collaborator.userName}
           email={collaborator.email}
           image={collaborator.userImage}
-          hasApproved={collaborator.hasApproved}
           isPending={collaborator.userId === null}
           isOwner={false}
           index={idx + 1}

@@ -19,6 +19,8 @@ export {
   generateInfographic,
   getInfographicVersions,
   getInfographicJob,
+  approveInfographic,
+  revokeInfographicApproval,
   type CreateInfographicInput,
   type GetInfographicInput,
   type ListInfographicsInput,
@@ -27,6 +29,8 @@ export {
   type GenerateInfographicInput,
   type GetInfographicVersionsInput,
   type GetInfographicJobInput,
+  type ApproveInfographicInput,
+  type RevokeInfographicApprovalInput,
 } from './use-cases';
 
 // Re-export types from schema

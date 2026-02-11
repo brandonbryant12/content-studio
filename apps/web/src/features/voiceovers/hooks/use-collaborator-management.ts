@@ -11,7 +11,6 @@ interface Owner {
   id: string;
   name: string;
   image?: string | null;
-  hasApproved: boolean;
 }
 
 export interface UseCollaboratorManagementReturn {
@@ -20,7 +19,8 @@ export interface UseCollaboratorManagementReturn {
   isAddDialogOpen: boolean;
   openAddDialog: () => void;
   closeAddDialog: () => void;
-  currentUserHasApproved: boolean;
+  isApproved: boolean;
+  isAdmin: boolean;
   handleApprove: () => void;
   handleRevoke: () => void;
   isApprovalPending: boolean;
@@ -33,6 +33,7 @@ export function useCollaboratorManagement(
     id?: string;
     name?: string | null;
     image?: string | null;
+    role?: string;
   } | null,
 ): UseCollaboratorManagementReturn {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -60,32 +61,17 @@ export function useCollaboratorManagement(
         currentUser?.id === voiceover.createdBy
           ? currentUser?.image
           : undefined,
-      hasApproved: voiceover.ownerHasApproved,
     }),
     [
       voiceover.createdBy,
-      voiceover.ownerHasApproved,
       currentUser?.id,
       currentUser?.name,
       currentUser?.image,
     ],
   );
 
-  // Check if current user has approved
-  const currentUserHasApproved = useMemo(() => {
-    if (currentUserId === voiceover.createdBy) {
-      return voiceover.ownerHasApproved;
-    }
-    const userCollaborator = collaborators.find(
-      (c) => c.userId === currentUserId,
-    );
-    return userCollaborator?.hasApproved ?? false;
-  }, [
-    currentUserId,
-    voiceover.createdBy,
-    voiceover.ownerHasApproved,
-    collaborators,
-  ]);
+  const isApproved = voiceover.approvedBy !== null;
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleApprove = useCallback(() => {
     approve.mutate({ id: voiceover.id });
@@ -103,7 +89,8 @@ export function useCollaboratorManagement(
     isAddDialogOpen,
     openAddDialog,
     closeAddDialog,
-    currentUserHasApproved,
+    isApproved,
+    isAdmin,
     handleApprove,
     handleRevoke,
     isApprovalPending,

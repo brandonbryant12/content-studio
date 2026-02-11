@@ -81,6 +81,12 @@ const jobErrors = {
   },
 } as const;
 
+const authErrors = {
+  FORBIDDEN: {
+    status: 403,
+  },
+} as const;
+
 const collaboratorErrors = {
   NOT_PODCAST_OWNER: {
     status: 403,
@@ -356,43 +362,29 @@ const podcastContract = oc
       )
       .output(std(Schema.Struct({}))),
 
-    // Approve a podcast (owner or collaborator)
+    // Approve a podcast (admin-only)
     approve: oc
       .route({
         method: 'POST',
         path: '/{id}/approve',
         summary: 'Approve podcast',
-        description:
-          'Approve the current podcast content. Available to both owners and collaborators.',
+        description: 'Approve the current podcast content. Admin-only.',
       })
-      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .errors({ ...podcastErrors, ...authErrors })
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
-      .output(
-        std(
-          Schema.Struct({
-            isOwner: Schema.Boolean,
-          }),
-        ),
-      ),
+      .output(std(PodcastOutputSchema)),
 
-    // Revoke approval on a podcast
+    // Revoke approval on a podcast (admin-only)
     revokeApproval: oc
       .route({
         method: 'DELETE',
         path: '/{id}/approve',
         summary: 'Revoke approval',
-        description:
-          'Revoke your approval on a podcast. Available to both owners and collaborators.',
+        description: 'Revoke approval on a podcast. Admin-only.',
       })
-      .errors({ ...podcastErrors, ...collaboratorErrors })
+      .errors({ ...podcastErrors, ...authErrors })
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
-      .output(
-        std(
-          Schema.Struct({
-            isOwner: Schema.Boolean,
-          }),
-        ),
-      ),
+      .output(std(PodcastOutputSchema)),
 
     // Claim pending invites for the current user
     claimInvites: oc

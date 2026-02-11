@@ -75,14 +75,7 @@ function Dashboard() {
 
   return (
     <div className="page-container">
-      {/* Header */}
-      <div className="mb-8 animate-fade-in-up">
-        <h1 className="page-title-lg">Dashboard</h1>
-        <p className="text-body-lg mt-2">
-          Your content at a glance. Create, manage, and track everything in one
-          place.
-        </p>
-      </div>
+      <h1 className="sr-only">Dashboard</h1>
 
       {/* Stats Row */}
       <div className="content-grid-4 mb-8 animate-fade-in-up stagger-1">

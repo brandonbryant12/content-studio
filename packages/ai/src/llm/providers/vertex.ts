@@ -1,5 +1,4 @@
 import { createVertex } from '@ai-sdk/google-vertex';
-import { LLMError, LLMRateLimitError } from '../../errors';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
 import {
@@ -8,6 +7,7 @@ import {
   type GenerateOptions,
   type GenerateResult,
 } from '../service';
+import { mapError } from '../map-error';
 
 /**
  * Configuration for Vertex AI provider via AI SDK.
@@ -37,49 +37,21 @@ export type VertexConfig =
     };
 
 /**
- * Map AI SDK errors to domain errors.
- */
-const mapError = (error: unknown): LLMError | LLMRateLimitError => {
-  if (error instanceof Error) {
-    // Check for rate limit errors
-    if (error.message.includes('rate limit') || error.message.includes('429')) {
-      return new LLMRateLimitError({
-        message: error.message,
-      });
-    }
-
-    return new LLMError({
-      message: error.message,
-      cause: error,
-    });
-  }
-
-  return new LLMError({
-    message: 'Unknown LLM error',
-    cause: error,
-  });
-};
-
-/**
  * Create Vertex AI service implementation via AI SDK.
  */
 const makeVertexService = (config: VertexConfig): LLMService => {
   const modelId = config.model ?? 'gemini-2.5-flash';
 
-  // Create provider based on auth mode
   const vertex =
     config.mode === 'express'
       ? createVertex({
-          // Express mode: uses experimental_createProviderRegistry internally
-          // The API key is read from GOOGLE_VERTEX_API_KEY env var by the SDK
+          // API key is read from GOOGLE_VERTEX_API_KEY env var by the SDK
         })
       : createVertex({
           project: config.project,
           location: config.location,
-          // Service account credentials are read from GOOGLE_APPLICATION_CREDENTIALS env var
+          // Credentials read from GOOGLE_APPLICATION_CREDENTIALS env var
         });
-
-  // Create model instance
   const model = vertex(modelId);
 
   return {

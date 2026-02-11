@@ -1,8 +1,16 @@
 import { useState, useCallback } from 'react';
 import { useOptimisticCreate } from '../hooks/use-optimistic-create';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
-import { useInfographicList } from '../hooks/use-infographic-list';
+import {
+  useInfographicList,
+  getInfographicListQueryKey,
+} from '../hooks/use-infographic-list';
+import { rawApiClient } from '@/clients/apiClient';
+import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { InfographicList } from './infographic-list';
+
+const deleteFn = (input: { id: string }) =>
+  rawApiClient.infographics.delete(input);
 
 export function InfographicListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,6 +20,14 @@ export function InfographicListContainer() {
 
   const createMutation = useOptimisticCreate();
   const deleteMutation = useOptimisticDeleteList();
+
+  // Bulk selection & delete
+  const selection = useBulkSelection();
+  const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
+    queryKey: getInfographicListQueryKey(),
+    deleteFn,
+    entityName: 'infographic',
+  });
 
   const handleCreate = useCallback(() => {
     createMutation.mutate({
@@ -36,6 +52,11 @@ export function InfographicListContainer() {
     },
     [deleteMutation],
   );
+
+  const handleBulkDelete = useCallback(async () => {
+    await executeBulkDelete(selection.selectedIds);
+    selection.deselectAll();
+  }, [executeBulkDelete, selection]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -66,6 +87,9 @@ export function InfographicListContainer() {
       onSearch={handleSearch}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      selection={selection}
+      isBulkDeleting={isBulkDeleting}
+      onBulkDelete={handleBulkDelete}
     />
   );
 }

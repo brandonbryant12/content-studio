@@ -22,7 +22,6 @@ interface Owner {
   id: string;
   name: string;
   image?: string | null;
-  hasApproved: boolean;
 }
 
 export interface VoiceoverDetailProps {
@@ -38,7 +37,8 @@ export interface VoiceoverDetailProps {
   onDelete: () => void;
   owner: Owner;
   collaborators: readonly Collaborator[];
-  currentUserHasApproved: boolean;
+  isApproved: boolean;
+  isAdmin: boolean;
   onManageCollaborators: () => void;
   // Approval callbacks
   onApprove: () => void;
@@ -59,7 +59,8 @@ export function VoiceoverDetail({
   onDelete,
   owner,
   collaborators,
-  currentUserHasApproved,
+  isApproved,
+  isAdmin,
   onManageCollaborators,
   onApprove,
   onRevoke,
@@ -72,7 +73,8 @@ export function VoiceoverDetail({
       isDeleting={isDeleting}
       owner={owner}
       collaborators={collaborators}
-      currentUserHasApproved={currentUserHasApproved}
+      isApproved={isApproved}
+      isAdmin={isAdmin}
       onManageCollaborators={onManageCollaborators}
       onApprove={onApprove}
       onRevoke={onRevoke}
@@ -88,16 +90,18 @@ export function VoiceoverDetail({
         />
       }
     >
-      <div className="flex flex-col gap-6 p-6">
-        {/* Voice Ensemble at top */}
-        <VoiceSelector
-          voice={settings.voice}
-          onChange={settings.setVoice}
-          disabled={isGenerating}
-        />
+      <div className="flex flex-col gap-6 p-6 h-full">
+        {/* Voice Ensemble at top - pinned */}
+        <div className="shrink-0">
+          <VoiceSelector
+            voice={settings.voice}
+            onChange={settings.setVoice}
+            disabled={isGenerating}
+          />
+        </div>
 
-        {/* Full-width Manuscript */}
-        <div className="flex-1 min-h-[400px]">
+        {/* Full-width Manuscript - fills remaining space, scrolls internally */}
+        <div className="flex-1 min-h-0">
           <TextEditor
             text={settings.text}
             onChange={settings.setText}
@@ -105,9 +109,14 @@ export function VoiceoverDetail({
           />
         </div>
 
-        {/* Audio Stage (when available) */}
+        {/* Audio Stage (when available) - pinned at bottom */}
         {displayAudio && (
-          <AudioStage src={displayAudio.url} duration={displayAudio.duration} />
+          <div className="shrink-0">
+            <AudioStage
+              src={displayAudio.url}
+              duration={displayAudio.duration}
+            />
+          </div>
         )}
       </div>
     </WorkbenchLayout>

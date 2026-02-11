@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router';
 import type { AuthSession } from '@/clients/authClient';
 import { APP_NAME } from '@/constants';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
-import UserAvatar from '@/routes/-components/layout/nav/user-avatar';
 
 function WaveformIcon({ className }: { className?: string }) {
   return (
@@ -32,9 +31,7 @@ export function Navbar({ session }: Readonly<{ session: AuthSession }>) {
         </div>
         <span className="logo-text">{APP_NAME}</span>
       </Link>
-      {session?.user ? (
-        <UserAvatar user={session.user} />
-      ) : (
+      {!session?.user && (
         <div className="flex items-center gap-1">
           <Link to="/login" className="nav-link">
             Log in

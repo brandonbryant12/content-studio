@@ -1,6 +1,7 @@
-import { TrashIcon } from '@radix-ui/react-icons';
+import { PauseIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useState } from 'react';
@@ -13,6 +14,7 @@ import {
 import { PodcastIcon } from './podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 import { getStorageUrl } from '@/shared/lib/storage-url';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 
 /** Podcast data for list display */
 export interface PodcastListItem {
@@ -20,6 +22,7 @@ export interface PodcastListItem {
   title: string;
   description: string | null;
   format: 'voice_over' | 'conversation';
+  audioUrl: string | null;
   createdAt: string;
   status: VersionStatus;
   duration: number | null;
@@ -51,6 +54,10 @@ export interface PodcastItemProps {
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
   hideDelete?: boolean;
+  quickPlay?: UseQuickPlayReturn;
+  isSelected?: boolean;
+  hasSelection?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 // Memoized to prevent re-renders when parent list re-renders (rerender-memo)
@@ -59,6 +66,10 @@ export const PodcastItem = memo(function PodcastItem({
   onDelete,
   isDeleting,
   hideDelete,
+  quickPlay,
+  isSelected,
+  hasSelection,
+  onToggleSelect,
 }: PodcastItemProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -73,9 +84,35 @@ export const PodcastItem = memo(function PodcastItem({
     onDelete?.(podcast.id);
   }, [onDelete, podcast.id]);
 
+  const hasAudio = !!podcast.audioUrl;
+  const isThisPlaying =
+    quickPlay?.playingId === podcast.id && quickPlay.isPlaying;
+
+  const handlePlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!podcast.audioUrl || !quickPlay) return;
+      quickPlay.toggle(podcast.id, podcast.audioUrl);
+    },
+    [quickPlay, podcast.id, podcast.audioUrl],
+  );
+
+  const handleCheckboxClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleSelect?.(podcast.id);
+    },
+    [onToggleSelect, podcast.id],
+  );
+
   return (
     <>
-      <div className="content-card group">
+      <div
+        className="content-card group"
+        data-selected={isSelected || undefined}
+      >
         <Link
           to="/podcasts/$podcastId"
           params={{ podcastId: podcast.id }}
@@ -83,6 +120,19 @@ export const PodcastItem = memo(function PodcastItem({
           className="flex flex-col flex-1"
         >
           <div className="content-card-thumb">
+            {onToggleSelect && (
+              <div
+                className="content-card-checkbox"
+                data-visible={hasSelection || isSelected || undefined}
+                onClick={handleCheckboxClick}
+              >
+                <Checkbox
+                  checked={isSelected}
+                  tabIndex={-1}
+                  aria-label={`Select ${podcast.title}`}
+                />
+              </div>
+            )}
             {podcast.coverImageStorageKey ? (
               <img
                 src={getStorageUrl(podcast.coverImageStorageKey)}
@@ -111,10 +161,37 @@ export const PodcastItem = memo(function PodcastItem({
         </Link>
         <div className="content-card-footer">
           <div className="flex items-center gap-2">
-            {podcast.duration && (
-              <span className="text-meta">
-                {formatDuration(podcast.duration)}
+            {quickPlay && hasAudio && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+                onClick={handlePlayClick}
+                aria-label={
+                  isThisPlaying
+                    ? `Pause ${podcast.title}`
+                    : `Play ${podcast.title}`
+                }
+              >
+                {isThisPlaying ? (
+                  <PauseIcon className="w-3.5 h-3.5" />
+                ) : (
+                  <PlayIcon className="w-3.5 h-3.5" />
+                )}
+              </Button>
+            )}
+            {quickPlay?.playingId === podcast.id ? (
+              <span className="text-meta tabular-nums">
+                {quickPlay.formatTime(quickPlay.currentTime)}
+                {quickPlay.duration > 0 &&
+                  ` / ${quickPlay.formatTime(quickPlay.duration)}`}
               </span>
+            ) : (
+              podcast.duration && (
+                <span className="text-meta">
+                  {formatDuration(podcast.duration)}
+                </span>
+              )
             )}
             <span className="text-meta">
               {new Date(podcast.createdAt).toLocaleDateString()}

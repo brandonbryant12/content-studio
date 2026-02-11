@@ -31,7 +31,8 @@ const createMockVoiceover = (overrides: Partial<Voiceover> = {}): Voiceover => {
     duration: null,
     status: 'drafting',
     errorMessage: null,
-    ownerHasApproved: false,
+    approvedBy: null,
+    approvedAt: null,
     createdBy: 'user_123',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
@@ -64,8 +65,8 @@ const createMockVoiceoverRepo = (
     updateStatus: () => Effect.die('Not implemented'),
     updateAudio: () => Effect.die('Not implemented'),
     clearAudio: () => Effect.die('Not implemented'),
-    clearApprovals: () => Effect.die('Not implemented'),
-    setOwnerApproval: () => Effect.die('Not implemented'),
+    clearApproval: () => Effect.die('Not implemented'),
+    setApproval: () => Effect.die('Not implemented'),
 
     list: (options: ListOptions) =>
       Effect.succeed(

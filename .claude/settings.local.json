@@ -127,7 +127,12 @@
       "Bash(gh pr view:*)",
       "Bash(npx --filter web tsr:*)",
       "Bash(gh pr edit:*)",
-      "Bash(npx drizzle-kit generate:*)"
+      "Bash(npx drizzle-kit generate:*)",
+      "Bash(git merge:*)",
+      "Skill(ralph-plan)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsr:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

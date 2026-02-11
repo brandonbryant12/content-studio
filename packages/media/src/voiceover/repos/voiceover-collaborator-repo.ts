@@ -109,29 +109,6 @@ export interface VoiceoverCollaboratorRepoService {
   ) => Effect.Effect<boolean, DatabaseError, Db>;
 
   /**
-   * Set hasApproved=true for a collaborator.
-   */
-  readonly approve: (
-    voiceoverId: VoiceoverId,
-    userId: string,
-  ) => Effect.Effect<VoiceoverCollaborator | null, DatabaseError, Db>;
-
-  /**
-   * Set hasApproved=false for a collaborator.
-   */
-  readonly revokeApproval: (
-    voiceoverId: VoiceoverId,
-    userId: string,
-  ) => Effect.Effect<VoiceoverCollaborator | null, DatabaseError, Db>;
-
-  /**
-   * Clear all approvals for a voiceover (set hasApproved=false for all).
-   */
-  readonly clearAllApprovals: (
-    voiceoverId: VoiceoverId,
-  ) => Effect.Effect<number, DatabaseError, Db>;
-
-  /**
    * Claim pending invites by email (set userId for all matching email).
    * Returns the number of invites claimed.
    */
@@ -263,55 +240,6 @@ const make: VoiceoverCollaboratorRepoService = {
         .where(eq(voiceoverCollaborator.id, id))
         .returning({ id: voiceoverCollaborator.id });
       return result.length > 0;
-    }),
-
-  approve: (voiceoverId, userId) =>
-    withDb('voiceoverCollaboratorRepo.approve', async (db) => {
-      const [collaborator] = await db
-        .update(voiceoverCollaborator)
-        .set({
-          hasApproved: true,
-          approvedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(voiceoverCollaborator.voiceoverId, voiceoverId),
-            eq(voiceoverCollaborator.userId, userId),
-          ),
-        )
-        .returning();
-      return collaborator ?? null;
-    }),
-
-  revokeApproval: (voiceoverId, userId) =>
-    withDb('voiceoverCollaboratorRepo.revokeApproval', async (db) => {
-      const [collaborator] = await db
-        .update(voiceoverCollaborator)
-        .set({
-          hasApproved: false,
-          approvedAt: null,
-        })
-        .where(
-          and(
-            eq(voiceoverCollaborator.voiceoverId, voiceoverId),
-            eq(voiceoverCollaborator.userId, userId),
-          ),
-        )
-        .returning();
-      return collaborator ?? null;
-    }),
-
-  clearAllApprovals: (voiceoverId) =>
-    withDb('voiceoverCollaboratorRepo.clearAllApprovals', async (db) => {
-      const result = await db
-        .update(voiceoverCollaborator)
-        .set({
-          hasApproved: false,
-          approvedAt: null,
-        })
-        .where(eq(voiceoverCollaborator.voiceoverId, voiceoverId))
-        .returning({ id: voiceoverCollaborator.id });
-      return result.length;
     }),
 
   claimByEmail: (email, userId) =>

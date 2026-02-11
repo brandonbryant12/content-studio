@@ -58,6 +58,17 @@ const mockDocuments: DocumentListItem[] = [
   },
 ];
 
+const mockSelection = {
+  selectedIds: new Set<string>() as ReadonlySet<string>,
+  selectedCount: 0,
+  isSelected: () => false,
+  toggle: vi.fn(),
+  selectAll: vi.fn(),
+  deselectAll: vi.fn(),
+  isAllSelected: () => false,
+  isIndeterminate: () => false,
+};
+
 const defaultProps = {
   documents: mockDocuments,
   searchQuery: '',
@@ -66,6 +77,9 @@ const defaultProps = {
   onSearch: vi.fn(),
   onUploadOpen: vi.fn(),
   onDelete: vi.fn(),
+  selection: mockSelection,
+  isBulkDeleting: false,
+  onBulkDelete: vi.fn(),
 };
 
 describe('DocumentList', () => {

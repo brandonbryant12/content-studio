@@ -38,11 +38,11 @@ interface ActivityDashboardProps {
   onPeriodChange: (period: Period) => void;
   entityType: string | undefined;
   onEntityTypeChange: (value: string | undefined) => void;
-  action: string | undefined;
-  onActionChange: (value: string | undefined) => void;
   userId: string | undefined;
   onUserIdChange: (value: string | undefined) => void;
   topUsers: readonly TopUser[];
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
 
   // Feed
   activities: ActivityItem[];
@@ -62,11 +62,11 @@ export function ActivityDashboard({
   onPeriodChange,
   entityType,
   onEntityTypeChange,
-  action,
-  onActionChange,
   userId,
   onUserIdChange,
   topUsers,
+  searchQuery,
+  onSearchChange,
   // Feed
   activities,
   hasMore,
@@ -97,11 +97,11 @@ export function ActivityDashboard({
         <ActivityFilters
           entityType={entityType}
           onEntityTypeChange={onEntityTypeChange}
-          action={action}
-          onActionChange={onActionChange}
           userId={userId}
           onUserIdChange={onUserIdChange}
           topUsers={topUsers}
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
         />
       </div>
 

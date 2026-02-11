@@ -10,4 +10,3 @@ export {
   CollaboratorList,
   type CollaboratorListProps,
 } from './collaborator-list';
-export { ApproveButton, type ApproveButtonProps } from './approve-button';

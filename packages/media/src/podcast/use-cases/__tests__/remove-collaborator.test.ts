@@ -49,8 +49,8 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
     updateScript: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: () => Effect.die('not implemented'),
-    setOwnerApproval: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
 
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -82,9 +82,6 @@ const createMockCollaboratorRepo = (
     findByPodcastAndEmail: () => Effect.die('not implemented'),
     lookupUserByEmail: () => Effect.die('not implemented'),
     add: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: () => Effect.die('not implemented'),
     claimByEmail: () => Effect.die('not implemented'),
 
     findById: (id: CollaboratorId) =>

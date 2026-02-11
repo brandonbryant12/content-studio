@@ -20,6 +20,8 @@ export const createMockInfographicRepo = (
     insertVersion: () => Effect.die('not implemented'),
     listVersions: () => Effect.die('not implemented'),
     deleteOldVersions: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
+    clearApproval: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(InfographicRepo, { ...defaults, ...overrides });

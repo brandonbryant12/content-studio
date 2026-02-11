@@ -7,6 +7,9 @@ import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
 import { PodcastItem, type PodcastListItem } from './podcast-item';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -57,7 +60,7 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   return (
     <div className="text-center py-16">
       <p className="text-muted-foreground">
-        No podcasts found matching "{searchQuery}"
+        No podcasts found matching &ldquo;{searchQuery}&rdquo;
       </p>
     </div>
   );
@@ -71,6 +74,10 @@ export interface PodcastListProps {
   onSearch: (query: string) => void;
   onCreate: () => void;
   onDelete: (id: string) => void;
+  quickPlay: UseQuickPlayReturn;
+  selection: UseBulkSelectionReturn;
+  isBulkDeleting: boolean;
+  onBulkDelete: () => void;
 }
 
 export function PodcastList({
@@ -81,6 +88,10 @@ export function PodcastList({
   onSearch,
   onCreate,
   onDelete,
+  quickPlay,
+  selection,
+  isBulkDeleting,
+  onBulkDelete,
 }: PodcastListProps) {
   // Use transition for non-urgent search updates (rerender-transitions)
   const [isPending, startTransition] = useTransition();
@@ -91,6 +102,11 @@ export function PodcastList({
         podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
     [podcasts, searchQuery],
+  );
+
+  const filteredIds = useMemo(
+    () => filteredPodcasts.map((p) => p.id),
+    [filteredPodcasts],
   );
 
   const handleSearchChange = useCallback(
@@ -104,13 +120,22 @@ export function PodcastList({
     [onSearch],
   );
 
+  const handleToggleAll = useCallback(() => {
+    if (selection.isAllSelected(filteredIds)) {
+      selection.deselectAll();
+    } else {
+      selection.selectAll(filteredIds);
+    }
+  }, [selection, filteredIds]);
+
   const isEmpty = podcasts.length === 0;
   const hasNoResults = filteredPodcasts.length === 0 && searchQuery.length > 0;
+  const hasSelection = selection.selectedCount > 0;
 
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <p className="page-eyebrow">Audio Content</p>
           <h1 className="page-title">Podcasts</h1>
@@ -131,12 +156,12 @@ export function PodcastList({
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <Input
           value={searchQuery}
           onChange={handleSearchChange}
           placeholder="Search podcasts…"
-          className="search-input"
+          className="search-input pl-10"
           autoComplete="off"
           aria-label="Search podcasts"
         />
@@ -158,10 +183,27 @@ export function PodcastList({
               podcast={podcast}
               onDelete={onDelete}
               isDeleting={deletingId === podcast.id}
+              quickPlay={quickPlay}
+              isSelected={selection.isSelected(podcast.id)}
+              hasSelection={hasSelection}
+              onToggleSelect={selection.toggle}
             />
           ))}
         </div>
       )}
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selection.selectedCount}
+        totalCount={filteredPodcasts.length}
+        isAllSelected={selection.isAllSelected(filteredIds)}
+        isIndeterminate={selection.isIndeterminate(filteredIds)}
+        isDeleting={isBulkDeleting}
+        entityName="podcast"
+        onToggleAll={handleToggleAll}
+        onDeselectAll={selection.deselectAll}
+        onDeleteSelected={onBulkDelete}
+      />
     </div>
   );
 }

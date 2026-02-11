@@ -18,6 +18,8 @@ export interface CreateTestInfographicOptions {
   thumbnailStorageKey?: string | null;
   status?: Infographic['status'];
   errorMessage?: string | null;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -47,6 +49,8 @@ export const createTestInfographic = (
     thumbnailStorageKey: options.thumbnailStorageKey ?? null,
     status: options.status ?? 'draft',
     errorMessage: options.errorMessage ?? null,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,

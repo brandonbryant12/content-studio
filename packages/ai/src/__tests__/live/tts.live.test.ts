@@ -10,7 +10,8 @@
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:tts
  */
 import { describe, it, expect } from 'vitest';
-import { Effect } from 'effect';
+import { Effect, Exit } from 'effect';
+import { expectEffectFailure } from '../../test-utils/effect-assertions';
 import { GoogleTTSLive, TTS } from '../../tts';
 import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
 import { TTSError, TTSQuotaExceededError } from '../../errors';
@@ -212,19 +213,10 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
         });
       }).pipe(Effect.provide(invalidLayer));
 
-      const result = await Effect.runPromiseExit(effect);
+      const exit = await Effect.runPromiseExit(effect);
 
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause;
-        expect(error._tag).toBe('Fail');
-        if (error._tag === 'Fail') {
-          expect(
-            error.error instanceof TTSError ||
-              error.error instanceof TTSQuotaExceededError,
-          ).toBe(true);
-        }
-      }
+      // Invalid API key produces a TTSError (not quota exceeded)
+      expectEffectFailure(exit, TTSError);
     });
   });
 });
@@ -247,20 +239,21 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration - Rate Limiting', () => {
       }).pipe(Effect.provide(layer)),
     );
 
-    const results = await Promise.allSettled(
-      effects.map((e) => Effect.runPromise(e)),
+    const exits = await Effect.runPromise(
+      Effect.all(
+        effects.map((e) => e.pipe(Effect.exit)),
+        { concurrency: 'unbounded' },
+      ),
     );
 
-    const successes = results.filter((r) => r.status === 'fulfilled');
-    const failures = results.filter((r) => r.status === 'rejected');
+    const successes = exits.filter(Exit.isSuccess);
+    const failures = exits.filter(Exit.isFailure);
 
     expect(successes.length).toBeGreaterThan(0);
 
     // If there are failures, they should be quota/rate limit errors
     for (const failure of failures) {
-      if (failure.status === 'rejected') {
-        expect(failure.reason).toBeInstanceOf(TTSQuotaExceededError);
-      }
+      expectEffectFailure(failure, TTSQuotaExceededError);
     }
   });
 });

@@ -229,7 +229,8 @@ interface CreateTestVoiceoverOptions {
   duration?: number | null;
   status?: 'drafting' | 'generating_audio' | 'ready' | 'failed';
   errorMessage?: string | null;
-  ownerHasApproved?: boolean;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
 }
 
@@ -250,7 +251,8 @@ const createTestVoiceover = (
   duration: number | null;
   status: 'drafting' | 'generating_audio' | 'ready' | 'failed';
   errorMessage: string | null;
-  ownerHasApproved: boolean;
+  approvedBy: string | null;
+  approvedAt: Date | null;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -267,7 +269,8 @@ const createTestVoiceover = (
     duration: options.duration ?? null,
     status: options.status ?? 'drafting',
     errorMessage: options.errorMessage ?? null,
-    ownerHasApproved: options.ownerHasApproved ?? false,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -1556,7 +1559,8 @@ describe('voiceover router', () => {
       // Arrange
       const context = createMockContext(runtime, null);
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        ownerHasApproved: true,
+        approvedBy: testUser.id,
+        approvedAt: new Date(),
       });
 
       // Act & Assert
@@ -1574,7 +1578,8 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, user);
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         status: 'ready',
-        ownerHasApproved: true,
+        approvedBy: testUser.id,
+        approvedAt: new Date(),
       });
 
       // Act
@@ -1631,7 +1636,8 @@ describe('voiceover router', () => {
 
       const voiceover = await insertTestVoiceover(ctx, ownerTestUser.id, {
         status: 'ready',
-        ownerHasApproved: true,
+        approvedBy: ownerTestUser.id,
+        approvedAt: new Date(),
       });
 
       // Act & Assert - Stranger cannot revoke

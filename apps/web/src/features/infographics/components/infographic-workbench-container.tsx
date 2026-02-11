@@ -15,6 +15,9 @@ import { getStorageUrl } from '@/shared/lib/storage-url';
 import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
+import { useApproveInfographic } from '../hooks/use-approve-infographic';
+import { ApproveButton } from '@/shared/components/approval/approve-button';
+import { useSessionGuard } from '@/shared/hooks';
 import {
   useInfographicVersions,
   type InfographicVersion,
@@ -34,8 +37,19 @@ interface InfographicWorkbenchContainerProps {
 export function InfographicWorkbenchContainer({
   infographicId,
 }: InfographicWorkbenchContainerProps) {
+  const { user } = useSessionGuard();
+  const currentUserId = user?.id ?? '';
+  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+
   const { data: infographic } = useInfographic(infographicId);
   const settings = useInfographicSettings({ infographic });
+
+  const { approve, revoke } = useApproveInfographic(
+    infographicId,
+    currentUserId,
+  );
+  const isApproved = infographic.approvedBy !== null;
+  const isApprovalPending = approve.isPending || revoke.isPending;
 
   // Document selection — resolve sourceDocumentIds to DocumentInfo objects
   const { data: allDocuments } = useDocumentList();
@@ -123,6 +137,13 @@ export function InfographicWorkbenchContainer({
             {infographic.title}
           </h1>
           <div className="flex items-center gap-2">
+            <ApproveButton
+              isApproved={isApproved}
+              isAdmin={isAdmin}
+              onApprove={() => approve.mutate({ id: infographicId })}
+              onRevoke={() => revoke.mutate({ id: infographicId })}
+              isPending={isApprovalPending}
+            />
             <ExportDropdown
               imageUrl={displayImageUrl}
               title={infographic.title}

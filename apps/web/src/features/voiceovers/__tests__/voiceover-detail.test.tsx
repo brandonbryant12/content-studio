@@ -99,7 +99,8 @@ function createMockVoiceover(overrides: Partial<Voiceover> = {}): Voiceover {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: 'user-1',
-    ownerHasApproved: false,
+    approvedBy: null,
+    approvedAt: null,
     ...overrides,
   } as Voiceover;
 }
@@ -126,7 +127,6 @@ function createMockOwner(overrides = {}) {
     id: 'user-1',
     name: 'Test User',
     image: null,
-    hasApproved: false,
     ...overrides,
   };
 }
@@ -147,7 +147,8 @@ function createDefaultProps(
     onDelete: vi.fn(),
     owner: createMockOwner(),
     collaborators: [] as readonly Collaborator[],
-    currentUserHasApproved: false,
+    isApproved: false,
+    isAdmin: false,
     onManageCollaborators: vi.fn(),
     onApprove: vi.fn(),
     onRevoke: vi.fn(),

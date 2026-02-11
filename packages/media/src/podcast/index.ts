@@ -82,9 +82,7 @@ export {
   type AddCollaboratorResult,
   type RemoveCollaboratorInput,
   type ApprovePodcastInput,
-  type ApprovePodcastResult,
   type RevokeApprovalInput,
-  type RevokeApprovalResult,
   type ClaimPendingInvitesInput,
   type ClaimPendingInvitesResult,
 } from './use-cases';

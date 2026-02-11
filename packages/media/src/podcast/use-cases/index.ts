@@ -88,17 +88,9 @@ export {
   type RemoveCollaboratorInput,
 } from './remove-collaborator';
 
-export {
-  approvePodcast,
-  type ApprovePodcastInput,
-  type ApprovePodcastResult,
-} from './approve-podcast';
+export { approvePodcast, type ApprovePodcastInput } from './approve-podcast';
 
-export {
-  revokeApproval,
-  type RevokeApprovalInput,
-  type RevokeApprovalResult,
-} from './revoke-approval';
+export { revokeApproval, type RevokeApprovalInput } from './revoke-approval';
 
 export {
   claimPendingInvites,

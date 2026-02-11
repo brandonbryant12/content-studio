@@ -148,6 +148,22 @@ Break complex topics into digestible segments with natural transitions.`;
     parts.push(`\n\n# Additional Instructions\n${instructions}`);
   }
 
+  parts.push(`\n\n# TTS Speech Annotations
+
+The script will be read aloud by a text-to-speech engine that supports inline annotations.
+Include these annotations naturally in each speaker's lines to make the audio more expressive and human.
+
+Available annotations:
+- Non-speech sounds: [sigh], [laughing], [chuckling], [clearing throat], [gasp], [uhm], [uh], [hmm]
+- Style modifiers: [whispering], [shouting], [sarcasm], [extremely fast], [slowly]
+- Pacing/pauses: [short pause], [medium pause], [long pause]
+
+Guidelines:
+- Use pauses to create natural conversational rhythm — e.g., [short pause] before answering a question, [medium pause] at topic transitions
+- Add reactions that respond to what the other speaker said (e.g., [laughing] after a joke, [hmm] when considering a point)
+- Keep it conservative: 1-3 annotations per segment at most. Over-annotating sounds worse than no annotations.
+- Vary annotation placement across the episode to maintain natural pacing`);
+
   return parts.join('');
 };
 

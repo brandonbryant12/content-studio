@@ -3,7 +3,6 @@ import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
-import { VoiceoverCollaboratorRepo } from '../repos/voiceover-collaborator-repo';
 import {
   InvalidVoiceoverAudioGeneration,
   NotVoiceoverOwner,
@@ -48,7 +47,7 @@ export const startVoiceoverGeneration = (
 ) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
-    const collaboratorRepo = yield* VoiceoverCollaboratorRepo;
+
     const queue = yield* Queue;
 
     // 1. Verify voiceover exists
@@ -84,10 +83,9 @@ export const startVoiceoverGeneration = (
       };
     }
 
-    // 4. Update status to generating_audio and clear approvals
+    // 4. Update status to generating_audio and clear approval
     yield* voiceoverRepo.updateStatus(voiceover.id, 'generating_audio');
-    yield* voiceoverRepo.clearApprovals(voiceover.id);
-    yield* collaboratorRepo.clearAllApprovals(voiceover.id);
+    yield* voiceoverRepo.clearApproval(voiceover.id);
 
     // 5. Enqueue the generation job
     const payload: GenerateVoiceoverPayload = {

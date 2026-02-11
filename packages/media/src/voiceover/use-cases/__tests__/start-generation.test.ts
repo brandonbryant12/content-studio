@@ -40,7 +40,8 @@ interface CreateTestVoiceoverOptions {
   duration?: number | null;
   status?: VoiceoverStatus;
   errorMessage?: string | null;
-  ownerHasApproved?: boolean;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -64,7 +65,8 @@ const createTestVoiceover = (
     duration: options.duration ?? null,
     status: options.status ?? 'drafting',
     errorMessage: options.errorMessage ?? null,
-    ownerHasApproved: options.ownerHasApproved ?? false,
+    approvedBy: options.approvedBy ?? null,
+    approvedAt: options.approvedAt ?? null,
     createdBy: options.createdBy ?? 'test-user-id',
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
@@ -113,41 +115,33 @@ const createMockVoiceoverRepo = (
       }),
     updateAudio: () => Effect.die('not implemented'),
     clearAudio: () => Effect.die('not implemented'),
-    clearApprovals: (id: string) =>
+    clearApproval: (id: string) =>
       Effect.sync(() => {
         options?.onClearApprovals?.(id);
-        return { ...state.voiceover!, ownerHasApproved: false };
+        return { ...state.voiceover!, approvedBy: null, approvedAt: null };
       }),
-    setOwnerApproval: () => Effect.die('not implemented'),
+    setApproval: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(VoiceoverRepo, service);
 };
 
-const createMockCollaboratorRepo = (options?: {
-  onClearAllApprovals?: (voiceoverId: VoiceoverId) => void;
-}): Layer.Layer<VoiceoverCollaboratorRepo> => {
-  const service: VoiceoverCollaboratorRepoService = {
-    findById: () => Effect.succeed(null),
-    findByVoiceover: () => Effect.succeed([]),
-    findByEmail: () => Effect.succeed([]),
-    findByVoiceoverAndUser: () => Effect.succeed(null),
-    findByVoiceoverAndEmail: () => Effect.succeed(null),
-    lookupUserByEmail: () => Effect.succeed(null),
-    add: () => Effect.die('not implemented'),
-    remove: () => Effect.die('not implemented'),
-    approve: () => Effect.die('not implemented'),
-    revokeApproval: () => Effect.die('not implemented'),
-    clearAllApprovals: (voiceoverId: VoiceoverId) =>
-      Effect.sync(() => {
-        options?.onClearAllApprovals?.(voiceoverId);
-        return 0;
-      }),
-    claimByEmail: () => Effect.succeed(0),
-  };
+const createMockCollaboratorRepo =
+  (): Layer.Layer<VoiceoverCollaboratorRepo> => {
+    const service: VoiceoverCollaboratorRepoService = {
+      findById: () => Effect.succeed(null),
+      findByVoiceover: () => Effect.succeed([]),
+      findByEmail: () => Effect.succeed([]),
+      findByVoiceoverAndUser: () => Effect.succeed(null),
+      findByVoiceoverAndEmail: () => Effect.succeed(null),
+      lookupUserByEmail: () => Effect.succeed(null),
+      add: () => Effect.die('not implemented'),
+      remove: () => Effect.die('not implemented'),
+      claimByEmail: () => Effect.succeed(0),
+    };
 
-  return Layer.succeed(VoiceoverCollaboratorRepo, service);
-};
+    return Layer.succeed(VoiceoverCollaboratorRepo, service);
+  };
 
 const createMockQueue = (
   state: MockState,
@@ -273,11 +267,11 @@ describe('startVoiceoverGeneration', () => {
       const user = createTestUser();
       const voiceover = createTestVoiceover({
         createdBy: user.id,
-        ownerHasApproved: true,
+        approvedBy: 'some-admin-id',
+        approvedAt: new Date(),
         text: 'Text content for voiceover.',
       });
       const clearApprovalsSpy = vi.fn();
-      const clearAllApprovalsSpy = vi.fn();
 
       const layers = Layer.mergeAll(
         MockDbLive,
@@ -286,9 +280,7 @@ describe('startVoiceoverGeneration', () => {
           { onClearApprovals: clearApprovalsSpy },
         ),
         createMockQueue({ voiceover }),
-        createMockCollaboratorRepo({
-          onClearAllApprovals: clearAllApprovalsSpy,
-        }),
+        createMockCollaboratorRepo(),
       );
 
       await Effect.runPromise(
@@ -298,13 +290,9 @@ describe('startVoiceoverGeneration', () => {
         }).pipe(Effect.provide(layers)),
       );
 
-      // Owner approval should be cleared
+      // Approval should be cleared
       expect(clearApprovalsSpy).toHaveBeenCalledOnce();
       expect(clearApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
-
-      // Collaborator approvals should be cleared
-      expect(clearAllApprovalsSpy).toHaveBeenCalledOnce();
-      expect(clearAllApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
     });
   });
 
@@ -551,7 +539,8 @@ describe('startVoiceoverGeneration', () => {
         status: 'ready',
         audioUrl: 'https://storage.example.com/audio.wav',
         duration: 120,
-        ownerHasApproved: true,
+        approvedBy: 'some-admin-id',
+        approvedAt: new Date(),
       });
       const updateStatusSpy = vi.fn();
       const clearApprovalsSpy = vi.fn();

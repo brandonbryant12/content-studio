@@ -105,29 +105,6 @@ export interface CollaboratorRepoService {
   ) => Effect.Effect<boolean, DatabaseError, Db>;
 
   /**
-   * Set hasApproved=true for a collaborator.
-   */
-  readonly approve: (
-    podcastId: PodcastId,
-    userId: string,
-  ) => Effect.Effect<Collaborator | null, DatabaseError, Db>;
-
-  /**
-   * Set hasApproved=false for a collaborator.
-   */
-  readonly revokeApproval: (
-    podcastId: PodcastId,
-    userId: string,
-  ) => Effect.Effect<Collaborator | null, DatabaseError, Db>;
-
-  /**
-   * Clear all approvals for a podcast (set hasApproved=false for all).
-   */
-  readonly clearAllApprovals: (
-    podcastId: PodcastId,
-  ) => Effect.Effect<number, DatabaseError, Db>;
-
-  /**
    * Claim pending invites by email (set userId for all matching email).
    * Returns the number of invites claimed.
    */
@@ -259,55 +236,6 @@ const make: CollaboratorRepoService = {
         .where(eq(podcastCollaborator.id, id))
         .returning({ id: podcastCollaborator.id });
       return result.length > 0;
-    }),
-
-  approve: (podcastId, userId) =>
-    withDb('collaboratorRepo.approve', async (db) => {
-      const [collaborator] = await db
-        .update(podcastCollaborator)
-        .set({
-          hasApproved: true,
-          approvedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(podcastCollaborator.podcastId, podcastId),
-            eq(podcastCollaborator.userId, userId),
-          ),
-        )
-        .returning();
-      return collaborator ?? null;
-    }),
-
-  revokeApproval: (podcastId, userId) =>
-    withDb('collaboratorRepo.revokeApproval', async (db) => {
-      const [collaborator] = await db
-        .update(podcastCollaborator)
-        .set({
-          hasApproved: false,
-          approvedAt: null,
-        })
-        .where(
-          and(
-            eq(podcastCollaborator.podcastId, podcastId),
-            eq(podcastCollaborator.userId, userId),
-          ),
-        )
-        .returning();
-      return collaborator ?? null;
-    }),
-
-  clearAllApprovals: (podcastId) =>
-    withDb('collaboratorRepo.clearAllApprovals', async (db) => {
-      const result = await db
-        .update(podcastCollaborator)
-        .set({
-          hasApproved: false,
-          approvedAt: null,
-        })
-        .where(eq(podcastCollaborator.podcastId, podcastId))
-        .returning({ id: podcastCollaborator.id });
-      return result.length;
     }),
 
   claimByEmail: (email, userId) =>

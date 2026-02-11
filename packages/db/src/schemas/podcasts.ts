@@ -7,7 +7,6 @@ import {
   jsonb,
   index,
   pgEnum,
-  boolean,
   unique,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
@@ -136,7 +135,8 @@ export const podcast = pgTable(
     duration: integer('duration'), // seconds
     errorMessage: text('errorMessage'),
     coverImageStorageKey: text('coverImageStorageKey'),
-    ownerHasApproved: boolean('ownerHasApproved').notNull().default(false),
+    approvedBy: text('approvedBy').references(() => user.id),
+    approvedAt: timestamp('approvedAt', { mode: 'date', withTimezone: true }),
 
     createdBy: text('createdBy')
       .notNull()
@@ -179,9 +179,6 @@ export const podcastCollaborator = pgTable(
     userId: text('userId').references(() => user.id, { onDelete: 'cascade' }),
     // Email used for pending invites and display
     email: text('email').notNull(),
-    // Approval tracking
-    hasApproved: boolean('hasApproved').notNull().default(false),
-    approvedAt: timestamp('approvedAt', { mode: 'date', withTimezone: true }),
     // Audit fields
     addedAt: timestamp('addedAt', { mode: 'date', withTimezone: true })
       .notNull()
@@ -344,7 +341,8 @@ export const PodcastOutputSchema = Schema.Struct({
   duration: Schema.NullOr(Schema.Number),
   errorMessage: Schema.NullOr(Schema.String),
   coverImageStorageKey: Schema.NullOr(Schema.String),
-  ownerHasApproved: Schema.Boolean,
+  approvedBy: Schema.NullOr(Schema.String),
+  approvedAt: Schema.NullOr(Schema.String),
 
   createdBy: Schema.String,
   createdAt: Schema.String,
@@ -378,8 +376,6 @@ export const CollaboratorOutputSchema = Schema.Struct({
   podcastId: PodcastIdSchema,
   userId: Schema.NullOr(Schema.String),
   email: Schema.String,
-  hasApproved: Schema.Boolean,
-  approvedAt: Schema.NullOr(Schema.String),
   addedAt: Schema.String,
   addedBy: Schema.String,
 });
@@ -446,7 +442,8 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   duration: podcast.duration ?? null,
   errorMessage: podcast.errorMessage ?? null,
   coverImageStorageKey: podcast.coverImageStorageKey ?? null,
-  ownerHasApproved: podcast.ownerHasApproved,
+  approvedBy: podcast.approvedBy ?? null,
+  approvedAt: podcast.approvedAt?.toISOString() ?? null,
   createdBy: podcast.createdBy,
   createdAt: podcast.createdAt.toISOString(),
   updatedAt: podcast.updatedAt.toISOString(),
@@ -547,8 +544,6 @@ const collaboratorTransform = (
   podcastId: collaborator.podcastId,
   userId: collaborator.userId ?? null,
   email: collaborator.email,
-  hasApproved: collaborator.hasApproved,
-  approvedAt: collaborator.approvedAt?.toISOString() ?? null,
   addedAt: collaborator.addedAt.toISOString(),
   addedBy: collaborator.addedBy,
 });

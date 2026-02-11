@@ -43,6 +43,12 @@ const voiceoverErrors = {
   },
 } as const;
 
+const authErrors = {
+  FORBIDDEN: {
+    status: 403,
+  },
+} as const;
+
 const collaboratorErrors = {
   NOT_VOICEOVER_OWNER: {
     status: 403,
@@ -288,43 +294,29 @@ const voiceoverContract = oc
       )
       .output(std(Schema.Struct({}))),
 
-    // Approve a voiceover (owner or collaborator)
+    // Approve a voiceover (admin-only)
     approve: oc
       .route({
         method: 'POST',
         path: '/{id}/approve',
         summary: 'Approve voiceover',
-        description:
-          'Approve the current voiceover content. Available to both owners and collaborators.',
+        description: 'Approve the current voiceover content. Admin-only.',
       })
-      .errors({ ...voiceoverErrors, ...collaboratorErrors })
+      .errors({ ...voiceoverErrors, ...authErrors })
       .input(std(Schema.Struct({ id: VoiceoverIdSchema })))
-      .output(
-        std(
-          Schema.Struct({
-            isOwner: Schema.Boolean,
-          }),
-        ),
-      ),
+      .output(std(VoiceoverOutputSchema)),
 
-    // Revoke approval on a voiceover
+    // Revoke approval on a voiceover (admin-only)
     revokeApproval: oc
       .route({
         method: 'DELETE',
         path: '/{id}/approve',
         summary: 'Revoke approval',
-        description:
-          'Revoke your approval on a voiceover. Available to both owners and collaborators.',
+        description: 'Revoke approval on a voiceover. Admin-only.',
       })
-      .errors({ ...voiceoverErrors, ...collaboratorErrors })
+      .errors({ ...voiceoverErrors, ...authErrors })
       .input(std(Schema.Struct({ id: VoiceoverIdSchema })))
-      .output(
-        std(
-          Schema.Struct({
-            isOwner: Schema.Boolean,
-          }),
-        ),
-      ),
+      .output(std(VoiceoverOutputSchema)),
 
     // Claim pending invites for the current user
     claimInvites: oc

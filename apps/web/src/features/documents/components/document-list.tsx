@@ -3,15 +3,46 @@
 
 import {
   MagnifyingGlassIcon,
-  PlusIcon,
+  TrashIcon,
   UploadIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
+import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import { useCallback, useMemo, useTransition } from 'react';
-import { DocumentItem, type DocumentListItem } from './document-item';
+import { memo, useCallback, useMemo, useTransition } from 'react';
+import type { DocumentListItem } from './document-item';
+import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
+import { formatFileSize } from '@/shared/lib/formatters';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+
+function getFileLabel(source: string): string {
+  if (source === 'manual') return 'Text';
+  if (source.includes('txt')) return 'TXT';
+  if (source.includes('pdf')) return 'PDF';
+  if (source.includes('docx')) return 'DOCX';
+  if (source.includes('pptx')) return 'PPTX';
+  return source;
+}
+
+function getFileBadgeClass(source: string): string {
+  if (source.includes('txt')) return 'file-badge-txt';
+  if (source.includes('pdf')) return 'file-badge-pdf';
+  if (source.includes('docx')) return 'file-badge-docx';
+  if (source.includes('pptx')) return 'file-badge-pptx';
+  return 'file-badge-default';
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   return (
@@ -44,6 +75,89 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   );
 }
 
+const DocumentRow = memo(function DocumentRow({
+  document,
+  onDelete,
+  isDeleting,
+  isSelected,
+  onToggleSelect,
+}: {
+  document: DocumentListItem;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+  isSelected: boolean;
+  onToggleSelect: (id: string) => void;
+}) {
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete(document.id);
+    },
+    [onDelete, document.id],
+  );
+
+  const handleToggle = useCallback(() => {
+    onToggleSelect(document.id);
+  }, [onToggleSelect, document.id]);
+
+  return (
+    <tr
+      className={`group border-b border-border last:border-b-0 transition-colors ${
+        isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'
+      }`}
+    >
+      <td className="py-3 pl-4 pr-1 w-10">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={handleToggle}
+          aria-label={`Select ${document.title}`}
+        />
+      </td>
+      <td className="py-3 px-4">
+        <Link
+          to="/documents/$documentId"
+          params={{ documentId: document.id }}
+          className="flex items-center gap-3 min-w-0"
+        >
+          <DocumentIcon source={document.source} />
+          <span className="font-medium text-sm truncate">{document.title}</span>
+        </Link>
+      </td>
+      <td className="py-3 px-4">
+        <span className={`${getFileBadgeClass(document.source)} text-xs`}>
+          {getFileLabel(document.source)}
+        </span>
+      </td>
+      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right">
+        {document.wordCount.toLocaleString()}
+      </td>
+      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right hidden sm:table-cell">
+        {formatFileSize(document.originalFileSize)}
+      </td>
+      <td className="py-3 px-4 text-sm text-muted-foreground text-right hidden md:table-cell">
+        {formatDate(document.createdAt)}
+      </td>
+      <td className="py-3 px-2 w-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+          aria-label={`Delete ${document.title}`}
+        >
+          {isDeleting ? (
+            <Spinner className="w-3.5 h-3.5" />
+          ) : (
+            <TrashIcon className="w-3.5 h-3.5" />
+          )}
+        </Button>
+      </td>
+    </tr>
+  );
+});
+
 export interface DocumentListProps {
   documents: readonly DocumentListItem[];
   searchQuery: string;
@@ -52,6 +166,9 @@ export interface DocumentListProps {
   onSearch: (query: string) => void;
   onUploadOpen: (open: boolean) => void;
   onDelete: (id: string) => void;
+  selection: UseBulkSelectionReturn;
+  isBulkDeleting: boolean;
+  onBulkDelete: () => void;
 }
 
 export function DocumentList({
@@ -62,8 +179,10 @@ export function DocumentList({
   onSearch,
   onUploadOpen,
   onDelete,
+  selection,
+  isBulkDeleting,
+  onBulkDelete,
 }: DocumentListProps) {
-  // Use transition for non-urgent search updates (rerender-transitions)
   const [isPending, startTransition] = useTransition();
 
   const filteredDocuments = useMemo(
@@ -74,10 +193,14 @@ export function DocumentList({
     [documents, searchQuery],
   );
 
+  const filteredIds = useMemo(
+    () => filteredDocuments.map((d) => d.id),
+    [filteredDocuments],
+  );
+
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      // Wrap in transition to keep input responsive during filtering
       startTransition(() => {
         onSearch(value);
       });
@@ -85,24 +208,26 @@ export function DocumentList({
     [onSearch],
   );
 
+  const handleToggleAll = useCallback(() => {
+    if (selection.isAllSelected(filteredIds)) {
+      selection.deselectAll();
+    } else {
+      selection.selectAll(filteredIds);
+    }
+  }, [selection, filteredIds]);
+
   const isEmpty = documents.length === 0;
   const hasNoResults = filteredDocuments.length === 0 && searchQuery.length > 0;
 
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <p className="page-eyebrow">Source Content</p>
-          <h1 className="page-title">Documents</h1>
+          <h1 className="page-title">Knowledge Base</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/podcasts">
-            <Button variant="outline">
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Create Podcast
-            </Button>
-          </Link>
           <Button onClick={() => onUploadOpen(true)}>
             <UploadIcon className="w-4 h-4 mr-2" />
             Upload
@@ -111,12 +236,12 @@ export function DocumentList({
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <Input
           value={searchQuery}
           onChange={handleSearchChange}
           placeholder="Search documents…"
-          className="search-input"
+          className="search-input pl-10"
           autoComplete="off"
           aria-label="Search documents"
         />
@@ -130,20 +255,72 @@ export function DocumentList({
         <EmptyState hasSearch={true} />
       ) : (
         <div
-          className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
-          {filteredDocuments.map((doc) => (
-            <DocumentItem
-              key={doc.id}
-              document={doc}
-              onDelete={onDelete}
-              isDeleting={deletingId === doc.id}
-            />
-          ))}
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="py-2.5 pl-4 pr-1 w-10">
+                  <Checkbox
+                    checked={
+                      selection.isIndeterminate(filteredIds)
+                        ? 'indeterminate'
+                        : selection.isAllSelected(filteredIds)
+                    }
+                    onCheckedChange={handleToggleAll}
+                    aria-label="Select all documents"
+                  />
+                </th>
+                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Words
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
+                  Size
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                  Created
+                </th>
+                <th className="w-10">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDocuments.map((doc) => (
+                <DocumentRow
+                  key={doc.id}
+                  document={doc}
+                  onDelete={onDelete}
+                  isDeleting={deletingId === doc.id}
+                  isSelected={selection.isSelected(doc.id)}
+                  onToggleSelect={selection.toggle}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       <UploadDocumentDialog open={uploadOpen} onOpenChange={onUploadOpen} />
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selection.selectedCount}
+        totalCount={filteredDocuments.length}
+        isAllSelected={selection.isAllSelected(filteredIds)}
+        isIndeterminate={selection.isIndeterminate(filteredIds)}
+        isDeleting={isBulkDeleting}
+        entityName="document"
+        onToggleAll={handleToggleAll}
+        onDeselectAll={selection.deselectAll}
+        onDeleteSelected={onBulkDelete}
+      />
     </div>
   );
 }

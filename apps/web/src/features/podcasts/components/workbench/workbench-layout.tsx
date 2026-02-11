@@ -12,7 +12,7 @@ import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
 import { CollaboratorAvatars } from '../collaborators';
-import { ApproveButton } from '../collaborators';
+import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
@@ -30,7 +30,6 @@ interface WorkbenchLayoutProps {
     id: string;
     name: string;
     image?: string | null;
-    hasApproved: boolean;
   };
   collaborators: readonly {
     id: string;
@@ -39,9 +38,9 @@ interface WorkbenchLayoutProps {
     email: string;
     userName: string | null;
     userImage: string | null;
-    hasApproved: boolean;
   }[];
-  currentUserHasApproved: boolean;
+  isApproved: boolean;
+  isAdmin: boolean;
   onManageCollaborators: () => void;
   onApprove: () => void;
   onRevoke: () => void;
@@ -57,7 +56,8 @@ export function WorkbenchLayout({
   isDeleting,
   owner,
   collaborators,
-  currentUserHasApproved,
+  isApproved,
+  isAdmin,
   onManageCollaborators,
   onApprove,
   onRevoke,
@@ -109,7 +109,8 @@ export function WorkbenchLayout({
             onManageClick={onManageCollaborators}
           />
           <ApproveButton
-            hasApproved={currentUserHasApproved}
+            isApproved={isApproved}
+            isAdmin={isAdmin}
             onApprove={onApprove}
             onRevoke={onRevoke}
             isPending={isApprovalPending}

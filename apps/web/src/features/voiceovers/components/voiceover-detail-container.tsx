@@ -76,7 +76,8 @@ export function VoiceoverDetailContainer({
         onDelete={actions.handleDelete}
         owner={collaboratorManagement.owner}
         collaborators={collaboratorManagement.collaborators}
-        currentUserHasApproved={collaboratorManagement.currentUserHasApproved}
+        isApproved={collaboratorManagement.isApproved}
+        isAdmin={collaboratorManagement.isAdmin}
         onManageCollaborators={collaboratorManagement.openAddDialog}
         onApprove={collaboratorManagement.handleApprove}
         onRevoke={collaboratorManagement.handleRevoke}
