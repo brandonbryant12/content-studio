@@ -41,7 +41,10 @@ services:
           "wget --quiet --spider http://$$SERVER_HOST:$$SERVER_PORT/healthcheck",
         ]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   db:
     image: docker.io/postgres:18
@@ -60,19 +63,16 @@ services:
       retries: 3
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
 
-  drizzle:
+  migrate:
     restart: "no"
-    command: /bin/sh
     build:
       context: .
       dockerfile: ./packages/db/Dockerfile
     environment:
       - DB_POSTGRES_URL=postgres://postgres:postgres@db:5432/postgres
-      - TURBO_UI=true
-    profiles:
-      # Using profiles to avoid starting this container by default.
-      # We only use this to run `pnpm db:push`
-      - drizzle
+    depends_on:
+      db:
+        condition: service_healthy
 
   minio:
     image: minio/minio:latest

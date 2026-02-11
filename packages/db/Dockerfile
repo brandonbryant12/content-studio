@@ -32,4 +32,4 @@ RUN pnpm --filter=@repo/db add dotenv-cli drizzle-kit \
 
 COPY --from=builder /app/out/full/ .
 
-CMD ["/bin/sh"]
+CMD ["pnpm", "--filter=@repo/db", "migrate"]
