@@ -10,10 +10,7 @@ const PathStartingWithSlash = Schema.String.pipe(
 );
 
 export const envSchema = Schema.Struct({
-  /**
-   * This is the backend API server. Note that this should be passed as
-   * a build-time variable (ARG) in docker.
-   */
+  /** Backend API server URL. Injected at runtime via env.js in production. */
   PUBLIC_SERVER_URL: Schema.String.pipe(
     Schema.filter(
       (s) => {
@@ -40,4 +37,17 @@ export const envSchema = Schema.Struct({
   }),
 });
 
-export const env = Schema.decodeUnknownSync(envSchema)(import.meta.env);
+/**
+ * Merge runtime config (window.__ENV__ from env.js in production) with
+ * Vite's import.meta.env (used in development). Runtime values take
+ * precedence so a single Docker image works across environments.
+ */
+const runtimeEnv: Record<string, unknown> = {
+  ...import.meta.env,
+  ...(((globalThis as Record<string, unknown>).__ENV__ as Record<
+    string,
+    unknown
+  >) ?? {}),
+};
+
+export const env = Schema.decodeUnknownSync(envSchema)(runtimeEnv);

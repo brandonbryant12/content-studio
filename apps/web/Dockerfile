@@ -25,12 +25,6 @@ RUN turbo prune web --docker
 
 FROM base AS installer
 
-ARG PUBLIC_SERVER_URL
-ENV PUBLIC_SERVER_URL=${PUBLIC_SERVER_URL}
-
-ARG PUBLIC_SERVER_API_PATH
-ENV PUBLIC_SERVER_API_PATH=${PUBLIC_SERVER_API_PATH}
-
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
@@ -39,14 +33,27 @@ RUN pnpm build
 
 # =========================================================================== #
 
-FROM nginx:stable-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
-COPY apps/web/nginx.conf /etc/nginx/nginx.conf
-COPY --from=installer /app/apps/web/dist /usr/share/nginx/html
+RUN addgroup --system --gid 1001 app && \
+    adduser --system --uid 1001 --ingroup app app
+
+# Copy built SPA and the static file server
+COPY --from=installer /app/apps/web/dist ./dist
+COPY apps/web/serve.js ./serve.js
+COPY apps/web/entrypoint.sh ./entrypoint.sh
+
+RUN chmod +x ./entrypoint.sh
+
+USER app
+
+ENV PORT=8080
+
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD curl --fail --silent http://0.0.0.0:80/healthcheck || exit 1
+  CMD wget --quiet --spider http://0.0.0.0:8080/healthcheck || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["./entrypoint.sh"]
