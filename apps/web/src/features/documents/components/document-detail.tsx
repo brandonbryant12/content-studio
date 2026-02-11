@@ -14,10 +14,10 @@ import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, type ReactNode } from 'react';
+import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
 import type { RouterOutput } from '@repo/api/client';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
-import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
 
 type Document = RouterOutput['documents']['get'];
 

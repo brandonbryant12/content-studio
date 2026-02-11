@@ -77,9 +77,12 @@ export {
 } from './image-gen';
 
 // Import for combined layer
-import { LLM, GoogleLive, VertexLive } from './llm';
-import { TTS, GoogleTTSLive, VertexTTSLive } from './tts';
-import { ImageGen, GoogleImageGenLive } from './image-gen';
+import type { ImageGen} from './image-gen';
+import type { LLM} from './llm';
+import type { TTS} from './tts';
+import { GoogleImageGenLive } from './image-gen';
+import { GoogleLive, VertexLive } from './llm';
+import { GoogleTTSLive, VertexTTSLive } from './tts';
 
 // =============================================================================
 // Combined AI Layer

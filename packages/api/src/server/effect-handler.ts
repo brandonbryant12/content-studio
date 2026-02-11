@@ -1,8 +1,8 @@
-import { Effect, Match, pipe } from 'effect';
 import { ORPCError } from '@orpc/client';
 import { ValidationError } from '@orpc/contract';
 import { withCurrentUser, type User } from '@repo/auth/policy';
 import { hasHttpProtocol, type LogLevel } from '@repo/db/error-protocol';
+import { Effect, Match, pipe } from 'effect';
 import type { ServerRuntime, SharedServices } from './runtime';
 
 /**
@@ -224,7 +224,7 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
 ): Promise<A> => {
   const typedEffect = effect;
 
-  let tracedEffect = options?.span
+  const tracedEffect = options?.span
     ? typedEffect.pipe(
         Effect.withSpan(options.span, { attributes: options.attributes }),
       )

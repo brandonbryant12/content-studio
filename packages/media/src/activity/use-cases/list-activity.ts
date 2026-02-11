@@ -1,10 +1,10 @@
-import { Effect } from 'effect';
 import { requireRole, Role } from '@repo/auth/policy';
 import {
   createPaginatedResponse,
   type PaginatedResponse,
   type ActivityLogWithUser,
 } from '@repo/db/schema';
+import { Effect } from 'effect';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================

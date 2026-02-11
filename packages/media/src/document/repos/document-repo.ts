@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from 'effect';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import {
   document,
   type Document,
@@ -7,9 +7,9 @@ import {
   type DocumentStatus,
   type ResearchConfig,
 } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { DocumentNotFound } from '../../errors';
 import { eq, desc, and, count as drizzleCount } from 'drizzle-orm';
+import { Context, Effect, Layer } from 'effect';
+import { DocumentNotFound } from '../../errors';
 
 // =============================================================================
 // Input Types (previously in repository.ts)

@@ -1,9 +1,9 @@
-import { Effect } from 'effect';
-import { Storage } from '@repo/storage';
 import { getCurrentUser } from '@repo/auth/policy';
-import { DocumentRepo } from '../repos';
-import { getMimeType, parseUploadedFile } from '../parsers';
+import { Storage } from '@repo/storage';
+import { Effect } from 'effect';
 import { calculateWordCount } from '../../shared';
+import { getMimeType, parseUploadedFile } from '../parsers';
+import { DocumentRepo } from '../repos';
 
 // =============================================================================
 // Types

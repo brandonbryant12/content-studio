@@ -9,13 +9,13 @@
  *
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:tts
  */
-import { describe, expect } from 'vitest';
 import { it } from '@effect/vitest';
 import { Effect, Exit } from 'effect';
+import { describe, expect } from 'vitest';
+import { TTSError, TTSQuotaExceededError } from '../../errors';
 import { expectEffectFailure } from '../../test-utils/effect-assertions';
 import { GoogleTTSLive, TTS } from '../../tts';
 import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
-import { TTSError, TTSQuotaExceededError } from '../../errors';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

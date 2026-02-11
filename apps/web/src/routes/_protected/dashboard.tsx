@@ -14,12 +14,12 @@ import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
+import { useInfographicList } from '@/features/infographics/hooks';
+import { useOptimisticCreate as useCreateInfographic } from '@/features/infographics/hooks/use-optimistic-create';
 import { useOptimisticCreate as useCreatePodcast } from '@/features/podcasts/hooks/use-optimistic-create';
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
-import { useOptimisticCreate as useCreateVoiceover } from '@/features/voiceovers/hooks/use-optimistic-create';
 import { useVoiceoversOrdered } from '@/features/voiceovers/hooks';
-import { useOptimisticCreate as useCreateInfographic } from '@/features/infographics/hooks/use-optimistic-create';
-import { useInfographicList } from '@/features/infographics/hooks';
+import { useOptimisticCreate as useCreateVoiceover } from '@/features/voiceovers/hooks/use-optimistic-create';
 import { formatDuration } from '@/shared/lib/formatters';
 
 export const Route = createFileRoute('/_protected/dashboard')({

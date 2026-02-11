@@ -9,8 +9,19 @@
  * - Worker expects certain fields populated that API doesn't set
  * - Race conditions in job processing
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer, ManagedRuntime } from 'effect';
+import { withCurrentUser, Role, type User } from '@repo/auth/policy';
+import {
+  user as userTable,
+  voiceover as voiceoverTable,
+  generateVoiceoverId,
+  VoiceoverStatus,
+} from '@repo/db/schema';
+import {
+  VoiceoverRepoLive,
+  startVoiceoverGeneration,
+  generateVoiceoverAudio,
+} from '@repo/media';
+import { QueueLive } from '@repo/queue';
 import {
   createTestContext,
   createTestUser,
@@ -22,20 +33,9 @@ import {
   MockLLMLive,
   MockTTSLive,
 } from '@repo/testing/mocks';
-import {
-  user as userTable,
-  voiceover as voiceoverTable,
-  generateVoiceoverId,
-  VoiceoverStatus,
-} from '@repo/db/schema';
-import { withCurrentUser, Role, type User } from '@repo/auth/policy';
-import {
-  VoiceoverRepoLive,
-  startVoiceoverGeneration,
-  generateVoiceoverAudio,
-} from '@repo/media';
-import { QueueLive } from '@repo/queue';
 import { eq } from 'drizzle-orm';
+import { Layer, ManagedRuntime } from 'effect';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // =============================================================================
 // Test Setup

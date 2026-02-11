@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer } from 'effect';
+import { DatabasePolicyLive, type User } from '@repo/auth/policy';
+import { user as userTable } from '@repo/db/schema';
 import {
   createTestContext,
   createTestUser,
@@ -13,10 +13,10 @@ import {
   MOCK_VOICES,
   MockLLMLive,
 } from '@repo/testing/mocks';
-import { user as userTable } from '@repo/db/schema';
-import { DatabasePolicyLive, type User } from '@repo/auth/policy';
-import type { AudioEncoding, VoiceInfo } from '@repo/ai';
+import { Layer } from 'effect';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
+import type { AudioEncoding, VoiceInfo } from '@repo/ai';
 import voicesRouter from '../voices';
 import {
   createMockContext,

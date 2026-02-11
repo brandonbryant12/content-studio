@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Effect, Layer } from 'effect';
-import { getActivityStats } from '../get-activity-stats';
-import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
 import { createTestUser, createTestAdmin, withTestUser } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
+import { getActivityStats } from '../get-activity-stats';
 
 describe('getActivityStats', () => {
   beforeEach(() => {

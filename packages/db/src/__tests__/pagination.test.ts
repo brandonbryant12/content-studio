@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { Schema } from 'effect';
+import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PAGE_LIMIT,
   MAX_PAGE_LIMIT,

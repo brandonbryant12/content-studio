@@ -1,5 +1,4 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestAdmin,
@@ -7,8 +6,9 @@ import {
   withTestUser,
   resetAllFactories,
 } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Document } from '@repo/db/schema';
-import { Db } from '@repo/db/effect';
 import {
   DocumentRepo,
   type DocumentRepoService,

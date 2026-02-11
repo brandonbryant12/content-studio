@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { render, screen, userEvent } from '@/test-utils';
 import { ActivityDashboard } from '../components/activity-dashboard';
+import { render, screen, userEvent } from '@/test-utils';
 
 // Mock TanStack Router Link to avoid RouterProvider requirement
 vi.mock('@tanstack/react-router', () => ({

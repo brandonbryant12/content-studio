@@ -1,11 +1,11 @@
-import { Effect } from 'effect';
-import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
+import { Storage } from '@repo/storage';
+import { Effect } from 'effect';
+import { calculateWordCount } from '../../shared';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
 } from '../repos';
-import { calculateWordCount } from '../../shared';
 
 // =============================================================================
 // Types

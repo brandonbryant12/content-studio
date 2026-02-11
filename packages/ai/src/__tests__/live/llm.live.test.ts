@@ -9,12 +9,12 @@
  *
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:llm
  */
-import { describe, expect } from 'vitest';
 import { it } from '@effect/vitest';
 import { Effect, Exit, Schema } from 'effect';
-import { expectEffectFailure } from '../../test-utils/effect-assertions';
-import { GoogleLive, LLM } from '../../llm';
+import { describe, expect } from 'vitest';
 import { LLMError, LLMRateLimitError } from '../../errors';
+import { GoogleLive, LLM } from '../../llm';
+import { expectEffectFailure } from '../../test-utils/effect-assertions';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

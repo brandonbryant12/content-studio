@@ -5,13 +5,13 @@ import { Checkbox } from '@repo/ui/components/checkbox';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useState } from 'react';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { getStorageUrl } from '@/shared/lib/storage-url';
 import {
   type InfographicStatusType,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 
 export interface InfographicListItem {
   id: string;

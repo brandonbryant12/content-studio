@@ -4,9 +4,9 @@ import {
   MixerHorizontalIcon,
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
-import { Link } from '@tanstack/react-router';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Link } from '@tanstack/react-router';
 import type { ComponentType } from 'react';
 
 interface ActivityItem {

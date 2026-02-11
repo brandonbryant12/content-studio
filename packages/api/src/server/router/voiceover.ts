@@ -1,4 +1,9 @@
 import {
+  serializeVoiceoverEffect,
+  serializeVoiceoverListItemsEffect,
+  serializeJobEffect,
+} from '@repo/db/schema';
+import {
   listVoiceovers,
   getVoiceover,
   createVoiceover,
@@ -13,11 +18,6 @@ import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
-import {
-  serializeVoiceoverEffect,
-  serializeVoiceoverListItemsEffect,
-  serializeJobEffect,
-} from '@repo/db/schema';
 
 const voiceoverRouter = {
   list: protectedProcedure.voiceovers.list.handler(

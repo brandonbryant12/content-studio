@@ -1,4 +1,10 @@
 import {
+  serializeInfographicEffect,
+  serializeInfographicsEffect,
+  serializeInfographicVersionsEffect,
+  serializeJobEffect,
+} from '@repo/db/schema';
+import {
   listInfographics,
   getInfographic,
   createInfographic,
@@ -14,12 +20,6 @@ import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
-import {
-  serializeInfographicEffect,
-  serializeInfographicsEffect,
-  serializeInfographicVersionsEffect,
-  serializeJobEffect,
-} from '@repo/db/schema';
 
 const infographicRouter = {
   list: protectedProcedure.infographics.list.handler(

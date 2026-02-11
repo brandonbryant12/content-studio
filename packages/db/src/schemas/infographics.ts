@@ -11,11 +11,6 @@ import {
 import { Schema } from 'effect';
 import { user } from './auth';
 import {
-  createEffectSerializer,
-  createBatchEffectSerializer,
-  createSyncSerializer,
-} from './serialization';
-import {
   type InfographicId,
   type InfographicVersionId,
   InfographicIdSchema,
@@ -23,6 +18,11 @@ import {
   generateInfographicId,
   generateInfographicVersionId,
 } from './brands';
+import {
+  createEffectSerializer,
+  createBatchEffectSerializer,
+  createSyncSerializer,
+} from './serialization';
 
 export const infographicTypeEnum = pgEnum('infographic_type', [
   'timeline',

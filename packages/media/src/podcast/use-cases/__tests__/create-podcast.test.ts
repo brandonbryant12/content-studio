@@ -1,5 +1,4 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestPodcast,
@@ -8,13 +7,14 @@ import {
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type {
   Podcast,
   Document,
   CreatePodcast,
   DocumentId,
 } from '@repo/db/schema';
-import { Db } from '@repo/db/effect';
 import { DocumentNotFound } from '../../../errors';
 import {
   PodcastRepo,

@@ -1,7 +1,7 @@
-import { Effect } from 'effect';
 import { getCurrentUser } from '@repo/auth/policy';
-import { logActivity } from './use-cases/log-activity';
+import { Effect } from 'effect';
 import { ActivityLogRepo } from './repos/activity-log-repo';
+import { logActivity } from './use-cases/log-activity';
 
 /**
  * Log an entity activity using the current user from FiberRef.

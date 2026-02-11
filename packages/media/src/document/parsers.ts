@@ -1,10 +1,10 @@
+import { Effect } from 'effect';
+import type { DocumentSource } from '@repo/db/schema';
 import {
   DocumentParseError,
   DocumentTooLargeError,
   UnsupportedDocumentFormat,
 } from '../errors';
-import { Effect } from 'effect';
-import type { DocumentSource } from '@repo/db/schema';
 
 /**
  * Maximum file size in bytes (10MB).

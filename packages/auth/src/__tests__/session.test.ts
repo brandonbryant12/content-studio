@@ -1,14 +1,14 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
+import type { AuthInstance } from '../server/auth';
+import { UnauthorizedError } from '../errors';
+import { Policy, type PolicyService } from '../policy/service';
+import { Role } from '../policy/types';
 import {
   getSession,
   getSessionWithRole,
   requireSession,
 } from '../server/session';
-import { Policy, type PolicyService } from '../policy/service';
-import { Role } from '../policy/types';
-import { UnauthorizedError } from '../errors';
-import type { AuthInstance } from '../server/auth';
 
 // Mock auth instance factory
 const createMockAuth = (

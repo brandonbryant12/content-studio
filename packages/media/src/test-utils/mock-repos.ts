@@ -1,4 +1,17 @@
+import { Db } from '@repo/db/effect';
 import { Effect, Layer } from 'effect';
+import {
+  ActivityLogRepo,
+  type ActivityLogRepoService,
+} from '../activity/repos/activity-log-repo';
+import {
+  DocumentRepo,
+  type DocumentRepoService,
+} from '../document/repos/document-repo';
+import {
+  InfographicRepo,
+  type InfographicRepoService,
+} from '../infographic/repos/infographic-repo';
 import {
   PodcastRepo,
   type PodcastRepoService,
@@ -7,19 +20,6 @@ import {
   VoiceoverRepo,
   type VoiceoverRepoService,
 } from '../voiceover/repos/voiceover-repo';
-import {
-  DocumentRepo,
-  type DocumentRepoService,
-} from '../document/repos/document-repo';
-import {
-  ActivityLogRepo,
-  type ActivityLogRepoService,
-} from '../activity/repos/activity-log-repo';
-import {
-  InfographicRepo,
-  type InfographicRepoService,
-} from '../infographic/repos/infographic-repo';
-import { Db } from '@repo/db/effect';
 
 // =============================================================================
 // Mock Repo Factories

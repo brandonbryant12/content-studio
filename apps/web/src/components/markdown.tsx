@@ -1,9 +1,9 @@
 // components/markdown.tsx
 // Renders markdown content with proper styling for chat messages
 
+import { cn } from '@repo/ui/lib/utils';
 import { memo, lazy, Suspense } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import { cn } from '@repo/ui/lib/utils';
 
 const LazyCodeBlock = lazy(() =>
   import('react-syntax-highlighter/dist/esm/prism-light').then(async (mod) => {

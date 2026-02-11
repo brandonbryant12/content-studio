@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from 'effect';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import {
   infographic,
   infographicVersion,
@@ -7,9 +7,9 @@ import {
   type InfographicId,
   type InfographicStatusType,
 } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { InfographicNotFound } from '../../errors';
 import { eq, desc, asc } from 'drizzle-orm';
+import { Context, Effect, Layer } from 'effect';
+import { InfographicNotFound } from '../../errors';
 
 // =============================================================================
 // Types

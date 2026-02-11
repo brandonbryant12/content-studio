@@ -1,13 +1,13 @@
 import { createVertex } from '@ai-sdk/google-vertex';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
+import { mapError } from '../map-error';
 import {
   LLM,
   type LLMService,
   type GenerateOptions,
   type GenerateResult,
 } from '../service';
-import { mapError } from '../map-error';
 
 /**
  * Configuration for Vertex AI provider via AI SDK.

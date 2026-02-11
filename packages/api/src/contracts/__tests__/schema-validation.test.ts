@@ -8,8 +8,6 @@
  * Unlike integration tests that call handlers directly (bypassing contract validation),
  * these tests validate the schemas themselves.
  */
-import { describe, it, expect } from 'vitest';
-import { Schema } from 'effect';
 import {
   DocumentIdSchema,
   PodcastIdSchema,
@@ -20,6 +18,8 @@ import {
   generateVoiceoverId,
   generateJobId,
 } from '@repo/db/schema';
+import { Schema } from 'effect';
+import { describe, it, expect } from 'vitest';
 import { appContract } from '../index';
 
 // =============================================================================

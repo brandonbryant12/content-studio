@@ -1,13 +1,13 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
-import { resetAllFactories } from '@repo/testing';
-import type { JobId, JobStatus } from '@repo/db/schema';
 import {
   Queue,
   type QueueService,
   type Job,
   JobNotFoundError,
 } from '@repo/queue';
+import { resetAllFactories } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
+import type { JobId, JobStatus } from '@repo/db/schema';
 import { getJob } from '../get-job';
 
 // =============================================================================

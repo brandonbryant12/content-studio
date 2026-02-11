@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, type MouseEvent } from 'react';
 import { toast } from 'sonner';
 import type { DocumentInfo } from '../../hooks/use-document-selection';
+import { DocumentUploader } from './document-uploader';
+import { ExistingDocumentPicker } from './existing-document-picker';
 import { apiClient } from '@/clients/apiClient';
 import {
   useDocuments,
@@ -9,8 +11,6 @@ import {
 } from '@/features/documents/hooks/use-document-list';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import { getErrorMessage } from '@/shared/lib/errors';
-import { DocumentUploader } from './document-uploader';
-import { ExistingDocumentPicker } from './existing-document-picker';
 
 interface AddDocumentDialogProps {
   open: boolean;

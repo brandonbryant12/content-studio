@@ -5,10 +5,10 @@ import {
   useVoiceoverList,
   getVoiceoverListQueryKey,
 } from '../hooks/use-voiceover-list';
-import { useQuickPlay } from '@/shared/hooks/use-quick-play';
+import { VoiceoverList } from './voiceover-list';
 import { rawApiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { VoiceoverList } from './voiceover-list';
+import { useQuickPlay } from '@/shared/hooks/use-quick-play';
 
 const deleteFn = (input: { id: string }) =>
   rawApiClient.voiceovers.delete(input);

@@ -1,7 +1,7 @@
+import { Queue } from '@repo/queue';
 import { Effect, Schema } from 'effect';
 import type { JobId, JobStatus, ScriptSegment } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
-import { Queue } from '@repo/queue';
 import { saveChanges } from './save-changes';
 
 // =============================================================================

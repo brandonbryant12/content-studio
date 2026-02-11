@@ -1,7 +1,8 @@
 import { Effect } from 'effect';
 import type { AuthInstance } from './auth';
-import { UnauthorizedError, PolicyError } from '../errors';
+import type { PolicyError } from '../errors';
 import type { User } from '../policy/types';
+import { UnauthorizedError } from '../errors';
 import { Policy } from '../policy/service';
 
 type Session = AuthInstance['$Infer']['Session'];

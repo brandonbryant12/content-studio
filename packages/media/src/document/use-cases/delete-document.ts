@@ -1,6 +1,6 @@
-import { Effect } from 'effect';
-import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
+import { Storage } from '@repo/storage';
+import { Effect } from 'effect';
 import { DocumentNotFound } from '../../errors';
 import { DocumentRepo } from '../repos';
 

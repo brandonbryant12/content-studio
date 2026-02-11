@@ -1,5 +1,6 @@
-import { Context, Effect } from 'effect';
+import { Context } from 'effect';
 import type { UrlFetchError } from '../../errors';
+import type { Effect } from 'effect';
 
 export interface ScrapedContent {
   readonly title: string;

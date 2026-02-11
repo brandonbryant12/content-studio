@@ -1,9 +1,9 @@
-import * as Select from '@radix-ui/react-select';
 import {
   CheckIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
+import * as Select from '@radix-ui/react-select';
 import { Input } from '@repo/ui/components/input';
 
 interface TopUser {

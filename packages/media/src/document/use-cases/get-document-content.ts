@@ -1,9 +1,9 @@
-import { Effect } from 'effect';
-import { Storage } from '@repo/storage';
 import { requireOwnership } from '@repo/auth/policy';
-import { DocumentRepo } from '../repos';
-import { parseDocumentContent } from '../parsers';
+import { Storage } from '@repo/storage';
+import { Effect } from 'effect';
 import { DocumentContentNotFound } from '../../errors';
+import { parseDocumentContent } from '../parsers';
+import { DocumentRepo } from '../repos';
 
 export interface GetDocumentContentInput {
   id: string;

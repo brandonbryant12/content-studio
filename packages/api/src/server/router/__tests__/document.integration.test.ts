@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Layer } from 'effect';
+import { DatabasePolicyLive, type User } from '@repo/auth/policy';
+import {
+  user as userTable,
+  document as documentTable,
+  type DocumentOutput,
+  type DocumentId,
+} from '@repo/db/schema';
+import { DocumentRepoLive } from '@repo/media';
 import {
   createTestContext,
   createTestUser,
@@ -12,15 +18,9 @@ import {
   MockLLMLive,
   MockTTSLive,
 } from '@repo/testing/mocks';
-import {
-  user as userTable,
-  document as documentTable,
-  type DocumentOutput,
-  type DocumentId,
-} from '@repo/db/schema';
-import { DatabasePolicyLive, type User } from '@repo/auth/policy';
-import { DocumentRepoLive } from '@repo/media';
 import { eq } from 'drizzle-orm';
+import { Layer } from 'effect';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import documentRouter from '../document';
 import {

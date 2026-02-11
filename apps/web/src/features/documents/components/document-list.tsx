@@ -13,11 +13,11 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useMemo, useTransition } from 'react';
 import type { DocumentListItem } from './document-item';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
-import { formatFileSize } from '@/shared/lib/formatters';
-import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { formatFileSize } from '@/shared/lib/formatters';
 
 function getFileLabel(source: string): string {
   if (source === 'manual') return 'Text';

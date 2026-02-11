@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Effect, Layer } from 'effect';
-import { logActivity } from '../log-activity';
-import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ActivityLog, ActivityLogId } from '@repo/db/schema';
+import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
+import { logActivity } from '../log-activity';
 
 const createMockActivityLog = (
   overrides: Partial<ActivityLog> = {},

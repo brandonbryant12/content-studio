@@ -1,13 +1,13 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema } from 'effect';
+import { mapError } from '../map-error';
 import {
   LLM,
   type LLMService,
   type GenerateOptions,
   type GenerateResult,
 } from '../service';
-import { mapError } from '../map-error';
 
 /**
  * Configuration for Google AI provider via AI SDK.

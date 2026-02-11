@@ -1,11 +1,5 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getDocument } from '../get-document';
-import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { Db, type DatabaseError } from '@repo/db/effect';
-import { DocumentNotFound } from '../../../errors';
 import { ForbiddenError, UnauthorizedError } from '@repo/db/errors';
-import type { Document } from '@repo/db/schema';
 import {
   createTestUser,
   createTestAdmin,
@@ -13,6 +7,12 @@ import {
   withTestUser,
   resetAllFactories,
 } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
+import type { Document } from '@repo/db/schema';
+import { DocumentNotFound } from '../../../errors';
+import { DocumentRepo, type DocumentRepoService } from '../../repos';
+import { getDocument } from '../get-document';
 
 // =============================================================================
 // Test Setup

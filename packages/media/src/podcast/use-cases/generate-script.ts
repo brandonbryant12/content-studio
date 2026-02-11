@@ -1,10 +1,10 @@
-import { Effect, Schema } from 'effect';
-import type { Podcast } from '@repo/db/schema';
 import { LLM } from '@repo/ai/llm';
 import { requireOwnership } from '@repo/auth/policy';
+import { Effect, Schema } from 'effect';
+import type { Podcast } from '@repo/db/schema';
 import { getDocumentContent } from '../../document';
-import { PodcastRepo } from '../repos/podcast-repo';
 import { buildSystemPrompt, buildUserPrompt } from '../prompts';
+import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
 // Types

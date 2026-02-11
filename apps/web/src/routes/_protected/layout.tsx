@@ -21,13 +21,13 @@ import {
   createFileRoute,
   Link,
 } from '@tanstack/react-router';
-import type { ComponentType } from 'react';
 import { useEffect } from 'react';
+import type { ComponentType } from 'react';
 import { authClient } from '@/clients/authClient';
-import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { useSSERecovery } from '@/providers/sse-provider';
-import { useSidebar } from '@/shared/hooks/use-sidebar';
 import UserAvatar from '@/routes/-components/layout/nav/user-avatar';
+import { ErrorBoundary } from '@/shared/components/error-boundary';
+import { useSidebar } from '@/shared/hooks/use-sidebar';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,

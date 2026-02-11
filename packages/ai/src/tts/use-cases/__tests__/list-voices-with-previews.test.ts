@@ -1,7 +1,7 @@
-import { Effect, Layer } from 'effect';
-import { describe, expect } from 'vitest';
 import { it } from '@effect/vitest';
 import { Storage, type StorageService } from '@repo/storage';
+import { Effect, Layer } from 'effect';
+import { describe, expect } from 'vitest';
 import { TTS, type TTSService, VOICES } from '../../index';
 import { listVoicesWithPreviews } from '../list-voices-with-previews';
 

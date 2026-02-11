@@ -5,16 +5,16 @@ import { Checkbox } from '@repo/ui/components/checkbox';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useState } from 'react';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import {
   type VersionStatus,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
 import { PodcastIcon } from './podcast-icon';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { formatDuration } from '@/shared/lib/formatters';
 import { getStorageUrl } from '@/shared/lib/storage-url';
-import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 
 /** Podcast data for list display */
 export interface PodcastListItem {

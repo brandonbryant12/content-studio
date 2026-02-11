@@ -1,11 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { Schema } from 'effect';
-import {
-  VersionStatus,
-  PodcastFormatSchema,
-  VersionStatusSchema,
-} from '../schemas/podcasts';
-import { VoiceoverStatus, VoiceoverStatusSchema } from '../schemas/voiceovers';
+import { describe, expect, it } from 'vitest';
+import { DocumentSourceSchema } from '../schemas/documents';
 import {
   InfographicStatus,
   InfographicTypeSchema,
@@ -14,7 +9,12 @@ import {
   InfographicStatusSchema,
 } from '../schemas/infographics';
 import { JobStatus, JobType, JobStatusSchema } from '../schemas/jobs';
-import { DocumentSourceSchema } from '../schemas/documents';
+import {
+  VersionStatus,
+  PodcastFormatSchema,
+  VersionStatusSchema,
+} from '../schemas/podcasts';
+import { VoiceoverStatus, VoiceoverStatusSchema } from '../schemas/voiceovers';
 
 describe('enum companion objects', () => {
   describe('VersionStatus', () => {

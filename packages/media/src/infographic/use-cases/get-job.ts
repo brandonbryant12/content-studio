@@ -1,5 +1,5 @@
-import { Effect } from 'effect';
 import { Queue } from '@repo/queue';
+import { Effect } from 'effect';
 import type { JobId } from '@repo/db/schema';
 
 // =============================================================================

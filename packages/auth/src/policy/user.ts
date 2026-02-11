@@ -1,6 +1,6 @@
 import { Effect, FiberRef, Option } from 'effect';
-import { UnauthorizedError } from '../errors';
 import type { User } from './types';
+import { UnauthorizedError } from '../errors';
 
 export type { User } from './types';
 

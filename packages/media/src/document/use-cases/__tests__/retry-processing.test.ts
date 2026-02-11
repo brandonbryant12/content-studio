@@ -1,17 +1,17 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ForbiddenError } from '@repo/auth';
+import { Queue, type QueueService } from '@repo/queue';
 import {
   createTestUser,
   createTestDocument,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
-import { ForbiddenError } from '@repo/auth';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { JobId, JobStatus, Document } from '@repo/db/schema';
 import { DocumentAlreadyProcessing, DocumentNotFound } from '../../../errors';
-import { Queue, type QueueService } from '@repo/queue';
-import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { MockDbLive } from '../../../test-utils/mock-repos';
+import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { retryProcessing } from '../retry-processing';
 
 const createMockDocumentRepo = (

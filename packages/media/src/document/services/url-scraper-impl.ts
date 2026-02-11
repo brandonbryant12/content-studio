@@ -1,11 +1,11 @@
-import { Effect, Layer } from 'effect';
 import { extract } from '@extractus/article-extractor';
+import { Effect, Layer } from 'effect';
+import { UrlFetchError } from '../../errors';
 import {
   UrlScraper,
   type ScrapedContent,
   type UrlScraperService,
 } from './url-scraper';
-import { UrlFetchError } from '../../errors';
 
 const FETCH_TIMEOUT_MS = 30_000;
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024; // 5MB

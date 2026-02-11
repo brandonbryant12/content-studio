@@ -1,6 +1,6 @@
-import { ActivityStats } from './activity-stats';
-import { ActivityFilters } from './activity-filters';
 import { ActivityFeed } from './activity-feed';
+import { ActivityFilters } from './activity-filters';
+import { ActivityStats } from './activity-stats';
 
 type Period = '24h' | '7d' | '30d';
 

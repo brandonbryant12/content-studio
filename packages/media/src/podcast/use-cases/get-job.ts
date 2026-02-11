@@ -1,6 +1,6 @@
+import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
-import { Queue } from '@repo/queue';
 
 // =============================================================================
 // Types

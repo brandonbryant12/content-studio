@@ -1,16 +1,16 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Queue, QueueError, type QueueService } from '@repo/queue';
 import {
   createTestUser,
   createTestDocument,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { JobId, JobStatus, Document } from '@repo/db/schema';
 import { DocumentAlreadyProcessing, InvalidUrlError } from '../../../errors';
-import { Queue, QueueError, type QueueService } from '@repo/queue';
-import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { MockDbLive } from '../../../test-utils/mock-repos';
+import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { createFromUrl } from '../create-from-url';
 
 interface MockDocState {

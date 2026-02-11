@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { validateUrl } from '../url-validator';
 import { InvalidUrlError } from '../../../errors';
+import { validateUrl } from '../url-validator';
 
 describe('validateUrl', () => {
   describe('valid URLs', () => {

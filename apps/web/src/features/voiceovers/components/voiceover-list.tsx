@@ -21,17 +21,17 @@ import {
   useTransition,
   type ChangeEvent,
 } from 'react';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import type { VoiceoverListItem } from './voiceover-item';
+import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import {
   type VoiceoverStatusType,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
-import { formatDuration } from '@/shared/lib/formatters';
-import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
-import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { formatDuration } from '@/shared/lib/formatters';
 
 function StatusBadge({ status }: { status: VoiceoverStatusType | undefined }) {
   const config = getStatusConfig(status);

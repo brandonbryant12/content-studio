@@ -5,10 +5,10 @@ import {
   usePodcastList,
   getPodcastListQueryKey,
 } from '../hooks/use-podcast-list';
-import { useQuickPlay } from '@/shared/hooks/use-quick-play';
+import { PodcastList } from './podcast-list';
 import { rawApiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { PodcastList } from './podcast-list';
+import { useQuickPlay } from '@/shared/hooks/use-quick-play';
 
 const deleteFn = (input: { id: string }) => rawApiClient.podcasts.delete(input);
 

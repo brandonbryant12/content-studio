@@ -1,10 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
+import { Effect, Layer } from 'effect';
 import {
   ImageGenError,
   ImageGenRateLimitError,
   ImageGenContentFilteredError,
 } from '../../errors';
-import { Effect, Layer } from 'effect';
 import {
   ImageGen,
   type ImageGenService,

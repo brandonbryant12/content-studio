@@ -1,11 +1,30 @@
-import { describe, expect, it } from 'vitest';
 import { Effect } from 'effect';
+import { describe, expect, it } from 'vitest';
+import type { DocumentId } from '../schemas/brands';
+import type { PodcastId } from '../schemas/brands';
+import type { VoiceoverId } from '../schemas/brands';
+import type { InfographicId, InfographicVersionId } from '../schemas/brands';
+import type { JobId } from '../schemas/brands';
+import type { ActivityLogId } from '../schemas/brands';
+import {
+  serializeActivityLog,
+  serializeActivityLogEffect,
+  type ActivityLogWithUser,
+} from '../schemas/activity-log';
 import {
   serializeDocument,
   serializeDocumentEffect,
   serializeDocumentsEffect,
   type Document,
 } from '../schemas/documents';
+import {
+  serializeInfographic,
+  serializeInfographicEffect,
+  serializeInfographicVersion,
+  type Infographic,
+  type InfographicVersion,
+} from '../schemas/infographics';
+import { serializeJob, serializeJobEffect, type Job } from '../schemas/jobs';
 import {
   serializePodcast,
   serializePodcastEffect,
@@ -19,25 +38,6 @@ import {
   serializeVoiceoverListItem,
   type Voiceover,
 } from '../schemas/voiceovers';
-import {
-  serializeInfographic,
-  serializeInfographicEffect,
-  serializeInfographicVersion,
-  type Infographic,
-  type InfographicVersion,
-} from '../schemas/infographics';
-import { serializeJob, serializeJobEffect, type Job } from '../schemas/jobs';
-import {
-  serializeActivityLog,
-  serializeActivityLogEffect,
-  type ActivityLogWithUser,
-} from '../schemas/activity-log';
-import type { DocumentId } from '../schemas/brands';
-import type { PodcastId } from '../schemas/brands';
-import type { VoiceoverId } from '../schemas/brands';
-import type { InfographicId, InfographicVersionId } from '../schemas/brands';
-import type { JobId } from '../schemas/brands';
-import type { ActivityLogId } from '../schemas/brands';
 
 // =============================================================================
 // Test Fixtures

@@ -1,6 +1,5 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
 import { Db } from '@repo/db/effect';
-import type { DatabaseInstance } from '@repo/db/client';
 import {
   job,
   type JobId,
@@ -9,6 +8,7 @@ import {
 } from '@repo/db/schema';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType, JobStatus as JobStatusType } from './types';
+import type { DatabaseInstance } from '@repo/db/client';
 import { QueueError, JobNotFoundError, JobProcessingError } from './errors';
 import { Queue, type QueueService } from './service';
 

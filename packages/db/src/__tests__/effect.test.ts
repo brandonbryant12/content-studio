@@ -1,12 +1,13 @@
-import { describe, expect, it } from 'vitest';
 import { Effect, Exit, Cause, Layer } from 'effect';
-import {
-  withDb,
-  Db,
+import { describe, expect, it } from 'vitest';
+import type {
   DbError,
   ConstraintViolationError,
   DeadlockError,
-  ConnectionError,
+  ConnectionError} from '../effect';
+import {
+  withDb,
+  Db,
   DbLive,
 } from '../effect';
 

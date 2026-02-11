@@ -1,4 +1,10 @@
 import {
+  serializePodcastEffect,
+  serializePodcastFullEffect,
+  serializePodcastListItemsEffect,
+  serializeJobEffect,
+} from '@repo/db/schema';
+import {
   listPodcasts,
   getPodcast,
   createPodcast,
@@ -14,12 +20,6 @@ import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
-import {
-  serializePodcastEffect,
-  serializePodcastFullEffect,
-  serializePodcastListItemsEffect,
-  serializeJobEffect,
-} from '@repo/db/schema';
 
 const podcastRouter = {
   list: protectedProcedure.podcasts.list.handler(

@@ -1,11 +1,11 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createTestUser,
   createTestInfographic,
   resetAllFactories,
 } from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Infographic } from '@repo/db/schema';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';

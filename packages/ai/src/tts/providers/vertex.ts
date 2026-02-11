@@ -1,4 +1,6 @@
 import { Effect, Layer } from 'effect';
+import { wrapPcmAsWav } from '../audio-utils';
+import { mapError } from '../map-error';
 import {
   TTS,
   type TTSService,
@@ -9,8 +11,6 @@ import {
   type PreviewVoiceResult,
 } from '../service';
 import { VOICES, getVoicesByGender, DEFAULT_PREVIEW_TEXT } from '../voices';
-import { wrapPcmAsWav } from '../audio-utils';
-import { mapError } from '../map-error';
 
 /**
  * Configuration for Vertex AI TTS provider.

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Effect, Layer } from 'effect';
-import { listActivity } from '../list-activity';
-import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
 import { createTestUser, createTestAdmin, withTestUser } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ActivityLogWithUser, ActivityLogId } from '@repo/db/schema';
+import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
+import { listActivity } from '../list-activity';
 
 const createMockActivityLog = (
   overrides: Partial<ActivityLogWithUser> = {},

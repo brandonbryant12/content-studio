@@ -3,21 +3,10 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { DocumentManager } from '@/shared/components/document-manager';
-import {
-  useKeyboardShortcut,
-  useNavigationBlock,
-  useDocumentSelection,
-} from '@/shared/hooks';
-import { useDocumentList } from '@/features/documents/hooks/use-document-list';
-import { getStorageUrl } from '@/shared/lib/storage-url';
-import { useInfographic } from '../hooks/use-infographic';
-import { useInfographicSettings } from '../hooks/use-infographic-settings';
-import { useInfographicActions } from '../hooks/use-infographic-actions';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
-import { ApproveButton } from '@/shared/components/approval/approve-button';
-import { useSessionGuard } from '@/shared/hooks';
+import { useInfographic } from '../hooks/use-infographic';
+import { useInfographicActions } from '../hooks/use-infographic-actions';
+import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import {
   useInfographicVersions,
   type InfographicVersion,
@@ -29,6 +18,17 @@ import { PromptPanel } from './prompt-panel';
 import { StyleSelector } from './style-selector';
 import { TypeSelector } from './type-selector';
 import { VersionHistoryStrip } from './version-history-strip';
+import { useDocumentList } from '@/features/documents/hooks/use-document-list';
+import { ApproveButton } from '@/shared/components/approval/approve-button';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { DocumentManager } from '@/shared/components/document-manager';
+import { useSessionGuard } from '@/shared/hooks';
+import {
+  useKeyboardShortcut,
+  useNavigationBlock,
+  useDocumentSelection,
+} from '@/shared/hooks';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 
 interface InfographicWorkbenchContainerProps {
   infographicId: string;

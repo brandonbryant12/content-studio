@@ -11,9 +11,9 @@ import { Link } from '@tanstack/react-router';
 import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { getStatusConfig, isGeneratingStatus } from '../../lib/status';
+import { PodcastIcon } from '../podcast-icon';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { PodcastIcon } from '../podcast-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
 type PodcastFull = RouterOutput['podcasts']['get'];

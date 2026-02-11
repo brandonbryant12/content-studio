@@ -1,9 +1,9 @@
+import { getCurrentUser } from '@repo/auth/policy';
+import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import type { CreateDocument } from '@repo/db/schema';
-import { Storage } from '@repo/storage';
-import { getCurrentUser } from '@repo/auth/policy';
-import { DocumentRepo } from '../repos';
 import { calculateWordCount } from '../../shared';
+import { DocumentRepo } from '../repos';
 
 // =============================================================================
 // Types

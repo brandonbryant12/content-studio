@@ -1,5 +1,5 @@
-import { logEntityActivity, syncEntityTitle } from '@repo/media';
 import { withCurrentUser, type User } from '@repo/auth/policy';
+import { logEntityActivity, syncEntityTitle } from '@repo/media';
 import { Effect } from 'effect';
 import type { ServerRuntime } from '../runtime';
 

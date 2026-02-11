@@ -3,8 +3,8 @@ import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
-import { InfographicItem, type InfographicListItem } from './infographic-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { InfographicItem, type InfographicListItem } from './infographic-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 
 interface EmptyStateProps {

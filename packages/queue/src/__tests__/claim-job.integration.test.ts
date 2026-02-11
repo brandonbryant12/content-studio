@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { Effect, Layer } from 'effect';
 import { eq } from '@repo/db';
 import { createDb, type DatabaseInstance } from '@repo/db/client';
 import { Db } from '@repo/db/effect';
 import { job, JobStatus, JobType } from '@repo/db/schema';
 import { user } from '@repo/db/schema';
-import { Queue } from '../service';
-import { QueueLive } from '../repository';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { JobProcessingError } from '../errors';
+import { QueueLive } from '../repository';
+import { Queue } from '../service';
 
 /**
  * Integration tests for the queue's atomic job claiming mechanism.

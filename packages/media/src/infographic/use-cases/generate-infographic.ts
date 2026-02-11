@@ -1,8 +1,8 @@
+import { requireOwnership } from '@repo/auth/policy';
+import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateInfographicPayload } from '@repo/queue';
-import { Queue } from '@repo/queue';
-import { requireOwnership } from '@repo/auth/policy';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================

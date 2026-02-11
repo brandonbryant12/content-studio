@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from 'effect';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import {
   activityLog,
   type ActivityLog,
@@ -6,7 +6,6 @@ import {
   type ActivityLogId,
   user,
 } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import {
   desc,
   eq,
@@ -17,6 +16,8 @@ import {
   count as drizzleCount,
   gt,
 } from 'drizzle-orm';
+import { Context, Layer } from 'effect';
+import type { Effect} from 'effect';
 
 // =============================================================================
 // Input Types

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { ActivityDashboard } from './activity-dashboard';
 import { useActivityList } from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
+import { ActivityDashboard } from './activity-dashboard';
 
 type Period = '24h' | '7d' | '30d';
 

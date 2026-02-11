@@ -1,7 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
-import { UrlScraper, type UrlScraperService } from '../url-scraper';
 import { UrlFetchError } from '../../../errors';
+import { UrlScraper, type UrlScraperService } from '../url-scraper';
 
 const createMockUrlScraper = (
   overrides: Partial<UrlScraperService> = {},

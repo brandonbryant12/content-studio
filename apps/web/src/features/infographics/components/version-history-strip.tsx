@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { getStorageUrl } from '@/shared/lib/storage-url';
 import type { InfographicVersion } from '../hooks/use-infographic-versions';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 
 interface VersionHistoryStripProps {
   versions: readonly InfographicVersion[];

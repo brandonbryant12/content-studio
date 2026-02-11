@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import { useOptimisticCreate } from '../hooks/use-optimistic-create';
-import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
   useInfographicList,
   getInfographicListQueryKey,
 } from '../hooks/use-infographic-list';
+import { useOptimisticCreate } from '../hooks/use-optimistic-create';
+import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
+import { InfographicList } from './infographic-list';
 import { rawApiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { InfographicList } from './infographic-list';
 
 const deleteFn = (input: { id: string }) =>
   rawApiClient.infographics.delete(input);

@@ -2,12 +2,12 @@ import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import type { RouterOutput } from '@repo/api/client';
 import { useState, useCallback, type ReactNode } from 'react';
+import type { RouterOutput } from '@repo/api/client';
 import { isGeneratingStatus } from '../../lib/status';
+import { VoiceoverIcon } from '../voiceover-icon';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { VoiceoverIcon } from '../voiceover-icon';
 import { formatDuration } from '@/shared/lib/formatters';
 
 type VoiceoverFull = RouterOutput['voiceovers']['get'];

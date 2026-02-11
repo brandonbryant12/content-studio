@@ -4,13 +4,13 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
   type VoiceoverStatusType,
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
 import { VoiceoverIcon } from './voiceover-icon';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { formatDuration } from '@/shared/lib/formatters';
 
 /** Voiceover data for list display */

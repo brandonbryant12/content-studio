@@ -1,9 +1,9 @@
 import { implement } from '@orpc/server';
 import { type AuthInstance, getSessionWithRole } from '@repo/auth/server';
-import type { User } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { appContract } from '../contracts';
 import type { ServerRuntime } from './runtime';
+import type { User } from '@repo/auth/policy';
+import { appContract } from '../contracts';
 
 type Session = AuthInstance['$Infer']['Session'];
 

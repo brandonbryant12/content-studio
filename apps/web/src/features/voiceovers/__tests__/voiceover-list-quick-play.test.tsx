@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { VoiceoverList } from '../components/voiceover-list';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { VoiceoverListItem } from '../components/voiceover-item';
-import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import { VoiceoverList } from '../components/voiceover-list';
 
 // Mock TanStack Router Link to render a plain anchor
 vi.mock('@tanstack/react-router', () => ({

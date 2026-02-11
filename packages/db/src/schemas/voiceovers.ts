@@ -10,15 +10,15 @@ import {
 import { Schema } from 'effect';
 import { user } from './auth';
 import {
-  createEffectSerializer,
-  createBatchEffectSerializer,
-  createSyncSerializer,
-} from './serialization';
-import {
   type VoiceoverId,
   VoiceoverIdSchema,
   generateVoiceoverId,
 } from './brands';
+import {
+  createEffectSerializer,
+  createBatchEffectSerializer,
+  createSyncSerializer,
+} from './serialization';
 
 /** Flow: drafting -> generating_audio -> ready */
 export const voiceoverStatusEnum = pgEnum('voiceover_status', [

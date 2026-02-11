@@ -1,10 +1,10 @@
-import { Effect } from 'effect';
 import { getCurrentUser } from '@repo/auth/policy';
-import { Queue, type ProcessUrlPayload } from '@repo/queue';
 import { JobType } from '@repo/db/schema';
+import { Queue, type ProcessUrlPayload } from '@repo/queue';
+import { Effect } from 'effect';
+import { DocumentAlreadyProcessing } from '../../errors';
 import { DocumentRepo } from '../repos';
 import { validateUrl } from '../services/url-validator';
-import { DocumentAlreadyProcessing } from '../../errors';
 
 export interface CreateFromUrlInput {
   url: string;

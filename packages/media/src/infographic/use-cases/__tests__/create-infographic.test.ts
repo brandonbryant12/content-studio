@@ -1,9 +1,9 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestUser, resetAllFactories } from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
-import type { Infographic } from '@repo/db/schema';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { InsertInfographic } from '../../repos/infographic-repo';
+import type { Infographic } from '@repo/db/schema';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';
 import { createInfographic } from '../create-infographic';

@@ -1,7 +1,7 @@
-import { Effect } from 'effect';
-import type { Job } from '@repo/queue';
 import { Queue } from '@repo/queue';
+import { Effect } from 'effect';
 import type { JobId } from '@repo/db/schema';
+import type { Job } from '@repo/queue';
 
 // =============================================================================
 // Types

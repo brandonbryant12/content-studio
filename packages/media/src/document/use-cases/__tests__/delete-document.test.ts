@@ -1,5 +1,6 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { Db, type DbService } from '@repo/db/effect';
+import { ForbiddenError } from '@repo/db/errors';
+import { Storage, type StorageService, StorageError } from '@repo/storage';
 import {
   createTestUser,
   createTestAdmin,
@@ -7,11 +8,10 @@ import {
   withTestUser,
   resetAllFactories,
 } from '@repo/testing';
-import { Storage, type StorageService, StorageError } from '@repo/storage';
-import { Db, type DbService } from '@repo/db/effect';
-import { DocumentNotFound } from '../../../errors';
-import { ForbiddenError } from '@repo/db/errors';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Document } from '@repo/db/schema';
+import { DocumentNotFound } from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { deleteDocument } from '../delete-document';
 

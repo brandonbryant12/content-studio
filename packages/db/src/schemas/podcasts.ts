@@ -11,6 +11,13 @@ import {
 import { Schema } from 'effect';
 import { user } from './auth';
 import {
+  type PodcastId,
+  type DocumentId,
+  PodcastIdSchema,
+  DocumentIdSchema,
+  generatePodcastId,
+} from './brands';
+import {
   DocumentOutputSchema,
   serializeDocument,
   type Document,
@@ -20,13 +27,6 @@ import {
   createBatchEffectSerializer,
   createSyncSerializer,
 } from './serialization';
-import {
-  type PodcastId,
-  type DocumentId,
-  PodcastIdSchema,
-  DocumentIdSchema,
-  generatePodcastId,
-} from './brands';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',

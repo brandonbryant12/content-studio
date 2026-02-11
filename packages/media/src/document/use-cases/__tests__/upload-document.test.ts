@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Effect, Layer } from 'effect';
-import { Storage, StorageUploadError } from '@repo/storage';
 import { Db, type DbService } from '@repo/db/effect';
-import type { Document, DocumentId } from '@repo/db/schema';
-import { DocumentParseError, UnsupportedDocumentFormat } from '../../../errors';
+import { Storage, StorageUploadError } from '@repo/storage';
 import {
   createTestUser,
   createTestDocument,
   withTestUser,
   resetAllFactories,
 } from '@repo/testing';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { DocumentParseError, UnsupportedDocumentFormat } from '../../../errors';
+import type { Document, DocumentId } from '@repo/db/schema';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { uploadDocument } from '../upload-document';
 

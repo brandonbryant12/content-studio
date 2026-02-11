@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from 'effect';
+import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import {
   podcast,
   document,
@@ -12,9 +12,9 @@ import {
   type VersionStatus,
   type ScriptSegment,
 } from '@repo/db/schema';
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
-import { PodcastNotFound, DocumentNotFound } from '../../errors';
 import { eq, desc, inArray, count as drizzleCount } from 'drizzle-orm';
+import { Context, Effect, Layer } from 'effect';
+import { PodcastNotFound, DocumentNotFound } from '../../errors';
 
 // =============================================================================
 // Types

@@ -1,6 +1,6 @@
+import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Document } from '@repo/db/schema';
-import { getCurrentUser, Role } from '@repo/auth/policy';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================

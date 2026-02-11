@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { PodcastItem, type PodcastListItem } from '../components/podcast-item';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import { PodcastItem, type PodcastListItem } from '../components/podcast-item';
 
 // Mock TanStack Router Link to render a plain anchor
 vi.mock('@tanstack/react-router', () => ({

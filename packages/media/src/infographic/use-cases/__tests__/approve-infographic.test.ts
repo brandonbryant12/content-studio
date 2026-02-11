@@ -1,5 +1,4 @@
-import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ForbiddenError } from '@repo/auth';
 import {
   createTestUser,
   createTestAdmin,
@@ -7,7 +6,8 @@ import {
   resetAllFactories,
 } from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
-import { ForbiddenError } from '@repo/auth';
+import { Effect, Layer } from 'effect';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Infographic } from '@repo/db/schema';
 import { InfographicNotFound } from '../../../errors';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
