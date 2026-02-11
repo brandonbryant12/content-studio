@@ -65,8 +65,13 @@ describe('queue errors', () => {
 
     it('httpMessage returns fallback when message is undefined', () => {
       // Directly test the static method with an object that has undefined message
-      const errorLike = { jobId: 'job-123', message: undefined } as JobNotFoundError;
-      expect(JobNotFoundError.httpMessage(errorLike)).toBe('Job job-123 not found');
+      const errorLike = {
+        jobId: 'job-123',
+        message: undefined,
+      } as JobNotFoundError;
+      expect(JobNotFoundError.httpMessage(errorLike)).toBe(
+        'Job job-123 not found',
+      );
     });
 
     it('exposes correct HTTP protocol properties', () => {

@@ -1,13 +1,12 @@
-import type { JobId } from '@repo/db/schema';
+import type {
+  JobId,
+  JobStatus as DbJobStatus,
+  JobType as DbJobType,
+} from '@repo/db/schema';
 
-export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type JobStatus = DbJobStatus;
 
-export type JobType =
-  | 'generate-podcast'
-  | 'generate-script'
-  | 'generate-audio'
-  | 'generate-voiceover'
-  | 'generate-infographic';
+export type JobType = DbJobType[keyof DbJobType];
 
 export interface Job<TPayload = unknown, TResult = unknown> {
   readonly id: JobId;
@@ -57,10 +56,6 @@ export interface GenerateAudioResult {
   readonly duration: number;
 }
 
-// =============================================================================
-// Voiceover Job Types
-// =============================================================================
-
 export interface GenerateVoiceoverPayload {
   readonly voiceoverId: string;
   readonly userId: string;
@@ -71,10 +66,6 @@ export interface GenerateVoiceoverResult {
   readonly audioUrl: string;
   readonly duration: number;
 }
-
-// =============================================================================
-// Infographic Job Types
-// =============================================================================
 
 export interface GenerateInfographicPayload {
   readonly infographicId: string;

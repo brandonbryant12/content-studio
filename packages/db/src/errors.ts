@@ -1,13 +1,5 @@
 import { Schema } from 'effect';
 
-// =============================================================================
-// Base HTTP Errors
-// =============================================================================
-
-/**
- * Generic not found error.
- * Use domain-specific errors (DocumentNotFound, PodcastNotFound, etc.) when possible.
- */
 export class NotFoundError extends Schema.TaggedError<NotFoundError>()(
   'NotFoundError',
   {
@@ -26,9 +18,6 @@ export class NotFoundError extends Schema.TaggedError<NotFoundError>()(
   }
 }
 
-/**
- * Authorization failure - user doesn't have permission.
- */
 export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
   'ForbiddenError',
   {
@@ -43,9 +32,6 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
   static readonly logLevel = 'silent' as const;
 }
 
-/**
- * Authentication required - user is not logged in.
- */
 export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
   'UnauthorizedError',
   {
@@ -58,9 +44,6 @@ export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
   static readonly logLevel = 'silent' as const;
 }
 
-/**
- * Input validation failure.
- */
 export class ValidationError extends Schema.TaggedError<ValidationError>()(
   'ValidationError',
   {
@@ -78,13 +61,6 @@ export class ValidationError extends Schema.TaggedError<ValidationError>()(
   }
 }
 
-// =============================================================================
-// Database Errors
-// =============================================================================
-
-/**
- * Database operation failure.
- */
 export class DbError extends Schema.TaggedError<DbError>()('DbError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
@@ -95,10 +71,7 @@ export class DbError extends Schema.TaggedError<DbError>()('DbError', {
   static readonly logLevel = 'error-with-stack' as const;
 }
 
-/**
- * Database constraint violation (unique, foreign key, check constraint).
- * PostgreSQL error codes: 23xxx
- */
+/** PostgreSQL error codes: 23xxx */
 export class ConstraintViolationError extends Schema.TaggedError<ConstraintViolationError>()(
   'ConstraintViolationError',
   {
@@ -117,10 +90,7 @@ export class ConstraintViolationError extends Schema.TaggedError<ConstraintViola
   }
 }
 
-/**
- * Database deadlock detected.
- * PostgreSQL error code: 40P01
- */
+/** PostgreSQL error code: 40P01 */
 export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
   'DeadlockError',
   {
@@ -135,10 +105,7 @@ export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
   static readonly logLevel = 'error' as const;
 }
 
-/**
- * Database connection failure.
- * PostgreSQL error codes: 08xxx
- */
+/** PostgreSQL error codes: 08xxx */
 export class ConnectionError extends Schema.TaggedError<ConnectionError>()(
   'ConnectionError',
   {
@@ -152,13 +119,6 @@ export class ConnectionError extends Schema.TaggedError<ConnectionError>()(
   static readonly logLevel = 'error-with-stack' as const;
 }
 
-// =============================================================================
-// External Service Errors
-// =============================================================================
-
-/**
- * External service failure (generic).
- */
 export class ExternalServiceError extends Schema.TaggedError<ExternalServiceError>()(
   'ExternalServiceError',
   {
@@ -177,19 +137,6 @@ export class ExternalServiceError extends Schema.TaggedError<ExternalServiceErro
   }
 }
 
-// =============================================================================
-// Error Union Types
-// =============================================================================
-
-/**
- * Base infrastructure errors.
- * Domain-specific errors are defined in their respective packages:
- * - @repo/media/errors: DocumentNotFound, PodcastNotFound, etc.
- * - @repo/ai/errors: LLMError, TTSError, etc.
- * - @repo/storage/errors: StorageError, StorageNotFoundError, etc.
- * - @repo/queue/errors: QueueError, JobNotFoundError, etc.
- * - @repo/auth/errors: PolicyError
- */
 export type BaseError =
   | NotFoundError
   | ForbiddenError
@@ -201,7 +148,4 @@ export type BaseError =
   | ConnectionError
   | ExternalServiceError;
 
-/**
- * Error tags for discriminated union matching.
- */
 export type BaseErrorTag = BaseError['_tag'];

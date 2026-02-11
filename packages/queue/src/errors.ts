@@ -1,12 +1,5 @@
 import { Schema } from 'effect';
 
-// =============================================================================
-// Queue Errors
-// =============================================================================
-
-/**
- * Queue operation failure.
- */
 export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
@@ -17,9 +10,6 @@ export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
   static readonly logLevel = 'error-with-stack' as const;
 }
 
-/**
- * Job not found.
- */
 export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(
   'JobNotFoundError',
   {
@@ -30,16 +20,13 @@ export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(
   static readonly httpStatus = 404 as const;
   static readonly httpCode = 'JOB_NOT_FOUND' as const;
   static readonly httpMessage = (e: JobNotFoundError) =>
-    e.message ?? `Job ${e.jobId} not found`;
+    e.message || `Job ${e.jobId} not found`;
   static readonly logLevel = 'silent' as const;
   static getData(e: JobNotFoundError) {
     return { jobId: e.jobId };
   }
 }
 
-/**
- * Job processing failure.
- */
 export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()(
   'JobProcessingError',
   {
@@ -57,23 +44,15 @@ export class JobProcessingError extends Schema.TaggedError<JobProcessingError>()
   }
 }
 
-// =============================================================================
-// Error Utilities
-// =============================================================================
-
-/**
- * Format an error for logging - handles Effect tagged errors and standard errors.
- */
 export const formatError = (error: unknown): string => {
   if (error && typeof error === 'object') {
-    // Effect tagged error
-    if ('_tag' in error) {
-      const tag = (error as { _tag: string })._tag;
-      const message =
-        'message' in error ? (error as { message: string }).message : '';
-      return message ? `${tag}: ${message}` : tag;
+    if ('_tag' in error && typeof error._tag === 'string') {
+      const msg =
+        'message' in error && typeof error.message === 'string'
+          ? error.message
+          : '';
+      return msg ? `${error._tag}: ${msg}` : error._tag;
     }
-    // Standard Error
     if (error instanceof Error) {
       return error.message || error.name;
     }
@@ -81,13 +60,6 @@ export const formatError = (error: unknown): string => {
   return String(error);
 };
 
-// =============================================================================
-// Error Union Types
-// =============================================================================
-
-/**
- * All queue package errors.
- */
 export type QueuePackageError =
   | QueueError
   | JobNotFoundError

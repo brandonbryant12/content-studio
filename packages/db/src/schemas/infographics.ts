@@ -24,10 +24,6 @@ import {
   generateInfographicVersionId,
 } from './brands';
 
-// =============================================================================
-// Enums
-// =============================================================================
-
 export const infographicTypeEnum = pgEnum('infographic_type', [
   'timeline',
   'comparison',
@@ -65,10 +61,6 @@ export const InfographicStatus = {
   FAILED: 'failed',
 } as const;
 
-// =============================================================================
-// Infographic Table
-// =============================================================================
-
 export const infographic = pgTable(
   'infographic',
   {
@@ -90,7 +82,6 @@ export const infographic = pgTable(
     errorMessage: text('error_message'),
     approvedBy: text('approved_by').references(() => user.id),
     approvedAt: timestamp('approved_at', { mode: 'date', withTimezone: true }),
-
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -106,10 +97,6 @@ export const infographic = pgTable(
     index('infographic_status_idx').on(table.status),
   ],
 );
-
-// =============================================================================
-// Infographic Version Table
-// =============================================================================
 
 export const infographicVersion = pgTable(
   'infographic_version',
@@ -137,10 +124,6 @@ export const infographicVersion = pgTable(
     index('infographic_version_infographicId_idx').on(table.infographicId),
   ],
 );
-
-// =============================================================================
-// Input Schemas
-// =============================================================================
 
 export const InfographicTypeSchema = Schema.Union(
   Schema.Literal('timeline'),
@@ -194,10 +177,6 @@ export const UpdateInfographicFields = {
 
 export const UpdateInfographicSchema = Schema.Struct(UpdateInfographicFields);
 
-// =============================================================================
-// Output Schemas
-// =============================================================================
-
 export const InfographicOutputSchema = Schema.Struct({
   id: InfographicIdSchema,
   title: Schema.String,
@@ -230,10 +209,6 @@ export const InfographicVersionOutputSchema = Schema.Struct({
   createdAt: Schema.String,
 });
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type Infographic = typeof infographic.$inferSelect;
 export type InfographicType = Infographic['infographicType'];
 export type InfographicStyle = Infographic['stylePreset'];
@@ -247,10 +222,6 @@ export type InfographicVersion = typeof infographicVersion.$inferSelect;
 export type InfographicVersionOutput =
   typeof InfographicVersionOutputSchema.Type;
 
-// =============================================================================
-// Transform Functions
-// =============================================================================
-
 const infographicTransform = (row: Infographic): InfographicOutput => ({
   id: row.id,
   title: row.title,
@@ -258,7 +229,7 @@ const infographicTransform = (row: Infographic): InfographicOutput => ({
   infographicType: row.infographicType,
   stylePreset: row.stylePreset,
   format: row.format,
-  sourceDocumentIds: (row.sourceDocumentIds as string[]) ?? [],
+  sourceDocumentIds: row.sourceDocumentIds ?? [],
   imageStorageKey: row.imageStorageKey ?? null,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
   status: row.status,
@@ -285,12 +256,6 @@ const infographicVersionTransform = (
   createdAt: row.createdAt.toISOString(),
 });
 
-// =============================================================================
-// Serializers
-// =============================================================================
-
-// --- Infographic ---
-
 export const serializeInfographicEffect = createEffectSerializer(
   'infographic',
   infographicTransform,
@@ -302,8 +267,6 @@ export const serializeInfographicsEffect = createBatchEffectSerializer(
 );
 
 export const serializeInfographic = createSyncSerializer(infographicTransform);
-
-// --- InfographicVersion ---
 
 export const serializeInfographicVersionEffect = createEffectSerializer(
   'infographicVersion',

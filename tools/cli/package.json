@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e ../../.env -- tsx src/main.ts",
+    "dev": "dotenv -e ../../apps/server/.env -e ../../.env -- tsx src/main.ts",
     "build": "tsc --build",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",

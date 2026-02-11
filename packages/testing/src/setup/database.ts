@@ -1,33 +1,28 @@
+import { Db } from '@repo/db/effect';
 import * as schema from '@repo/db/schema';
-import { DbLive } from '@repo/db/effect';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { Layer } from 'effect';
 import pg from 'pg';
 import type { DatabaseInstance } from '@repo/db/client';
-import type { Db } from '@repo/db/effect';
-import type { Layer } from 'effect';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 /**
- * Configuration for the test database.
+ * Drizzle instance with our schema but without the $client: Pool constraint.
+ * Used in test contexts where the underlying client may be a PoolClient
+ * (for transaction rollback) rather than a Pool.
  */
+type TestDatabaseInstance = NodePgDatabase<typeof schema>;
+
 export interface TestDatabaseConfig {
-  /**
-   * PostgreSQL connection string.
-   * Defaults to TEST_POSTGRES_URL env var or localhost test database.
-   */
   connectionString?: string;
 }
 
-/**
- * Default test database connection string.
- */
 export const DEFAULT_TEST_CONNECTION =
+  // eslint-disable-next-line no-restricted-properties -- test infrastructure, not production code
   process.env.TEST_POSTGRES_URL ??
   'postgres://test:test@localhost:5433/content_studio_test';
 
-/**
- * Create a test database connection.
- */
-export const createTestDatabase = (config: TestDatabaseConfig = {}) => {
+export function createTestDatabase(config: TestDatabaseConfig = {}) {
   const connectionString = config.connectionString ?? DEFAULT_TEST_CONNECTION;
 
   const pool = new pg.Pool({
@@ -40,77 +35,45 @@ export const createTestDatabase = (config: TestDatabaseConfig = {}) => {
   return {
     db,
     pool,
-    /**
-     * Close the database connection.
-     */
     close: async () => {
       await pool.end();
     },
   };
-};
+}
 
-/**
- * Context for a single test with transaction support.
- * All database operations within the test are wrapped in a transaction
- * that is rolled back after the test completes.
- */
 export interface TestContext {
-  /**
-   * The database instance for this test.
-   */
-  db: DatabaseInstance;
-
-  /**
-   * Effect layer providing the Db service.
-   */
+  db: TestDatabaseInstance;
   dbLayer: Layer.Layer<Db>;
-
-  /**
-   * Rollback the transaction (call in afterEach).
-   */
   rollback: () => Promise<void>;
 }
 
 /**
- * Create a test context with a transaction that will be rolled back.
- *
- * @example
- * ```ts
- * describe('podcast generation', () => {
- *   let ctx: TestContext;
- *
- *   beforeEach(async () => {
- *     ctx = await createTestContext();
- *   });
- *
- *   afterEach(async () => {
- *     await ctx.rollback();
- *   });
- *
- *   it('creates a podcast', async () => {
- *     await ctx.db.insert(podcast).values({...});
- *     // Transaction is rolled back after test
- *   });
- * });
- * ```
+ * Narrow cast: drizzle(PoolClient) produces $client: PoolClient but
+ * DbService requires $client: Pool. The $client property is never accessed
+ * in query code — only the NodePgDatabase query methods are used. This is
+ * the single location where this cast exists. See DatabaseInstance type in
+ * @repo/db/client for context.
  */
-export const createTestContext = async (
+function toDbLayer(db: TestDatabaseInstance): Layer.Layer<Db> {
+  // eslint-disable-next-line no-restricted-syntax -- test infrastructure wrapping PoolClient as DbService
+  return Layer.succeed(Db, { db: db as unknown as DatabaseInstance });
+}
+
+/**
+ * Create a test context with a transaction that will be rolled back.
+ * Each test gets a dedicated connection with an open transaction.
+ */
+export async function createTestContext(
   config: TestDatabaseConfig = {},
-): Promise<TestContext> => {
+): Promise<TestContext> {
   const connectionString = config.connectionString ?? DEFAULT_TEST_CONNECTION;
 
-  // Get a dedicated client for this test's transaction
   const pool = new pg.Pool({ connectionString, max: 1 });
   const client = await pool.connect();
-
-  // Start a transaction
   await client.query('BEGIN');
 
-  // Create a drizzle instance for this client
-  const db = drizzle(client, { schema }) as unknown as DatabaseInstance;
-
-  // Create the Effect layer
-  const dbLayer = DbLive(db);
+  const db = drizzle(client, { schema });
+  const dbLayer = toDbLayer(db);
 
   return {
     db,
@@ -124,33 +87,4 @@ export const createTestContext = async (
       }
     },
   };
-};
-
-/**
- * Run database migrations for tests.
- * Usually called once before all tests in a test file or suite.
- */
-export const runTestMigrations = async (config: TestDatabaseConfig = {}) => {
-  const { db, close } = createTestDatabase(config);
-
-  // Drizzle Kit handles migrations via CLI, so this is a no-op in tests
-  // Assumes migrations have been run via `pnpm db:push` against test DB
-
-  await close();
-};
-
-/**
- * Clean all tables in the test database.
- * Use with caution - this is destructive!
- */
-export const cleanTestDatabase = async (config: TestDatabaseConfig = {}) => {
-  const { db, close } = createTestDatabase(config);
-
-  // Delete in reverse order of dependencies
-  await db.delete(schema.podcast);
-  await db.delete(schema.document);
-  await db.delete(schema.job);
-  // Don't delete users/sessions as they may be needed for auth
-
-  await close();
-};
+}

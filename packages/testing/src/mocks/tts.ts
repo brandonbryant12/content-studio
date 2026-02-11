@@ -1,3 +1,6 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   TTS,
   type TTSService,
@@ -8,13 +11,7 @@ import {
   type TTSQuotaExceededError,
 } from '@repo/ai';
 import { Layer, Effect } from 'effect';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-/**
- * Mock voice list for testing.
- */
 export const MOCK_VOICES: readonly VoiceInfo[] = [
   {
     id: 'Charon',
@@ -42,26 +39,15 @@ export const MOCK_VOICES: readonly VoiceInfo[] = [
   },
 ];
 
-/**
- * Path to the sample podcast audio fixture.
- * This is a real audio file used for realistic mock responses.
- */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SAMPLE_AUDIO_PATH = path.join(
   __dirname,
   '../../fixtures/sample-podcast.wav',
 );
 
-/**
- * Cached sample audio buffer to avoid repeated file reads.
- */
 let cachedSampleAudio: Buffer | null = null;
 
-/**
- * Load the sample audio file from fixtures.
- * Returns the real audio file if available, falls back to generated silence.
- */
-const loadSampleAudio = (): Buffer => {
+function loadSampleAudio(): Buffer {
   if (cachedSampleAudio) {
     return cachedSampleAudio;
   }
@@ -70,16 +56,13 @@ const loadSampleAudio = (): Buffer => {
     cachedSampleAudio = fs.readFileSync(SAMPLE_AUDIO_PATH);
     return cachedSampleAudio;
   } catch {
-    // Fall back to generated silence if file not found
+    // Fall back to generated silence if fixture file not found
     return createSilentAudioBuffer(30);
   }
-};
+}
 
-/**
- * Create a minimal WAV file header for testing.
- * Returns a valid but silent WAV buffer.
- */
-const createSilentAudioBuffer = (durationSeconds: number = 5): Buffer => {
+/** Create a minimal valid WAV file buffer of silence. */
+function createSilentAudioBuffer(durationSeconds: number = 5): Buffer {
   const sampleRate = 24000;
   const bitsPerSample = 16;
   const channels = 1;
@@ -96,71 +79,31 @@ const createSilentAudioBuffer = (durationSeconds: number = 5): Buffer => {
 
   // fmt chunk
   buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16); // chunk size
-  buffer.writeUInt16LE(1, 20); // audio format (PCM)
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20); // PCM
   buffer.writeUInt16LE(channels, 22);
   buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(sampleRate * channels * (bitsPerSample / 8), 28); // byte rate
-  buffer.writeUInt16LE(channels * (bitsPerSample / 8), 32); // block align
+  buffer.writeUInt32LE(sampleRate * channels * (bitsPerSample / 8), 28);
+  buffer.writeUInt16LE(channels * (bitsPerSample / 8), 32);
   buffer.writeUInt16LE(bitsPerSample, 34);
 
-  // data chunk
+  // data chunk (buffer is already zeroed = silence)
   buffer.write('data', 36);
   buffer.writeUInt32LE(dataSize, 40);
 
-  // Audio data is zeroes (silence) - buffer is already zeroed
-
   return buffer;
-};
+}
 
-/**
- * Options for creating a mock TTS service.
- */
 export interface MockTTSOptions {
-  /**
-   * Simulated delay in milliseconds before returning.
-   */
   delay?: number;
-
-  /**
-   * Custom voices to return.
-   */
   voices?: readonly VoiceInfo[];
-
-  /**
-   * Duration of the mock audio in seconds (only used if useSampleAudio is false).
-   */
   audioDurationSeconds?: number;
-
-  /**
-   * If true, use the sample-podcast.wav fixture instead of generated silence.
-   * Defaults to true.
-   */
+  /** Use the sample-podcast.wav fixture instead of generated silence. Defaults to true. */
   useSampleAudio?: boolean;
-
-  /**
-   * If set, the synthesize method will fail with this error message.
-   */
   errorMessage?: string;
 }
 
-/**
- * Create a mock TTS layer for testing.
- *
- * @example
- * ```ts
- * const MockTTS = createMockTTS({ delay: 100 });
- *
- * await Effect.runPromise(
- *   generator.generateAudio(podcastId).pipe(
- *     Effect.provide(MockTTS)
- *   )
- * );
- * ```
- */
-export const createMockTTS = (
-  options: MockTTSOptions = {},
-): Layer.Layer<TTS> => {
+export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
   const useSampleAudio = options.useSampleAudio ?? true;
   const audioBuffer = useSampleAudio
     ? loadSampleAudio()
@@ -191,9 +134,9 @@ export const createMockTTS = (
 
         return {
           audioContent: createSilentAudioBuffer(2),
-          audioEncoding: 'LINEAR16',
+          audioEncoding: 'LINEAR16' as const,
           voiceId,
-        } as PreviewVoiceResult;
+        } satisfies PreviewVoiceResult;
       }),
 
     synthesize: (): Effect.Effect<
@@ -213,23 +156,16 @@ export const createMockTTS = (
 
         return {
           audioContent: audioBuffer,
-          audioEncoding: 'LINEAR16',
+          audioEncoding: 'LINEAR16' as const,
           mimeType: 'audio/wav',
-        } as SynthesizeResult;
+        } satisfies SynthesizeResult;
       }),
   };
 
+  // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
   return Layer.succeed(TTS, service);
-};
+}
 
-/**
- * Default mock TTS layer with standard test responses.
- * No delay for fast tests.
- */
 export const MockTTSLive = createMockTTS();
 
-/**
- * Mock TTS layer with realistic latency for dev server.
- * Simulates 15 second audio synthesis time.
- */
 export const MockTTSWithLatency = createMockTTS({ delay: 15_000 });

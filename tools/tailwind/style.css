@@ -2220,8 +2220,9 @@
 
   /* Voice dropdown options */
   .mixer-voice-dropdown {
-    @apply absolute top-full left-0 right-0 mt-1 p-1.5 rounded-lg border border-border
+    @apply p-1.5 rounded-lg border border-border
            bg-popover shadow-lg z-20 max-h-48 overflow-y-auto;
+    min-width: var(--radix-select-trigger-width);
     animation: mixer-dropdown-in 0.15s ease-out;
   }
 
@@ -2289,6 +2290,10 @@
 
   .mixer-voice-option:hover .mixer-voice-preview-btn {
     @apply opacity-100;
+  }
+
+  .mixer-voice-preview-btn.playing {
+    @apply text-warning bg-warning/15 border-warning/25 opacity-100;
   }
 
   .mixer-voice-preview-icon {
@@ -3287,6 +3292,10 @@
     @apply text-warning bg-warning/15 border-warning/30;
   }
 
+  .setup-voice-preview-btn.playing {
+    @apply text-warning bg-warning/15 border-warning/25 opacity-100;
+  }
+
   .setup-voice-preview-icon {
     @apply w-3.5 h-3.5;
   }
@@ -3913,6 +3922,10 @@
 
   .voice-card-selected .voice-preview-btn:hover {
     @apply text-primary bg-primary/15 border-primary/30;
+  }
+
+  .voice-preview-btn.playing {
+    @apply text-primary bg-primary/15 border-primary/25 opacity-100;
   }
 
   .voice-preview-icon {

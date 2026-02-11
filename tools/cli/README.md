@@ -32,6 +32,10 @@ Tests text-to-speech voice preview. Prompts you to filter by gender and select a
 
 Runs a full CRUD lifecycle against filesystem storage (no S3 or database needed). Exercises upload, exists, download, getUrl, delete, and verify-deleted steps with pass/fail output.
 
+### `pnpm cli seed voice-previews`
+
+Generates TTS audio previews for the 8 frontend voices (Aoede, Kore, Leda, Zephyr, Charon, Fenrir, Puck, Orus) and uploads them to storage at `voice-previews/{voiceId}.wav`. Idempotent — skips voices that already have a preview in storage. Requires `GEMINI_API_KEY` and storage config (`STORAGE_PROVIDER`, `STORAGE_PATH`, etc.) in `.env`.
+
 ## Development
 
 ```bash

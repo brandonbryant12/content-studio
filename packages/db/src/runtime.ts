@@ -1,8 +1,7 @@
 import { ManagedRuntime } from 'effect';
-import type { Db } from './effect';
-import type { DatabaseInstance } from './client';
 import type { Effect, Layer } from 'effect';
-import { DbLive } from './effect';
+import type { DatabaseInstance } from './client';
+import { type Db, DbLive } from './effect';
 
 export type AppLayer = Layer.Layer<Db>;
 

@@ -1,36 +1,27 @@
+/* eslint-disable no-console, no-restricted-properties -- test infrastructure: console logging and process.env are intentional */
+import { execSync } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import * as schema from '@repo/db/schema';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import * as schema from '@repo/db/schema';
 import type { DatabaseInstance } from '@repo/db/client';
-import { execSync } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * Global container instance (reused across test files in same process).
- * This significantly improves test performance by avoiding container startup
- * on each test file.
- */
+/** Reused across test files in the same process to avoid repeated startup. */
 let globalContainer: StartedPostgreSqlContainer | undefined;
 let globalPool: pg.Pool | undefined;
 let schemaPushed = false;
 
-/**
- * Start a PostgreSQL container for tests.
- * Container is reused across test files for performance.
- *
- * @returns Container instance and connection string
- */
-export const startPostgresContainer = async (): Promise<{
+export async function startPostgresContainer(): Promise<{
   container: StartedPostgreSqlContainer;
   connectionString: string;
-}> => {
+}> {
   if (globalContainer) {
     return {
       container: globalContainer,
@@ -52,32 +43,25 @@ export const startPostgresContainer = async (): Promise<{
   const connectionString = container.getConnectionUri();
   console.log(`[Testcontainers] PostgreSQL ready at ${connectionString}`);
 
-  // Push schema immediately after container starts
   if (!schemaPushed) {
     await pushSchema(connectionString);
     schemaPushed = true;
   }
 
-  return {
-    container,
-    connectionString,
-  };
-};
+  return { container, connectionString };
+}
 
 /**
- * Run Drizzle schema push against the test database.
- * Uses drizzle-kit push via CLI for full schema support.
- *
- * @param connectionString - PostgreSQL connection URI
+ * Run drizzle-kit push against the test database.
+ * The connectionString is a trusted internal value from testcontainers, not user input.
  */
-export const pushSchema = async (connectionString: string): Promise<void> => {
+export async function pushSchema(connectionString: string): Promise<void> {
   console.log('[Testcontainers] Pushing schema via drizzle-kit...');
 
-  // Find the monorepo root (where drizzle.config.ts lives)
   const monorepoRoot = path.resolve(__dirname, '../../../../..');
 
   try {
-    // Run drizzle-kit push with the test database URL
+    // Safe: connectionString comes from testcontainers, passed via env var (not shell-interpolated)
     execSync(`pnpm --filter @repo/db exec drizzle-kit push`, {
       cwd: monorepoRoot,
       env: {
@@ -91,18 +75,12 @@ export const pushSchema = async (connectionString: string): Promise<void> => {
     console.error('[Testcontainers] Schema push failed:', error);
     throw error;
   }
-};
+}
 
-/**
- * Get a shared database pool for tests.
- * Creates the pool on first access if container is running.
- *
- * @returns Database pool and instance
- */
-export const getTestDb = async (): Promise<{
+export async function getTestDb(): Promise<{
   db: DatabaseInstance;
   pool: pg.Pool;
-}> => {
+}> {
   if (!globalContainer) {
     throw new Error(
       'PostgreSQL container not started. Call startPostgresContainer() first.',
@@ -116,16 +94,12 @@ export const getTestDb = async (): Promise<{
     });
   }
 
-  const db = drizzle(globalPool, { schema }) as DatabaseInstance;
+  const db: DatabaseInstance = drizzle(globalPool, { schema });
 
   return { db, pool: globalPool };
-};
+}
 
-/**
- * Stop the global PostgreSQL container.
- * Call this in Vitest's globalTeardown.
- */
-export const stopPostgresContainer = async (): Promise<void> => {
+export async function stopPostgresContainer(): Promise<void> {
   console.log('[Testcontainers] Stopping PostgreSQL container...');
 
   if (globalPool) {
@@ -139,24 +113,17 @@ export const stopPostgresContainer = async (): Promise<void> => {
   }
 
   console.log('[Testcontainers] PostgreSQL stopped');
-};
+}
 
-/**
- * Get the connection string for the running container.
- * Throws if container is not started.
- */
-export const getConnectionString = (): string => {
+export function getConnectionString(): string {
   if (!globalContainer) {
     throw new Error(
       'PostgreSQL container not started. Call startPostgresContainer() first.',
     );
   }
   return globalContainer.getConnectionUri();
-};
+}
 
-/**
- * Check if the container is running.
- */
-export const isContainerRunning = (): boolean => {
+export function isContainerRunning(): boolean {
   return globalContainer !== undefined;
-};
+}

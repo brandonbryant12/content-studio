@@ -1,9 +1,5 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
-/**
- * All content types in the system.
- * Any content type can potentially be both a source AND a derivative.
- */
 export const contentTypeEnum = pgEnum('content_type', [
   'document',
   'podcast',
@@ -15,14 +11,6 @@ export const contentTypeEnum = pgEnum('content_type', [
 
 export type ContentType = (typeof contentTypeEnum.enumValues)[number];
 
-/**
- * Configuration for each media type defining:
- * - What content types it can accept as input
- * - What content types it can be used as input for
- * - Whether users can upload this type directly
- * - Whether AI can generate this type
- * - Visual styling (icon, gradient)
- */
 export interface MediaTypeConfig {
   label: string;
   description: string;
@@ -39,7 +27,7 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   document: {
     label: 'Document',
     description: 'Text content from files or AI generation',
-    acceptsInputFrom: ['podcast', 'video', 'article'], // Transcripts, summaries
+    acceptsInputFrom: ['podcast', 'video', 'article'],
     canBeInputFor: ['podcast', 'article', 'graphic', 'video', 'social'],
     canBeUploaded: true,
     canBeGenerated: true,
@@ -104,9 +92,6 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   },
 } as const;
 
-/**
- * Check if a source type can be used as input for a target type.
- */
 export function canBeSourceFor(
   sourceType: ContentType,
   targetType: ContentType,
@@ -114,23 +99,14 @@ export function canBeSourceFor(
   return MEDIA_TYPE_CONFIG[targetType].acceptsInputFrom.includes(sourceType);
 }
 
-/**
- * Get all content types that can be used as sources for a given target type.
- */
 export function getAcceptedSourceTypes(targetType: ContentType): ContentType[] {
   return MEDIA_TYPE_CONFIG[targetType].acceptsInputFrom;
 }
 
-/**
- * Get all content types that a given source type can be used for.
- */
 export function getTargetTypes(sourceType: ContentType): ContentType[] {
   return MEDIA_TYPE_CONFIG[sourceType].canBeInputFor;
 }
 
-/**
- * Get all available (not "coming soon") media types.
- */
 export function getAvailableMediaTypes(): ContentType[] {
   return (Object.keys(MEDIA_TYPE_CONFIG) as ContentType[]).filter(
     (type) => MEDIA_TYPE_CONFIG[type].available,

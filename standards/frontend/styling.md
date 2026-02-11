@@ -352,6 +352,42 @@ Most styles work automatically via CSS variables. For exceptions:
 <Icon className="text-muted-foreground dark:text-muted-foreground/80">
 ```
 
+## Radix UI Portaled Components
+
+Radix primitives like `Select.Content`, `Popover.Content`, and `DropdownMenu.Content` render through a **Portal** — the dropdown DOM is appended to `<body>`, not nested inside the trigger's parent. This means CSS positioning relative to the trigger's parent (`absolute`, `left-0 right-0`, `top-full`) **will not work**.
+
+### How Radix Handles Positioning
+
+With `position="popper"`, Radix uses Floating UI internally and exposes CSS custom properties on the content element:
+
+| Variable | Description |
+|----------|-------------|
+| `--radix-select-trigger-width` | Width of the Select trigger |
+| `--radix-popover-trigger-width` | Width of the Popover trigger |
+| `--radix-dropdown-menu-trigger-width` | Width of the DropdownMenu trigger |
+
+### Correct Pattern
+
+```css
+/* WRONG — absolute positioning breaks inside a portal */
+.my-dropdown {
+  @apply absolute top-full left-0 right-0 mt-1;
+}
+
+/* CORRECT — let Radix position, use CSS var for width */
+.my-dropdown {
+  @apply p-1.5 rounded-lg border border-border bg-popover shadow-lg;
+  min-width: var(--radix-select-trigger-width);
+}
+```
+
+### Key Rules
+
+1. **Never use `absolute`/`top-full`/`left-0 right-0`** on portaled Radix content — there's no positioned ancestor in the portal.
+2. **Use `min-width: var(--radix-{component}-trigger-width)`** to match the trigger width.
+3. **Use `sideOffset` prop** (not CSS margin) to control gap between trigger and content.
+4. **Non-portaled Radix content** (without `<Portal>`) can use relative positioning, but portaled is the default and recommended approach.
+
 ## Anti-Patterns
 
 ### Generic AI Aesthetics

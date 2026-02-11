@@ -27,13 +27,13 @@ export interface CreateTestInfographicOptions {
 
 let infographicCounter = 0;
 
-export const resetInfographicCounter = () => {
+export function resetInfographicCounter() {
   infographicCounter = 0;
-};
+}
 
-export const createTestInfographic = (
+export function createTestInfographic(
   options: CreateTestInfographicOptions = {},
-): Infographic => {
+): Infographic {
   infographicCounter++;
   const now = new Date();
 
@@ -55,14 +55,14 @@ export const createTestInfographic = (
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
-};
+}
 
-export const createReadyInfographic = (
+export function createReadyInfographic(
   options: Omit<
     CreateTestInfographicOptions,
     'status' | 'imageStorageKey'
   > = {},
-): Infographic => {
+): Infographic {
   const id = options.id ?? generateInfographicId();
   return createTestInfographic({
     ...options,
@@ -70,7 +70,7 @@ export const createReadyInfographic = (
     status: 'ready',
     imageStorageKey: `infographics/${id}/image.png`,
   });
-};
+}
 
 export interface CreateTestInfographicVersionOptions {
   id?: string;
@@ -87,13 +87,13 @@ export interface CreateTestInfographicVersionOptions {
 
 let versionCounter = 0;
 
-export const resetInfographicVersionCounter = () => {
+export function resetInfographicVersionCounter() {
   versionCounter = 0;
-};
+}
 
-export const createTestInfographicVersion = (
+export function createTestInfographicVersion(
   options: CreateTestInfographicVersionOptions = {},
-): InfographicVersion => {
+): InfographicVersion {
   versionCounter++;
   const now = new Date();
   const infographicId =
@@ -115,4 +115,4 @@ export const createTestInfographicVersion = (
     thumbnailStorageKey: options.thumbnailStorageKey ?? null,
     createdAt: options.createdAt ?? now,
   };
-};
+}

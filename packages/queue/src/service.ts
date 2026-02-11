@@ -1,11 +1,11 @@
 import { Context } from 'effect';
-import type { JobId } from '@repo/db/schema';
 import type {
   QueueError,
   JobNotFoundError,
   JobProcessingError,
 } from './errors';
 import type { Job, JobType, JobStatus } from './types';
+import type { JobId } from '@repo/db/schema';
 import type { Effect } from 'effect';
 
 export interface QueueService {

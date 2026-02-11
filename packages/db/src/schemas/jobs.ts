@@ -57,9 +57,22 @@ export const job = pgTable(
   ],
 );
 
-// =============================================================================
-// Enum Schemas
-// =============================================================================
+export const JobStatus = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+} as const;
+
+export const JobType = {
+  GENERATE_PODCAST: 'generate-podcast',
+  GENERATE_SCRIPT: 'generate-script',
+  GENERATE_AUDIO: 'generate-audio',
+  GENERATE_VOICEOVER: 'generate-voiceover',
+  GENERATE_INFOGRAPHIC: 'generate-infographic',
+} as const;
+
+export type JobType = typeof JobType;
 
 export const JobStatusSchema = Schema.Union(
   Schema.Literal('pending'),
@@ -67,10 +80,6 @@ export const JobStatusSchema = Schema.Union(
   Schema.Literal('completed'),
   Schema.Literal('failed'),
 );
-
-// =============================================================================
-// Result Schemas (matches queue result types)
-// =============================================================================
 
 export const GeneratePodcastResultSchema = Schema.Struct({
   scriptId: Schema.String,
@@ -95,10 +104,6 @@ export const JobResultSchema = Schema.Union(
   GenerateAudioResultSchema,
 );
 
-// =============================================================================
-// Output Schema
-// =============================================================================
-
 export const JobOutputSchema = Schema.Struct({
   id: JobIdSchema,
   type: Schema.String,
@@ -112,21 +117,10 @@ export const JobOutputSchema = Schema.Struct({
   completedAt: Schema.NullOr(Schema.String),
 });
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type Job = typeof job.$inferSelect;
 export type JobStatus = Job['status'];
 export type JobOutput = typeof JobOutputSchema.Type;
 
-// =============================================================================
-// Transform Function - pure DB → API output conversion
-// =============================================================================
-
-/**
- * Pure transform for Job → JobOutput.
- */
 const jobTransform = (job: Job): JobOutput => ({
   id: job.id,
   type: job.type,
@@ -140,18 +134,11 @@ const jobTransform = (job: Job): JobOutput => ({
   completedAt: job.completedAt?.toISOString() ?? null,
 });
 
-// =============================================================================
-// Serializers - Effect-based and sync variants
-// =============================================================================
-
-/** Effect-based serializer with tracing. */
 export const serializeJobEffect = createEffectSerializer('job', jobTransform);
 
-/** Batch serializer for multiple jobs. */
 export const serializeJobsEffect = createBatchEffectSerializer(
   'job',
   jobTransform,
 );
 
-/** Sync serializer for simple cases. */
 export const serializeJob = createSyncSerializer(jobTransform);

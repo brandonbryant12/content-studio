@@ -14,6 +14,7 @@ const VoiceInfoSchema = Schema.Struct({
   name: Schema.String,
   gender: GenderSchema,
   description: Schema.String,
+  previewUrl: Schema.NullOr(Schema.String),
 });
 
 const AudioEncodingSchema = Schema.Union(

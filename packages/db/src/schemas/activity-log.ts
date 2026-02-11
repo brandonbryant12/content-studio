@@ -19,10 +19,6 @@ import {
   createSyncSerializer,
 } from './serialization';
 
-// =============================================================================
-// Table
-// =============================================================================
-
 export const activityLog = pgTable(
   'activity_log',
   {
@@ -56,10 +52,6 @@ export const activityLog = pgTable(
   ],
 );
 
-// =============================================================================
-// Schemas
-// =============================================================================
-
 export const ActivityLogActionSchema = Schema.Union(
   Schema.Literal('created'),
   Schema.Literal('updated'),
@@ -92,19 +84,11 @@ export const ActivityLogOutputSchema = Schema.Struct({
   createdAt: Schema.String,
 });
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type ActivityLog = typeof activityLog.$inferSelect;
 export type ActivityLogWithUser = ActivityLog & { userName: string | null };
 export type ActivityLogOutput = typeof ActivityLogOutputSchema.Type;
 export type ActivityLogAction = typeof ActivityLogActionSchema.Type;
 export type ActivityLogEntityType = typeof ActivityLogEntityTypeSchema.Type;
-
-// =============================================================================
-// Transform
-// =============================================================================
 
 const activityLogTransform = (log: ActivityLogWithUser): ActivityLogOutput => ({
   id: log.id,
@@ -117,10 +101,6 @@ const activityLogTransform = (log: ActivityLogWithUser): ActivityLogOutput => ({
   metadata: log.metadata,
   createdAt: log.createdAt.toISOString(),
 });
-
-// =============================================================================
-// Serializers
-// =============================================================================
 
 export const serializeActivityLogEffect = createEffectSerializer(
   'activityLog',

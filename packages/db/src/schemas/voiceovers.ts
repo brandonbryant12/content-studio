@@ -20,41 +20,20 @@ import {
   generateVoiceoverId,
 } from './brands';
 
-// =============================================================================
-// Voiceover Status Enum
-// =============================================================================
-
-/**
- * Voiceover status enum.
- * Tracks the voiceover's generation state.
- *
- * Flow: drafting → generating_audio → ready
- */
+/** Flow: drafting -> generating_audio -> ready */
 export const voiceoverStatusEnum = pgEnum('voiceover_status', [
-  'drafting', // Initial state, editing text
-  'generating_audio', // TTS is generating audio
-  'ready', // Fully generated, can edit settings
-  'failed', // Generation failed
+  'drafting',
+  'generating_audio',
+  'ready',
+  'failed',
 ]);
 
-/**
- * Voiceover status values for runtime usage.
- * Use this instead of magic strings for type-safe status comparisons.
- *
- * @example
- * import { VoiceoverStatus } from '@repo/db/schema';
- * if (voiceover.status === VoiceoverStatus.READY) { ... }
- */
 export const VoiceoverStatus = {
   DRAFTING: 'drafting',
   GENERATING_AUDIO: 'generating_audio',
   READY: 'ready',
   FAILED: 'failed',
 } as const;
-
-// =============================================================================
-// Voiceover Table
-// =============================================================================
 
 export const voiceover = pgTable(
   'voiceover',
@@ -68,12 +47,11 @@ export const voiceover = pgTable(
     voice: varchar('voice', { length: 100 }).notNull().default('Charon'),
     voiceName: varchar('voice_name', { length: 100 }),
     audioUrl: varchar('audio_url', { length: 500 }),
-    duration: integer('duration'), // seconds
+    duration: integer('duration'),
     status: voiceoverStatusEnum('status').notNull().default('drafting'),
     errorMessage: text('error_message'),
     approvedBy: text('approved_by').references(() => user.id),
     approvedAt: timestamp('approved_at', { mode: 'date', withTimezone: true }),
-
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -90,17 +68,10 @@ export const voiceover = pgTable(
   ],
 );
 
-// =============================================================================
-// Input Schemas - for API contracts
-// =============================================================================
-
 export const CreateVoiceoverSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
 });
 
-/**
- * Base fields for voiceover updates.
- */
 export const UpdateVoiceoverFields = {
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
@@ -114,24 +85,12 @@ export const UpdateVoiceoverFields = {
 
 export const UpdateVoiceoverSchema = Schema.Struct(UpdateVoiceoverFields);
 
-// =============================================================================
-// Enum Schemas - for API contracts
-// =============================================================================
-
-/**
- * Voiceover status schema.
- * Flow: drafting → generating_audio → ready
- */
 export const VoiceoverStatusSchema = Schema.Union(
   Schema.Literal('drafting'),
   Schema.Literal('generating_audio'),
   Schema.Literal('ready'),
   Schema.Literal('failed'),
 );
-
-// =============================================================================
-// Output Schemas - for API responses (Date → string)
-// =============================================================================
 
 export const VoiceoverOutputSchema = Schema.Struct({
   id: VoiceoverIdSchema,
@@ -154,10 +113,6 @@ export const VoiceoverListItemOutputSchema = Schema.Struct({
   ...VoiceoverOutputSchema.fields,
 });
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type Voiceover = typeof voiceover.$inferSelect;
 export type VoiceoverStatus = Voiceover['status'];
 export type VoiceoverOutput = typeof VoiceoverOutputSchema.Type;
@@ -165,13 +120,6 @@ export type VoiceoverListItemOutput = typeof VoiceoverListItemOutputSchema.Type;
 export type CreateVoiceover = typeof CreateVoiceoverSchema.Type;
 export type UpdateVoiceover = typeof UpdateVoiceoverSchema.Type;
 
-// =============================================================================
-// Transform Functions - pure DB → API output conversion
-// =============================================================================
-
-/**
- * Pure transform for Voiceover → VoiceoverOutput.
- */
 const voiceoverTransform = (voiceover: Voiceover): VoiceoverOutput => ({
   id: voiceover.id,
   title: voiceover.title,
@@ -189,51 +137,34 @@ const voiceoverTransform = (voiceover: Voiceover): VoiceoverOutput => ({
   updatedAt: voiceover.updatedAt.toISOString(),
 });
 
-/**
- * Pure transform for Voiceover list item.
- */
 const voiceoverListItemTransform = (
   voiceover: Voiceover,
 ): VoiceoverListItemOutput => ({
   ...voiceoverTransform(voiceover),
 });
 
-// =============================================================================
-// Serializers - Effect-based and sync variants
-// =============================================================================
-
-// --- Voiceover ---
-
-/** Effect-based serializer with tracing. */
 export const serializeVoiceoverEffect = createEffectSerializer(
   'voiceover',
   voiceoverTransform,
 );
 
-/** Batch serializer for multiple voiceovers. */
 export const serializeVoiceoversEffect = createBatchEffectSerializer(
   'voiceover',
   voiceoverTransform,
 );
 
-/** Sync serializer for simple cases. */
 export const serializeVoiceover = createSyncSerializer(voiceoverTransform);
 
-// --- VoiceoverListItem ---
-
-/** Effect-based serializer with tracing. */
 export const serializeVoiceoverListItemEffect = createEffectSerializer(
   'voiceoverListItem',
   voiceoverListItemTransform,
 );
 
-/** Batch serializer for voiceover lists. */
 export const serializeVoiceoverListItemsEffect = createBatchEffectSerializer(
   'voiceoverListItem',
   voiceoverListItemTransform,
 );
 
-/** Sync serializer for simple cases. */
 export const serializeVoiceoverListItem = createSyncSerializer(
   voiceoverListItemTransform,
 );

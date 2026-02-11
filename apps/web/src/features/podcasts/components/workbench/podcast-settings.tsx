@@ -8,6 +8,7 @@ import {
   MAX_DURATION,
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
+import { useVoicePreview, useVoices } from '@/shared/hooks';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -22,36 +23,58 @@ interface VoiceSelectorProps {
   onChange: (value: string) => void;
   disabledVoice?: string;
   disabled?: boolean;
+  previewUrls: Record<string, string>;
+  playingVoiceId: string | null;
+  onPreview: (voiceId: string) => void;
 }
 
 function VoicePreviewBtn({
+  voiceId,
   voiceName,
   disabled,
+  isPlaying,
+  onPreview,
 }: {
+  voiceId: string;
   voiceName: string;
   disabled?: boolean;
+  isPlaying: boolean;
+  onPreview: (voiceId: string) => void;
 }) {
   return (
     <button
       type="button"
-      className="mixer-voice-preview-btn"
+      className={`mixer-voice-preview-btn ${isPlaying ? 'playing' : ''}`}
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        // TODO: wire up voice preview playback
+        onPreview(voiceId);
       }}
-      aria-label={`Preview ${voiceName} voice`}
+      aria-label={
+        isPlaying ? `Stop ${voiceName} preview` : `Preview ${voiceName} voice`
+      }
       disabled={disabled}
     >
-      <svg
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className="mixer-voice-preview-icon"
-        aria-hidden="true"
-      >
-        <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
-        <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
-      </svg>
+      {isPlaying ? (
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="mixer-voice-preview-icon"
+          aria-hidden="true"
+        >
+          <path d="M5.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75A.75.75 0 0 0 7.25 3h-1.5ZM12.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75h-1.5Z" />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="mixer-voice-preview-icon"
+          aria-hidden="true"
+        >
+          <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
+          <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
+        </svg>
+      )}
     </button>
   );
 }
@@ -61,6 +84,9 @@ function VoiceSelector({
   onChange,
   disabledVoice,
   disabled,
+  previewUrls,
+  playingVoiceId,
+  onPreview,
 }: VoiceSelectorProps) {
   const selectedVoice = VOICES.find((v) => v.id === value);
 
@@ -111,8 +137,11 @@ function VoiceSelector({
                       </span>
                     </SelectPrimitive.ItemText>
                     <VoicePreviewBtn
+                      voiceId={voice.id}
                       voiceName={voice.name}
-                      disabled={isDisabled}
+                      disabled={isDisabled || !previewUrls[voice.id]}
+                      isPlaying={playingVoiceId === voice.id}
+                      onPreview={onPreview}
                     />
                   </SelectPrimitive.Item>
                 );
@@ -122,8 +151,11 @@ function VoiceSelector({
         </SelectPrimitive.Portal>
       </SelectPrimitive.Root>
       <VoicePreviewBtn
+        voiceId={value}
         voiceName={selectedVoice?.name ?? 'selected'}
-        disabled={disabled}
+        disabled={disabled || !previewUrls[value]}
+        isPlaying={playingVoiceId === value}
+        onPreview={onPreview}
       />
     </div>
   );
@@ -135,6 +167,25 @@ export function PodcastSettings({
   settings,
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
+  const { data: voicesData } = useVoices();
+  const { playingVoiceId, play, stop } = useVoicePreview();
+
+  const previewUrls = voicesData
+    ? Object.fromEntries(
+        voicesData
+          .filter((v) => v.previewUrl)
+          .map((v) => [v.id, v.previewUrl!]),
+      )
+    : {};
+
+  const handlePreview = (voiceId: string) => {
+    if (playingVoiceId === voiceId) {
+      stop();
+    } else {
+      const url = previewUrls[voiceId];
+      if (url) play(voiceId, url);
+    }
+  };
 
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
@@ -161,6 +212,9 @@ export function PodcastSettings({
             onChange={settings.setHostVoice}
             disabledVoice={isConversation ? settings.coHostVoice : undefined}
             disabled={disabled}
+            previewUrls={previewUrls}
+            playingVoiceId={playingVoiceId}
+            onPreview={handlePreview}
           />
         </div>
 
@@ -175,6 +229,9 @@ export function PodcastSettings({
               onChange={settings.setCoHostVoice}
               disabledVoice={settings.hostVoice}
               disabled={disabled}
+              previewUrls={previewUrls}
+              playingVoiceId={playingVoiceId}
+              onPreview={handlePreview}
             />
           </div>
         )}

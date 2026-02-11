@@ -5,9 +5,6 @@ import {
   type DocumentSource,
 } from '@repo/db/schema';
 
-/**
- * Options for creating a test document.
- */
 export interface CreateTestDocumentOptions {
   id?: DocumentId;
   title?: string;
@@ -25,12 +22,9 @@ export interface CreateTestDocumentOptions {
 
 let documentCounter = 0;
 
-/**
- * Create a test document with default values.
- */
-export const createTestDocument = (
+export function createTestDocument(
   options: CreateTestDocumentOptions = {},
-): Document => {
+): Document {
   documentCounter++;
   const now = new Date();
 
@@ -48,14 +42,11 @@ export const createTestDocument = (
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
-};
+}
 
-/**
- * Create a test document from a PDF upload.
- */
-export const createTestPdfDocument = (
+export function createTestPdfDocument(
   options: Omit<CreateTestDocumentOptions, 'source' | 'mimeType'> = {},
-): Document => {
+): Document {
   return createTestDocument({
     ...options,
     source: 'upload_pdf',
@@ -63,11 +54,8 @@ export const createTestPdfDocument = (
     originalFileName: options.originalFileName ?? 'document.pdf',
     originalFileSize: options.originalFileSize ?? 50000,
   });
-};
+}
 
-/**
- * Reset the document counter (call in beforeEach for consistent test data).
- */
-export const resetDocumentCounter = () => {
+export function resetDocumentCounter() {
   documentCounter = 0;
-};
+}

@@ -1,60 +1,22 @@
-/**
- * Effect-Idiomatic Serialization Pattern
- *
- * This module provides utilities for defining type-safe serialization
- * between database entities and API output types using Effect.
- *
- * Pattern:
- * 1. Define an OutputSchema for the API response (for contract validation)
- * 2. Define a pure transform function (DB entity → Output)
- * 3. Wrap with Effect for tracing and error handling
- *
- * Benefits:
- * - Type-safe end-to-end (DB → API)
- * - Effect-native with tracing support
- * - Simple and pragmatic (no fighting branded types)
- * - Composable serializers
- */
+import { Effect, Schema } from 'effect';
 
-import { Effect, Data } from 'effect';
+export class SerializationError extends Schema.TaggedError<SerializationError>()(
+  'SerializationError',
+  {
+    entity: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {
+  static readonly httpStatus = 500 as const;
+  static readonly httpCode = 'INTERNAL_ERROR' as const;
+  static readonly httpMessage = 'Serialization failed';
+  static readonly logLevel = 'error' as const;
+  static getData(e: SerializationError) {
+    return { entity: e.entity };
+  }
+}
 
-// =============================================================================
-// Error Types
-// =============================================================================
-
-/**
- * Serialization error with context about what failed.
- */
-export class SerializationError extends Data.TaggedError('SerializationError')<{
-  entity: string;
-  message: string;
-  cause?: unknown;
-}> {}
-
-// =============================================================================
-// Serialization Helpers
-// =============================================================================
-
-/**
- * Create an Effect-based serializer from a pure transform function.
- * Wraps the function with tracing for observability.
- *
- * @example
- * ```typescript
- * const serializeDocumentEffect = createEffectSerializer(
- *   'document',
- *   (doc: Document): DocumentOutput => ({
- *     id: doc.id,
- *     title: doc.title,
- *     createdAt: doc.createdAt.toISOString(),
- *     updatedAt: doc.updatedAt.toISOString(),
- *   }),
- * );
- *
- * // Usage in handler
- * const output = yield* serializeDocumentEffect(dbDocument);
- * ```
- */
 export const createEffectSerializer = <DbType, OutputType>(
   entityName: string,
   transform: (entity: DbType) => OutputType,
@@ -75,20 +37,6 @@ export const createEffectSerializer = <DbType, OutputType>(
     );
 };
 
-/**
- * Create a batch serializer for arrays.
- * Serializes all entities in parallel for better performance.
- *
- * @example
- * ```typescript
- * const serializeDocumentsEffect = createBatchEffectSerializer(
- *   'document',
- *   documentTransform,
- * );
- *
- * const outputs = yield* serializeDocumentsEffect(dbDocuments);
- * ```
- */
 export const createBatchEffectSerializer = <DbType, OutputType>(
   entityName: string,
   transform: (entity: DbType) => OutputType,
@@ -108,27 +56,6 @@ export const createBatchEffectSerializer = <DbType, OutputType>(
     );
 };
 
-/**
- * Create a pure synchronous serializer (no Effect wrapper).
- * Use when Effect overhead is not needed (e.g., in map callbacks).
- *
- * This is the simplest form - just returns the transform function
- * with a nice name for debugging.
- *
- * @example
- * ```typescript
- * const serializeDocument = createSyncSerializer(
- *   (doc: Document): DocumentOutput => ({
- *     id: doc.id,
- *     title: doc.title,
- *     createdAt: doc.createdAt.toISOString(),
- *     updatedAt: doc.updatedAt.toISOString(),
- *   }),
- * );
- *
- * const outputs = documents.map(serializeDocument);
- * ```
- */
 export const createSyncSerializer = <DbType, OutputType>(
   transform: (entity: DbType) => OutputType,
 ): ((entity: DbType) => OutputType) => transform;

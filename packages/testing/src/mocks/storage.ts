@@ -5,42 +5,16 @@ import {
 } from '@repo/storage';
 import { Layer, Effect } from 'effect';
 
-/**
- * Options for creating a mock storage service.
- */
 export interface MockStorageOptions {
-  /**
-   * Simulated delay in milliseconds before returning.
-   */
   delay?: number;
-
-  /**
-   * Base URL prefix for generated URLs.
-   */
   baseUrl?: string;
 }
 
 /**
  * Create an in-memory storage layer for testing.
- * Data is stored in a Map and cleared between tests.
- *
- * @example
- * ```ts
- * const storage = createInMemoryStorage();
- *
- * await Effect.runPromise(
- *   Effect.gen(function* () {
- *     const s = yield* Storage;
- *     const url = yield* s.upload('test.txt', Buffer.from('hello'), 'text/plain');
- *     const data = yield* s.download('test.txt');
- *   }).pipe(Effect.provide(storage.layer))
- * );
- *
- * // Clear storage between tests
- * storage.clear();
- * ```
+ * Data persists across calls within the same instance; call `clear()` between tests.
  */
-export const createInMemoryStorage = (options: MockStorageOptions = {}) => {
+export function createInMemoryStorage(options: MockStorageOptions = {}) {
   const store = new Map<string, { data: Buffer; contentType: string }>();
   const baseUrl = options.baseUrl ?? 'memory://';
 
@@ -95,25 +69,20 @@ export const createInMemoryStorage = (options: MockStorageOptions = {}) => {
   };
 
   return {
+    // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
     layer: Layer.succeed(Storage, service),
-    /**
-     * Clear all stored data.
-     */
     clear: () => store.clear(),
-    /**
-     * Get the raw store for inspection.
-     */
     getStore: () => store,
   };
-};
+}
 
 /**
  * Create a simple mock storage layer.
- * Unlike InMemoryStorage, this doesn't persist data between calls.
+ * Unlike createInMemoryStorage, this does not persist data between calls.
  */
-export const createMockStorage = (
+export function createMockStorage(
   options: MockStorageOptions = {},
-): Layer.Layer<Storage> => {
+): Layer.Layer<Storage> {
   const baseUrl = options.baseUrl ?? 'mock://';
 
   const service: StorageService = {
@@ -157,10 +126,8 @@ export const createMockStorage = (
       }),
   };
 
+  // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
   return Layer.succeed(Storage, service);
-};
+}
 
-/**
- * Default mock storage layer.
- */
 export const MockStorageLive = createMockStorage();

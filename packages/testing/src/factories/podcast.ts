@@ -8,9 +8,6 @@ import {
   type GenerationContext,
 } from '@repo/db/schema';
 
-/**
- * Options for creating a test podcast.
- */
 export interface CreateTestPodcastOptions {
   id?: PodcastId;
   title?: string;
@@ -25,7 +22,6 @@ export interface CreateTestPodcastOptions {
   tags?: string[];
   sourceDocumentIds?: string[];
   generationContext?: GenerationContext | null;
-  // Script fields (flattened)
   status?: VersionStatus;
   segments?: ScriptSegment[] | null;
   summary?: string | null;
@@ -43,9 +39,6 @@ export interface CreateTestPodcastOptions {
 
 let podcastCounter = 0;
 
-/**
- * Default segments for a test podcast script.
- */
 export const DEFAULT_TEST_SEGMENTS: ScriptSegment[] = [
   { speaker: 'host', line: 'Welcome to the show!', index: 0 },
   { speaker: 'cohost', line: 'Thanks for having me.', index: 1 },
@@ -53,13 +46,9 @@ export const DEFAULT_TEST_SEGMENTS: ScriptSegment[] = [
   { speaker: 'cohost', line: 'Great idea!', index: 3 },
 ];
 
-/**
- * Create a test podcast with default values.
- * All script fields are now directly on the podcast (flattened schema).
- */
-export const createTestPodcast = (
+export function createTestPodcast(
   options: CreateTestPodcastOptions = {},
-): Podcast => {
+): Podcast {
   podcastCounter++;
   const now = new Date();
 
@@ -79,7 +68,6 @@ export const createTestPodcast = (
     sourceDocumentIds: (options.sourceDocumentIds ??
       []) as Podcast['sourceDocumentIds'],
     generationContext: options.generationContext ?? null,
-    // Script fields (flattened)
     status: options.status ?? 'drafting',
     segments: options.segments ?? null,
     summary: options.summary ?? null,
@@ -94,17 +82,14 @@ export const createTestPodcast = (
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
   };
-};
+}
 
-/**
- * Create a test podcast with ready status and audio.
- */
-export const createReadyPodcast = (
+export function createReadyPodcast(
   options: Omit<
     CreateTestPodcastOptions,
     'status' | 'audioUrl' | 'duration'
   > = {},
-): Podcast => {
+): Podcast {
   const id = options.id ?? generatePodcastId();
   return createTestPodcast({
     ...options,
@@ -113,27 +98,21 @@ export const createReadyPodcast = (
     segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
     summary: options.summary ?? 'A test podcast about interesting topics.',
     audioUrl: `https://storage.example.com/podcasts/${id}/audio.wav`,
-    duration: 300, // 5 minutes
+    duration: 300,
   });
-};
+}
 
-/**
- * Create a test podcast with script ready status (no audio yet).
- */
-export const createScriptReadyPodcast = (
+export function createScriptReadyPodcast(
   options: Omit<CreateTestPodcastOptions, 'status'> = {},
-): Podcast => {
+): Podcast {
   return createTestPodcast({
     ...options,
     status: 'script_ready',
     segments: options.segments ?? DEFAULT_TEST_SEGMENTS,
     summary: options.summary ?? 'A test podcast about interesting topics.',
   });
-};
+}
 
-/**
- * Reset the counters (call in beforeEach for consistent test data).
- */
-export const resetPodcastCounters = () => {
+export function resetPodcastCounters() {
   podcastCounter = 0;
-};
+}
