@@ -180,9 +180,9 @@ const makeQueueService = Effect.gen(function* () {
       async () => {
         const result = await (db as DatabaseInstance).execute(sql`
           UPDATE ${job}
-          SET ${sql.raw(`"status" = '${JobStatus.PROCESSING}'`)},
-              ${sql.raw(`"startedAt" = NOW()`)},
-              ${sql.raw(`"updatedAt" = NOW()`)}
+          SET "status" = ${JobStatus.PROCESSING},
+              "startedAt" = NOW(),
+              "updatedAt" = NOW()
           WHERE ${job.id} = (
             SELECT ${job.id} FROM ${job}
             WHERE ${job.type} = ${type}

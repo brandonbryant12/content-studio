@@ -12,7 +12,7 @@ import {
   eq,
   and,
   or,
-  sql,
+  lt,
   ilike,
   count as drizzleCount,
   gt,
@@ -149,7 +149,7 @@ const make: ActivityLogRepoService = {
         );
       }
       if (options.afterCursor) {
-        conditions.push(sql`${activityLog.createdAt} < ${options.afterCursor}`);
+        conditions.push(lt(activityLog.createdAt, new Date(options.afterCursor)));
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;
