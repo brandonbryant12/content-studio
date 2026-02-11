@@ -7,7 +7,7 @@ describe('security headers', () => {
 
   beforeEach(() => {
     app = new Hono();
-    app.use(secureHeaders());
+    app.use(secureHeaders({ crossOriginResourcePolicy: 'cross-origin' }));
     app.get('/', (c) => c.text('ok'));
   });
 
@@ -52,7 +52,10 @@ describe('health check endpoints', () => {
 
     const app = new Hono();
     app.get('/healthcheck/deep', async (c) => {
-      const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
+      const checks: Record<
+        string,
+        { status: string; latencyMs?: number; error?: string }
+      > = {};
 
       const dbStart = Date.now();
       try {
@@ -66,8 +69,13 @@ describe('health check endpoints', () => {
         };
       }
 
-      const allHealthy = Object.values(checks).every((ch) => ch.status === 'ok');
-      return c.json({ status: allHealthy ? 'ok' : 'degraded', checks }, allHealthy ? 200 : 503);
+      const allHealthy = Object.values(checks).every(
+        (ch) => ch.status === 'ok',
+      );
+      return c.json(
+        { status: allHealthy ? 'ok' : 'degraded', checks },
+        allHealthy ? 200 : 503,
+      );
     });
 
     const res = await app.request('/healthcheck/deep');
@@ -80,11 +88,16 @@ describe('health check endpoints', () => {
   });
 
   it('GET /healthcheck/deep returns 503 when db is down', async () => {
-    const mockVerify = vi.fn().mockRejectedValue(new Error('connection refused'));
+    const mockVerify = vi
+      .fn()
+      .mockRejectedValue(new Error('connection refused'));
 
     const app = new Hono();
     app.get('/healthcheck/deep', async (c) => {
-      const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
+      const checks: Record<
+        string,
+        { status: string; latencyMs?: number; error?: string }
+      > = {};
 
       const dbStart = Date.now();
       try {
@@ -98,8 +111,13 @@ describe('health check endpoints', () => {
         };
       }
 
-      const allHealthy = Object.values(checks).every((ch) => ch.status === 'ok');
-      return c.json({ status: allHealthy ? 'ok' : 'degraded', checks }, allHealthy ? 200 : 503);
+      const allHealthy = Object.values(checks).every(
+        (ch) => ch.status === 'ok',
+      );
+      return c.json(
+        { status: allHealthy ? 'ok' : 'degraded', checks },
+        allHealthy ? 200 : 503,
+      );
     });
 
     const res = await app.request('/healthcheck/deep');

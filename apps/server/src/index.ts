@@ -27,7 +27,11 @@ const app = new Hono<{
 
 // Global middleware
 app.use(logger());
-app.use(secureHeaders());
+app.use(
+  secureHeaders({
+    crossOriginResourcePolicy: 'cross-origin',
+  }),
+);
 
 // Global error handler
 app.onError((err, c) => {
@@ -44,7 +48,10 @@ app.get('/healthcheck', (c) => c.text('OK'));
 
 // Deep health check — verifies downstream dependencies (for readiness probes)
 app.get('/healthcheck/deep', async (c) => {
-  const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
+  const checks: Record<
+    string,
+    { status: string; latencyMs?: number; error?: string }
+  > = {};
 
   // Database check
   const dbStart = Date.now();
@@ -60,7 +67,10 @@ app.get('/healthcheck/deep', async (c) => {
   }
 
   const allHealthy = Object.values(checks).every((ch) => ch.status === 'ok');
-  return c.json({ status: allHealthy ? 'ok' : 'degraded', checks }, allHealthy ? 200 : 503);
+  return c.json(
+    { status: allHealthy ? 'ok' : 'degraded', checks },
+    allHealthy ? 200 : 503,
+  );
 });
 
 // Root page
