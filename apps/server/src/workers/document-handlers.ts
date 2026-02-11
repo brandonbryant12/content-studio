@@ -55,7 +55,11 @@ export const handleProcessUrl = (job: Job<ProcessUrlPayload>) =>
       return DocumentRepo.pipe(
         Effect.flatMap((repo) =>
           repo
-            .updateStatus(job.payload.documentId, DocumentStatus.FAILED, errorMessage)
+            .updateStatus(
+              job.payload.documentId,
+              DocumentStatus.FAILED,
+              errorMessage,
+            )
             .pipe(Effect.catchAll(() => Effect.void)),
         ),
         Effect.flatMap(() =>

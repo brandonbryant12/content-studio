@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { UrlScraper, type UrlScraperService } from '../url-scraper';
 import { UrlFetchError } from '../../../errors';
 
-
 const createMockUrlScraper = (
   overrides: Partial<UrlScraperService> = {},
 ): Layer.Layer<UrlScraper> =>
@@ -11,7 +10,6 @@ const createMockUrlScraper = (
     fetchAndExtract:
       overrides.fetchAndExtract ?? (() => Effect.die('not implemented')),
   });
-
 
 describe('UrlScraper', () => {
   describe('fetchAndExtract', () => {
@@ -130,7 +128,6 @@ describe('UrlScraper', () => {
     });
   });
 });
-
 
 describe('UrlScraperLive', () => {
   // We test the implementation by mocking the external `extract` function

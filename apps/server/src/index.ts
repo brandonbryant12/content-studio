@@ -2,7 +2,7 @@ import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
-import type { auth} from './services';
+import type { auth } from './services';
 import { env } from './env';
 import {
   authRoute,

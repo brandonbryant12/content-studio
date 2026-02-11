@@ -125,7 +125,10 @@ export function createUnifiedWorker(config: BaseWorkerConfig): Worker {
 
   const onJobComplete = (job: Job<WorkerPayload>) => {
     const { userId } = job.payload;
-    const status = job.status === JobStatus.COMPLETED ? JobStatus.COMPLETED : JobStatus.FAILED;
+    const status =
+      job.status === JobStatus.COMPLETED
+        ? JobStatus.COMPLETED
+        : JobStatus.FAILED;
 
     if ('documentId' in job.payload) {
       const { documentId } = job.payload as ProcessUrlPayload;
