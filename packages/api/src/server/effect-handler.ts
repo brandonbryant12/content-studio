@@ -222,13 +222,11 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   options?: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
-  const typedEffect = effect;
-
   const tracedEffect = options?.span
-    ? typedEffect.pipe(
+    ? effect.pipe(
         Effect.withSpan(options.span, { attributes: options.attributes }),
       )
-    : typedEffect;
+    : effect;
 
   const scopedEffect = user
     ? withCurrentUser(user)(tracedEffect)

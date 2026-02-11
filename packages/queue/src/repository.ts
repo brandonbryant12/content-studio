@@ -53,7 +53,15 @@ const makeQueueService = Effect.gen(function* () {
         return mapRowToJob(row);
       },
       'Failed to enqueue job',
-    ).pipe(Effect.tap((j) => Effect.annotateCurrentSpan('queue.job.id', j.id)));
+    ).pipe(
+      Effect.tap((j) =>
+        Effect.all([
+          Effect.annotateCurrentSpan('queue.job.id', j.id),
+          Effect.annotateCurrentSpan('queue.job.type', type),
+          Effect.annotateCurrentSpan('queue.user.id', userId),
+        ]),
+      ),
+    );
 
   const getJob: QueueService['getJob'] = (jobId) =>
     runQuery(

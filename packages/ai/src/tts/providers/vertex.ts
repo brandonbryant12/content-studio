@@ -1,4 +1,5 @@
 import { Effect, Layer } from 'effect';
+import { GoogleAuth } from 'google-auth-library';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
 import {
@@ -44,8 +45,6 @@ export type VertexTTSConfig =
  * Uses google-auth-library's Application Default Credentials.
  */
 const getAccessToken = async (): Promise<string> => {
-  // Dynamically import to avoid bundling issues
-  const { GoogleAuth } = await import('google-auth-library');
   const auth = new GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/cloud-platform'],
   });
@@ -75,12 +74,9 @@ const makeVertexTTSService = (config: VertexTTSConfig): TTSService => {
 
   return {
     listVoices: (options?: ListVoicesOptions) =>
-      Effect.sync(() => {
-        if (options?.gender) {
-          return getVoicesByGender(options.gender);
-        }
-        return VOICES;
-      }).pipe(
+      Effect.succeed(
+        options?.gender ? getVoicesByGender(options.gender) : VOICES,
+      ).pipe(
         Effect.withSpan('tts.listVoices', {
           attributes: {
             'tts.provider': 'vertex',

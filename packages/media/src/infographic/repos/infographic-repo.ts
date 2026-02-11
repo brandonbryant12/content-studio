@@ -7,7 +7,7 @@ import {
   type InfographicId,
   type InfographicStatusType,
 } from '@repo/db/schema';
-import { eq, desc, asc } from 'drizzle-orm';
+import { eq, desc, asc, inArray } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { InfographicNotFound } from '../../errors';
 
@@ -271,16 +271,16 @@ const make: InfographicRepoService = {
           eq(infographicVersion.infographicId, infographicId as InfographicId),
         );
 
-      const toDelete = allVersions.filter((v) => !keepIds.includes(v.id));
-      if (toDelete.length === 0) return 0;
+      const toDeleteIds = allVersions
+        .filter((v) => !keepIds.includes(v.id))
+        .map((v) => v.id);
+      if (toDeleteIds.length === 0) return 0;
 
-      for (const v of toDelete) {
-        await db
-          .delete(infographicVersion)
-          .where(eq(infographicVersion.id, v.id));
-      }
+      await db
+        .delete(infographicVersion)
+        .where(inArray(infographicVersion.id, toDeleteIds));
 
-      return toDelete.length;
+      return toDeleteIds.length;
     }),
 
   setApproval: (id, approvedBy) =>

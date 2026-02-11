@@ -23,7 +23,12 @@ export const logActivity = (
         logEntityActivity(action, entityType, entityId, entityTitle),
       ),
     )
-    .catch(() => {});
+    .catch((err) => {
+      console.warn(
+        '[ACTIVITY_LOG]',
+        err instanceof Error ? err.message : String(err),
+      );
+    });
 };
 
 /**
@@ -78,7 +83,12 @@ export const tapSyncTitle =
           if (!id || !title) return;
           runtime
             .runPromise(withCurrentUser(user)(syncEntityTitle(id, title)))
-            .catch(() => {});
+            .catch((err) => {
+              console.warn(
+                '[TITLE_SYNC]',
+                err instanceof Error ? err.message : String(err),
+              );
+            });
         }),
       ),
     );

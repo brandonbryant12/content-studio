@@ -31,12 +31,9 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
 
   return {
     listVoices: (options?: ListVoicesOptions) =>
-      Effect.sync(() => {
-        if (options?.gender) {
-          return getVoicesByGender(options.gender);
-        }
-        return VOICES;
-      }).pipe(
+      Effect.succeed(
+        options?.gender ? getVoicesByGender(options.gender) : VOICES,
+      ).pipe(
         Effect.withSpan('tts.listVoices', {
           attributes: {
             'tts.provider': 'google',

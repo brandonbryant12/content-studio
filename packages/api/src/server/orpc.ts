@@ -63,7 +63,15 @@ export const createORPCContext = async ({
 }): Promise<ORPCContext> => {
   const result = await runtime.runPromise(
     getSessionWithRole(auth, headers).pipe(
-      Effect.catchAll(() => Effect.succeed(null)),
+      Effect.catchAll((error) =>
+        Effect.sync(() => {
+          console.warn(
+            '[AUTH_CONTEXT] Session lookup failed:',
+            error instanceof Error ? error.message : String(error),
+          );
+          return null;
+        }),
+      ),
     ),
   );
 
