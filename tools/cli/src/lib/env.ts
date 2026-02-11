@@ -1,6 +1,7 @@
 import { Effect, Schema } from 'effect';
 
 const EnvSchema = Schema.Struct({
+  SERVER_POSTGRES_URL: Schema.optional(Schema.String),
   GEMINI_API_KEY: Schema.optional(Schema.String),
   GOOGLE_VERTEX_API_KEY: Schema.optional(Schema.String),
   HTTPS_PROXY: Schema.optional(Schema.String),

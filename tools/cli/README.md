@@ -36,6 +36,14 @@ Runs a full CRUD lifecycle against filesystem storage (no S3 or database needed)
 
 Generates TTS audio previews for the 8 frontend voices (Aoede, Kore, Leda, Zephyr, Charon, Fenrir, Puck, Orus) and uploads them to storage at `voice-previews/{voiceId}.wav`. Idempotent — skips voices that already have a preview in storage. Requires `GEMINI_API_KEY` and storage config (`STORAGE_PROVIDER`, `STORAGE_PATH`, etc.) in `.env`.
 
+### `pnpm cli admin set-role <email>`
+
+Promotes a user to admin role by email address. Connects to the database using `SERVER_POSTGRES_URL` from `apps/server/.env` and updates the user's role via Drizzle ORM.
+
+```bash
+pnpm cli -- admin set-role user@example.com
+```
+
 ## Development
 
 ```bash

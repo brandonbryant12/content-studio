@@ -992,6 +992,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
