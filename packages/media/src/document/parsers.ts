@@ -1,4 +1,6 @@
 import { Effect } from 'effect';
+import mammoth from 'mammoth';
+import pdfParse from 'pdf-parse';
 import type { DocumentSource } from '@repo/db/schema';
 import {
   DocumentParseError,
@@ -144,8 +146,6 @@ const parsePdf = (
 ): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
-      // Dynamic import to handle ESM/CJS interop
-      const pdfParse = (await import('pdf-parse')).default;
       const result = await pdfParse(data);
       return {
         content: result.text,
@@ -180,7 +180,6 @@ const parseDocx = (
 ): Effect.Effect<ParsedDocument, DocumentParseError> =>
   Effect.tryPromise({
     try: async () => {
-      const mammoth = await import('mammoth');
       const result = await mammoth.extractRawText({ buffer: data });
       return {
         content: result.value,

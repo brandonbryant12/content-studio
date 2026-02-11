@@ -110,4 +110,5 @@ const isEnoent = (error: unknown): boolean =>
 export const FilesystemStorageLive = (
   config: FilesystemStorageConfig,
 ): Layer.Layer<Storage> =>
+  // eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements
   Layer.succeed(Storage, makeFilesystemStorage(config));

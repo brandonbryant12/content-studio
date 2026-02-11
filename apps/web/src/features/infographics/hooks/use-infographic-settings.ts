@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -49,7 +49,15 @@ export function useInfographicSettings({
   infographic,
 }: UseInfographicSettingsOptions): UseInfographicSettingsReturn {
   const [prevInfographicId, setPrevInfographicId] = useState(infographic?.id);
-  const hasUserEditsRef = useRef(false);
+  const [hasUserEdits, setHasUserEdits] = useState(false);
+
+  // Track previous server values to detect external changes
+  const [prevServerValues, setPrevServerValues] = useState(() => ({
+    prompt: infographic?.prompt,
+    infographicType: infographic?.infographicType,
+    stylePreset: infographic?.stylePreset,
+    format: infographic?.format,
+  }));
 
   const initial = getInitialValues(infographic);
   const [prompt, setPromptInternal] = useState(initial.prompt);
@@ -59,56 +67,65 @@ export function useInfographicSettings({
 
   // Wrapped setters that track user edits
   const setPrompt = useCallback((value: string) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setPromptInternal(value);
   }, []);
 
   const setInfographicType = useCallback((value: InfographicType) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setTypeInternal(value);
   }, []);
 
   const setStylePreset = useCallback((value: InfographicStyle) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setStyleInternal(value);
   }, []);
 
   const setFormat = useCallback((value: InfographicFormat) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setFormatInternal(value);
   }, []);
 
   // Reset state when navigating to a different infographic
   if (infographic?.id !== prevInfographicId) {
     setPrevInfographicId(infographic?.id);
+    setHasUserEdits(false);
     const newInitial = getInitialValues(infographic);
     setPromptInternal(newInitial.prompt);
     setTypeInternal(newInitial.infographicType);
     setStyleInternal(newInitial.stylePreset);
     setFormatInternal(newInitial.format);
+    setPrevServerValues({
+      prompt: infographic?.prompt,
+      infographicType: infographic?.infographicType,
+      stylePreset: infographic?.stylePreset,
+      format: infographic?.format,
+    });
   }
 
-  // Reset user-edits flag when navigating to a different infographic
-  useEffect(() => {
-    hasUserEditsRef.current = false;
-  }, [prevInfographicId]);
-
   // Sync local state when server data changes externally (e.g., SSE update)
-  useEffect(() => {
-    if (hasUserEditsRef.current) return;
+  // Only sync if user hasn't made local edits
+  const serverChanged =
+    infographic?.prompt !== prevServerValues.prompt ||
+    infographic?.infographicType !== prevServerValues.infographicType ||
+    infographic?.stylePreset !== prevServerValues.stylePreset ||
+    infographic?.format !== prevServerValues.format;
 
-    const newInitial = getInitialValues(infographic);
-    setPromptInternal(newInitial.prompt);
-    setTypeInternal(newInitial.infographicType);
-    setStyleInternal(newInitial.stylePreset);
-    setFormatInternal(newInitial.format);
-  }, [
-    infographic,
-    infographic?.prompt,
-    infographic?.infographicType,
-    infographic?.stylePreset,
-    infographic?.format,
-  ]);
+  if (serverChanged) {
+    setPrevServerValues({
+      prompt: infographic?.prompt,
+      infographicType: infographic?.infographicType,
+      stylePreset: infographic?.stylePreset,
+      format: infographic?.format,
+    });
+    if (!hasUserEdits) {
+      const newInitial = getInitialValues(infographic);
+      setPromptInternal(newInitial.prompt);
+      setTypeInternal(newInitial.infographicType);
+      setStyleInternal(newInitial.stylePreset);
+      setFormatInternal(newInitial.format);
+    }
+  }
 
   const hasChanges =
     prompt !== (infographic?.prompt ?? '') ||
@@ -139,20 +156,13 @@ export function useInfographicSettings({
           : {}),
       });
 
-      hasUserEditsRef.current = false;
+      setHasUserEdits(false);
     },
-    [
-      infographic?.id,
-      prompt,
-      infographicType,
-      stylePreset,
-      format,
-      updateMutation,
-    ],
+    [infographic, prompt, infographicType, stylePreset, format, updateMutation],
   );
 
   const discardChanges = useCallback(() => {
-    hasUserEditsRef.current = false;
+    setHasUserEdits(false);
     const initial = getInitialValues(infographic);
     setPromptInternal(initial.prompt);
     setTypeInternal(initial.infographicType);

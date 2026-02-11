@@ -7,7 +7,7 @@ import { PodcastRepo } from '../repos/podcast-repo';
 // Types
 // =============================================================================
 
-export interface CreatePodcastInput extends CreatePodcast {}
+export type CreatePodcastInput = CreatePodcast;
 
 // =============================================================================
 // Use Case

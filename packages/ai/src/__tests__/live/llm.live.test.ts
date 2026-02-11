@@ -15,8 +15,9 @@ import { describe, expect } from 'vitest';
 import { LLMError, LLMRateLimitError } from '../../errors';
 import { GoogleLive, LLM } from '../../llm';
 import { expectEffectFailure } from '../../test-utils/effect-assertions';
+import { liveTestEnv } from './env';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;
 
 describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration', () => {
   const layer = GoogleLive({ apiKey: GEMINI_API_KEY! });

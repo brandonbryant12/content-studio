@@ -8,6 +8,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { DatabaseInstance } from '@repo/db/client';
 import type { Document } from '@repo/db/schema';
 import {
   DocumentRepo,
@@ -65,7 +66,7 @@ const createMockDocumentRepoLayer = (
  * This satisfies the type requirement from the use case signature.
  */
 const MockDbLayer: Layer.Layer<Db> = Layer.succeed(Db, {
-  db: {} as unknown as import('@repo/db/client').DatabaseInstance,
+  db: {} as unknown as DatabaseInstance,
 });
 
 // =============================================================================

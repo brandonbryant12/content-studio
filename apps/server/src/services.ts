@@ -26,6 +26,7 @@ const vertexConfig: VertexAIConfig | undefined =
           mode: 'serviceAccount',
           project: env.GOOGLE_VERTEX_PROJECT!,
           location: env.GOOGLE_VERTEX_LOCATION!,
+          imageGenApiKey: env.GEMINI_API_KEY,
         };
 
 export const serverRuntime = createServerRuntime({

@@ -165,6 +165,8 @@ export type VertexAIConfig =
       readonly llmModel?: string;
       /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
       readonly ttsModel?: string;
+      /** API key for image gen (SA mode doesn't have one natively) */
+      readonly imageGenApiKey?: string;
     };
 
 /**
@@ -204,9 +206,7 @@ export const VertexAILive = (config: VertexAIConfig): Layer.Layer<AI> => {
     );
   }
 
-  // Service account mode doesn't have a simple API key for image gen.
-  // Use GEMINI_API_KEY env var as fallback for image gen in SA mode.
-  const imageGenApiKey = process.env.GEMINI_API_KEY ?? '';
+  const imageGenApiKey = config.imageGenApiKey ?? '';
   return Layer.mergeAll(
     VertexLive({
       mode: 'serviceAccount',

@@ -1,6 +1,4 @@
 import { Layer } from 'effect';
-import type { Db } from '@repo/db/effect';
-import type { Storage } from '@repo/storage';
 
 export {
   DocumentNotFound,
@@ -168,16 +166,18 @@ export type {
   InfographicVersionOutput,
 } from './infographic';
 
+import type { ActivityLogRepo } from './activity';
 import type { DocumentRepo } from './document';
+import type { InfographicRepo } from './infographic';
+import type { PodcastRepo } from './podcast';
+import type { VoiceoverRepo } from './voiceover';
+import type { Db } from '@repo/db/effect';
+import type { Storage } from '@repo/storage';
 import { ActivityLogRepoLive } from './activity';
 import { DocumentRepoLive } from './document';
-import type { PodcastRepo } from './podcast';
 import { InfographicRepoLive } from './infographic';
 import { PodcastRepoLive } from './podcast';
-import type { VoiceoverRepo } from './voiceover';
 import { VoiceoverRepoLive } from './voiceover';
-import type { InfographicRepo } from './infographic';
-import type { ActivityLogRepo } from './activity';
 
 // When adding a new repo, add it to both Media and MediaLive.
 export type Media =

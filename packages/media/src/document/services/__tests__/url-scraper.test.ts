@@ -1,7 +1,15 @@
+import { extract } from '@extractus/article-extractor';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
 import { UrlFetchError } from '../../../errors';
 import { UrlScraper, type UrlScraperService } from '../url-scraper';
+import { UrlScraperLive } from '../url-scraper-impl';
+
+vi.mock('@extractus/article-extractor', () => ({
+  extract: vi.fn(),
+}));
+
+const extractMock = extract as ReturnType<typeof vi.fn>;
 
 const createMockUrlScraper = (
   overrides: Partial<UrlScraperService> = {},
@@ -130,24 +138,7 @@ describe('UrlScraper', () => {
 });
 
 describe('UrlScraperLive', () => {
-  // We test the implementation by mocking the external `extract` function
-  vi.mock('@extractus/article-extractor', () => ({
-    extract: vi.fn(),
-  }));
-
-  // Must import after mock setup
-  const getExtractMock = async () => {
-    const mod = await import('@extractus/article-extractor');
-    return mod.extract as ReturnType<typeof vi.fn>;
-  };
-
-  const getUrlScraperLive = async () => {
-    const mod = await import('../url-scraper-impl');
-    return mod.UrlScraperLive;
-  };
-
   it('extracts content and counts words correctly', async () => {
-    const extractMock = await getExtractMock();
     extractMock.mockResolvedValue({
       title: 'Real Article',
       content: '<p>Hello <strong>world</strong> this is a test article</p>',
@@ -155,8 +146,6 @@ describe('UrlScraperLive', () => {
       author: 'Author Name',
       published: '2024-06-01',
     });
-
-    const UrlScraperLive = await getUrlScraperLive();
 
     const result = await Effect.runPromise(
       UrlScraper.pipe(
@@ -176,13 +165,10 @@ describe('UrlScraperLive', () => {
   });
 
   it('falls back to hostname for title when none extracted', async () => {
-    const extractMock = await getExtractMock();
     extractMock.mockResolvedValue({
       title: '',
       content: '<p>Some content here</p>',
     });
-
-    const UrlScraperLive = await getUrlScraperLive();
 
     const result = await Effect.runPromise(
       UrlScraper.pipe(
@@ -197,10 +183,7 @@ describe('UrlScraperLive', () => {
   });
 
   it('returns UrlFetchError when extract returns null', async () => {
-    const extractMock = await getExtractMock();
     extractMock.mockResolvedValue(null);
-
-    const UrlScraperLive = await getUrlScraperLive();
 
     const result = await Effect.runPromiseExit(
       UrlScraper.pipe(
@@ -220,10 +203,7 @@ describe('UrlScraperLive', () => {
   });
 
   it('wraps fetch errors in UrlFetchError', async () => {
-    const extractMock = await getExtractMock();
     extractMock.mockRejectedValue(new Error('Network timeout'));
-
-    const UrlScraperLive = await getUrlScraperLive();
 
     const result = await Effect.runPromiseExit(
       UrlScraper.pipe(

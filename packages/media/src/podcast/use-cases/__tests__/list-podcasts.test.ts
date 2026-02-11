@@ -7,6 +7,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { DatabaseInstance } from '@repo/db/client';
 import type { Podcast } from '@repo/db/schema';
 import {
   PodcastRepo,
@@ -73,7 +74,7 @@ const createMockPodcastRepoLayer = (
  * our mock PodcastRepo methods return Effect.succeed directly.
  */
 const MockDbLayer: Layer.Layer<Db> = Layer.succeed(Db, {
-  db: {} as unknown as import('@repo/db/client').DatabaseInstance,
+  db: {} as unknown as DatabaseInstance,
 });
 
 // =============================================================================

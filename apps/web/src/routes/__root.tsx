@@ -1,21 +1,18 @@
+import { Toaster } from '@repo/ui/components/sonner';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
-import React, { Suspense, lazy, useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { authClient } from '@/clients/authClient';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 
-// Defer Toaster loading until after hydration
-const Toaster = lazy(() =>
-  import('@repo/ui/components/sonner').then((m) => ({ default: m.Toaster })),
-);
-
 export const Route = createRootRoute({
   component: RootComponent,
 });
 
-// https://tanstack.com/router/v1/docs/framework/react/devtools
+// Dev-only router devtools — stripped in production builds by Vite
+/* eslint-disable no-restricted-syntax -- React.lazy requires dynamic import for conditional dev-only loading */
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
   : React.lazy(() =>
@@ -23,6 +20,7 @@ const TanStackRouterDevtools = import.meta.env.PROD
         default: res.TanStackRouterDevtools,
       })),
     );
+/* eslint-enable no-restricted-syntax */
 
 const emptySubscribe = () => () => {};
 
@@ -61,11 +59,7 @@ function RootComponent() {
     >
       <div className="min-h-screen bg-background">
         <Navbar session={session} />
-        {mounted && (
-          <Suspense fallback={null}>
-            <Toaster position="bottom-right" />
-          </Suspense>
-        )}
+        {mounted && <Toaster position="bottom-right" />}
         <Outlet />
         <React.Suspense>
           <TanStackRouterDevtools position="top-right" />

@@ -16,8 +16,9 @@ import { TTSError, TTSQuotaExceededError } from '../../errors';
 import { expectEffectFailure } from '../../test-utils/effect-assertions';
 import { GoogleTTSLive, TTS } from '../../tts';
 import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
+import { liveTestEnv } from './env';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;
 
 describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
   const layer = GoogleTTSLive({ apiKey: GEMINI_API_KEY! });

@@ -1,16 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { lazy, useEffect } from 'react';
+import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { InfographicWorkbenchContainer } from '@/features/infographics/components/infographic-workbench-container';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
-
-const InfographicWorkbenchContainer = lazy(() =>
-  import(
-    '@/features/infographics/components/infographic-workbench-container'
-  ).then((m) => ({
-    default: m.InfographicWorkbenchContainer,
-  })),
-);
 
 export const Route = createFileRoute('/_protected/infographics/$infographicId')(
   {

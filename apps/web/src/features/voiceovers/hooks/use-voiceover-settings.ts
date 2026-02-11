@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { VOICES } from '../lib/voices';
@@ -45,7 +45,13 @@ export function useVoiceoverSettings({
   const [prevVoiceoverId, setPrevVoiceoverId] = useState(voiceover?.id);
 
   // Track whether user has made local edits
-  const hasUserEditsRef = useRef(false);
+  const [hasUserEdits, setHasUserEdits] = useState(false);
+
+  // Track previous server values to detect external changes
+  const [prevServerValues, setPrevServerValues] = useState(() => ({
+    text: voiceover?.text,
+    voice: voiceover?.voice,
+  }));
 
   // Initialize state
   const initial = getInitialValues(voiceover);
@@ -54,36 +60,45 @@ export function useVoiceoverSettings({
 
   // Wrapped setters that track user edits
   const setText = useCallback((value: string) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setTextInternal(value);
   }, []);
 
   const setVoice = useCallback((value: string) => {
-    hasUserEditsRef.current = true;
+    setHasUserEdits(true);
     setVoiceInternal(value);
   }, []);
 
   // Reset state when navigating to a different voiceover
   if (voiceover?.id !== prevVoiceoverId) {
     setPrevVoiceoverId(voiceover?.id);
+    setHasUserEdits(false);
     const newInitial = getInitialValues(voiceover);
     setTextInternal(newInitial.text);
     setVoiceInternal(newInitial.voice);
+    setPrevServerValues({
+      text: voiceover?.text,
+      voice: voiceover?.voice,
+    });
   }
 
-  // Reset user-edits flag when navigating to a different voiceover
-  useEffect(() => {
-    hasUserEditsRef.current = false;
-  }, [prevVoiceoverId]);
-
   // Sync local state when server data changes externally
-  useEffect(() => {
-    if (hasUserEditsRef.current) return;
+  // Only sync if user hasn't made local edits
+  const serverChanged =
+    voiceover?.text !== prevServerValues.text ||
+    voiceover?.voice !== prevServerValues.voice;
 
-    const newInitial = getInitialValues(voiceover);
-    setTextInternal(newInitial.text);
-    setVoiceInternal(newInitial.voice);
-  }, [voiceover, voiceover?.text, voiceover?.voice]);
+  if (serverChanged) {
+    setPrevServerValues({
+      text: voiceover?.text,
+      voice: voiceover?.voice,
+    });
+    if (!hasUserEdits) {
+      const newInitial = getInitialValues(voiceover);
+      setTextInternal(newInitial.text);
+      setVoiceInternal(newInitial.voice);
+    }
+  }
 
   // Track if there are changes
   const hasChanges =
@@ -111,11 +126,11 @@ export function useVoiceoverSettings({
     });
 
     // Reset user edits after saving
-    hasUserEditsRef.current = false;
-  }, [voiceover?.id, text, voice, updateMutation]);
+    setHasUserEdits(false);
+  }, [voiceover, text, voice, updateMutation]);
 
   const discardChanges = useCallback(() => {
-    hasUserEditsRef.current = false;
+    setHasUserEdits(false);
     setTextInternal(voiceover?.text ?? '');
     setVoiceInternal(voiceover?.voice ?? 'Charon');
   }, [voiceover]);

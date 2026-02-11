@@ -19,12 +19,15 @@
 import { Effect } from 'effect';
 import { describe, it, expect, afterAll } from 'vitest';
 import { S3StorageLive, Storage } from '../../index';
+import { liveTestEnv } from './env';
 
-const S3_BUCKET = process.env.S3_BUCKET;
-const S3_REGION = process.env.S3_REGION;
-const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
-const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-const S3_ENDPOINT = process.env.S3_ENDPOINT;
+const {
+  S3_BUCKET,
+  S3_REGION,
+  S3_ACCESS_KEY_ID,
+  S3_SECRET_ACCESS_KEY,
+  S3_ENDPOINT,
+} = liveTestEnv;
 
 const hasS3Config =
   S3_BUCKET && S3_REGION && S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY;

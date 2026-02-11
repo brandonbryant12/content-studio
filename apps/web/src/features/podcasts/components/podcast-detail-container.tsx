@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback } from 'react';
+import { Suspense, useCallback } from 'react';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
@@ -7,17 +7,12 @@ import { usePodcastSettings } from '../hooks/use-podcast-settings';
 import { useScriptEditor } from '../hooks/use-script-editor';
 import { isSetupMode } from '../lib/status';
 import { PodcastDetail } from './podcast-detail';
+import { SetupWizardContainer } from './setup-wizard-container';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
-
-const SetupWizardContainer = lazy(() =>
-  import('./setup-wizard-container').then((m) => ({
-    default: m.SetupWizardContainer,
-  })),
-);
 
 interface PodcastDetailContainerProps {
   podcastId: string;

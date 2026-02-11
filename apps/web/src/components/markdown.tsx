@@ -2,44 +2,36 @@
 // Renders markdown content with proper styling for chat messages
 
 import { cn } from '@repo/ui/lib/utils';
-import { memo, lazy, Suspense } from 'react';
+import { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
 
-const LazyCodeBlock = lazy(() =>
-  import('react-syntax-highlighter/dist/esm/prism-light').then(async (mod) => {
-    const { default: oneDark } = await import(
-      'react-syntax-highlighter/dist/esm/styles/prism/one-dark'
-    );
-    const SyntaxHighlighter = mod.default;
-    return {
-      default: function CodeBlock({
-        language,
-        children,
-        compact,
-      }: {
-        language: string;
-        children: string;
-        compact: boolean;
-      }) {
-        return (
-          <SyntaxHighlighter
-            style={oneDark}
-            language={language}
-            PreTag="div"
-            customStyle={{
-              margin: 0,
-              padding: compact ? '0.75rem' : '1rem',
-              background: '#1e1e1e',
-              fontSize: 'inherit',
-            }}
-          >
-            {children}
-          </SyntaxHighlighter>
-        );
-      },
-    };
-  }),
-);
+function CodeBlock({
+  language,
+  children,
+  compact,
+}: {
+  language: string;
+  children: string;
+  compact: boolean;
+}) {
+  return (
+    <SyntaxHighlighter
+      style={oneDark}
+      language={language}
+      PreTag="div"
+      customStyle={{
+        margin: 0,
+        padding: compact ? '0.75rem' : '1rem',
+        background: '#1e1e1e',
+        fontSize: 'inherit',
+      }}
+    >
+      {children}
+    </SyntaxHighlighter>
+  );
+}
 
 interface MarkdownProps {
   children: string;
@@ -200,26 +192,9 @@ export const Markdown = memo(function Markdown({
               {language}
             </div>
           )}
-          <Suspense
-            fallback={
-              <pre
-                style={{
-                  margin: 0,
-                  padding: compact ? '0.75rem' : '1rem',
-                  background: '#1e1e1e',
-                  fontSize: 'inherit',
-                  color: '#abb2bf',
-                  overflow: 'auto',
-                }}
-              >
-                <code>{codeString}</code>
-              </pre>
-            }
-          >
-            <LazyCodeBlock language={language} compact={compact}>
-              {codeString}
-            </LazyCodeBlock>
-          </Suspense>
+          <CodeBlock language={language} compact={compact}>
+            {codeString}
+          </CodeBlock>
         </div>
       );
     },
