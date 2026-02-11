@@ -174,9 +174,7 @@ const makeQueueService = Effect.gen(function* () {
       ),
     );
 
-  const claimNextJob = (
-    type: JobType,
-  ): Effect.Effect<Job | null, QueueError> =>
+  const claimNextJob = (type: JobType): Effect.Effect<Job | null, QueueError> =>
     runQuery(
       'claimNextJob',
       async () => {

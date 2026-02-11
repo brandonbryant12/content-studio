@@ -16,6 +16,7 @@ export const runMigrations = async (
   migrationsFolder?: string,
 ): Promise<void> => {
   await drizzleMigrate(db, {
-    migrationsFolder: migrationsFolder ?? new URL('../drizzle', import.meta.url).pathname,
+    migrationsFolder:
+      migrationsFolder ?? new URL('../drizzle', import.meta.url).pathname,
   });
 };
