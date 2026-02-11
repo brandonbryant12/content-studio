@@ -7,7 +7,7 @@ import {
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { VoiceoverNotFound } from '../../errors';
-import { eq, desc, and, count as drizzleCount } from 'drizzle-orm';
+import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================
 // Types
@@ -204,20 +204,12 @@ const make: VoiceoverRepoService = {
 
   list: (options) =>
     withDb('voiceoverRepo.list', (db) => {
-      const conditions = [];
-
-      if (options.userId) {
-        conditions.push(eq(voiceover.createdBy, options.userId));
-      }
-
-      if (options.createdBy && !options.userId) {
-        conditions.push(eq(voiceover.createdBy, options.createdBy));
-      }
+      const createdBy = options.userId || options.createdBy;
 
       return db
         .select()
         .from(voiceover)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .where(createdBy ? eq(voiceover.createdBy, createdBy) : undefined)
         .orderBy(desc(voiceover.createdAt))
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0);
@@ -225,20 +217,12 @@ const make: VoiceoverRepoService = {
 
   count: (options) =>
     withDb('voiceoverRepo.count', async (db) => {
-      const conditions = [];
-
-      if (options?.userId) {
-        conditions.push(eq(voiceover.createdBy, options.userId));
-      }
-
-      if (options?.createdBy && !options.userId) {
-        conditions.push(eq(voiceover.createdBy, options.createdBy));
-      }
+      const createdBy = options?.userId || options?.createdBy;
 
       const [result] = await db
         .select({ count: drizzleCount() })
         .from(voiceover)
-        .where(conditions.length > 0 ? and(...conditions) : undefined);
+        .where(createdBy ? eq(voiceover.createdBy, createdBy) : undefined);
       return result?.count ?? 0;
     }),
 

@@ -9,7 +9,7 @@ import {
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { InfographicNotFound } from '../../errors';
-import { eq, desc, asc, and, lt } from 'drizzle-orm';
+import { eq, desc, asc } from 'drizzle-orm';
 
 // =============================================================================
 // Types

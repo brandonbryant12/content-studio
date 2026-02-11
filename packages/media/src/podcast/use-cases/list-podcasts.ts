@@ -27,11 +27,13 @@ export const listPodcasts = (input: ListPodcastsInput) =>
   Effect.gen(function* () {
     const podcastRepo = yield* PodcastRepo;
 
+    const limit = input.limit ?? 50;
+    const offset = input.offset ?? 0;
     const options: ListOptions = {
       userId: input.userId,
       projectId: input.projectId,
-      limit: input.limit ?? 50,
-      offset: input.offset ?? 0,
+      limit,
+      offset,
     };
 
     const [podcasts, total] = yield* Effect.all(
@@ -42,7 +44,7 @@ export const listPodcasts = (input: ListPodcastsInput) =>
     return {
       podcasts,
       total,
-      hasMore: (options.offset ?? 0) + podcasts.length < total,
+      hasMore: offset + podcasts.length < total,
     };
   }).pipe(
     Effect.withSpan('useCase.listPodcasts', {

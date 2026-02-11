@@ -2,7 +2,6 @@ import { Effect, Schema } from 'effect';
 import type { JobId, JobStatus, ScriptSegment } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
-import { PodcastRepo } from '../repos/podcast-repo';
 import { saveChanges } from './save-changes';
 
 // =============================================================================
@@ -48,10 +47,7 @@ export class NoChangesToSaveError extends Schema.TaggedError<NoChangesToSaveErro
 
 export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
   Effect.gen(function* () {
-    const podcastRepo = yield* PodcastRepo;
     const queue = yield* Queue;
-
-    const podcast = yield* podcastRepo.findById(input.podcastId);
 
     const result = yield* saveChanges({
       podcastId: input.podcastId,
@@ -67,6 +63,8 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
         new NoChangesToSaveError({ podcastId: input.podcastId }),
       );
     }
+
+    const { podcast } = result;
 
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {

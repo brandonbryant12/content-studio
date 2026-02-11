@@ -14,7 +14,7 @@ import {
 } from '@repo/db/schema';
 import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
 import { PodcastNotFound, DocumentNotFound } from '../../errors';
-import { eq, desc, and, inArray, count as drizzleCount } from 'drizzle-orm';
+import { eq, desc, inArray, count as drizzleCount } from 'drizzle-orm';
 
 // =============================================================================
 // Types
@@ -298,20 +298,12 @@ const make: PodcastRepoService = {
 
   list: (options) =>
     withDb('podcastRepo.list', (db) => {
-      const conditions = [];
-
-      if (options.userId) {
-        conditions.push(eq(podcast.createdBy, options.userId));
-      }
-
-      if (options.createdBy && !options.userId) {
-        conditions.push(eq(podcast.createdBy, options.createdBy));
-      }
+      const createdBy = options.userId || options.createdBy;
 
       return db
         .select()
         .from(podcast)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .where(createdBy ? eq(podcast.createdBy, createdBy) : undefined)
         .orderBy(desc(podcast.createdAt))
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0);
@@ -319,20 +311,12 @@ const make: PodcastRepoService = {
 
   count: (options) =>
     withDb('podcastRepo.count', async (db) => {
-      const conditions = [];
-
-      if (options?.userId) {
-        conditions.push(eq(podcast.createdBy, options.userId));
-      }
-
-      if (options?.createdBy && !options.userId) {
-        conditions.push(eq(podcast.createdBy, options.createdBy));
-      }
+      const createdBy = options?.userId || options?.createdBy;
 
       const [result] = await db
         .select({ count: drizzleCount() })
         .from(podcast)
-        .where(conditions.length > 0 ? and(...conditions) : undefined);
+        .where(createdBy ? eq(podcast.createdBy, createdBy) : undefined);
       return result?.count ?? 0;
     }),
 

@@ -26,10 +26,12 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
 
+    const limit = input.limit ?? 50;
+    const offset = input.offset ?? 0;
     const options: ListOptions = {
       userId: input.userId,
-      limit: input.limit ?? 50,
-      offset: input.offset ?? 0,
+      limit,
+      offset,
     };
 
     const [voiceovers, total] = yield* Effect.all(
@@ -40,7 +42,7 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
     return {
       voiceovers,
       total,
-      hasMore: (options.offset ?? 0) + voiceovers.length < total,
+      hasMore: offset + voiceovers.length < total,
     };
   }).pipe(
     Effect.withSpan('useCase.listVoiceovers', {
