@@ -1,4 +1,5 @@
 import { Effect } from 'effect';
+import { requireOwnership } from '@repo/auth/policy';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -22,7 +23,9 @@ export interface GetVoiceoverInput {
 export const getVoiceover = (input: GetVoiceoverInput) =>
   Effect.gen(function* () {
     const voiceoverRepo = yield* VoiceoverRepo;
-    return yield* voiceoverRepo.findById(input.voiceoverId);
+    const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
+    yield* requireOwnership(voiceover.createdBy);
+    return voiceover;
   }).pipe(
     Effect.withSpan('useCase.getVoiceover', {
       attributes: { 'voiceover.id': input.voiceoverId },

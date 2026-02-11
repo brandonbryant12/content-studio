@@ -13,7 +13,6 @@ export {
   ScriptNotFound,
   VoiceoverNotFound,
   VoiceoverError,
-  NotVoiceoverOwner,
   InvalidVoiceoverAudioGeneration,
   ProjectNotFound,
   MediaNotFound,

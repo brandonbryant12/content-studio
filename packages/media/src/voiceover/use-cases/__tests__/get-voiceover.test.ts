@@ -3,6 +3,7 @@ import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
+import { ForbiddenError } from '@repo/auth';
 import { VoiceoverNotFound } from '../../../errors';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { getVoiceover } from '../get-voiceover';
@@ -221,9 +222,7 @@ describe('getVoiceover', () => {
       expect(capturedId).toBe(voiceoverId);
     });
 
-    it('returns voiceover owned by different user', async () => {
-      // The getVoiceover use case does not perform authorization checks
-      // It simply retrieves the voiceover by ID
+    it('fails with ForbiddenError when non-owner tries to access', async () => {
       const requestingUser = createTestUser({ id: 'requesting-user-123' });
       const ownerId = 'owner-user-456';
       const voiceover = createMockVoiceover({
@@ -235,7 +234,7 @@ describe('getVoiceover', () => {
       const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
-      const result = await Effect.runPromise(
+      const result = await Effect.runPromiseExit(
         withTestUser(requestingUser)(
           getVoiceover({ voiceoverId: voiceover.id }).pipe(
             Effect.provide(layers),
@@ -243,8 +242,11 @@ describe('getVoiceover', () => {
         ),
       );
 
-      expect(result.id).toBe(voiceover.id);
-      expect(result.createdBy).toBe(ownerId);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(ForbiddenError);
+      }
     });
   });
 });

@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
+import { requireOwnership } from '@repo/auth/policy';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
-import { NotVoiceoverOwner } from '../../errors';
 
 // =============================================================================
 // Types
@@ -8,7 +8,6 @@ import { NotVoiceoverOwner } from '../../errors';
 
 export interface DeleteVoiceoverInput {
   voiceoverId: string;
-  userId: string;
 }
 
 // =============================================================================
@@ -21,14 +20,7 @@ export const deleteVoiceover = (input: DeleteVoiceoverInput) =>
 
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
 
-    if (voiceover.createdBy !== input.userId) {
-      return yield* Effect.fail(
-        new NotVoiceoverOwner({
-          voiceoverId: input.voiceoverId,
-          userId: input.userId,
-        }),
-      );
-    }
+    yield* requireOwnership(voiceover.createdBy);
 
     yield* voiceoverRepo.delete(input.voiceoverId);
   }).pipe(

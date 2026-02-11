@@ -1,6 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createTestUser, resetAllFactories } from '@repo/testing';
+import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
+import { ForbiddenError } from '@repo/auth';
 import type {
   Voiceover,
   JobId,
@@ -12,7 +13,6 @@ import { generateVoiceoverId } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import {
   VoiceoverNotFound,
-  NotVoiceoverOwner,
   InvalidVoiceoverAudioGeneration,
 } from '../../../errors';
 import { Queue, type QueueService, type Job } from '@repo/queue';
@@ -189,10 +189,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_test123456789abc');
@@ -227,10 +228,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
@@ -260,10 +262,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Approval should be cleared
@@ -304,10 +307,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_existing0000000');
@@ -346,10 +350,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_processing00000');
@@ -369,10 +374,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        startVoiceoverGeneration({
-          voiceoverId: 'voc_nonexistent00000' as VoiceoverId,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: 'voc_nonexistent00000' as VoiceoverId,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -382,7 +388,7 @@ describe('startVoiceoverGeneration', () => {
       }
     });
 
-    it('fails with NotVoiceoverOwner when caller is not owner', async () => {
+    it('fails with ForbiddenError when caller is not owner', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const otherUser = createTestUser({ id: 'other-user-id' });
       const voiceover = createTestVoiceover({
@@ -397,20 +403,17 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: otherUser.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(otherUser)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotVoiceoverOwner);
-        if (error instanceof NotVoiceoverOwner) {
-          expect(error.voiceoverId).toBe(voiceover.id);
-          expect(error.userId).toBe(otherUser.id);
-        }
+        expect(error).toBeInstanceOf(ForbiddenError);
       }
     });
 
@@ -428,10 +431,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -459,10 +463,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -490,10 +495,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBe('job_test123456789abc');
@@ -527,10 +533,11 @@ describe('startVoiceoverGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startVoiceoverGeneration({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.jobId).toBeDefined();

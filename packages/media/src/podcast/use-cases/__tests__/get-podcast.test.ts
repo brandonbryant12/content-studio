@@ -6,7 +6,9 @@ import {
   createTestDocument,
   resetPodcastCounters,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
+import { ForbiddenError } from '@repo/auth';
 import type { Podcast, Document } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
@@ -101,7 +103,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -124,7 +128,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -147,7 +153,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -170,7 +178,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(podcast.id);
@@ -196,7 +206,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.documents).toHaveLength(3);
@@ -216,15 +228,44 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.documents).toHaveLength(0);
     });
   });
 
+  describe('authorization', () => {
+    it('fails with ForbiddenError when non-owner tries to access', async () => {
+      const owner = createTestUser();
+      const nonOwner = createTestUser();
+      const podcast = createTestPodcast({ createdBy: owner.id });
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts: [podcast],
+        documents: [],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(nonOwner)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(ForbiddenError);
+      }
+    });
+  });
+
   describe('error handling', () => {
     it('fails with PodcastNotFound when podcast does not exist', async () => {
+      const user = createTestUser();
       const nonExistentId = 'pod_nonexistent';
 
       const mockRepo = createMockPodcastRepo({
@@ -234,7 +275,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        getPodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -246,6 +289,7 @@ describe('getPodcast', () => {
     });
 
     it('fails with PodcastNotFound when includeDocuments is true and podcast does not exist', async () => {
+      const user = createTestUser();
       const nonExistentId = 'pod_nonexistent';
 
       const mockRepo = createMockPodcastRepo({
@@ -255,7 +299,9 @@ describe('getPodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        getPodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getPodcast({ podcastId: nonExistentId }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');

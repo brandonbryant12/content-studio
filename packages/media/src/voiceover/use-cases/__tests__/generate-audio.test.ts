@@ -2,17 +2,18 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createTestUser,
+  withTestUser,
   resetAllFactories,
   createMockTTS,
   createMockStorage,
   createMockLLM,
 } from '@repo/testing';
+import { ForbiddenError } from '@repo/auth';
 import { TTS, type TTSService, TTSError } from '@repo/ai';
 import type { Voiceover, VoiceoverId, VoiceoverStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import {
   VoiceoverNotFound,
-  NotVoiceoverOwner,
   InvalidVoiceoverAudioGeneration,
 } from '../../../errors';
 import {
@@ -207,10 +208,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Verify result structure
@@ -268,10 +270,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.voiceover).toBeDefined();
@@ -305,10 +308,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.voiceover).toBeDefined();
@@ -340,10 +344,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Verify audio URL format (includes timestamp for cache-busting)
@@ -367,6 +372,7 @@ describe('generateVoiceoverAudio', () => {
 
   describe('error cases', () => {
     it('fails with VoiceoverNotFound when voiceover does not exist', async () => {
+      const user = createTestUser();
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockVoiceoverRepo({}),
@@ -376,10 +382,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        generateVoiceoverAudio({
-          voiceoverId: 'voc_nonexistent' as VoiceoverId,
-          userId: 'user_123',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: 'voc_nonexistent' as VoiceoverId,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -390,7 +397,7 @@ describe('generateVoiceoverAudio', () => {
       }
     });
 
-    it('fails with NotVoiceoverOwner when caller is not the owner', async () => {
+    it('fails with ForbiddenError when caller is not the owner', async () => {
       const owner = createTestUser();
       const otherUser = createTestUser();
       const voiceover = createTestVoiceover({
@@ -408,18 +415,17 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: otherUser.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(otherUser)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NotVoiceoverOwner);
-        expect((error as NotVoiceoverOwner).voiceoverId).toBe(voiceover.id);
-        expect((error as NotVoiceoverOwner).userId).toBe(otherUser.id);
+        expect(error).toBeInstanceOf(ForbiddenError);
       }
     });
 
@@ -440,10 +446,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -476,10 +483,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -511,10 +519,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.voiceover).toBeDefined();
@@ -548,10 +557,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
@@ -594,10 +604,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(clearApprovalsSpy).toHaveBeenCalledWith(voiceover.id);
@@ -624,10 +635,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // If we got a result, TTS was called successfully with the voice config
@@ -670,10 +682,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(synthesizeSpy).toHaveBeenCalledWith(
@@ -702,10 +715,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Verify the audio URL follows expected pattern (includes timestamp)
@@ -743,10 +757,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(updateSpy).toHaveBeenCalledWith(voiceover.id, {
@@ -775,10 +790,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(updateSpy).not.toHaveBeenCalled();
@@ -803,10 +819,11 @@ describe('generateVoiceoverAudio', () => {
       );
 
       const result = await Effect.runPromise(
-        generateVoiceoverAudio({
-          voiceoverId: voiceover.id,
-          userId: user.id,
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          generateVoiceoverAudio({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // Audio generation should still succeed

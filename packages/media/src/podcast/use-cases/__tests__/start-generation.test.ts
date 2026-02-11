@@ -4,7 +4,9 @@ import {
   createTestUser,
   createTestPodcast,
   resetAllFactories,
+  withTestUser,
 } from '@repo/testing';
+import { ForbiddenError } from '@repo/auth';
 import type { Podcast, JobId, JobStatus, VersionStatus } from '@repo/db/schema';
 import { Db } from '@repo/db/effect';
 import { PodcastNotFound } from '../../../errors';
@@ -135,7 +137,11 @@ describe('startGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startGeneration({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
       expect(result.jobId).toBe('job_test123');
@@ -163,10 +169,12 @@ describe('startGeneration', () => {
       );
 
       await Effect.runPromise(
-        startGeneration({
-          podcastId: podcast.id,
-          promptInstructions: 'Make it funny',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startGeneration({
+            podcastId: podcast.id,
+            promptInstructions: 'Make it funny',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(enqueueSpy).toHaveBeenCalledWith(
@@ -195,7 +203,11 @@ describe('startGeneration', () => {
       );
 
       await Effect.runPromise(
-        startGeneration({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
@@ -232,7 +244,11 @@ describe('startGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startGeneration({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
       expect(result.jobId).toBe('job_existing');
@@ -264,7 +280,11 @@ describe('startGeneration', () => {
       );
 
       const result = await Effect.runPromise(
-        startGeneration({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
       );
 
       expect(result.jobId).toBe('job_processing');
@@ -272,8 +292,37 @@ describe('startGeneration', () => {
     });
   });
 
+  describe('authorization', () => {
+    it('fails with ForbiddenError when non-owner tries to start generation', async () => {
+      const owner = createTestUser();
+      const nonOwner = createTestUser();
+      const podcast = createTestPodcast({ createdBy: owner.id });
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo({ podcast }),
+        createMockQueue({ podcast }),
+      );
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(nonOwner)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(ForbiddenError);
+      }
+    });
+  });
+
   describe('error handling', () => {
     it('fails when podcast not found', async () => {
+      const user = createTestUser();
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({}),
@@ -281,8 +330,10 @@ describe('startGeneration', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        startGeneration({ podcastId: 'pod_nonexistent' }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          startGeneration({ podcastId: 'pod_nonexistent' }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 

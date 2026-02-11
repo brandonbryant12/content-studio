@@ -91,7 +91,6 @@ const voiceoverRouter = {
         context.user,
         updateVoiceover({
           voiceoverId: id as string,
-          userId: context.session.user.id,
           data,
         }).pipe(
           Effect.flatMap(serializeVoiceoverEffect),
@@ -113,7 +112,6 @@ const voiceoverRouter = {
         context.user,
         deleteVoiceover({
           voiceoverId: input.id,
-          userId: context.session.user.id,
         }).pipe(
           Effect.map(() => ({})),
           tapLogActivity(
@@ -140,7 +138,6 @@ const voiceoverRouter = {
         context.user,
         startVoiceoverGeneration({
           voiceoverId: input.id,
-          userId: context.session.user.id,
         }),
         errors,
         {

@@ -3,7 +3,8 @@ import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
-import { VoiceoverNotFound, NotVoiceoverOwner } from '../../../errors';
+import { ForbiddenError } from '@repo/auth';
+import { VoiceoverNotFound } from '../../../errors';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { deleteVoiceover } from '../delete-voiceover';
 
@@ -147,7 +148,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         {
@@ -174,7 +174,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },
@@ -199,7 +198,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },
@@ -223,7 +221,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },
@@ -247,7 +244,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },
@@ -256,7 +252,7 @@ describe('deleteVoiceover', () => {
       expect(voiceovers.has(voiceover.id)).toBe(false);
     });
 
-    it('fails with NotVoiceoverOwner when non-owner tries to delete', async () => {
+    it('fails with ForbiddenError when non-owner tries to delete', async () => {
       const owner = createTestUser({ id: 'owner-123' });
       const nonOwner = createTestUser({ id: 'non-owner-456' });
       const voiceover = createMockVoiceover({
@@ -270,15 +266,12 @@ describe('deleteVoiceover', () => {
         withTestUser(nonOwner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: nonOwner.id,
           }),
         ),
         { voiceovers },
       );
 
-      expect(error).toBeInstanceOf(NotVoiceoverOwner);
-      expect((error as NotVoiceoverOwner).voiceoverId).toBe(voiceover.id);
-      expect((error as NotVoiceoverOwner).userId).toBe(nonOwner.id);
+      expect(error).toBeInstanceOf(ForbiddenError);
     });
 
     it('does not delete when authorization fails', async () => {
@@ -296,7 +289,6 @@ describe('deleteVoiceover', () => {
         withTestUser(nonOwner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: nonOwner.id,
           }),
         ),
         { voiceovers },
@@ -319,7 +311,6 @@ describe('deleteVoiceover', () => {
         withTestUser(user)(
           deleteVoiceover({
             voiceoverId: nonExistentId,
-            userId: user.id,
           }),
         ),
         { voiceovers },
@@ -345,7 +336,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         {
@@ -379,7 +369,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },
@@ -402,7 +391,6 @@ describe('deleteVoiceover', () => {
         withTestUser(owner)(
           deleteVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
           }),
         ),
         { voiceovers },

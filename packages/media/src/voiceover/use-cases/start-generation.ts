@@ -2,11 +2,9 @@ import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { Queue } from '@repo/queue';
+import { requireOwnership } from '@repo/auth/policy';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
-import {
-  InvalidVoiceoverAudioGeneration,
-  NotVoiceoverOwner,
-} from '../../errors';
+import { InvalidVoiceoverAudioGeneration } from '../../errors';
 
 // =============================================================================
 // Types
@@ -14,7 +12,6 @@ import {
 
 export interface StartVoiceoverGenerationInput {
   voiceoverId: string;
-  userId: string;
 }
 
 export interface StartVoiceoverGenerationResult {
@@ -35,14 +32,7 @@ export const startVoiceoverGeneration = (
 
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
 
-    if (voiceover.createdBy !== input.userId) {
-      return yield* Effect.fail(
-        new NotVoiceoverOwner({
-          voiceoverId: input.voiceoverId,
-          userId: input.userId,
-        }),
-      );
-    }
+    yield* requireOwnership(voiceover.createdBy);
 
     const text = voiceover.text.trim();
     if (!text) {

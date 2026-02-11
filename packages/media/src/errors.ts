@@ -303,27 +303,6 @@ export class VoiceoverError extends Schema.TaggedError<VoiceoverError>()(
 }
 
 /**
- * User is not the owner of the voiceover.
- */
-export class NotVoiceoverOwner extends Schema.TaggedError<NotVoiceoverOwner>()(
-  'NotVoiceoverOwner',
-  {
-    voiceoverId: Schema.String,
-    userId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 403 as const;
-  static readonly httpCode = 'NOT_VOICEOVER_OWNER' as const;
-  static readonly httpMessage = (e: NotVoiceoverOwner) =>
-    e.message ?? 'Only the voiceover owner can perform this action';
-  static readonly logLevel = 'silent' as const;
-  static getData(e: NotVoiceoverOwner) {
-    return { voiceoverId: e.voiceoverId };
-  }
-}
-
-/**
  * Invalid voiceover audio generation.
  * Text must not be empty.
  */
@@ -428,7 +407,6 @@ export type MediaError =
   | NotPodcastOwner
   | VoiceoverNotFound
   | VoiceoverError
-  | NotVoiceoverOwner
   | InvalidVoiceoverAudioGeneration
   | InfographicNotFound
   | NotInfographicOwner

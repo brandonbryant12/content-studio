@@ -3,7 +3,8 @@ import { Effect, Layer } from 'effect';
 import { Db, type DbService } from '@repo/db/effect';
 import type { Voiceover, VoiceoverId, UpdateVoiceover } from '@repo/db/schema';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
-import { VoiceoverNotFound, NotVoiceoverOwner } from '../../../errors';
+import { ForbiddenError } from '@repo/auth';
+import { VoiceoverNotFound } from '../../../errors';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { updateVoiceover } from '../update-voiceover';
 
@@ -159,7 +160,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { title: 'Updated Title' },
           }),
         ),
@@ -183,7 +183,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { text: 'Updated text content' },
           }),
         ),
@@ -207,7 +206,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { voice: 'NewVoice' },
           }),
         ),
@@ -231,7 +229,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { voiceName: 'Custom Voice Name' },
           }),
         ),
@@ -255,7 +252,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { voiceName: null },
           }),
         ),
@@ -281,7 +277,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: {
               title: 'New Title',
               text: 'New text content',
@@ -314,7 +309,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { title: 'New Title' }, // Only updating title
           }),
         ),
@@ -342,7 +336,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { title: 'Updated by Owner' },
           }),
         ),
@@ -352,7 +345,7 @@ describe('updateVoiceover', () => {
       expect(result.title).toBe('Updated by Owner');
     });
 
-    it('fails with NotVoiceoverOwner when non-owner tries to update', async () => {
+    it('fails with ForbiddenError when non-owner tries to update', async () => {
       const owner = createTestUser({ id: 'owner-123' });
       const nonOwner = createTestUser({ id: 'non-owner-456' });
       const voiceover = createMockVoiceover({
@@ -366,16 +359,13 @@ describe('updateVoiceover', () => {
         withTestUser(nonOwner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: nonOwner.id,
             data: { title: 'Attempted Update' },
           }),
         ),
         { voiceovers },
       );
 
-      expect(error).toBeInstanceOf(NotVoiceoverOwner);
-      expect((error as NotVoiceoverOwner).voiceoverId).toBe(voiceover.id);
-      expect((error as NotVoiceoverOwner).userId).toBe(nonOwner.id);
+      expect(error).toBeInstanceOf(ForbiddenError);
     });
   });
 
@@ -390,7 +380,6 @@ describe('updateVoiceover', () => {
         withTestUser(user)(
           updateVoiceover({
             voiceoverId: nonExistentId,
-            userId: user.id,
             data: { title: 'Should Fail' },
           }),
         ),
@@ -418,7 +407,6 @@ describe('updateVoiceover', () => {
         withTestUser(owner)(
           updateVoiceover({
             voiceoverId: voiceover.id,
-            userId: owner.id,
             data: { title: 'New Title', text: 'New Text' },
           }),
         ),

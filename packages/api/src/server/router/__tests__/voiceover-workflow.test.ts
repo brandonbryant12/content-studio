@@ -153,7 +153,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -174,7 +173,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           generateVoiceoverAudio({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -206,7 +204,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -225,7 +222,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           generateVoiceoverAudio({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -255,7 +251,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -267,7 +262,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           generateVoiceoverAudio({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -307,7 +301,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -323,7 +316,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           generateVoiceoverAudio({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -366,7 +358,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           generateVoiceoverAudio({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -388,7 +379,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );
@@ -398,7 +388,6 @@ describe('voiceover job workflow', () => {
         withCurrentUser(user)(
           startVoiceoverGeneration({
             voiceoverId: voiceover.id,
-            userId: user.id,
           }),
         ),
       );

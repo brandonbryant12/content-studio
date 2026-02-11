@@ -15,12 +15,11 @@ import type {
  */
 export const handleGenerateVoiceover = (job: Job<GenerateVoiceoverPayload>) =>
   Effect.gen(function* () {
-    const { voiceoverId, userId } = job.payload;
+    const { voiceoverId } = job.payload;
 
     // Generate audio for voiceover
     const result = yield* generateVoiceoverAudio({
       voiceoverId,
-      userId,
     });
 
     // Sync the title to activity log entries (voiceover may auto-generate a title)

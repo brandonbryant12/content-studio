@@ -3,11 +3,9 @@ import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { TTS } from '@repo/ai/tts';
 import { LLM } from '@repo/ai/llm';
 import { Storage } from '@repo/storage';
+import { requireOwnership } from '@repo/auth/policy';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
-import {
-  InvalidVoiceoverAudioGeneration,
-  NotVoiceoverOwner,
-} from '../../errors';
+import { InvalidVoiceoverAudioGeneration } from '../../errors';
 import {
   PreprocessResultSchema,
   buildVoiceoverSystemPrompt,
@@ -55,7 +53,6 @@ const preprocessText = (text: string, currentTitle: string) =>
 
 export interface GenerateVoiceoverAudioInput {
   voiceoverId: string;
-  userId: string;
 }
 
 export interface GenerateVoiceoverAudioResult {
@@ -76,14 +73,7 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
 
     const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
 
-    if (voiceover.createdBy !== input.userId) {
-      return yield* Effect.fail(
-        new NotVoiceoverOwner({
-          voiceoverId: input.voiceoverId,
-          userId: input.userId,
-        }),
-      );
-    }
+    yield* requireOwnership(voiceover.createdBy);
 
     if (!ALLOWED_GENERATION_STATUSES.includes(voiceover.status)) {
       return yield* Effect.fail(

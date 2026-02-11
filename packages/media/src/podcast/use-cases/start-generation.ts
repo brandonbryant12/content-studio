@@ -1,6 +1,7 @@
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
+import { requireOwnership } from '@repo/auth/policy';
 import { Queue } from '@repo/queue';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -28,6 +29,7 @@ export const startGeneration = (input: StartGenerationInput) =>
     const queue = yield* Queue;
 
     const podcast = yield* podcastRepo.findById(input.podcastId);
+    yield* requireOwnership(podcast.createdBy);
 
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {
