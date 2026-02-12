@@ -9,7 +9,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
  * Create voiceover mutation with navigation on success.
  * Uses standard mutation (not optimistic) since the ID is server-generated.
  */
-export function useOptimisticCreate() {
+export function useCreateVoiceover() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 

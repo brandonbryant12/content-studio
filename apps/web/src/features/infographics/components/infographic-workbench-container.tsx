@@ -28,6 +28,7 @@ import {
   useNavigationBlock,
   useDocumentSelection,
 } from '@/shared/hooks';
+import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
 interface InfographicWorkbenchContainerProps {
@@ -39,7 +40,7 @@ export function InfographicWorkbenchContainer({
 }: InfographicWorkbenchContainerProps) {
   const { user } = useSessionGuard();
   const currentUserId = user?.id ?? '';
-  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+  const isAdmin = useIsAdmin();
 
   const { data: infographic } = useInfographic(infographicId);
   const settings = useInfographicSettings({ infographic });

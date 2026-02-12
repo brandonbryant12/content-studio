@@ -7,13 +7,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { ComponentType } from 'react';
-
-type Period = '24h' | '7d' | '30d';
-
-interface StatBreakdown {
-  readonly field: string;
-  readonly count: number;
-}
+import type { Period, StatBreakdown } from '../types';
 
 interface ActivityStatsProps {
   total: number;

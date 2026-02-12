@@ -1,14 +1,10 @@
 import { TrashIcon } from '@radix-ui/react-icons';
-import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useMemo, useState } from 'react';
-import {
-  type VoiceoverStatusType,
-  getStatusConfig,
-  isGeneratingStatus,
-} from '../lib/status';
+import { isGeneratingStatus, type VoiceoverStatusType } from '../lib/status';
+import { StatusBadge } from './status-badge';
 import { VoiceoverIcon } from './voiceover-icon';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { formatDuration } from '@/shared/lib/formatters';
@@ -24,18 +20,6 @@ export interface VoiceoverListItem {
   createdAt: string;
   status: VoiceoverStatusType;
   duration: number | null;
-}
-
-function StatusBadge({ status }: { status: VoiceoverStatusType | undefined }) {
-  const config = getStatusConfig(status);
-  if (!config) return null;
-
-  return (
-    <Badge variant={config.badgeVariant} className="gap-1.5">
-      {isGeneratingStatus(status) && <Spinner className="w-3 h-3" />}
-      {config.label}
-    </Badge>
-  );
 }
 
 export interface VoiceoverItemProps {

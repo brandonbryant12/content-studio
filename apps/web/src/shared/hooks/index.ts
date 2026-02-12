@@ -28,3 +28,4 @@ export {
   type UseVoicePreviewReturn,
 } from './use-voice-preview';
 export { useVoices } from './use-voices';
+export { useIsAdmin } from './use-is-admin';

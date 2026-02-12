@@ -3,6 +3,7 @@ import {
   memo,
   useCallback,
   useMemo,
+  useRef,
   type MouseEvent,
   type KeyboardEvent,
 } from 'react';
@@ -31,7 +32,8 @@ const VOICE_TRAITS: Record<string, string> = {
 
 /**
  * Voice Ensemble - Card gallery for selecting voices.
- * Replaces dropdown with theatrical voice cards.
+ * Uses roving tabindex: only the selected voice is tabbable,
+ * arrow keys move focus between voice cards.
  */
 export const VoiceSelector = memo(function VoiceSelector({
   voice,
@@ -40,6 +42,7 @@ export const VoiceSelector = memo(function VoiceSelector({
 }: VoiceSelectorProps) {
   const { data: voicesData } = useVoices();
   const { playingVoiceId, play, stop } = useVoicePreview();
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Build a map of voiceId -> previewUrl from the API
   const previewUrls = useMemo(
@@ -68,7 +71,29 @@ export const VoiceSelector = memo(function VoiceSelector({
         e.preventDefault();
         const voiceId = e.currentTarget.dataset.voiceId;
         if (voiceId) onChange(voiceId);
+        return;
       }
+
+      // Arrow key navigation for roving tabindex
+      const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (!arrowKeys.includes(e.key)) return;
+
+      e.preventDefault();
+      const currentIndex = VOICES.findIndex(
+        (v) => v.id === e.currentTarget.dataset.voiceId,
+      );
+      if (currentIndex === -1) return;
+
+      let nextIndex: number;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        nextIndex = (currentIndex + 1) % VOICES.length;
+      } else {
+        nextIndex = (currentIndex - 1 + VOICES.length) % VOICES.length;
+      }
+
+      const nextVoice = VOICES[nextIndex]!;
+      onChange(nextVoice.id);
+      cardRefs.current.get(nextVoice.id)?.focus();
     },
     [onChange],
   );
@@ -89,6 +114,17 @@ export const VoiceSelector = memo(function VoiceSelector({
     [playingVoiceId, previewUrls, play, stop],
   );
 
+  const setCardRef = useCallback(
+    (voiceId: string) => (el: HTMLDivElement | null) => {
+      if (el) {
+        cardRefs.current.set(voiceId, el);
+      } else {
+        cardRefs.current.delete(voiceId);
+      }
+    },
+    [],
+  );
+
   return (
     <fieldset className="voice-ensemble" disabled={disabled}>
       <legend className="sr-only">Select a voice</legend>
@@ -98,8 +134,9 @@ export const VoiceSelector = memo(function VoiceSelector({
           return (
             <div
               key={v.id}
+              ref={setCardRef(v.id)}
               role="radio"
-              tabIndex={disabled ? -1 : 0}
+              tabIndex={disabled ? -1 : isSelected ? 0 : -1}
               data-voice-id={v.id}
               className={cn('voice-card', isSelected && 'voice-card-selected')}
               onClick={handleVoiceSelect}

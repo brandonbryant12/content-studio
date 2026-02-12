@@ -118,6 +118,7 @@ function VoiceSelector({
             className="mixer-voice-dropdown"
             position="popper"
             sideOffset={4}
+            style={{ minWidth: 'var(--radix-select-trigger-width)' }}
           >
             <SelectPrimitive.Viewport>
               {VOICES.map((voice) => {

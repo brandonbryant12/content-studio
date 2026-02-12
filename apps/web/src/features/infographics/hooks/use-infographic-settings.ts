@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -105,27 +105,36 @@ export function useInfographicSettings({
 
   // Sync local state when server data changes externally (e.g., SSE update)
   // Only sync if user hasn't made local edits
-  const serverChanged =
-    infographic?.prompt !== prevServerValues.prompt ||
-    infographic?.infographicType !== prevServerValues.infographicType ||
-    infographic?.stylePreset !== prevServerValues.stylePreset ||
-    infographic?.format !== prevServerValues.format;
+  useEffect(() => {
+    const serverChanged =
+      infographic?.prompt !== prevServerValues.prompt ||
+      infographic?.infographicType !== prevServerValues.infographicType ||
+      infographic?.stylePreset !== prevServerValues.stylePreset ||
+      infographic?.format !== prevServerValues.format;
 
-  if (serverChanged) {
-    setPrevServerValues({
-      prompt: infographic?.prompt,
-      infographicType: infographic?.infographicType,
-      stylePreset: infographic?.stylePreset,
-      format: infographic?.format,
-    });
-    if (!hasUserEdits) {
-      const newInitial = getInitialValues(infographic);
-      setPromptInternal(newInitial.prompt);
-      setTypeInternal(newInitial.infographicType);
-      setStyleInternal(newInitial.stylePreset);
-      setFormatInternal(newInitial.format);
+    if (serverChanged) {
+      setPrevServerValues({
+        prompt: infographic?.prompt,
+        infographicType: infographic?.infographicType,
+        stylePreset: infographic?.stylePreset,
+        format: infographic?.format,
+      });
+      if (!hasUserEdits) {
+        const newInitial = getInitialValues(infographic);
+        setPromptInternal(newInitial.prompt);
+        setTypeInternal(newInitial.infographicType);
+        setStyleInternal(newInitial.stylePreset);
+        setFormatInternal(newInitial.format);
+      }
     }
-  }
+  }, [
+    infographic?.prompt,
+    infographic?.infographicType,
+    infographic?.stylePreset,
+    infographic?.format,
+    prevServerValues,
+    hasUserEdits,
+  ]);
 
   const hasChanges =
     prompt !== (infographic?.prompt ?? '') ||

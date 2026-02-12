@@ -73,22 +73,25 @@ export function AddDocumentDialog({
     setActiveTab('existing');
   };
 
-  const handleUpload = async (file: File, title: string | undefined) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        '',
-      ),
-    );
+  const handleUpload = useCallback(
+    async (file: File, title: string | undefined) => {
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          '',
+        ),
+      );
 
-    uploadMutation.mutate({
-      fileName: file.name,
-      mimeType: file.type,
-      data: base64,
-      title,
-    });
-  };
+      uploadMutation.mutate({
+        fileName: file.name,
+        mimeType: file.type,
+        data: base64,
+        title,
+      });
+    },
+    [uploadMutation],
+  );
 
   const handleSwitchToUpload = useCallback(() => {
     setActiveTab('upload');

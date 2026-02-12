@@ -16,8 +16,9 @@ import { Link } from '@tanstack/react-router';
 import { memo, useState, type ReactNode } from 'react';
 import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
 import type { RouterOutput } from '@repo/api/client';
+import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { DocumentIcon } from './document-icon';
-import { formatFileSize } from '@/shared/lib/formatters';
+import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 
 function extractDomain(url: string): string {
   try {
@@ -25,6 +26,34 @@ function extractDomain(url: string): string {
   } catch {
     return url;
   }
+}
+
+function SourceFavicon({ domain }: { domain: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <svg
+        className="w-3.5 h-3.5 text-muted-foreground"
+        viewBox="0 0 15 15"
+        fill="currentColor"
+      >
+        <path d="M7.5 0a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15ZM1.197 7.5a6.303 6.303 0 1 1 12.606 0 6.303 6.303 0 0 1-12.606 0Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <img
+      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+      alt=""
+      width={14}
+      height={14}
+      className="rounded-sm"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 interface ResearchCalloutProps {
@@ -84,27 +113,7 @@ function ResearchCallout({ config }: ResearchCalloutProps) {
                       className="research-source-favicon"
                       aria-hidden="true"
                     >
-                      <img
-                        src={`https://www.google.com/s2/favicons?domain=${extractDomain(source.url)}&sz=32`}
-                        alt=""
-                        width={14}
-                        height={14}
-                        className="rounded-sm"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove(
-                            'hidden',
-                          );
-                        }}
-                      />
-                      <svg
-                        className="w-3.5 h-3.5 text-muted-foreground hidden"
-                        viewBox="0 0 15 15"
-                        fill="currentColor"
-                      >
-                        <path d="M7.5 0a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15ZM1.197 7.5a6.303 6.303 0 1 1 12.606 0 6.303 6.303 0 0 1-12.606 0Z" />
-                      </svg>
+                      <SourceFavicon domain={extractDomain(source.url)} />
                     </span>
                     <span className="research-source-info">
                       <span className="research-source-title">
@@ -140,35 +149,6 @@ function ResearchCallout({ config }: ResearchCalloutProps) {
 }
 
 type Document = RouterOutput['documents']['get'];
-
-function getSourceLabel(source: string): string {
-  if (source === 'manual') return 'Text';
-  if (source === 'url') return 'URL';
-  if (source === 'research') return 'Research';
-  if (source.includes('txt')) return 'TXT';
-  if (source.includes('pdf')) return 'PDF';
-  if (source.includes('docx')) return 'DOCX';
-  if (source.includes('pptx')) return 'PPTX';
-  return source;
-}
-
-function getFileBadgeClass(source: string): string {
-  if (source === 'url') return 'file-badge-url';
-  if (source === 'research') return 'file-badge-research';
-  if (source.includes('txt')) return 'file-badge-txt';
-  if (source.includes('pdf')) return 'file-badge-pdf';
-  if (source.includes('docx')) return 'file-badge-docx';
-  if (source.includes('pptx')) return 'file-badge-pptx';
-  return 'file-badge-default';
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -437,7 +417,7 @@ export function DocumentDetail({
             {/* Metadata bar */}
             <div className="flex flex-wrap items-center gap-3 mb-8 text-sm">
               <span className={getFileBadgeClass(document.source)}>
-                {getSourceLabel(document.source)}
+                {getFileLabel(document.source)}
               </span>
               {document.status === 'ready' && (
                 <span className="text-muted-foreground">

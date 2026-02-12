@@ -1,7 +1,7 @@
 import { Cross2Icon, FileTextIcon, UploadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useState, useCallback, type ChangeEvent } from 'react';
+import { useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { toast } from 'sonner';
 
 const SUPPORTED_TYPES = [
@@ -22,6 +22,7 @@ export function DocumentUploader({
   onUpload,
   isUploading,
 }: DocumentUploaderProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -85,7 +86,7 @@ export function DocumentUploader({
   }, []);
 
   const handleUploadZoneClick = useCallback(() => {
-    document.getElementById('doc-manager-file-input')?.click();
+    fileInputRef.current?.click();
   }, []);
 
   const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +172,7 @@ export function DocumentUploader({
       className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
     >
       <input
-        id="doc-manager-file-input"
+        ref={fileInputRef}
         type="file"
         accept={SUPPORTED_EXTENSIONS}
         className="hidden"

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useOptimisticCreate } from '../hooks/use-optimistic-create';
+import { useCreateVoiceover } from '../hooks/use-create-voiceover';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
   useVoiceoverList,
@@ -18,7 +18,7 @@ export function VoiceoverListContainer() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: voiceovers = [], isLoading } = useVoiceoverList();
-  const createMutation = useOptimisticCreate();
+  const createMutation = useCreateVoiceover();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
   const selection = useBulkSelection();

@@ -47,7 +47,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-57px)] flex flex-col bg-background overflow-hidden">
+    <div className="min-h-[calc(100vh-var(--navbar-height))] flex flex-col bg-background overflow-hidden">
       {/* Hero */}
       <section className="relative flex-1 flex items-center justify-center px-6 py-20 md:py-28">
         {/* Background orbs */}

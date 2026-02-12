@@ -5,7 +5,7 @@ export {
   useVoiceoversOrdered,
 } from './use-voiceover-list';
 
-export { useOptimisticCreate } from './use-optimistic-create';
+export { useCreateVoiceover } from './use-create-voiceover';
 
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';
 

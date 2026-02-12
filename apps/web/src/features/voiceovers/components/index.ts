@@ -13,3 +13,4 @@ export { VoiceoverDetail, type VoiceoverDetailProps } from './voiceover-detail';
 
 // Reusable components
 export { VoiceoverIcon } from './voiceover-icon';
+export { StatusBadge } from './status-badge';

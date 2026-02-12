@@ -7,7 +7,6 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@radix-ui/react-icons';
-import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
@@ -22,36 +21,12 @@ import {
   type ChangeEvent,
 } from 'react';
 import type { VoiceoverListItem } from './voiceover-item';
+import { StatusBadge } from './status-badge';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
-import {
-  type VoiceoverStatusType,
-  getStatusConfig,
-  isGeneratingStatus,
-} from '../lib/status';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { formatDuration } from '@/shared/lib/formatters';
-
-function StatusBadge({ status }: { status: VoiceoverStatusType | undefined }) {
-  const config = getStatusConfig(status);
-  if (!config) return null;
-
-  return (
-    <Badge variant={config.badgeVariant} className="gap-1.5">
-      {isGeneratingStatus(status) && <Spinner className="w-3 h-3" />}
-      {config.label}
-    </Badge>
-  );
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
+import { formatDuration, formatDate } from '@/shared/lib/formatters';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -108,18 +83,38 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   );
 }
 
+/**
+ * Playback progress display — only rendered for the actively playing row.
+ * Subscribes to quickPlay time updates so other rows don't re-render.
+ */
+const PlaybackProgress = memo(function PlaybackProgress({
+  quickPlay,
+}: {
+  quickPlay: UseQuickPlayReturn;
+}) {
+  return (
+    <span className="text-xs text-muted-foreground tabular-nums">
+      {quickPlay.formatTime(quickPlay.currentTime)}
+      {quickPlay.duration > 0 &&
+        ` / ${quickPlay.formatTime(quickPlay.duration)}`}
+    </span>
+  );
+});
+
 const VoiceoverRow = memo(function VoiceoverRow({
   voiceover,
   onDelete,
   isDeleting,
-  quickPlay,
+  isThisPlaying,
+  onTogglePlay,
   isSelected,
   onToggleSelect,
 }: {
   voiceover: VoiceoverListItem;
   onDelete: (id: string) => void;
   isDeleting: boolean;
-  quickPlay: UseQuickPlayReturn;
+  isThisPlaying: boolean;
+  onTogglePlay: (id: string, audioUrl: string) => void;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
 }) {
@@ -137,17 +132,15 @@ const VoiceoverRow = memo(function VoiceoverRow({
   }, [onDelete, voiceover.id]);
 
   const hasAudio = !!voiceover.audioUrl;
-  const isThisPlaying =
-    quickPlay.playingId === voiceover.id && quickPlay.isPlaying;
 
   const handlePlayClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (!voiceover.audioUrl) return;
-      quickPlay.toggle(voiceover.id, voiceover.audioUrl);
+      onTogglePlay(voiceover.id, voiceover.audioUrl);
     },
-    [quickPlay, voiceover.id, voiceover.audioUrl],
+    [onTogglePlay, voiceover.id, voiceover.audioUrl],
   );
 
   const handleToggle = useCallback(() => {
@@ -202,13 +195,6 @@ const VoiceoverRow = memo(function VoiceoverRow({
           <span className="font-medium text-sm truncate block">
             {voiceover.title}
           </span>
-          {quickPlay.playingId === voiceover.id && (
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {quickPlay.formatTime(quickPlay.currentTime)}
-              {quickPlay.duration > 0 &&
-                ` / ${quickPlay.formatTime(quickPlay.duration)}`}
-            </span>
-          )}
         </Link>
       </td>
       {/* Status */}
@@ -350,7 +336,7 @@ export function VoiceoverList({
         <Input
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="Search voiceovers…"
+          placeholder="Search voiceovers..."
           className="search-input pl-10"
           autoComplete="off"
           aria-label="Search voiceovers"
@@ -411,13 +397,22 @@ export function VoiceoverList({
                   voiceover={voiceover}
                   onDelete={onDelete}
                   isDeleting={deletingId === voiceover.id}
-                  quickPlay={quickPlay}
+                  isThisPlaying={
+                    quickPlay.playingId === voiceover.id && quickPlay.isPlaying
+                  }
+                  onTogglePlay={quickPlay.toggle}
                   isSelected={selection.isSelected(voiceover.id)}
                   onToggleSelect={selection.toggle}
                 />
               ))}
             </tbody>
           </table>
+          {/* Playback progress rendered outside the row loop so only active row subscribes to time */}
+          {quickPlay.playingId && (
+            <div className="px-4 pb-2 text-xs text-muted-foreground tabular-nums">
+              <PlaybackProgress quickPlay={quickPlay} />
+            </div>
+          )}
         </div>
       )}
 

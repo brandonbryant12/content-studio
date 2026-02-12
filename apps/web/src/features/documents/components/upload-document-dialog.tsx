@@ -13,7 +13,7 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   useOptimisticUpload,
@@ -41,6 +41,7 @@ export function UploadDocumentDialog({
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClose = useCallback(() => {
     setFile(null);
@@ -124,17 +125,17 @@ export function UploadDocumentDialog({
               ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}
               ${file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
             `}
-            onClick={() => document.getElementById('file-input')?.click()}
+            onClick={() => fileInputRef.current?.click()}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                document.getElementById('file-input')?.click();
+                fileInputRef.current?.click();
               }
             }}
             aria-label="Drop zone for file upload. Click or press Enter to select a file."
           >
             <input
-              id="file-input"
+              ref={fileInputRef}
               type="file"
               accept={SUPPORTED_EXTENSIONS}
               className="hidden"

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -37,7 +37,20 @@ export function useDocumentActions({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState(document.title);
+  const [title, setTitleInternal] = useState(document.title);
+  const hasUserEdits = useRef(false);
+
+  const setTitle = useCallback((value: string) => {
+    hasUserEdits.current = true;
+    setTitleInternal(value);
+  }, []);
+
+  // Sync from server when title changes externally (SSE/cache invalidation)
+  useEffect(() => {
+    if (!hasUserEdits.current) {
+      setTitleInternal(document.title);
+    }
+  }, [document.title]);
 
   const hasChanges = title.trim() !== document.title;
 
@@ -45,7 +58,8 @@ export function useDocumentActions({
     apiClient.documents.update.mutationOptions({
       onSuccess: (updated) => {
         toast.success('Document updated');
-        setTitle(updated.title);
+        hasUserEdits.current = false;
+        setTitleInternal(updated.title);
         // Update the single-document cache
         queryClient.setQueryData(
           apiClient.documents.get.queryOptions({ input: { id: document.id } })
@@ -86,7 +100,8 @@ export function useDocumentActions({
   }, [deleteMutation, document.id]);
 
   const discardChanges = useCallback(() => {
-    setTitle(document.title);
+    hasUserEdits.current = false;
+    setTitleInternal(document.title);
   }, [document.title]);
 
   return {

@@ -5,6 +5,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { memo, useCallback } from 'react';
+import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { DocumentIcon } from './document-icon';
 import { formatFileSize } from '@/shared/lib/formatters';
 
@@ -19,23 +20,6 @@ export interface DocumentListItem {
   sourceUrl: string | null;
   errorMessage: string | null;
   createdAt: string;
-}
-
-function getFileBadgeClass(source: string): string {
-  if (source.includes('txt')) return 'file-badge-txt';
-  if (source.includes('pdf')) return 'file-badge-pdf';
-  if (source.includes('docx')) return 'file-badge-docx';
-  if (source.includes('pptx')) return 'file-badge-pptx';
-  return 'file-badge-default';
-}
-
-function getFileLabel(source: string): string {
-  if (source === 'manual') return 'Text';
-  if (source.includes('txt')) return 'TXT';
-  if (source.includes('pdf')) return 'PDF';
-  if (source.includes('docx')) return 'DOCX';
-  if (source.includes('pptx')) return 'PPTX';
-  return source;
 }
 
 export interface DocumentItemProps {

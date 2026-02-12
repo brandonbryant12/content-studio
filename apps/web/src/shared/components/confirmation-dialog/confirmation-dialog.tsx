@@ -37,7 +37,7 @@ export function ConfirmationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="confirmation-dialog-icon-wrapper">
+          <div className="confirmation-dialog-icon-wrapper" aria-hidden="true">
             <div className={`confirmation-dialog-icon ${variant}`}>
               <ExclamationTriangleIcon className="w-5 h-5" />
             </div>

@@ -28,12 +28,11 @@ export function useOptimisticUpload(options?: { onSuccess?: () => void }) {
 /**
  * Convert file to base64 for upload.
  */
-export async function fileToBase64(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  return btoa(
-    new Uint8Array(arrayBuffer).reduce(
-      (data, byte) => data + String.fromCharCode(byte),
-      '',
-    ),
-  );
+export function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(',')[1]!);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

@@ -8,18 +8,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { ComponentType } from 'react';
-
-interface ActivityItem {
-  id: string;
-  userId: string;
-  action: string;
-  entityType: string;
-  entityId?: string | null;
-  entityTitle?: string | null;
-  metadata?: Record<string, unknown> | null;
-  createdAt: string;
-  userName?: string | null;
-}
+import type { ActivityItem } from '../types';
 
 interface ActivityFeedProps {
   activities: ActivityItem[];

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import { useReducer, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { VOICES } from '../lib/voices';
@@ -30,80 +30,77 @@ export interface UseVoiceoverSettingsReturn {
   discardChanges: () => void;
 }
 
-// Get initial values from voiceover or defaults
-function getInitialValues(voiceover: VoiceoverFull | undefined) {
+interface SettingsState {
+  text: string;
+  voice: string;
+  hasUserEdits: boolean;
+}
+
+type SettingsAction =
+  | { type: 'SET_TEXT'; value: string }
+  | { type: 'SET_VOICE'; value: string }
+  | { type: 'SYNC_SERVER'; text: string; voice: string }
+  | { type: 'RESET'; text: string; voice: string };
+
+function settingsReducer(
+  state: SettingsState,
+  action: SettingsAction,
+): SettingsState {
+  switch (action.type) {
+    case 'SET_TEXT':
+      return { ...state, text: action.value, hasUserEdits: true };
+    case 'SET_VOICE':
+      return { ...state, voice: action.value, hasUserEdits: true };
+    case 'SYNC_SERVER':
+      if (state.hasUserEdits) return state;
+      return { text: action.text, voice: action.voice, hasUserEdits: false };
+    case 'RESET':
+      return { text: action.text, voice: action.voice, hasUserEdits: false };
+  }
+}
+
+function getServerValues(voiceover: VoiceoverFull | undefined) {
   return {
     text: voiceover?.text ?? '',
-    voice: voiceover?.voice ?? 'Charon', // default is Charon per schema
+    voice: voiceover?.voice ?? 'Charon',
   };
 }
 
 export function useVoiceoverSettings({
   voiceover,
 }: UseVoiceoverSettingsOptions): UseVoiceoverSettingsReturn {
-  // Track the voiceover ID to detect navigation
-  const [prevVoiceoverId, setPrevVoiceoverId] = useState(voiceover?.id);
+  const server = getServerValues(voiceover);
 
-  // Track whether user has made local edits
-  const [hasUserEdits, setHasUserEdits] = useState(false);
+  const [state, dispatch] = useReducer(settingsReducer, {
+    text: server.text,
+    voice: server.voice,
+    hasUserEdits: false,
+  });
 
-  // Track previous server values to detect external changes
-  const [prevServerValues, setPrevServerValues] = useState(() => ({
-    text: voiceover?.text,
-    voice: voiceover?.voice,
-  }));
-
-  // Initialize state
-  const initial = getInitialValues(voiceover);
-  const [text, setTextInternal] = useState(initial.text);
-  const [voice, setVoiceInternal] = useState(initial.voice);
-
-  // Wrapped setters that track user edits
-  const setText = useCallback((value: string) => {
-    setHasUserEdits(true);
-    setTextInternal(value);
-  }, []);
-
-  const setVoice = useCallback((value: string) => {
-    setHasUserEdits(true);
-    setVoiceInternal(value);
-  }, []);
-
-  // Reset state when navigating to a different voiceover
-  if (voiceover?.id !== prevVoiceoverId) {
-    setPrevVoiceoverId(voiceover?.id);
-    setHasUserEdits(false);
-    const newInitial = getInitialValues(voiceover);
-    setTextInternal(newInitial.text);
-    setVoiceInternal(newInitial.voice);
-    setPrevServerValues({
-      text: voiceover?.text,
-      voice: voiceover?.voice,
-    });
+  // Reset on navigation to a different voiceover
+  const voiceoverIdRef = useRef(voiceover?.id);
+  if (voiceover?.id !== voiceoverIdRef.current) {
+    voiceoverIdRef.current = voiceover?.id;
+    dispatch({ type: 'RESET', text: server.text, voice: server.voice });
   }
 
-  // Sync local state when server data changes externally
-  // Only sync if user hasn't made local edits
-  const serverChanged =
-    voiceover?.text !== prevServerValues.text ||
-    voiceover?.voice !== prevServerValues.voice;
+  // Sync from server when data changes externally (SSE, cache invalidation)
+  useEffect(() => {
+    dispatch({ type: 'SYNC_SERVER', text: server.text, voice: server.voice });
+  }, [server.text, server.voice]);
 
-  if (serverChanged) {
-    setPrevServerValues({
-      text: voiceover?.text,
-      voice: voiceover?.voice,
-    });
-    if (!hasUserEdits) {
-      const newInitial = getInitialValues(voiceover);
-      setTextInternal(newInitial.text);
-      setVoiceInternal(newInitial.voice);
-    }
-  }
+  // Derived hasChanges
+  const hasChanges = state.text !== server.text || state.voice !== server.voice;
 
-  // Track if there are changes
-  const hasChanges =
-    text !== (voiceover?.text ?? '') ||
-    voice !== (voiceover?.voice ?? 'Charon');
+  const setText = useCallback(
+    (value: string) => dispatch({ type: 'SET_TEXT', value }),
+    [],
+  );
+
+  const setVoice = useCallback(
+    (value: string) => dispatch({ type: 'SET_VOICE', value }),
+    [],
+  );
 
   const updateMutation = useMutation(
     apiClient.voiceovers.update.mutationOptions({
@@ -116,28 +113,30 @@ export function useVoiceoverSettings({
   const saveSettings = useCallback(async () => {
     if (!voiceover?.id) return;
 
-    const voiceInfo = VOICES.find((v) => v.id === voice);
+    const voiceInfo = VOICES.find((v) => v.id === state.voice);
 
     await updateMutation.mutateAsync({
       id: voiceover.id,
-      text,
-      voice,
+      text: state.text,
+      voice: state.voice,
       voiceName: voiceInfo?.name,
     });
 
     // Reset user edits after saving
-    setHasUserEdits(false);
-  }, [voiceover, text, voice, updateMutation]);
+    dispatch({
+      type: 'RESET',
+      text: state.text,
+      voice: state.voice,
+    });
+  }, [voiceover, state.text, state.voice, updateMutation]);
 
   const discardChanges = useCallback(() => {
-    setHasUserEdits(false);
-    setTextInternal(voiceover?.text ?? '');
-    setVoiceInternal(voiceover?.voice ?? 'Charon');
-  }, [voiceover]);
+    dispatch({ type: 'RESET', text: server.text, voice: server.voice });
+  }, [server.text, server.voice]);
 
   return {
-    text,
-    voice,
+    text: state.text,
+    voice: state.voice,
     setText,
     setVoice,
     hasChanges,

@@ -41,7 +41,7 @@ function RootComponent() {
         <NavContainer>
           <div />
         </NavContainer>
-        <div className="flex items-center justify-center h-[calc(100vh-57px)]">
+        <div className="flex items-center justify-center h-[calc(100vh-var(--navbar-height))]">
           <Spinner />
         </div>
       </div>

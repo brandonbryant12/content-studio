@@ -1,9 +1,8 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import type { Period } from '../types';
 import { useActivityList } from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
 import { ActivityDashboard } from './activity-dashboard';
-
-type Period = '24h' | '7d' | '30d';
 
 export function ActivityDashboardContainer() {
   const [period, setPeriod] = useState<Period>('7d');

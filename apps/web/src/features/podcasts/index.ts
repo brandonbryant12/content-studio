@@ -38,11 +38,6 @@ export {
   type DocumentInfo,
   type UseDocumentSelectionReturn,
 } from './hooks/use-document-selection';
-export {
-  usePodcastGeneration,
-  type UsePodcastGenerationReturn,
-} from './hooks/use-podcast-generation';
-
 export { useApprovePodcast } from './hooks/use-approve-podcast';
 
 export { PodcastDetailContainer } from './components/podcast-detail-container';

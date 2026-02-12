@@ -16,15 +16,10 @@ import {
   getDocumentListQueryKey,
 } from '@/features/documents/hooks/use-document-list';
 import { getErrorMessage } from '@/shared/lib/errors';
-
-const SUPPORTED_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-];
-
-const SUPPORTED_EXTENSIONS = '.txt,.pdf,.docx,.pptx';
+import {
+  SUPPORTED_TYPES,
+  SUPPORTED_EXTENSIONS,
+} from '../../../lib/upload-constants';
 
 interface StepDocumentsProps {
   selectedIds: string[];
@@ -112,13 +107,12 @@ export function StepDocuments({
   const handleUpload = async () => {
     if (!uploadFile) return;
 
-    const arrayBuffer = await uploadFile.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        '',
-      ),
-    );
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1]!);
+      reader.onerror = reject;
+      reader.readAsDataURL(uploadFile);
+    });
 
     uploadMutation.mutate({
       fileName: uploadFile.name,

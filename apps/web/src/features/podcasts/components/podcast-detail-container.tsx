@@ -1,4 +1,4 @@
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, useMemo } from 'react';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
@@ -13,6 +13,7 @@ import {
   useNavigationBlock,
   useSessionGuard,
 } from '@/shared/hooks';
+import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 
 interface PodcastDetailContainerProps {
   podcastId: string;
@@ -26,15 +27,25 @@ export function PodcastDetailContainer({
 
   const { data: podcast } = usePodcast(podcastId);
 
+  const initialSegments = useMemo(
+    () => [...(podcast.segments ?? [])],
+    [podcast.segments],
+  );
+
   const scriptEditor = useScriptEditor({
     podcastId,
-    initialSegments: [...(podcast.segments ?? [])],
+    initialSegments,
   });
 
   const settings = usePodcastSettings({ podcast });
 
+  const initialDocuments = useMemo(
+    () => [...(podcast.documents ?? [])],
+    [podcast.documents],
+  );
+
   const documentSelection = useDocumentSelection({
-    initialDocuments: [...(podcast.documents ?? [])],
+    initialDocuments,
   });
 
   const actions = usePodcastActions({
@@ -47,7 +58,7 @@ export function PodcastDetailContainer({
 
   const { approve, revoke } = useApprovePodcast(podcastId, currentUserId);
 
-  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+  const isAdmin = useIsAdmin();
   const isApproved = podcast.approvedBy !== null;
 
   const handleApprove = useCallback(() => {

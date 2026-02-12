@@ -10,7 +10,15 @@ function Layout() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <Spinner />;
+    return (
+      <div
+        className="flex items-center justify-center h-screen"
+        role="status"
+        aria-label="Loading"
+      >
+        <Spinner />
+      </div>
+    );
   }
 
   if (!session?.user) {

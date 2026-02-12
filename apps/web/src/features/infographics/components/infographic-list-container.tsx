@@ -3,10 +3,11 @@ import {
   useInfographicList,
   getInfographicListQueryKey,
 } from '../hooks/use-infographic-list';
-import { useOptimisticCreate } from '../hooks/use-optimistic-create';
+import { useCreateInfographic } from '../hooks/use-create-infographic';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import { InfographicList } from './infographic-list';
 import { rawApiClient } from '@/clients/apiClient';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 
 const deleteFn = (input: { id: string }) =>
@@ -15,10 +16,11 @@ const deleteFn = (input: { id: string }) =>
 export function InfographicListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: infographics = [], isLoading } = useInfographicList();
 
-  const createMutation = useOptimisticCreate();
+  const createMutation = useCreateInfographic();
   const deleteMutation = useOptimisticDeleteList();
 
   // Bulk selection & delete
@@ -38,20 +40,24 @@ export function InfographicListContainer() {
     });
   }, [createMutation]);
 
-  const handleDelete = useCallback(
-    (id: string) => {
-      setDeletingId(id);
-      deleteMutation.mutate(
-        { id },
-        {
-          onSettled: () => {
-            setDeletingId(null);
-          },
+  const handleDeleteRequest = useCallback((id: string) => {
+    setPendingDeleteId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    setPendingDeleteId(null);
+    setDeletingId(id);
+    deleteMutation.mutate(
+      { id },
+      {
+        onSettled: () => {
+          setDeletingId(null);
         },
-      );
-    },
-    [deleteMutation],
-  );
+      },
+    );
+  }, [pendingDeleteId, deleteMutation]);
 
   const handleBulkDelete = useCallback(async () => {
     await executeBulkDelete(selection.selectedIds);
@@ -79,17 +85,31 @@ export function InfographicListContainer() {
   }
 
   return (
-    <InfographicList
-      infographics={infographics}
-      searchQuery={searchQuery}
-      isCreating={createMutation.isPending}
-      deletingId={deletingId}
-      onSearch={handleSearch}
-      onCreate={handleCreate}
-      onDelete={handleDelete}
-      selection={selection}
-      isBulkDeleting={isBulkDeleting}
-      onBulkDelete={handleBulkDelete}
-    />
+    <>
+      <InfographicList
+        infographics={infographics}
+        searchQuery={searchQuery}
+        isCreating={createMutation.isPending}
+        deletingId={deletingId}
+        onSearch={handleSearch}
+        onCreate={handleCreate}
+        onDelete={handleDeleteRequest}
+        selection={selection}
+        isBulkDeleting={isBulkDeleting}
+        onBulkDelete={handleBulkDelete}
+      />
+      <ConfirmationDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null);
+        }}
+        title="Delete Infographic"
+        description="Are you sure you want to delete this infographic? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={deletingId !== null}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 }

@@ -66,7 +66,10 @@ export function ExistingDocumentPicker({
     <>
       {availableDocuments && availableDocuments.length > 0 && (
         <div className="relative mb-4">
-          <MagnifyingGlassIcon aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <MagnifyingGlassIcon
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+          />
           <input
             type="text"
             placeholder="Search documents\u2026"

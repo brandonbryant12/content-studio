@@ -7,7 +7,7 @@ export default function FormFieldInfo({ field }: { field: AnyFieldApi }) {
   return (
     <div className="mt-2" aria-live="polite">
       {hasErrors ? (
-        <em id={`${field.name}-error`} className="text-red-500">
+        <em id={`${field.name}-error`} className="text-destructive">
           {field.state.meta.errors.map((e) => e.message).join(', ')}
         </em>
       ) : null}

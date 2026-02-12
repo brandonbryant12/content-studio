@@ -1998,7 +1998,11 @@
 
   /* Document picker dialog items */
   .doc-picker-item {
-    @apply w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left border-border hover:border-warning/30 bg-card;
+    @apply w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition-[border-color,background-color,box-shadow] duration-200 text-left border-border hover:border-warning/30 bg-card;
+  }
+
+  .doc-picker-item:focus-visible {
+    @apply outline-none ring-2 ring-warning/50 ring-offset-2 ring-offset-background;
   }
 
   .doc-picker-item.selected {
@@ -3173,8 +3177,12 @@
   }
 
   .setup-tab {
-    @apply flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200
+    @apply flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-200
            text-muted-foreground hover:text-foreground;
+  }
+
+  .setup-tab:focus-visible {
+    @apply outline-none ring-2 ring-warning/50 ring-offset-2 ring-offset-background;
   }
 
   .setup-tab.active {

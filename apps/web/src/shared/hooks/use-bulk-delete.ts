@@ -44,17 +44,27 @@ export function useBulkDelete({
       }
 
       // Fire all deletes in parallel
+      const idList = [...ids];
       const results = await Promise.allSettled(
-        [...ids].map((id) => deleteFn({ id })),
+        idList.map((id) => deleteFn({ id })),
       );
 
-      const failures = results.filter((r) => r.status === 'rejected');
+      const failedIds = new Set(
+        idList.filter((_, i) => results[i]!.status === 'rejected'),
+      );
 
-      if (failures.length > 0) {
-        // Rollback to previous state on any failure
-        queryClient.setQueryData(queryKey, previous);
-        const plural = entityName + (failures.length > 1 ? 's' : '');
-        toast.error(`Failed to delete ${failures.length} ${plural}`);
+      if (failedIds.size > 0) {
+        // Only restore items whose deletion failed
+        if (previous) {
+          const successfullyDeleted = idList.filter((id) => !failedIds.has(id));
+          const successfulSet = new Set(successfullyDeleted);
+          queryClient.setQueryData(
+            queryKey,
+            previous.filter((item) => !successfulSet.has(item.id)),
+          );
+        }
+        const plural = entityName + (failedIds.size > 1 ? 's' : '');
+        toast.error(`Failed to delete ${failedIds.size} ${plural}`);
       } else {
         const plural = entityName + (ids.size > 1 ? 's' : '');
         toast.success(`Deleted ${ids.size} ${plural}`);

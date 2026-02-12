@@ -5,12 +5,7 @@ import {
 } from '@radix-ui/react-icons';
 import * as Select from '@radix-ui/react-select';
 import { Input } from '@repo/ui/components/input';
-
-interface TopUser {
-  readonly userId: string;
-  readonly userName: string;
-  readonly count: number;
-}
+import type { TopUser } from '../types';
 
 interface ActivityFiltersProps {
   entityType: string | undefined;
@@ -61,7 +56,11 @@ function FilterSelect({
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
-          <Select.Content className="overflow-hidden rounded-md border border-border bg-popover shadow-md z-50">
+          <Select.Content
+            position="popper"
+            className="overflow-hidden rounded-md border border-border bg-popover shadow-md z-50"
+            style={{ minWidth: 'var(--radix-select-trigger-width)' }}
+          >
             <Select.Viewport className="p-1">
               <SelectItem value="__all__">All</SelectItem>
               {options.map((opt) => (

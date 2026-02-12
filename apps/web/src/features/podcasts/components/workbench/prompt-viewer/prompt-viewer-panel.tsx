@@ -5,6 +5,7 @@ import {
   FileTextIcon,
 } from '@radix-ui/react-icons';
 import type { RouterOutput } from '@repo/api/client';
+import { useRef, useEffect } from 'react';
 import { DocumentContentViewer } from './document-content-viewer';
 import { PromptSection } from './prompt-section';
 
@@ -44,9 +45,17 @@ export function PromptViewerPanel({
   const hasUserInstructions =
     userInstructions && userInstructions.trim().length > 0;
 
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    overlayRef.current?.focus();
+  }, []);
+
   return (
     <div
+      ref={overlayRef}
       className="prompt-viewer-overlay"
+      tabIndex={-1}
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <div

@@ -1,31 +1,7 @@
+import type { ActivityItem, Period, StatBreakdown, TopUser } from '../types';
 import { ActivityFeed } from './activity-feed';
 import { ActivityFilters } from './activity-filters';
 import { ActivityStats } from './activity-stats';
-
-type Period = '24h' | '7d' | '30d';
-
-interface ActivityItem {
-  id: string;
-  userId: string;
-  action: string;
-  entityType: string;
-  entityId?: string | null;
-  entityTitle?: string | null;
-  metadata?: Record<string, unknown> | null;
-  createdAt: string;
-  userName?: string | null;
-}
-
-interface StatBreakdown {
-  readonly field: string;
-  readonly count: number;
-}
-
-interface TopUser {
-  readonly userId: string;
-  readonly userName: string;
-  readonly count: number;
-}
 
 interface ActivityDashboardProps {
   // Stats

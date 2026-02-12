@@ -1,17 +1,12 @@
 import { Cross2Icon, FileTextIcon, UploadIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useState, useCallback, type ChangeEvent } from 'react';
+import { useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { toast } from 'sonner';
-
-const SUPPORTED_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-];
-
-const SUPPORTED_EXTENSIONS = '.txt,.pdf,.docx,.pptx';
+import {
+  SUPPORTED_TYPES,
+  SUPPORTED_EXTENSIONS,
+} from '../../lib/upload-constants';
 
 interface DocumentUploaderProps {
   onUpload: (file: File, title: string | undefined) => void;
@@ -84,8 +79,17 @@ export function DocumentUploader({
     setIsDragging(false);
   }, []);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleUploadZoneClick = useCallback(() => {
-    document.getElementById('workbench-file-input')?.click();
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleUploadZoneKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInputRef.current?.click();
+    }
   }, []);
 
   const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -160,10 +164,14 @@ export function DocumentUploader({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={handleUploadZoneClick}
+      onKeyDown={handleUploadZoneKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
       className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
     >
       <input
-        id="workbench-file-input"
+        ref={fileInputRef}
         type="file"
         accept={SUPPORTED_EXTENSIONS}
         className="hidden"

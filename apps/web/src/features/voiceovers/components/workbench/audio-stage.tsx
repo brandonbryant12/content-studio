@@ -68,6 +68,7 @@ export function AudioStage({
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
           tabIndex={0}
         >
           <div className="stage-track" />

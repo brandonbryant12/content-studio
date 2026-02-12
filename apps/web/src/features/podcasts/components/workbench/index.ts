@@ -3,8 +3,6 @@ export { ScriptPanel } from './script-panel';
 export { ConfigPanel } from './config-panel';
 export { ScriptEditor } from './script-editor';
 export { SegmentItem } from './segment-item';
-export { SegmentEditorDialog } from './segment-editor-dialog';
-export { SmartActions } from './smart-actions';
 export { GenerationStatus } from './generation-status';
 export { ErrorDisplay } from './error-display';
 export { DocumentManager } from './document-manager';

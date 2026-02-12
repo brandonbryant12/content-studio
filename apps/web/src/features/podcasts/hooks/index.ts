@@ -29,11 +29,6 @@ export {
   type DocumentInfo,
   type UseDocumentSelectionReturn,
 } from './use-document-selection';
-export {
-  usePodcastGeneration,
-  type UsePodcastGenerationReturn,
-} from './use-podcast-generation';
-
 export { useApprovePodcast } from './use-approve-podcast';
 
 export {

@@ -1,5 +1,9 @@
 @import '../../../tools/tailwind/style.css';
 
+:root {
+  --navbar-height: 57px;
+}
+
 /**
  * This is necessary to load the @repo/ui package when moving from
  * @tailwindcss/vite v4.0.7 to v4.0.8.

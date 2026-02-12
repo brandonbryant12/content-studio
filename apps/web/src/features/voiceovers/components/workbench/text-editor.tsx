@@ -32,7 +32,7 @@ const CharacterCountRing = memo(function CharacterCountRing({
     RING_CIRCUMFERENCE - (percentage / 100) * RING_CIRCUMFERENCE;
 
   return (
-    <div className="manuscript-count">
+    <div className="manuscript-count" id="char-count" aria-live="polite">
       <svg
         className="manuscript-count-ring"
         width="32"
@@ -81,8 +81,9 @@ const CharacterCountRing = memo(function CharacterCountRing({
           isError && 'text-destructive',
           isWarning && !isError && 'text-warning',
         )}
+        role="status"
       >
-        {count.toLocaleString()}
+        {count.toLocaleString()} of {max.toLocaleString()} characters
       </span>
     </div>
   );
@@ -115,6 +116,7 @@ export function TextEditor({
         placeholder={placeholder}
         maxLength={MAX_CHARACTERS}
         aria-label="Voiceover script"
+        aria-describedby="char-count"
       />
       <div className="manuscript-footer">
         <CharacterCountRing count={text.length} max={MAX_CHARACTERS} />

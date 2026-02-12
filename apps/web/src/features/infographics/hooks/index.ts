@@ -18,5 +18,5 @@ export {
   type UseInfographicActionsReturn,
 } from './use-infographic-actions';
 export { useOptimisticGeneration } from './use-optimistic-generation';
-export { useOptimisticCreate } from './use-optimistic-create';
+export { useCreateInfographic } from './use-create-infographic';
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';

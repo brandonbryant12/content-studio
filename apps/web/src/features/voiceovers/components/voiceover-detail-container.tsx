@@ -8,6 +8,7 @@ import {
   useKeyboardShortcut,
   useNavigationBlock,
   useSessionGuard,
+  useIsAdmin,
 } from '@/shared/hooks';
 
 interface VoiceoverDetailContainerProps {
@@ -32,7 +33,7 @@ export function VoiceoverDetailContainer({
     settings,
   });
 
-  const isAdmin = (user as { role?: string } | undefined)?.role === 'admin';
+  const isAdmin = useIsAdmin();
   const isApproved = voiceover.approvedBy !== null;
 
   const handleApprove = useCallback(() => {

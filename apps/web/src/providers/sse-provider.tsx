@@ -1,5 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, use, useEffect, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  use,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { authClient } from '@/clients/authClient';
 import { useSSE, type SSEConnectionState } from '@/shared/hooks/use-sse';
 
@@ -14,9 +21,14 @@ export function SSEProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession();
   const isAuthenticated = !!session?.user;
 
-  const sseState = useSSE({ enabled: isAuthenticated });
+  const { connectionState, reconnect } = useSSE({ enabled: isAuthenticated });
 
-  return <SSEContext.Provider value={sseState}>{children}</SSEContext.Provider>;
+  const value = useMemo(
+    () => ({ connectionState, reconnect }),
+    [connectionState, reconnect],
+  );
+
+  return <SSEContext.Provider value={value}>{children}</SSEContext.Provider>;
 }
 
 export function useSSEContext(): SSEContextValue {

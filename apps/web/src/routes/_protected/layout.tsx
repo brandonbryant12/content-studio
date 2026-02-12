@@ -27,18 +27,60 @@ import { authClient } from '@/clients/authClient';
 import { useSSERecovery } from '@/providers/sse-provider';
 import UserAvatar from '@/routes/-components/layout/nav/user-avatar';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
+import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { useSidebar } from '@/shared/hooks/use-sidebar';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,
 });
 
+type ColorScheme = 'primary' | 'sky' | 'violet' | 'emerald' | 'amber' | 'rose';
+
+const COLOR_SCHEMES: Record<
+  ColorScheme,
+  { color: string; activeColor: string }
+> = {
+  primary: {
+    color: 'bg-primary/10 text-primary group-hover:bg-primary/15',
+    activeColor: '[&_div]:bg-primary/15 [&_div]:text-primary',
+  },
+  sky: {
+    color:
+      'bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500/15',
+    activeColor:
+      '[&_div]:bg-sky-500/15 [&_div]:text-sky-600 dark:[&_div]:text-sky-400',
+  },
+  violet: {
+    color:
+      'bg-violet-500/10 text-violet-600 dark:text-violet-400 group-hover:bg-violet-500/15',
+    activeColor:
+      '[&_div]:bg-violet-500/15 [&_div]:text-violet-600 dark:[&_div]:text-violet-400',
+  },
+  emerald: {
+    color:
+      'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/15',
+    activeColor:
+      '[&_div]:bg-emerald-500/15 [&_div]:text-emerald-600 dark:[&_div]:text-emerald-400',
+  },
+  amber: {
+    color:
+      'bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/15',
+    activeColor:
+      '[&_div]:bg-amber-500/15 [&_div]:text-amber-600 dark:[&_div]:text-amber-400',
+  },
+  rose: {
+    color:
+      'bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/15',
+    activeColor:
+      '[&_div]:bg-rose-500/15 [&_div]:text-rose-600 dark:[&_div]:text-rose-400',
+  },
+};
+
 interface NavItemProps {
   to: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
-  color: string;
-  activeColor: string;
+  colorScheme: ColorScheme;
   collapsed: boolean;
 }
 
@@ -46,10 +88,11 @@ function NavItem({
   to,
   icon: Icon,
   label,
-  color,
-  activeColor,
+  colorScheme,
   collapsed,
 }: NavItemProps) {
+  const { color, activeColor } = COLOR_SCHEMES[colorScheme];
+
   const link = (
     <Link
       to={to}
@@ -110,15 +153,17 @@ function Sidebar({
       <aside
         className={`${
           collapsed ? 'w-[68px]' : 'w-[220px]'
-        } border-r border-border/60 h-[calc(100vh-57px)] flex flex-col bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out`}
+        } border-r border-border/60 h-[calc(100vh-var(--navbar-height))] flex flex-col bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out`}
       >
-        <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4">
+        <nav
+          className="flex-1 flex flex-col gap-0.5 px-3 py-4"
+          aria-label="Main navigation"
+        >
           <NavItem
             to="/dashboard"
             icon={HomeIcon}
             label="Dashboard"
-            color="bg-primary/10 text-primary group-hover:bg-primary/15"
-            activeColor="[&_div]:bg-primary/15 [&_div]:text-primary"
+            colorScheme="primary"
             collapsed={collapsed}
           />
 
@@ -128,8 +173,7 @@ function Sidebar({
             to="/documents"
             icon={FileTextIcon}
             label="Knowledge Base"
-            color="bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500/15"
-            activeColor="[&_div]:bg-sky-500/15 [&_div]:text-sky-600 dark:[&_div]:text-sky-400"
+            colorScheme="sky"
             collapsed={collapsed}
           />
 
@@ -137,8 +181,7 @@ function Sidebar({
             to="/podcasts"
             icon={MixerHorizontalIcon}
             label="Podcasts"
-            color="bg-violet-500/10 text-violet-600 dark:text-violet-400 group-hover:bg-violet-500/15"
-            activeColor="[&_div]:bg-violet-500/15 [&_div]:text-violet-600 dark:[&_div]:text-violet-400"
+            colorScheme="violet"
             collapsed={collapsed}
           />
 
@@ -146,8 +189,7 @@ function Sidebar({
             to="/voiceovers"
             icon={SpeakerLoudIcon}
             label="Voiceovers"
-            color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/15"
-            activeColor="[&_div]:bg-emerald-500/15 [&_div]:text-emerald-600 dark:[&_div]:text-emerald-400"
+            colorScheme="emerald"
             collapsed={collapsed}
           />
 
@@ -155,8 +197,7 @@ function Sidebar({
             to="/infographics"
             icon={ImageIcon}
             label="Infographics"
-            color="bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/15"
-            activeColor="[&_div]:bg-amber-500/15 [&_div]:text-amber-600 dark:[&_div]:text-amber-400"
+            colorScheme="amber"
             collapsed={collapsed}
           />
 
@@ -168,8 +209,7 @@ function Sidebar({
                 to="/admin/activity"
                 icon={ActivityLogIcon}
                 label="Admin"
-                color="bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/15"
-                activeColor="[&_div]:bg-rose-500/15 [&_div]:text-rose-600 dark:[&_div]:text-rose-400"
+                colorScheme="rose"
                 collapsed={collapsed}
               />
             </>
@@ -185,31 +225,33 @@ function Sidebar({
             <UserAvatar user={user} collapsed={collapsed} />
           </div>
 
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={onToggle}
-                  className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  aria-label="Expand sidebar"
-                >
+          {(() => {
+            const toggleButton = (
+              <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {collapsed ? (
                   <ChevronRightIcon className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                Expand sidebar
-                <span className="ml-1.5 text-[10px] opacity-60">[</span>
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={onToggle}
-              className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label="Collapse sidebar"
-            >
-              <ChevronLeftIcon className="w-4 h-4" />
-            </button>
-          )}
+                ) : (
+                  <ChevronLeftIcon className="w-4 h-4" />
+                )}
+              </button>
+            );
+
+            return collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>{toggleButton}</TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  Expand sidebar
+                  <span className="ml-1.5 text-[10px] opacity-60">[</span>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              toggleButton
+            );
+          })()}
         </div>
       </aside>
     </TooltipProvider>
@@ -219,6 +261,7 @@ function Sidebar({
 function Layout() {
   const { data: session, isPending } = authClient.useSession();
   const { isCollapsed, toggle } = useSidebar();
+  const isAdmin = useIsAdmin();
   useSSERecovery();
 
   useEffect(() => {
@@ -242,7 +285,7 @@ function Layout() {
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-57px)]">
+      <div className="flex items-center justify-center h-[calc(100vh-var(--navbar-height))]">
         <Spinner />
       </div>
     );
@@ -251,9 +294,6 @@ function Layout() {
   if (!session?.user) {
     return <Navigate to="/" />;
   }
-
-  const isAdmin =
-    (session?.user as { role?: string } | undefined)?.role === 'admin';
 
   return (
     <div className="flex">
@@ -271,7 +311,7 @@ function Layout() {
       />
       <main
         id="main-content"
-        className="flex-1 min-w-0 overflow-auto h-[calc(100vh-57px)] bg-background"
+        className="flex-1 min-w-0 overflow-auto h-[calc(100vh-var(--navbar-height))] bg-background"
       >
         <ErrorBoundary resetKeys={[session?.user?.id]}>
           <Outlet />
