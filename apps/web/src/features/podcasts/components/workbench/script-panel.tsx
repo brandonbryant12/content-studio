@@ -3,6 +3,7 @@ import {
   FileTextIcon,
   LockClosedIcon,
   PlusIcon,
+  ReaderIcon,
 } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
@@ -91,7 +92,17 @@ export function ScriptPanel({
           )}
 
           {/* Main editor area */}
-          {isEmpty ? (
+          {isEmpty && disabled ? (
+            <div className="script-empty-v2">
+              <div className="script-empty-v2-icon animate-pulse">
+                <ReaderIcon />
+              </div>
+              <h3 className="script-empty-v2-title">Writing your script</h3>
+              <p className="script-empty-v2-desc">
+                Your script is being generated. Lines will appear shortly.
+              </p>
+            </div>
+          ) : isEmpty ? (
             <div className="script-empty-v2">
               <div className="script-empty-v2-icon">
                 <FileTextIcon />
