@@ -18,6 +18,10 @@
     "./tts": {
       "types": "./dist/src/tts/index.d.ts",
       "default": "./src/tts/index.ts"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./src/testing/index.ts"
     }
   },
   "scripts": {
@@ -46,6 +50,7 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@repo/eslint-config": "workspace:*",
+    "@repo/testing": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",

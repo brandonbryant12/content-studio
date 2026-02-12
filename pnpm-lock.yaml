@@ -282,9 +282,6 @@ importers:
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
-      '@repo/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
       effect:
         specifier: ^3.16.0
         version: 3.19.8
@@ -294,6 +291,9 @@ importers:
       undici:
         specifier: ^7.3.0
         version: 7.16.0
+      worker:
+        specifier: workspace:*
+        version: link:../worker
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -477,6 +477,73 @@ importers:
         specifier: 'catalog:'
         version: 7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2)
 
+  apps/worker:
+    dependencies:
+      '@repo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@repo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@repo/media':
+        specifier: workspace:*
+        version: link:../../packages/media
+      '@repo/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+      effect:
+        specifier: ^3.16.0
+        version: 3.19.8
+      undici:
+        specifier: ^7.3.0
+        version: 7.16.0
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../tools/eslint
+      '@repo/prettier-config':
+        specifier: workspace:*
+        version: link:../../tools/prettier
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../tools/typescript
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.1
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 11.0.0
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.1(jiti@2.6.1)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
+      shx:
+        specifier: 'catalog:'
+        version: 0.4.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.16.6(typescript@5.9.3)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   packages/ai:
     dependencies:
       '@ai-sdk/google':
@@ -510,6 +577,9 @@ importers:
       '@repo/prettier-config':
         specifier: workspace:*
         version: link:../../tools/prettier
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../tools/typescript
@@ -567,9 +637,6 @@ importers:
       '@repo/storage':
         specifier: workspace:*
         version: link:../storage
-      '@repo/testing':
-        specifier: workspace:*
-        version: link:../testing
       '@standard-schema/spec':
         specifier: 'catalog:'
         version: 1.1.0
@@ -586,6 +653,9 @@ importers:
       '@repo/prettier-config':
         specifier: workspace:*
         version: link:../../tools/prettier
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../tools/typescript
@@ -846,9 +916,6 @@ importers:
 
   packages/testing:
     dependencies:
-      '@repo/ai':
-        specifier: workspace:*
-        version: link:../ai
       '@repo/auth':
         specifier: workspace:*
         version: link:../auth
@@ -858,9 +925,6 @@ importers:
       '@repo/queue':
         specifier: workspace:*
         version: link:../queue
-      '@repo/storage':
-        specifier: workspace:*
-        version: link:../storage
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(better-sqlite3@11.10.0)(kysely@0.28.5)(pg@8.16.3)

@@ -66,10 +66,10 @@ export function ExistingDocumentPicker({
     <>
       {availableDocuments && availableDocuments.length > 0 && (
         <div className="relative mb-4">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <MagnifyingGlassIcon aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search documents..."
+            placeholder="Search documents\u2026"
             value={searchQuery}
             onChange={handleSearchChange}
             className="setup-input pl-9"
@@ -87,7 +87,7 @@ export function ExistingDocumentPicker({
               onClick={handleDocumentClick}
               className={`doc-picker-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
             >
-              <div className="doc-picker-item-icon">
+              <div className="doc-picker-item-icon" aria-hidden="true">
                 <span>
                   {doc.mimeType.split('/')[1]?.toUpperCase().slice(0, 3) ||
                     'DOC'}
@@ -100,6 +100,7 @@ export function ExistingDocumentPicker({
                 </p>
               </div>
               <div
+                aria-hidden="true"
                 className={`doc-picker-checkbox ${selectedIds.includes(doc.id) ? 'checked' : ''}`}
               >
                 {selectedIds.includes(doc.id) && (
@@ -123,18 +124,18 @@ export function ExistingDocumentPicker({
       ) : searchQuery ? (
         <div className="empty-state-lg">
           <div className="empty-state-icon">
-            <MagnifyingGlassIcon className="w-6 h-6" />
+            <MagnifyingGlassIcon aria-hidden="true" className="w-6 h-6" />
           </div>
           <p className="text-body">No documents match your search.</p>
         </div>
       ) : (
         <div className="empty-state-lg">
           <div className="empty-state-icon">
-            <FileTextIcon className="w-6 h-6" />
+            <FileTextIcon aria-hidden="true" className="w-6 h-6" />
           </div>
           <p className="text-body">No more documents available to add.</p>
           <Button variant="outline" onClick={onSwitchToUpload} className="mt-4">
-            <UploadIcon className="w-4 h-4 mr-2" />
+            <UploadIcon aria-hidden="true" className="w-4 h-4 mr-2" />
             Upload Document
           </Button>
         </div>

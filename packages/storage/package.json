@@ -18,6 +18,10 @@
     "./providers/s3": {
       "types": "./dist/src/providers/s3.d.ts",
       "default": "./src/providers/s3.ts"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./src/testing/index.ts"
     }
   },
   "scripts": {

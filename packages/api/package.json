@@ -40,7 +40,6 @@
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
-    "@repo/testing": "workspace:*",
     "effect": "^3.16.0",
     "url-join": "catalog:"
   },
@@ -52,6 +51,7 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
+    "@repo/testing": "workspace:*",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

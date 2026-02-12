@@ -24,17 +24,12 @@ export interface ProcessResearchInput {
   query: string;
 }
 
-/** Max total polling time: 10 minutes */
-const MAX_POLL_DURATION_MS = 10 * 60 * 1000;
+/** Max total polling time: 60 minutes (Google's documented max for Deep Research) */
+const MAX_POLL_DURATION_MS = 60 * 60 * 1000;
 
-/** Backoff schedule in milliseconds: 5s, 10s, 20s, 30s (capped) */
-const BACKOFF_SCHEDULE: number[] = [5_000, 10_000, 20_000, 30_000];
-
-function getBackoffDelay(attempt: number): number {
-  return attempt < BACKOFF_SCHEDULE.length
-    ? BACKOFF_SCHEDULE[attempt]!
-    : BACKOFF_SCHEDULE[BACKOFF_SCHEDULE.length - 1]!;
-}
+/** Backoff: 30s for first poll, then 60s thereafter */
+const INITIAL_POLL_MS = 30_000;
+const STEADY_POLL_MS = 60_000;
 
 export const processResearch = (input: ProcessResearchInput) =>
   Effect.gen(function* () {
@@ -53,16 +48,14 @@ export const processResearch = (input: ProcessResearchInput) =>
       researchStatus: 'in_progress',
     });
 
-    // 3. Poll for result with exponential backoff
-    let attempt = 0;
+    // 3. Poll for result: 30s first, then every 60s
     let elapsed = 0;
     let result = yield* research.getResult(interactionId);
 
     while (result === null && elapsed < MAX_POLL_DURATION_MS) {
-      const delay = getBackoffDelay(attempt);
+      const delay = elapsed === 0 ? INITIAL_POLL_MS : STEADY_POLL_MS;
       yield* Effect.sleep(delay);
       elapsed += delay;
-      attempt++;
       result = yield* research.getResult(interactionId);
     }
 
@@ -75,7 +68,7 @@ export const processResearch = (input: ProcessResearchInput) =>
       yield* documentRepo.updateStatus(
         documentId,
         DocumentStatus.FAILED,
-        'Research timed out after 10 minutes',
+        'Research timed out after 60 minutes',
       );
       return yield* new ResearchTimeoutError({ documentId, interactionId });
     }

@@ -27,22 +27,23 @@ export function BaseDialog({
   children,
   footer,
 }: BaseDialogProps) {
-  const contentClasses = [
-    maxWidthClasses[maxWidth],
-    scrollable && 'max-h-[90vh] overflow-y-auto',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={contentClasses}>
+      <DialogContent className={maxWidthClasses[maxWidth]}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <div className="py-4">{children}</div>
+        <div
+          className={
+            scrollable
+              ? 'py-4 overflow-y-auto overscroll-y-contain max-h-[60vh]'
+              : 'py-4'
+          }
+        >
+          {children}
+        </div>
 
         {footer && (
           <DialogFooter>

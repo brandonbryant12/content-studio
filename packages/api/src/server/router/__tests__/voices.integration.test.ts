@@ -1,5 +1,7 @@
+import { createMockTTS, MOCK_VOICES, MockLLMLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { user as userTable } from '@repo/db/schema';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
@@ -7,12 +9,6 @@ import {
   toUser,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  createMockTTS,
-  MOCK_VOICES,
-  MockLLMLive,
-} from '@repo/testing/mocks';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';

@@ -57,9 +57,17 @@ export interface QueueService {
     voiceoverId: string,
   ) => Effect.Effect<Job | null, QueueError>;
 
+  readonly claimNextJob: (
+    type: JobType,
+  ) => Effect.Effect<Job | null, QueueError>;
+
   readonly deleteJob: (
     jobId: JobId,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;
+
+  readonly failStaleJobs: (
+    maxAgeMs: number,
+  ) => Effect.Effect<Job[], QueueError>;
 }
 
 export class Queue extends Context.Tag('@repo/queue/Queue')<

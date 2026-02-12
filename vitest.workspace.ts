@@ -11,5 +11,6 @@ export default defineWorkspace([
   'packages/api/vitest.config.ts',
   // App tests
   'apps/server/vitest.config.ts',
+  'apps/worker/vitest.config.ts',
   'apps/web/vitest.config.ts',
 ]);

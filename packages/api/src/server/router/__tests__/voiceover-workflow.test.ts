@@ -9,6 +9,7 @@
  * - Worker expects certain fields populated that API doesn't set
  * - Race conditions in job processing
  */
+import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -22,17 +23,13 @@ import {
   generateVoiceoverAudio,
 } from '@repo/media';
 import { QueueLive } from '@repo/queue';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
   resetAllFactories,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  MockLLMLive,
-  MockTTSLive,
-} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer, ManagedRuntime } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

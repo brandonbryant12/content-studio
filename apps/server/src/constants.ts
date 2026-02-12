@@ -1,11 +1,1 @@
 export const DEFAULT_SERVER_PORT = 3035;
-
-export const WORKER_DEFAULTS = {
-  POLL_INTERVAL_MS: 5000,
-  MAX_CONSECUTIVE_ERRORS: 10,
-  BACKOFF_CAP_MS: 60_000,
-} as const;
-
-export const QUEUE_DEFAULTS = {
-  POLL_INTERVAL_MS: 3000,
-} as const;

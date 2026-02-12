@@ -5,10 +5,14 @@ import { configureProxy } from './proxy';
 configureProxy();
 
 import { serve } from '@hono/node-server';
+import { ssePublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
-import { QUEUE_DEFAULTS } from './constants';
+import {
+  createUnifiedWorker,
+  QUEUE_DEFAULTS,
+  MAX_CONCURRENT_JOBS,
+} from 'worker';
 import { env } from './env';
-import { createUnifiedWorker } from './workers/unified-worker';
 import app, { db, serverRuntime } from '.';
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -46,6 +50,7 @@ const startServer = async () => {
   const worker = createUnifiedWorker({
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     runtime: serverRuntime,
+    publishEvent: (userId, event) => ssePublisher.publish(userId, event),
   });
 
   worker.start().catch((error) => {
@@ -66,6 +71,9 @@ Hono
 - internal server url: http://${host}:${info.port}
 - external server url: ${env.PUBLIC_SERVER_URL}
 - public web url: ${env.PUBLIC_WEB_URL}
+- worker polling: ${QUEUE_DEFAULTS.POLL_INTERVAL_MS}ms
+- max concurrent jobs: ${MAX_CONCURRENT_JOBS}
+- mock AI: ${env.USE_MOCK_AI}
       `);
     },
   );
@@ -85,6 +93,9 @@ Hono
     forceTimer.unref();
 
     try {
+      await worker.stop();
+      console.log('Worker stopped');
+
       await new Promise<void>((resolve) => {
         server.close((error) => {
           if (error) console.error('Error closing HTTP server:', error);
@@ -92,9 +103,6 @@ Hono
           resolve();
         });
       });
-
-      await worker.stop();
-      console.log('Worker stopped');
 
       await db.$client.end();
       console.log('Database pool closed');

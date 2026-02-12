@@ -1,3 +1,4 @@
+import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -6,22 +7,18 @@ import {
   type VoiceoverId,
   type VoiceoverOutput,
   type VoiceoverListItemOutput,
-  generateVoiceoverId,
 } from '@repo/db/schema';
 import { VoiceoverRepoLive } from '@repo/media';
 import { QueueLive } from '@repo/queue';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
+  createTestVoiceover,
   resetAllFactories,
   toUser,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  MockLLMLive,
-  MockTTSLive,
-} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -115,13 +112,13 @@ const handlers = {
       voiceoverRouter.getJob as unknown as ORPCProcedure,
       args,
     ),
-  approve: (args: HandlerArgs): Promise<{ isOwner: boolean }> =>
-    callHandler<{ isOwner: boolean }>(
+  approve: (args: HandlerArgs): Promise<VoiceoverOutput> =>
+    callHandler<VoiceoverOutput>(
       voiceoverRouter.approve as unknown as ORPCProcedure,
       args,
     ),
-  revokeApproval: (args: HandlerArgs): Promise<{ isOwner: boolean }> =>
-    callHandler<{ isOwner: boolean }>(
+  revokeApproval: (args: HandlerArgs): Promise<VoiceoverOutput> =>
+    callHandler<VoiceoverOutput>(
       voiceoverRouter.revokeApproval as unknown as ORPCProcedure,
       args,
     ),
@@ -181,80 +178,12 @@ const insertTestUser = async (
 };
 
 /**
- * Options for creating a test voiceover.
- */
-interface CreateTestVoiceoverOptions {
-  id?: VoiceoverId;
-  title?: string;
-  text?: string;
-  voice?: string;
-  voiceName?: string | null;
-  audioUrl?: string | null;
-  duration?: number | null;
-  status?: 'drafting' | 'generating_audio' | 'ready' | 'failed';
-  errorMessage?: string | null;
-  approvedBy?: string | null;
-  approvedAt?: Date | null;
-  createdBy?: string;
-}
-
-let voiceoverCounter = 0;
-
-/**
- * Create a test voiceover data object.
- */
-const createTestVoiceover = (
-  options: CreateTestVoiceoverOptions = {},
-): {
-  id: VoiceoverId;
-  title: string;
-  text: string;
-  voice: string;
-  voiceName: string | null;
-  audioUrl: string | null;
-  duration: number | null;
-  status: 'drafting' | 'generating_audio' | 'ready' | 'failed';
-  errorMessage: string | null;
-  approvedBy: string | null;
-  approvedAt: Date | null;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-} => {
-  voiceoverCounter++;
-
-  return {
-    id: options.id ?? generateVoiceoverId(),
-    title: options.title ?? `Test Voiceover ${voiceoverCounter}`,
-    text: options.text ?? 'This is test voiceover text.',
-    voice: options.voice ?? 'Charon',
-    voiceName: options.voiceName ?? 'Charon',
-    audioUrl: options.audioUrl ?? null,
-    duration: options.duration ?? null,
-    status: options.status ?? 'drafting',
-    errorMessage: options.errorMessage ?? null,
-    approvedBy: options.approvedBy ?? null,
-    approvedAt: options.approvedAt ?? null,
-    createdBy: options.createdBy ?? 'test-user-id',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-};
-
-/**
- * Reset voiceover counter.
- */
-const resetVoiceoverCounter = () => {
-  voiceoverCounter = 0;
-};
-
-/**
  * Insert a voiceover into the database for testing.
  */
 const insertTestVoiceover = async (
   ctx: TestContext,
   userId: string,
-  options: Omit<CreateTestVoiceoverOptions, 'createdBy'> = {},
+  options: Omit<Parameters<typeof createTestVoiceover>[0], 'createdBy'> = {},
 ) => {
   const voiceover = createTestVoiceover({
     createdBy: userId,
@@ -277,7 +206,6 @@ describe('voiceover router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    resetVoiceoverCounter();
     ctx = await createTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
@@ -507,6 +435,50 @@ describe('voiceover router', () => {
           errors,
         }),
       ).rejects.toThrow();
+    });
+
+    it("rejects access to another user's voiceover (ownership check)", async () => {
+      // Arrange - create voiceover as another user
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
+        title: 'Other User Voiceover',
+      });
+
+      // Act & Assert - non-owner cannot access
+      const context = createMockContext(runtime, user);
+
+      await expect(
+        handlers.get({
+          context,
+          input: { id: otherVoiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to access any voiceover', async () => {
+      // Arrange - create voiceover as regular user
+      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
+        title: 'Regular User Voiceover',
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin accesses another user's voiceover
+      const result = await handlers.get({
+        context,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      // Assert
+      expect(result.id).toBe(voiceover.id);
+      expect(result.title).toBe('Regular User Voiceover');
     });
 
     it('returns voiceover in serialized format', async () => {
@@ -779,6 +751,50 @@ describe('voiceover router', () => {
       ).rejects.toThrow();
     });
 
+    it("rejects updating another user's voiceover (ownership check)", async () => {
+      // Arrange - create voiceover as another user
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
+        title: 'Original Title',
+      });
+
+      const context = createMockContext(runtime, user);
+
+      // Act & Assert - non-owner cannot update
+      await expect(
+        handlers.update({
+          context,
+          input: { id: otherVoiceover.id, title: 'Updated Title' },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to update any voiceover', async () => {
+      // Arrange - create voiceover as regular user
+      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
+        title: 'Original Title',
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin updates another user's voiceover
+      const result = await handlers.update({
+        context,
+        input: { id: voiceover.id, title: 'Admin Updated' },
+        errors,
+      });
+
+      // Assert
+      expect(result.id).toBe(voiceover.id);
+      expect(result.title).toBe('Admin Updated');
+    });
+
     it('persists updates to database', async () => {
       // Arrange
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
@@ -841,24 +857,6 @@ describe('voiceover router', () => {
       expect(result).toEqual({});
     });
 
-    it('returns empty object on successful delete', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.delete({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('object');
-      expect(Object.keys(result)).toHaveLength(0);
-    });
-
     it('throws error when voiceover does not exist', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -872,6 +870,52 @@ describe('voiceover router', () => {
           errors,
         }),
       ).rejects.toThrow();
+    });
+
+    it("rejects deleting another user's voiceover (ownership check)", async () => {
+      // Arrange - create voiceover as another user
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id);
+
+      const context = createMockContext(runtime, user);
+
+      // Act & Assert - non-owner cannot delete
+      await expect(
+        handlers.delete({
+          context,
+          input: { id: otherVoiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to delete any voiceover', async () => {
+      // Arrange - create voiceover as regular user
+      const voiceover = await insertTestVoiceover(ctx, testUser.id);
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin deletes another user's voiceover
+      const result = await handlers.delete({
+        context,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      // Assert - delete succeeded
+      expect(result).toEqual({});
+
+      // Verify - voiceover is gone
+      const [afterDelete] = await ctx.db
+        .select()
+        .from(voiceoverTable)
+        .where(eq(voiceoverTable.id, voiceover.id));
+      expect(afterDelete).toBeUndefined();
     });
 
     it('verifies voiceover is actually removed from database after delete', async () => {
@@ -1009,6 +1053,52 @@ describe('voiceover router', () => {
           errors,
         }),
       ).rejects.toThrow();
+    });
+
+    it("rejects generating another user's voiceover (ownership check)", async () => {
+      // Arrange - create voiceover as another user
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
+        text: 'Some text to generate',
+        status: 'drafting',
+      });
+
+      const context = createMockContext(runtime, user);
+
+      // Act & Assert - non-owner cannot generate
+      await expect(
+        handlers.generate({
+          context,
+          input: { id: otherVoiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to generate any voiceover', async () => {
+      // Arrange - create voiceover as regular user
+      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
+        text: 'Some text to generate audio for',
+        status: 'drafting',
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin generates another user's voiceover
+      const result = await handlers.generate({
+        context,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      // Assert
+      expect(result.jobId).toBeDefined();
+      expect(result.status).toBe('pending');
     });
   });
 
@@ -1157,14 +1247,18 @@ describe('voiceover router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows owner to approve their own voiceover', async () => {
+    it('allows admin to approve a voiceover', async () => {
       // Arrange
-      const context = createMockContext(runtime, user);
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         status: 'ready',
       });
 
-      // Act
+      // Act - Approve as admin
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
       const result = await handlers.approve({
         context,
         input: { id: voiceover.id },
@@ -1172,10 +1266,10 @@ describe('voiceover router', () => {
       });
 
       // Assert
-      expect(result.isOwner).toBe(true);
+      expect(result.id).toBe(voiceover.id);
     });
 
-    it('rejects approval from non-owner', async () => {
+    it('rejects approval from non-admin', async () => {
       // Arrange
       const ownerTestUser = createTestUser();
       const strangerTestUser = createTestUser();
@@ -1197,7 +1291,7 @@ describe('voiceover router', () => {
           input: { id: voiceover.id },
           errors,
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow('admin role');
     });
   });
 
@@ -1224,16 +1318,20 @@ describe('voiceover router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows owner to revoke their approval', async () => {
+    it('allows admin to revoke approval', async () => {
       // Arrange
-      const context = createMockContext(runtime, user);
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         status: 'ready',
         approvedBy: testUser.id,
         approvedAt: new Date(),
       });
 
-      // Act
+      // Act - Revoke as admin
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
       const result = await handlers.revokeApproval({
         context,
         input: { id: voiceover.id },
@@ -1241,10 +1339,10 @@ describe('voiceover router', () => {
       });
 
       // Assert
-      expect(result.isOwner).toBe(true);
+      expect(result.id).toBe(voiceover.id);
     });
 
-    it('rejects revoke from non-owner', async () => {
+    it('rejects revoke from non-admin', async () => {
       // Arrange
       const ownerTestUser = createTestUser();
       const strangerTestUser = createTestUser();
@@ -1267,7 +1365,7 @@ describe('voiceover router', () => {
           input: { id: voiceover.id },
           errors,
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow('admin role');
     });
   });
 });

@@ -1,3 +1,4 @@
+import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -6,6 +7,7 @@ import {
   type DocumentId,
 } from '@repo/db/schema';
 import { DocumentRepoLive } from '@repo/media';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
@@ -13,11 +15,6 @@ import {
   toUser,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  MockLLMLive,
-  MockTTSLive,
-} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

@@ -6,9 +6,4 @@ export {
   type TestContext,
 } from './database';
 
-export {
-  createMockAILayers,
-  withTestUser,
-  toUser,
-  type TestLayersOptions,
-} from './layers';
+export { withTestUser, toUser } from './layers';

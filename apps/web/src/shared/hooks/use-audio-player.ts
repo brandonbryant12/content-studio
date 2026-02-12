@@ -95,14 +95,17 @@ export function useAudioPlayer(
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !src) return;
 
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play();
+      audio.play().catch(() => {
+        // Source unavailable or not yet loaded
+        setIsPlaying(false);
+      });
     }
-  }, [isPlaying]);
+  }, [isPlaying, src]);
 
   const seek = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {

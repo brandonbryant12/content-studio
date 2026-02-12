@@ -25,7 +25,7 @@
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
-    "@repo/testing": "workspace:*",
+    "worker": "workspace:*",
     "effect": "^3.16.0",
     "hono": "catalog:",
     "undici": "^7.3.0"

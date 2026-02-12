@@ -2,6 +2,7 @@ export * from './user';
 export * from './document';
 export * from './podcast';
 export * from './infographic';
+export * from './voiceover';
 
 import { resetDocumentCounter } from './document';
 import {
@@ -10,6 +11,7 @@ import {
 } from './infographic';
 import { resetPodcastCounters } from './podcast';
 import { resetUserCounter } from './user';
+import { resetVoiceoverCounter } from './voiceover';
 
 /**
  * Reset all factory counters.
@@ -21,4 +23,5 @@ export function resetAllFactories() {
   resetPodcastCounters();
   resetInfographicCounter();
   resetInfographicVersionCounter();
+  resetVoiceoverCounter();
 }

@@ -15,6 +15,7 @@
  *    API: saveAndQueueAudio → script_ready (via saveChanges)
  *    Worker: generateAudio → generating_audio → ready
  */
+import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -31,6 +32,7 @@ import {
   generateAudio,
 } from '@repo/media';
 import { QueueLive } from '@repo/queue';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
@@ -40,11 +42,6 @@ import {
   DEFAULT_TEST_SEGMENTS,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  MockLLMLive,
-  MockTTSLive,
-} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer, ManagedRuntime } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

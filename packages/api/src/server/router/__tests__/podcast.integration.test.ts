@@ -1,3 +1,4 @@
+import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -12,6 +13,7 @@ import {
 } from '@repo/db/schema';
 import { PodcastRepoLive, DocumentRepoLive } from '@repo/media';
 import { QueueLive } from '@repo/queue';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
@@ -22,11 +24,6 @@ import {
   DEFAULT_TEST_SEGMENTS,
   type TestContext,
 } from '@repo/testing';
-import {
-  createInMemoryStorage,
-  MockLLMLive,
-  MockTTSLive,
-} from '@repo/testing/mocks';
 import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -125,9 +122,14 @@ const handlers = {
       podcastRouter.saveChanges as unknown as ORPCProcedure,
       args,
     ),
-  approve: (args: HandlerArgs): Promise<{ isOwner: boolean }> =>
-    callHandler<{ isOwner: boolean }>(
+  approve: (args: HandlerArgs): Promise<PodcastOutput> =>
+    callHandler<PodcastOutput>(
       podcastRouter.approve as unknown as ORPCProcedure,
+      args,
+    ),
+  revokeApproval: (args: HandlerArgs): Promise<PodcastOutput> =>
+    callHandler<PodcastOutput>(
+      podcastRouter.revokeApproval as unknown as ORPCProcedure,
       args,
     ),
 };
@@ -249,6 +251,20 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('list handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+
+      // Act & Assert
+      await expect(
+        handlers.list({
+          context,
+          input: { limit: 10, offset: 0 },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('returns empty array when no podcasts exist', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -411,6 +427,21 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('get handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id);
+
+      // Act & Assert
+      await expect(
+        handlers.get({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('returns podcast when found', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -446,9 +477,7 @@ describe('podcast router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows access to any podcast (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for get.
-      // This test documents the current behavior.
+    it("rejects access to another user's podcast (ownership check)", async () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
@@ -456,18 +485,40 @@ describe('podcast router', () => {
         title: 'Other User Podcast',
       });
 
-      // Act - access as original user
+      // Act & Assert - non-owner cannot access
       const context = createMockContext(runtime, user);
 
+      await expect(
+        handlers.get({
+          context,
+          input: { id: otherPodcast.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to access any podcast', async () => {
+      // Arrange - create podcast as regular user
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'Regular User Podcast',
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin accesses another user's podcast
       const result = await handlers.get({
         context,
-        input: { id: otherPodcast.id },
+        input: { id: podcast.id },
         errors,
       });
 
-      // Assert - can access other user's podcast
-      expect(result.id).toBe(otherPodcast.id);
-      expect(result.title).toBe('Other User Podcast');
+      // Assert
+      expect(result.id).toBe(podcast.id);
+      expect(result.title).toBe('Regular User Podcast');
     });
 
     it('returns podcast in serialized full format with documents and status', async () => {
@@ -509,6 +560,20 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('create handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+
+      // Act & Assert
+      await expect(
+        handlers.create({
+          context,
+          input: { title: 'New Podcast', format: 'conversation' as const },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('creates podcast with title and format', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -666,6 +731,21 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('update handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id);
+
+      // Act & Assert
+      await expect(
+        handlers.update({
+          context,
+          input: { id: podcast.id, title: 'Updated' },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('updates podcast title', async () => {
       // Arrange
       const podcast = await insertTestPodcast(ctx, testUser.id, {
@@ -793,9 +873,7 @@ describe('podcast router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows updating any podcast (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for update.
-      // This test documents the current behavior.
+    it("rejects updating another user's podcast (ownership check)", async () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
@@ -805,16 +883,38 @@ describe('podcast router', () => {
 
       const context = createMockContext(runtime, user);
 
-      // Act - update as different user
+      // Act & Assert - non-owner cannot update
+      await expect(
+        handlers.update({
+          context,
+          input: { id: otherPodcast.id, title: 'Updated Title' },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to update any podcast', async () => {
+      // Arrange - create podcast as regular user
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'Original Title',
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin updates another user's podcast
       const result = await handlers.update({
         context,
-        input: { id: otherPodcast.id, title: 'Updated Title' },
+        input: { id: podcast.id, title: 'Admin Updated' },
         errors,
       });
 
-      // Assert - can update other user's podcast
-      expect(result.id).toBe(otherPodcast.id);
-      expect(result.title).toBe('Updated Title');
+      // Assert
+      expect(result.id).toBe(podcast.id);
+      expect(result.title).toBe('Admin Updated');
     });
 
     it('persists updates to database', async () => {
@@ -848,6 +948,21 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('delete handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id);
+
+      // Act & Assert
+      await expect(
+        handlers.delete({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('deletes podcast successfully', async () => {
       // Arrange
       const podcast = await insertTestPodcast(ctx, testUser.id);
@@ -862,24 +977,6 @@ describe('podcast router', () => {
 
       // Assert - returns empty object on success
       expect(result).toEqual({});
-    });
-
-    it('returns empty object on successful delete', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.delete({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('object');
-      expect(Object.keys(result)).toHaveLength(0);
     });
 
     it('throws error when podcast does not exist', async () => {
@@ -897,9 +994,7 @@ describe('podcast router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows deleting any podcast (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for delete.
-      // This test documents the current behavior.
+    it("rejects deleting another user's podcast (ownership check)", async () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
@@ -907,15 +1002,14 @@ describe('podcast router', () => {
 
       const context = createMockContext(runtime, user);
 
-      // Act - delete as different user
-      const result = await handlers.delete({
-        context,
-        input: { id: otherPodcast.id },
-        errors,
-      });
-
-      // Assert - can delete other user's podcast
-      expect(result).toEqual({});
+      // Act & Assert - non-owner cannot delete
+      await expect(
+        handlers.delete({
+          context,
+          input: { id: otherPodcast.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
     });
 
     it('verifies podcast is actually removed from database after delete', async () => {
@@ -1001,6 +1095,21 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('generate handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id);
+
+      // Act & Assert
+      await expect(
+        handlers.generate({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('creates a generation job for the podcast', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -1059,9 +1168,7 @@ describe('podcast router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows generating any podcast (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for generate.
-      // This test documents the current behavior.
+    it("rejects generating another user's podcast (ownership check)", async () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
@@ -1069,15 +1176,36 @@ describe('podcast router', () => {
 
       const context = createMockContext(runtime, user);
 
-      // Act - generate as different user
+      // Act & Assert - non-owner cannot generate
+      await expect(
+        handlers.generate({
+          context,
+          input: { id: otherPodcast.id },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to generate any podcast', async () => {
+      // Arrange - create podcast as regular user
+      const podcast = await insertTestPodcast(ctx, testUser.id);
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin generates another user's podcast
       const result = await handlers.generate({
         context,
-        input: { id: otherPodcast.id },
+        input: { id: podcast.id },
         errors,
       });
 
-      // Assert - can generate for other user's podcast
+      // Assert
       expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1241,6 +1369,27 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('saveChanges handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        status: 'ready',
+        segments: DEFAULT_TEST_SEGMENTS,
+      });
+
+      // Act & Assert
+      await expect(
+        handlers.saveChanges({
+          context,
+          input: {
+            id: podcast.id,
+            segments: [{ speaker: 'host', line: 'Test', index: 0 }],
+          },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
     it('saves segment changes and queues audio regeneration', async () => {
       // Arrange
       const context = createMockContext(runtime, user);
@@ -1313,9 +1462,7 @@ describe('podcast router', () => {
       ).rejects.toThrow();
     });
 
-    it('allows saving changes to any podcast (no ownership check)', async () => {
-      // NOTE: Current implementation does not check ownership for saveChanges.
-      // This test documents the current behavior.
+    it("rejects saving changes to another user's podcast (ownership check)", async () => {
       // Arrange - create podcast as another user
       const otherTestUser = createTestUser();
       await insertTestUser(ctx, otherTestUser);
@@ -1326,18 +1473,45 @@ describe('podcast router', () => {
 
       const context = createMockContext(runtime, user);
 
-      // Act - save changes as different user
+      // Act & Assert - non-owner cannot save changes
+      await expect(
+        handlers.saveChanges({
+          context,
+          input: {
+            id: otherPodcast.id,
+            segments: [{ speaker: 'host', line: 'New line', index: 0 }],
+          },
+          errors,
+        }),
+      ).rejects.toThrow('do not own');
+    });
+
+    it('allows admin to save changes to any podcast', async () => {
+      // Arrange - create podcast as regular user
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        status: 'ready',
+        segments: DEFAULT_TEST_SEGMENTS,
+      });
+
+      // Create admin user
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+
+      // Act - admin saves changes to another user's podcast
       const result = await handlers.saveChanges({
         context,
         input: {
-          id: otherPodcast.id,
-          segments: [{ speaker: 'host', line: 'New line', index: 0 }],
+          id: podcast.id,
+          segments: [{ speaker: 'host', line: 'Admin edit', index: 0 }],
         },
         errors,
       });
 
-      // Assert - can save changes to other user's podcast
+      // Assert
       expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1403,19 +1577,34 @@ describe('podcast router', () => {
   // ===========================================================================
 
   describe('approve handler', () => {
-    it('allows owner to approve their own podcast', async () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
       // Arrange
-      const ownerTestUser = createTestUser();
-      await insertTestUser(ctx, ownerTestUser);
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id);
 
-      const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
-        title: 'Owner podcast',
+      // Act & Assert
+      await expect(
+        handlers.approve({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('allows admin to approve a podcast', async () => {
+      // Arrange
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        title: 'Test podcast',
         status: 'ready',
       });
 
-      // Act - Approve as owner
-      const ownerUser = toUser(ownerTestUser);
-      const context = createMockContext(runtime, ownerUser);
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+
+      // Act - Approve as admin
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
       const result = await handlers.approve({
         context,
         input: { id: podcast.id },
@@ -1423,10 +1612,10 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.isOwner).toBe(true);
+      expect(result.id).toBe(podcast.id);
     });
 
-    it('rejects approval from non-owner', async () => {
+    it('rejects approval from non-admin', async () => {
       // Arrange
       const ownerTestUser = createTestUser();
       const strangerTestUser = createTestUser();
@@ -1438,7 +1627,7 @@ describe('podcast router', () => {
         status: 'ready',
       });
 
-      // Act & Assert - Stranger cannot approve
+      // Act & Assert - Non-admin cannot approve (requires admin role)
       const strangerUser = toUser(strangerTestUser);
       const context = createMockContext(runtime, strangerUser);
 
@@ -1448,7 +1637,81 @@ describe('podcast router', () => {
           input: { id: podcast.id },
           errors,
         }),
+      ).rejects.toThrow('admin role');
+    });
+  });
+
+  // ===========================================================================
+  // Tests: revokeApproval handler
+  // ===========================================================================
+
+  describe('revokeApproval handler', () => {
+    it('returns UNAUTHORIZED when user is null', async () => {
+      // Arrange
+      const context = createMockContext(runtime, null);
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        approvedBy: testUser.id,
+        approvedAt: new Date(),
+      });
+
+      // Act & Assert
+      await expect(
+        handlers.revokeApproval({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
       ).rejects.toThrow();
+    });
+
+    it('allows admin to revoke approval', async () => {
+      // Arrange
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        status: 'ready',
+        approvedBy: testUser.id,
+        approvedAt: new Date(),
+      });
+
+      // Act - Revoke as admin
+      const adminUser = toUser(adminTestUser);
+      const context = createMockContext(runtime, adminUser);
+      const result = await handlers.revokeApproval({
+        context,
+        input: { id: podcast.id },
+        errors,
+      });
+
+      // Assert
+      expect(result.id).toBe(podcast.id);
+    });
+
+    it('rejects revoke from non-admin', async () => {
+      // Arrange
+      const ownerTestUser = createTestUser();
+      const strangerTestUser = createTestUser();
+      await insertTestUser(ctx, ownerTestUser);
+      await insertTestUser(ctx, strangerTestUser);
+
+      const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
+        status: 'ready',
+        approvedBy: ownerTestUser.id,
+        approvedAt: new Date(),
+      });
+
+      // Act & Assert - Non-admin cannot revoke
+      const strangerUser = toUser(strangerTestUser);
+      const context = createMockContext(runtime, strangerUser);
+
+      await expect(
+        handlers.revokeApproval({
+          context,
+          input: { id: podcast.id },
+          errors,
+        }),
+      ).rejects.toThrow('admin role');
     });
   });
 });

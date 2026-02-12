@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Effect } from 'effect';
 import { TTS, TTSError } from '@repo/ai';
-import { MockTTSLive, MOCK_VOICES, createMockTTS } from '@repo/testing/mocks';
+import { MockTTSLive, MOCK_VOICES, createMockTTS } from '@repo/ai/testing';
 
 describe('test-tts command logic', () => {
   it('lists available voices', async () => {

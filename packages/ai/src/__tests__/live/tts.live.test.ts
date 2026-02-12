@@ -13,7 +13,7 @@ import { it } from '@effect/vitest';
 import { Effect, Exit } from 'effect';
 import { describe, expect } from 'vitest';
 import { TTSError, TTSQuotaExceededError } from '../../errors';
-import { expectEffectFailure } from '../../test-utils/effect-assertions';
+import { expectEffectFailure } from '@repo/testing';
 import { GoogleTTSLive, TTS } from '../../tts';
 import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
 import { liveTestEnv } from './env';

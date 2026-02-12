@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, type MouseEvent } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { DocumentInfo } from '@/shared/hooks/use-document-selection';
 import { DocumentUploader } from './document-uploader';
@@ -90,13 +90,6 @@ export function AddDocumentDialog({
     });
   };
 
-  const handleTabClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
-    const tabId = e.currentTarget.dataset.tabId as 'existing' | 'upload';
-    if (tabId) {
-      setActiveTab(tabId);
-    }
-  }, []);
-
   const handleSwitchToUpload = useCallback(() => {
     setActiveTab('upload');
   }, []);
@@ -110,13 +103,13 @@ export function AddDocumentDialog({
       }}
       title="Add Documents"
       description="Select existing documents or upload new ones."
-      maxWidth="md"
+      maxWidth="lg"
       scrollable
       footer={
         activeTab === 'existing'
           ? {
               submitText: `Add ${selectedIds.length > 0 ? `(${selectedIds.length})` : ''}`,
-              loadingText: 'Adding...',
+              loadingText: 'Adding\u2026',
               submitDisabled: selectedIds.length === 0,
               onSubmit: handleAddDocuments,
               isLoading: false,
@@ -124,19 +117,21 @@ export function AddDocumentDialog({
           : undefined
       }
     >
-      <div className="setup-tabs mb-4">
+      <div className="setup-tabs" role="tablist">
         <button
           type="button"
-          data-tab-id="existing"
-          onClick={handleTabClick}
+          role="tab"
+          aria-selected={activeTab === 'existing'}
+          onClick={() => setActiveTab('existing')}
           className={`setup-tab ${activeTab === 'existing' ? 'active' : ''}`}
         >
           Select Existing
         </button>
         <button
           type="button"
-          data-tab-id="upload"
-          onClick={handleTabClick}
+          role="tab"
+          aria-selected={activeTab === 'upload'}
+          onClick={() => setActiveTab('upload')}
           className={`setup-tab ${activeTab === 'upload' ? 'active' : ''}`}
         >
           Upload New

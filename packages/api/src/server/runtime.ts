@@ -1,4 +1,5 @@
 import { type AI, GoogleAILive } from '@repo/ai';
+import { MockAIWithLatency } from '@repo/ai/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
 import {
@@ -8,7 +9,6 @@ import {
   type UrlScraper,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
-import { MockAIWithLatency } from '@repo/testing';
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import type { StorageConfig } from './orpc';
 import type { DatabaseInstance } from '@repo/db/client';

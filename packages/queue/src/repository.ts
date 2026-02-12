@@ -298,6 +298,31 @@ const makeQueueService = Effect.gen(function* () {
         ),
       );
 
+  const failStaleJobs: QueueService['failStaleJobs'] = (maxAgeMs) =>
+    runQuery(
+      'failStaleJobs',
+      async () => {
+        const intervalSeconds = Math.floor(maxAgeMs / 1000);
+        const result = await (db as DatabaseInstance).execute(sql`
+          UPDATE ${job}
+          SET "status" = ${JobStatus.FAILED},
+              "error" = ${'Job timed out: worker did not complete within ' + intervalSeconds + 's'},
+              "completedAt" = NOW(),
+              "updatedAt" = NOW()
+          WHERE ${job.status} = ${JobStatus.PROCESSING}
+            AND ${job.startedAt} < NOW() - INTERVAL '${sql.raw(String(intervalSeconds))} seconds'
+          RETURNING *
+        `);
+
+        return (result.rows as (typeof job.$inferSelect)[]).map(mapRowToJob);
+      },
+      'Failed to fail stale jobs',
+    ).pipe(
+      Effect.tap((jobs) =>
+        Effect.annotateCurrentSpan('queue.stale_jobs.count', jobs.length),
+      ),
+    );
+
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(
       'deleteJob',
@@ -322,11 +347,13 @@ const makeQueueService = Effect.gen(function* () {
     getJob,
     getJobsByUser,
     updateJobStatus,
+    claimNextJob,
     processNextJob,
     processJobById,
     findPendingJobForPodcast,
     findPendingJobForVoiceover,
     deleteJob,
+    failStaleJobs,
   } satisfies QueueService;
 });
 
