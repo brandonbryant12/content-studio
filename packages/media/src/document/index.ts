@@ -15,6 +15,7 @@ export {
 export * from './use-cases';
 
 // Services
+export { calculateContentHash } from './services/content-utils';
 export { validateUrl } from './services/url-validator';
 export {
   UrlScraper,

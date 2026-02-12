@@ -339,4 +339,4 @@ const make: DocumentRepoService = {
 // =============================================================================
 
 export const DocumentRepoLive: Layer.Layer<DocumentRepo, never, Db> =
-  Layer.succeed(DocumentRepo, make);
+  Layer.sync(DocumentRepo, () => make);

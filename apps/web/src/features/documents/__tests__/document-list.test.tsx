@@ -86,6 +86,7 @@ const defaultProps = {
   onSearch: vi.fn(),
   onUploadOpen: vi.fn(),
   onUrlDialogOpen: vi.fn(),
+  onResearchDialogOpen: vi.fn(),
   onDelete: vi.fn(),
   selection: mockSelection,
   isBulkDeleting: false,

@@ -1,18 +1,16 @@
 import { requireOwnership } from '@repo/auth/policy';
 import { JobType } from '@repo/db/schema';
-import { Queue, type ProcessUrlPayload } from '@repo/queue';
+import {
+  Queue,
+  type ProcessUrlPayload,
+  type ProcessResearchPayload,
+} from '@repo/queue';
 import { Effect } from 'effect';
 import { DocumentAlreadyProcessing } from '../../errors';
 import { DocumentRepo } from '../repos';
 
 export interface RetryProcessingInput {
   id: string;
-}
-
-export interface ProcessResearchPayload {
-  documentId: string;
-  query: string;
-  userId: string;
 }
 
 export const retryProcessing = (input: RetryProcessingInput) =>

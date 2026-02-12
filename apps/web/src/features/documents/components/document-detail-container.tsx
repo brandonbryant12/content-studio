@@ -1,9 +1,10 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
-import { useState } from 'react';
-import { useDocument, useDocumentContent } from '../hooks/use-document';
+import { useState, useCallback } from 'react';
+import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
 import { useDocumentSearch } from '../hooks/use-document-search';
+import { useRetryProcessing } from '../hooks/use-retry-processing';
 import { DocumentDetail } from './document-detail';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
@@ -16,10 +17,14 @@ export function DocumentDetailContainer({
   documentId,
 }: DocumentDetailContainerProps) {
   const { data: document } = useDocument(documentId);
-  const { data: contentData } = useDocumentContent(documentId);
+
+  // Only fetch content when document is ready (hook always called, `enabled` controls fetching)
+  const isReady = document.status === 'ready';
+  const { data: contentData } = useDocumentContentOptional(documentId, isReady);
 
   const actions = useDocumentActions({ document });
-  const search = useDocumentSearch(contentData.content);
+  const search = useDocumentSearch(contentData?.content ?? '');
+  const retryMutation = useRetryProcessing();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -40,19 +45,29 @@ export function DocumentDetailContainer({
     shouldBlock: actions.hasChanges,
   });
 
+  const handleRetry = useCallback(() => {
+    retryMutation.mutate({ id: documentId });
+  }, [retryMutation, documentId]);
+
+  const handleDeleteRequest = useCallback(() => {
+    setIsDeleteDialogOpen(true);
+  }, []);
+
   return (
     <>
       <DocumentDetail
         document={document}
-        content={contentData.content}
+        content={contentData?.content ?? null}
         title={actions.title}
         onTitleChange={actions.setTitle}
         hasChanges={actions.hasChanges}
         isSaving={actions.isSaving}
         isDeleting={actions.isDeleting}
+        isRetrying={retryMutation.isPending}
         onSave={actions.handleSave}
         onDiscard={actions.discardChanges}
-        onDeleteRequest={() => setIsDeleteDialogOpen(true)}
+        onDeleteRequest={handleDeleteRequest}
+        onRetry={handleRetry}
         search={search}
       />
       <ConfirmationDialog

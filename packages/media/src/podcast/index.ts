@@ -27,6 +27,7 @@ export {
   NoChangesToSaveError,
   approvePodcast,
   revokeApproval,
+  generateCoverImage,
   type CreatePodcastInput,
   type GetPodcastInput,
   type UpdatePodcastInput,
@@ -47,6 +48,7 @@ export {
   type GetJobResult,
   type ApprovePodcastInput,
   type RevokeApprovalInput,
+  type GenerateCoverImageInput,
 } from './use-cases';
 
 // Prompts

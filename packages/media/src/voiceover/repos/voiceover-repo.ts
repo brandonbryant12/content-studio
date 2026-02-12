@@ -322,4 +322,4 @@ const make: VoiceoverRepoService = {
 // =============================================================================
 
 export const VoiceoverRepoLive: Layer.Layer<VoiceoverRepo, never, Db> =
-  Layer.succeed(VoiceoverRepo, make);
+  Layer.sync(VoiceoverRepo, () => make);

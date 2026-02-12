@@ -494,5 +494,7 @@ const make: PodcastRepoService = {
 // Layer
 // =============================================================================
 
-export const PodcastRepoLive: Layer.Layer<PodcastRepo, never, Db> =
-  Layer.succeed(PodcastRepo, make);
+export const PodcastRepoLive: Layer.Layer<PodcastRepo, never, Db> = Layer.sync(
+  PodcastRepo,
+  () => make,
+);

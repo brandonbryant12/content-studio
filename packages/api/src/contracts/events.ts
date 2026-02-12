@@ -62,7 +62,7 @@ export interface ActivityLoggedEvent {
 export interface DocumentJobCompletionEvent {
   type: 'document_job_completion';
   jobId: string;
-  jobType: 'process-url';
+  jobType: 'process-url' | 'process-research';
   status: 'completed' | 'failed';
   documentId: string;
   error?: string;
@@ -142,7 +142,7 @@ const ActivityLoggedEventSchema = Schema.Struct({
 const DocumentJobCompletionEventSchema = Schema.Struct({
   type: Schema.Literal('document_job_completion'),
   jobId: Schema.String,
-  jobType: Schema.Literal('process-url'),
+  jobType: Schema.Literal('process-url', 'process-research'),
   status: Schema.Literal('completed', 'failed'),
   documentId: Schema.String,
   error: Schema.optional(Schema.String),

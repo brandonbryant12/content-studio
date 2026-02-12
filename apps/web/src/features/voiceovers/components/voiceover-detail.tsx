@@ -72,7 +72,7 @@ export function VoiceoverDetail({
         />
       }
     >
-      <div className="flex flex-col gap-6 p-6 h-full">
+      <div className="flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 h-full">
         {/* Voice Ensemble at top - pinned */}
         <div className="shrink-0">
           <VoiceSelector

@@ -329,4 +329,4 @@ const make: InfographicRepoService = {
 // =============================================================================
 
 export const InfographicRepoLive: Layer.Layer<InfographicRepo, never, Db> =
-  Layer.succeed(InfographicRepo, make);
+  Layer.sync(InfographicRepo, () => make);

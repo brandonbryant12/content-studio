@@ -45,7 +45,7 @@ export const testLlm = Command.make('llm', {}).pipe(
       yield* Console.log(`\nUsing model: ${model}`);
       yield* Console.log('Generating structured output...\n');
 
-      const aiLayer = createAILayer({ provider: 'gemini', apiKey, model });
+      const aiLayer = createAILayer({ apiKey, model });
 
       const result = yield* Effect.gen(function* () {
         const llm = yield* LLM;

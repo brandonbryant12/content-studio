@@ -8,6 +8,7 @@ import {
   type GenerateVoiceoverPayload,
   type GenerateInfographicPayload,
   type ProcessUrlPayload,
+  type ProcessResearchPayload,
   type Job,
   type JobType,
 } from '@repo/queue';
@@ -33,6 +34,7 @@ import {
   handleGenerateAudio,
 } from './handlers';
 import { handleGenerateInfographic } from './infographic-handlers';
+import { handleProcessResearch } from './research-handlers';
 import { handleGenerateVoiceover } from './voiceover-handlers';
 
 type WorkerPayload =
@@ -41,7 +43,8 @@ type WorkerPayload =
   | GenerateAudioPayload
   | GenerateVoiceoverPayload
   | GenerateInfographicPayload
-  | ProcessUrlPayload;
+  | ProcessUrlPayload
+  | ProcessResearchPayload;
 
 const JOB_TYPES: JobType[] = [
   'generate-podcast',
@@ -50,6 +53,7 @@ const JOB_TYPES: JobType[] = [
   'generate-voiceover',
   'generate-infographic',
   'process-url',
+  'process-research',
 ];
 
 function emitEntityChange(
@@ -82,6 +86,9 @@ export function createUnifiedWorker(config: BaseWorkerConfig): Worker {
         case 'process-url':
           yield* run(handleProcessUrl(job as Job<ProcessUrlPayload>));
           break;
+        case 'process-research':
+          yield* run(handleProcessResearch(job as Job<ProcessResearchPayload>));
+          break;
         case 'generate-infographic':
           yield* run(
             handleGenerateInfographic(job as Job<GenerateInfographicPayload>),
@@ -93,12 +100,7 @@ export function createUnifiedWorker(config: BaseWorkerConfig): Worker {
           );
           break;
         case 'generate-podcast':
-          yield* run(
-            handleGeneratePodcast(job as Job<GeneratePodcastPayload>, {
-              onScriptComplete: (podcastId) =>
-                emitEntityChange(userId, 'podcast', podcastId),
-            }),
-          );
+          yield* run(handleGeneratePodcast(job as Job<GeneratePodcastPayload>));
           break;
         case 'generate-script':
           yield* run(handleGenerateScript(job as Job<GenerateScriptPayload>));
@@ -131,11 +133,13 @@ export function createUnifiedWorker(config: BaseWorkerConfig): Worker {
         : JobStatus.FAILED;
 
     if ('documentId' in job.payload) {
-      const { documentId } = job.payload as ProcessUrlPayload;
+      const { documentId } = job.payload as
+        | ProcessUrlPayload
+        | ProcessResearchPayload;
       const event: DocumentJobCompletionEvent = {
         type: 'document_job_completion',
         jobId: job.id,
-        jobType: 'process-url',
+        jobType: job.type as 'process-url' | 'process-research',
         status,
         documentId,
         error: job.error ?? undefined,

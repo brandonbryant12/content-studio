@@ -58,23 +58,7 @@ export const envSchema = Schema.Struct({
   }),
   PUBLIC_WEB_URL: UrlSchema,
 
-  AI_PROVIDER: Schema.optionalWith(Schema.Literal('gemini', 'vertex'), {
-    default: () => 'gemini' as const,
-  }),
   GEMINI_API_KEY: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
-
-  GOOGLE_VERTEX_PROJECT: Schema.optional(
-    Schema.String.pipe(Schema.minLength(1)),
-  ),
-  GOOGLE_VERTEX_LOCATION: Schema.optional(
-    Schema.String.pipe(Schema.minLength(1)),
-  ),
-  GOOGLE_VERTEX_API_KEY: Schema.optional(
-    Schema.String.pipe(Schema.minLength(1)),
-  ),
-  GOOGLE_APPLICATION_CREDENTIALS: Schema.optional(
-    Schema.String.pipe(Schema.minLength(1)),
-  ),
 
   USE_MOCK_AI: Schema.optionalWith(BooleanStringSchema, {
     default: () => process.env.NODE_ENV !== 'production',
@@ -99,23 +83,8 @@ export const envSchema = Schema.Struct({
 const rawEnv = Schema.decodeUnknownSync(envSchema)(process.env);
 
 if (!rawEnv.USE_MOCK_AI) {
-  if (rawEnv.AI_PROVIDER === 'gemini') {
-    if (!rawEnv.GEMINI_API_KEY) {
-      throw new Error(
-        'GEMINI_API_KEY is required when AI_PROVIDER=gemini (or not set)',
-      );
-    }
-  } else if (rawEnv.AI_PROVIDER === 'vertex') {
-    const hasExpressMode = !!rawEnv.GOOGLE_VERTEX_API_KEY;
-    const hasServiceAccountMode =
-      !!rawEnv.GOOGLE_VERTEX_PROJECT && !!rawEnv.GOOGLE_VERTEX_LOCATION;
-
-    if (!hasExpressMode && !hasServiceAccountMode) {
-      throw new Error(
-        'Vertex AI requires either GOOGLE_VERTEX_API_KEY (express mode) or ' +
-          'GOOGLE_VERTEX_PROJECT + GOOGLE_VERTEX_LOCATION (service account mode)',
-      );
-    }
+  if (!rawEnv.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is required when USE_MOCK_AI=false');
   }
 }
 

@@ -8,6 +8,3 @@ export {
 
 // Google AI provider (Gemini API)
 export { GoogleLive, type GoogleConfig } from './providers/google';
-
-// Vertex AI provider
-export { VertexLive, type VertexConfig } from './providers/vertex';

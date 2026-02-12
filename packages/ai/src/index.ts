@@ -25,8 +25,6 @@ export {
   type GenerateResult,
   GoogleLive as LLMGoogleLive,
   type GoogleConfig as LLMGoogleConfig,
-  VertexLive as LLMVertexLive,
-  type VertexConfig as LLMVertexConfig,
 } from './llm';
 
 // TTS
@@ -55,8 +53,6 @@ export {
   DEFAULT_PREVIEW_TEXT,
   GoogleTTSLive,
   type GoogleTTSConfig,
-  VertexTTSLive,
-  type VertexTTSConfig,
   // Use Cases
   listVoices,
   previewVoice,
@@ -76,13 +72,25 @@ export {
   type GoogleImageGenConfig,
 } from './image-gen';
 
+// DeepResearch
+export {
+  DeepResearch,
+  type DeepResearchService,
+  type ResearchResult,
+  type ResearchSource,
+  GoogleDeepResearchLive,
+  type GoogleDeepResearchConfig,
+} from './research';
+
 // Import for combined layer
 import type { ImageGen } from './image-gen';
 import type { LLM } from './llm';
+import type { DeepResearch } from './research';
 import type { TTS } from './tts';
 import { GoogleImageGenLive } from './image-gen';
-import { GoogleLive, VertexLive } from './llm';
-import { GoogleTTSLive, VertexTTSLive } from './tts';
+import { GoogleLive } from './llm';
+import { GoogleDeepResearchLive } from './research';
+import { GoogleTTSLive } from './tts';
 
 // =============================================================================
 // Combined AI Layer
@@ -92,7 +100,7 @@ import { GoogleTTSLive, VertexTTSLive } from './tts';
  * All AI services bundled together.
  * Use this type in SharedServices instead of listing each service individually.
  */
-export type AI = LLM | TTS | ImageGen;
+export type AI = LLM | TTS | ImageGen | DeepResearch;
 
 /**
  * Configuration for all Google AI services.
@@ -109,7 +117,7 @@ export interface GoogleAIConfig {
 }
 
 /**
- * Combined layer for all Google AI services (LLM + TTS).
+ * Combined layer for all Google AI services (LLM + TTS + ImageGen + DeepResearch).
  *
  * @example
  * ```typescript
@@ -125,101 +133,5 @@ export const GoogleAILive = (config: GoogleAIConfig): Layer.Layer<AI> =>
       apiKey: config.apiKey,
       model: config.imageGenModel,
     }),
+    GoogleDeepResearchLive({ apiKey: config.apiKey }),
   );
-
-// =============================================================================
-// Vertex AI Provider
-// =============================================================================
-
-/**
- * AI Provider type - which Google AI backend to use.
- */
-export type AIProvider = 'gemini' | 'vertex';
-
-/**
- * Configuration for Vertex AI services.
- *
- * Supports two authentication modes:
- * 1. Express Mode: Uses API key (simpler, good for dev)
- * 2. Service Account: Uses Application Default Credentials (production)
- */
-export type VertexAIConfig =
-  | {
-      /** Express mode - uses API key */
-      readonly mode: 'express';
-      /** Vertex AI API key */
-      readonly apiKey: string;
-      /** LLM model. Default: 'gemini-2.5-flash' */
-      readonly llmModel?: string;
-      /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
-      readonly ttsModel?: string;
-    }
-  | {
-      /** Service account mode - uses Application Default Credentials */
-      readonly mode: 'serviceAccount';
-      /** GCP project ID */
-      readonly project: string;
-      /** GCP region (e.g., 'us-central1') */
-      readonly location: string;
-      /** LLM model. Default: 'gemini-2.5-flash' */
-      readonly llmModel?: string;
-      /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
-      readonly ttsModel?: string;
-      /** API key for image gen (SA mode doesn't have one natively) */
-      readonly imageGenApiKey?: string;
-    };
-
-/**
- * Combined layer for all Vertex AI services (LLM + TTS).
- *
- * @example Express Mode
- * ```typescript
- * const aiLayer = VertexAILive({
- *   mode: 'express',
- *   apiKey: env.GOOGLE_VERTEX_API_KEY,
- * });
- * ```
- *
- * @example Service Account Mode
- * ```typescript
- * const aiLayer = VertexAILive({
- *   mode: 'serviceAccount',
- *   project: env.GOOGLE_VERTEX_PROJECT,
- *   location: env.GOOGLE_VERTEX_LOCATION,
- * });
- * ```
- */
-export const VertexAILive = (config: VertexAIConfig): Layer.Layer<AI> => {
-  if (config.mode === 'express') {
-    return Layer.mergeAll(
-      VertexLive({
-        mode: 'express',
-        apiKey: config.apiKey,
-        model: config.llmModel,
-      }),
-      VertexTTSLive({
-        mode: 'express',
-        apiKey: config.apiKey,
-        model: config.ttsModel,
-      }),
-      GoogleImageGenLive({ apiKey: config.apiKey }),
-    );
-  }
-
-  const imageGenApiKey = config.imageGenApiKey ?? '';
-  return Layer.mergeAll(
-    VertexLive({
-      mode: 'serviceAccount',
-      project: config.project,
-      location: config.location,
-      model: config.llmModel,
-    }),
-    VertexTTSLive({
-      mode: 'serviceAccount',
-      project: config.project,
-      location: config.location,
-      model: config.ttsModel,
-    }),
-    GoogleImageGenLive({ apiKey: imageGenApiKey }),
-  );
-};

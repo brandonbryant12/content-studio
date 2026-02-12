@@ -1,10 +1,4 @@
-import {
-  type AI,
-  type AIProvider,
-  type VertexAIConfig,
-  GoogleAILive,
-  VertexAILive,
-} from '@repo/ai';
+import { type AI, GoogleAILive } from '@repo/ai';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
 import {
@@ -44,12 +38,8 @@ export interface ServerRuntimeConfig {
   db: DatabaseInstance;
   storageConfig: StorageConfig;
   useMockAI?: boolean;
-  /** AI provider to use: 'gemini' or 'vertex' */
-  aiProvider: AIProvider;
-  /** Gemini API key (required when aiProvider='gemini') */
+  /** Gemini API key (required when useMockAI=false) */
   geminiApiKey?: string;
-  /** Vertex AI config (required when aiProvider='vertex') */
-  vertexConfig?: VertexAIConfig;
 }
 
 /**
@@ -72,14 +62,9 @@ export const createSharedLayers = (
   const queueLayer = QueueLive.pipe(Layer.provide(dbLayer));
   const storageLayer = createStorageLayer(config.storageConfig);
 
-  let aiLayer: Layer.Layer<AI>;
-  if (config.useMockAI) {
-    aiLayer = MockAIWithLatency;
-  } else if (config.aiProvider === 'vertex') {
-    aiLayer = VertexAILive(config.vertexConfig!);
-  } else {
-    aiLayer = GoogleAILive({ apiKey: config.geminiApiKey! });
-  }
+  const aiLayer: Layer.Layer<AI> = config.useMockAI
+    ? MockAIWithLatency
+    : GoogleAILive({ apiKey: config.geminiApiKey! });
 
   // Media layer bundles Documents, PodcastRepo, and VoiceoverRepo
   const mediaLayer = MediaLive.pipe(
@@ -111,10 +96,6 @@ export type ServerRuntime = ManagedRuntime.ManagedRuntime<
 /**
  * Creates a shared ManagedRuntime for the server.
  * This should be created once at server startup and reused for all requests.
- *
- * The runtime provides all shared services. For request-specific context
- * (like the current user), use withCurrentUser() to scope the user
- * via FiberRef before running effects.
  *
  * @example
  * ```typescript

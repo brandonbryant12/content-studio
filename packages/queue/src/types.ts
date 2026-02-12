@@ -88,3 +88,14 @@ export interface ProcessUrlResult {
   readonly documentId: string;
   readonly wordCount: number;
 }
+
+export interface ProcessResearchPayload {
+  readonly documentId: string;
+  readonly query: string;
+  readonly userId: string;
+}
+
+export interface ProcessResearchResult {
+  readonly documentId: string;
+  readonly wordCount: number;
+}

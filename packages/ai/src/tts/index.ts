@@ -31,9 +31,6 @@ export {
 // Google provider (Gemini API)
 export { GoogleTTSLive, type GoogleTTSConfig } from './providers/google';
 
-// Vertex AI provider
-export { VertexTTSLive, type VertexTTSConfig } from './providers/vertex';
-
 // Use Cases - Error types are inferred by Effect
 export {
   // Errors

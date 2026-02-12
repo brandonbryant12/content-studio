@@ -44,12 +44,13 @@ export function StepDocuments({
 
   const { data: documents, isLoading: loadingDocs } = useDocuments();
 
-  // Filter documents by search query
+  // Filter documents: only show ready ones, then apply search
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
-    if (!searchQuery.trim()) return documents;
+    const ready = documents.filter((doc) => doc.status === 'ready');
+    if (!searchQuery.trim()) return ready;
     const query = searchQuery.toLowerCase();
-    return documents.filter((doc) => doc.title.toLowerCase().includes(query));
+    return ready.filter((doc) => doc.title.toLowerCase().includes(query));
   }, [documents, searchQuery]);
 
   const uploadMutation = useMutation(
@@ -203,10 +204,16 @@ export function StepDocuments({
                   >
                     <div className="setup-doc-icon">
                       <span>
-                        {doc.mimeType
-                          .split('/')[1]
-                          ?.toUpperCase()
-                          .slice(0, 3) || 'DOC'}
+                        {doc.source === 'url'
+                          ? 'URL'
+                          : doc.source === 'research'
+                            ? 'RES'
+                            : doc.source === 'manual'
+                              ? 'TXT'
+                              : doc.mimeType
+                                  .split('/')[1]
+                                  ?.toUpperCase()
+                                  .slice(0, 3) || 'DOC'}
                       </span>
                     </div>
                     <div className="setup-doc-info">

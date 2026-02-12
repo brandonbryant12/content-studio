@@ -93,4 +93,4 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
  * ```
  */
 export const GoogleLive = (config: GoogleConfig): Layer.Layer<LLM> =>
-  Layer.succeed(LLM, makeGoogleService(config));
+  Layer.sync(LLM, () => makeGoogleService(config));

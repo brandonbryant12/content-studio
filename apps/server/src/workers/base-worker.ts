@@ -8,7 +8,6 @@ import { Role, type User } from '@repo/auth/policy';
 import { createDb } from '@repo/db/client';
 import { Queue, JobProcessingError, type Job, type JobType } from '@repo/queue';
 import { Deferred, Effect, Fiber, Ref, Schedule } from 'effect';
-import type { AIProvider, VertexAIConfig } from '@repo/ai';
 import type { JobId } from '@repo/db/schema';
 import { WORKER_DEFAULTS } from '../constants';
 
@@ -17,9 +16,7 @@ export interface BaseWorkerConfig {
   maxConsecutiveErrors?: number;
   runtime?: ServerRuntime;
   databaseUrl?: string;
-  aiProvider?: AIProvider;
   geminiApiKey?: string;
-  vertexConfig?: VertexAIConfig;
   storageConfig?: StorageConfig;
   useMockAI?: boolean;
 }
@@ -87,25 +84,15 @@ export const createWorker = <
   if (config.runtime) {
     runtime = config.runtime;
   } else {
-    const aiProvider = config.aiProvider ?? 'gemini';
-    const needsGeminiKey = aiProvider === 'gemini' && !config.useMockAI;
-    const needsVertexConfig = aiProvider === 'vertex' && !config.useMockAI;
-
     if (!config.databaseUrl || !config.storageConfig) {
       throw new Error(
         `[${name}] Either 'runtime' or 'databaseUrl' and 'storageConfig' must be provided`,
       );
     }
 
-    if (needsGeminiKey && !config.geminiApiKey) {
+    if (!config.useMockAI && !config.geminiApiKey) {
       throw new Error(
-        `[${name}] 'geminiApiKey' is required when aiProvider='gemini' and useMockAI=false`,
-      );
-    }
-
-    if (needsVertexConfig && !config.vertexConfig) {
-      throw new Error(
-        `[${name}] 'vertexConfig' is required when aiProvider='vertex' and useMockAI=false`,
+        `[${name}] 'geminiApiKey' is required when useMockAI=false`,
       );
     }
 
@@ -114,9 +101,7 @@ export const createWorker = <
       db,
       storageConfig: config.storageConfig,
       useMockAI: config.useMockAI,
-      aiProvider,
       geminiApiKey: config.geminiApiKey,
-      vertexConfig: config.vertexConfig,
     });
 
     if (config.useMockAI) {

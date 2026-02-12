@@ -1,6 +1,8 @@
 import {
   useSuspenseQuery,
+  useQuery,
   type UseSuspenseQueryResult,
+  type UseQueryResult,
 } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -30,4 +32,18 @@ export function useDocumentContent(
   return useSuspenseQuery(
     apiClient.documents.getContent.queryOptions({ input: { id } }),
   );
+}
+
+/**
+ * Fetch document text content by ID (non-suspense).
+ * Use this when content may not be available yet (e.g. processing/failed documents).
+ */
+export function useDocumentContentOptional(
+  id: string,
+  enabled: boolean,
+): UseQueryResult<DocumentContent, Error> {
+  return useQuery({
+    ...apiClient.documents.getContent.queryOptions({ input: { id } }),
+    enabled,
+  });
 }

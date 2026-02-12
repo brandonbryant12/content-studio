@@ -57,6 +57,13 @@ pnpm test:e2e     # Run Playwright e2e tests
 pnpm test:db:setup # Start test DB container + push schema
 ```
 
+## Effect Layer Rules
+
+- **`Layer.succeed`** — only for pure object literals (repos, plain config). No `new` or factory calls.
+- **`Layer.sync`** — when `make*` instantiates classes (`new GoogleGenAI(...)`) or calls factory functions
+- **`Layer.effect`** — when construction needs to `yield*` other Effect services
+- See `standards/patterns/effect-runtime.md` § "Layer Construction" for full guide
+
 ## DX & Tooling
 
 - **All dependencies use `catalog:`** in package.json for version alignment via pnpm catalog

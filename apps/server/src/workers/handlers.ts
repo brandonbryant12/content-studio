@@ -1,16 +1,13 @@
-import { ImageGen } from '@repo/ai';
 import {
   generateScript,
   generateAudio,
-  PodcastRepo,
+  generateCoverImage,
   syncEntityTitle,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
 import { JobProcessingError, formatError } from '@repo/queue';
-import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import type { Podcast } from '@repo/db/schema';
 import type {
   GeneratePodcastPayload,
   GeneratePodcastResult,
@@ -21,40 +18,7 @@ import type {
   Job,
 } from '@repo/queue';
 
-export interface HandlerOptions {
-  onScriptComplete?: (podcastId: string) => void;
-}
-
-const generateCoverImage = (podcast: Podcast) =>
-  Effect.gen(function* () {
-    const imageGen = yield* ImageGen;
-    const storage = yield* Storage;
-    const podcastRepo = yield* PodcastRepo;
-
-    const prompt =
-      `Create a podcast cover image for "${podcast.title}". ${podcast.description ?? ''}. ${podcast.summary ?? ''}`.trim();
-
-    const { imageData, mimeType } = yield* imageGen.generateImage({
-      prompt,
-      format: 'square',
-    });
-
-    const ext = mimeType.includes('png') ? 'png' : 'jpg';
-    const storageKey = `podcasts/${podcast.id}/cover.${ext}`;
-    yield* storage.upload(storageKey, imageData, mimeType);
-
-    yield* podcastRepo.update(podcast.id, { coverImageStorageKey: storageKey });
-  }).pipe(
-    Effect.catchAll(() => Effect.void),
-    Effect.withSpan('worker.generateCoverImage', {
-      attributes: { 'podcast.id': podcast.id },
-    }),
-  );
-
-export const handleGeneratePodcast = (
-  job: Job<GeneratePodcastPayload>,
-  options?: HandlerOptions,
-) =>
+export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
 
@@ -64,8 +28,7 @@ export const handleGeneratePodcast = (
     });
 
     yield* syncEntityTitle(scriptResult.podcast.id, scriptResult.podcast.title);
-    options?.onScriptComplete?.(scriptResult.podcast.id);
-    yield* generateCoverImage(scriptResult.podcast);
+    yield* generateCoverImage({ podcastId: scriptResult.podcast.id });
 
     const audioResult: UseCaseAudioResult = yield* generateAudio({
       podcastId: scriptResult.podcast.id,
@@ -106,7 +69,7 @@ export const handleGenerateScript = (job: Job<GenerateScriptPayload>) =>
     });
 
     yield* syncEntityTitle(result.podcast.id, result.podcast.title);
-    yield* generateCoverImage(result.podcast);
+    yield* generateCoverImage({ podcastId: result.podcast.id });
 
     return {
       podcastId: result.podcast.id,

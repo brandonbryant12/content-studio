@@ -132,6 +132,25 @@ export default defineConfig([
       ],
     },
   },
+  // Allow Layer.succeed in test files and test utilities — mocks intentionally have R=never
+  {
+    files: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.integration.test.ts',
+      '**/test-utils/**/*.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'ImportExpression',
+          message:
+            'Dynamic imports are not allowed. Use static imports instead.',
+        },
+      ],
+    },
+  },
   // Ban `as any` in test files — use branded types or typed helpers instead
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.integration.test.ts'],

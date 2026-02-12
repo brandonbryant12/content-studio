@@ -11,4 +11,5 @@ export type { UseDocumentActionsReturn } from './use-document-actions';
 export { useOptimisticDeleteDocument } from './use-optimistic-delete-document';
 export { useOptimisticUpload, fileToBase64 } from './use-optimistic-upload';
 export { useCreateFromUrl } from './use-create-from-url';
+export { useStartResearch } from './use-start-research';
 export { useRetryProcessing } from './use-retry-processing';

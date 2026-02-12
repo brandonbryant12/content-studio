@@ -193,6 +193,7 @@ export interface DocumentListProps {
   onSearch: (query: string) => void;
   onUploadOpen: (open: boolean) => void;
   onUrlDialogOpen: (open: boolean) => void;
+  onResearchDialogOpen: (open: boolean) => void;
   onDelete: (id: string) => void;
   selection: UseBulkSelectionReturn;
   isBulkDeleting: boolean;
@@ -207,6 +208,7 @@ export function DocumentList({
   onSearch,
   onUploadOpen,
   onUrlDialogOpen,
+  onResearchDialogOpen,
   onDelete,
   selection,
   isBulkDeleting,
@@ -257,6 +259,10 @@ export function DocumentList({
           <h1 className="page-title">Knowledge Base</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => onResearchDialogOpen(true)}>
+            <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
+            Research
+          </Button>
           <Button variant="outline" onClick={() => onUrlDialogOpen(true)}>
             <GlobeIcon className="w-4 h-4 mr-2" />
             From URL

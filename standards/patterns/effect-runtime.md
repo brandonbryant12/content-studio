@@ -274,6 +274,45 @@ export const createAuth = ({ db, ... }: AuthOptions) => {
 - Keep the logic simple - if complex, consider a separate cron job
 - Log errors but don't fail the auth flow
 
+## Layer Construction: `Layer.succeed` vs `Layer.sync`
+
+Choose the right Layer constructor based on whether the `make*` function performs side effects:
+
+| Constructor | Use When | Example |
+|-------------|----------|---------|
+| `Layer.succeed` | Value is a pure object literal (no `new`, no factory calls) | Repos, plain config |
+| `Layer.sync` | Construction instantiates classes or calls factory functions | SDK clients, providers |
+| `Layer.effect` | Construction needs to yield other Effect services | Layers with dependencies |
+
+### Anti-Pattern: `Layer.succeed` with Side Effects
+
+```typescript
+// WRONG - makeGoogleService calls `new GoogleGenAI(...)` internally
+export const GoogleLive = (config: Config): Layer.Layer<LLM> =>
+  Layer.succeed(LLM, makeGoogleService(config));
+
+// CORRECT - defer construction with Layer.sync
+export const GoogleLive = (config: Config): Layer.Layer<LLM> =>
+  Layer.sync(LLM, () => makeGoogleService(config));
+```
+
+### When `Layer.succeed` Is Fine
+
+Pure object literals with no instantiation are safe with `Layer.succeed`:
+
+```typescript
+// OK - `make` is a plain object of functions, no side effects
+const make: DocumentRepoService = {
+  findById: (id) => Effect.gen(function* () { /* ... */ }),
+  create: (input) => Effect.gen(function* () { /* ... */ }),
+};
+
+export const DocumentRepoLive: Layer.Layer<DocumentRepo> =
+  Layer.succeed(DocumentRepo, make);
+```
+
+**Rule of thumb:** If `make*` calls `new SomeClass(...)` or a factory like `createSomeSDK(...)`, use `Layer.sync`. If it's just an object literal of functions, `Layer.succeed` is fine.
+
 ## Summary
 
 | Pattern | Do | Don't |
@@ -285,3 +324,4 @@ export const createAuth = ({ db, ... }: AuthOptions) => {
 | Scope user | `withCurrentUser(user)(effect)` | Provide layer |
 | Effect requirements | Type as `SharedServices` | Cast to `unknown` |
 | New services | Add to type AND layer | Add to just one |
+| Layer with side effects | `Layer.sync(Tag, () => make(cfg))` | `Layer.succeed(Tag, make(cfg))` |

@@ -162,4 +162,4 @@ const makeGoogleImageGenService = (
 export const GoogleImageGenLive = (
   config: GoogleImageGenConfig,
 ): Layer.Layer<ImageGen> =>
-  Layer.succeed(ImageGen, makeGoogleImageGenService(config));
+  Layer.sync(ImageGen, () => makeGoogleImageGenService(config));

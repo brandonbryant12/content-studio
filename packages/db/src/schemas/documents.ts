@@ -37,11 +37,17 @@ export const documentStatusEnum = pgEnum('document_status', [
   'failed',
 ]);
 
+export interface ResearchSource {
+  title: string;
+  url: string;
+}
+
 export interface ResearchConfig {
   query: string;
   operationId?: string;
   researchStatus?: string;
   sourceCount?: number;
+  sources?: ResearchSource[];
 }
 
 export const document = pgTable(
@@ -136,11 +142,17 @@ export const DocumentStatusSchema = Schema.Literal(
   'failed',
 );
 
+export const ResearchSourceSchema = Schema.Struct({
+  title: Schema.String,
+  url: Schema.String,
+});
+
 export const ResearchConfigSchema = Schema.Struct({
   query: Schema.String,
   operationId: Schema.optional(Schema.String),
   researchStatus: Schema.optional(Schema.String),
   sourceCount: Schema.optional(Schema.Number),
+  sources: Schema.optional(Schema.Array(ResearchSourceSchema)),
 });
 
 export const DocumentOutputSchema = Schema.Struct({

@@ -219,6 +219,28 @@ const documentContract = oc
       )
       .output(std(DocumentOutputSchema)),
 
+    // Create from research
+    fromResearch: oc
+      .route({
+        method: 'POST',
+        path: '/from-research',
+        summary: 'Create from research',
+        description:
+          'Start a deep research operation that produces a knowledge base document',
+      })
+      .errors({ ...documentErrors, ...urlErrors })
+      .input(
+        std(
+          Schema.Struct({
+            query: Schema.String.pipe(Schema.minLength(10)),
+            title: Schema.optional(
+              Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
+            ),
+          }),
+        ),
+      )
+      .output(std(DocumentOutputSchema)),
+
     // Retry failed processing
     retry: oc
       .route({

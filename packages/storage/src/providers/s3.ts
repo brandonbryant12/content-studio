@@ -132,7 +132,5 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
   };
 };
 
-export const S3StorageLive = (
-  config: S3StorageConfig,
-  // eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements
-): Layer.Layer<Storage> => Layer.succeed(Storage, makeS3Storage(config));
+export const S3StorageLive = (config: S3StorageConfig): Layer.Layer<Storage> =>
+  Layer.sync(Storage, () => makeS3Storage(config));

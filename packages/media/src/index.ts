@@ -68,7 +68,13 @@ export {
   type DeleteDocumentInput,
   type CreateFromUrlInput,
   type RetryProcessingInput,
-  type ProcessResearchPayload,
+  createFromResearch,
+  type CreateFromResearchInput,
+  processUrl,
+  type ProcessUrlInput,
+  calculateContentHash,
+  processResearch,
+  type ProcessResearchInput,
 } from './document';
 
 export {
@@ -153,6 +159,9 @@ export {
   type GetInfographicJobInput,
   type ApproveInfographicInput,
   type RevokeInfographicApprovalInput,
+  executeInfographicGeneration,
+  type ExecuteGenerationInput,
+  type ExecuteGenerationResult,
 } from './infographic';
 
 export type {
@@ -210,6 +219,7 @@ export {
   getJob,
   approvePodcast,
   revokeApproval,
+  generateCoverImage,
   InvalidAudioGenerationError,
   InvalidSaveError,
   NoChangesToSaveError,
@@ -233,6 +243,7 @@ export {
   type GetJobResult,
   type ApprovePodcastInput,
   type RevokeApprovalInput,
+  type GenerateCoverImageInput,
 } from './podcast';
 
 export {

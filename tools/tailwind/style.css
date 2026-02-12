@@ -1218,11 +1218,122 @@
   }
 
   /* -----------------------------------------
+     RESEARCH CALLOUT & SOURCES
+     ----------------------------------------- */
+  .research-callout {
+    @apply rounded-xl border border-purple-200/60 bg-purple-50/40
+           dark:border-purple-500/15 dark:bg-purple-950/20;
+  }
+
+  .research-callout-header {
+    @apply flex items-start gap-3 px-5 py-4;
+  }
+
+  .research-callout-icon {
+    @apply mt-0.5 w-7 h-7 rounded-lg shrink-0
+           bg-purple-100 text-purple-600
+           dark:bg-purple-500/15 dark:text-purple-400
+           flex items-center justify-center;
+  }
+
+  .research-callout-label {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-[10px] uppercase tracking-wider text-purple-500/70 dark:text-purple-400/60;
+  }
+
+  .research-callout-query {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 50;
+    @apply text-[15px] font-medium text-foreground mt-0.5 leading-snug;
+  }
+
+  .research-sources-section {
+    @apply border-t border-purple-200/40 dark:border-purple-500/10;
+  }
+
+  .research-sources-toggle {
+    @apply w-full flex items-center justify-between px-5 py-2.5
+           text-xs font-medium text-muted-foreground
+           hover:text-foreground hover:bg-purple-100/30 dark:hover:bg-purple-500/5
+           transition-colors duration-150 cursor-pointer;
+  }
+
+  .research-sources-count {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-[11px] tracking-wide;
+  }
+
+  .research-sources-list {
+    @apply px-3 pb-3 space-y-1;
+  }
+
+  .research-source-item {
+    animation: source-fade-in 0.25s ease-out both;
+  }
+
+  .research-source-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg
+           text-sm transition-all duration-150
+           hover:bg-white dark:hover:bg-white/5;
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  .research-source-link:hover {
+    box-shadow:
+      0 1px 3px hsl(var(--foreground) / 0.04),
+      0 2px 8px hsl(var(--foreground) / 0.03);
+  }
+
+  .research-source-favicon {
+    @apply w-5 h-5 rounded shrink-0
+           bg-muted/60 dark:bg-white/5
+           flex items-center justify-center overflow-hidden;
+  }
+
+  .research-source-info {
+    @apply flex flex-col min-w-0 flex-1 gap-0.5;
+  }
+
+  .research-source-title {
+    @apply text-sm font-medium text-foreground truncate
+           transition-colors duration-150;
+  }
+
+  .research-source-link:hover .research-source-title {
+    @apply text-primary;
+  }
+
+  .research-source-domain {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-[10px] text-muted-foreground/70 truncate;
+  }
+
+  .research-source-arrow {
+    @apply w-3.5 h-3.5 shrink-0 text-muted-foreground/0
+           transition-all duration-200;
+  }
+
+  .research-source-link:hover .research-source-arrow {
+    @apply text-muted-foreground/50 translate-x-0.5 -translate-y-0.5;
+  }
+
+  @keyframes source-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* -----------------------------------------
      DOCUMENT CONTENT READER
      ----------------------------------------- */
   .document-content-reader {
     font-family: 'Source Serif 4', Georgia, serif;
-    @apply text-base leading-relaxed text-foreground/90;
+    @apply text-base leading-relaxed text-foreground/90 max-w-prose;
   }
 
   .document-content-reader p {
@@ -3211,19 +3322,32 @@
   }
 
   /* -----------------------------------------
-     DURATION SELECTOR (Step 3)
+     DURATION SELECTOR (Step 3) — Slider
      ----------------------------------------- */
-  .setup-duration-group {
-    @apply flex flex-wrap gap-3 justify-center;
+  .setup-duration-slider {
+    @apply flex items-center gap-3 max-w-sm mx-auto;
   }
 
-  .setup-duration-btn {
-    @apply px-6 py-3 rounded-full border-2 text-sm font-semibold transition-all duration-200
-           border-border text-muted-foreground hover:border-warning/40 hover:text-foreground;
+  .setup-duration-slider > [data-slot='slider'] {
+    @apply flex-1;
   }
 
-  .setup-duration-btn.selected {
-    @apply border-warning bg-warning text-warning-foreground shadow-md;
+  .setup-duration-range-label {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-xs text-muted-foreground tabular-nums shrink-0;
+  }
+
+  .setup-duration-value-display {
+    @apply flex items-center justify-center gap-1 mt-3;
+  }
+
+  .setup-duration-value {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    @apply text-2xl font-semibold text-warning tabular-nums;
+  }
+
+  .setup-duration-unit {
+    @apply text-sm text-muted-foreground;
   }
 
   /* -----------------------------------------
@@ -3748,7 +3872,7 @@
   .collab-list-remove-btn {
     @apply w-7 h-7 text-muted-foreground;
     @apply hover:text-destructive hover:bg-destructive/10;
-    @apply opacity-0 group-hover:opacity-100 transition-opacity;
+    @apply opacity-0 transition-opacity;
   }
 
   .collab-list-row:hover .collab-list-remove-btn {

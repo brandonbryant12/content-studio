@@ -22,8 +22,18 @@ export { deleteDocument, type DeleteDocumentInput } from './delete-document';
 
 export { createFromUrl, type CreateFromUrlInput } from './create-from-url';
 
+export { retryProcessing, type RetryProcessingInput } from './retry-processing';
+
 export {
-  retryProcessing,
-  type RetryProcessingInput,
-  type ProcessResearchPayload,
-} from './retry-processing';
+  createFromResearch,
+  type CreateFromResearchInput,
+} from './create-from-research';
+
+export { processUrl, type ProcessUrlInput } from './process-url';
+
+export {
+  processResearch,
+  type ProcessResearchInput,
+  ResearchTimeoutError,
+  ResearchEmptyContentError,
+} from './process-research';

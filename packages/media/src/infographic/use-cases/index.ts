@@ -41,3 +41,9 @@ export {
   revokeInfographicApproval,
   type RevokeInfographicApprovalInput,
 } from './revoke-infographic-approval';
+
+export {
+  executeInfographicGeneration,
+  type ExecuteGenerationInput,
+  type ExecuteGenerationResult,
+} from './execute-generation';

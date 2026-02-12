@@ -45,3 +45,9 @@ export { getJob, type GetJobInput, type GetJobResult } from './get-job';
 // Approval
 export { approvePodcast, type ApprovePodcastInput } from './approve-podcast';
 export { revokeApproval, type RevokeApprovalInput } from './revoke-approval';
+
+// Cover Image
+export {
+  generateCoverImage,
+  type GenerateCoverImageInput,
+} from './generate-cover-image';

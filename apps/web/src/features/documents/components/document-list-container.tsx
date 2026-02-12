@@ -5,8 +5,10 @@ import {
   getDocumentListQueryKey,
 } from '../hooks/use-document-list';
 import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-document';
+import { useStartResearch } from '../hooks/use-start-research';
 import { AddFromUrlDialog } from './add-from-url-dialog';
 import { DocumentList } from './document-list';
+import { StartResearchDialog } from './start-research-dialog';
 import { rawApiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
@@ -18,12 +20,14 @@ export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
+  const [researchDialogOpen, setResearchDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: documents = [], isLoading } = useDocumentList();
   const deleteMutation = useOptimisticDeleteDocument();
   const createFromUrlMutation = useCreateFromUrl();
+  const startResearchMutation = useStartResearch();
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getDocumentListQueryKey(),
@@ -58,6 +62,7 @@ export function DocumentListContainer() {
   const handleSearch = setSearchQuery;
   const handleUploadOpen = setUploadOpen;
   const handleUrlDialogOpen = setUrlDialogOpen;
+  const handleResearchDialogOpen = setResearchDialogOpen;
 
   const handleCreateFromUrl = useCallback(
     (url: string, title?: string) => {
@@ -71,6 +76,20 @@ export function DocumentListContainer() {
       );
     },
     [createFromUrlMutation],
+  );
+
+  const handleStartResearch = useCallback(
+    (query: string, title?: string) => {
+      startResearchMutation.mutate(
+        { query, title },
+        {
+          onSuccess: () => {
+            setResearchDialogOpen(false);
+          },
+        },
+      );
+    },
+    [startResearchMutation],
   );
 
   if (isLoading) {
@@ -99,6 +118,7 @@ export function DocumentListContainer() {
         onSearch={handleSearch}
         onUploadOpen={handleUploadOpen}
         onUrlDialogOpen={handleUrlDialogOpen}
+        onResearchDialogOpen={handleResearchDialogOpen}
         onDelete={handleDeleteRequest}
         selection={selection}
         isBulkDeleting={isBulkDeleting}
@@ -109,6 +129,12 @@ export function DocumentListContainer() {
         onOpenChange={setUrlDialogOpen}
         onSubmit={handleCreateFromUrl}
         isSubmitting={createFromUrlMutation.isPending}
+      />
+      <StartResearchDialog
+        open={researchDialogOpen}
+        onOpenChange={setResearchDialogOpen}
+        onSubmit={handleStartResearch}
+        isSubmitting={startResearchMutation.isPending}
       />
       <ConfirmationDialog
         open={pendingDeleteId !== null}

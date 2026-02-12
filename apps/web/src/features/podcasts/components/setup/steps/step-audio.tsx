@@ -1,3 +1,4 @@
+import { Slider } from '@repo/ui/components/slider';
 import type { MouseEvent, KeyboardEvent } from 'react';
 import { useVoicePreview, useVoices } from '@/shared/hooks';
 
@@ -105,13 +106,8 @@ function SetupVoicePreviewBtn({
   );
 }
 
-const DURATION_OPTIONS = [
-  { value: 3, label: '3 min' },
-  { value: 5, label: '5 min' },
-  { value: 10, label: '10 min' },
-  { value: 15, label: '15 min' },
-  { value: 30, label: '30 min' },
-] as const;
+const MIN_DURATION = 1;
+const MAX_DURATION = 10;
 
 interface StepAudioProps {
   format: PodcastFormat;
@@ -229,17 +225,23 @@ export function StepAudio({
         <label className="setup-label block text-center mb-4">
           Target Duration
         </label>
-        <div className="setup-duration-group">
-          {DURATION_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onDurationChange(option.value)}
-              className={`setup-duration-btn ${duration === option.value ? 'selected' : ''}`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="setup-duration-slider">
+          <span className="setup-duration-range-label">{MIN_DURATION}</span>
+          <Slider
+            value={[duration]}
+            onValueChange={([value]) =>
+              value != null && onDurationChange(value)
+            }
+            min={MIN_DURATION}
+            max={MAX_DURATION}
+            step={1}
+            aria-label="Target duration in minutes"
+          />
+          <span className="setup-duration-range-label">{MAX_DURATION}</span>
+        </div>
+        <div className="setup-duration-value-display">
+          <span className="setup-duration-value">{duration}</span>
+          <span className="setup-duration-unit">min</span>
         </div>
       </div>
 

@@ -6,19 +6,20 @@ import { DocumentDetailContainer } from '@/features/documents/components/documen
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
 export const Route = createFileRoute('/_protected/documents/$documentId')({
-  loader: ({ params }) =>
-    Promise.all([
-      queryClient.ensureQueryData(
-        apiClient.documents.get.queryOptions({
-          input: { id: params.documentId },
-        }),
-      ),
-      queryClient.ensureQueryData(
+  loader: async ({ params }) => {
+    const doc = await queryClient.ensureQueryData(
+      apiClient.documents.get.queryOptions({
+        input: { id: params.documentId },
+      }),
+    );
+    if (doc.status === 'ready') {
+      await queryClient.ensureQueryData(
         apiClient.documents.getContent.queryOptions({
           input: { id: params.documentId },
         }),
-      ),
-    ]),
+      );
+    }
+  },
   component: DocumentPage,
 });
 

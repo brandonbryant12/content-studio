@@ -252,4 +252,4 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
  * ```
  */
 export const GoogleTTSLive = (config: GoogleTTSConfig): Layer.Layer<TTS> =>
-  Layer.succeed(TTS, makeGoogleTTSService(config));
+  Layer.sync(TTS, () => makeGoogleTTSService(config));

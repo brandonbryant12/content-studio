@@ -11,6 +11,7 @@ import {
   updateDocument,
   deleteDocument,
   createFromUrl,
+  createFromResearch,
   retryProcessing,
 } from '@repo/media';
 import { Effect } from 'effect';
@@ -179,6 +180,24 @@ const documentRouter = {
         {
           span: 'api.documents.fromUrl',
           attributes: { 'document.url': input.url },
+        },
+      );
+    },
+  ),
+
+  fromResearch: protectedProcedure.documents.fromResearch.handler(
+    async ({ context, input, errors }) => {
+      return handleEffectWithProtocol(
+        context.runtime,
+        context.user,
+        createFromResearch(input).pipe(
+          Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(context.runtime, context.user, 'created', 'document'),
+        ),
+        errors,
+        {
+          span: 'api.documents.fromResearch',
+          attributes: { 'document.researchQuery': input.query.slice(0, 100) },
         },
       );
     },

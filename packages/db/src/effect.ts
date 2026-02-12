@@ -78,4 +78,4 @@ export const withDb = <A>(
   );
 
 export const DbLive = (db: DatabaseInstance): Layer.Layer<Db> =>
-  Layer.succeed(Db, { db });
+  Layer.sync(Db, () => ({ db }));
