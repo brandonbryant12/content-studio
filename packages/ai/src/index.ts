@@ -82,6 +82,9 @@ export {
   type GoogleDeepResearchConfig,
 } from './research';
 
+// Chat
+export { streamResearchChat, type StreamResearchChatInput } from './chat';
+
 // Import for combined layer
 import type { ImageGen } from './image-gen';
 import type { LLM } from './llm';

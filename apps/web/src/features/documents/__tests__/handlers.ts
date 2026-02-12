@@ -56,6 +56,26 @@ export const mockDocuments: MockDocumentListItem[] = [
   }),
 ];
 
+// Chat mock handler — returns a simple SSE stream
+export const chatHandlers = [
+  http.post(`${API_BASE}/chat.research`, () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        controller.enqueue(
+          encoder.encode(
+            'data: {"type":"text-delta","textDelta":"I can help refine your topic."}\n\n',
+          ),
+        );
+        controller.close();
+      },
+    });
+    return new HttpResponse(stream, {
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
+  }),
+];
+
 // Document feature handlers
 export const documentHandlers = [
   http.post(`${API_BASE}/documents.list`, () => {

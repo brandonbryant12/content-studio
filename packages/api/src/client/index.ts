@@ -10,6 +10,7 @@ import type {
 import { appContract } from '../contracts';
 
 export { isDefinedError, safe } from '@orpc/client';
+export { eventIteratorToUnproxiedDataStream } from '@orpc/client';
 
 export interface APIClientOptions {
   serverUrl: string;

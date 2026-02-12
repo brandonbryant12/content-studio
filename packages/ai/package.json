@@ -19,6 +19,10 @@
       "types": "./dist/src/tts/index.d.ts",
       "default": "./src/tts/index.ts"
     },
+    "./chat": {
+      "types": "./dist/src/chat/index.d.ts",
+      "default": "./src/chat/index.ts"
+    },
     "./testing": {
       "types": "./dist/src/testing/index.d.ts",
       "default": "./src/testing/index.ts"
@@ -39,12 +43,12 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
-    "@ai-sdk/google": "^3.0.15",
+    "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "^1.0.0",
     "@google/genai": "^1.40.0",
     "@repo/db": "workspace:*",
     "@repo/storage": "workspace:*",
-    "ai": "^6.0.57",
+    "ai": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

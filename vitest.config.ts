@@ -37,6 +37,7 @@ export default defineConfig({
       '@repo/testing/factories': `${packagesRoot}/testing/src/factories/index.ts`,
       '@repo/testing/setup': `${packagesRoot}/testing/src/setup/index.ts`,
       '@repo/testing': `${packagesRoot}/testing/src/index.ts`,
+      '@repo/ai/chat': `${packagesRoot}/ai/src/chat/index.ts`,
       '@repo/ai/testing': `${packagesRoot}/ai/src/testing/index.ts`,
       '@repo/ai/llm': `${packagesRoot}/ai/src/llm/index.ts`,
       '@repo/ai/tts': `${packagesRoot}/ai/src/tts/index.ts`,

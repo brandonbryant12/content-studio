@@ -5,10 +5,9 @@ import {
   getDocumentListQueryKey,
 } from '../hooks/use-document-list';
 import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-document';
-import { useStartResearch } from '../hooks/use-start-research';
 import { AddFromUrlDialog } from './add-from-url-dialog';
 import { DocumentList } from './document-list';
-import { StartResearchDialog } from './start-research-dialog';
+import { ResearchChatContainer } from './research-chat-container';
 import { rawApiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
@@ -27,7 +26,6 @@ export function DocumentListContainer() {
   const { data: documents = [], isLoading } = useDocumentList();
   const deleteMutation = useOptimisticDeleteDocument();
   const createFromUrlMutation = useCreateFromUrl();
-  const startResearchMutation = useStartResearch();
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getDocumentListQueryKey(),
@@ -69,20 +67,6 @@ export function DocumentListContainer() {
     [createFromUrlMutation],
   );
 
-  const handleStartResearch = useCallback(
-    (query: string, title?: string) => {
-      startResearchMutation.mutate(
-        { query, title },
-        {
-          onSuccess: () => {
-            setResearchDialogOpen(false);
-          },
-        },
-      );
-    },
-    [startResearchMutation],
-  );
-
   if (isLoading) {
     return (
       <div className="page-container-narrow">
@@ -121,11 +105,9 @@ export function DocumentListContainer() {
         onSubmit={handleCreateFromUrl}
         isSubmitting={createFromUrlMutation.isPending}
       />
-      <StartResearchDialog
+      <ResearchChatContainer
         open={researchDialogOpen}
         onOpenChange={setResearchDialogOpen}
-        onSubmit={handleStartResearch}
-        isSubmitting={startResearchMutation.isPending}
       />
       <ConfirmationDialog
         open={pendingDeleteId !== null}
