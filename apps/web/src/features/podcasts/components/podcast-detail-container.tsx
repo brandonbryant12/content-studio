@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
@@ -61,14 +61,6 @@ export function PodcastDetailContainer({
   const isAdmin = useIsAdmin();
   const isApproved = podcast.approvedBy !== null;
 
-  const handleApprove = useCallback(() => {
-    approve.mutate({ id: podcastId });
-  }, [approve, podcastId]);
-
-  const handleRevoke = useCallback(() => {
-    revoke.mutate({ id: podcastId });
-  }, [revoke, podcastId]);
-
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
@@ -112,8 +104,8 @@ export function PodcastDetailContainer({
       onDelete={actions.handleDelete}
       isApproved={isApproved}
       isAdmin={isAdmin}
-      onApprove={handleApprove}
-      onRevoke={handleRevoke}
+      onApprove={() => approve.mutate({ id: podcastId })}
+      onRevoke={() => revoke.mutate({ id: podcastId })}
       isApprovalPending={approve.isPending || revoke.isPending}
     />
   );

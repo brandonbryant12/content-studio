@@ -20,14 +20,7 @@ export type AuthInstance = ReturnType<typeof createAuth>;
  */
 export const getBaseOptions = (db: DatabaseInstance) =>
   ({
-    database: drizzleAdapter(db, {
-      provider: 'pg',
-    }),
-
-    /**
-     * Only uncomment the line below if you are using plugins, so that
-     * your types can be correctly inferred:
-     */
+    database: drizzleAdapter(db, { provider: 'pg' }),
     plugins: [openAPI()],
   }) satisfies BetterAuthOptions;
 
@@ -37,12 +30,12 @@ export const createAuth = ({
   apiPath,
   db,
   authSecret,
-}: AuthOptions) => {
-  return betterAuth({
+}: AuthOptions) =>
+  betterAuth({
     ...getBaseOptions(db),
     baseURL: urlJoin(serverUrl, apiPath, 'auth'),
     secret: authSecret,
-    trustedOrigins: [webUrl].map((url) => new URL(url).origin),
+    trustedOrigins: [new URL(webUrl).origin],
     user: {
       additionalFields: {
         role: {
@@ -64,4 +57,3 @@ export const createAuth = ({
       requireEmailVerification: false,
     },
   });
-};

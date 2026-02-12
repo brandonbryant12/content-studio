@@ -1,13 +1,8 @@
 import { oc } from '@orpc/contract';
 import { Schema } from 'effect';
+import { std } from './shared';
 
-// Helper to convert Effect Schema to Standard Schema for oRPC
-const std = Schema.standardSchemaV1;
-
-const GenderSchema = Schema.Union(
-  Schema.Literal('female'),
-  Schema.Literal('male'),
-);
+const GenderSchema = Schema.Literal('female', 'male');
 
 const VoiceInfoSchema = Schema.Struct({
   id: Schema.String,
@@ -17,11 +12,7 @@ const VoiceInfoSchema = Schema.Struct({
   previewUrl: Schema.NullOr(Schema.String),
 });
 
-const AudioEncodingSchema = Schema.Union(
-  Schema.Literal('MP3'),
-  Schema.Literal('LINEAR16'),
-  Schema.Literal('OGG_OPUS'),
-);
+const AudioEncodingSchema = Schema.Literal('MP3', 'LINEAR16', 'OGG_OPUS');
 
 const voicesContract = oc
   .prefix('/voices')
@@ -75,7 +66,7 @@ const voicesContract = oc
       .output(
         std(
           Schema.Struct({
-            audioContent: Schema.String, // Base64 encoded audio
+            audioContent: Schema.String,
             audioEncoding: AudioEncodingSchema,
             voiceId: Schema.String,
           }),

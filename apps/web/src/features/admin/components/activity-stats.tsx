@@ -19,26 +19,35 @@ interface ActivityStatsProps {
 
 const ENTITY_CONFIG: Record<
   string,
-  { icon: ComponentType<{ className?: string }>; color: string; label: string }
+  {
+    icon: ComponentType<{ className?: string }>;
+    bgColor: string;
+    textColor: string;
+    label: string;
+  }
 > = {
   document: {
     icon: FileTextIcon,
-    color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+    bgColor: 'bg-sky-500/10',
+    textColor: 'text-sky-600 dark:text-sky-400',
     label: 'Documents',
   },
   podcast: {
     icon: MixerHorizontalIcon,
-    color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    bgColor: 'bg-violet-500/10',
+    textColor: 'text-violet-600 dark:text-violet-400',
     label: 'Podcasts',
   },
   voiceover: {
     icon: SpeakerLoudIcon,
-    color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
     label: 'Voiceovers',
   },
   infographic: {
     icon: ImageIcon,
-    color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    textColor: 'text-amber-600 dark:text-amber-400',
     label: 'Infographics',
   },
 };
@@ -128,11 +137,8 @@ function renderEntityCard(
     <div key={entityType} className="stat-card">
       <div className="stat-card-header">
         <span className="stat-card-label">{config.label}</span>
-        <div className={`stat-card-icon ${config.color.split(' ')[0]}`}>
-          <Icon
-            className={config.color.split(' ').slice(1).join(' ')}
-            aria-hidden="true"
-          />
+        <div className={`stat-card-icon ${config.bgColor}`}>
+          <Icon className={config.textColor} aria-hidden="true" />
         </div>
       </div>
       <span className="stat-card-value">

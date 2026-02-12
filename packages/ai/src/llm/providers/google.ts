@@ -50,21 +50,17 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             temperature: options.temperature ?? 0.7,
           });
 
-          const generateResult: GenerateResult<T> = {
+          const { inputTokens, outputTokens, totalTokens } = result.usage;
+
+          return {
             object: result.object as T,
             usage:
-              result.usage.inputTokens !== undefined &&
-              result.usage.outputTokens !== undefined &&
-              result.usage.totalTokens !== undefined
-                ? {
-                    inputTokens: result.usage.inputTokens,
-                    outputTokens: result.usage.outputTokens,
-                    totalTokens: result.usage.totalTokens,
-                  }
+              inputTokens !== undefined &&
+              outputTokens !== undefined &&
+              totalTokens !== undefined
+                ? { inputTokens, outputTokens, totalTokens }
                 : undefined,
-          };
-
-          return generateResult;
+          } satisfies GenerateResult<T>;
         },
         catch: mapError,
       }).pipe(

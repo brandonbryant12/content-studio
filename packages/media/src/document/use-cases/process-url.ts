@@ -46,18 +46,13 @@ export const processUrl = (input: ProcessUrlInput) =>
     return { documentId, wordCount: scraped.wordCount };
   }).pipe(
     Effect.catchAll((error) =>
-      DocumentRepo.pipe(
-        Effect.flatMap((repo) =>
-          repo
-            .updateStatus(
-              input.documentId,
-              DocumentStatus.FAILED,
-              String(error),
-            )
-            .pipe(Effect.catchAll(() => Effect.void)),
-        ),
-        Effect.flatMap(() => Effect.fail(error)),
-      ),
+      Effect.gen(function* () {
+        const repo = yield* DocumentRepo;
+        yield* repo
+          .updateStatus(input.documentId, DocumentStatus.FAILED, String(error))
+          .pipe(Effect.ignore);
+        return yield* Effect.fail(error);
+      }),
     ),
     Effect.withSpan('useCase.processUrl', {
       attributes: {

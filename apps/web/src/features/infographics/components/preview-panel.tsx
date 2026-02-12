@@ -42,29 +42,27 @@ export function PreviewPanel({
   title,
   isGenerating,
 }: PreviewPanelProps) {
-  if (isGenerating) {
-    return (
-      <div className="flex-1 flex flex-col border border-border/40 rounded-xl bg-muted/20 min-h-[400px]">
-        <LoadingSkeleton />
-      </div>
-    );
-  }
-
-  if (!imageUrl) {
-    return (
-      <div className="flex-1 flex flex-col border border-border/40 rounded-xl bg-muted/20 min-h-[400px]">
-        <EmptyState />
-      </div>
-    );
-  }
+  const content = isGenerating ? (
+    <LoadingSkeleton />
+  ) : !imageUrl ? (
+    <EmptyState />
+  ) : (
+    <img
+      src={imageUrl}
+      alt={`${title} infographic`}
+      className="max-w-full max-h-full rounded-lg object-contain"
+    />
+  );
 
   return (
-    <div className="flex-1 flex items-center justify-center border border-border/40 rounded-xl bg-muted/10 p-4 min-h-[400px] overflow-hidden">
-      <img
-        src={imageUrl}
-        alt={`${title} infographic`}
-        className="max-w-full max-h-full rounded-lg object-contain"
-      />
+    <div
+      className={`flex-1 flex flex-col items-center justify-center border border-border/40 rounded-xl min-h-[400px] ${
+        imageUrl && !isGenerating
+          ? 'bg-muted/10 p-4 overflow-hidden'
+          : 'bg-muted/20'
+      }`}
+    >
+      {content}
     </div>
   );
 }

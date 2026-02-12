@@ -1,61 +1,31 @@
 import { oc } from '@orpc/contract';
 import {
-  // Input schemas
   CreatePodcastSchema,
   UpdatePodcastFields,
-  // Output schemas (single source of truth from db)
   PodcastOutputSchema,
   PodcastFullOutputSchema,
   PodcastListItemOutputSchema,
   ScriptSegmentSchema,
-  // Job schemas
   JobOutputSchema,
   JobStatusSchema,
-  // Branded ID schemas
   PodcastIdSchema,
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-
-// Helper to convert Effect Schema to Standard Schema for oRPC
-const std = Schema.standardSchemaV1;
-
-// Helper for query params that may come in as strings
-const CoerceNumber = Schema.Union(
-  Schema.Number,
-  Schema.String.pipe(
-    Schema.transform(Schema.Number, { decode: Number, encode: String }),
-  ),
-).pipe(Schema.compose(Schema.Number));
-
-// =============================================================================
-// Error Definitions
-// =============================================================================
+import { std, PaginationFields, authErrors, jobErrors } from './shared';
 
 const podcastErrors = {
   PODCAST_NOT_FOUND: {
     status: 404,
-    data: std(
-      Schema.Struct({
-        podcastId: Schema.String,
-      }),
-    ),
+    data: std(Schema.Struct({ podcastId: Schema.String })),
   },
   SCRIPT_NOT_FOUND: {
     status: 404,
-    data: std(
-      Schema.Struct({
-        podcastId: Schema.String,
-      }),
-    ),
+    data: std(Schema.Struct({ podcastId: Schema.String })),
   },
   DOCUMENT_NOT_FOUND: {
     status: 404,
-    data: std(
-      Schema.Struct({
-        documentId: Schema.String,
-      }),
-    ),
+    data: std(Schema.Struct({ documentId: Schema.String })),
   },
   MEDIA_NOT_FOUND: {
     status: 404,
@@ -67,27 +37,6 @@ const podcastErrors = {
     ),
   },
 } as const;
-
-const jobErrors = {
-  JOB_NOT_FOUND: {
-    status: 404,
-    data: std(
-      Schema.Struct({
-        jobId: Schema.String,
-      }),
-    ),
-  },
-} as const;
-
-const authErrors = {
-  FORBIDDEN: {
-    status: 403,
-  },
-} as const;
-
-// =============================================================================
-// Contract Definition
-// =============================================================================
 
 const podcastContract = oc
   .prefix('/podcasts')
@@ -101,21 +50,7 @@ const podcastContract = oc
         summary: 'List podcasts',
         description: 'Retrieve all podcasts for the current user',
       })
-      .input(
-        std(
-          Schema.Struct({
-            limit: Schema.optional(
-              CoerceNumber.pipe(
-                Schema.greaterThanOrEqualTo(1),
-                Schema.lessThanOrEqualTo(100),
-              ),
-            ),
-            offset: Schema.optional(
-              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
-            ),
-          }),
-        ),
-      )
+      .input(std(Schema.Struct(PaginationFields)))
       .output(std(Schema.Array(PodcastListItemOutputSchema))),
 
     // Get a single podcast by ID

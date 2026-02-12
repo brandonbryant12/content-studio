@@ -37,10 +37,8 @@ export function useVoiceoverList(
 export function useSuspenseVoiceoverList(
   options: { limit?: number } = {},
 ): UseSuspenseQueryResult<VoiceoverList, Error> {
-  const { limit } = options;
-
   return useSuspenseQuery(
-    apiClient.voiceovers.list.queryOptions({ input: { limit } }),
+    apiClient.voiceovers.list.queryOptions({ input: options }),
   );
 }
 
@@ -51,9 +49,7 @@ export function useSuspenseVoiceoverList(
 export function getVoiceoverListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.voiceovers.list.queryOptions({
-    input: { limit: options.limit },
-  }).queryKey;
+  return apiClient.voiceovers.list.queryOptions({ input: options }).queryKey;
 }
 
 /**

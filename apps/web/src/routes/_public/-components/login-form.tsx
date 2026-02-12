@@ -67,30 +67,28 @@ export default function LoginCredentialsForm() {
       <div>
         <form.Field
           name="email"
-          children={(field) => {
-            return (
-              <>
-                <Label htmlFor={field.name}>Email</Label>
-                <Input
-                  className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background"
-                  id={field.name}
-                  type="email"
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  aria-describedby={`${field.name}-error`}
-                  aria-invalid={
-                    field.state.meta.isTouched &&
-                    field.state.meta.errors.length > 0
-                  }
-                />
-                <FormFieldInfo field={field} />
-              </>
-            );
-          }}
+          children={(field) => (
+            <>
+              <Label htmlFor={field.name}>Email</Label>
+              <Input
+                className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background"
+                id={field.name}
+                type="email"
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-describedby={`${field.name}-error`}
+                aria-invalid={
+                  field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0
+                }
+              />
+              <FormFieldInfo field={field} />
+            </>
+          )}
         />
       </div>
       <div>
@@ -99,47 +97,45 @@ export default function LoginCredentialsForm() {
           children={(field) => (
             <>
               <Label htmlFor={field.name}>Password</Label>
-              <>
-                <div className="flex justify-end items-center relative w-full">
-                  <Input
-                    className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background pr-10"
-                    id={field.name}
-                    type={isPasswordVisible ? 'text' : 'password'}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    aria-describedby={`${field.name}-error`}
-                    aria-invalid={
-                      field.state.meta.isTouched &&
-                      field.state.meta.errors.length > 0
-                    }
-                  />
-                  <Button
-                    className="absolute mr-2 w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground"
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsPasswordVisible(!isPasswordVisible);
-                    }}
-                    aria-label={
-                      isPasswordVisible ? 'Hide password' : 'Show password'
-                    }
-                  >
-                    {isPasswordVisible ? (
-                      <EyeOpenIcon aria-hidden="true" />
-                    ) : (
-                      <EyeNoneIcon aria-hidden="true" />
-                    )}
-                  </Button>
-                </div>
-                <FormFieldInfo field={field} />
-              </>
+              <div className="flex justify-end items-center relative w-full">
+                <Input
+                  className="mt-1.5 h-11 bg-muted/50 border-border focus:bg-background pr-10"
+                  id={field.name}
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  aria-describedby={`${field.name}-error`}
+                  aria-invalid={
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0
+                  }
+                />
+                <Button
+                  className="absolute mr-2 w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground"
+                  type="button"
+                  tabIndex={-1}
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPasswordVisible(!isPasswordVisible);
+                  }}
+                  aria-label={
+                    isPasswordVisible ? 'Hide password' : 'Show password'
+                  }
+                >
+                  {isPasswordVisible ? (
+                    <EyeOpenIcon aria-hidden="true" />
+                  ) : (
+                    <EyeNoneIcon aria-hidden="true" />
+                  )}
+                </Button>
+              </div>
+              <FormFieldInfo field={field} />
             </>
           )}
         />

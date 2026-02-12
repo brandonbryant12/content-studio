@@ -1,6 +1,7 @@
 import { extract } from '@extractus/article-extractor';
 import { Effect, Layer } from 'effect';
 import { UrlFetchError } from '../../errors';
+import { calculateWordCount } from '../../shared';
 import {
   UrlScraper,
   type ScrapedContent,
@@ -9,10 +10,6 @@ import {
 
 const FETCH_TIMEOUT_MS = 30_000;
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024; // 5MB
-
-function countWords(text: string): number {
-  return text.split(/\s+/).filter((w) => w.length > 0).length;
-}
 
 const make: UrlScraperService = {
   fetchAndExtract: (
@@ -57,7 +54,7 @@ const make: UrlScraperService = {
           description: article.description ?? undefined,
           author: article.author ?? undefined,
           publishedAt: article.published ?? undefined,
-          wordCount: countWords(plainText),
+          wordCount: calculateWordCount(plainText),
         } satisfies ScrapedContent;
       },
       catch: (error) =>
@@ -76,7 +73,7 @@ const make: UrlScraperService = {
     ),
 };
 
-export const UrlScraperLive: Layer.Layer<UrlScraper> = Layer.sync(
+export const UrlScraperLive: Layer.Layer<UrlScraper> = Layer.succeed(
   UrlScraper,
-  () => make,
+  make,
 );

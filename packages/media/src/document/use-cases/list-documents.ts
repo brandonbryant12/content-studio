@@ -30,13 +30,7 @@ export const listDocuments = (input: ListDocumentsInput) =>
     const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const isAdmin = user.role === Role.ADMIN;
-    let createdBy: string | undefined;
-    if (isAdmin) {
-      createdBy = input.userId;
-    } else {
-      createdBy = user.id;
-    }
+    const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;

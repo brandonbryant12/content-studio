@@ -248,4 +248,4 @@ const make: ActivityLogRepoService = {
 // =============================================================================
 
 export const ActivityLogRepoLive: Layer.Layer<ActivityLogRepo, never, Db> =
-  Layer.sync(ActivityLogRepo, () => make);
+  Layer.succeed(ActivityLogRepo, make);

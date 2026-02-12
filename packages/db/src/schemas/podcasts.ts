@@ -25,7 +25,6 @@ import {
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
@@ -129,15 +128,20 @@ export const PodcastFormat = {
   CONVERSATION: 'conversation',
 } as const;
 
+export const PodcastFormatSchema = Schema.Literal(
+  ...podcastFormatEnum.enumValues,
+);
+
+export const VersionStatusSchema = Schema.Literal(
+  ...versionStatusEnum.enumValues,
+);
+
 export const CreatePodcastSchema = Schema.Struct({
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
   description: Schema.optional(Schema.String),
-  format: Schema.Union(
-    Schema.Literal('voice_over'),
-    Schema.Literal('conversation'),
-  ),
+  format: PodcastFormatSchema,
   documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
   promptInstructions: Schema.optional(Schema.String),
   targetDurationMinutes: Schema.optional(
@@ -175,29 +179,15 @@ export const UpdatePodcastFields = {
 
 export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
 
-export const UpdateScriptSchema = Schema.Struct({
-  segments: Schema.Array(
-    Schema.Struct({
-      speaker: Schema.String,
-      line: Schema.String,
-      index: Schema.Number,
-    }),
-  ),
+export const ScriptSegmentSchema = Schema.Struct({
+  speaker: Schema.String,
+  line: Schema.String,
+  index: Schema.Number,
 });
 
-export const PodcastFormatSchema = Schema.Union(
-  Schema.Literal('voice_over'),
-  Schema.Literal('conversation'),
-);
-
-export const VersionStatusSchema = Schema.Union(
-  Schema.Literal('drafting'),
-  Schema.Literal('generating_script'),
-  Schema.Literal('script_ready'),
-  Schema.Literal('generating_audio'),
-  Schema.Literal('ready'),
-  Schema.Literal('failed'),
-);
+export const UpdateScriptSchema = Schema.Struct({
+  segments: Schema.Array(ScriptSegmentSchema),
+});
 
 export const GenerationContextOutputSchema = Schema.Struct({
   systemPromptTemplate: Schema.String,
@@ -217,12 +207,6 @@ export const GenerationContextOutputSchema = Schema.Struct({
     }),
   ),
   generatedAt: Schema.String,
-});
-
-export const ScriptSegmentSchema = Schema.Struct({
-  speaker: Schema.String,
-  line: Schema.String,
-  index: Schema.Number,
 });
 
 export const PodcastOutputSchema = Schema.Struct({
@@ -259,9 +243,7 @@ export const PodcastFullOutputSchema = Schema.Struct({
   documents: Schema.Array(DocumentOutputSchema),
 });
 
-export const PodcastListItemOutputSchema = Schema.Struct({
-  ...PodcastOutputSchema.fields,
-});
+export const PodcastListItemOutputSchema = PodcastOutputSchema;
 
 export type Podcast = typeof podcast.$inferSelect;
 export type PodcastFormat = Podcast['format'];
@@ -314,10 +296,6 @@ const podcastFullTransform = (
   documents: podcast.documents.map(serializeDocument),
 });
 
-const podcastListItemTransform = (podcast: Podcast): PodcastListItemOutput => ({
-  ...podcastTransform(podcast),
-});
-
 export const serializePodcastEffect = createEffectSerializer(
   'podcast',
   podcastTransform,
@@ -328,25 +306,23 @@ export const serializePodcastsEffect = createBatchEffectSerializer(
   podcastTransform,
 );
 
-export const serializePodcast = createSyncSerializer(podcastTransform);
+export const serializePodcast = podcastTransform;
 
 export const serializePodcastFullEffect = createEffectSerializer(
   'podcastFull',
   podcastFullTransform,
 );
 
-export const serializePodcastFull = createSyncSerializer(podcastFullTransform);
+export const serializePodcastFull = podcastFullTransform;
 
 export const serializePodcastListItemEffect = createEffectSerializer(
   'podcastListItem',
-  podcastListItemTransform,
+  podcastTransform,
 );
 
 export const serializePodcastListItemsEffect = createBatchEffectSerializer(
   'podcastListItem',
-  podcastListItemTransform,
+  podcastTransform,
 );
 
-export const serializePodcastListItem = createSyncSerializer(
-  podcastListItemTransform,
-);
+export const serializePodcastListItem = podcastTransform;

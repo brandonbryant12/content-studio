@@ -1,5 +1,3 @@
-// Presenter: Pure UI component with no data fetching or state management
-
 import {
   MagnifyingGlassIcon,
   PauseIcon,

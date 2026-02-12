@@ -2,6 +2,8 @@ import { PlayIcon, PauseIcon } from '@radix-ui/react-icons';
 import { cn } from '@repo/ui/lib/utils';
 import { useAudioPlayer, formatTime } from '@/shared/hooks/use-audio-player';
 
+const WAVEFORM_INDICES = Array.from({ length: 25 }, (_, i) => i);
+
 interface AudioStageProps {
   src: string;
   duration?: number | null;
@@ -26,15 +28,12 @@ export function AudioStage({
     handleSliderKeyDown,
   } = useAudioPlayer(src, initialDuration);
 
-  // Generate waveform bars (25 bars)
-  const waveformBars = Array.from({ length: 25 }, (_, i) => i);
-
   return (
     <div className={cn('stage', isPlaying && 'stage-performing')}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
       <div className="stage-waveform" aria-hidden="true">
-        {waveformBars.map((i) => (
+        {WAVEFORM_INDICES.map((i) => (
           <div
             key={i}
             className="stage-waveform-bar"

@@ -41,13 +41,14 @@ function getActiveStep(
   return 'script';
 }
 
+const STEP_ORDER: Step[] = ['saving', 'script', 'audio', 'complete'];
+
 function getStepState(
   step: Step,
   activeStep: Step,
 ): 'completed' | 'active' | 'pending' {
-  const order: Step[] = ['saving', 'script', 'audio', 'complete'];
-  const stepIndex = order.indexOf(step);
-  const activeIndex = order.indexOf(activeStep);
+  const stepIndex = STEP_ORDER.indexOf(step);
+  const activeIndex = STEP_ORDER.indexOf(activeStep);
 
   if (stepIndex < activeIndex) return 'completed';
   if (stepIndex === activeIndex) return 'active';
@@ -65,7 +66,6 @@ export function GenerationStatus({
     isPendingGeneration,
   );
   const stepConfig = STEPS[activeStep];
-  const steps: Step[] = ['saving', 'script', 'audio', 'complete'];
 
   return (
     <div className="generation-status" role="status" aria-live="polite">
@@ -88,9 +88,9 @@ export function GenerationStatus({
 
       {/* Step Indicators */}
       <div className="generation-steps">
-        {steps.map((step, index) => {
+        {STEP_ORDER.map((step, index) => {
           const state = getStepState(step, activeStep);
-          const isLast = index === steps.length - 1;
+          const isLast = index === STEP_ORDER.length - 1;
 
           return (
             <div key={step} className="generation-step">

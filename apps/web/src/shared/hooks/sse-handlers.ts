@@ -125,55 +125,27 @@ export function handleActivityLogged(
   });
 }
 
+const entityQueryKeys = {
+  podcast: { get: getPodcastQueryKey, list: getPodcastsListQueryKey },
+  document: { get: getDocumentQueryKey, list: getDocumentsListQueryKey },
+  voiceover: { get: getVoiceoverQueryKey, list: getVoiceoversListQueryKey },
+  infographic: {
+    get: getInfographicQueryKey,
+    list: getInfographicsListQueryKey,
+  },
+} as const;
+
 export function handleEntityChange(
   event: EntityChangeEvent,
   queryClient: QueryClient,
 ): void {
   const { entityType, changeType, entityId } = event;
+  const keys = entityQueryKeys[entityType];
+  if (!keys) return;
 
-  switch (entityType) {
-    case 'podcast':
-      queryClient.invalidateQueries({
-        queryKey: getPodcastQueryKey(entityId),
-      });
-      if (changeType === 'insert' || changeType === 'delete') {
-        queryClient.invalidateQueries({
-          queryKey: getPodcastsListQueryKey(),
-        });
-      }
-      break;
+  queryClient.invalidateQueries({ queryKey: keys.get(entityId) });
 
-    case 'document':
-      queryClient.invalidateQueries({
-        queryKey: getDocumentQueryKey(entityId),
-      });
-      if (changeType === 'insert' || changeType === 'delete') {
-        queryClient.invalidateQueries({
-          queryKey: getDocumentsListQueryKey(),
-        });
-      }
-      break;
-
-    case 'voiceover':
-      queryClient.invalidateQueries({
-        queryKey: getVoiceoverQueryKey(entityId),
-      });
-      if (changeType === 'insert' || changeType === 'delete') {
-        queryClient.invalidateQueries({
-          queryKey: getVoiceoversListQueryKey(),
-        });
-      }
-      break;
-
-    case 'infographic':
-      queryClient.invalidateQueries({
-        queryKey: getInfographicQueryKey(entityId),
-      });
-      if (changeType === 'insert' || changeType === 'delete') {
-        queryClient.invalidateQueries({
-          queryKey: getInfographicsListQueryKey(),
-        });
-      }
-      break;
+  if (changeType === 'insert' || changeType === 'delete') {
+    queryClient.invalidateQueries({ queryKey: keys.list() });
   }
 }

@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
-import { ResearchError, ResearchTimeoutError } from '../../errors';
+import { ResearchError } from '../../errors';
 import {
   DeepResearch,
   type DeepResearchService,
@@ -27,55 +27,37 @@ interface OutputBlock {
   result?: Array<{ title?: string; url?: string; rendered_content?: string }>;
 }
 
-/**
- * Extract text content from interaction outputs.
- * The interactions API returns typed content blocks: { type: 'text', text: '...' }
- */
+/** Extract text content from typed content blocks. */
 function extractContent(outputs: readonly OutputBlock[]): string {
-  const parts: string[] = [];
-  for (const block of outputs) {
-    if (block.type === 'text' && block.text) {
-      parts.push(block.text);
-    }
-  }
-  return parts.join('\n\n');
+  return outputs
+    .filter(
+      (b): b is OutputBlock & { text: string } => b.type === 'text' && !!b.text,
+    )
+    .map((b) => b.text)
+    .join('\n\n');
 }
 
-/**
- * Extract grounding sources from interaction outputs.
- * Deep Research returns GoogleSearchResultContent blocks with search results,
- * and TextContent blocks with annotations referencing source URLs.
- */
+/** Extract deduplicated sources from search result blocks and text annotations. */
 function extractSources(outputs: readonly OutputBlock[]): ResearchSource[] {
   const sources: ResearchSource[] = [];
   const seenUrls = new Set<string>();
 
-  // Extract from google_search_result blocks
+  const addSource = (url: string, title: string) => {
+    if (!seenUrls.has(url)) {
+      seenUrls.add(url);
+      sources.push({ title, url });
+    }
+  };
+
   for (const block of outputs) {
     if (block.type === 'google_search_result' && block.result) {
       for (const result of block.result) {
-        if (result.url && !seenUrls.has(result.url)) {
-          seenUrls.add(result.url);
-          sources.push({
-            title: result.title ?? result.url,
-            url: result.url,
-          });
-        }
+        if (result.url) addSource(result.url, result.title ?? result.url);
       }
     }
-  }
-
-  // Also extract from text annotations (citation sources)
-  for (const block of outputs) {
     if (block.type === 'text' && block.annotations) {
       for (const annotation of block.annotations) {
-        if (annotation.source && !seenUrls.has(annotation.source)) {
-          seenUrls.add(annotation.source);
-          sources.push({
-            title: annotation.source,
-            url: annotation.source,
-          });
-        }
+        if (annotation.source) addSource(annotation.source, annotation.source);
       }
     }
   }
@@ -121,55 +103,46 @@ const makeGoogleDeepResearchService = (
       ),
 
     getResult: (interactionId: string) =>
-      Effect.tryPromise({
-        try: async () => {
-          const interaction = await genAI.interactions.get(interactionId);
+      Effect.gen(function* () {
+        const interaction = yield* Effect.tryPromise({
+          try: () => genAI.interactions.get(interactionId),
+          catch: (error) =>
+            new ResearchError({
+              message:
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to get research result',
+              cause: error,
+            }),
+        });
 
-          if (interaction.status === 'failed') {
-            throw new ResearchError({
-              message: 'Research operation failed',
-            });
-          }
-
-          if (interaction.status === 'cancelled') {
-            throw new ResearchError({
-              message: 'Research operation was cancelled',
-            });
-          }
-
-          if (
-            interaction.status === 'in_progress' ||
-            interaction.status === 'requires_action'
-          ) {
-            return null;
-          }
-
-          // status === 'completed'
-          const outputs = (interaction.outputs ?? []) as OutputBlock[];
-
-          const content = extractContent(outputs);
-          const sources = extractSources(outputs);
-          const wordCount = content
-            .split(/\s+/)
-            .filter((w) => w.length > 0).length;
-
-          return {
-            content,
-            sources,
-            wordCount,
-          } satisfies ResearchResult;
-        },
-        catch: (error) => {
-          if (error instanceof ResearchError) return error;
-          if (error instanceof ResearchTimeoutError) return error;
-          return new ResearchError({
-            message:
-              error instanceof Error
-                ? error.message
-                : 'Failed to get research result',
-            cause: error,
+        if (interaction.status === 'failed') {
+          return yield* new ResearchError({
+            message: 'Research operation failed',
           });
-        },
+        }
+
+        if (interaction.status === 'cancelled') {
+          return yield* new ResearchError({
+            message: 'Research operation was cancelled',
+          });
+        }
+
+        if (
+          interaction.status === 'in_progress' ||
+          interaction.status === 'requires_action'
+        ) {
+          return null;
+        }
+
+        const outputs = (interaction.outputs ?? []) as OutputBlock[];
+        const content = extractContent(outputs);
+        const sources = extractSources(outputs);
+        const wordCount = content
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length;
+
+        return { content, sources, wordCount } satisfies ResearchResult;
       }).pipe(
         Effect.withSpan('deepResearch.getResult', {
           attributes: {

@@ -22,11 +22,58 @@ export interface GoogleTTSConfig {
   readonly model?: string;
 }
 
+/** Typed shape of the Gemini TTS generateContent response. */
+interface GeminiTTSResponse {
+  candidates: Array<{
+    content: {
+      parts: Array<{ inlineData?: { mimeType: string; data: string } }>;
+    };
+  }>;
+}
+
+/** Call the Gemini generateContent endpoint and return the raw response. */
+async function callGeminiTTS(
+  apiKey: string,
+  modelName: string,
+  body: Record<string, unknown>,
+): Promise<GeminiTTSResponse> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Google TTS API error: ${response.status} - ${errorBody}`);
+  }
+
+  return (await response.json()) as GeminiTTSResponse;
+}
+
+/** Extract audio buffer from a Gemini TTS response, wrapping raw PCM as WAV if needed. */
+function extractAudio(data: GeminiTTSResponse): Buffer {
+  const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+  if (!inlineData?.data) {
+    const preview = JSON.stringify(data).slice(0, 500);
+    throw new Error(`No audio data in response: ${preview}`);
+  }
+
+  const audioData = Buffer.from(inlineData.data, 'base64');
+  const isAlreadyWav = audioData.slice(0, 4).toString('ascii') === 'RIFF';
+  return isAlreadyWav ? audioData : wrapPcmAsWav(audioData);
+}
+
 /**
  * Create Google TTS service implementation.
  */
 const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
-  const apiKey = config.apiKey;
   const modelName = config.model ?? 'gemini-2.5-flash-preview-tts';
 
   return {
@@ -45,69 +92,22 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
     previewVoice: (options: PreviewVoiceOptions) =>
       Effect.tryPromise({
         try: async () => {
-          const text = options.text ?? DEFAULT_PREVIEW_TEXT;
-
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey,
-              },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [{ text }],
-                  },
-                ],
-                generationConfig: {
-                  responseModalities: ['AUDIO'],
-                  speechConfig: {
-                    voiceConfig: {
-                      prebuiltVoiceConfig: {
-                        voiceName: options.voiceId,
-                      },
-                    },
-                  },
+          const data = await callGeminiTTS(config.apiKey, modelName, {
+            contents: [
+              { parts: [{ text: options.text ?? DEFAULT_PREVIEW_TEXT }] },
+            ],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: options.voiceId },
                 },
-              }),
+              },
             },
-          );
-
-          if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(
-              `Google TTS API error: ${response.status} - ${errorBody}`,
-            );
-          }
-
-          const data = (await response.json()) as {
-            candidates: Array<{
-              content: {
-                parts: Array<{
-                  inlineData?: { mimeType: string; data: string };
-                }>;
-              };
-            }>;
-          };
-
-          const inlineData =
-            data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-          if (!inlineData?.data) {
-            const preview = JSON.stringify(data).slice(0, 500);
-            throw new Error(`No audio data in response: ${preview}`);
-          }
-
-          const audioData = Buffer.from(inlineData.data, 'base64');
-          const isAlreadyWav =
-            audioData.slice(0, 4).toString('ascii') === 'RIFF';
-          const audioContent = isAlreadyWav
-            ? audioData
-            : wrapPcmAsWav(audioData);
+          });
 
           return {
-            audioContent,
+            audioContent: extractAudio(data),
             audioEncoding: 'LINEAR16',
             voiceId: options.voiceId,
           } satisfies PreviewVoiceResult;
@@ -126,91 +126,41 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
     synthesize: (options: SynthesizeOptions) =>
       Effect.tryPromise({
         try: async () => {
-          // Single-speaker: plain text; multi-speaker: "Speaker: text" format
           const isSingleSpeaker = options.voiceConfigs.length === 1;
           const contentText = isSingleSpeaker
             ? options.turns.map((t) => t.text).join('\n')
             : options.turns.map((t) => `${t.speaker}: ${t.text}`).join('\n');
 
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey,
-              },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [{ text: contentText }],
+          const speechConfig = isSingleSpeaker
+            ? {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: options.voiceConfigs[0]!.voiceId,
                   },
-                ],
-                generationConfig: {
-                  responseModalities: ['AUDIO'],
-                  speechConfig: isSingleSpeaker
-                    ? {
-                        voiceConfig: {
-                          prebuiltVoiceConfig: {
-                            voiceName: options.voiceConfigs[0]!.voiceId,
-                          },
-                        },
-                      }
-                    : {
-                        multiSpeakerVoiceConfig: {
-                          speakerVoiceConfigs: options.voiceConfigs.map(
-                            (vc) => ({
-                              speaker: vc.speakerAlias,
-                              voiceConfig: {
-                                prebuiltVoiceConfig: {
-                                  voiceName: vc.voiceId,
-                                },
-                              },
-                            }),
-                          ),
-                        },
-                      },
                 },
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(
-              `Google TTS API error: ${response.status} - ${errorBody}`,
-            );
-          }
-
-          const data = (await response.json()) as {
-            candidates: Array<{
-              content: {
-                parts: Array<{
-                  inlineData?: { mimeType: string; data: string };
-                }>;
+              }
+            : {
+                multiSpeakerVoiceConfig: {
+                  speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
+                    speaker: vc.speakerAlias,
+                    voiceConfig: {
+                      prebuiltVoiceConfig: { voiceName: vc.voiceId },
+                    },
+                  })),
+                },
               };
-            }>;
-          };
 
-          const inlineData =
-            data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-          if (!inlineData?.data) {
-            const preview = JSON.stringify(data).slice(0, 500);
-            throw new Error(`No audio data in response: ${preview}`);
-          }
-
-          const audioData = Buffer.from(inlineData.data, 'base64');
-
-          // Don't double-wrap: check if response is already WAV (RIFF header)
-          const isAlreadyWav =
-            audioData.slice(0, 4).toString('ascii') === 'RIFF';
-          const audioContent = isAlreadyWav
-            ? audioData
-            : wrapPcmAsWav(audioData);
+          const data = await callGeminiTTS(config.apiKey, modelName, {
+            contents: [{ parts: [{ text: contentText }] }],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig,
+            },
+          });
 
           return {
-            audioContent,
-            audioEncoding: 'LINEAR16', // WAV format
+            audioContent: extractAudio(data),
+            audioEncoding: 'LINEAR16',
             mimeType: 'audio/wav',
           } satisfies SynthesizeResult;
         },

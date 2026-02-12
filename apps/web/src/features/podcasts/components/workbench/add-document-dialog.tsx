@@ -97,10 +97,6 @@ export function AddDocumentDialog({
     }
   }, []);
 
-  const handleSwitchToUpload = useCallback(() => {
-    setActiveTab('upload');
-  }, []);
-
   return (
     <BaseDialog
       open={open}
@@ -149,7 +145,7 @@ export function AddDocumentDialog({
           isLoading={loadingDocs}
           selectedIds={selectedIds}
           onToggleDocument={toggleDocument}
-          onSwitchToUpload={handleSwitchToUpload}
+          onSwitchToUpload={() => setActiveTab('upload')}
         />
       ) : (
         <DocumentUploader

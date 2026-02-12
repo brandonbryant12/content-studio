@@ -29,6 +29,8 @@ const createMockQueue = () => {
     findPendingJobForPodcast: () => Effect.die('not implemented'),
     findPendingJobForVoiceover: () => Effect.die('not implemented'),
     deleteJob: () => Effect.die('not implemented'),
+    claimNextJob: () => Effect.die('not implemented'),
+    failStaleJobs: () => Effect.die('not implemented'),
   };
 
   const layer = Layer.succeed(Queue, service);

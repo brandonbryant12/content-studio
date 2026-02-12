@@ -12,6 +12,7 @@ import {
 } from '@repo/ui/components/dropdown-menu';
 import { useTheme } from 'next-themes';
 import { authClient } from '@/clients/authClient';
+import { getInitials } from '@/shared/lib/get-initials';
 
 export default function UserAvatar({
   user,
@@ -34,8 +35,7 @@ export default function UserAvatar({
           <Avatar className="w-8 h-8 shrink-0">
             <AvatarImage referrerPolicy="no-referrer" src={user.image ?? ''} />
             <AvatarFallback className="text-xs">
-              {(user.name?.split(' ')[0]?.[0] || '') +
-                (user.name?.split(' ')[1]?.[0] || '')}
+              {getInitials(user.name, user.email)}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (

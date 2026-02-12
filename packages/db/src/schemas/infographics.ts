@@ -21,7 +21,6 @@ import {
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 export const infographicTypeEnum = pgEnum('infographic_type', [
@@ -125,34 +124,20 @@ export const infographicVersion = pgTable(
   ],
 );
 
-export const InfographicTypeSchema = Schema.Union(
-  Schema.Literal('timeline'),
-  Schema.Literal('comparison'),
-  Schema.Literal('stats_dashboard'),
-  Schema.Literal('key_takeaways'),
+export const InfographicTypeSchema = Schema.Literal(
+  ...infographicTypeEnum.enumValues,
 );
 
-export const InfographicStyleSchema = Schema.Union(
-  Schema.Literal('modern_minimal'),
-  Schema.Literal('bold_colorful'),
-  Schema.Literal('corporate'),
-  Schema.Literal('playful'),
-  Schema.Literal('dark_mode'),
-  Schema.Literal('editorial'),
+export const InfographicStyleSchema = Schema.Literal(
+  ...infographicStyleEnum.enumValues,
 );
 
-export const InfographicFormatSchema = Schema.Union(
-  Schema.Literal('portrait'),
-  Schema.Literal('square'),
-  Schema.Literal('landscape'),
-  Schema.Literal('og_card'),
+export const InfographicFormatSchema = Schema.Literal(
+  ...infographicFormatEnum.enumValues,
 );
 
-export const InfographicStatusSchema = Schema.Union(
-  Schema.Literal('draft'),
-  Schema.Literal('generating'),
-  Schema.Literal('ready'),
-  Schema.Literal('failed'),
+export const InfographicStatusSchema = Schema.Literal(
+  ...infographicStatusEnum.enumValues,
 );
 
 export const CreateInfographicSchema = Schema.Struct({
@@ -266,7 +251,7 @@ export const serializeInfographicsEffect = createBatchEffectSerializer(
   infographicTransform,
 );
 
-export const serializeInfographic = createSyncSerializer(infographicTransform);
+export const serializeInfographic = infographicTransform;
 
 export const serializeInfographicVersionEffect = createEffectSerializer(
   'infographicVersion',
@@ -278,6 +263,4 @@ export const serializeInfographicVersionsEffect = createBatchEffectSerializer(
   infographicVersionTransform,
 );
 
-export const serializeInfographicVersion = createSyncSerializer(
-  infographicVersionTransform,
-);
+export const serializeInfographicVersion = infographicVersionTransform;

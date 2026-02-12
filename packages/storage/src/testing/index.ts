@@ -6,6 +6,11 @@ export interface MockStorageOptions {
   baseUrl?: string;
 }
 
+const withDelay = <A, E>(
+  delay: number | undefined,
+  effect: Effect.Effect<A, E>,
+) => (delay ? Effect.zipRight(Effect.sleep(delay), effect) : effect);
+
 /**
  * Create an in-memory storage layer for testing.
  * Data persists across calls within the same instance; call `clear()` between tests.
@@ -16,52 +21,44 @@ export function createInMemoryStorage(options: MockStorageOptions = {}) {
 
   const service: StorageService = {
     upload: (key, data, contentType) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        store.set(key, { data, contentType });
-        return `${baseUrl}${key}`;
-      }),
+      withDelay(
+        options.delay,
+        Effect.sync(() => {
+          store.set(key, { data, contentType });
+          return `${baseUrl}${key}`;
+        }),
+      ),
 
     download: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        const entry = store.get(key);
-        if (!entry) {
-          return yield* Effect.fail(new StorageNotFoundError({ key }));
-        }
-        return entry.data;
-      }),
+      withDelay(
+        options.delay,
+        Effect.suspend(() => {
+          const entry = store.get(key);
+          return entry
+            ? Effect.succeed(entry.data)
+            : Effect.fail(new StorageNotFoundError({ key }));
+        }),
+      ),
 
     delete: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        store.delete(key);
-      }),
+      withDelay(
+        options.delay,
+        Effect.sync(() => {
+          store.delete(key);
+        }),
+      ),
 
     getUrl: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        if (!store.has(key)) {
-          return '';
-        }
-        return `${baseUrl}${key}`;
-      }),
+      withDelay(
+        options.delay,
+        Effect.sync(() => (store.has(key) ? `${baseUrl}${key}` : '')),
+      ),
 
     exists: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return store.has(key);
-      }),
+      withDelay(
+        options.delay,
+        Effect.sync(() => store.has(key)),
+      ),
   };
 
   return {
@@ -83,43 +80,17 @@ export function createMockStorage(
 
   const service: StorageService = {
     upload: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return `${baseUrl}${key}`;
-      }),
+      withDelay(options.delay, Effect.succeed(`${baseUrl}${key}`)),
 
     download: () =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return Buffer.from('mock content');
-      }),
+      withDelay(options.delay, Effect.succeed(Buffer.from('mock content'))),
 
-    delete: () =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-      }),
+    delete: () => withDelay(options.delay, Effect.void),
 
     getUrl: (key) =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return `${baseUrl}${key}`;
-      }),
+      withDelay(options.delay, Effect.succeed(`${baseUrl}${key}`)),
 
-    exists: () =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return true;
-      }),
+    exists: () => withDelay(options.delay, Effect.succeed(true)),
   };
 
   // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements

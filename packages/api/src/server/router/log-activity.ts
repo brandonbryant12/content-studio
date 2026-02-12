@@ -8,7 +8,7 @@ import type { ServerRuntime } from '../runtime';
  * Runs the log effect outside the main request pipeline so it never
  * blocks or fails the response.
  */
-export const logActivity = (
+const logActivity = (
   runtime: ServerRuntime,
   user: User | null,
   action: string,

@@ -56,10 +56,7 @@ export function VoiceoverDetailContainer({
   });
 
   const displayAudio = voiceover.audioUrl
-    ? {
-        url: voiceover.audioUrl,
-        duration: voiceover.duration ?? null,
-      }
+    ? { url: voiceover.audioUrl, duration: voiceover.duration ?? null }
     : null;
 
   return (

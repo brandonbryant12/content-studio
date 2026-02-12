@@ -25,12 +25,7 @@ const documentRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        listDocuments({
-          limit: input.limit,
-          offset: input.offset,
-          source: input.source,
-          status: input.status,
-        }).pipe(
+        listDocuments(input).pipe(
           Effect.flatMap((result) =>
             serializeDocumentsEffect(result.documents),
           ),
@@ -102,13 +97,7 @@ const documentRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        uploadDocument({
-          fileName: input.fileName,
-          mimeType: input.mimeType,
-          data: input.data,
-          title: input.title,
-          metadata: input.metadata,
-        }).pipe(
+        uploadDocument(input).pipe(
           Effect.flatMap(serializeDocumentEffect),
           tapLogActivity(context.runtime, context.user, 'created', 'document'),
         ),

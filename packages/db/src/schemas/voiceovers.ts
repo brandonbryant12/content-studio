@@ -17,7 +17,6 @@ import {
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 /** Flow: drafting -> generating_audio -> ready */
@@ -85,11 +84,8 @@ export const UpdateVoiceoverFields = {
 
 export const UpdateVoiceoverSchema = Schema.Struct(UpdateVoiceoverFields);
 
-export const VoiceoverStatusSchema = Schema.Union(
-  Schema.Literal('drafting'),
-  Schema.Literal('generating_audio'),
-  Schema.Literal('ready'),
-  Schema.Literal('failed'),
+export const VoiceoverStatusSchema = Schema.Literal(
+  ...voiceoverStatusEnum.enumValues,
 );
 
 export const VoiceoverOutputSchema = Schema.Struct({
@@ -109,9 +105,7 @@ export const VoiceoverOutputSchema = Schema.Struct({
   updatedAt: Schema.String,
 });
 
-export const VoiceoverListItemOutputSchema = Schema.Struct({
-  ...VoiceoverOutputSchema.fields,
-});
+export const VoiceoverListItemOutputSchema = VoiceoverOutputSchema;
 
 export type Voiceover = typeof voiceover.$inferSelect;
 export type VoiceoverStatus = Voiceover['status'];
@@ -137,12 +131,6 @@ const voiceoverTransform = (voiceover: Voiceover): VoiceoverOutput => ({
   updatedAt: voiceover.updatedAt.toISOString(),
 });
 
-const voiceoverListItemTransform = (
-  voiceover: Voiceover,
-): VoiceoverListItemOutput => ({
-  ...voiceoverTransform(voiceover),
-});
-
 export const serializeVoiceoverEffect = createEffectSerializer(
   'voiceover',
   voiceoverTransform,
@@ -153,18 +141,16 @@ export const serializeVoiceoversEffect = createBatchEffectSerializer(
   voiceoverTransform,
 );
 
-export const serializeVoiceover = createSyncSerializer(voiceoverTransform);
+export const serializeVoiceover = voiceoverTransform;
 
 export const serializeVoiceoverListItemEffect = createEffectSerializer(
   'voiceoverListItem',
-  voiceoverListItemTransform,
+  voiceoverTransform,
 );
 
 export const serializeVoiceoverListItemsEffect = createBatchEffectSerializer(
   'voiceoverListItem',
-  voiceoverListItemTransform,
+  voiceoverTransform,
 );
 
-export const serializeVoiceoverListItem = createSyncSerializer(
-  voiceoverListItemTransform,
-);
+export const serializeVoiceoverListItem = voiceoverTransform;

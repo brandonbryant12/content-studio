@@ -27,10 +27,7 @@ const infographicRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        listInfographics({
-          limit: input.limit,
-          offset: input.offset,
-        }).pipe(
+        listInfographics(input).pipe(
           Effect.flatMap((result) => serializeInfographicsEffect([...result])),
         ),
         errors,

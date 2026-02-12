@@ -110,25 +110,26 @@ export function useVoiceoverSettings({
     }),
   );
 
+  const voiceoverId = voiceover?.id;
+
   const saveSettings = useCallback(async () => {
-    if (!voiceover?.id) return;
+    if (!voiceoverId) return;
 
     const voiceInfo = VOICES.find((v) => v.id === state.voice);
 
     await updateMutation.mutateAsync({
-      id: voiceover.id,
+      id: voiceoverId,
       text: state.text,
       voice: state.voice,
       voiceName: voiceInfo?.name,
     });
 
-    // Reset user edits after saving
     dispatch({
       type: 'RESET',
       text: state.text,
       voice: state.voice,
     });
-  }, [voiceover, state.text, state.voice, updateMutation]);
+  }, [voiceoverId, state.text, state.voice, updateMutation]);
 
   const discardChanges = useCallback(() => {
     dispatch({ type: 'RESET', text: server.text, voice: server.voice });

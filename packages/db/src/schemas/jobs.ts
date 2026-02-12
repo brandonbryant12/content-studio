@@ -13,7 +13,6 @@ import { type JobId, JobIdSchema, generateJobId } from './brands';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 export const jobStatusEnum = pgEnum('job_status', [
@@ -76,12 +75,7 @@ export const JobType = {
 
 export type JobType = typeof JobType;
 
-export const JobStatusSchema = Schema.Literal(
-  'pending',
-  'processing',
-  'completed',
-  'failed',
-);
+export const JobStatusSchema = Schema.Literal(...jobStatusEnum.enumValues);
 
 export const GeneratePodcastResultSchema = Schema.Struct({
   scriptId: Schema.String,
@@ -160,4 +154,4 @@ export const serializeJobsEffect = createBatchEffectSerializer(
   jobTransform,
 );
 
-export const serializeJob = createSyncSerializer(jobTransform);
+export const serializeJob = jobTransform;

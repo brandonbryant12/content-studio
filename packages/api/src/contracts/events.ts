@@ -4,10 +4,7 @@
 
 import { oc, eventIterator } from '@orpc/contract';
 import { Schema } from 'effect';
-
-// =============================================================================
-// TypeScript Types (used by handlers, workers, etc.)
-// =============================================================================
+import { std } from './shared';
 
 export type EntityType = 'podcast' | 'document' | 'voiceover' | 'infographic';
 export type ChangeType = 'insert' | 'update' | 'delete';
@@ -81,12 +78,6 @@ export type SSEEvent =
   | DocumentJobCompletionEvent
   | ActivityLoggedEvent
   | ConnectionEvent;
-
-// =============================================================================
-// Effect Schemas (for ORPC contract validation)
-// =============================================================================
-
-const std = Schema.standardSchemaV1;
 
 const EntityChangeEventSchema = Schema.Struct({
   type: Schema.Literal('entity_change'),
@@ -162,10 +153,6 @@ const SSEEventSchema = Schema.Union(
   ActivityLoggedEventSchema,
   ConnectionEventSchema,
 );
-
-// =============================================================================
-// Contract
-// =============================================================================
 
 const eventsContract = oc
   .prefix('/events')

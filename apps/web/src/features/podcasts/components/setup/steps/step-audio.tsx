@@ -7,8 +7,6 @@ import {
   MAX_DURATION,
 } from '../../../hooks/use-podcast-settings';
 
-type PodcastFormat = 'conversation' | 'voiceover' | 'voice_over';
-
 function SetupVoicePreviewBtn({
   voiceId,
   voiceName,
@@ -60,7 +58,7 @@ function SetupVoicePreviewBtn({
 }
 
 interface StepAudioProps {
-  format: PodcastFormat;
+  format: string;
   duration: number;
   hostVoice: string;
   coHostVoice: string;

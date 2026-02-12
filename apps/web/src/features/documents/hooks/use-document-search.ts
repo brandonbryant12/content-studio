@@ -26,7 +26,6 @@ export function useDocumentSearch(content: string): UseDocumentSearchReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
-  const [prevQuery, setPrevQuery] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const paragraphs = useMemo(() => content.split('\n'), [content]);
@@ -50,11 +49,10 @@ export function useDocumentSearch(content: string): UseDocumentSearchReturn {
     return result;
   }, [paragraphs, query]);
 
-  // Reset current index when query changes (adjust state during render)
-  if (query !== prevQuery) {
-    setPrevQuery(query);
+  // Reset current index when query changes
+  useEffect(() => {
     setCurrentMatchIndex(0);
-  }
+  }, [query]);
 
   // Scroll the current match into view
   useEffect(() => {

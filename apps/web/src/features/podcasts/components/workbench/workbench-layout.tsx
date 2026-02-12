@@ -51,14 +51,6 @@ export function WorkbenchLayout({
   const [activeTab, setActiveTab] = useState<TabId>('script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const handleTabClick = useCallback((tab: TabId) => {
-    setActiveTab(tab);
-  }, []);
-
-  const handleDeleteClick = useCallback(() => {
-    setDeleteConfirmOpen(true);
-  }, []);
-
   const handleDeleteConfirm = useCallback(() => {
     setDeleteConfirmOpen(false);
     onDelete();
@@ -107,7 +99,7 @@ export function WorkbenchLayout({
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleDeleteClick}
+            onClick={() => setDeleteConfirmOpen(true)}
             disabled={isDeleting || isGenerating}
             className="workbench-v3-delete"
             aria-label="Delete podcast"
@@ -126,7 +118,7 @@ export function WorkbenchLayout({
           type="button"
           role="tab"
           aria-selected={activeTab === 'script'}
-          onClick={() => handleTabClick('script')}
+          onClick={() => setActiveTab('script')}
           className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
         >
           <FileTextIcon className="w-4 h-4" />
@@ -136,7 +128,7 @@ export function WorkbenchLayout({
           type="button"
           role="tab"
           aria-selected={activeTab === 'settings'}
-          onClick={() => handleTabClick('settings')}
+          onClick={() => setActiveTab('settings')}
           className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
         >
           <MixerHorizontalIcon className="w-4 h-4" />

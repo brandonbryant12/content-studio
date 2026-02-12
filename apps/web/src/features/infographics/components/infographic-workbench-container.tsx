@@ -7,10 +7,7 @@ import { useApproveInfographic } from '../hooks/use-approve-infographic';
 import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
 import { useInfographicSettings } from '../hooks/use-infographic-settings';
-import {
-  useInfographicVersions,
-  type InfographicVersion,
-} from '../hooks/use-infographic-versions';
+import { useInfographicVersions } from '../hooks/use-infographic-versions';
 import { ExportDropdown } from './export-dropdown';
 import { FormatSelector } from './format-selector';
 import { PreviewPanel } from './preview-panel';
@@ -22,8 +19,8 @@ import { useDocumentList } from '@/features/documents/hooks/use-document-list';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { DocumentManager } from '@/shared/components/document-manager';
-import { useSessionGuard } from '@/shared/hooks';
 import {
+  useSessionGuard,
   useKeyboardShortcut,
   useNavigationBlock,
   useDocumentSelection,
@@ -79,12 +76,11 @@ export function InfographicWorkbenchContainer({
 
   // Determine which image to show: selected version or current
   const selectedVersion = selectedVersionId
-    ? versions.find((v: InfographicVersion) => v.id === selectedVersionId)
+    ? versions.find((v) => v.id === selectedVersionId)
     : null;
 
-  const storageKey = selectedVersion
-    ? selectedVersion.imageStorageKey
-    : infographic.imageStorageKey;
+  const storageKey =
+    selectedVersion?.imageStorageKey ?? infographic.imageStorageKey;
   const displayImageUrl = storageKey ? getStorageUrl(storageKey) : null;
 
   // Edit mode: once at least one version has been generated
@@ -111,10 +107,6 @@ export function InfographicWorkbenchContainer({
 
   const handleSelectVersion = useCallback((versionId: string) => {
     setSelectedVersionId((prev) => (prev === versionId ? null : versionId));
-  }, []);
-
-  const handleDeleteClick = useCallback(() => {
-    setDeleteConfirmOpen(true);
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -162,7 +154,7 @@ export function InfographicWorkbenchContainer({
             <Button
               variant="destructive"
               size="sm"
-              onClick={handleDeleteClick}
+              onClick={() => setDeleteConfirmOpen(true)}
               disabled={actions.isDeleting}
               aria-label={`Delete ${infographic.title}`}
             >

@@ -1,10 +1,9 @@
-import { Context } from 'effect';
+import { Context, type Effect } from 'effect';
 import type {
   StorageError,
   StorageNotFoundError,
   StorageUploadError,
 } from './errors';
-import type { Effect } from 'effect';
 
 export interface StorageService {
   readonly upload: (

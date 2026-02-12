@@ -25,10 +25,7 @@ const voiceoverRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        listVoiceovers({
-          limit: input.limit,
-          offset: input.offset,
-        }).pipe(
+        listVoiceovers(input).pipe(
           Effect.flatMap((result) =>
             serializeVoiceoverListItemsEffect([...result.voiceovers]),
           ),

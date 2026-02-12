@@ -7,14 +7,9 @@ interface DefinedAPIError {
 }
 
 const isDefinedAPIError = (error: unknown): error is DefinedAPIError => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    'message' in error &&
-    typeof (error as DefinedAPIError).code === 'string' &&
-    typeof (error as DefinedAPIError).message === 'string'
-  );
+  if (typeof error !== 'object' || error === null) return false;
+  const e = error as Record<string, unknown>;
+  return typeof e.code === 'string' && typeof e.message === 'string';
 };
 
 export const getErrorMessage = (error: unknown, fallback: string): string => {

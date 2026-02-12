@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { DocumentInfo } from '@/shared/hooks/use-document-selection';
 import { AddDocumentDialog } from './add-document-dialog';
 import { DocumentList } from './document-list';
@@ -18,10 +18,6 @@ export function DocumentManager({
 }: DocumentManagerProps) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const handleOpenAddDialog = useCallback(() => {
-    setAddDialogOpen(true);
-  }, []);
-
   const currentIds = useMemo(() => documents.map((d) => d.id), [documents]);
 
   return (
@@ -30,7 +26,7 @@ export function DocumentManager({
         documents={documents}
         disabled={disabled}
         onRemove={onRemoveDocument}
-        onAdd={handleOpenAddDialog}
+        onAdd={() => setAddDialogOpen(true)}
       />
 
       <AddDocumentDialog

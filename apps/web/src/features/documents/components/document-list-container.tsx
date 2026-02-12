@@ -35,10 +35,6 @@ export function DocumentListContainer() {
     entityName: 'document',
   });
 
-  const handleDeleteRequest = useCallback((id: string) => {
-    setPendingDeleteId(id);
-  }, []);
-
   const handleDeleteConfirm = useCallback(() => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
@@ -58,11 +54,6 @@ export function DocumentListContainer() {
     await executeBulkDelete(selection.selectedIds);
     selection.deselectAll();
   }, [executeBulkDelete, selection]);
-
-  const handleSearch = setSearchQuery;
-  const handleUploadOpen = setUploadOpen;
-  const handleUrlDialogOpen = setUrlDialogOpen;
-  const handleResearchDialogOpen = setResearchDialogOpen;
 
   const handleCreateFromUrl = useCallback(
     (url: string, title?: string) => {
@@ -115,11 +106,11 @@ export function DocumentListContainer() {
         searchQuery={searchQuery}
         uploadOpen={uploadOpen}
         deletingId={deletingId}
-        onSearch={handleSearch}
-        onUploadOpen={handleUploadOpen}
-        onUrlDialogOpen={handleUrlDialogOpen}
-        onResearchDialogOpen={handleResearchDialogOpen}
-        onDelete={handleDeleteRequest}
+        onSearch={setSearchQuery}
+        onUploadOpen={setUploadOpen}
+        onUrlDialogOpen={setUrlDialogOpen}
+        onResearchDialogOpen={setResearchDialogOpen}
+        onDelete={setPendingDeleteId}
         selection={selection}
         isBulkDeleting={isBulkDeleting}
         onBulkDelete={handleBulkDelete}

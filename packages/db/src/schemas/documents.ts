@@ -18,7 +18,6 @@ import {
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 export const documentSourceEnum = pgEnum('document_source', [
@@ -127,19 +126,11 @@ export const UpdateDocumentFields = {
 export const UpdateDocumentSchema = Schema.Struct(UpdateDocumentFields);
 
 export const DocumentSourceSchema = Schema.Literal(
-  'manual',
-  'upload_txt',
-  'upload_pdf',
-  'upload_docx',
-  'upload_pptx',
-  'url',
-  'research',
+  ...documentSourceEnum.enumValues,
 );
 
 export const DocumentStatusSchema = Schema.Literal(
-  'ready',
-  'processing',
-  'failed',
+  ...documentStatusEnum.enumValues,
 );
 
 export const ResearchSourceSchema = Schema.Struct({
@@ -218,4 +209,4 @@ export const serializeDocumentsEffect = createBatchEffectSerializer(
   documentTransform,
 );
 
-export const serializeDocument = createSyncSerializer(documentTransform);
+export const serializeDocument = documentTransform;

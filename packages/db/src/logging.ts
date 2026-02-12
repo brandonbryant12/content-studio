@@ -2,9 +2,6 @@ import { Logger, LogLevel, Layer } from 'effect';
 
 export { LogLevel };
 
-export const withLogLevel = (level: LogLevel.LogLevel): Layer.Layer<never> =>
-  Logger.minimumLogLevel(level);
-
 export interface LoggingConfig {
   readonly level?: LogLevel.LogLevel;
   readonly format?: 'json' | 'pretty' | 'structured';

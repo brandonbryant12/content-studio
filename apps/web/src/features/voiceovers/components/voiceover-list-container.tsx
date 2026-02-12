@@ -58,9 +58,7 @@ export function VoiceoverListContainer() {
     selection.deselectAll();
   }, [executeBulkDelete, selection, quickPlay]);
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
+  const handleSearch = setSearchQuery;
 
   if (isLoading) {
     return (

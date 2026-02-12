@@ -19,29 +19,12 @@ export interface ListVoicesResult {
 
 /**
  * List available TTS voices with optional gender filter.
- *
- * This use case returns the list of available voices from the TTS service.
- * The voice data is in-memory so this operation cannot fail.
- *
- * @example
- * // List all voices
- * const result = yield* listVoices({});
- *
- * // List only female voices
- * const result = yield* listVoices({ gender: 'female' });
  */
 export const listVoices = (input: ListVoicesInput) =>
-  Effect.gen(function* () {
-    const tts = yield* TTS;
-    const voices = yield* tts.listVoices({ gender: input.gender });
-
-    return {
-      voices,
-    };
-  }).pipe(
+  TTS.pipe(
+    Effect.flatMap((tts) => tts.listVoices({ gender: input.gender })),
+    Effect.map((voices) => ({ voices })),
     Effect.withSpan('useCase.listVoices', {
-      attributes: {
-        'filter.gender': input.gender,
-      },
+      attributes: { 'filter.gender': input.gender },
     }),
   );

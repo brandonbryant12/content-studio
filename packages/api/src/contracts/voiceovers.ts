@@ -1,60 +1,21 @@
 import { oc } from '@orpc/contract';
 import {
-  // Input schemas
   CreateVoiceoverSchema,
   UpdateVoiceoverFields,
-  // Output schemas
   VoiceoverOutputSchema,
   VoiceoverListItemOutputSchema,
-  // Job schemas
   JobOutputSchema,
   JobStatusSchema,
-  // Branded ID schemas
   VoiceoverIdSchema,
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-
-// Helper to convert Effect Schema to Standard Schema for oRPC
-const std = Schema.standardSchemaV1;
-
-// Helper for query params that may come in as strings
-const CoerceNumber = Schema.Union(
-  Schema.Number,
-  Schema.String.pipe(
-    Schema.transform(Schema.Number, { decode: Number, encode: String }),
-  ),
-).pipe(Schema.compose(Schema.Number));
-
-// =============================================================================
-// Error Definitions
-// =============================================================================
+import { std, PaginationFields, authErrors, jobErrors } from './shared';
 
 const voiceoverErrors = {
   VOICEOVER_NOT_FOUND: {
     status: 404,
-    data: std(
-      Schema.Struct({
-        voiceoverId: Schema.String,
-      }),
-    ),
-  },
-} as const;
-
-const authErrors = {
-  FORBIDDEN: {
-    status: 403,
-  },
-} as const;
-
-const jobErrors = {
-  JOB_NOT_FOUND: {
-    status: 404,
-    data: std(
-      Schema.Struct({
-        jobId: Schema.String,
-      }),
-    ),
+    data: std(Schema.Struct({ voiceoverId: Schema.String })),
   },
 } as const;
 
@@ -70,10 +31,6 @@ const generationErrors = {
   },
 } as const;
 
-// =============================================================================
-// Contract Definition
-// =============================================================================
-
 const voiceoverContract = oc
   .prefix('/voiceovers')
   .tag('voiceover')
@@ -86,21 +43,7 @@ const voiceoverContract = oc
         summary: 'List voiceovers',
         description: 'Retrieve all voiceovers for the current user',
       })
-      .input(
-        std(
-          Schema.Struct({
-            limit: Schema.optional(
-              CoerceNumber.pipe(
-                Schema.greaterThanOrEqualTo(1),
-                Schema.lessThanOrEqualTo(100),
-              ),
-            ),
-            offset: Schema.optional(
-              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
-            ),
-          }),
-        ),
-      )
+      .input(std(Schema.Struct(PaginationFields)))
       .output(std(Schema.Array(VoiceoverListItemOutputSchema))),
 
     // Get a single voiceover by ID

@@ -1,5 +1,5 @@
 import { FileTextIcon } from '@radix-ui/react-icons';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import type { UseDocumentSelectionReturn } from '../../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
 import type { RouterOutput } from '@repo/api/client';
@@ -28,14 +28,6 @@ export function ConfigPanel({
   documentSelection,
 }: ConfigPanelProps) {
   const [showPromptViewer, setShowPromptViewer] = useState(false);
-
-  const handleTogglePromptViewer = useCallback(() => {
-    setShowPromptViewer((prev) => !prev);
-  }, []);
-
-  const handleClosePromptViewer = useCallback(() => {
-    setShowPromptViewer(false);
-  }, []);
 
   return (
     <div className="config-panel-v2">
@@ -91,7 +83,7 @@ export function ConfigPanel({
             <div className="config-section-v2">
               <button
                 type="button"
-                onClick={handleTogglePromptViewer}
+                onClick={() => setShowPromptViewer((prev) => !prev)}
                 className="config-prompt-toggle"
                 aria-expanded={showPromptViewer}
               >
@@ -107,7 +99,7 @@ export function ConfigPanel({
       {showPromptViewer && podcast.generationContext && (
         <PromptViewerPanel
           generationContext={podcast.generationContext}
-          onClose={handleClosePromptViewer}
+          onClose={() => setShowPromptViewer(false)}
         />
       )}
     </div>

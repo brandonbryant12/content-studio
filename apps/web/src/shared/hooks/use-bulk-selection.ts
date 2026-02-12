@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 export interface UseBulkSelectionReturn {
   selectedIds: ReadonlySet<string>;
@@ -38,7 +38,7 @@ export function useBulkSelection(): UseBulkSelectionReturn {
     [selectedIds],
   );
 
-  const selectedCount = useMemo(() => selectedIds.size, [selectedIds]);
+  const selectedCount = selectedIds.size;
 
   const isAllSelected = useCallback(
     (ids: readonly string[]) =>

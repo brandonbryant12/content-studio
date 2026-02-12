@@ -19,11 +19,7 @@ const voicesRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        previewVoice({
-          voiceId: input.voiceId,
-          text: input.text,
-          audioEncoding: input.audioEncoding,
-        }).pipe(
+        previewVoice(input).pipe(
           Effect.map((result) => ({
             audioContent: result.audioContent.toString('base64'),
             audioEncoding: result.audioEncoding,

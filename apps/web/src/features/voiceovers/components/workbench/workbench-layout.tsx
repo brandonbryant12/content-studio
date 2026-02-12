@@ -20,7 +20,6 @@ interface WorkbenchLayoutProps {
   isDeleting: boolean;
   isApproved: boolean;
   isAdmin: boolean;
-  // Approval callbacks
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;

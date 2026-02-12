@@ -44,12 +44,7 @@ export const createDocument = (input: CreateDocumentInput) =>
         createdBy: ownerId,
       })
       .pipe(
-        Effect.catchAll((error) =>
-          storage.delete(contentKey).pipe(
-            Effect.ignore,
-            Effect.flatMap(() => Effect.fail(error)),
-          ),
-        ),
+        Effect.tapError(() => storage.delete(contentKey).pipe(Effect.ignore)),
       );
   }).pipe(
     Effect.withSpan('useCase.createDocument', {

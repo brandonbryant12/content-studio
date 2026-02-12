@@ -23,7 +23,7 @@ export function useActivityList(options: UseActivityListOptions = {}) {
         entityType,
         search: search || undefined,
         limit,
-        afterCursor: pageParam ?? undefined,
+        afterCursor: pageParam,
       });
     },
     initialPageParam: undefined as string | undefined,

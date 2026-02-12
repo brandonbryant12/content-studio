@@ -80,33 +80,22 @@ export function ActionBar({
     );
   }
 
-  // No changes - show context-aware actions
+  const statusLabel =
+    status === VoiceoverStatus.READY
+      ? 'Ready'
+      : status === VoiceoverStatus.FAILED
+        ? 'Generation failed'
+        : 'Draft';
+
   return (
     <div className="global-action-bar">
       <div className="global-action-bar-content">
         <div className="global-action-bar-status ready">
           <CheckIcon className="w-4 h-4" />
-          <span className="global-action-bar-status-text">
-            {status === VoiceoverStatus.READY
-              ? 'Ready'
-              : status === VoiceoverStatus.FAILED
-                ? 'Generation failed'
-                : 'Draft'}
-          </span>
+          <span className="global-action-bar-status-text">{statusLabel}</span>
         </div>
         <div className="global-action-bar-actions">
-          {renderContextActions()}
-        </div>
-      </div>
-    </div>
-  );
-
-  function renderContextActions() {
-    switch (status) {
-      case VoiceoverStatus.DRAFTING:
-        // No changes + drafting + hasText: show "Generate Audio" button
-        if (hasText) {
-          return (
+          {status === VoiceoverStatus.DRAFTING && hasText && (
             <Button
               size="sm"
               onClick={onGenerate}
@@ -116,30 +105,20 @@ export function ActionBar({
               <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
               Generate Audio
             </Button>
-          );
-        }
-        return null;
-
-      case VoiceoverStatus.READY:
-        // No changes + ready: show checkmark "Ready" with no action
-        return null;
-
-      case VoiceoverStatus.FAILED:
-        // Failed: show "Retry" button
-        return (
-          <Button
-            size="sm"
-            onClick={onGenerate}
-            disabled={disabled}
-            className="global-action-bar-btn-primary"
-          >
-            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-            Retry
-          </Button>
-        );
-
-      default:
-        return null;
-    }
-  }
+          )}
+          {status === VoiceoverStatus.FAILED && (
+            <Button
+              size="sm"
+              onClick={onGenerate}
+              disabled={disabled}
+              className="global-action-bar-btn-primary"
+            >
+              <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+              Retry
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

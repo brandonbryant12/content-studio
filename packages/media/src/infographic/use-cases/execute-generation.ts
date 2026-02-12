@@ -69,12 +69,7 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const infographic = yield* repo.findById(infographicId);
 
     const existingVersions = yield* repo.listVersions(infographicId);
-    const latestVersion =
-      existingVersions.length > 0
-        ? existingVersions.reduce((a, b) =>
-            a.versionNumber > b.versionNumber ? a : b,
-          )
-        : null;
+    const latestVersion = existingVersions.at(-1) ?? null;
 
     let documentContent: string | undefined;
     const sourceIds = infographic.sourceDocumentIds as string[] | null;
@@ -118,10 +113,7 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const storageKey = `infographics/${infographicId}/${Date.now()}.${ext}`;
     const imageUrl = yield* storage.upload(storageKey, imageData, mimeType);
 
-    const nextVersion =
-      existingVersions.length > 0
-        ? Math.max(...existingVersions.map((v) => v.versionNumber)) + 1
-        : 1;
+    const nextVersion = (latestVersion?.versionNumber ?? 0) + 1;
 
     yield* repo
       .insertVersion({
@@ -134,27 +126,23 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
         imageStorageKey: storageKey,
       })
       .pipe(
-        Effect.catchAll((err) =>
-          storage.delete(storageKey).pipe(
-            Effect.catchAll(() => Effect.void),
-            Effect.flatMap(() => Effect.fail(err)),
-          ),
-        ),
+        Effect.tapError(() => storage.delete(storageKey).pipe(Effect.ignore)),
       );
 
     const userPrompt = infographic.prompt ?? '';
-    const isFirstVersion = !isEdit;
-    const isUntitled = infographic.title === 'Untitled Infographic';
-    const title =
-      isFirstVersion && isUntitled && (userPrompt.length > 0 || documentContent)
-        ? yield* generateTitle(userPrompt, infographic.title, documentContent)
-        : infographic.title;
+    const shouldGenerateTitle =
+      !isEdit &&
+      infographic.title === 'Untitled Infographic' &&
+      (userPrompt.length > 0 || documentContent);
+    const title = shouldGenerateTitle
+      ? yield* generateTitle(userPrompt, infographic.title, documentContent)
+      : infographic.title;
 
     yield* repo.update(infographicId, {
+      title,
       status: InfographicStatus.READY,
       imageStorageKey: storageKey,
       errorMessage: null,
-      ...(title !== infographic.title ? { title } : {}),
     });
 
     if (title !== infographic.title) {

@@ -36,12 +36,13 @@ export const VoiceoverItem = memo(function VoiceoverItem({
 }: VoiceoverItemProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const textPreview = useMemo(() => {
-    if (voiceover.text.length > 100) {
-      return voiceover.text.substring(0, 100) + '...';
-    }
-    return voiceover.text;
-  }, [voiceover.text]);
+  const textPreview = useMemo(
+    () =>
+      voiceover.text.length > 100
+        ? voiceover.text.substring(0, 100) + '...'
+        : voiceover.text,
+    [voiceover.text],
+  );
 
   const handleDeleteClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

@@ -63,7 +63,7 @@ export function ActivityDashboardContainer() {
       // Feed
       activities={activities}
       hasMore={!!hasNextPage}
-      onLoadMore={() => fetchNextPage()}
+      onLoadMore={fetchNextPage}
       isLoadingMore={isFetchingNextPage}
       feedLoading={feedLoading}
     />

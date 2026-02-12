@@ -1,6 +1,6 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
 import { useDocumentSearch } from '../hooks/use-document-search';
@@ -45,14 +45,6 @@ export function DocumentDetailContainer({
     shouldBlock: actions.hasChanges,
   });
 
-  const handleRetry = useCallback(() => {
-    retryMutation.mutate({ id: documentId });
-  }, [retryMutation, documentId]);
-
-  const handleDeleteRequest = useCallback(() => {
-    setIsDeleteDialogOpen(true);
-  }, []);
-
   return (
     <>
       <DocumentDetail
@@ -66,8 +58,8 @@ export function DocumentDetailContainer({
         isRetrying={retryMutation.isPending}
         onSave={actions.handleSave}
         onDiscard={actions.discardChanges}
-        onDeleteRequest={handleDeleteRequest}
-        onRetry={handleRetry}
+        onDeleteRequest={() => setIsDeleteDialogOpen(true)}
+        onRetry={() => retryMutation.mutate({ id: documentId })}
         search={search}
       />
       <ConfirmationDialog

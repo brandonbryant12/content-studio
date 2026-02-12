@@ -139,17 +139,14 @@ export const handleTaggedError = <E extends { _tag: string }>(
   }
 
   // Fallback to standard factory based on httpStatus when custom factory not found
-  const status = ErrorClass.httpStatus!;
-  const statusFactory =
-    status === 400
-      ? errors['BAD_REQUEST']
-      : status === 401
-        ? errors['UNAUTHORIZED']
-        : status === 403
-          ? errors['FORBIDDEN']
-          : status === 404
-            ? errors['NOT_FOUND']
-            : errors['INTERNAL_ERROR'];
+  const statusToCode: Record<number, string> = {
+    400: 'BAD_REQUEST',
+    401: 'UNAUTHORIZED',
+    403: 'FORBIDDEN',
+    404: 'NOT_FOUND',
+  };
+  const fallbackCode = statusToCode[ErrorClass.httpStatus!] ?? 'INTERNAL_ERROR';
+  const statusFactory = errors[fallbackCode];
 
   if (statusFactory) {
     throw statusFactory({ message, data });
@@ -431,15 +428,12 @@ const throwTransformed = (classified: ClassifiedError): never =>
  */
 export const handleORPCError = (
   error: unknown,
-): Effect.Effect<never, never, never> =>
-  pipe(
-    Effect.sync(() => classifyError(error)),
-    Effect.tap(() =>
-      error instanceof Error
-        ? Effect.logError(formatStackTrace(error))
-        : Effect.void,
-    ),
-    Effect.flatMap((classified) =>
-      Effect.sync(() => throwTransformed(classified)),
-    ),
+): Effect.Effect<never, never, never> => {
+  const classified = classifyError(error);
+  return pipe(
+    error instanceof Error
+      ? Effect.logError(formatStackTrace(error))
+      : Effect.void,
+    Effect.flatMap(() => Effect.sync(() => throwTransformed(classified))),
   );
+};

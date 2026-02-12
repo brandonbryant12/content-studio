@@ -29,21 +29,15 @@ export type TanstackQueryAPIClient = ReturnType<
 export const createAPIClient = ({
   serverUrl,
   apiPath,
-}: APIClientOptions): APIClient => {
-  const link = new OpenAPILink(appContract, {
-    url: urlJoin(serverUrl, apiPath),
-    plugins: [new ResponseValidationPlugin(appContract)],
-    fetch: (request, init) => {
-      return globalThis.fetch(request, {
-        ...init,
-        credentials: 'include',
-      });
-    },
-  });
-  const client: APIClient = createORPCClient(link);
-
-  return client;
-};
+}: APIClientOptions): APIClient =>
+  createORPCClient(
+    new OpenAPILink(appContract, {
+      url: urlJoin(serverUrl, apiPath),
+      plugins: [new ResponseValidationPlugin(appContract)],
+      fetch: (request, init) =>
+        globalThis.fetch(request, { ...init, credentials: 'include' }),
+    }),
+  );
 
 export const createTanstackQueryAPIClient = (
   opts: APIClientOptions,

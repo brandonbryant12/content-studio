@@ -17,7 +17,6 @@ export {
   useVoiceoverSettings,
   type UseVoiceoverSettingsReturn,
 } from './use-voiceover-settings';
-// Note: VOICES exported from lib/voices.ts
 
 export { useApproveVoiceover } from './use-approve-voiceover';
 

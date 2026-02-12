@@ -6,7 +6,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
 
@@ -38,14 +38,6 @@ export function ScriptPanel({
 }: ScriptPanelProps) {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const isEmpty = segments.length === 0;
-
-  const toggleSummary = useCallback(() => {
-    setSummaryExpanded((prev) => !prev);
-  }, []);
-
-  const handleAddFirst = useCallback(() => {
-    onAddSegment(-1, { speaker: 'host', line: '' });
-  }, [onAddSegment]);
 
   return (
     <div className="script-panel-v2">
@@ -84,7 +76,7 @@ export function ScriptPanel({
             <div className="script-summary-v2">
               <button
                 type="button"
-                onClick={toggleSummary}
+                onClick={() => setSummaryExpanded((prev) => !prev)}
                 className="script-summary-v2-toggle"
               >
                 <span className="script-summary-v2-label">Summary</span>
@@ -110,7 +102,7 @@ export function ScriptPanel({
               </p>
               <Button
                 variant="outline"
-                onClick={handleAddFirst}
+                onClick={() => onAddSegment(-1, { speaker: 'host', line: '' })}
                 className="script-empty-v2-btn"
                 disabled={disabled}
               >

@@ -173,13 +173,11 @@ const make: VoiceoverRepoService = {
   update: (id, data) =>
     withDb('voiceoverRepo.update', async (db) => {
       const updateValues: Partial<Voiceover> = {
+        ...Object.fromEntries(
+          Object.entries(data).filter(([, v]) => v !== undefined),
+        ),
         updatedAt: new Date(),
       };
-
-      if (data.title !== undefined) updateValues.title = data.title;
-      if (data.text !== undefined) updateValues.text = data.text;
-      if (data.voice !== undefined) updateValues.voice = data.voice;
-      if (data.voiceName !== undefined) updateValues.voiceName = data.voiceName;
 
       const [vo] = await db
         .update(voiceover)
@@ -322,4 +320,4 @@ const make: VoiceoverRepoService = {
 // =============================================================================
 
 export const VoiceoverRepoLive: Layer.Layer<VoiceoverRepo, never, Db> =
-  Layer.sync(VoiceoverRepo, () => make);
+  Layer.succeed(VoiceoverRepo, make);

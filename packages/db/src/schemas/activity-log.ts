@@ -16,7 +16,6 @@ import {
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
-  createSyncSerializer,
 } from './serialization';
 
 export const activityLog = pgTable(
@@ -112,4 +111,4 @@ export const serializeActivityLogsEffect = createBatchEffectSerializer(
   activityLogTransform,
 );
 
-export const serializeActivityLog = createSyncSerializer(activityLogTransform);
+export const serializeActivityLog = activityLogTransform;

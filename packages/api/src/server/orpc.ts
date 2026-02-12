@@ -94,11 +94,7 @@ export const protectedProcedure = publicProcedure.use(
       });
     }
     return next({
-      context: {
-        session: context.session,
-        user: context.user,
-        runtime: context.runtime,
-      } as AuthenticatedORPCContext,
+      context: context as AuthenticatedORPCContext,
     });
   },
 );

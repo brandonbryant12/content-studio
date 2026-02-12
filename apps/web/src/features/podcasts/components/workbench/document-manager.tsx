@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { DocumentInfo } from '@/shared/hooks/use-document-selection';
 import { AddDocumentDialog } from '@/shared/components/document-manager';
@@ -27,10 +27,6 @@ export function DocumentManager({
     onRemoveDocument(docId);
   };
 
-  const handleOpenAddDialog = useCallback(() => {
-    setAddDialogOpen(true);
-  }, []);
-
   const currentIds = documents.map((d) => d.id);
 
   return (
@@ -39,7 +35,7 @@ export function DocumentManager({
         documents={documents}
         disabled={disabled}
         onRemove={handleRemove}
-        onAdd={handleOpenAddDialog}
+        onAdd={() => setAddDialogOpen(true)}
       />
 
       <AddDocumentDialog

@@ -10,19 +10,7 @@ import {
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-
-const std = Schema.standardSchemaV1;
-
-const CoerceNumber = Schema.Union(
-  Schema.Number,
-  Schema.String.pipe(
-    Schema.transform(Schema.Number, { decode: Number, encode: String }),
-  ),
-).pipe(Schema.compose(Schema.Number));
-
-// =============================================================================
-// Error Definitions
-// =============================================================================
+import { std, PaginationFields, authErrors, jobErrors } from './shared';
 
 const infographicErrors = {
   INFOGRAPHIC_NOT_FOUND: {
@@ -35,27 +23,6 @@ const infographicErrors = {
   },
 } as const;
 
-const authErrors = {
-  FORBIDDEN: {
-    status: 403,
-  },
-} as const;
-
-const jobErrors = {
-  JOB_NOT_FOUND: {
-    status: 404,
-    data: std(
-      Schema.Struct({
-        jobId: Schema.String,
-      }),
-    ),
-  },
-} as const;
-
-// =============================================================================
-// Contract Definition
-// =============================================================================
-
 const infographicContract = oc
   .prefix('/infographics')
   .tag('infographic')
@@ -67,21 +34,7 @@ const infographicContract = oc
         summary: 'List infographics',
         description: 'Retrieve all infographics for the current user',
       })
-      .input(
-        std(
-          Schema.Struct({
-            limit: Schema.optional(
-              CoerceNumber.pipe(
-                Schema.greaterThanOrEqualTo(1),
-                Schema.lessThanOrEqualTo(100),
-              ),
-            ),
-            offset: Schema.optional(
-              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
-            ),
-          }),
-        ),
-      )
+      .input(std(Schema.Struct(PaginationFields)))
       .output(std(Schema.Array(InfographicOutputSchema))),
 
     get: oc

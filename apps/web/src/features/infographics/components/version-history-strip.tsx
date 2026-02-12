@@ -60,40 +60,32 @@ export function VersionHistoryStrip({
   onSelectVersion,
   isLoading,
 }: VersionHistoryStripProps) {
-  if (isLoading) {
-    return (
-      <div className="border-t border-border/40 px-4 py-3">
+  return (
+    <div className="border-t border-border/40 px-4 py-3">
+      {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading versions...</p>
-      </div>
-    );
-  }
-
-  if (versions.length === 0) {
-    return (
-      <div className="border-t border-border/40 px-4 py-3">
+      ) : versions.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           No versions yet — generate your first infographic to see version
           history
         </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-t border-border/40 px-4 py-3">
-      <p className="text-xs font-medium text-muted-foreground mb-2">
-        Version History ({versions.length})
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1" role="list">
-        {versions.map((version) => (
-          <VersionCard
-            key={version.id}
-            version={version}
-            isSelected={selectedVersionId === version.id}
-            onSelect={() => onSelectVersion(version.id)}
-          />
-        ))}
-      </div>
+      ) : (
+        <>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Version History ({versions.length})
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1" role="list">
+            {versions.map((version) => (
+              <VersionCard
+                key={version.id}
+                version={version}
+                isSelected={selectedVersionId === version.id}
+                onSelect={() => onSelectVersion(version.id)}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

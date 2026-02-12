@@ -13,13 +13,10 @@ import { StepInstructions } from './steps/step-instructions';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-type PodcastFull = PodcastFullOutput;
-type PodcastFormat = 'conversation' | 'voiceover';
-
 const TOTAL_STEPS = 3;
 
 interface SetupWizardProps {
-  podcast: PodcastFull;
+  podcast: PodcastFullOutput;
 }
 
 export function SetupWizard({ podcast }: SetupWizardProps) {
@@ -33,8 +30,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     );
   }, [queryClient]);
 
-  // Format is set at creation and read-only during setup
-  const format = (podcast.format as PodcastFormat) ?? 'conversation';
+  const format = podcast.format ?? 'conversation';
 
   // Step 2 state
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
@@ -48,7 +44,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     podcast.coHostVoice ?? 'Charon',
   );
 
-  // Step 4 state
+  // Step 3 state (instructions)
   const [instructions, setInstructions] = useState(
     podcast.promptInstructions ?? '',
   );
@@ -139,7 +135,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     if (success && currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     }
-    // If step 4, generation was triggered and the component will unmount
+    // If final step, generation was triggered and the component will unmount
     // as the podcast status changes
   };
 

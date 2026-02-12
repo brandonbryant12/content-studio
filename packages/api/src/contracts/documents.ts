@@ -6,17 +6,7 @@ import {
   DocumentIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-
-// Helper to convert Effect Schema to Standard Schema for oRPC
-const std = Schema.standardSchemaV1;
-
-// Helper for query params that may come in as strings
-const CoerceNumber = Schema.Union(
-  Schema.Number,
-  Schema.String.pipe(
-    Schema.transform(Schema.Number, { decode: Number, encode: String }),
-  ),
-).pipe(Schema.compose(Schema.Number));
+import { std, PaginationFields } from './shared';
 
 const documentErrors = {
   DOCUMENT_NOT_FOUND: {
@@ -72,11 +62,10 @@ const urlErrors = {
   },
 } as const;
 
-// Upload input schema (base64 encoded file)
 const UploadDocumentSchema = Schema.Struct({
   fileName: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   mimeType: Schema.String,
-  data: Schema.String, // Base64 encoded file content
+  data: Schema.String,
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
@@ -100,15 +89,7 @@ const documentContract = oc
       .input(
         std(
           Schema.Struct({
-            limit: Schema.optional(
-              CoerceNumber.pipe(
-                Schema.greaterThanOrEqualTo(1),
-                Schema.lessThanOrEqualTo(100),
-              ),
-            ),
-            offset: Schema.optional(
-              CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0)),
-            ),
+            ...PaginationFields,
             source: Schema.optional(Schema.String),
             status: Schema.optional(Schema.String),
           }),

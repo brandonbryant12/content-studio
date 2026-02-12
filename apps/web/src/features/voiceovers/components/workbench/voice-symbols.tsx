@@ -185,6 +185,17 @@ export function OrusSymbol({ className }: VoiceSymbolProps) {
   );
 }
 
+const SYMBOLS: Record<string, React.ComponentType<VoiceSymbolProps>> = {
+  Aoede: AoedeSymbol,
+  Kore: KoreSymbol,
+  Leda: LedaSymbol,
+  Zephyr: ZephyrSymbol,
+  Charon: CharonSymbol,
+  Fenrir: FenrirSymbol,
+  Puck: PuckSymbol,
+  Orus: OrusSymbol,
+};
+
 /** Map voice ID to symbol component */
 export function VoiceSymbol({
   voiceId,
@@ -193,18 +204,7 @@ export function VoiceSymbol({
   voiceId: string;
   className?: string;
 }) {
-  const symbols: Record<string, React.ComponentType<VoiceSymbolProps>> = {
-    Aoede: AoedeSymbol,
-    Kore: KoreSymbol,
-    Leda: LedaSymbol,
-    Zephyr: ZephyrSymbol,
-    Charon: CharonSymbol,
-    Fenrir: FenrirSymbol,
-    Puck: PuckSymbol,
-    Orus: OrusSymbol,
-  };
-
-  const Symbol = symbols[voiceId];
+  const Symbol = SYMBOLS[voiceId];
   if (!Symbol) return null;
 
   return <Symbol className={className} />;

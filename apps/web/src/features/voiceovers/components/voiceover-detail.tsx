@@ -28,7 +28,6 @@ export interface VoiceoverDetailProps {
   onDelete: () => void;
   isApproved: boolean;
   isAdmin: boolean;
-  // Approval callbacks
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;

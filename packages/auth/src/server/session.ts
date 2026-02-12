@@ -26,7 +26,6 @@ export const getSession = (
 
 /**
  * Get session with user role loaded from database.
- * This is the main entry point for authenticated requests.
  * Returns null if no session exists.
  */
 export const getSessionWithRole = (
@@ -44,14 +43,15 @@ export const getSessionWithRole = (
     const policy = yield* Policy;
     const role = yield* policy.getUserRole(session.user.id);
 
-    const user: User = {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-      role,
+    return {
+      session,
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        role,
+      },
     };
-
-    return { session, user };
   }).pipe(Effect.withSpan('auth.getSessionWithRole'));
 
 /**
@@ -65,12 +65,10 @@ export const requireSession = (
   UnauthorizedError | PolicyError,
   Policy
 > =>
-  Effect.gen(function* () {
-    const result = yield* getSessionWithRole(auth, headers);
-    if (!result) {
-      return yield* Effect.fail(
-        new UnauthorizedError({ message: 'Authentication required' }),
-      );
-    }
-    return result;
-  }).pipe(Effect.withSpan('auth.requireSession'));
+  getSessionWithRole(auth, headers).pipe(
+    Effect.filterOrFail(
+      (result): result is { session: Session; user: User } => result !== null,
+      () => new UnauthorizedError({ message: 'Authentication required' }),
+    ),
+    Effect.withSpan('auth.requireSession'),
+  );

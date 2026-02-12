@@ -38,12 +38,8 @@ export function useQuickPlay(): UseQuickPlayReturn {
   // Refs so toggle/stop closures stay stable
   const playingIdRef = useRef(playingId);
   const isPlayingRef = useRef(isPlaying);
-  useEffect(() => {
-    playingIdRef.current = playingId;
-  }, [playingId]);
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
+  playingIdRef.current = playingId;
+  isPlayingRef.current = isPlaying;
 
   // Create audio element once
   useEffect(() => {

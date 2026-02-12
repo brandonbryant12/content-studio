@@ -1,25 +1,16 @@
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 export interface UseVoicePreviewReturn {
-  /** ID of the voice currently playing, or null */
   playingVoiceId: string | null;
-  /** Start playing a voice preview. Stops any currently playing preview. */
   play: (voiceId: string, url: string) => void;
-  /** Stop the currently playing preview */
   stop: () => void;
 }
 
-/**
- * Manages playing a single voice preview at a time.
- * Uses a single Audio element — stops previous before playing new.
- */
 export function useVoicePreview(): UseVoicePreviewReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
   const playingRef = useRef<string | null>(null);
-  useEffect(() => {
-    playingRef.current = playingVoiceId;
-  }, [playingVoiceId]);
+  playingRef.current = playingVoiceId;
 
   // Create audio element once
   useEffect(() => {
@@ -73,8 +64,5 @@ export function useVoicePreview(): UseVoicePreviewReturn {
     [stop],
   );
 
-  return useMemo(
-    () => ({ playingVoiceId, play, stop }),
-    [playingVoiceId, play, stop],
-  );
+  return { playingVoiceId, play, stop };
 }

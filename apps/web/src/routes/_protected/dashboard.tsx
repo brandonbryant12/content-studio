@@ -16,7 +16,7 @@ import { queryClient } from '@/clients/queryClient';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
 import { useInfographicList } from '@/features/infographics/hooks';
-import { useOptimisticCreate as useCreateInfographic } from '@/features/infographics/hooks/use-optimistic-create';
+import { useCreateInfographic } from '@/features/infographics/hooks/use-create-infographic';
 import { useOptimisticCreate as useCreatePodcast } from '@/features/podcasts/hooks/use-optimistic-create';
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
 import { useVoiceoversOrdered } from '@/features/voiceovers/hooks';

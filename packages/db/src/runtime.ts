@@ -5,10 +5,8 @@ import { type Db, DbLive } from './effect';
 
 export type AppLayer = Layer.Layer<Db>;
 
-export const createAppLayer = (db: DatabaseInstance): AppLayer => DbLive(db);
-
 export const createAppRuntime = (db: DatabaseInstance) =>
-  ManagedRuntime.make(createAppLayer(db));
+  ManagedRuntime.make(DbLive(db));
 
 export type AppRuntime = ReturnType<typeof createAppRuntime>;
 

@@ -45,20 +45,17 @@ export function useKeyboardShortcut({
     (e: KeyboardEvent) => {
       if (!enabledRef.current) return;
 
-      // Check if modifier requirements are met (exact match when specified)
-      const cmdCtrlMatch = cmdOrCtrl ? e.metaKey || e.ctrlKey : true;
+      const cmdCtrlMatch = cmdOrCtrl
+        ? e.metaKey || e.ctrlKey
+        : !e.metaKey && !e.ctrlKey;
       const shiftMatch = shift ? e.shiftKey : !e.shiftKey;
       const altMatch = alt ? e.altKey : !e.altKey;
-
-      // Only match if Cmd/Ctrl isn't pressed when not required (to avoid triggering on Cmd+other)
-      const noUnwantedModifiers = cmdOrCtrl || (!e.metaKey && !e.ctrlKey);
 
       if (
         e.key.toLowerCase() === key.toLowerCase() &&
         cmdCtrlMatch &&
         shiftMatch &&
-        altMatch &&
-        (cmdOrCtrl || noUnwantedModifiers)
+        altMatch
       ) {
         e.preventDefault();
         onTriggerRef.current();

@@ -1,5 +1,12 @@
 // Errors
-export * from './errors';
+export {
+  DocumentNotFound,
+  DocumentError,
+  DocumentTooLargeError,
+  UnsupportedDocumentFormat,
+  DocumentParseError,
+  DocumentContentNotFound,
+} from '../errors';
 
 // Repository (Context.Tag pattern)
 export {

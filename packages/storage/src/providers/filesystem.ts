@@ -24,7 +24,7 @@ const makeFilesystemStorage = (
   });
 
   return {
-    upload: (key, data, _contentType) =>
+    upload: (key, data) =>
       Effect.gen(function* () {
         const dest = filePath(key);
         const dir = path.dirname(dest);
@@ -101,11 +101,8 @@ const makeFilesystemStorage = (
   };
 };
 
-const isEnoent = (error: unknown): boolean =>
-  typeof error === 'object' &&
-  error !== null &&
-  'code' in error &&
-  (error as { code: string }).code === 'ENOENT';
+const isEnoent = (error: unknown): error is NodeJS.ErrnoException =>
+  error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT';
 
 export const FilesystemStorageLive = (
   config: FilesystemStorageConfig,

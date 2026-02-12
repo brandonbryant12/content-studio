@@ -135,13 +135,8 @@ export function ScriptEditor({
     afterIndex: number;
     speaker: string;
   } | null>(null);
-  const newSegmentRef = useRef<{ afterIndex: number; speaker: string } | null>(
-    null,
-  );
-
-  useEffect(() => {
-    newSegmentRef.current = newSegment;
-  }, [newSegment]);
+  const newSegmentRef = useRef(newSegment);
+  newSegmentRef.current = newSegment;
 
   const handleStartEdit = useCallback((segmentIndex: number) => {
     setEditingIndex(segmentIndex);

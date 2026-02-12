@@ -40,10 +40,6 @@ export function InfographicListContainer() {
     });
   }, [createMutation]);
 
-  const handleDeleteRequest = useCallback((id: string) => {
-    setPendingDeleteId(id);
-  }, []);
-
   const handleDeleteConfirm = useCallback(() => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
@@ -63,10 +59,6 @@ export function InfographicListContainer() {
     await executeBulkDelete(selection.selectedIds);
     selection.deselectAll();
   }, [executeBulkDelete, selection]);
-
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
 
   if (isLoading) {
     return (
@@ -91,9 +83,9 @@ export function InfographicListContainer() {
         searchQuery={searchQuery}
         isCreating={createMutation.isPending}
         deletingId={deletingId}
-        onSearch={handleSearch}
+        onSearch={setSearchQuery}
         onCreate={handleCreate}
-        onDelete={handleDeleteRequest}
+        onDelete={setPendingDeleteId}
         selection={selection}
         isBulkDeleting={isBulkDeleting}
         onBulkDelete={handleBulkDelete}

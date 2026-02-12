@@ -160,9 +160,7 @@ export function useInfographicSettings({
         infographicType,
         stylePreset,
         format,
-        ...(extra?.sourceDocumentIds !== undefined
-          ? { sourceDocumentIds: extra.sourceDocumentIds }
-          : {}),
+        ...extra,
       });
 
       setHasUserEdits(false);

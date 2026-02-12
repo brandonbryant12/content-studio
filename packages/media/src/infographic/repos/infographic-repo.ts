@@ -174,26 +174,16 @@ const make: InfographicRepoService = {
 
   update: (id, data) =>
     withDb('infographicRepo.update', async (db) => {
+      const { sourceDocumentIds, ...rest } = data;
       const updateValues: Record<string, unknown> = {
+        ...Object.fromEntries(
+          Object.entries(rest).filter(([, v]) => v !== undefined),
+        ),
+        ...(sourceDocumentIds !== undefined && {
+          sourceDocumentIds: [...sourceDocumentIds],
+        }),
         updatedAt: new Date(),
       };
-
-      if (data.title !== undefined) updateValues.title = data.title;
-      if (data.prompt !== undefined) updateValues.prompt = data.prompt;
-      if (data.infographicType !== undefined)
-        updateValues.infographicType = data.infographicType;
-      if (data.stylePreset !== undefined)
-        updateValues.stylePreset = data.stylePreset;
-      if (data.format !== undefined) updateValues.format = data.format;
-      if (data.sourceDocumentIds !== undefined)
-        updateValues.sourceDocumentIds = [...data.sourceDocumentIds];
-      if (data.imageStorageKey !== undefined)
-        updateValues.imageStorageKey = data.imageStorageKey;
-      if (data.thumbnailStorageKey !== undefined)
-        updateValues.thumbnailStorageKey = data.thumbnailStorageKey;
-      if (data.status !== undefined) updateValues.status = data.status;
-      if (data.errorMessage !== undefined)
-        updateValues.errorMessage = data.errorMessage;
 
       const [row] = await db
         .update(infographic)
@@ -329,4 +319,4 @@ const make: InfographicRepoService = {
 // =============================================================================
 
 export const InfographicRepoLive: Layer.Layer<InfographicRepo, never, Db> =
-  Layer.sync(InfographicRepo, () => make);
+  Layer.succeed(InfographicRepo, make);

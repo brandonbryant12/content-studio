@@ -27,10 +27,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        listPodcasts({
-          limit: input.limit,
-          offset: input.offset,
-        }).pipe(
+        listPodcasts(input).pipe(
           Effect.flatMap((result) =>
             serializePodcastListItemsEffect([...result.podcasts]),
           ),
@@ -163,7 +160,7 @@ const podcastRouter = {
         context.user,
         saveAndQueueAudio({
           podcastId: input.id,
-          segments: input.segments ? [...input.segments] : undefined,
+          segments: input.segments && [...input.segments],
           hostVoice: input.hostVoice,
           hostVoiceName: input.hostVoiceName,
           coHostVoice: input.coHostVoice,

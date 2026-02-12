@@ -1,15 +1,7 @@
 import { oc } from '@orpc/contract';
 import { ActivityLogOutputSchema } from '@repo/db/schema';
 import { Schema } from 'effect';
-
-const std = Schema.standardSchemaV1;
-
-const CoerceNumber = Schema.Union(
-  Schema.Number,
-  Schema.String.pipe(
-    Schema.transform(Schema.Number, { decode: Number, encode: String }),
-  ),
-).pipe(Schema.compose(Schema.Number));
+import { std, CoerceNumber } from './shared';
 
 const ActivityStatsOutputSchema = Schema.Struct({
   total: Schema.Number,

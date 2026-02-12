@@ -225,33 +225,31 @@ function Sidebar({
             <UserAvatar user={user} collapsed={collapsed} />
           </div>
 
-          {(() => {
-            const toggleButton = (
-              <button
-                onClick={onToggle}
-                className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {collapsed ? (
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggle}
+                  className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Expand sidebar"
+                >
                   <ChevronRightIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronLeftIcon className="w-4 h-4" />
-                )}
-              </button>
-            );
-
-            return collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>{toggleButton}</TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                  Expand sidebar
-                  <span className="ml-1.5 text-[10px] opacity-60">[</span>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              toggleButton
-            );
-          })()}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Expand sidebar
+                <span className="ml-1.5 text-[10px] opacity-60">[</span>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={onToggle}
+              className="w-full flex items-center justify-center h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </aside>
     </TooltipProvider>
