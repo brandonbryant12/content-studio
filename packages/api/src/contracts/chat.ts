@@ -14,6 +14,26 @@ const chatContract = oc
       .route({ method: 'POST', path: '/synthesize-research-query' })
       .input(type<{ messages: UIMessage[] }>())
       .output(type<{ query: string; title: string }>()),
+
+    personaChat: oc
+      .route({ method: 'POST', path: '/persona-chat' })
+      .input(type<{ messages: UIMessage[] }>())
+      .output(eventIterator(type<unknown>())),
+
+    synthesizePersona: oc
+      .route({ method: 'POST', path: '/synthesize-persona' })
+      .input(type<{ messages: UIMessage[] }>())
+      .output(
+        type<{
+          name: string;
+          role: string;
+          personalityDescription: string;
+          speakingStyle: string;
+          exampleQuotes: readonly string[];
+          voiceId: string;
+          voiceName: string;
+        }>(),
+      ),
   });
 
 export default chatContract;

@@ -72,12 +72,21 @@ export interface UsePodcastSettingsReturn {
   coHostVoice: string;
   targetDuration: number;
   instructions: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  hostPersonaVoiceId: string | null;
+  coHostPersonaVoiceId: string | null;
+
+  // Derived
+  voiceConflict: boolean;
 
   // Setters
   setHostVoice: (voice: string) => void;
   setCoHostVoice: (voice: string) => void;
   setTargetDuration: (duration: number) => void;
   setInstructions: (instructions: string) => void;
+  setHostPersona: (personaId: string | null, voiceId?: string | null) => void;
+  setCoHostPersona: (personaId: string | null, voiceId?: string | null) => void;
 
   // State
   hasChanges: boolean;
@@ -94,6 +103,10 @@ interface SettingsState {
   coHostVoice: string;
   targetDuration: number;
   instructions: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  hostPersonaVoiceId: string | null;
+  coHostPersonaVoiceId: string | null;
   hasUserEdits: boolean;
 }
 
@@ -102,6 +115,16 @@ type SettingsAction =
   | { type: 'SET_COHOST_VOICE'; value: string }
   | { type: 'SET_DURATION'; value: number }
   | { type: 'SET_INSTRUCTIONS'; value: string }
+  | {
+      type: 'SET_HOST_PERSONA';
+      personaId: string | null;
+      voiceId?: string | null;
+    }
+  | {
+      type: 'SET_COHOST_PERSONA';
+      personaId: string | null;
+      voiceId?: string | null;
+    }
   | { type: 'SYNC_SERVER'; values: Omit<SettingsState, 'hasUserEdits'> }
   | { type: 'RESET'; values: Omit<SettingsState, 'hasUserEdits'> }
   | { type: 'CLEAR_USER_EDITS' };
@@ -119,6 +142,22 @@ function settingsReducer(
       return { ...state, targetDuration: action.value, hasUserEdits: true };
     case 'SET_INSTRUCTIONS':
       return { ...state, instructions: action.value, hasUserEdits: true };
+    case 'SET_HOST_PERSONA':
+      return {
+        ...state,
+        hostPersonaId: action.personaId,
+        hostPersonaVoiceId: action.voiceId ?? null,
+        hostVoice: action.voiceId ?? state.hostVoice,
+        hasUserEdits: true,
+      };
+    case 'SET_COHOST_PERSONA':
+      return {
+        ...state,
+        coHostPersonaId: action.personaId,
+        coHostPersonaVoiceId: action.voiceId ?? null,
+        coHostVoice: action.voiceId ?? state.coHostVoice,
+        hasUserEdits: true,
+      };
     case 'SYNC_SERVER':
       if (state.hasUserEdits) return state;
       return { ...state, ...action.values };
@@ -135,6 +174,10 @@ function getInitialValues(podcast: PodcastFull | undefined) {
     coHostVoice: podcast?.coHostVoice ?? 'Charon',
     targetDuration: podcast?.targetDurationMinutes ?? 5,
     instructions: podcast?.promptInstructions ?? '',
+    hostPersonaId: podcast?.hostPersonaId ?? null,
+    coHostPersonaId: podcast?.coHostPersonaId ?? null,
+    hostPersonaVoiceId: null as string | null,
+    coHostPersonaVoiceId: null as string | null,
   };
 }
 
@@ -165,6 +208,8 @@ export function usePodcastSettings({
     podcast?.coHostVoice,
     podcast?.targetDurationMinutes,
     podcast?.promptInstructions,
+    podcast?.hostPersonaId,
+    podcast?.coHostPersonaId,
   ]);
 
   const setHostVoice = useCallback((value: string) => {
@@ -183,17 +228,40 @@ export function usePodcastSettings({
     dispatch({ type: 'SET_INSTRUCTIONS', value });
   }, []);
 
+  const setHostPersona = useCallback(
+    (personaId: string | null, voiceId?: string | null) => {
+      dispatch({ type: 'SET_HOST_PERSONA', personaId, voiceId });
+    },
+    [],
+  );
+
+  const setCoHostPersona = useCallback(
+    (personaId: string | null, voiceId?: string | null) => {
+      dispatch({ type: 'SET_COHOST_PERSONA', personaId, voiceId });
+    },
+    [],
+  );
+
   // Derive hasChanges by comparing current state to server data
   const serverValues = getInitialValues(podcast);
 
   const hasScriptSettingsChanges =
     state.targetDuration !== serverValues.targetDuration ||
-    state.instructions !== serverValues.instructions;
+    state.instructions !== serverValues.instructions ||
+    state.hostPersonaId !== serverValues.hostPersonaId ||
+    state.coHostPersonaId !== serverValues.coHostPersonaId;
 
   const hasChanges =
     state.hostVoice !== serverValues.hostVoice ||
     state.coHostVoice !== serverValues.coHostVoice ||
     hasScriptSettingsChanges;
+
+  // Effective voice: persona voice takes precedence
+  const hostEffectiveVoice = state.hostPersonaVoiceId || state.hostVoice;
+  const coHostEffectiveVoice = state.coHostPersonaVoiceId || state.coHostVoice;
+  const voiceConflict =
+    podcast?.format === 'conversation' &&
+    hostEffectiveVoice === coHostEffectiveVoice;
 
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
@@ -217,6 +285,8 @@ export function usePodcastSettings({
       coHostVoiceName: coHostVoiceInfo?.name,
       targetDurationMinutes: state.targetDuration,
       promptInstructions: state.instructions || undefined,
+      hostPersonaId: state.hostPersonaId,
+      coHostPersonaId: state.coHostPersonaId,
     });
 
     dispatch({ type: 'CLEAR_USER_EDITS' });
@@ -226,6 +296,8 @@ export function usePodcastSettings({
     state.coHostVoice,
     state.targetDuration,
     state.instructions,
+    state.hostPersonaId,
+    state.coHostPersonaId,
     updateMutation,
   ]);
 
@@ -239,10 +311,17 @@ export function usePodcastSettings({
       coHostVoice: state.coHostVoice,
       targetDuration: state.targetDuration,
       instructions: state.instructions,
+      hostPersonaId: state.hostPersonaId,
+      coHostPersonaId: state.coHostPersonaId,
+      hostPersonaVoiceId: state.hostPersonaVoiceId,
+      coHostPersonaVoiceId: state.coHostPersonaVoiceId,
+      voiceConflict,
       setHostVoice,
       setCoHostVoice,
       setTargetDuration,
       setInstructions,
+      setHostPersona,
+      setCoHostPersona,
       hasChanges,
       hasScriptSettingsChanges,
       isSaving: updateMutation.isPending,
@@ -254,6 +333,11 @@ export function usePodcastSettings({
       state.coHostVoice,
       state.targetDuration,
       state.instructions,
+      state.hostPersonaId,
+      state.coHostPersonaId,
+      state.hostPersonaVoiceId,
+      state.coHostPersonaVoiceId,
+      voiceConflict,
       hasChanges,
       hasScriptSettingsChanges,
       updateMutation.isPending,

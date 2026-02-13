@@ -1,5 +1,6 @@
 import {
   ActivityLogIcon,
+  AvatarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   FileTextIcon,
@@ -190,6 +191,14 @@ function Sidebar({
             icon={SpeakerLoudIcon}
             label="Voiceovers"
             colorScheme="emerald"
+            collapsed={collapsed}
+          />
+
+          <NavItem
+            to="/personas"
+            icon={AvatarIcon}
+            label="Personas"
+            colorScheme="rose"
             collapsed={collapsed}
           />
 

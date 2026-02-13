@@ -7,6 +7,7 @@ interface SetupFooterProps {
   continueDisabled?: boolean;
   isLoading?: boolean;
   isFinalStep?: boolean;
+  subtitle?: string;
 }
 
 export function SetupFooter({
@@ -16,6 +17,7 @@ export function SetupFooter({
   continueDisabled = false,
   isLoading = false,
   isFinalStep = false,
+  subtitle,
 }: SetupFooterProps) {
   return (
     <div className="setup-footer">
@@ -50,6 +52,11 @@ export function SetupFooter({
             'Continue'
           )}
         </button>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            {subtitle}
+          </p>
+        )}
       </div>
     </div>
   );

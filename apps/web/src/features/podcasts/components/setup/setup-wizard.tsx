@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import type { PodcastFullOutput } from '@repo/db/schema';
@@ -36,6 +36,12 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
     podcast.documents.map((d) => d.id),
   );
+  const [researchDocId, setResearchDocId] = useState<string | null>(null);
+
+  const handleDocumentCreated = useCallback((docId: string, _title: string) => {
+    setResearchDocId(docId);
+    setSelectedDocIds((prev) => [...prev, docId]);
+  }, []);
 
   // Step 3 state
   const [duration, setDuration] = useState(podcast.targetDurationMinutes ?? 5);
@@ -43,11 +49,41 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const [coHostVoice, setCoHostVoice] = useState(
     podcast.coHostVoice ?? 'Charon',
   );
+  const [hostPersonaId, setHostPersonaId] = useState<string | null>(
+    podcast.hostPersonaId ?? null,
+  );
+  const [coHostPersonaId, setCoHostPersonaId] = useState<string | null>(
+    podcast.coHostPersonaId ?? null,
+  );
+  const [hostPersonaVoiceId, setHostPersonaVoiceId] = useState<string | null>(
+    null,
+  );
+  const [coHostPersonaVoiceId, setCoHostPersonaVoiceId] = useState<
+    string | null
+  >(null);
 
   // Step 3 state (instructions)
   const [instructions, setInstructions] = useState(
     podcast.promptInstructions ?? '',
   );
+
+  const handleHostPersonaChange = (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => {
+    setHostPersonaId(personaId);
+    setHostPersonaVoiceId(voiceId);
+    if (voiceId) setHostVoice(voiceId);
+  };
+
+  const handleCoHostPersonaChange = (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => {
+    setCoHostPersonaId(personaId);
+    setCoHostPersonaVoiceId(voiceId);
+    if (voiceId) setCoHostVoice(voiceId);
+  };
 
   // Update mutation for saving progress
   const queryKey = getPodcastQueryKey(podcast.id);
@@ -109,6 +145,11 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             targetDurationMinutes: duration,
             hostVoice,
             coHostVoice: format === 'conversation' ? coHostVoice : undefined,
+            hostPersonaId: hostPersonaId || undefined,
+            coHostPersonaId:
+              format === 'conversation'
+                ? coHostPersonaId || undefined
+                : undefined,
           });
           break;
         case 3:
@@ -154,6 +195,8 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           <StepDocuments
             selectedIds={selectedDocIds}
             onSelectionChange={setSelectedDocIds}
+            researchDocId={researchDocId}
+            onDocumentCreated={handleDocumentCreated}
           />
         )}
 
@@ -163,9 +206,15 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             duration={duration}
             hostVoice={hostVoice}
             coHostVoice={coHostVoice}
+            hostPersonaId={hostPersonaId}
+            coHostPersonaId={coHostPersonaId}
+            hostPersonaVoiceId={hostPersonaVoiceId}
+            coHostPersonaVoiceId={coHostPersonaVoiceId}
             onDurationChange={setDuration}
             onHostVoiceChange={setHostVoice}
             onCoHostVoiceChange={setCoHostVoice}
+            onHostPersonaChange={handleHostPersonaChange}
+            onCoHostPersonaChange={handleCoHostPersonaChange}
           />
         )}
 
@@ -183,6 +232,11 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           continueDisabled={!canProceedFromStep(currentStep)}
           isLoading={isLoading}
           isFinalStep={currentStep === TOTAL_STEPS}
+          subtitle={
+            currentStep === TOTAL_STEPS && researchDocId
+              ? 'Research will complete in the background'
+              : undefined
+          }
         />
       </div>
     </div>

@@ -3,7 +3,13 @@ import { requireOwnership } from '@repo/auth/policy';
 import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import { getDocumentContent } from '../../document';
-import { buildSystemPrompt, buildUserPrompt } from '../prompts';
+import { PersonaRepo } from '../../persona';
+import {
+  buildSystemPrompt,
+  buildUserPrompt,
+  type PersonaContext,
+  type ScriptPromptContext,
+} from '../prompts';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -51,6 +57,42 @@ export const generateScript = (input: GenerateScriptInput) =>
 
     yield* podcastRepo.updateStatus(input.podcastId, 'generating_script');
 
+    // Load personas if assigned
+    let hostPersona: PersonaContext | undefined;
+    let coHostPersona: PersonaContext | undefined;
+
+    if (podcast.hostPersonaId) {
+      const personaRepo = yield* PersonaRepo;
+      const p = yield* personaRepo
+        .findById(podcast.hostPersonaId)
+        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      if (p) {
+        hostPersona = {
+          name: p.name,
+          role: p.role,
+          personalityDescription: p.personalityDescription,
+          speakingStyle: p.speakingStyle,
+          exampleQuotes: p.exampleQuotes ?? [],
+        };
+      }
+    }
+
+    if (podcast.coHostPersonaId) {
+      const personaRepo = yield* PersonaRepo;
+      const p = yield* personaRepo
+        .findById(podcast.coHostPersonaId)
+        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      if (p) {
+        coHostPersona = {
+          name: p.name,
+          role: p.role,
+          personalityDescription: p.personalityDescription,
+          speakingStyle: p.speakingStyle,
+          exampleQuotes: p.exampleQuotes ?? [],
+        };
+      }
+    }
+
     const documentContents = yield* Effect.all(
       podcast.documents.map((doc) =>
         getDocumentContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
@@ -61,7 +103,13 @@ export const generateScript = (input: GenerateScriptInput) =>
 
     const effectivePrompt =
       input.promptInstructions ?? podcast.promptInstructions ?? '';
-    const systemPrompt = buildSystemPrompt(podcast.format, effectivePrompt);
+    const promptContext: ScriptPromptContext = {
+      format: podcast.format,
+      customInstructions: effectivePrompt,
+      hostPersona,
+      coHostPersona,
+    };
+    const systemPrompt = buildSystemPrompt(promptContext);
     const userPrompt = buildUserPrompt(
       { title: podcast.title, description: podcast.description },
       combinedContent,

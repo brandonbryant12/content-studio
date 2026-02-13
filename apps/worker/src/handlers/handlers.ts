@@ -3,6 +3,8 @@ import {
   generateAudio,
   generateCoverImage,
   syncEntityTitle,
+  PodcastRepo,
+  awaitDocumentsReady,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
@@ -21,6 +23,19 @@ import type {
 export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
+
+    // Wait for any pending research documents before generating script
+    const podcastRepo = yield* PodcastRepo;
+    const podcast = yield* podcastRepo.findById(podcastId);
+    const pendingDocs = podcast.documents.filter((d) => d.status !== 'ready');
+    if (pendingDocs.length > 0) {
+      yield* Effect.logInfo(
+        `Waiting for ${pendingDocs.length} document(s) to become ready...`,
+      );
+      yield* awaitDocumentsReady({
+        documentIds: pendingDocs.map((d) => d.id),
+      });
+    }
 
     const scriptResult: UseCaseScriptResult = yield* generateScript({
       podcastId,

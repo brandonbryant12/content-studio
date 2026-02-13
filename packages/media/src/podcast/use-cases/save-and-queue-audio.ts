@@ -1,6 +1,11 @@
 import { Queue } from '@repo/queue';
 import { Effect, Schema } from 'effect';
-import type { JobId, JobStatus, ScriptSegment } from '@repo/db/schema';
+import type {
+  JobId,
+  JobStatus,
+  PersonaId,
+  ScriptSegment,
+} from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
 import { saveChanges } from './save-changes';
 
@@ -15,6 +20,8 @@ export interface SaveAndQueueAudioInput {
   hostVoiceName?: string;
   coHostVoice?: string;
   coHostVoiceName?: string;
+  hostPersonaId?: PersonaId | null;
+  coHostPersonaId?: PersonaId | null;
 }
 
 export interface SaveAndQueueAudioResult {
@@ -56,6 +63,8 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       hostVoiceName: input.hostVoiceName,
       coHostVoice: input.coHostVoice,
       coHostVoiceName: input.coHostVoiceName,
+      hostPersonaId: input.hostPersonaId,
+      coHostPersonaId: input.coHostPersonaId,
     });
 
     if (!result.hasChanges) {

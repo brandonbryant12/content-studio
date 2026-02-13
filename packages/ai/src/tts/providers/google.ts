@@ -1,4 +1,5 @@
 import { Effect, Layer } from 'effect';
+import { TTS_MODEL } from '../../models';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
 import {
@@ -18,7 +19,7 @@ import { VOICES, getVoicesByGender, DEFAULT_PREVIEW_TEXT } from '../voices';
 export interface GoogleTTSConfig {
   /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
-  /** Default: 'gemini-2.5-flash-preview-tts' */
+  /** Override the default TTS model from models.ts */
   readonly model?: string;
 }
 
@@ -74,7 +75,7 @@ function extractAudio(data: GeminiTTSResponse): Buffer {
  * Create Google TTS service implementation.
  */
 const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
-  const modelName = config.model ?? 'gemini-2.5-flash-preview-tts';
+  const modelName = config.model ?? TTS_MODEL;
 
   return {
     listVoices: (options?: ListVoicesOptions) =>

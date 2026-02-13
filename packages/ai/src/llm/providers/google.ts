@@ -1,6 +1,7 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject, jsonSchema } from 'ai';
-import { Effect, Layer, JSONSchema } from 'effect';
+import { Effect, Layer, JSONSchema, Schedule } from 'effect';
+import { LLM_MODEL } from '../../models';
 import { mapError } from '../map-error';
 import {
   LLM,
@@ -15,15 +16,24 @@ import {
 export interface GoogleConfig {
   /** API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
-  /** Default: 'gemini-2.5-flash' */
+  /** Override the default LLM model from models.ts */
   readonly model?: string;
+}
+
+/**
+ * Strip markdown code fences that Gemini thinking models sometimes wrap around JSON.
+ * e.g. ```json\n{...}\n``` → {...}
+ */
+function stripMarkdownCodeFence(text: string): string | null {
+  const match = text.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
+  return match ? match[1].trim() : null;
 }
 
 /**
  * Create Google AI service implementation via AI SDK.
  */
 const makeGoogleService = (config: GoogleConfig): LLMService => {
-  const modelId = config.model ?? 'gemini-2.5-flash';
+  const modelId = config.model ?? LLM_MODEL;
 
   const google = createGoogleGenerativeAI({
     apiKey: config.apiKey,
@@ -48,6 +58,8 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             schema: aiSchema,
             maxOutputTokens: options.maxTokens,
             temperature: options.temperature ?? 0.7,
+            experimental_repairText: async ({ text }) =>
+              stripMarkdownCodeFence(text),
           });
 
           const { inputTokens, outputTokens, totalTokens } = result.usage;
@@ -64,6 +76,12 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
         },
         catch: mapError,
       }).pipe(
+        // Retry transient LLM errors (e.g. response parsing failures) up to 2 times
+        Effect.retry({
+          times: 2,
+          schedule: Schedule.exponential('500 millis'),
+          while: (error) => error._tag === 'LLMError',
+        }),
         Effect.withSpan('llm.generate', {
           attributes: { 'llm.provider': 'google', 'llm.model': modelId },
         }),
@@ -76,7 +94,7 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
  *
  * @example
  * ```typescript
- * const LLMLive = GoogleLive({ model: 'gemini-2.5-flash' });
+ * const LLMLive = GoogleLive({ apiKey: env.GEMINI_API_KEY });
  *
  * const program = Effect.gen(function* () {
  *   const llm = yield* LLM;

@@ -4,6 +4,7 @@ import chatContract from './chat';
 import documentContract from './documents';
 import eventsContract from './events';
 import infographicContract from './infographics';
+import personaContract from './personas';
 import podcastContract from './podcasts';
 import voiceoverContract from './voiceovers';
 import voicesContract from './voices';
@@ -69,6 +70,7 @@ export const appContract = oc
     documents: documentContract,
     events: eventsContract,
     infographics: infographicContract,
+    personas: personaContract,
     podcasts: podcastContract,
     voiceovers: voiceoverContract,
     voices: voicesContract,

@@ -59,6 +59,7 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
     updateContent: () => Effect.die('not implemented'),
     findBySourceUrl: () => Effect.die('not implemented'),
     updateResearchConfig: () => Effect.die('not implemented'),
+    findOrphanedResearch: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(DocumentRepo, service);

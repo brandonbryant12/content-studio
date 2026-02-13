@@ -2520,6 +2520,153 @@
   }
 
   /* -----------------------------------------
+     PERSONA PICKER — mixer & setup wizard
+     ----------------------------------------- */
+  .persona-picker-wrap {
+    @apply mb-2;
+  }
+
+  .persona-picker-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block;
+  }
+
+  .persona-picker-trigger {
+    @apply w-full flex items-center gap-2 px-2.5 py-2 rounded-lg
+           border border-dashed border-border bg-background/50
+           text-left transition-all duration-200 cursor-pointer
+           hover:border-primary/40 hover:bg-primary/5;
+  }
+
+  .persona-picker-trigger[data-state='open'] {
+    @apply border-primary bg-primary/5;
+  }
+
+  .persona-picker-selected {
+    @apply flex items-center gap-2 flex-1 min-w-0;
+  }
+
+  .persona-picker-avatar {
+    @apply w-7 h-7 rounded-lg bg-primary/15 text-primary
+           flex items-center justify-center text-xs font-bold shrink-0;
+  }
+
+  .persona-picker-selected-info {
+    @apply flex flex-col min-w-0;
+  }
+
+  .persona-picker-selected-name {
+    @apply text-sm font-medium text-foreground truncate leading-tight;
+  }
+
+  .persona-picker-selected-role {
+    @apply text-[10px] text-muted-foreground truncate leading-tight;
+  }
+
+  .persona-picker-placeholder {
+    @apply flex items-center gap-2 flex-1 text-muted-foreground;
+  }
+
+  .persona-picker-placeholder-icon {
+    @apply w-4 h-4 opacity-50;
+  }
+
+  .persona-picker-placeholder span {
+    @apply text-sm;
+  }
+
+  .persona-picker-chevron {
+    @apply w-4 h-4 text-muted-foreground transition-transform duration-200 shrink-0;
+  }
+
+  .persona-picker-trigger[data-state='open'] .persona-picker-chevron {
+    @apply rotate-180;
+  }
+
+  .persona-picker-dropdown {
+    @apply p-1.5 rounded-lg border border-border
+           bg-popover shadow-lg z-20 max-h-52 overflow-y-auto;
+    min-width: var(--radix-select-trigger-width);
+    animation: persona-dropdown-in 0.15s ease-out;
+  }
+
+  @keyframes persona-dropdown-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .persona-picker-option {
+    @apply w-full flex items-center gap-2 p-2 rounded-md text-left transition-all duration-150
+           hover:bg-primary/10 cursor-pointer;
+  }
+
+  .persona-picker-option.selected {
+    @apply bg-primary/10;
+  }
+
+  .persona-picker-option-avatar {
+    @apply w-6 h-6 rounded-md bg-primary/15 text-primary
+           flex items-center justify-center text-[10px] font-bold shrink-0;
+  }
+
+  .persona-picker-option-avatar.none {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .persona-picker-option-details {
+    @apply flex flex-col flex-1 min-w-0;
+  }
+
+  .persona-picker-option-name {
+    @apply text-sm text-foreground;
+  }
+
+  .persona-picker-option-role {
+    @apply text-[10px] text-muted-foreground truncate leading-tight;
+  }
+
+  .persona-picker-option-voice-badge {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    @apply text-[9px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium uppercase tracking-wider shrink-0;
+  }
+
+  .persona-picker-empty {
+    @apply flex items-center gap-2 px-2.5 py-2 rounded-lg border border-dashed border-border
+           text-sm text-muted-foreground/60 mb-2;
+  }
+
+  .persona-picker-empty-icon {
+    @apply w-4 h-4 opacity-40;
+  }
+
+  /* Setup wizard persona picker — slightly larger styling */
+  .setup-persona-picker {
+    @apply mb-4 max-w-sm mx-auto;
+  }
+
+  .setup-persona-picker .persona-picker-label {
+    @apply text-center text-xs mb-2;
+  }
+
+  .setup-persona-picker .persona-picker-trigger {
+    @apply py-2.5 px-3 rounded-xl;
+  }
+
+  .setup-persona-picker .persona-picker-avatar {
+    @apply w-8 h-8 rounded-lg text-sm;
+  }
+
+  .setup-persona-picker .persona-picker-selected-name {
+    @apply text-base;
+  }
+
+  /* -----------------------------------------
      SLIDER COMPONENT
      ----------------------------------------- */
   .slider {

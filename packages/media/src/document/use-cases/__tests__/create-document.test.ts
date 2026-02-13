@@ -54,6 +54,7 @@ const createMockDocumentRepo = (
     updateContent: () => Effect.die('not implemented'),
     findBySourceUrl: () => Effect.die('not implemented'),
     updateResearchConfig: () => Effect.die('not implemented'),
+    findOrphanedResearch: () => Effect.die('not implemented'),
   });
 
 /**

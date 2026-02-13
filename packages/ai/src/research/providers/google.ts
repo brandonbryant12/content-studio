@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
 import { ResearchError } from '../../errors';
+import { DEEP_RESEARCH_MODEL } from '../../models';
 import {
   DeepResearch,
   type DeepResearchService,
@@ -78,7 +79,7 @@ const makeGoogleDeepResearchService = (
       Effect.tryPromise({
         try: async () => {
           const interaction = await genAI.interactions.create({
-            agent: 'deep-research-pro-preview-12-2025',
+            agent: DEEP_RESEARCH_MODEL,
             input: query,
             background: true,
             agent_config: {

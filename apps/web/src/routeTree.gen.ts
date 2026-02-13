@@ -17,10 +17,12 @@ import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedVoiceoversIndexRouteImport } from './routes/_protected/voiceovers/index'
 import { Route as ProtectedPodcastsIndexRouteImport } from './routes/_protected/podcasts/index'
+import { Route as ProtectedPersonasIndexRouteImport } from './routes/_protected/personas/index'
 import { Route as ProtectedInfographicsIndexRouteImport } from './routes/_protected/infographics/index'
 import { Route as ProtectedDocumentsIndexRouteImport } from './routes/_protected/documents/index'
 import { Route as ProtectedVoiceoversVoiceoverIdRouteImport } from './routes/_protected/voiceovers/$voiceoverId'
 import { Route as ProtectedPodcastsPodcastIdRouteImport } from './routes/_protected/podcasts/$podcastId'
+import { Route as ProtectedPersonasPersonaIdRouteImport } from './routes/_protected/personas/$personaId'
 import { Route as ProtectedInfographicsInfographicIdRouteImport } from './routes/_protected/infographics/$infographicId'
 import { Route as ProtectedDocumentsDocumentIdRouteImport } from './routes/_protected/documents/$documentId'
 import { Route as ProtectedAdminActivityRouteImport } from './routes/_protected/admin/activity'
@@ -64,6 +66,11 @@ const ProtectedPodcastsIndexRoute = ProtectedPodcastsIndexRouteImport.update({
   path: '/podcasts/',
   getParentRoute: () => ProtectedLayoutRoute,
 } as any)
+const ProtectedPersonasIndexRoute = ProtectedPersonasIndexRouteImport.update({
+  id: '/personas/',
+  path: '/personas/',
+  getParentRoute: () => ProtectedLayoutRoute,
+} as any)
 const ProtectedInfographicsIndexRoute =
   ProtectedInfographicsIndexRouteImport.update({
     id: '/infographics/',
@@ -85,6 +92,12 @@ const ProtectedPodcastsPodcastIdRoute =
   ProtectedPodcastsPodcastIdRouteImport.update({
     id: '/podcasts/$podcastId',
     path: '/podcasts/$podcastId',
+    getParentRoute: () => ProtectedLayoutRoute,
+  } as any)
+const ProtectedPersonasPersonaIdRoute =
+  ProtectedPersonasPersonaIdRouteImport.update({
+    id: '/personas/$personaId',
+    path: '/personas/$personaId',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
 const ProtectedInfographicsInfographicIdRoute =
@@ -113,10 +126,12 @@ export interface FileRoutesByFullPath {
   '/admin/activity': typeof ProtectedAdminActivityRoute
   '/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
+  '/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
   '/infographics': typeof ProtectedInfographicsIndexRoute
+  '/personas': typeof ProtectedPersonasIndexRoute
   '/podcasts': typeof ProtectedPodcastsIndexRoute
   '/voiceovers': typeof ProtectedVoiceoversIndexRoute
 }
@@ -128,10 +143,12 @@ export interface FileRoutesByTo {
   '/admin/activity': typeof ProtectedAdminActivityRoute
   '/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
+  '/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
   '/infographics': typeof ProtectedInfographicsIndexRoute
+  '/personas': typeof ProtectedPersonasIndexRoute
   '/podcasts': typeof ProtectedPodcastsIndexRoute
   '/voiceovers': typeof ProtectedVoiceoversIndexRoute
 }
@@ -146,10 +163,12 @@ export interface FileRoutesById {
   '/_protected/admin/activity': typeof ProtectedAdminActivityRoute
   '/_protected/documents/$documentId': typeof ProtectedDocumentsDocumentIdRoute
   '/_protected/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
+  '/_protected/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/_protected/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/_protected/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/_protected/documents/': typeof ProtectedDocumentsIndexRoute
   '/_protected/infographics/': typeof ProtectedInfographicsIndexRoute
+  '/_protected/personas/': typeof ProtectedPersonasIndexRoute
   '/_protected/podcasts/': typeof ProtectedPodcastsIndexRoute
   '/_protected/voiceovers/': typeof ProtectedVoiceoversIndexRoute
 }
@@ -163,10 +182,12 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/documents/$documentId'
     | '/infographics/$infographicId'
+    | '/personas/$personaId'
     | '/podcasts/$podcastId'
     | '/voiceovers/$voiceoverId'
     | '/documents'
     | '/infographics'
+    | '/personas'
     | '/podcasts'
     | '/voiceovers'
   fileRoutesByTo: FileRoutesByTo
@@ -178,10 +199,12 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/documents/$documentId'
     | '/infographics/$infographicId'
+    | '/personas/$personaId'
     | '/podcasts/$podcastId'
     | '/voiceovers/$voiceoverId'
     | '/documents'
     | '/infographics'
+    | '/personas'
     | '/podcasts'
     | '/voiceovers'
   id:
@@ -195,10 +218,12 @@ export interface FileRouteTypes {
     | '/_protected/admin/activity'
     | '/_protected/documents/$documentId'
     | '/_protected/infographics/$infographicId'
+    | '/_protected/personas/$personaId'
     | '/_protected/podcasts/$podcastId'
     | '/_protected/voiceovers/$voiceoverId'
     | '/_protected/documents/'
     | '/_protected/infographics/'
+    | '/_protected/personas/'
     | '/_protected/podcasts/'
     | '/_protected/voiceovers/'
   fileRoutesById: FileRoutesById
@@ -267,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedPodcastsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
+    '/_protected/personas/': {
+      id: '/_protected/personas/'
+      path: '/personas'
+      fullPath: '/personas'
+      preLoaderRoute: typeof ProtectedPersonasIndexRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
     '/_protected/infographics/': {
       id: '/_protected/infographics/'
       path: '/infographics'
@@ -293,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/podcasts/$podcastId'
       fullPath: '/podcasts/$podcastId'
       preLoaderRoute: typeof ProtectedPodcastsPodcastIdRouteImport
+      parentRoute: typeof ProtectedLayoutRoute
+    }
+    '/_protected/personas/$personaId': {
+      id: '/_protected/personas/$personaId'
+      path: '/personas/$personaId'
+      fullPath: '/personas/$personaId'
+      preLoaderRoute: typeof ProtectedPersonasPersonaIdRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/infographics/$infographicId': {
@@ -324,10 +363,12 @@ interface ProtectedLayoutRouteChildren {
   ProtectedAdminActivityRoute: typeof ProtectedAdminActivityRoute
   ProtectedDocumentsDocumentIdRoute: typeof ProtectedDocumentsDocumentIdRoute
   ProtectedInfographicsInfographicIdRoute: typeof ProtectedInfographicsInfographicIdRoute
+  ProtectedPersonasPersonaIdRoute: typeof ProtectedPersonasPersonaIdRoute
   ProtectedPodcastsPodcastIdRoute: typeof ProtectedPodcastsPodcastIdRoute
   ProtectedVoiceoversVoiceoverIdRoute: typeof ProtectedVoiceoversVoiceoverIdRoute
   ProtectedDocumentsIndexRoute: typeof ProtectedDocumentsIndexRoute
   ProtectedInfographicsIndexRoute: typeof ProtectedInfographicsIndexRoute
+  ProtectedPersonasIndexRoute: typeof ProtectedPersonasIndexRoute
   ProtectedPodcastsIndexRoute: typeof ProtectedPodcastsIndexRoute
   ProtectedVoiceoversIndexRoute: typeof ProtectedVoiceoversIndexRoute
 }
@@ -338,10 +379,12 @@ const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
   ProtectedDocumentsDocumentIdRoute: ProtectedDocumentsDocumentIdRoute,
   ProtectedInfographicsInfographicIdRoute:
     ProtectedInfographicsInfographicIdRoute,
+  ProtectedPersonasPersonaIdRoute: ProtectedPersonasPersonaIdRoute,
   ProtectedPodcastsPodcastIdRoute: ProtectedPodcastsPodcastIdRoute,
   ProtectedVoiceoversVoiceoverIdRoute: ProtectedVoiceoversVoiceoverIdRoute,
   ProtectedDocumentsIndexRoute: ProtectedDocumentsIndexRoute,
   ProtectedInfographicsIndexRoute: ProtectedInfographicsIndexRoute,
+  ProtectedPersonasIndexRoute: ProtectedPersonasIndexRoute,
   ProtectedPodcastsIndexRoute: ProtectedPodcastsIndexRoute,
   ProtectedVoiceoversIndexRoute: ProtectedVoiceoversIndexRoute,
 }

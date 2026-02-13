@@ -3,6 +3,7 @@ import {
   UploadIcon,
   Cross2Icon,
   CheckIcon,
+  CheckCircledIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
@@ -20,18 +21,25 @@ import {
   SUPPORTED_TYPES,
   SUPPORTED_EXTENSIONS,
 } from '../../../lib/upload-constants';
+import { StepResearch } from './step-research';
 
 interface StepDocumentsProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
+  researchDocId: string | null;
+  onDocumentCreated: (id: string, title: string) => void;
 }
 
 export function StepDocuments({
   selectedIds,
   onSelectionChange,
+  researchDocId,
+  onDocumentCreated,
 }: StepDocumentsProps) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing');
+  const [activeTab, setActiveTab] = useState<
+    'existing' | 'upload' | 'research'
+  >('existing');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -164,11 +172,23 @@ export function StepDocuments({
         >
           Upload New
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'research'}
+          onClick={() => setActiveTab('research')}
+          className={`setup-tab ${activeTab === 'research' ? 'active' : ''}`}
+        >
+          Research New
+          {researchDocId && (
+            <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
+          )}
+        </button>
       </div>
 
-      {activeTab === 'existing' ? (
-        // Existing documents tab
-        loadingDocs ? (
+      {/* Existing documents tab */}
+      <div hidden={activeTab !== 'existing'}>
+        {loadingDocs ? (
           <div className="loading-center">
             <Spinner className="w-6 h-6" />
           </div>
@@ -252,112 +272,122 @@ export function StepDocuments({
               Upload Document
             </Button>
           </div>
-        )
-      ) : (
-        // Upload tab
-        <div role="tabpanel" aria-label="Upload New">
-          {uploadFile ? (
-            <div className="space-y-4">
-              <div className="setup-file-preview">
-                <div className="setup-file-icon">
-                  <FileTextIcon />
-                </div>
-                <div className="setup-file-info">
-                  <p className="setup-file-name">{uploadFile.name}</p>
-                  <p className="setup-file-size">
-                    {(uploadFile.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    setUploadFile(null);
-                    setUploadTitle('');
-                  }}
-                  className="setup-file-remove"
-                  aria-label="Remove file"
-                >
-                  <Cross2Icon className="w-4 h-4" />
-                </Button>
-              </div>
+        )}
+      </div>
 
-              <div className="setup-field">
-                <label htmlFor="doc-title" className="setup-label">
-                  Title{' '}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
-                </label>
-                <input
-                  id="doc-title"
-                  type="text"
-                  value={uploadTitle}
-                  onChange={(e) => setUploadTitle(e.target.value)}
-                  placeholder="Document title"
-                  className="setup-input"
-                />
+      {/* Upload tab */}
+      <div
+        role="tabpanel"
+        aria-label="Upload New"
+        hidden={activeTab !== 'upload'}
+      >
+        {uploadFile ? (
+          <div className="space-y-4">
+            <div className="setup-file-preview">
+              <div className="setup-file-icon">
+                <FileTextIcon />
               </div>
-
+              <div className="setup-file-info">
+                <p className="setup-file-name">{uploadFile.name}</p>
+                <p className="setup-file-size">
+                  {(uploadFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
               <Button
-                onClick={handleUpload}
-                disabled={uploadMutation.isPending}
-                className="w-full"
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setUploadFile(null);
+                  setUploadTitle('');
+                }}
+                className="setup-file-remove"
+                aria-label="Remove file"
               >
-                {uploadMutation.isPending ? (
-                  <>
-                    <Spinner className="w-4 h-4 mr-2" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <UploadIcon className="w-4 h-4 mr-2" />
-                    Upload Document
-                  </>
-                )}
+                <Cross2Icon className="w-4 h-4" />
               </Button>
             </div>
-          ) : (
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              onClick={() =>
-                document.getElementById('setup-file-input')?.click()
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  document.getElementById('setup-file-input')?.click();
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
-              className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
-            >
+
+            <div className="setup-field">
+              <label htmlFor="doc-title" className="setup-label">
+                Title{' '}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </label>
               <input
-                id="setup-file-input"
-                type="file"
-                accept={SUPPORTED_EXTENSIONS}
-                className="hidden"
-                onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+                id="doc-title"
+                type="text"
+                value={uploadTitle}
+                onChange={(e) => setUploadTitle(e.target.value)}
+                placeholder="Document title"
+                className="setup-input"
               />
-              <div className="setup-upload-icon">
-                <UploadIcon />
-              </div>
-              <p className="setup-upload-title">Drop your file here</p>
-              <p className="setup-upload-hint">or click to browse</p>
-              <p className="setup-upload-formats">
-                Supports TXT, PDF, DOCX, PPTX (max 10MB)
-              </p>
             </div>
-          )}
-        </div>
-      )}
+
+            <Button
+              onClick={handleUpload}
+              disabled={uploadMutation.isPending}
+              className="w-full"
+            >
+              {uploadMutation.isPending ? (
+                <>
+                  <Spinner className="w-4 h-4 mr-2" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <UploadIcon className="w-4 h-4 mr-2" />
+                  Upload Document
+                </>
+              )}
+            </Button>
+          </div>
+        ) : (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('setup-file-input')?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('setup-file-input')?.click();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
+            className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
+          >
+            <input
+              id="setup-file-input"
+              type="file"
+              accept={SUPPORTED_EXTENSIONS}
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+            />
+            <div className="setup-upload-icon">
+              <UploadIcon />
+            </div>
+            <p className="setup-upload-title">Drop your file here</p>
+            <p className="setup-upload-hint">or click to browse</p>
+            <p className="setup-upload-formats">
+              Supports TXT, PDF, DOCX, PPTX (max 10MB)
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Research tab */}
+      <div hidden={activeTab !== 'research'}>
+        <StepResearch
+          onDocumentCreated={onDocumentCreated}
+          createdDocumentId={researchDocId}
+        />
+      </div>
     </div>
   );
 }

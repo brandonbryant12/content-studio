@@ -65,6 +65,7 @@ const createMockDocumentRepo = (options?: {
       }),
     findBySourceUrl: () => Effect.die('not implemented'),
     updateResearchConfig: () => Effect.die('not implemented'),
+    findOrphanedResearch: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(DocumentRepo, service);
@@ -399,6 +400,7 @@ describe('handleProcessUrl', () => {
         updateContent: () => Effect.die('not implemented'),
         findBySourceUrl: () => Effect.die('not implemented'),
         updateResearchConfig: () => Effect.die('not implemented'),
+        findOrphanedResearch: () => Effect.die('not implemented'),
       } satisfies DocumentRepoService);
 
       const layers = Layer.mergeAll(

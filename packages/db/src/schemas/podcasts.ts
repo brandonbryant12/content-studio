@@ -13,10 +13,13 @@ import { user } from './auth';
 import {
   type PodcastId,
   type DocumentId,
+  type PersonaId,
   PodcastIdSchema,
   DocumentIdSchema,
+  PersonaIdSchema,
   generatePodcastId,
 } from './brands';
+import { persona } from './personas';
 import {
   DocumentOutputSchema,
   serializeDocument,
@@ -104,6 +107,12 @@ export const podcast = pgTable(
     audioUrl: text('audioUrl'),
     duration: integer('duration'),
     errorMessage: text('errorMessage'),
+    hostPersonaId: varchar('hostPersonaId', { length: 20 })
+      .$type<PersonaId>()
+      .references(() => persona.id, { onDelete: 'set null' }),
+    coHostPersonaId: varchar('coHostPersonaId', { length: 20 })
+      .$type<PersonaId>()
+      .references(() => persona.id, { onDelete: 'set null' }),
     coverImageStorageKey: text('coverImageStorageKey'),
     approvedBy: text('approvedBy').references(() => user.id),
     approvedAt: timestamp('approvedAt', { mode: 'date', withTimezone: true }),
@@ -154,6 +163,8 @@ export const CreatePodcastSchema = Schema.Struct({
   hostVoiceName: Schema.optional(Schema.String),
   coHostVoice: Schema.optional(Schema.String),
   coHostVoiceName: Schema.optional(Schema.String),
+  hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
 });
 
 export const UpdatePodcastFields = {
@@ -175,6 +186,8 @@ export const UpdatePodcastFields = {
   tags: Schema.optional(Schema.Array(Schema.String)),
   documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
   coverImageStorageKey: Schema.optional(Schema.NullOr(Schema.String)),
+  hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+  coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
 };
 
 export const UpdatePodcastSchema = Schema.Struct(UpdatePodcastFields);
@@ -230,6 +243,8 @@ export const PodcastOutputSchema = Schema.Struct({
   audioUrl: Schema.NullOr(Schema.String),
   duration: Schema.NullOr(Schema.Number),
   errorMessage: Schema.NullOr(Schema.String),
+  hostPersonaId: Schema.NullOr(PersonaIdSchema),
+  coHostPersonaId: Schema.NullOr(PersonaIdSchema),
   coverImageStorageKey: Schema.NullOr(Schema.String),
   approvedBy: Schema.NullOr(Schema.String),
   approvedAt: Schema.NullOr(Schema.String),
@@ -277,6 +292,8 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   audioUrl: podcast.audioUrl ?? null,
   duration: podcast.duration ?? null,
   errorMessage: podcast.errorMessage ?? null,
+  hostPersonaId: podcast.hostPersonaId ?? null,
+  coHostPersonaId: podcast.coHostPersonaId ?? null,
   coverImageStorageKey: podcast.coverImageStorageKey ?? null,
   approvedBy: podcast.approvedBy ?? null,
   approvedAt: podcast.approvedAt?.toISOString() ?? null,

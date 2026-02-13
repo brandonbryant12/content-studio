@@ -9,6 +9,7 @@ import {
   JobOutputSchema,
   JobStatusSchema,
   PodcastIdSchema,
+  PersonaIdSchema,
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
@@ -166,6 +167,8 @@ const podcastContract = oc
             hostVoiceName: Schema.optional(Schema.String),
             coHostVoice: Schema.optional(Schema.String),
             coHostVoiceName: Schema.optional(Schema.String),
+            hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
+            coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
           }),
         ),
       )

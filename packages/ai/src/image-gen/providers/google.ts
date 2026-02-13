@@ -5,6 +5,7 @@ import {
   ImageGenRateLimitError,
   ImageGenContentFilteredError,
 } from '../../errors';
+import { IMAGE_GEN_MODEL } from '../../models';
 import {
   ImageGen,
   type ImageGenService,
@@ -75,7 +76,7 @@ const mapError = (
 const makeGoogleImageGenService = (
   config: GoogleImageGenConfig,
 ): ImageGenService => {
-  const modelId = config.model ?? 'gemini-2.5-flash-image';
+  const modelId = config.model ?? IMAGE_GEN_MODEL;
 
   const genAI = new GoogleGenAI({ apiKey: config.apiKey });
 

@@ -20,6 +20,8 @@ export {
   InfographicNotFound,
   NotInfographicOwner,
   InfographicError,
+  PersonaNotFound,
+  NotPersonaOwner,
   type MediaError,
 } from './errors';
 
@@ -75,6 +77,9 @@ export {
   calculateContentHash,
   processResearch,
   type ProcessResearchInput,
+  awaitDocumentsReady,
+  type AwaitDocumentsReadyInput,
+  DocumentsNotReadyTimeout,
 } from './document';
 
 export {
@@ -175,11 +180,35 @@ export type {
   InfographicVersionOutput,
 } from './infographic';
 
+export {
+  PersonaRepo,
+  PersonaRepoLive,
+  type PersonaRepoService,
+  type PersonaListOptions,
+} from './persona';
+
+export {
+  createPersona,
+  getPersona,
+  listPersonas,
+  updatePersona,
+  deletePersona,
+  generateAvatar,
+  type CreatePersonaInput,
+  type GetPersonaInput,
+  type ListPersonasInput,
+  type ListPersonasResult,
+  type UpdatePersonaInput,
+  type DeletePersonaInput,
+  type GenerateAvatarInput,
+} from './persona';
+
 import type { ActivityLogRepo } from './activity';
 import type { DocumentRepo } from './document';
 import type { InfographicRepo } from './infographic';
 import type { PodcastRepo } from './podcast';
 import type { VoiceoverRepo } from './voiceover';
+import type { PersonaRepo } from './persona';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 import { ActivityLogRepoLive } from './activity';
@@ -187,6 +216,7 @@ import { DocumentRepoLive } from './document';
 import { InfographicRepoLive } from './infographic';
 import { PodcastRepoLive } from './podcast';
 import { VoiceoverRepoLive } from './voiceover';
+import { PersonaRepoLive } from './persona';
 
 // When adding a new repo, add it to both Media and MediaLive.
 export type Media =
@@ -194,7 +224,8 @@ export type Media =
   | PodcastRepo
   | VoiceoverRepo
   | InfographicRepo
-  | ActivityLogRepo;
+  | ActivityLogRepo
+  | PersonaRepo;
 
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
@@ -203,6 +234,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     VoiceoverRepoLive,
     InfographicRepoLive,
     ActivityLogRepoLive,
+    PersonaRepoLive,
   );
 
 export {

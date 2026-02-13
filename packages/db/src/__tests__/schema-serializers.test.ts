@@ -90,6 +90,8 @@ const makePodcast = (overrides?: Partial<Podcast>): Podcast => ({
   audioUrl: null,
   duration: null,
   errorMessage: null,
+  hostPersonaId: null,
+  coHostPersonaId: null,
   coverImageStorageKey: null,
   approvedBy: null,
   approvedAt: null,

@@ -1,5 +1,13 @@
 import { Layer } from 'effect';
 
+// Model constants
+export {
+  LLM_MODEL,
+  TTS_MODEL,
+  IMAGE_GEN_MODEL,
+  DEEP_RESEARCH_MODEL,
+} from './models';
+
 // Re-export AI errors from package errors
 export {
   LLMError,
@@ -107,15 +115,16 @@ export type AI = LLM | TTS | ImageGen | DeepResearch;
 
 /**
  * Configuration for all Google AI services.
+ * Defaults are defined in `models.ts`.
  */
 export interface GoogleAIConfig {
   /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
-  /** LLM model. Default: 'gemini-2.5-flash' */
+  /** Override the default LLM model */
   readonly llmModel?: string;
-  /** TTS model. Default: 'gemini-2.5-flash-preview-tts' */
+  /** Override the default TTS model */
   readonly ttsModel?: string;
-  /** ImageGen model. Default: 'gemini-2.0-flash-exp' */
+  /** Override the default image generation model */
   readonly imageGenModel?: string;
 }
 

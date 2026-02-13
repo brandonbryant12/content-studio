@@ -13,6 +13,10 @@ import {
   type InfographicRepoService,
 } from '../infographic/repos/infographic-repo';
 import {
+  PersonaRepo,
+  type PersonaRepoService,
+} from '../persona/repos/persona-repo';
+import {
   PodcastRepo,
   type PodcastRepoService,
 } from '../podcast/repos/podcast-repo';
@@ -117,6 +121,7 @@ export const createMockDocumentRepo = (
     updateContent: () => Effect.die('not implemented'),
     findBySourceUrl: () => Effect.die('not implemented'),
     updateResearchConfig: () => Effect.die('not implemented'),
+    findOrphanedResearch: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(DocumentRepo, { ...defaults, ...overrides });
@@ -163,6 +168,25 @@ export const createMockInfographicRepo = (
   };
 
   return Layer.succeed(InfographicRepo, { ...defaults, ...overrides });
+};
+
+/**
+ * Create a mock PersonaRepo layer with `Effect.die('not implemented')` defaults.
+ * Override individual methods by passing them in the overrides object.
+ */
+export const createMockPersonaRepo = (
+  overrides: Partial<PersonaRepoService> = {},
+): Layer.Layer<PersonaRepo> => {
+  const defaults: PersonaRepoService = {
+    insert: () => Effect.die('not implemented'),
+    findById: () => Effect.die('not implemented'),
+    list: () => Effect.die('not implemented'),
+    update: () => Effect.die('not implemented'),
+    delete: () => Effect.die('not implemented'),
+    count: () => Effect.die('not implemented'),
+  };
+
+  return Layer.succeed(PersonaRepo, { ...defaults, ...overrides });
 };
 
 /**

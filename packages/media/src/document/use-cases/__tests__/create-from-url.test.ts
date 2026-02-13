@@ -61,6 +61,7 @@ const createMockDocumentRepo = (
     findBySourceUrl: () =>
       Effect.suspend(() => Effect.succeed(state.existingByUrl ?? null)),
     updateResearchConfig: () => Effect.die('not implemented'),
+    findOrphanedResearch: () => Effect.die('not implemented'),
   };
 
   return Layer.succeed(DocumentRepo, service);

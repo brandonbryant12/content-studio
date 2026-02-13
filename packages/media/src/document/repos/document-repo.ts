@@ -7,7 +7,7 @@ import {
   type DocumentStatus,
   type ResearchConfig,
 } from '@repo/db/schema';
-import { eq, desc, and, count as drizzleCount } from 'drizzle-orm';
+import { eq, desc, and, count as drizzleCount, sql } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { DocumentNotFound } from '../../errors';
 
@@ -167,6 +167,16 @@ export interface DocumentRepoService {
     id: string,
     config: ResearchConfig,
   ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
+
+  /**
+   * Find research documents that were mid-operation when the worker died.
+   * Returns docs with source='research', an operationId, and researchStatus='in_progress'.
+   */
+  readonly findOrphanedResearch: () => Effect.Effect<
+    Document[],
+    DatabaseError,
+    Db
+  >;
 }
 
 // =============================================================================
@@ -331,6 +341,20 @@ const make: DocumentRepoService = {
       Effect.flatMap((doc) =>
         doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
       ),
+    ),
+
+  findOrphanedResearch: () =>
+    withDb('documentRepo.findOrphanedResearch', (db) =>
+      db
+        .select()
+        .from(document)
+        .where(
+          and(
+            eq(document.source, 'research'),
+            sql`${document.researchConfig}->>'operationId' IS NOT NULL`,
+            sql`${document.researchConfig}->>'researchStatus' = 'in_progress'`,
+          ),
+        ),
     ),
 };
 

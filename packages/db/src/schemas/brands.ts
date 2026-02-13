@@ -129,6 +129,20 @@ export type ActivityLogId = typeof ActivityLogIdSchema.Type;
 export const generateActivityLogId = (): ActivityLogId =>
   `act_${generateRandomBase32()}` as ActivityLogId;
 
+// Persona ID
+
+export const PersonaIdSchema = Schema.String.pipe(
+  Schema.pattern(/^per_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid persona ID format',
+  }),
+  Schema.brand('PersonaId'),
+);
+
+export type PersonaId = typeof PersonaIdSchema.Type;
+
+export const generatePersonaId = (): PersonaId =>
+  `per_${generateRandomBase32()}` as PersonaId;
+
 // Infographic Version ID
 
 export const InfographicVersionIdSchema = Schema.String.pipe(

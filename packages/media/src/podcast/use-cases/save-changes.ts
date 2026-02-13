@@ -1,6 +1,6 @@
 import { requireOwnership } from '@repo/auth/policy';
 import { Effect, Schema } from 'effect';
-import type { Podcast, ScriptSegment } from '@repo/db/schema';
+import type { PersonaId, Podcast, ScriptSegment } from '@repo/db/schema';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -14,6 +14,8 @@ export interface SaveChangesInput {
   hostVoiceName?: string;
   coHostVoice?: string;
   coHostVoiceName?: string;
+  hostPersonaId?: PersonaId | null;
+  coHostPersonaId?: PersonaId | null;
 }
 
 export interface SaveChangesResult {
@@ -69,12 +71,14 @@ export const saveChanges = (input: SaveChangesInput) =>
       input.hostVoiceName !== undefined ||
       input.coHostVoice !== undefined ||
       input.coHostVoiceName !== undefined;
+    const hasPersonaChanges =
+      input.hostPersonaId !== undefined || input.coHostPersonaId !== undefined;
 
-    if (!hasSegmentChanges && !hasVoiceChanges) {
+    if (!hasSegmentChanges && !hasVoiceChanges && !hasPersonaChanges) {
       return { podcast, hasChanges: false };
     }
 
-    if (hasVoiceChanges) {
+    if (hasVoiceChanges || hasPersonaChanges) {
       yield* podcastRepo.update(input.podcastId, {
         ...(input.hostVoice !== undefined && { hostVoice: input.hostVoice }),
         ...(input.hostVoiceName !== undefined && {
@@ -85,6 +89,12 @@ export const saveChanges = (input: SaveChangesInput) =>
         }),
         ...(input.coHostVoiceName !== undefined && {
           coHostVoiceName: input.coHostVoiceName,
+        }),
+        ...(input.hostPersonaId !== undefined && {
+          hostPersonaId: input.hostPersonaId,
+        }),
+        ...(input.coHostPersonaId !== undefined && {
+          coHostPersonaId: input.coHostPersonaId,
         }),
       });
     }

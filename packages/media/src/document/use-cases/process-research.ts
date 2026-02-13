@@ -38,15 +38,30 @@ export const processResearch = (input: ProcessResearchInput) =>
     const documentRepo = yield* DocumentRepo;
     const storage = yield* Storage;
 
-    // 1. Start the research
-    const { interactionId } = yield* research.startResearch(query);
+    // 1. Check if we can resume an existing research operation
+    const doc = yield* documentRepo.findById(documentId);
+    const canResume =
+      doc.researchConfig?.operationId &&
+      doc.researchConfig?.researchStatus === 'in_progress';
 
-    // 2. Update document with interaction ID
-    yield* documentRepo.updateResearchConfig(documentId, {
-      query,
-      operationId: interactionId,
-      researchStatus: 'in_progress',
-    });
+    let interactionId: string;
+    if (canResume) {
+      interactionId = doc.researchConfig!.operationId!;
+      yield* Effect.logInfo(
+        `Resuming polling for existing operation ${interactionId}`,
+      );
+    } else {
+      // Start a new research operation
+      const result = yield* research.startResearch(query);
+      interactionId = result.interactionId;
+
+      // Update document with interaction ID
+      yield* documentRepo.updateResearchConfig(documentId, {
+        query,
+        operationId: interactionId,
+        researchStatus: 'in_progress',
+      });
+    }
 
     // 3. Poll for result: 30s first, then every 60s
     let elapsed = 0;

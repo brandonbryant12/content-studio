@@ -3,6 +3,7 @@ import { requireOwnership } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment } from '@repo/db/schema';
+import { PersonaRepo } from '../../persona';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -75,20 +76,47 @@ export const generateAudio = (input: GenerateAudioInput) =>
 
     yield* podcastRepo.updateStatus(input.podcastId, 'generating_audio');
 
+    // Load persona names for speaker detection
+    let hostPersonaName: string | undefined;
+    let coHostPersonaName: string | undefined;
+
+    if (podcast.hostPersonaId) {
+      const personaRepo = yield* PersonaRepo;
+      const p = yield* personaRepo
+        .findById(podcast.hostPersonaId)
+        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      if (p) hostPersonaName = p.name.toLowerCase();
+    }
+
+    if (podcast.coHostPersonaId) {
+      const personaRepo = yield* PersonaRepo;
+      const p = yield* personaRepo
+        .findById(podcast.coHostPersonaId)
+        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      if (p) coHostPersonaName = p.name.toLowerCase();
+    }
+
     const hostVoice = podcast.hostVoice ?? 'Charon';
     const coHostVoice = podcast.coHostVoice ?? 'Kore';
 
+    const isCoHost = (speakerName: string) => {
+      const lower = speakerName.toLowerCase();
+      // Check persona names first
+      if (coHostPersonaName && lower.includes(coHostPersonaName)) return true;
+      if (hostPersonaName && lower.includes(hostPersonaName)) return false;
+      // Fall back to existing heuristics
+      return (
+        lower.includes('cohost') ||
+        lower.includes('co-host') ||
+        lower.includes('co host') ||
+        lower === 'guest'
+      );
+    };
+
     const turns: SpeakerTurn[] = podcast.segments.map(
       (segment: ScriptSegment) => {
-        const name = segment.speaker.toLowerCase().trim();
-        // Must check for "cohost"/"co-host" first since "cohost" also contains "host"
-        const isCoHost =
-          name.includes('cohost') ||
-          name.includes('co-host') ||
-          name.includes('co host') ||
-          name === 'guest';
         return {
-          speaker: isCoHost ? 'cohost' : 'host',
+          speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
           text: segment.line,
         };
       },

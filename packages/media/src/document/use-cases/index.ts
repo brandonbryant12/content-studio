@@ -37,3 +37,9 @@ export {
   ResearchTimeoutError,
   ResearchEmptyContentError,
 } from './process-research';
+
+export {
+  awaitDocumentsReady,
+  type AwaitDocumentsReadyInput,
+  DocumentsNotReadyTimeout,
+} from './await-documents-ready';

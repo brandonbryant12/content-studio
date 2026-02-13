@@ -6,6 +6,7 @@ import {
   MIN_DURATION,
   MAX_DURATION,
 } from '../../../hooks/use-podcast-settings';
+import { PersonaPicker } from '../../workbench/persona-picker';
 
 function SetupVoicePreviewBtn({
   voiceId,
@@ -62,9 +63,21 @@ interface StepAudioProps {
   duration: number;
   hostVoice: string;
   coHostVoice: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  hostPersonaVoiceId?: string | null;
+  coHostPersonaVoiceId?: string | null;
   onDurationChange: (duration: number) => void;
   onHostVoiceChange: (voice: string) => void;
   onCoHostVoiceChange: (voice: string) => void;
+  onHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
+  onCoHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
 }
 
 interface VoiceCardProps {
@@ -129,13 +142,30 @@ export function StepAudio({
   duration,
   hostVoice,
   coHostVoice,
+  hostPersonaId,
+  coHostPersonaId,
+  hostPersonaVoiceId,
+  coHostPersonaVoiceId,
   onDurationChange,
   onHostVoiceChange,
   onCoHostVoiceChange,
+  onHostPersonaChange,
+  onCoHostPersonaChange,
 }: StepAudioProps) {
   const isConversation = format === 'conversation';
   const femaleVoices = VOICES.filter((v) => v.gender === 'female');
   const maleVoices = VOICES.filter((v) => v.gender === 'male');
+
+  const hostVoiceInfo = hostPersonaVoiceId
+    ? VOICES.find((v) => v.id === hostPersonaVoiceId)
+    : null;
+  const coHostVoiceInfo = coHostPersonaVoiceId
+    ? VOICES.find((v) => v.id === coHostPersonaVoiceId)
+    : null;
+
+  const hostEffective = hostPersonaVoiceId || hostVoice;
+  const coHostEffective = coHostPersonaVoiceId || coHostVoice;
+  const hasVoiceConflict = isConversation && hostEffective === coHostEffective;
 
   const { data: voicesData } = useVoices();
   const { playingVoiceId, play, stop } = useVoicePreview();
@@ -168,6 +198,13 @@ export function StepAudio({
         </p>
       </div>
 
+      {hasVoiceConflict && (
+        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
+          Host and co-host are using the same voice. Consider assigning
+          different voices.
+        </div>
+      )}
+
       {/* Duration Selection */}
       <div className="mb-8">
         <label className="setup-label block text-center mb-4">
@@ -195,119 +232,161 @@ export function StepAudio({
 
       {/* Host Voice Selection */}
       <div className="setup-voice-section">
+        <div className="setup-persona-picker">
+          <PersonaPicker
+            selectedPersonaId={hostPersonaId}
+            onSelect={onHostPersonaChange}
+            label={isConversation ? 'Host Persona' : 'Persona'}
+          />
+        </div>
         <div className="setup-voice-label">
           {isConversation ? 'Host Voice' : 'Voice'}
           <span className="setup-voice-badge">Primary</span>
         </div>
 
-        {/* Female Voices */}
-        <div className="mb-4">
-          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-            Female
-          </p>
-          <div
-            className="setup-voice-grid"
-            role="radiogroup"
-            aria-label="Female host voices"
-          >
-            {femaleVoices.map((voice) => (
-              <VoiceCard
-                key={voice.id}
-                voice={voice}
-                isSelected={hostVoice === voice.id}
-                isDisabled={isConversation && coHostVoice === voice.id}
-                onSelect={onHostVoiceChange}
-                previewUrl={previewUrls[voice.id] ?? null}
-                isPlaying={playingVoiceId === voice.id}
-                onPreview={handlePreview}
-              />
-            ))}
+        {hostVoiceInfo ? (
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 flex items-center gap-3">
+            <div className={`setup-voice-avatar ${hostVoiceInfo.gender}`}>
+              {hostVoiceInfo.name.charAt(0)}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{hostVoiceInfo.name}</p>
+              <p className="text-xs text-muted-foreground">Set by persona</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Female Voices */}
+            <div className="mb-4">
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                Female
+              </p>
+              <div
+                className="setup-voice-grid"
+                role="radiogroup"
+                aria-label="Female host voices"
+              >
+                {femaleVoices.map((voice) => (
+                  <VoiceCard
+                    key={voice.id}
+                    voice={voice}
+                    isSelected={hostVoice === voice.id}
+                    isDisabled={isConversation && coHostEffective === voice.id}
+                    onSelect={onHostVoiceChange}
+                    previewUrl={previewUrls[voice.id] ?? null}
+                    isPlaying={playingVoiceId === voice.id}
+                    onPreview={handlePreview}
+                  />
+                ))}
+              </div>
+            </div>
 
-        {/* Male Voices */}
-        <div>
-          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-            Male
-          </p>
-          <div
-            className="setup-voice-grid"
-            role="radiogroup"
-            aria-label="Male host voices"
-          >
-            {maleVoices.map((voice) => (
-              <VoiceCard
-                key={voice.id}
-                voice={voice}
-                isSelected={hostVoice === voice.id}
-                isDisabled={isConversation && coHostVoice === voice.id}
-                onSelect={onHostVoiceChange}
-                previewUrl={previewUrls[voice.id] ?? null}
-                isPlaying={playingVoiceId === voice.id}
-                onPreview={handlePreview}
-              />
-            ))}
-          </div>
-        </div>
+            {/* Male Voices */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                Male
+              </p>
+              <div
+                className="setup-voice-grid"
+                role="radiogroup"
+                aria-label="Male host voices"
+              >
+                {maleVoices.map((voice) => (
+                  <VoiceCard
+                    key={voice.id}
+                    voice={voice}
+                    isSelected={hostVoice === voice.id}
+                    isDisabled={isConversation && coHostEffective === voice.id}
+                    onSelect={onHostVoiceChange}
+                    previewUrl={previewUrls[voice.id] ?? null}
+                    isPlaying={playingVoiceId === voice.id}
+                    onPreview={handlePreview}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Co-Host Voice Selection (only for conversation format) */}
       {isConversation && (
         <div className="setup-voice-section">
+          <div className="setup-persona-picker">
+            <PersonaPicker
+              selectedPersonaId={coHostPersonaId}
+              onSelect={onCoHostPersonaChange}
+              label="Co-Host Persona"
+            />
+          </div>
           <div className="setup-voice-label">
             Co-Host Voice
             <span className="setup-voice-badge">Secondary</span>
           </div>
 
-          {/* Female Voices */}
-          <div className="mb-4">
-            <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-              Female
-            </p>
-            <div
-              className="setup-voice-grid"
-              role="radiogroup"
-              aria-label="Female co-host voices"
-            >
-              {femaleVoices.map((voice) => (
-                <VoiceCard
-                  key={voice.id}
-                  voice={voice}
-                  isSelected={coHostVoice === voice.id}
-                  isDisabled={hostVoice === voice.id}
-                  onSelect={onCoHostVoiceChange}
-                  previewUrl={previewUrls[voice.id] ?? null}
-                  isPlaying={playingVoiceId === voice.id}
-                  onPreview={handlePreview}
-                />
-              ))}
+          {coHostVoiceInfo ? (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-4 flex items-center gap-3">
+              <div className={`setup-voice-avatar ${coHostVoiceInfo.gender}`}>
+                {coHostVoiceInfo.name.charAt(0)}
+              </div>
+              <div>
+                <p className="text-sm font-medium">{coHostVoiceInfo.name}</p>
+                <p className="text-xs text-muted-foreground">Set by persona</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Female Voices */}
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                  Female
+                </p>
+                <div
+                  className="setup-voice-grid"
+                  role="radiogroup"
+                  aria-label="Female co-host voices"
+                >
+                  {femaleVoices.map((voice) => (
+                    <VoiceCard
+                      key={voice.id}
+                      voice={voice}
+                      isSelected={coHostVoice === voice.id}
+                      isDisabled={hostEffective === voice.id}
+                      onSelect={onCoHostVoiceChange}
+                      previewUrl={previewUrls[voice.id] ?? null}
+                      isPlaying={playingVoiceId === voice.id}
+                      onPreview={handlePreview}
+                    />
+                  ))}
+                </div>
+              </div>
 
-          {/* Male Voices */}
-          <div>
-            <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-              Male
-            </p>
-            <div
-              className="setup-voice-grid"
-              role="radiogroup"
-              aria-label="Male co-host voices"
-            >
-              {maleVoices.map((voice) => (
-                <VoiceCard
-                  key={voice.id}
-                  voice={voice}
-                  isSelected={coHostVoice === voice.id}
-                  isDisabled={hostVoice === voice.id}
-                  onSelect={onCoHostVoiceChange}
-                  previewUrl={previewUrls[voice.id] ?? null}
-                  isPlaying={playingVoiceId === voice.id}
-                  onPreview={handlePreview}
-                />
-              ))}
-            </div>
-          </div>
+              {/* Male Voices */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                  Male
+                </p>
+                <div
+                  className="setup-voice-grid"
+                  role="radiogroup"
+                  aria-label="Male co-host voices"
+                >
+                  {maleVoices.map((voice) => (
+                    <VoiceCard
+                      key={voice.id}
+                      voice={voice}
+                      isSelected={coHostVoice === voice.id}
+                      isDisabled={hostEffective === voice.id}
+                      onSelect={onCoHostVoiceChange}
+                      previewUrl={previewUrls[voice.id] ?? null}
+                      isPlaying={playingVoiceId === voice.id}
+                      onPreview={handlePreview}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

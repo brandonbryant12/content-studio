@@ -165,6 +165,8 @@ const podcastRouter = {
           hostVoiceName: input.hostVoiceName,
           coHostVoice: input.coHostVoice,
           coHostVoiceName: input.coHostVoiceName,
+          hostPersonaId: input.hostPersonaId,
+          coHostPersonaId: input.coHostPersonaId,
         }),
         errors,
         {

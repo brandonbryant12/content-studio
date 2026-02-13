@@ -9,6 +9,7 @@ import {
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
 import { useVoicePreview, useVoices } from '@/shared/hooks';
+import { PersonaPicker } from './persona-picker';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -211,15 +212,44 @@ export function PodcastSettings({
               {isConversation ? 'Host' : 'Voice'}
             </span>
           </div>
-          <VoiceSelector
-            value={settings.hostVoice}
-            onChange={settings.setHostVoice}
-            disabledVoice={isConversation ? settings.coHostVoice : undefined}
+          <PersonaPicker
+            selectedPersonaId={settings.hostPersonaId}
+            onSelect={(personaId, voiceId) =>
+              settings.setHostPersona(personaId, voiceId)
+            }
             disabled={disabled}
-            previewUrls={previewUrls}
-            playingVoiceId={playingVoiceId}
-            onPreview={handlePreview}
+            label={isConversation ? 'Host Persona' : 'Persona'}
           />
+          {settings.hostPersonaVoiceId ? (
+            <div className="mixer-voice-readonly">
+              <div
+                className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.hostPersonaVoiceId)?.gender}`}
+              >
+                {VOICES.find(
+                  (v) => v.id === settings.hostPersonaVoiceId,
+                )?.name.charAt(0)}
+              </div>
+              <div className="mixer-voice-info">
+                <p className="mixer-voice-name">
+                  {
+                    VOICES.find((v) => v.id === settings.hostPersonaVoiceId)
+                      ?.name
+                  }
+                </p>
+                <p className="mixer-voice-desc">Set by persona</p>
+              </div>
+            </div>
+          ) : (
+            <VoiceSelector
+              value={settings.hostVoice}
+              onChange={settings.setHostVoice}
+              disabledVoice={isConversation ? settings.coHostVoice : undefined}
+              disabled={disabled}
+              previewUrls={previewUrls}
+              playingVoiceId={playingVoiceId}
+              onPreview={handlePreview}
+            />
+          )}
         </div>
 
         {isConversation && (
@@ -228,18 +258,54 @@ export function PodcastSettings({
               <div className="mixer-channel-indicator cohost" />
               <span className="mixer-channel-label">Co-Host</span>
             </div>
-            <VoiceSelector
-              value={settings.coHostVoice}
-              onChange={settings.setCoHostVoice}
-              disabledVoice={settings.hostVoice}
+            <PersonaPicker
+              selectedPersonaId={settings.coHostPersonaId}
+              onSelect={(personaId, voiceId) =>
+                settings.setCoHostPersona(personaId, voiceId)
+              }
               disabled={disabled}
-              previewUrls={previewUrls}
-              playingVoiceId={playingVoiceId}
-              onPreview={handlePreview}
+              label="Co-Host Persona"
             />
+            {settings.coHostPersonaVoiceId ? (
+              <div className="mixer-voice-readonly">
+                <div
+                  className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)?.gender}`}
+                >
+                  {VOICES.find(
+                    (v) => v.id === settings.coHostPersonaVoiceId,
+                  )?.name.charAt(0)}
+                </div>
+                <div className="mixer-voice-info">
+                  <p className="mixer-voice-name">
+                    {
+                      VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)
+                        ?.name
+                    }
+                  </p>
+                  <p className="mixer-voice-desc">Set by persona</p>
+                </div>
+              </div>
+            ) : (
+              <VoiceSelector
+                value={settings.coHostVoice}
+                onChange={settings.setCoHostVoice}
+                disabledVoice={settings.hostVoice}
+                disabled={disabled}
+                previewUrls={previewUrls}
+                playingVoiceId={playingVoiceId}
+                onPreview={handlePreview}
+              />
+            )}
           </div>
         )}
       </div>
+
+      {settings.voiceConflict && (
+        <div className="mx-0 mt-3 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
+          Host and co-host are using the same voice. Consider assigning
+          different voices.
+        </div>
+      )}
 
       <div className="mixer-duration">
         <span className="mixer-duration-label">Target Length</span>

@@ -38,6 +38,7 @@ import {
 import { handleGenerateInfographic } from './handlers/infographic-handlers';
 import { handleProcessResearch } from './handlers/research-handlers';
 import { handleGenerateVoiceover } from './handlers/voiceover-handlers';
+import { recoverOrphanedResearch } from './research-recovery';
 import { reapStaleJobs } from './stale-job-reaper';
 
 export interface UnifiedWorkerConfig extends BaseWorkerConfig {
@@ -185,7 +186,10 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
     }
   };
 
-  const onStart = () => reapStaleJobs(publishEvent);
+  const onStart = () =>
+    reapStaleJobs(publishEvent).pipe(
+      Effect.flatMap(() => recoverOrphanedResearch(publishEvent)),
+    );
 
   const onPollCycle = (pollCount: number) =>
     pollCount % STALE_CHECK_EVERY_N_POLLS === 0
