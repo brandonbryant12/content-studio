@@ -79,12 +79,19 @@ export const generateAudio = (input: GenerateAudioInput) =>
     const coHostVoice = podcast.coHostVoice ?? 'Kore';
 
     const turns: SpeakerTurn[] = podcast.segments.map(
-      (segment: ScriptSegment) => ({
-        speaker: segment.speaker.toLowerCase().includes('host')
-          ? 'host'
-          : 'cohost',
-        text: segment.line,
-      }),
+      (segment: ScriptSegment) => {
+        const name = segment.speaker.toLowerCase().trim();
+        // Must check for "cohost"/"co-host" first since "cohost" also contains "host"
+        const isCoHost =
+          name.includes('cohost') ||
+          name.includes('co-host') ||
+          name.includes('co host') ||
+          name === 'guest';
+        return {
+          speaker: isCoHost ? 'cohost' : 'host',
+          text: segment.line,
+        };
+      },
     );
 
     const voiceConfigs: SpeakerVoiceConfig[] = [
