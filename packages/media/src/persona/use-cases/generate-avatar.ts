@@ -15,11 +15,8 @@ export const generateAvatar = (input: GenerateAvatarInput) =>
 
     const p = yield* personaRepo.findById(input.personaId);
 
-    const traits = [p.role, p.personalityDescription]
-      .filter(Boolean)
-      .join('. ');
     const prompt =
-      `Cartoon headshot portrait of a person named "${p.name}". ${traits}. Style: friendly cartoon illustration, head and shoulders only, clean solid-color background, warm lighting, expressive face. NOT photorealistic, NOT full body.`.trim();
+      `Create a professional avatar portrait for a podcast character named "${p.name}". ${p.role ?? ''}. ${p.personalityDescription ?? ''}. Style: clean, modern, digital art portrait suitable for a podcast profile picture.`.trim();
 
     const { imageData, mimeType } = yield* imageGen.generateImage({
       prompt,
