@@ -50,13 +50,21 @@ export const processResearch = (input: ProcessResearchInput) =>
 
     // 3. Poll for result: 30s first, then every 60s
     let elapsed = 0;
+    let attempt = 1;
     let result = yield* research.getResult(interactionId);
+    yield* Effect.logInfo(
+      `Poll attempt ${attempt}: status=${result === null ? 'in_progress' : 'completed'} (elapsed: 0s)`,
+    );
 
     while (result === null && elapsed < MAX_POLL_DURATION_MS) {
       const delay = elapsed === 0 ? INITIAL_POLL_MS : STEADY_POLL_MS;
       yield* Effect.sleep(delay);
       elapsed += delay;
+      attempt += 1;
       result = yield* research.getResult(interactionId);
+      yield* Effect.logInfo(
+        `Poll attempt ${attempt}: status=${result === null ? 'in_progress' : 'completed'} (elapsed: ${Math.round(elapsed / 1000)}s)`,
+      );
     }
 
     if (result === null) {

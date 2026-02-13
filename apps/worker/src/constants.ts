@@ -12,7 +12,7 @@ export const QUEUE_DEFAULTS = {
 export const MAX_CONCURRENT_JOBS = 5;
 
 /** Jobs stuck in `processing` longer than this are considered orphaned */
-export const STALE_JOB_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
+export const STALE_JOB_MAX_AGE_MS = 60 * 60 * 1000; // 60 minutes
 
 /** Run the stale-job reaper every N poll cycles (~3 min at 3s polling) */
 export const STALE_CHECK_EVERY_N_POLLS = 60;
