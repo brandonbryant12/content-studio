@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
+import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
 import { ResearchChatDialog } from './research-chat-dialog';
 
 interface ResearchChatContainerProps {
@@ -13,6 +14,7 @@ export function ResearchChatContainer({
   onOpenChange,
 }: ResearchChatContainerProps) {
   const chat = useResearchChat();
+  const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
 
   const handleOpenChange = useCallback(
@@ -30,17 +32,26 @@ export function ResearchChatContainer({
     [chat],
   );
 
-  const handleStartResearch = useCallback(
-    (query: string, title?: string) => {
-      startResearchMutation.mutate(
-        { query, title },
-        {
-          onSuccess: () => handleOpenChange(false),
-        },
-      );
-    },
-    [startResearchMutation, handleOpenChange],
-  );
+  const handleStartResearch = useCallback(() => {
+    synthesizeMutation.mutate(chat.messages, {
+      onSuccess: ({ query, title }) => {
+        startResearchMutation.mutate(
+          { query, title },
+          {
+            onSuccess: () => handleOpenChange(false),
+          },
+        );
+      },
+    });
+  }, [
+    synthesizeMutation,
+    startResearchMutation,
+    chat.messages,
+    handleOpenChange,
+  ]);
+
+  const isStartingResearch =
+    synthesizeMutation.isPending || startResearchMutation.isPending;
 
   return (
     <ResearchChatDialog
@@ -49,10 +60,10 @@ export function ResearchChatContainer({
       messages={chat.messages}
       isStreaming={chat.isStreaming}
       error={chat.error}
-      refinedQuery={chat.refinedQuery}
+      canStartResearch={chat.canStartResearch}
       onSendMessage={handleSendMessage}
       onStartResearch={handleStartResearch}
-      isStartingResearch={startResearchMutation.isPending}
+      isStartingResearch={isStartingResearch}
     />
   );
 }

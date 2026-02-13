@@ -25,22 +25,13 @@ export function useResearchChat() {
     transport,
   });
 
-  const refinedQuery = useMemo(() => {
-    const lastAssistant = [...messages]
-      .reverse()
-      .find((m) => m.role === 'assistant');
-    if (!lastAssistant) return null;
-    const text = lastAssistant.parts
-      .filter(
-        (p): p is Extract<typeof p, { type: 'text' }> => p.type === 'text',
-      )
-      .map((p) => p.text)
-      .join('');
-    const match = text.match(/\*\*Refined Research Query:\*\*\s*([\s\S]+)/);
-    return match?.[1]?.trim() ?? null;
-  }, [messages]);
-
   const isStreaming = status !== 'ready';
+
+  const canStartResearch = useMemo(
+    () => !isStreaming && messages.some((m) => m.role === 'assistant'),
+    [isStreaming, messages],
+  );
+
   const reset = useCallback(() => setMessages([]), [setMessages]);
 
   return {
@@ -49,7 +40,7 @@ export function useResearchChat() {
     status,
     isStreaming,
     error,
-    refinedQuery,
+    canStartResearch,
     reset,
   };
 }

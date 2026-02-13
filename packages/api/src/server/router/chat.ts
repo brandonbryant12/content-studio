@@ -1,5 +1,5 @@
 import { streamToEventIterator } from '@orpc/server';
-import { streamResearchChat } from '@repo/ai/chat';
+import { streamResearchChat, synthesizeResearchQuery } from '@repo/ai/chat';
 import { protectedProcedure } from '../orpc';
 
 const chatRouter = {
@@ -11,6 +11,15 @@ const chatRouter = {
       return streamToEventIterator(stream);
     },
   ),
+
+  synthesizeResearchQuery:
+    protectedProcedure.chat.synthesizeResearchQuery.handler(
+      async ({ context, input }) => {
+        return context.runtime.runPromise(
+          synthesizeResearchQuery({ messages: input.messages }),
+        );
+      },
+    ),
 };
 
 export default chatRouter;

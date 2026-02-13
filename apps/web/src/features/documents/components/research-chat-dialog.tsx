@@ -25,9 +25,9 @@ interface ResearchChatDialogProps {
   messages: UIMessage[];
   isStreaming: boolean;
   error: Error | undefined;
-  refinedQuery: string | null;
+  canStartResearch: boolean;
   onSendMessage: (text: string) => void;
-  onStartResearch: (query: string, title?: string) => void;
+  onStartResearch: () => void;
   isStartingResearch: boolean;
 }
 
@@ -37,21 +37,14 @@ export function ResearchChatDialog({
   messages,
   isStreaming,
   error,
-  refinedQuery,
+  canStartResearch,
   onSendMessage,
   onStartResearch,
   isStartingResearch,
 }: ResearchChatDialogProps) {
   const [input, setInput] = useState('');
-  const [editedQuery, setEditedQuery] = useState('');
-  const [title, setTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Sync refined query into editable field
-  useEffect(() => {
-    if (refinedQuery) setEditedQuery(refinedQuery);
-  }, [refinedQuery]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -75,12 +68,6 @@ export function ResearchChatDialog({
     },
     [onSendMessage],
   );
-
-  const handleStartResearch = useCallback(() => {
-    const query = editedQuery.trim();
-    if (!query) return;
-    onStartResearch(query, title.trim() || undefined);
-  }, [editedQuery, title, onStartResearch]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,48 +130,18 @@ export function ResearchChatDialog({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Refined query section */}
-        {refinedQuery && (
-          <div className="border-t px-6 py-4 space-y-3">
-            <div className="space-y-2">
-              <label
-                htmlFor="refined-query"
-                className="text-xs font-medium text-muted-foreground uppercase tracking-wide"
-              >
-                Research Query
-              </label>
-              <textarea
-                id="refined-query"
-                value={editedQuery}
-                onChange={(e) => setEditedQuery(e.target.value)}
-                rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="research-title"
-                className="text-xs font-medium text-muted-foreground uppercase tracking-wide"
-              >
-                Title{' '}
-                <span className="font-normal normal-case">(optional)</span>
-              </label>
-              <Input
-                id="research-title"
-                placeholder="Auto-generated from topic"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
+        {/* Start Research button */}
+        {canStartResearch && (
+          <div className="border-t px-6 py-3">
             <Button
-              onClick={handleStartResearch}
-              disabled={!editedQuery.trim() || isStartingResearch}
+              onClick={onStartResearch}
+              disabled={isStartingResearch}
               className="w-full"
             >
               {isStartingResearch ? (
                 <>
                   <Spinner className="w-4 h-4 mr-2" />
-                  Starting...
+                  Preparing research...
                 </>
               ) : (
                 'Start Research'
@@ -199,14 +156,18 @@ export function ResearchChatDialog({
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe your research topic..."
-            disabled={isStreaming}
+            placeholder={
+              canStartResearch
+                ? 'Add more details or click Start Research...'
+                : 'Describe your research topic...'
+            }
+            disabled={isStreaming || isStartingResearch}
             autoFocus
           />
           <Button
             type="submit"
             size="icon"
-            disabled={!input.trim() || isStreaming}
+            disabled={!input.trim() || isStreaming || isStartingResearch}
           >
             <PaperPlaneIcon className="w-4 h-4" />
           </Button>

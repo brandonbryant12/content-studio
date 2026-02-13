@@ -9,6 +9,11 @@ const chatContract = oc
       .route({ method: 'POST', path: '/research' })
       .input(type<{ messages: UIMessage[] }>())
       .output(eventIterator(type<unknown>())),
+
+    synthesizeResearchQuery: oc
+      .route({ method: 'POST', path: '/synthesize-research-query' })
+      .input(type<{ messages: UIMessage[] }>())
+      .output(type<{ query: string; title: string }>()),
   });
 
 export default chatContract;

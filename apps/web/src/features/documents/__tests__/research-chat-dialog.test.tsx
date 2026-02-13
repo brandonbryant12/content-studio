@@ -9,7 +9,7 @@ const defaultProps = {
   messages: [] as UIMessage[],
   isStreaming: false,
   error: undefined,
-  refinedQuery: null,
+  canStartResearch: false,
   onSendMessage: vi.fn(),
   onStartResearch: vi.fn(),
   isStartingResearch: false,
@@ -47,7 +47,13 @@ describe('ResearchChatDialog', () => {
   });
 
   it('displays messages when present', () => {
-    render(<ResearchChatDialog {...defaultProps} messages={messagesFixture} />);
+    render(
+      <ResearchChatDialog
+        {...defaultProps}
+        messages={messagesFixture}
+        canStartResearch
+      />,
+    );
     expect(screen.getByText('AI in healthcare')).toBeInTheDocument();
     expect(
       screen.getByText('What aspect of AI in healthcare interests you?'),
@@ -94,22 +100,31 @@ describe('ResearchChatDialog', () => {
     expect(input).toBeDisabled();
   });
 
-  it('shows refined query section when refinedQuery is set', () => {
+  it('shows Start Research button when canStartResearch is true', () => {
     render(
       <ResearchChatDialog
         {...defaultProps}
         messages={messagesFixture}
-        refinedQuery="Comprehensive analysis of AI applications in diagnostics"
+        canStartResearch
       />,
     );
 
-    expect(screen.getByLabelText('Research Query')).toHaveValue(
-      'Comprehensive analysis of AI applications in diagnostics',
-    );
     expect(screen.getByText('Start Research')).toBeInTheDocument();
   });
 
-  it('calls onStartResearch with edited query', async () => {
+  it('does not show Start Research button when canStartResearch is false', () => {
+    render(
+      <ResearchChatDialog
+        {...defaultProps}
+        messages={messagesFixture}
+        canStartResearch={false}
+      />,
+    );
+
+    expect(screen.queryByText('Start Research')).not.toBeInTheDocument();
+  });
+
+  it('calls onStartResearch when clicking Start Research', async () => {
     const onStartResearch = vi.fn();
     const user = userEvent.setup();
 
@@ -117,7 +132,7 @@ describe('ResearchChatDialog', () => {
       <ResearchChatDialog
         {...defaultProps}
         messages={messagesFixture}
-        refinedQuery="Original query"
+        canStartResearch
         onStartResearch={onStartResearch}
       />,
     );
@@ -125,7 +140,7 @@ describe('ResearchChatDialog', () => {
     const startButton = screen.getByText('Start Research');
     await user.click(startButton);
 
-    expect(onStartResearch).toHaveBeenCalledWith('Original query', undefined);
+    expect(onStartResearch).toHaveBeenCalled();
   });
 
   it('shows spinner when isStartingResearch', () => {
@@ -133,12 +148,12 @@ describe('ResearchChatDialog', () => {
       <ResearchChatDialog
         {...defaultProps}
         messages={messagesFixture}
-        refinedQuery="Some query"
+        canStartResearch
         isStartingResearch={true}
       />,
     );
 
-    expect(screen.getByText('Starting...')).toBeInTheDocument();
+    expect(screen.getByText('Preparing research...')).toBeInTheDocument();
   });
 
   it('shows error message when error is set', () => {
@@ -166,5 +181,21 @@ describe('ResearchChatDialog', () => {
     await user.click(screen.getByText('AI trends in healthcare 2026'));
 
     expect(onSendMessage).toHaveBeenCalledWith('AI trends in healthcare 2026');
+  });
+
+  it('changes placeholder when research can be started', () => {
+    render(
+      <ResearchChatDialog
+        {...defaultProps}
+        messages={messagesFixture}
+        canStartResearch
+      />,
+    );
+
+    expect(
+      screen.getByPlaceholderText(
+        'Add more details or click Start Research...',
+      ),
+    ).toBeInTheDocument();
   });
 });
