@@ -74,6 +74,9 @@ export const envSchema = Schema.Struct({
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String),
   S3_SECRET_ACCESS_KEY: Schema.optional(Schema.String),
   S3_ENDPOINT: Schema.optional(Schema.String),
+  S3_PUBLIC_ENDPOINT: Schema.optional(Schema.String),
+
+  CORS_ORIGINS: Schema.optional(Schema.String),
 
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),

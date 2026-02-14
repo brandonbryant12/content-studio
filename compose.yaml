@@ -1,13 +1,28 @@
+# Content Studio — full-stack Docker Compose
+#
+# Usage:
+#   HOST_IP=<your-lan-ip> docker compose up --build
+#
+# Defaults to localhost if HOST_IP is not set.
+# Services exposed:
+#   - Web app:       http://<HOST_IP>:8086
+#   - API server:    http://<HOST_IP>:3036
+#   - MinIO S3 API:  http://<HOST_IP>:9001
+#   - MinIO Console: http://<HOST_IP>:9090
+
 services:
+  # ------------------------------------------------------------------ #
+  # Web App (port 8086)
+  # ------------------------------------------------------------------ #
   web:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
     ports:
-      - 8085:8080
+      - "8086:8080"
     environment:
-      - PUBLIC_SERVER_URL=http://localhost:3035
-      - PUBLIC_SERVER_API_PATH=/api
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
+      PUBLIC_SERVER_API_PATH: /api
     healthcheck:
       interval: 30s
       timeout: 10s
@@ -18,100 +33,126 @@ services:
           "wget --quiet --spider http://localhost:8080/healthcheck",
         ]
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
+  # ------------------------------------------------------------------ #
+  # API Server (port 3036)
+  # ------------------------------------------------------------------ #
   server:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
     ports:
-      - 3035:3000
+      - "3036:3036"
     environment:
-      - SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET:-please_change_this_in_production}
-      - SERVER_POSTGRES_URL=postgres://postgres:postgres@db:5432/postgres
-      - SERVER_HOST=0.0.0.0
-      - SERVER_PORT=3000
-      - PUBLIC_WEB_URL=http://localhost:8085
-      - PUBLIC_SERVER_URL=http://localhost:3035
-      - USE_MOCK_AI=${USE_MOCK_AI:-true}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-s3}
-      - S3_BUCKET=content-studio
-      - S3_REGION=us-east-1
-      - S3_ACCESS_KEY_ID=minioadmin
-      - S3_SECRET_ACCESS_KEY=minioadmin
-      - S3_ENDPOINT=http://minio:9000
+      NODE_ENV: production
+      SERVER_AUTH_SECRET: "${SERVER_AUTH_SECRET:-please_change_this_in_production}"
+      SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "3036"
+      PUBLIC_WEB_URL: "http://${HOST_IP:-localhost}:8086"
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
+      CORS_ORIGINS: "*"
+      USE_MOCK_AI: "${USE_MOCK_AI:-true}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      # S3 / MinIO storage
+      STORAGE_PROVIDER: s3
+      S3_BUCKET: content-studio
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_ENDPOINT: "http://minio:9001"
+      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:9001"
     healthcheck:
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
       test:
         [
           "CMD-SHELL",
-          "wget --quiet --spider http://$$SERVER_HOST:$$SERVER_PORT/healthcheck",
+          "wget --quiet --spider http://0.0.0.0:3036/healthcheck || exit 1",
         ]
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
 
+  # ------------------------------------------------------------------ #
+  # PostgreSQL
+  # ------------------------------------------------------------------ #
   db:
-    image: docker.io/postgres:18
+    image: docker.io/postgres:16
     ports:
-      - 5432:5432
-    command: ["postgres", "-c", "log_statement=all"]
+      - "5432:5432"
+    command: ["postgres", "-c", "wal_level=logical"]
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: content_studio
     volumes:
-      - postgres_data:/var/lib/postgresql/18/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U postgres -d content_studio"]
 
+  # ------------------------------------------------------------------ #
+  # Database migrations
+  # ------------------------------------------------------------------ #
   migrate:
     restart: "no"
     build:
       context: .
       dockerfile: ./packages/db/Dockerfile
     environment:
-      - DB_POSTGRES_URL=postgres://postgres:postgres@db:5432/postgres
+      DB_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
     depends_on:
       db:
         condition: service_healthy
 
+  # ------------------------------------------------------------------ #
+  # MinIO (S3-compatible storage) — API on 9001, Console on 9090
+  # ------------------------------------------------------------------ #
   minio:
     image: minio/minio:latest
     ports:
-      - "9000:9000"
       - "9001:9001"
+      - "9090:9090"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+    command: server /data --address ":9001" --console-address ":9090"
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:9001/minio/health/live || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # ------------------------------------------------------------------ #
+  # MinIO init — create bucket + set public anonymous access
+  # ------------------------------------------------------------------ #
   minio-init:
     image: minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      mc mb myminio/content-studio --ignore-existing;
-      mc anonymous set download myminio/content-studio;
-      "
+    restart: "no"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        mc alias set myminio http://minio:9001 minioadmin minioadmin
+        mc mb --ignore-existing myminio/content-studio
+        mc anonymous set public myminio/content-studio
+        echo "MinIO bucket 'content-studio' ready with public access"
 
 volumes:
   postgres_data:

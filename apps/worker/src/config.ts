@@ -31,6 +31,7 @@ export function buildStorageConfig(): StorageConfig {
         accessKeyId: env.S3_ACCESS_KEY_ID,
         secretAccessKey: env.S3_SECRET_ACCESS_KEY,
         endpoint: env.S3_ENDPOINT,
+        publicEndpoint: env.S3_PUBLIC_ENDPOINT,
       };
     }
   }

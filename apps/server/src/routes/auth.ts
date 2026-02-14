@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { trustedOrigins } from '../config';
+import { corsOriginConfig } from '../config';
 import { env } from '../env';
 import { authRateLimit } from '../middleware/rate-limit';
 import { auth } from '../services';
@@ -8,7 +8,7 @@ import { auth } from '../services';
 export const authRoute = new Hono()
   .use(
     cors({
-      origin: trustedOrigins,
+      origin: corsOriginConfig === '*' ? (origin) => origin : corsOriginConfig,
       credentials: true,
       allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['POST', 'GET', 'OPTIONS'],

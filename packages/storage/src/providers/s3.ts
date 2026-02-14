@@ -12,13 +12,17 @@ export interface S3StorageConfig {
   readonly accessKeyId: string;
   readonly secretAccessKey: string;
   readonly endpoint?: string;
+  /** Public-facing endpoint for URL generation (e.g. browser-accessible MinIO URL). Falls back to endpoint. */
+  readonly publicEndpoint?: string;
 }
 
 const makeS3Storage = (config: S3StorageConfig): StorageService => {
   const baseUrl =
     config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
+  const publicBaseUrl = config.publicEndpoint ?? baseUrl;
 
-  const objectUrl = (key: string) => `${baseUrl}/${config.bucket}/${key}`;
+  const internalUrl = (key: string) => `${baseUrl}/${config.bucket}/${key}`;
+  const publicUrl = (key: string) => `${publicBaseUrl}/${config.bucket}/${key}`;
 
   const spanAttributes = (key: string) => ({
     'storage.key': key,
@@ -30,7 +34,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     upload: (key, data, contentType) =>
       Effect.tryPromise({
         try: async () => {
-          const url = objectUrl(key);
+          const url = internalUrl(key);
           const response = await fetch(url, {
             method: 'PUT',
             headers: {
@@ -44,7 +48,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
             throw new Error(`S3 upload failed: ${response.statusText}`);
           }
 
-          return url;
+          return publicUrl(key);
         },
         catch: (cause) =>
           new StorageUploadError({
@@ -59,7 +63,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     download: (key) =>
       Effect.gen(function* () {
         const response = yield* Effect.tryPromise({
-          try: () => fetch(objectUrl(key)),
+          try: () => fetch(internalUrl(key)),
           catch: (cause) =>
             new StorageError({
               message: `Failed to download from S3: ${key}`,
@@ -98,7 +102,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     delete: (key) =>
       Effect.tryPromise({
         try: async () => {
-          const response = await fetch(objectUrl(key), { method: 'DELETE' });
+          const response = await fetch(internalUrl(key), { method: 'DELETE' });
 
           if (!response.ok && response.status !== 404) {
             throw new Error(`S3 delete failed: ${response.statusText}`);
@@ -114,14 +118,14 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
       ),
 
     getUrl: (key) =>
-      Effect.succeed(objectUrl(key)).pipe(
+      Effect.succeed(publicUrl(key)).pipe(
         Effect.withSpan('storage.getUrl', { attributes: spanAttributes(key) }),
       ),
 
     exists: (key) =>
       Effect.tryPromise({
         try: async () => {
-          const response = await fetch(objectUrl(key), { method: 'HEAD' });
+          const response = await fetch(internalUrl(key), { method: 'HEAD' });
           return response.ok;
         },
         catch: () =>

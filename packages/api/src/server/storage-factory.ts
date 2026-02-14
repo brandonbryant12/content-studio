@@ -24,6 +24,7 @@ export const createStorageLayer = (
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
         endpoint: config.endpoint,
+        publicEndpoint: config.publicEndpoint,
       });
     case 'filesystem':
       return FilesystemStorageLive({

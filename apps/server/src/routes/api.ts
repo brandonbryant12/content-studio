@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { trustedOrigins } from '../config';
+import { corsOriginConfig } from '../config';
 import { env } from '../env';
 import { apiRateLimit } from '../middleware/rate-limit';
 import { api } from '../services';
@@ -8,7 +8,7 @@ import { api } from '../services';
 export const apiRoute = new Hono()
   .use(
     cors({
-      origin: trustedOrigins,
+      origin: corsOriginConfig === '*' ? (origin) => origin : corsOriginConfig,
       credentials: true,
     }),
   )

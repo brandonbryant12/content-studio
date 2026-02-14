@@ -31,6 +31,7 @@ export const buildStorageConfig = (): StorageConfig => {
       accessKeyId: env.S3_ACCESS_KEY_ID,
       secretAccessKey: env.S3_SECRET_ACCESS_KEY,
       endpoint: env.S3_ENDPOINT,
+      publicEndpoint: env.S3_PUBLIC_ENDPOINT,
     };
   }
 
@@ -41,6 +42,21 @@ export const buildStorageConfig = (): StorageConfig => {
   };
 };
 
-export const trustedOrigins = [env.PUBLIC_WEB_URL].map(
-  (url) => new URL(url).origin,
-);
+/**
+ * CORS origins. Set CORS_ORIGINS=* for fully permissive mode (reflects
+ * any requesting origin). Otherwise falls back to PUBLIC_WEB_URL.
+ */
+export const corsOriginConfig: string[] | '*' = (() => {
+  if (env.CORS_ORIGINS === '*') return '*';
+  const origins = [env.PUBLIC_WEB_URL];
+  if (env.CORS_ORIGINS) {
+    origins.push(...env.CORS_ORIGINS.split(',').map((s) => s.trim()));
+  }
+  return origins.map((url) => {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return url;
+    }
+  });
+})();
