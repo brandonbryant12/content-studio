@@ -39,6 +39,26 @@ const podcastErrors = {
   },
 } as const;
 
+const saveChangesErrors = {
+  INVALID_SAVE: {
+    status: 409,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        currentStatus: Schema.String,
+      }),
+    ),
+  },
+  NO_CHANGES: {
+    status: 400,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+      }),
+    ),
+  },
+} as const;
+
 const podcastContract = oc
   .prefix('/podcasts')
   .tag('podcast')
@@ -157,7 +177,7 @@ const podcastContract = oc
         description:
           'Update script segments and/or voice settings, then regenerate audio. Only allowed when podcast is in ready status.',
       })
-      .errors({ ...podcastErrors, ...jobErrors })
+      .errors({ ...podcastErrors, ...jobErrors, ...saveChangesErrors })
       .input(
         std(
           Schema.Struct({

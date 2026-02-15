@@ -23,6 +23,7 @@ const createMockDocumentRepo = (
   options?: {
     onInsert?: (data: unknown) => void;
     onDelete?: (id: string) => void;
+    onUpdateStatus?: (id: string, status: Document['status'], error?: string) => void;
   },
 ): Layer.Layer<DocumentRepo> => {
   const service: DocumentRepoService = {
@@ -56,7 +57,21 @@ const createMockDocumentRepo = (
         return true;
       }),
     count: () => Effect.die('not implemented'),
-    updateStatus: () => Effect.die('not implemented'),
+    updateStatus: (id, status, errorMessage) =>
+      Effect.suspend(() => {
+        if (!state.insertedDoc || state.insertedDoc.id !== id) {
+          return Effect.die('updateStatus not mocked');
+        }
+        options?.onUpdateStatus?.(id, status, errorMessage);
+        const updated: Document = {
+          ...state.insertedDoc,
+          status,
+          errorMessage: status === 'failed' ? (errorMessage ?? null) : null,
+          updatedAt: new Date(),
+        };
+        state.insertedDoc = updated;
+        return Effect.succeed(updated);
+      }),
     updateContent: () => Effect.die('not implemented'),
     findBySourceUrl: () =>
       Effect.suspend(() => Effect.succeed(state.existingByUrl ?? null)),
@@ -359,13 +374,15 @@ describe('createFromUrl', () => {
       }
     });
 
-    it('propagates queue failure after insert (no cleanup)', async () => {
+    it('marks document as failed when enqueue fails, then propagates the error', async () => {
       const user = createTestUser();
       const insertSpy = vi.fn();
+      const updateStatusSpy = vi.fn();
 
       const docState: MockDocState = {};
       const docLayer = createMockDocumentRepo(docState, {
         onInsert: insertSpy,
+        onUpdateStatus: updateStatusSpy,
       });
 
       const failingQueue = Layer.succeed(Queue, {
@@ -393,9 +410,12 @@ describe('createFromUrl', () => {
         ),
       );
 
-      // Document was inserted before enqueue failed
       expect(insertSpy).toHaveBeenCalledTimes(1);
-      // Error propagates — no cleanup of the orphaned document
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        'failed',
+        expect.stringContaining('Queue connection failed'),
+      );
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;

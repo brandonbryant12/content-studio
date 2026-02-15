@@ -1,8 +1,8 @@
 import { requireOwnership } from '@repo/auth/policy';
-import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateInfographicPayload } from '@repo/queue';
+import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -25,16 +25,9 @@ export interface GenerateInfographicResult {
 export const generateInfographic = (input: GenerateInfographicInput) =>
   Effect.gen(function* () {
     const repo = yield* InfographicRepo;
-    const queue = yield* Queue;
 
     const existing = yield* repo.findById(input.id);
     yield* requireOwnership(existing.createdBy);
-
-    // Update status to generating
-    yield* repo.update(input.id, {
-      status: 'generating',
-      errorMessage: null,
-    });
 
     // Enqueue job
     const payload: GenerateInfographicPayload = {
@@ -42,10 +35,23 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
       userId: existing.createdBy,
     };
 
-    const job = yield* queue.enqueue(
-      'generate-infographic',
-      payload,
-      existing.createdBy,
+    const job = yield* withTransactionalStateAndEnqueue(
+      Effect.gen(function* () {
+        yield* repo.update(input.id, {
+          status: 'generating',
+          errorMessage: null,
+        });
+        return yield* enqueueJob({
+          type: 'generate-infographic',
+          payload,
+          userId: existing.createdBy,
+        });
+      }),
+      () =>
+        repo.update(input.id, {
+          status: existing.status,
+          errorMessage: existing.errorMessage,
+        }),
     );
 
     return {

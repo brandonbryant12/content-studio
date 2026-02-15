@@ -6,7 +6,7 @@
 
 | Area | Standards |
 |------|-----------|
-| Backend logic | `standards/patterns/use-case.md`, `standards/patterns/repository.md` |
+| Backend logic | `standards/patterns/use-case.md`, `standards/patterns/repository.md`, `standards/patterns/safety-primitives.md`, `standards/patterns/job-queue.md` |
 | API endpoints | `standards/patterns/router-handler.md`, `standards/patterns/serialization.md` |
 | Error handling | `standards/patterns/error-handling.md`, `standards/patterns/enum-constants.md` |
 | Effect runtime | `standards/patterns/effect-runtime.md` |
@@ -15,7 +15,7 @@
 | Forms | `standards/frontend/forms.md` |
 | Frontend architecture | `standards/frontend/project-structure.md`, `standards/frontend/suspense.md`, `standards/frontend/error-handling.md` |
 | Real-time | `standards/frontend/real-time.md` |
-| Testing | `standards/testing/use-case-tests.md`, `standards/testing/integration-tests.md`, `standards/testing/job-workflow-tests.md`, `standards/testing/live-tests.md`, `standards/frontend/testing.md` |
+| Testing | `standards/testing/use-case-tests.md`, `standards/testing/integration-tests.md`, `standards/testing/job-workflow-tests.md`, `standards/testing/invariants.md`, `standards/testing/live-tests.md`, `standards/frontend/testing.md` |
 | Implementation plans | `standards/implementation-plan.md` |
 
 ## Project Structure
@@ -30,7 +30,7 @@ packages/
   auth/            # better-auth integration
   db/              # Drizzle schema + migrations (PostgreSQL)
   media/           # Domain logic — podcasts, voiceovers, documents, infographics
-  queue/           # Job queue (BullMQ-style)
+  queue/           # Postgres-backed job queue
   storage/         # S3-compatible file storage
   testing/         # Shared test utilities
   ui/              # Radix UI + Tailwind component library
@@ -48,6 +48,7 @@ packages/
 ```bash
 pnpm typecheck    # Type check all packages (required before PR)
 pnpm test         # Run all tests (includes web app tests)
+pnpm test:invariants # Safety invariants (must pass for agent-authored changes)
 pnpm build        # Build all packages
 pnpm lint         # Lint all packages
 pnpm dev          # Start all dev servers (Turborepo watch mode)

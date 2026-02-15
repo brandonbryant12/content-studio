@@ -21,6 +21,7 @@
     "postclean": "git clean -xdf .cache .turbo node_modules",
     "start": "turbo run start",
     "test": "vitest run",
+    "test:invariants": "vitest run packages/media/src/shared/__tests__/safety-invariants.test.ts packages/api/src/server/__tests__/effect-handler.invariants.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "turbo run test:integration",

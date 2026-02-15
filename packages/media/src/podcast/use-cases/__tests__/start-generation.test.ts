@@ -1,6 +1,6 @@
 import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
-import { Queue, type QueueService, type Job } from '@repo/queue';
+import { Queue, QueueError, type QueueService, type Job } from '@repo/queue';
 import {
   createTestUser,
   createTestPodcast,
@@ -343,6 +343,51 @@ describe('startGeneration', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error).toBeInstanceOf(PodcastNotFound);
+      }
+    });
+
+    it('rolls podcast status back when enqueue fails', async () => {
+      const user = createTestUser();
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        status: 'ready',
+      });
+      const updateStatusSpy = vi.fn();
+
+      const failingQueue = Layer.succeed(Queue, {
+        enqueue: () => Effect.fail(new QueueError({ message: 'Queue down' })),
+        getJob: () => Effect.die('not implemented'),
+        getJobsByUser: () => Effect.die('not implemented'),
+        updateJobStatus: () => Effect.die('not implemented'),
+        processNextJob: () => Effect.die('not implemented'),
+        processJobById: () => Effect.die('not implemented'),
+        findPendingJobForPodcast: () => Effect.succeed(null),
+        findPendingJobForVoiceover: () => Effect.die('not implemented'),
+        deleteJob: () => Effect.die('not implemented'),
+        claimNextJob: () => Effect.die('not implemented'),
+        failStaleJobs: () => Effect.die('not implemented'),
+      } as QueueService);
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo({ podcast }, { onUpdateStatus: updateStatusSpy }),
+        failingQueue,
+      );
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(user)(
+          startGeneration({ podcastId: podcast.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      expect(updateStatusSpy).toHaveBeenNthCalledWith(1, podcast.id, 'drafting');
+      expect(updateStatusSpy).toHaveBeenNthCalledWith(2, podcast.id, 'ready');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(QueueError);
       }
     });
   });

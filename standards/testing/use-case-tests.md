@@ -9,6 +9,9 @@ Every use case must have unit tests covering:
 2. All error conditions
 3. Edge cases (empty results, pagination)
 
+In addition, run invariant tests for architecture-level guardrails:
+- `pnpm test:invariants`
+
 ## File Location
 
 ```

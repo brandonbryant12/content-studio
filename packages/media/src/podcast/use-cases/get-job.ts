@@ -1,6 +1,6 @@
-import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
+import { getOwnedJobOrNotFound } from '../../shared';
 
 // =============================================================================
 // Types
@@ -29,8 +29,7 @@ export interface GetJobResult {
 
 export const getJob = (input: GetJobInput) =>
   Effect.gen(function* () {
-    const queue = yield* Queue;
-    return yield* queue.getJob(input.jobId);
+    return yield* getOwnedJobOrNotFound(input.jobId);
   }).pipe(
     Effect.withSpan('useCase.getJob', {
       attributes: { 'job.id': input.jobId },

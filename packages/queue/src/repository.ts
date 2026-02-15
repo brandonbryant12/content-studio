@@ -1,11 +1,6 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
 import { Db } from '@repo/db/effect';
-import {
-  job,
-  type JobId,
-  JobStatus,
-  JobType as JobTypeConst,
-} from '@repo/db/schema';
+import { job, JobStatus, JobType as JobTypeConst } from '@repo/db/schema';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType } from './types';
 import type { DatabaseInstance } from '@repo/db/client';

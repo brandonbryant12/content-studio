@@ -139,17 +139,35 @@ export const handleTaggedError = <E extends { _tag: string }>(
   }
 
   // Fallback to standard factory based on httpStatus when custom factory not found
-  const statusToCode: Record<number, string> = {
-    400: 'BAD_REQUEST',
-    401: 'UNAUTHORIZED',
-    403: 'FORBIDDEN',
-    404: 'NOT_FOUND',
+  const statusToCodes: Record<number, readonly string[]> = {
+    400: ['BAD_REQUEST'],
+    401: ['UNAUTHORIZED'],
+    403: ['FORBIDDEN'],
+    404: ['NOT_FOUND'],
+    409: ['CONFLICT'],
+    413: ['PAYLOAD_TOO_LARGE'],
+    415: ['UNSUPPORTED_MEDIA_TYPE'],
+    422: ['UNPROCESSABLE_CONTENT', 'INPUT_VALIDATION_FAILED'],
+    429: ['RATE_LIMITED', 'TOO_MANY_REQUESTS'],
+    502: ['SERVICE_UNAVAILABLE', 'BAD_GATEWAY'],
+    503: ['SERVICE_UNAVAILABLE'],
+    504: ['SERVICE_UNAVAILABLE', 'GATEWAY_TIMEOUT'],
   };
-  const fallbackCode = statusToCode[ErrorClass.httpStatus!] ?? 'INTERNAL_ERROR';
-  const statusFactory = errors[fallbackCode];
 
-  if (statusFactory) {
-    throw statusFactory({ message, data });
+  const fallbackCodes = statusToCodes[ErrorClass.httpStatus!] ?? [
+    'INTERNAL_ERROR',
+  ];
+
+  for (const fallbackCode of fallbackCodes) {
+    const statusFactory = errors[fallbackCode];
+    if (statusFactory) {
+      throw statusFactory({ message, data });
+    }
+  }
+
+  const internalFactory = errors.INTERNAL_ERROR;
+  if (internalFactory) {
+    throw internalFactory({ message, data });
   }
 
   // Ultimate fallback - construct ORPCError directly

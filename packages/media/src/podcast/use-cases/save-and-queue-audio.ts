@@ -7,6 +7,7 @@ import type {
   ScriptSegment,
 } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
+import { enqueueJob, withCompensatingAction } from '../../shared';
 import { saveChanges } from './save-changes';
 
 // =============================================================================
@@ -85,10 +86,13 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       userId: podcast.createdBy,
     };
 
-    const job = yield* queue.enqueue(
-      'generate-audio',
-      payload,
-      podcast.createdBy,
+    const job = yield* withCompensatingAction(
+      enqueueJob({
+        type: 'generate-audio',
+        payload,
+        userId: podcast.createdBy,
+      }),
+      () => Effect.void,
     );
 
     return { jobId: job.id, status: job.status };

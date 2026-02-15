@@ -3,6 +3,7 @@ import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
+import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -36,8 +37,7 @@ export const startGeneration = (input: StartGenerationInput) =>
       return { jobId: existingJob.id, status: existingJob.status };
     }
 
-    yield* podcastRepo.updateStatus(podcast.id, 'drafting');
-    yield* podcastRepo.clearApproval(podcast.id);
+    const previousStatus = podcast.status;
 
     const payload: GeneratePodcastPayload = {
       podcastId: podcast.id,
@@ -45,10 +45,17 @@ export const startGeneration = (input: StartGenerationInput) =>
       promptInstructions: input.promptInstructions,
     };
 
-    const job = yield* queue.enqueue(
-      'generate-podcast',
-      payload,
-      podcast.createdBy,
+    const job = yield* withTransactionalStateAndEnqueue(
+      Effect.gen(function* () {
+        yield* podcastRepo.updateStatus(podcast.id, 'drafting');
+        yield* podcastRepo.clearApproval(podcast.id);
+        return yield* enqueueJob({
+          type: 'generate-podcast',
+          payload,
+          userId: podcast.createdBy,
+        });
+      }),
+      () => podcastRepo.updateStatus(podcast.id, previousStatus),
     );
 
     return { jobId: job.id, status: job.status };

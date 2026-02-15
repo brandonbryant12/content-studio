@@ -1,7 +1,7 @@
 import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import { generateVoiceoverId } from '@repo/db/schema';
-import { Queue, type QueueService, type Job } from '@repo/queue';
+import { Queue, QueueError, type QueueService, type Job } from '@repo/queue';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -476,6 +476,59 @@ describe('startVoiceoverGeneration', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
+      }
+    });
+
+    it('rolls voiceover status back when enqueue fails', async () => {
+      const user = createTestUser();
+      const voiceover = createTestVoiceover({
+        createdBy: user.id,
+        text: 'Some text.',
+        status: 'ready',
+      });
+      const updateStatusSpy = vi.fn();
+
+      const failingQueue = Layer.succeed(Queue, {
+        enqueue: () => Effect.fail(new QueueError({ message: 'Queue down' })),
+        getJob: () => Effect.die('not implemented'),
+        getJobsByUser: () => Effect.die('not implemented'),
+        updateJobStatus: () => Effect.die('not implemented'),
+        processNextJob: () => Effect.die('not implemented'),
+        processJobById: () => Effect.die('not implemented'),
+        findPendingJobForPodcast: () => Effect.die('not implemented'),
+        findPendingJobForVoiceover: () => Effect.succeed(null),
+        deleteJob: () => Effect.die('not implemented'),
+        claimNextJob: () => Effect.die('not implemented'),
+        failStaleJobs: () => Effect.die('not implemented'),
+      } as QueueService);
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockVoiceoverRepo(
+          { voiceover },
+          { onUpdateStatus: updateStatusSpy },
+        ),
+        failingQueue,
+      );
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(user)(
+          startVoiceoverGeneration({
+            voiceoverId: voiceover.id,
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      expect(updateStatusSpy).toHaveBeenNthCalledWith(
+        1,
+        voiceover.id,
+        'generating_audio',
+      );
+      expect(updateStatusSpy).toHaveBeenNthCalledWith(2, voiceover.id, 'ready');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(QueueError);
       }
     });
   });

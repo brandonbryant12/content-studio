@@ -15,6 +15,8 @@ Consider this real bug: An API use case set the voiceover status to `generating_
 
 Job workflow tests catch these issues by testing the actual sequence of use case calls.
 
+Queue note: when enqueue writes directly to the `job` table, workflow tests should still verify workers can claim and process pending jobs end-to-end.
+
 ## File Location
 
 ```

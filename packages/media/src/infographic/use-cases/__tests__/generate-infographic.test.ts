@@ -1,4 +1,4 @@
-import { Queue, type QueueService } from '@repo/queue';
+import { Queue, QueueError, type QueueService } from '@repo/queue';
 import {
   createTestUser,
   createTestInfographic,
@@ -104,5 +104,63 @@ describe('generateInfographic', () => {
     );
 
     expect(result._tag).toBe('Failure');
+  });
+
+  it('rolls infographic status back when enqueue fails', async () => {
+    const user = createTestUser();
+    const infographic = createTestInfographic({
+      createdBy: user.id,
+      status: 'draft',
+    });
+
+    const updateCalls: Array<{
+      status?: string;
+      errorMessage?: string | null;
+    }> = [];
+    const repo = createMockInfographicRepo({
+      findById: () => Effect.succeed(infographic),
+      update: (_id: string, data) => {
+        updateCalls.push({
+          status: data.status,
+          errorMessage: data.errorMessage,
+        });
+        return Effect.succeed({
+          ...infographic,
+          ...data,
+        } as Infographic);
+      },
+    });
+
+    const failingQueue = Layer.succeed(Queue, {
+      enqueue: () => Effect.fail(new QueueError({ message: 'Queue down' })),
+      getJob: () => Effect.die('not implemented'),
+      getJobsByUser: () => Effect.die('not implemented'),
+      updateJobStatus: () => Effect.die('not implemented'),
+      processNextJob: () => Effect.die('not implemented'),
+      processJobById: () => Effect.die('not implemented'),
+      findPendingJobForPodcast: () => Effect.die('not implemented'),
+      findPendingJobForVoiceover: () => Effect.die('not implemented'),
+      deleteJob: () => Effect.die('not implemented'),
+      claimNextJob: () => Effect.die('not implemented'),
+      failStaleJobs: () => Effect.die('not implemented'),
+    } as QueueService);
+
+    const layers = Layer.mergeAll(MockDbLive, repo, failingQueue);
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(user)(generateInfographic({ id: infographic.id })).pipe(
+        Effect.provide(layers),
+      ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    expect(updateCalls).toEqual([
+      { status: 'generating', errorMessage: null },
+      { status: 'draft', errorMessage: infographic.errorMessage },
+    ]);
+    if (result._tag === 'Failure') {
+      const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+      expect(error).toBeInstanceOf(QueueError);
+    }
   });
 });

@@ -59,6 +59,13 @@ export const actionName = (input: ActionInput) =>
 
 ## Rules
 
+### 0. Use Safety Primitives for High-Risk Operations
+
+Before implementing queue polling, queue enqueue, or document content replacement,
+read `standards/patterns/safety-primitives.md` and use shared primitives
+(`getOwnedJobOrNotFound`, `enqueueJob`, `withTransactionalStateAndEnqueue`,
+`replaceTextContentSafely`).
+
 ### 1. One File Per Use Case
 
 Each use case gets its own file. This enables:

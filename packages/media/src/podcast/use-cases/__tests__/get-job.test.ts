@@ -4,7 +4,12 @@ import {
   type Job,
   JobNotFoundError,
 } from '@repo/queue';
-import { resetAllFactories } from '@repo/testing';
+import {
+  createTestAdmin,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { JobId, JobStatus } from '@repo/db/schema';
@@ -69,13 +74,16 @@ describe('getJob', () => {
 
   describe('happy path', () => {
     it('returns job by ID', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob();
       const jobs = new Map([[job.id, job]]);
 
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(job.id);
@@ -85,6 +93,7 @@ describe('getJob', () => {
     });
 
     it('returns completed job with result', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob({
         status: 'completed',
         result: {
@@ -100,7 +109,9 @@ describe('getJob', () => {
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.status).toBe('completed');
@@ -114,6 +125,7 @@ describe('getJob', () => {
     });
 
     it('returns failed job with error', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob({
         status: 'failed',
         error: 'Generation failed: API error',
@@ -124,7 +136,9 @@ describe('getJob', () => {
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.status).toBe('failed');
@@ -132,6 +146,7 @@ describe('getJob', () => {
     });
 
     it('returns processing job with startedAt', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob({
         status: 'processing',
         startedAt: new Date('2024-01-01T00:30:00Z'),
@@ -141,7 +156,9 @@ describe('getJob', () => {
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.status).toBe('processing');
@@ -151,11 +168,14 @@ describe('getJob', () => {
 
   describe('error handling', () => {
     it('fails when job not found', async () => {
+      const user = createTestUser();
       const layers = createMockQueue({ jobs: new Map() });
 
       const result = await Effect.runPromiseExit(
-        getJob({ jobId: 'job_nonexistent' as JobId }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          getJob({ jobId: 'job_nonexistent' as JobId }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
@@ -166,23 +186,59 @@ describe('getJob', () => {
         expect((error as JobNotFoundError).jobId).toBe('job_nonexistent');
       }
     });
+
+    it('fails when job belongs to another user', async () => {
+      const user = createTestUser({ id: 'user_999' });
+      const job = createTestJob({ createdBy: 'user_123' });
+      const jobs = new Map([[job.id, job]]);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(createMockQueue({ jobs }))),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error).toBeInstanceOf(JobNotFoundError);
+      }
+    });
+
+    it('allows admin to fetch another user job', async () => {
+      const admin = createTestAdmin();
+      const job = createTestJob({ createdBy: 'user_123' });
+      const jobs = new Map([[job.id, job]]);
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(createMockQueue({ jobs }))),
+        ),
+      );
+
+      expect(result.id).toBe(job.id);
+    });
   });
 
   describe('all job types', () => {
     it('handles generate-podcast job', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob({ type: 'generate-podcast' });
       const jobs = new Map([[job.id, job]]);
 
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.type).toBe('generate-podcast');
     });
 
     it('handles generate-audio job', async () => {
+      const user = createTestUser({ id: 'user_123' });
       const job = createTestJob({
         type: 'generate-audio',
         payload: { versionId: 'ver_123', userId: 'user_123' },
@@ -192,7 +248,9 @@ describe('getJob', () => {
       const layers = createMockQueue({ jobs });
 
       const result = await Effect.runPromise(
-        getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          getJob({ jobId: job.id }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.type).toBe('generate-audio');

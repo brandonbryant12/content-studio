@@ -1,7 +1,6 @@
 import { requireOwnership } from '@repo/auth/policy';
-import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { calculateWordCount } from '../../shared';
+import { replaceTextContentSafely } from '../../shared';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
@@ -24,7 +23,6 @@ export interface UpdateDocumentInput {
 
 export const updateDocument = (input: UpdateDocumentInput) =>
   Effect.gen(function* () {
-    const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 
     const existing = yield* documentRepo.findById(input.id);
@@ -40,19 +38,20 @@ export const updateDocument = (input: UpdateDocumentInput) =>
       updateInput.metadata = input.metadata;
     }
 
-    if (input.content !== undefined) {
-      const contentBuffer = Buffer.from(input.content, 'utf-8');
-
-      yield* storage.delete(existing.contentKey).pipe(Effect.ignore);
-
-      const newContentKey = `documents/${crypto.randomUUID()}.txt`;
-      yield* storage.upload(newContentKey, contentBuffer, 'text/plain');
-
-      updateInput.contentKey = newContentKey;
-      updateInput.wordCount = calculateWordCount(input.content);
+    if (input.content === undefined) {
+      return yield* documentRepo.update(input.id, updateInput);
     }
 
-    return yield* documentRepo.update(input.id, updateInput);
+    return yield* replaceTextContentSafely({
+      previousContentKey: existing.contentKey,
+      content: input.content,
+      persist: ({ contentKey, wordCount }) =>
+        documentRepo.update(input.id, {
+          ...updateInput,
+          contentKey,
+          wordCount,
+        }),
+    });
   }).pipe(
     Effect.withSpan('useCase.updateDocument', {
       attributes: { 'document.id': input.id },
