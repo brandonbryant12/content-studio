@@ -100,7 +100,7 @@ export const InfographicItem = memo(function InfographicItem({
         params={{ infographicId: infographic.id }}
         className="flex flex-col flex-1"
       >
-        <div className="content-card-thumb">
+        <div className="content-card-thumb thumb-infographic">
           {onToggleSelect && (
             <div
               className="content-card-checkbox"

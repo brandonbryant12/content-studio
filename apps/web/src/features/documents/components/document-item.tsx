@@ -52,7 +52,7 @@ export const DocumentItem = memo(function DocumentItem({
         params={{ documentId: document.id }}
         className="flex flex-col flex-1"
       >
-        <div className="content-card-thumb">
+        <div className="content-card-thumb thumb-document">
           <DocumentIcon source={document.source} />
         </div>
         <div className="content-card-body">

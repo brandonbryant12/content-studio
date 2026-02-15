@@ -5,19 +5,40 @@ import NavContainer from '@/routes/-components/layout/nav/nav-container';
 
 function WaveformIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-    >
-      <line x1="4" y1="12" x2="4" y2="12" />
-      <line x1="8" y1="8" x2="8" y2="16" />
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="16" y1="8" x2="16" y2="16" />
-      <line x1="20" y1="12" x2="20" y2="12" />
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <rect
+        className="waveform-bar"
+        x="3"
+        y="10.5"
+        width="2"
+        height="3"
+        rx="1"
+      />
+      <rect className="waveform-bar" x="7" y="7" width="2" height="10" rx="1" />
+      <rect
+        className="waveform-bar"
+        x="11"
+        y="4"
+        width="2"
+        height="16"
+        rx="1"
+      />
+      <rect
+        className="waveform-bar"
+        x="15"
+        y="7"
+        width="2"
+        height="10"
+        rx="1"
+      />
+      <rect
+        className="waveform-bar"
+        x="19"
+        y="10.5"
+        width="2"
+        height="3"
+        rx="1"
+      />
     </svg>
   );
 }

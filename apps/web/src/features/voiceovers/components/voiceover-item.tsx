@@ -63,7 +63,7 @@ export const VoiceoverItem = memo(function VoiceoverItem({
           params={{ voiceoverId: voiceover.id }}
           className="flex flex-col flex-1"
         >
-          <div className="content-card-thumb">
+          <div className="content-card-thumb thumb-voiceover">
             <VoiceoverIcon status={voiceover.status} />
             {isGeneratingStatus(voiceover.status) && (
               <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">

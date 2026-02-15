@@ -119,7 +119,7 @@ export const PodcastItem = memo(function PodcastItem({
           search={{ version: undefined }}
           className="flex flex-col flex-1"
         >
-          <div className="content-card-thumb">
+          <div className="content-card-thumb thumb-podcast">
             {onToggleSelect && (
               <div
                 className="content-card-checkbox"
