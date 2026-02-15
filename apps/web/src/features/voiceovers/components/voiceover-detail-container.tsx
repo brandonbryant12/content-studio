@@ -52,7 +52,7 @@ export function VoiceoverDetailContainer({
   });
 
   useNavigationBlock({
-    shouldBlock: actions.hasChanges,
+    shouldBlock: actions.hasChanges && !actions.isGenerating,
   });
 
   const displayAudio = voiceover.audioUrl

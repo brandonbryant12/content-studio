@@ -69,7 +69,7 @@ export function PodcastDetailContainer({
   });
 
   useNavigationBlock({
-    shouldBlock: actions.hasAnyChanges,
+    shouldBlock: actions.hasAnyChanges && !actions.isGenerating,
   });
 
   if (isSetupMode(podcast)) {

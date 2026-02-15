@@ -102,7 +102,7 @@ export function InfographicWorkbenchContainer({
   });
 
   useNavigationBlock({
-    shouldBlock: actions.hasChanges,
+    shouldBlock: actions.hasChanges && !actions.isGenerating,
   });
 
   const handleSelectVersion = useCallback((versionId: string) => {
