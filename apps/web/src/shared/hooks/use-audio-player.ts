@@ -83,9 +83,7 @@ export function useAudioPlayer(
     setDisplayTime(0);
     setIsPlaying(false);
     setIsLoaded(false);
-    if (initialDuration) {
-      setDuration(initialDuration);
-    }
+    setDuration(initialDuration ?? 0);
   }
 
   // Reset throttle ref when src changes

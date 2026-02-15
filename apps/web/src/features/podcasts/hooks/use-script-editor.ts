@@ -28,51 +28,84 @@ export interface UseScriptEditorReturn {
   resetToSegments: (segments: ScriptSegment[]) => void;
 }
 
+interface OptimisticSavedEntry {
+  segments: ScriptSegment[];
+  baseServerHash: string;
+}
+
+function serializeSegments(segments: ScriptSegment[]): string {
+  return JSON.stringify(segments);
+}
+
+function segmentsEqual(a: ScriptSegment[], b: ScriptSegment[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const left = a[i];
+    const right = b[i];
+    if (!left || !right) return false;
+    if (
+      left.index !== right.index ||
+      left.speaker !== right.speaker ||
+      left.line !== right.line
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function useScriptEditor({
   podcastId,
   initialSegments,
 }: UseScriptEditorOptions): UseScriptEditorReturn {
-  // Use lazy initializer to avoid recreating arrays on every render (rerender-lazy-state-init)
-  const [segments, setSegments] = useState<ScriptSegment[]>(
-    () => initialSegments,
-  );
-  const [originalSegments, setOriginalSegments] = useState<ScriptSegment[]>(
-    () => initialSegments,
-  );
-  const [hasUserEdits, setHasUserEdits] = useState(false);
-  const [prevInitialSerialized, setPrevInitialSerialized] = useState<string>(
-    () => JSON.stringify(initialSegments),
+  const [draftByPodcastId, setDraftByPodcastId] = useState<
+    Record<string, ScriptSegment[]>
+  >({});
+  const [optimisticSavedByPodcastId, setOptimisticSavedByPodcastId] = useState<
+    Record<string, OptimisticSavedEntry>
+  >({});
+
+  const initialSegmentsHash = useMemo(
+    () => serializeSegments(initialSegments),
+    [initialSegments],
   );
 
-  // Sync with server data when it changes (e.g., after generation completes)
-  // Only sync if user hasn't made local edits
-  // Use JSON comparison to avoid infinite loops from array reference changes
-  const serialized = JSON.stringify(initialSegments);
-  if (serialized !== prevInitialSerialized && !hasUserEdits) {
-    setPrevInitialSerialized(serialized);
-    setSegments(initialSegments);
-    setOriginalSegments(initialSegments);
-  }
+  const optimisticSaved = optimisticSavedByPodcastId[podcastId];
+  const optimisticSegments =
+    optimisticSaved?.baseServerHash === initialSegmentsHash
+      ? optimisticSaved.segments
+      : undefined;
 
-  const hasChanges = useMemo(() => {
-    if (segments.length !== originalSegments.length) return true;
-    return segments.some((seg, i) => {
-      const orig = originalSegments[i];
-      if (!orig) return true;
-      return (
-        seg.speaker !== orig.speaker ||
-        seg.line !== orig.line ||
-        seg.index !== orig.index
-      );
-    });
-  }, [segments, originalSegments]);
+  const baselineSegments = optimisticSegments ?? initialSegments;
+  const draftSegments = draftByPodcastId[podcastId];
+  const segments = draftSegments ?? baselineSegments;
+
+  const hasChanges =
+    draftSegments != null && !segmentsEqual(draftSegments, baselineSegments);
+
+  const setDraftSegments = useCallback(
+    (updater: (current: ScriptSegment[]) => ScriptSegment[]) => {
+      setDraftByPodcastId((prev) => {
+        const current = prev[podcastId] ?? baselineSegments;
+        const next = updater(current);
+
+        if (segmentsEqual(next, baselineSegments)) {
+          if (!(podcastId in prev)) return prev;
+          const { [podcastId]: _removed, ...rest } = prev;
+          return rest;
+        }
+
+        return {
+          ...prev,
+          [podcastId]: next,
+        };
+      });
+    },
+    [podcastId, baselineSegments],
+  );
 
   const saveChangesMutation = useMutation(
     apiClient.podcasts.saveChanges.mutationOptions({
-      onSuccess: () => {
-        toast.success('Script saved. Regenerating audio...');
-        setOriginalSegments(segments);
-      },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to save script'));
       },
@@ -81,84 +114,111 @@ export function useScriptEditor({
 
   const updateSegment = useCallback(
     (index: number, data: Partial<ScriptSegment>) => {
-      setHasUserEdits(true);
-      setSegments((prev) =>
-        prev.map((seg) => (seg.index === index ? { ...seg, ...data } : seg)),
+      setDraftSegments((current) =>
+        current.map((segment) =>
+          segment.index === index ? { ...segment, ...data } : segment,
+        ),
       );
     },
-    [],
+    [setDraftSegments],
   );
 
   const addSegment = useCallback(
     (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => {
-      setHasUserEdits(true);
-      setSegments((prev) => {
-        // Find position to insert
+      setDraftSegments((current) => {
         const insertPosition =
           afterIndex === -1
             ? 0
-            : prev.findIndex((s) => s.index === afterIndex) + 1;
+            : Math.max(0, current.findIndex((s) => s.index === afterIndex) + 1);
 
-        // Create new segment with unique index
-        const maxIndex = prev.reduce((max, s) => Math.max(max, s.index), -1);
+        const maxIndex = current.reduce((max, s) => Math.max(max, s.index), -1);
         const newSegment: ScriptSegment = {
           ...data,
           index: maxIndex + 1,
         };
 
-        // Insert at position
-        const newSegments = [...prev];
-        newSegments.splice(insertPosition, 0, newSegment);
-
-        // Re-index all segments to maintain order
-        return newSegments.map((seg, i) => ({ ...seg, index: i }));
+        const nextSegments = [...current];
+        nextSegments.splice(insertPosition, 0, newSegment);
+        return nextSegments.map((segment, i) => ({ ...segment, index: i }));
       });
     },
-    [],
+    [setDraftSegments],
   );
 
-  const removeSegment = useCallback((index: number) => {
-    setHasUserEdits(true);
-    setSegments((prev) => {
-      const filtered = prev.filter((seg) => seg.index !== index);
-      // Re-index to maintain continuous order
-      return filtered.map((seg, i) => ({ ...seg, index: i }));
-    });
-  }, []);
+  const removeSegment = useCallback(
+    (index: number) => {
+      setDraftSegments((current) => {
+        const filtered = current.filter((segment) => segment.index !== index);
+        return filtered.map((segment, i) => ({ ...segment, index: i }));
+      });
+    },
+    [setDraftSegments],
+  );
 
-  const reorderSegments = useCallback((fromIndex: number, toIndex: number) => {
-    setHasUserEdits(true);
-    setSegments((prev) => {
-      const newSegments = [...prev];
-      const [removed] = newSegments.splice(fromIndex, 1);
-      if (!removed) return prev;
-      newSegments.splice(toIndex, 0, removed);
-      // Re-index after reorder
-      return newSegments.map((seg, i) => ({ ...seg, index: i }));
-    });
-  }, []);
+  const reorderSegments = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setDraftSegments((current) => {
+        const nextSegments = [...current];
+        const [removed] = nextSegments.splice(fromIndex, 1);
+        if (!removed) return current;
+        nextSegments.splice(toIndex, 0, removed);
+        return nextSegments.map((segment, i) => ({ ...segment, index: i }));
+      });
+    },
+    [setDraftSegments],
+  );
+
+  const saveCurrentAsBaseline = useCallback(
+    (nextSegments: ScriptSegment[]) => {
+      setDraftByPodcastId((prev) => {
+        if (!(podcastId in prev)) return prev;
+        const { [podcastId]: _removed, ...rest } = prev;
+        return rest;
+      });
+      setOptimisticSavedByPodcastId((prev) => ({
+        ...prev,
+        [podcastId]: {
+          segments: nextSegments,
+          baseServerHash: initialSegmentsHash,
+        },
+      }));
+    },
+    [podcastId, initialSegmentsHash],
+  );
 
   const saveChanges = useCallback(() => {
-    saveChangesMutation.mutate({
-      id: podcastId,
-      segments: segments.map((seg) => ({
-        speaker: seg.speaker,
-        line: seg.line,
-        index: seg.index,
-      })),
-    });
-  }, [podcastId, segments, saveChangesMutation]);
+    saveChangesMutation.mutate(
+      {
+        id: podcastId,
+        segments: segments.map((segment) => ({
+          speaker: segment.speaker,
+          line: segment.line,
+          index: segment.index,
+        })),
+      },
+      {
+        onSuccess: () => {
+          toast.success('Script saved. Regenerating audio...');
+          saveCurrentAsBaseline(segments);
+        },
+      },
+    );
+  }, [podcastId, segments, saveChangesMutation, saveCurrentAsBaseline]);
 
   const discardChanges = useCallback(() => {
-    setHasUserEdits(false);
-    setSegments(originalSegments);
-  }, [originalSegments]);
+    setDraftByPodcastId((prev) => {
+      if (!(podcastId in prev)) return prev;
+      const { [podcastId]: _removed, ...rest } = prev;
+      return rest;
+    });
+  }, [podcastId]);
 
-  const resetToSegments = useCallback((newSegments: ScriptSegment[]) => {
-    setHasUserEdits(false);
-    setSegments(newSegments);
-    setOriginalSegments(newSegments);
-  }, []);
+  const resetToSegments = useCallback(
+    (nextSegments: ScriptSegment[]) => {
+      saveCurrentAsBaseline(nextSegments);
+    },
+    [saveCurrentAsBaseline],
+  );
 
   return {
     segments,

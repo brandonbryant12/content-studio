@@ -25,45 +25,119 @@ export interface UseDocumentSelectionReturn {
   hasChanges: boolean;
 }
 
+interface SelectionDiffState {
+  addedById: Record<string, DocumentInfo>;
+  removedById: Record<string, true>;
+}
+
+function createEmptyDiffState(): SelectionDiffState {
+  return { addedById: {}, removedById: {} };
+}
+
 export function useDocumentSelection({
   initialDocuments,
 }: UseDocumentSelectionOptions): UseDocumentSelectionReturn {
-  const [documents, setDocuments] = useState<DocumentInfo[]>(initialDocuments);
-  const [prevInitialSerialized, setPrevInitialSerialized] = useState(() =>
-    JSON.stringify(initialDocuments.map((d) => d.id).sort()),
+  const [diffState, setDiffState] = useState<SelectionDiffState>(
+    createEmptyDiffState,
   );
 
-  // Sync with server data when it changes (adjust state during render)
-  const serialized = JSON.stringify(initialDocuments.map((d) => d.id).sort());
-  if (serialized !== prevInitialSerialized) {
-    setPrevInitialSerialized(serialized);
-    setDocuments(initialDocuments);
-  }
+  const initialById = useMemo(() => {
+    const map = new Map<string, DocumentInfo>();
+    for (const doc of initialDocuments) {
+      map.set(doc.id, doc);
+    }
+    return map;
+  }, [initialDocuments]);
+
+  const documents = useMemo(() => {
+    const merged: DocumentInfo[] = [];
+
+    for (const doc of initialDocuments) {
+      if (diffState.removedById[doc.id]) continue;
+      merged.push(doc);
+    }
+
+    for (const [id, doc] of Object.entries(diffState.addedById)) {
+      if (!initialById.has(id)) {
+        merged.push(doc);
+      }
+    }
+
+    return merged;
+  }, [diffState.addedById, diffState.removedById, initialDocuments, initialById]);
 
   const documentIds = useMemo(() => documents.map((d) => d.id), [documents]);
 
   const hasChanges = useMemo(() => {
-    const initialIds = initialDocuments.map((d) => d.id).sort();
-    const currentIds = [...documentIds].sort();
-    if (initialIds.length !== currentIds.length) return true;
-    return initialIds.some((id, i) => id !== currentIds[i]);
-  }, [initialDocuments, documentIds]);
+    for (const id of Object.keys(diffState.removedById)) {
+      if (initialById.has(id)) return true;
+    }
+    for (const id of Object.keys(diffState.addedById)) {
+      if (!initialById.has(id)) return true;
+    }
+    return false;
+  }, [diffState.addedById, diffState.removedById, initialById]);
 
-  const addDocuments = useCallback((docs: DocumentInfo[]) => {
-    setDocuments((prev) => {
-      const existingIds = new Set(prev.map((d) => d.id));
-      const newDocs = docs.filter((d) => !existingIds.has(d.id));
-      return [...prev, ...newDocs];
-    });
-  }, []);
+  const addDocuments = useCallback(
+    (docs: DocumentInfo[]) => {
+      setDiffState((prev) => {
+        let addedById = prev.addedById;
+        let removedById = prev.removedById;
+        let changed = false;
 
-  const removeDocument = useCallback((docId: string) => {
-    setDocuments((prev) => prev.filter((d) => d.id !== docId));
-  }, []);
+        for (const doc of docs) {
+          const id = doc.id;
+          if (initialById.has(id)) {
+            if (removedById[id]) {
+              if (!changed) {
+                removedById = { ...removedById };
+                changed = true;
+              }
+              delete removedById[id];
+            }
+            continue;
+          }
+
+          if (addedById[id] !== doc) {
+            if (!changed) {
+              addedById = { ...addedById };
+              changed = true;
+            }
+            addedById[id] = doc;
+          }
+        }
+
+        return changed ? { addedById, removedById } : prev;
+      });
+    },
+    [initialById],
+  );
+
+  const removeDocument = useCallback(
+    (docId: string) => {
+      setDiffState((prev) => {
+        if (initialById.has(docId)) {
+          if (prev.removedById[docId]) return prev;
+          return {
+            addedById: prev.addedById,
+            removedById: { ...prev.removedById, [docId]: true },
+          };
+        }
+
+        if (!(docId in prev.addedById)) return prev;
+        const { [docId]: _removed, ...restAddedById } = prev.addedById;
+        return {
+          addedById: restAddedById,
+          removedById: prev.removedById,
+        };
+      });
+    },
+    [initialById],
+  );
 
   const discardChanges = useCallback(() => {
-    setDocuments(initialDocuments);
-  }, [initialDocuments]);
+    setDiffState(createEmptyDiffState());
+  }, []);
 
   return {
     documents,

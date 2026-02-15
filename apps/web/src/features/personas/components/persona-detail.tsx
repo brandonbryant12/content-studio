@@ -8,7 +8,7 @@ import type { RouterOutput } from '@repo/api/client';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
 import { VOICES } from '@/features/podcasts/hooks/use-podcast-settings';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { useVoicePreview, useVoices } from '@/shared/hooks';
+import { useVoicePreviewController } from '@/shared/hooks';
 
 type Persona = RouterOutput['personas']['get'];
 
@@ -204,25 +204,8 @@ function VoiceAssignment({
   voiceId: string;
   onVoiceChange: (voiceId: string, voiceName: string) => void;
 }) {
-  const { data: voicesData } = useVoices();
-  const { playingVoiceId, play, stop } = useVoicePreview();
-
-  const previewUrls = voicesData
-    ? Object.fromEntries(
-        voicesData
-          .filter((v) => v.previewUrl)
-          .map((v) => [v.id, v.previewUrl!]),
-      )
-    : {};
-
-  const handlePreview = (id: string) => {
-    if (playingVoiceId === id) {
-      stop();
-    } else {
-      const url = previewUrls[id];
-      if (url) play(id, url);
-    }
-  };
+  const { playingVoiceId, previewUrls, togglePreview } =
+    useVoicePreviewController();
 
   const femaleVoices = VOICES.filter((v) => v.gender === 'female');
   const maleVoices = VOICES.filter((v) => v.gender === 'male');
@@ -261,7 +244,7 @@ function VoiceAssignment({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handlePreview(voice.id);
+              togglePreview(voice.id);
             }}
             className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
             aria-label={

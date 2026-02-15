@@ -9,7 +9,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
   SUPPORTED_TYPES,
@@ -44,8 +44,14 @@ export function StepDocuments({
   const [uploadTitle, setUploadTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const selectedIdsRef = useRef(selectedIds);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: documents, isLoading: loadingDocs } = useDocuments();
+
+  useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+  }, [selectedIds]);
 
   // Filter documents: only show ready ones, then apply search
   const filteredDocuments = useMemo(() => {
@@ -58,14 +64,6 @@ export function StepDocuments({
 
   const uploadMutation = useMutation(
     apiClient.documents.upload.mutationOptions({
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
-        toast.success('Document uploaded');
-        onSelectionChange([...selectedIds, data.id]);
-        setUploadFile(null);
-        setUploadTitle('');
-        setActiveTab('existing');
-      },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to upload document'));
       },
@@ -127,8 +125,27 @@ export function StepDocuments({
       mimeType: uploadFile.type,
       data: base64,
       title: uploadTitle || undefined,
+    },
+    {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
+        toast.success('Document uploaded');
+        const currentSelectedIds = selectedIdsRef.current;
+        onSelectionChange(
+          currentSelectedIds.includes(data.id)
+            ? currentSelectedIds
+            : [...currentSelectedIds, data.id],
+        );
+        setUploadFile(null);
+        setUploadTitle('');
+        setActiveTab('existing');
+      },
     });
   };
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   return (
     <div className="setup-content">
@@ -350,11 +367,11 @@ export function StepDocuments({
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('setup-file-input')?.click()}
+            onClick={openFilePicker}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                document.getElementById('setup-file-input')?.click();
+                openFilePicker();
               }
             }}
             role="button"
@@ -362,13 +379,13 @@ export function StepDocuments({
             aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
             className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
           >
-            <input
-              id="setup-file-input"
-              type="file"
-              accept={SUPPORTED_EXTENSIONS}
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={SUPPORTED_EXTENSIONS}
+                className="hidden"
+                onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+              />
             <div className="setup-upload-icon">
               <UploadIcon />
             </div>

@@ -27,5 +27,9 @@ export {
   useVoicePreview,
   type UseVoicePreviewReturn,
 } from './use-voice-preview';
+export {
+  useVoicePreviewController,
+  type UseVoicePreviewControllerReturn,
+} from './use-voice-preview-controller';
 export { useVoices } from './use-voices';
 export { useIsAdmin } from './use-is-admin';

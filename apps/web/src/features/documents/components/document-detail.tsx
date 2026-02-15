@@ -13,7 +13,7 @@ import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import { memo, useState, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
 import type { RouterOutput } from '@repo/api/client';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
@@ -166,31 +166,29 @@ interface SearchMatch {
   length: number;
 }
 
+interface ParagraphMatch extends SearchMatch {
+  globalIndex: number;
+}
+
 /** Splits paragraph text into fragments with highlighted matches */
 function highlightParagraph(
   text: string,
-  paragraphIndex: number,
-  matches: readonly SearchMatch[],
+  paragraphMatches: readonly ParagraphMatch[] | undefined,
   currentMatchIndex: number,
-  allMatches: readonly SearchMatch[],
 ): ReactNode[] {
-  const paraMatches = matches.filter(
-    (m) => m.paragraphIndex === paragraphIndex,
-  );
-  if (paraMatches.length === 0) return [text];
+  if (!paragraphMatches || paragraphMatches.length === 0) return [text];
 
   const fragments: ReactNode[] = [];
   let cursor = 0;
 
-  for (const match of paraMatches) {
+  for (const match of paragraphMatches) {
     if (match.start > cursor) {
       fragments.push(text.slice(cursor, match.start));
     }
-    const globalIdx = allMatches.indexOf(match);
-    const isCurrent = globalIdx === currentMatchIndex;
+    const isCurrent = match.globalIndex === currentMatchIndex;
     fragments.push(
       <mark
-        key={`${match.start}-${match.length}`}
+        key={`${match.globalIndex}-${match.start}-${match.length}`}
         className={
           isCurrent
             ? 'bg-primary/30 text-foreground rounded-sm ring-2 ring-primary'
@@ -338,6 +336,22 @@ export function DocumentDetail({
   onRetry,
   search,
 }: DocumentDetailProps) {
+  const paragraphs = useMemo(() => (content ? content.split('\n') : []), [content]);
+
+  const matchesByParagraph = useMemo(() => {
+    const grouped = new Map<number, ParagraphMatch[]>();
+    search.matches.forEach((match, globalIndex) => {
+      const list = grouped.get(match.paragraphIndex);
+      const withGlobalIndex = { ...match, globalIndex };
+      if (list) {
+        list.push(withGlobalIndex);
+      } else {
+        grouped.set(match.paragraphIndex, [withGlobalIndex]);
+      }
+    });
+    return grouped;
+  }, [search.matches]);
+
   return (
     <div className="workbench">
       {/* Header */}
@@ -544,25 +558,21 @@ export function DocumentDetail({
             {document.status === 'ready' && (
               <article className="document-content-reader">
                 {content ? (
-                  content
-                    .split('\n')
-                    .map((paragraph, i) =>
-                      paragraph.trim() === '' ? (
-                        <br key={i} />
-                      ) : (
-                        <p key={i}>
-                          {search.query.length >= 2 && search.matches.length > 0
-                            ? highlightParagraph(
-                                paragraph,
-                                i,
-                                search.matches,
-                                search.currentMatchIndex,
-                                search.matches,
-                              )
-                            : paragraph}
-                        </p>
-                      ),
-                    )
+                  paragraphs.map((paragraph, i) =>
+                    paragraph.trim() === '' ? (
+                      <br key={i} />
+                    ) : (
+                      <p key={i}>
+                        {search.query.length >= 2 && search.matches.length > 0
+                          ? highlightParagraph(
+                              paragraph,
+                              matchesByParagraph.get(i),
+                              search.currentMatchIndex,
+                            )
+                          : paragraph}
+                      </p>
+                    ),
+                  )
                 ) : (
                   <p className="text-muted-foreground italic">
                     No content available for this document.

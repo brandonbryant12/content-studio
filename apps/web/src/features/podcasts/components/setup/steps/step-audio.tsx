@@ -6,7 +6,7 @@ import {
   MAX_DURATION,
 } from '../../../hooks/use-podcast-settings';
 import { PersonaPicker } from '../../workbench/persona-picker';
-import { useVoicePreview, useVoices } from '@/shared/hooks';
+import { useVoicePreviewController } from '@/shared/hooks';
 
 function SetupVoicePreviewBtn({
   voiceId,
@@ -167,25 +167,8 @@ export function StepAudio({
   const coHostEffective = coHostPersonaVoiceId || coHostVoice;
   const hasVoiceConflict = isConversation && hostEffective === coHostEffective;
 
-  const { data: voicesData } = useVoices();
-  const { playingVoiceId, play, stop } = useVoicePreview();
-
-  const previewUrls = voicesData
-    ? Object.fromEntries(
-        voicesData
-          .filter((v) => v.previewUrl)
-          .map((v) => [v.id, v.previewUrl!]),
-      )
-    : {};
-
-  const handlePreview = (voiceId: string) => {
-    if (playingVoiceId === voiceId) {
-      stop();
-    } else {
-      const url = previewUrls[voiceId];
-      if (url) play(voiceId, url);
-    }
-  };
+  const { playingVoiceId, previewUrls, togglePreview } =
+    useVoicePreviewController();
 
   return (
     <div className="setup-content">
@@ -275,7 +258,7 @@ export function StepAudio({
                     onSelect={onHostVoiceChange}
                     previewUrl={previewUrls[voice.id] ?? null}
                     isPlaying={playingVoiceId === voice.id}
-                    onPreview={handlePreview}
+                    onPreview={togglePreview}
                   />
                 ))}
               </div>
@@ -300,7 +283,7 @@ export function StepAudio({
                     onSelect={onHostVoiceChange}
                     previewUrl={previewUrls[voice.id] ?? null}
                     isPlaying={playingVoiceId === voice.id}
-                    onPreview={handlePreview}
+                    onPreview={togglePreview}
                   />
                 ))}
               </div>
@@ -355,7 +338,7 @@ export function StepAudio({
                       onSelect={onCoHostVoiceChange}
                       previewUrl={previewUrls[voice.id] ?? null}
                       isPlaying={playingVoiceId === voice.id}
-                      onPreview={handlePreview}
+                      onPreview={togglePreview}
                     />
                   ))}
                 </div>
@@ -380,7 +363,7 @@ export function StepAudio({
                       onSelect={onCoHostVoiceChange}
                       previewUrl={previewUrls[voice.id] ?? null}
                       isPlaying={playingVoiceId === voice.id}
-                      onPreview={handlePreview}
+                      onPreview={togglePreview}
                     />
                   ))}
                 </div>

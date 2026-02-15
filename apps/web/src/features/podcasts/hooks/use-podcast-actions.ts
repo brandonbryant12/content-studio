@@ -98,6 +98,8 @@ export function usePodcastActions({
           coHostVoice: settings.coHostVoice,
           targetDurationMinutes: settings.targetDuration,
           promptInstructions: settings.instructions || undefined,
+          hostPersonaId: settings.hostPersonaId,
+          coHostPersonaId: settings.coHostPersonaId,
         });
 
         // Then trigger full regeneration

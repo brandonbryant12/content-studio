@@ -9,7 +9,7 @@ import {
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
 import { PersonaPicker } from './persona-picker';
-import { useVoicePreview, useVoices } from '@/shared/hooks';
+import { useVoicePreviewController } from '@/shared/hooks';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -172,25 +172,8 @@ export function PodcastSettings({
   settings,
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
-  const { data: voicesData } = useVoices();
-  const { playingVoiceId, play, stop } = useVoicePreview();
-
-  const previewUrls = voicesData
-    ? Object.fromEntries(
-        voicesData
-          .filter((v) => v.previewUrl)
-          .map((v) => [v.id, v.previewUrl!]),
-      )
-    : {};
-
-  const handlePreview = (voiceId: string) => {
-    if (playingVoiceId === voiceId) {
-      stop();
-    } else {
-      const url = previewUrls[voiceId];
-      if (url) play(voiceId, url);
-    }
-  };
+  const { playingVoiceId, previewUrls, togglePreview } =
+    useVoicePreviewController();
 
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
@@ -247,7 +230,7 @@ export function PodcastSettings({
               disabled={disabled}
               previewUrls={previewUrls}
               playingVoiceId={playingVoiceId}
-              onPreview={handlePreview}
+              onPreview={togglePreview}
             />
           )}
         </div>
@@ -293,7 +276,7 @@ export function PodcastSettings({
                 disabled={disabled}
                 previewUrls={previewUrls}
                 playingVoiceId={playingVoiceId}
-                onPreview={handlePreview}
+                onPreview={togglePreview}
               />
             )}
           </div>
