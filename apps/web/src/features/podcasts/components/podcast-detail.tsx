@@ -59,8 +59,13 @@ export function PodcastDetail({
   onApprove,
   onRevoke,
 }: PodcastDetailProps) {
-  const { hasChanges, isGenerating, isPendingGeneration, isSaving, isDeleting } =
-    workbenchState;
+  const {
+    hasChanges,
+    isGenerating,
+    isPendingGeneration,
+    isSaving,
+    isDeleting,
+  } = workbenchState;
   const { isApproved, isAdmin, isApprovalPending } = approvalState;
 
   return (

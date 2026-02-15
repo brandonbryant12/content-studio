@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { handleTaggedError, type ErrorFactory } from '../effect-handler';
 
-const createFactory = (code: string) => (options: unknown) => ({ code, options });
+const createFactory = (code: string) => (options: unknown) => ({
+  code,
+  options,
+});
 
 const captureThrown = (error: { _tag: string }, factories: ErrorFactory) => {
   try {

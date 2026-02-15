@@ -10,10 +10,10 @@ const SynthesisResult = Schema.Struct({
 const SYSTEM_PROMPT = `You are a research query synthesizer for Content Studio.
 
 Given a conversation between a user and a research assistant, synthesize the discussion into:
-1. A detailed, well-structured research query that captures the user's intent and any refinements from the conversation.
+1. A focused research query (2-4 sentences max) that captures the user's intent and any refinements from the conversation.
 2. A concise title (5-10 words) suitable for labeling the research document.
 
-Focus on specificity — include any scope, constraints, or angles discussed in the conversation.`;
+Keep the query brief and specific. Do not elaborate beyond what was discussed.`;
 
 function formatMessages(messages: UIMessage[]): string {
   return messages
@@ -42,7 +42,7 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
       prompt: formatMessages(input.messages),
       schema: SynthesisResult,
       temperature: 0.3,
-      maxTokens: 1024,
+      maxTokens: 2048,
     });
 
     return result.object;

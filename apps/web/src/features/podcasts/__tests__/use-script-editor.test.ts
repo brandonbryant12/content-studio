@@ -174,7 +174,13 @@ describe('useScriptEditor', () => {
     const bSegments = [createSegment(0, { line: 'pod-b' })];
 
     const { result, rerender } = renderHook(
-      ({ podcastId, segments }: { podcastId: string; segments: ScriptSegment[] }) =>
+      ({
+        podcastId,
+        segments,
+      }: {
+        podcastId: string;
+        segments: ScriptSegment[];
+      }) =>
         useScriptEditor({
           podcastId,
           initialSegments: segments,

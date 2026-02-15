@@ -1,3 +1,4 @@
+import { NoObjectGeneratedError } from 'ai';
 import { LLMError, LLMRateLimitError } from '../errors';
 
 /**
@@ -9,6 +10,10 @@ export function mapError(error: unknown): LLMError | LLMRateLimitError {
       return new LLMRateLimitError({
         message: error.message,
       });
+    }
+
+    if (NoObjectGeneratedError.isInstance(error) && error.text) {
+      console.error('[LLM] Failed to parse model output:', error.text);
     }
 
     return new LLMError({

@@ -113,7 +113,11 @@ function EditingSegmentFields({
   return (
     <>
       <div className="segment-row-speaker">
-        <div className="segment-speaker-toggle" role="radiogroup" aria-label="Speaker">
+        <div
+          className="segment-speaker-toggle"
+          role="radiogroup"
+          aria-label="Speaker"
+        >
           <button
             type="button"
             role="radio"
@@ -221,7 +225,9 @@ export const SegmentItem = memo(function SegmentItem({
             onKeyDown={(e) => e.key === 'Enter' && handleContentClick()}
           >
             {segment.line || (
-              <span className="segment-row-empty">Click to add dialogue...</span>
+              <span className="segment-row-empty">
+                Click to add dialogue...
+              </span>
             )}
           </p>
         </>

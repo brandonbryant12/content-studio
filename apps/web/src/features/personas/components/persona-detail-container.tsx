@@ -82,21 +82,24 @@ export function PersonaDetailContainer({
   );
 
   const handleSave = useCallback(() => {
-    updateMutation.mutate({
-      id: personaId,
-      name: formValues.name,
-      role: formValues.role || undefined,
-      personalityDescription: formValues.personalityDescription || undefined,
-      speakingStyle: formValues.speakingStyle || undefined,
-      exampleQuotes:
-        formValues.exampleQuotes.length > 0
-          ? formValues.exampleQuotes.filter((q) => q.trim() !== '')
-          : undefined,
-      voiceId: formValues.voiceId || undefined,
-      voiceName: formValues.voiceName || undefined,
-    }, {
-      onSuccess: () => clearDraft(persona.id),
-    });
+    updateMutation.mutate(
+      {
+        id: personaId,
+        name: formValues.name,
+        role: formValues.role || undefined,
+        personalityDescription: formValues.personalityDescription || undefined,
+        speakingStyle: formValues.speakingStyle || undefined,
+        exampleQuotes:
+          formValues.exampleQuotes.length > 0
+            ? formValues.exampleQuotes.filter((q) => q.trim() !== '')
+            : undefined,
+        voiceId: formValues.voiceId || undefined,
+        voiceName: formValues.voiceName || undefined,
+      },
+      {
+        onSuccess: () => clearDraft(persona.id),
+      },
+    );
   }, [personaId, formValues, updateMutation, clearDraft, persona.id]);
 
   const handleDiscard = useCallback(() => {

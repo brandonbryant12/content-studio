@@ -2,21 +2,20 @@
 
 ## Before Making Changes
 
-**Always search `standards/` before implementing.** Use `Glob` with `standards/**/*.md` to find relevant standards.
+**Always search `docs/` before implementing.** Use `Glob` with `docs/**/*.md` to find relevant docs.
 
-| Area | Standards |
-|------|-----------|
-| Backend logic | `standards/patterns/use-case.md`, `standards/patterns/repository.md`, `standards/patterns/safety-primitives.md`, `standards/patterns/job-queue.md` |
-| API endpoints | `standards/patterns/router-handler.md`, `standards/patterns/serialization.md` |
-| Error handling | `standards/patterns/error-handling.md`, `standards/patterns/enum-constants.md` |
-| Effect runtime | `standards/patterns/effect-runtime.md` |
-| Frontend components | `standards/frontend/components.md`, `standards/frontend/styling.md` |
-| Data fetching | `standards/frontend/data-fetching.md`, `standards/frontend/mutations.md` |
-| Forms | `standards/frontend/forms.md` |
-| Frontend architecture | `standards/frontend/project-structure.md`, `standards/frontend/suspense.md`, `standards/frontend/error-handling.md` |
-| Real-time | `standards/frontend/real-time.md` |
-| Testing | `standards/testing/use-case-tests.md`, `standards/testing/integration-tests.md`, `standards/testing/job-workflow-tests.md`, `standards/testing/invariants.md`, `standards/testing/live-tests.md`, `standards/frontend/testing.md` |
-| Implementation plans | `standards/implementation-plan.md` |
+| Area | Docs |
+|------|------|
+| Backend logic | `docs/patterns/use-case.md`, `docs/patterns/repository.md`, `docs/patterns/safety-primitives.md`, `docs/patterns/job-queue.md` |
+| API endpoints | `docs/patterns/api-handler.md` |
+| Error handling | `docs/patterns/error-handling.md`, `docs/patterns/enum-constants.md` |
+| Effect runtime | `docs/patterns/effect-runtime.md` |
+| Frontend components | `docs/frontend/components.md`, `docs/frontend/styling.md` |
+| Data fetching | `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md` |
+| Forms | `docs/frontend/forms.md` |
+| Frontend architecture | `docs/frontend/project-structure.md`, `docs/frontend/error-handling.md`, `docs/frontend/components.md` |
+| Real-time | `docs/frontend/real-time.md` |
+| Testing | `docs/testing/use-case-tests.md`, `docs/testing/integration-tests.md`, `docs/testing/job-workflow-tests.md`, `docs/testing/invariants.md`, `docs/testing/live-tests.md`, `docs/frontend/testing.md` |
 
 ## Project Structure
 
@@ -63,7 +62,7 @@ pnpm test:db:setup # Start test DB container + push schema
 - **`Layer.succeed`** — only for pure object literals (repos, plain config). No `new` or factory calls.
 - **`Layer.sync`** — when `make*` instantiates classes (`new GoogleGenAI(...)`) or calls factory functions
 - **`Layer.effect`** — when construction needs to `yield*` other Effect services
-- See `standards/patterns/effect-runtime.md` § "Layer Construction" for full guide
+- See `docs/patterns/effect-runtime.md` § "Layer Construction" for full guide
 
 ## DX & Tooling
 

@@ -194,7 +194,9 @@ describe('getJob', () => {
 
       const result = await Effect.runPromiseExit(
         withTestUser(user)(
-          getJob({ jobId: job.id }).pipe(Effect.provide(createMockQueue({ jobs }))),
+          getJob({ jobId: job.id }).pipe(
+            Effect.provide(createMockQueue({ jobs })),
+          ),
         ),
       );
 
@@ -212,7 +214,9 @@ describe('getJob', () => {
 
       const result = await Effect.runPromise(
         withTestUser(admin)(
-          getJob({ jobId: job.id }).pipe(Effect.provide(createMockQueue({ jobs }))),
+          getJob({ jobId: job.id }).pipe(
+            Effect.provide(createMockQueue({ jobs })),
+          ),
         ),
       );
 

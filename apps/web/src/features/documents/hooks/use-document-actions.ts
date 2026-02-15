@@ -51,12 +51,15 @@ export function useDocumentActions({
     });
   }, []);
 
-  const setTitle = useCallback((value: string) => {
-    setDraftTitlesByDocumentId((prev) => ({
-      ...prev,
-      [document.id]: value,
-    }));
-  }, [document.id]);
+  const setTitle = useCallback(
+    (value: string) => {
+      setDraftTitlesByDocumentId((prev) => ({
+        ...prev,
+        [document.id]: value,
+      }));
+    },
+    [document.id],
+  );
 
   const hasChanges = title.trim() !== document.title;
 

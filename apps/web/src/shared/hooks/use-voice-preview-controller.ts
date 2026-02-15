@@ -18,9 +18,7 @@ export function useVoicePreviewController(): UseVoicePreviewControllerReturn {
         ? Object.fromEntries(
             voicesData
               .filter(
-                (
-                  voice,
-                ): voice is typeof voice & { previewUrl: string } =>
+                (voice): voice is typeof voice & { previewUrl: string } =>
                   typeof voice.previewUrl === 'string' &&
                   voice.previewUrl.length > 0,
               )

@@ -120,27 +120,31 @@ export function StepDocuments({
       reader.readAsDataURL(uploadFile);
     });
 
-    uploadMutation.mutate({
-      fileName: uploadFile.name,
-      mimeType: uploadFile.type,
-      data: base64,
-      title: uploadTitle || undefined,
-    },
-    {
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
-        toast.success('Document uploaded');
-        const currentSelectedIds = selectedIdsRef.current;
-        onSelectionChange(
-          currentSelectedIds.includes(data.id)
-            ? currentSelectedIds
-            : [...currentSelectedIds, data.id],
-        );
-        setUploadFile(null);
-        setUploadTitle('');
-        setActiveTab('existing');
+    uploadMutation.mutate(
+      {
+        fileName: uploadFile.name,
+        mimeType: uploadFile.type,
+        data: base64,
+        title: uploadTitle || undefined,
       },
-    });
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries({
+            queryKey: getDocumentListQueryKey(),
+          });
+          toast.success('Document uploaded');
+          const currentSelectedIds = selectedIdsRef.current;
+          onSelectionChange(
+            currentSelectedIds.includes(data.id)
+              ? currentSelectedIds
+              : [...currentSelectedIds, data.id],
+          );
+          setUploadFile(null);
+          setUploadTitle('');
+          setActiveTab('existing');
+        },
+      },
+    );
   };
 
   const openFilePicker = useCallback(() => {
@@ -379,13 +383,13 @@ export function StepDocuments({
             aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
             className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
           >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={SUPPORTED_EXTENSIONS}
-                className="hidden"
-                onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
-              />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={SUPPORTED_EXTENSIONS}
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+            />
             <div className="setup-upload-icon">
               <UploadIcon />
             </div>

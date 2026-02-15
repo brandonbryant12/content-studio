@@ -16,7 +16,10 @@ function createDoc(overrides: Partial<DocumentInfo>): DocumentInfo {
 
 describe('useDocumentSelection', () => {
   it('returns initial documents and hasChanges=false', () => {
-    const initialDocuments = [createDoc({ id: 'doc-1' }), createDoc({ id: 'doc-2' })];
+    const initialDocuments = [
+      createDoc({ id: 'doc-1' }),
+      createDoc({ id: 'doc-2' }),
+    ];
 
     const { result } = renderHook(() =>
       useDocumentSelection({ initialDocuments }),
@@ -44,7 +47,10 @@ describe('useDocumentSelection', () => {
   });
 
   it('clears change state when removing and re-adding an initial document', () => {
-    const initialDocuments = [createDoc({ id: 'doc-1' }), createDoc({ id: 'doc-2' })];
+    const initialDocuments = [
+      createDoc({ id: 'doc-1' }),
+      createDoc({ id: 'doc-2' }),
+    ];
 
     const { result } = renderHook(() =>
       useDocumentSelection({ initialDocuments }),
@@ -104,7 +110,10 @@ describe('useDocumentSelection', () => {
   });
 
   it('preserves local removals while incorporating new server documents', () => {
-    const initialDocuments = [createDoc({ id: 'doc-1' }), createDoc({ id: 'doc-2' })];
+    const initialDocuments = [
+      createDoc({ id: 'doc-1' }),
+      createDoc({ id: 'doc-2' }),
+    ];
     const serverUpdatedDocuments = [
       createDoc({ id: 'doc-1' }),
       createDoc({ id: 'doc-2' }),
@@ -147,16 +156,16 @@ describe('useDocumentSelection', () => {
       result.current.addDocuments([locallyAdded]);
     });
     expect(result.current.hasChanges).toBe(true);
-    expect(result.current.documents.find((doc) => doc.id === 'doc-2')?.title).toBe(
-      'Local title',
-    );
+    expect(
+      result.current.documents.find((doc) => doc.id === 'doc-2')?.title,
+    ).toBe('Local title');
 
     rerender({ docs: serverUpdatedDocuments });
 
     expect(result.current.hasChanges).toBe(false);
-    expect(result.current.documents.find((doc) => doc.id === 'doc-2')?.title).toBe(
-      'Server title',
-    );
+    expect(
+      result.current.documents.find((doc) => doc.id === 'doc-2')?.title,
+    ).toBe('Server title');
   });
 
   it('discardChanges resets to current server state', () => {

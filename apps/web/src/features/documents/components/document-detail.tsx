@@ -336,7 +336,10 @@ export function DocumentDetail({
   onRetry,
   search,
 }: DocumentDetailProps) {
-  const paragraphs = useMemo(() => (content ? content.split('\n') : []), [content]);
+  const paragraphs = useMemo(
+    () => (content ? content.split('\n') : []),
+    [content],
+  );
 
   const matchesByParagraph = useMemo(() => {
     const grouped = new Map<number, ParagraphMatch[]>();

@@ -23,7 +23,11 @@ const createMockDocumentRepo = (
   options?: {
     onInsert?: (data: unknown) => void;
     onDelete?: (id: string) => void;
-    onUpdateStatus?: (id: string, status: Document['status'], error?: string) => void;
+    onUpdateStatus?: (
+      id: string,
+      status: Document['status'],
+      error?: string,
+    ) => void;
   },
 ): Layer.Layer<DocumentRepo> => {
   const service: DocumentRepoService = {

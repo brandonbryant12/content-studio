@@ -26,7 +26,7 @@ export interface GoogleConfig {
  */
 function stripMarkdownCodeFence(text: string): string | null {
   const match = text.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
-  return match ? match[1].trim() : null;
+  return match ? match[1]!.trim() : null;
 }
 
 /**

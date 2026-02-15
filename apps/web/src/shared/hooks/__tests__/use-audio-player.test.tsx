@@ -1,10 +1,7 @@
 import { render, act } from '@testing-library/react';
 import { useEffect } from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  useAudioPlayer,
-  type UseAudioPlayerReturn,
-} from '../use-audio-player';
+import { useAudioPlayer, type UseAudioPlayerReturn } from '../use-audio-player';
 
 type AudioSnapshot = Pick<
   UseAudioPlayerReturn,
@@ -25,10 +22,8 @@ const EMPTY_SNAPSHOT: AudioSnapshot = {
 };
 
 function Harness({ src, initialDuration, onSnapshot }: HarnessProps) {
-  const { audioRef, isPlaying, currentTime, duration, isLoaded } = useAudioPlayer(
-    src,
-    initialDuration,
-  );
+  const { audioRef, isPlaying, currentTime, duration, isLoaded } =
+    useAudioPlayer(src, initialDuration);
 
   useEffect(() => {
     onSnapshot({
@@ -44,8 +39,8 @@ function Harness({ src, initialDuration, onSnapshot }: HarnessProps) {
 
 describe('useAudioPlayer', () => {
   beforeEach(() => {
-    vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(
-      () => Promise.resolve(),
+    vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() =>
+      Promise.resolve(),
     );
   });
 

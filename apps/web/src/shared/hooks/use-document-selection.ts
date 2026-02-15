@@ -37,9 +37,8 @@ function createEmptyDiffState(): SelectionDiffState {
 export function useDocumentSelection({
   initialDocuments,
 }: UseDocumentSelectionOptions): UseDocumentSelectionReturn {
-  const [diffState, setDiffState] = useState<SelectionDiffState>(
-    createEmptyDiffState,
-  );
+  const [diffState, setDiffState] =
+    useState<SelectionDiffState>(createEmptyDiffState);
 
   const initialById = useMemo(() => {
     const map = new Map<string, DocumentInfo>();
@@ -64,7 +63,12 @@ export function useDocumentSelection({
     }
 
     return merged;
-  }, [diffState.addedById, diffState.removedById, initialDocuments, initialById]);
+  }, [
+    diffState.addedById,
+    diffState.removedById,
+    initialDocuments,
+    initialById,
+  ]);
 
   const documentIds = useMemo(() => documents.map((d) => d.id), [documents]);
 

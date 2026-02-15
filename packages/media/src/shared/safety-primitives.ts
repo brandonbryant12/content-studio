@@ -137,10 +137,9 @@ export const replaceTextContentSafely = <A, E, R>(
       })
       .pipe(
         Effect.catchAll((error) =>
-          storage.delete(newContentKey).pipe(
-            Effect.ignore,
-            Effect.zipRight(Effect.fail(error)),
-          ),
+          storage
+            .delete(newContentKey)
+            .pipe(Effect.ignore, Effect.zipRight(Effect.fail(error))),
         ),
       );
 

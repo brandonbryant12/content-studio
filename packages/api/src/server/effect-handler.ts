@@ -192,7 +192,7 @@ export const handleTaggedError = <E extends { _tag: string }>(
  * 1. Your use case requires a service not in SharedServices
  * 2. You need to add the service to MediaLive/SharedServices
  *
- * See standards/patterns/effect-runtime.md for details.
+ * See docs/patterns/effect-runtime.md for details.
  *
  * @param runtime - The shared server runtime
  * @param user - The authenticated user (or null for public routes)

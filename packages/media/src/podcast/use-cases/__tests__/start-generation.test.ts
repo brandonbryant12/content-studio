@@ -383,7 +383,11 @@ describe('startGeneration', () => {
       );
 
       expect(result._tag).toBe('Failure');
-      expect(updateStatusSpy).toHaveBeenNthCalledWith(1, podcast.id, 'drafting');
+      expect(updateStatusSpy).toHaveBeenNthCalledWith(
+        1,
+        podcast.id,
+        'drafting',
+      );
       expect(updateStatusSpy).toHaveBeenNthCalledWith(2, podcast.id, 'ready');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
