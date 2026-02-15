@@ -9,8 +9,6 @@ export interface UseVoicePreviewReturn {
 export function useVoicePreview(): UseVoicePreviewReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
-  const playingRef = useRef<string | null>(null);
-  playingRef.current = playingVoiceId;
 
   // Create audio element once
   useEffect(() => {
@@ -43,7 +41,7 @@ export function useVoicePreview(): UseVoicePreviewReturn {
       if (!audio) return;
 
       // If same voice is playing, toggle off
-      if (playingRef.current === voiceId) {
+      if (playingVoiceId === voiceId) {
         stop();
         return;
       }
@@ -61,7 +59,7 @@ export function useVoicePreview(): UseVoicePreviewReturn {
       };
       audio.addEventListener('canplay', onCanPlay);
     },
-    [stop],
+    [playingVoiceId, stop],
   );
 
   return { playingVoiceId, play, stop };

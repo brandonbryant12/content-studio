@@ -4,8 +4,8 @@ import {
   ChatBubbleIcon,
   FileTextIcon,
 } from '@radix-ui/react-icons';
-import type { RouterOutput } from '@repo/api/client';
 import { useRef, useEffect } from 'react';
+import type { RouterOutput } from '@repo/api/client';
 import { DocumentContentViewer } from './document-content-viewer';
 import { PromptSection } from './prompt-section';
 

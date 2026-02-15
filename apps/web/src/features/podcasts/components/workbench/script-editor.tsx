@@ -135,8 +135,6 @@ export function ScriptEditor({
     afterIndex: number;
     speaker: string;
   } | null>(null);
-  const newSegmentRef = useRef(newSegment);
-  newSegmentRef.current = newSegment;
 
   const handleStartEdit = useCallback((segmentIndex: number) => {
     setEditingIndex(segmentIndex);
@@ -202,16 +200,14 @@ export function ScriptEditor({
 
   const handleNewSegmentSave = useCallback(
     (line: string) => {
-      const current = newSegmentRef.current;
-      if (current) {
-        onAddSegment(current.afterIndex, {
-          speaker: current.speaker,
-          line,
-        });
-        setNewSegment(null);
-      }
+      if (!newSegment) return;
+      onAddSegment(newSegment.afterIndex, {
+        speaker: newSegment.speaker,
+        line,
+      });
+      setNewSegment(null);
     },
-    [onAddSegment],
+    [newSegment, onAddSegment],
   );
 
   const handleNewSegmentCancel = useCallback(() => {

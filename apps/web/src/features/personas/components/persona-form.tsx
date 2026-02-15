@@ -157,7 +157,7 @@ export function PersonaForm({
         </div>
         {values.exampleQuotes.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            Add example quotes to help the AI capture this persona's voice.
+            Add example quotes to help the AI capture this persona&apos;s voice.
           </p>
         )}
         <div className="space-y-2">

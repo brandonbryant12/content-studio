@@ -8,8 +8,8 @@ import {
   MAX_DURATION,
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
-import { useVoicePreview, useVoices } from '@/shared/hooks';
 import { PersonaPicker } from './persona-picker';
+import { useVoicePreview, useVoices } from '@/shared/hooks';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 

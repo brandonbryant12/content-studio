@@ -14,10 +14,10 @@ import { Link } from '@tanstack/react-router';
 import { memo, useCallback, useMemo, useTransition } from 'react';
 import type { DocumentListItem } from './document-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
-import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 
 function StatusBadge({ status }: { status: string }) {

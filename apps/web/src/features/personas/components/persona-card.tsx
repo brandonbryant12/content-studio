@@ -1,7 +1,7 @@
+import { Checkbox } from '@repo/ui/components/checkbox';
 import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { Checkbox } from '@repo/ui/components/checkbox';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 

@@ -24,7 +24,7 @@ export interface UseDocumentSearchReturn {
 
 export function useDocumentSearch(content: string): UseDocumentSearchReturn {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [query, setQueryInternal] = useState('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -49,10 +49,10 @@ export function useDocumentSearch(content: string): UseDocumentSearchReturn {
     return result;
   }, [paragraphs, query]);
 
-  // Reset current index when query changes
-  useEffect(() => {
+  const setQuery = useCallback((value: string) => {
+    setQueryInternal(value);
     setCurrentMatchIndex(0);
-  }, [query]);
+  }, []);
 
   // Scroll the current match into view
   useEffect(() => {
@@ -72,8 +72,7 @@ export function useDocumentSearch(content: string): UseDocumentSearchReturn {
   const close = useCallback(() => {
     setIsOpen(false);
     setQuery('');
-    setCurrentMatchIndex(0);
-  }, []);
+  }, [setQuery]);
 
   const goToNext = useCallback(() => {
     if (matches.length === 0) return;

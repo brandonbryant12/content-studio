@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { apiClient } from '@/clients/apiClient';
 import type { ActivityStats, Period } from '../types';
+import { apiClient } from '@/clients/apiClient';
 
 /**
  * Fetch activity stats with period filter.

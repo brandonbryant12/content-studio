@@ -11,17 +11,17 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import {
+  SUPPORTED_TYPES,
+  SUPPORTED_EXTENSIONS,
+} from '../../../lib/upload-constants';
+import { StepResearch } from './step-research';
 import { apiClient } from '@/clients/apiClient';
 import {
   useDocuments,
   getDocumentListQueryKey,
 } from '@/features/documents/hooks/use-document-list';
 import { getErrorMessage } from '@/shared/lib/errors';
-import {
-  SUPPORTED_TYPES,
-  SUPPORTED_EXTENSIONS,
-} from '../../../lib/upload-constants';
-import { StepResearch } from './step-research';
 
 interface StepDocumentsProps {
   selectedIds: string[];

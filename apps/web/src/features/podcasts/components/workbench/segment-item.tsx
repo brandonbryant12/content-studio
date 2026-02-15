@@ -19,35 +19,36 @@ interface SegmentItemProps {
   onAddAfter: (segmentIndex: number) => void;
 }
 
-export const SegmentItem = memo(function SegmentItem({
+interface EditingSegmentFieldsProps {
+  segment: ScriptSegment;
+  segmentIndex: number;
+  onSaveEdit: SegmentItemProps['onSaveEdit'];
+  onCancelEdit: SegmentItemProps['onCancelEdit'];
+  onNavigate: SegmentItemProps['onNavigate'];
+}
+
+function EditingSegmentFields({
   segment,
   segmentIndex,
-  isEditing,
-  disabled,
-  onStartEdit,
   onSaveEdit,
   onCancelEdit,
   onNavigate,
-  onRemove,
-  onAddAfter,
-}: SegmentItemProps) {
+}: EditingSegmentFieldsProps) {
   const [editSpeaker, setEditSpeaker] = useState(segment.speaker);
   const [editLine, setEditLine] = useState(segment.line);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset edit fields when editing starts or segment content changes externally
   useEffect(() => {
-    if (isEditing) {
-      setEditSpeaker(segment.speaker);
-      setEditLine(segment.line);
-      setTimeout(() => {
-        textareaRef.current?.focus();
-        textareaRef.current?.select();
-      }, 50);
-    }
-  }, [isEditing, segment.speaker, segment.line]);
+    const timeoutId = window.setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.select();
+    }, 50);
 
-  // Stable callback that calls parent with segmentIndex
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
   const handleSave = useCallback(() => {
     const trimmedLine = editLine.trim();
     if (trimmedLine !== segment.line || editSpeaker !== segment.speaker) {
@@ -97,7 +98,6 @@ export const SegmentItem = memo(function SegmentItem({
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
-      // Check if focus is moving to another element within the segment
       const relatedTarget = e.relatedTarget as HTMLElement;
       if (relatedTarget?.closest('.segment-row.editing')) {
         return;
@@ -107,6 +107,74 @@ export const SegmentItem = memo(function SegmentItem({
     [handleSave],
   );
 
+  const isHost = editSpeaker.toLowerCase() === 'host';
+  const isCohost = editSpeaker.toLowerCase() === 'cohost';
+
+  return (
+    <>
+      <div className="segment-row-speaker">
+        <div className="segment-speaker-toggle" role="radiogroup" aria-label="Speaker">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isHost}
+            onClick={() => setEditSpeaker('host')}
+            className={`segment-speaker-btn host ${isHost ? 'active' : ''}`}
+          >
+            Host
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isCohost}
+            onClick={() => setEditSpeaker('cohost')}
+            className={`segment-speaker-btn cohost ${isCohost ? 'active' : ''}`}
+          >
+            Co
+          </button>
+        </div>
+      </div>
+
+      <div className="segment-row-content">
+        <textarea
+          ref={textareaRef}
+          value={editLine}
+          onChange={(e) => setEditLine(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          placeholder="Enter dialogue..."
+          className="segment-edit-textarea"
+          rows={1}
+          aria-label={`Edit ${editSpeaker} dialogue`}
+        />
+        <div className="segment-edit-hints">
+          <span className="segment-edit-hint">
+            <kbd>Tab</kbd> next
+          </span>
+          <span className="segment-edit-hint">
+            <kbd>Esc</kbd> cancel
+          </span>
+          <span className="segment-edit-hint">
+            <kbd>Enter</kbd> save
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export const SegmentItem = memo(function SegmentItem({
+  segment,
+  segmentIndex,
+  isEditing,
+  disabled,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onNavigate,
+  onRemove,
+  onAddAfter,
+}: SegmentItemProps) {
   const handleContentClick = useCallback(() => {
     if (!isEditing && !disabled) {
       onStartEdit(segmentIndex);
@@ -121,90 +189,44 @@ export const SegmentItem = memo(function SegmentItem({
     onAddAfter(segmentIndex);
   }, [segmentIndex, onAddAfter]);
 
-  const isHost = editSpeaker.toLowerCase() === 'host';
-  const isCohost = editSpeaker.toLowerCase() === 'cohost';
+  const isHost = segment.speaker.toLowerCase() === 'host';
 
   return (
     <div
       className={`group segment-row ${isEditing ? 'editing' : ''} ${disabled ? 'disabled' : ''}`}
     >
-      {/* Speaker - toggle in edit mode, badge in view mode */}
-      <div className="segment-row-speaker">
-        {isEditing ? (
-          <div
-            className="segment-speaker-toggle"
-            role="radiogroup"
-            aria-label="Speaker"
-          >
-            <button
-              type="button"
-              role="radio"
-              aria-checked={isHost}
-              onClick={() => setEditSpeaker('host')}
-              className={`segment-speaker-btn host ${isHost ? 'active' : ''}`}
-            >
-              Host
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={isCohost}
-              onClick={() => setEditSpeaker('cohost')}
-              className={`segment-speaker-btn cohost ${isCohost ? 'active' : ''}`}
-            >
-              Co
-            </button>
-          </div>
-        ) : (
-          <span
-            className={`segment-row-speaker-badge ${isHost ? 'host' : 'guest'}`}
-          >
-            {segment.speaker}
-          </span>
-        )}
-      </div>
-
-      {/* Content - inline edit or display */}
       {isEditing ? (
-        <div className="segment-row-content">
-          <textarea
-            ref={textareaRef}
-            value={editLine}
-            onChange={(e) => setEditLine(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            placeholder="Enter dialogue..."
-            className="segment-edit-textarea"
-            rows={1}
-            aria-label={`Edit ${editSpeaker} dialogue`}
-          />
-          <div className="segment-edit-hints">
-            <span className="segment-edit-hint">
-              <kbd>Tab</kbd> next
-            </span>
-            <span className="segment-edit-hint">
-              <kbd>Esc</kbd> cancel
-            </span>
-            <span className="segment-edit-hint">
-              <kbd>Enter</kbd> save
+        <EditingSegmentFields
+          segment={segment}
+          segmentIndex={segmentIndex}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <>
+          <div className="segment-row-speaker">
+            <span
+              className={`segment-row-speaker-badge ${isHost ? 'host' : 'guest'}`}
+            >
+              {segment.speaker}
             </span>
           </div>
-        </div>
-      ) : (
-        <p
-          className="segment-row-content"
-          onClick={handleContentClick}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleContentClick()}
-        >
-          {segment.line || (
-            <span className="segment-row-empty">Click to add dialogue...</span>
-          )}
-        </p>
+
+          <p
+            className="segment-row-content"
+            onClick={handleContentClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleContentClick()}
+          >
+            {segment.line || (
+              <span className="segment-row-empty">Click to add dialogue...</span>
+            )}
+          </p>
+        </>
       )}
 
-      {/* Actions */}
       <div className="segment-row-actions">
         <Button
           variant="ghost"

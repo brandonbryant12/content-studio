@@ -141,6 +141,13 @@ export class VoiceoverRepo extends Context.Tag('@repo/media/VoiceoverRepo')<
 // Implementation
 // =============================================================================
 
+const requireVoiceover = (id: string) =>
+  Effect.flatMap((voiceover: Voiceover | null | undefined) =>
+    voiceover
+      ? Effect.succeed(voiceover)
+      : Effect.fail(new VoiceoverNotFound({ id })),
+  );
+
 const make: VoiceoverRepoService = {
   insert: (data) =>
     withDb('voiceoverRepo.insert', async (db) => {
@@ -162,13 +169,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .limit(1);
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((result) =>
-        result
-          ? Effect.succeed(result)
-          : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   update: (id, data) =>
     withDb('voiceoverRepo.update', async (db) => {
@@ -185,11 +186,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   delete: (id) =>
     withDb('voiceoverRepo.delete', async (db) => {
@@ -236,11 +233,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   updateAudio: (id, options) =>
     withDb('voiceoverRepo.updateAudio', async (db) => {
@@ -254,11 +247,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   clearAudio: (id) =>
     withDb('voiceoverRepo.clearAudio', async (db) => {
@@ -272,11 +261,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   setApproval: (id, approvedBy) =>
     withDb('voiceoverRepo.setApproval', async (db) => {
@@ -290,11 +275,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 
   clearApproval: (id) =>
     withDb('voiceoverRepo.clearApproval', async (db) => {
@@ -308,11 +289,7 @@ const make: VoiceoverRepoService = {
         .where(eq(voiceover.id, id as VoiceoverId))
         .returning();
       return vo ?? null;
-    }).pipe(
-      Effect.flatMap((vo) =>
-        vo ? Effect.succeed(vo) : Effect.fail(new VoiceoverNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireVoiceover(id)),
 };
 
 // =============================================================================

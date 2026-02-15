@@ -3,8 +3,8 @@ import {
   usePersonaList,
   getPersonaListQueryKey,
 } from '../hooks/use-persona-list';
-import { PersonaList } from './persona-list';
 import { PersonaChatContainer } from './persona-chat-container';
+import { PersonaList } from './persona-list';
 import { rawApiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 

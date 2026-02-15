@@ -1,7 +1,7 @@
 import { useChat } from '@ai-sdk/react';
-import type { UIMessage, UIMessageChunk } from 'ai';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
 import { useMemo, useCallback } from 'react';
+import type { UIMessage, UIMessageChunk } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
 
 const transport = {

@@ -19,9 +19,9 @@ import {
   type ChangeEvent,
 } from 'react';
 import type { VoiceoverListItem } from './voiceover-item';
-import { StatusBadge } from './status-badge';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import { StatusBadge } from './status-badge';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { formatDuration, formatDate } from '@/shared/lib/formatters';

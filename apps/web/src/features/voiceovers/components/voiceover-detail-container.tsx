@@ -59,23 +59,31 @@ export function VoiceoverDetailContainer({
     ? { url: voiceover.audioUrl, duration: voiceover.duration ?? null }
     : null;
 
+  const workbenchState = {
+    hasChanges: actions.hasChanges,
+    hasText: actions.hasText,
+    isGenerating: actions.isGenerating,
+    isSaving: actions.isSaving,
+    isDeleting: actions.isDeleting,
+  };
+
+  const approvalState = {
+    isApproved,
+    isAdmin,
+    isApprovalPending: approve.isPending || revoke.isPending,
+  };
+
   return (
     <VoiceoverDetail
       voiceover={voiceover}
       settings={settings}
       displayAudio={displayAudio}
-      hasChanges={actions.hasChanges}
-      hasText={actions.hasText}
-      isGenerating={actions.isGenerating}
-      isSaving={actions.isSaving}
-      isDeleting={actions.isDeleting}
+      workbenchState={workbenchState}
+      approvalState={approvalState}
       onGenerate={actions.handleGenerate}
       onDelete={actions.handleDelete}
-      isApproved={isApproved}
-      isAdmin={isAdmin}
       onApprove={handleApprove}
       onRevoke={handleRevoke}
-      isApprovalPending={approve.isPending || revoke.isPending}
     />
   );
 }

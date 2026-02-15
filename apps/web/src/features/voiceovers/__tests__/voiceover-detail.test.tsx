@@ -128,25 +128,47 @@ function createMockSettings(
 }
 
 function createDefaultProps(
-  overrides: Partial<VoiceoverDetailProps> = {},
+  overrides: Omit<
+    Partial<VoiceoverDetailProps>,
+    'workbenchState' | 'approvalState'
+  > & {
+    workbenchState?: Partial<VoiceoverDetailProps['workbenchState']>;
+    approvalState?: Partial<VoiceoverDetailProps['approvalState']>;
+  } = {},
 ): VoiceoverDetailProps {
-  return {
-    voiceover: createMockVoiceover(),
-    settings: createMockSettings(),
-    displayAudio: null,
+  const {
+    workbenchState: workbenchStateOverride,
+    approvalState: approvalStateOverride,
+    ...restOverrides
+  } = overrides;
+
+  const workbenchState = {
     hasChanges: false,
     hasText: true,
     isGenerating: false,
     isSaving: false,
     isDeleting: false,
-    onGenerate: vi.fn(),
-    onDelete: vi.fn(),
+    ...workbenchStateOverride,
+  };
+
+  const approvalState = {
     isApproved: false,
     isAdmin: false,
+    isApprovalPending: false,
+    ...approvalStateOverride,
+  };
+
+  return {
+    voiceover: createMockVoiceover(),
+    settings: createMockSettings(),
+    displayAudio: null,
+    workbenchState,
+    approvalState,
+    onGenerate: vi.fn(),
+    onDelete: vi.fn(),
     onApprove: vi.fn(),
     onRevoke: vi.fn(),
-    isApprovalPending: false,
-    ...overrides,
+    ...restOverrides,
   };
 }
 
@@ -229,7 +251,13 @@ describe('VoiceoverDetail', () => {
   });
 
   it('disables inputs during generation', () => {
-    render(<VoiceoverDetail {...createDefaultProps({ isGenerating: true })} />);
+    render(
+      <VoiceoverDetail
+        {...createDefaultProps({
+          workbenchState: { isGenerating: true },
+        })}
+      />,
+    );
 
     const textEditor = screen.getByTestId('text-editor');
     const voiceSelector = screen.getByTestId('voice-selector');
@@ -240,7 +268,11 @@ describe('VoiceoverDetail', () => {
 
   it('enables inputs when not generating', () => {
     render(
-      <VoiceoverDetail {...createDefaultProps({ isGenerating: false })} />,
+      <VoiceoverDetail
+        {...createDefaultProps({
+          workbenchState: { isGenerating: false },
+        })}
+      />,
     );
 
     const textEditor = screen.getByTestId('text-editor');
@@ -251,7 +283,13 @@ describe('VoiceoverDetail', () => {
   });
 
   it('passes isGenerating to action bar', () => {
-    render(<VoiceoverDetail {...createDefaultProps({ isGenerating: true })} />);
+    render(
+      <VoiceoverDetail
+        {...createDefaultProps({
+          workbenchState: { isGenerating: true },
+        })}
+      />,
+    );
 
     const actionBar = screen.getByTestId('action-bar');
     expect(actionBar).toHaveAttribute('data-generating', 'true');

@@ -1,4 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import type { PersonaFormValues } from './persona-form';
+import type { RouterOutput } from '@repo/api/client';
 import { usePersona } from '../hooks/use-persona';
 import {
   useUpdatePersona,
@@ -6,8 +8,6 @@ import {
   useGenerateAvatar,
 } from '../hooks/use-persona-mutations';
 import { PersonaDetail } from './persona-detail';
-import type { PersonaFormValues } from './persona-form';
-import type { RouterOutput } from '@repo/api/client';
 import { useNavigationBlock } from '@/shared/hooks';
 
 type Persona = RouterOutput['personas']['get'];
@@ -52,29 +52,34 @@ export function PersonaDetailContainer({
   const deleteMutation = useDeletePersona();
   const avatarMutation = useGenerateAvatar(personaId);
 
-  const [formValues, setFormValues] = useState<PersonaFormValues>(() =>
-    getFormValues(persona),
-  );
-
-  // Reset form when navigating to a different persona
-  const personaIdRef = useRef(persona.id);
-  if (persona.id !== personaIdRef.current) {
-    personaIdRef.current = persona.id;
-    setFormValues(getFormValues(persona));
-  }
-
-  // Sync from server when data changes externally (SSE, cache invalidation)
-  const serverVersionRef = useRef(persona.updatedAt);
-  useEffect(() => {
-    if (persona.updatedAt !== serverVersionRef.current) {
-      serverVersionRef.current = persona.updatedAt;
-      setFormValues(getFormValues(persona));
-    }
-  }, [persona]);
+  // Keep drafts keyed by persona id so route changes don't require effect-based resets.
+  const [draftsByPersonaId, setDraftsByPersonaId] = useState<
+    Record<string, PersonaFormValues>
+  >({});
+  const formValues = draftsByPersonaId[persona.id] ?? getFormValues(persona);
 
   const hasChanges = hasFormChanges(formValues, persona);
 
   useNavigationBlock({ shouldBlock: hasChanges });
+
+  const clearDraft = useCallback((id: string) => {
+    setDraftsByPersonaId((current) => {
+      if (!(id in current)) return current;
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  const handleFormChange = useCallback(
+    (values: PersonaFormValues) => {
+      setDraftsByPersonaId((current) => ({
+        ...current,
+        [persona.id]: values,
+      }));
+    },
+    [persona.id],
+  );
 
   const handleSave = useCallback(() => {
     updateMutation.mutate({
@@ -89,12 +94,14 @@ export function PersonaDetailContainer({
           : undefined,
       voiceId: formValues.voiceId || undefined,
       voiceName: formValues.voiceName || undefined,
+    }, {
+      onSuccess: () => clearDraft(persona.id),
     });
-  }, [personaId, formValues, updateMutation]);
+  }, [personaId, formValues, updateMutation, clearDraft, persona.id]);
 
   const handleDiscard = useCallback(() => {
-    setFormValues(getFormValues(persona));
-  }, [persona]);
+    clearDraft(persona.id);
+  }, [clearDraft, persona.id]);
 
   const handleDelete = useCallback(() => {
     deleteMutation.mutate({ id: personaId });
@@ -112,7 +119,7 @@ export function PersonaDetailContainer({
       isSaving={updateMutation.isPending}
       isDeleting={deleteMutation.isPending}
       isGeneratingAvatar={avatarMutation.isPending}
-      onFormChange={setFormValues}
+      onFormChange={handleFormChange}
       onSave={handleSave}
       onDiscard={handleDiscard}
       onDelete={handleDelete}

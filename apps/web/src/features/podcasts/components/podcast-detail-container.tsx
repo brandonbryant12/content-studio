@@ -87,6 +87,20 @@ export function PodcastDetailContainer({
       }
     : null;
 
+  const workbenchState = {
+    hasChanges: actions.hasAnyChanges,
+    isGenerating: actions.isGenerating,
+    isPendingGeneration: actions.isPendingGeneration,
+    isSaving: actions.isSaving,
+    isDeleting: actions.isDeleting,
+  };
+
+  const approvalState = {
+    isApproved,
+    isAdmin,
+    isApprovalPending: approve.isPending || revoke.isPending,
+  };
+
   return (
     <PodcastDetail
       podcast={podcast}
@@ -94,19 +108,13 @@ export function PodcastDetailContainer({
       settings={settings}
       documentSelection={documentSelection}
       displayAudio={displayAudio}
-      hasChanges={actions.hasAnyChanges}
-      isGenerating={actions.isGenerating}
-      isPendingGeneration={actions.isPendingGeneration}
-      isSaving={actions.isSaving}
-      isDeleting={actions.isDeleting}
+      workbenchState={workbenchState}
+      approvalState={approvalState}
       onSave={actions.handleSave}
       onGenerate={actions.handleGenerate}
       onDelete={actions.handleDelete}
-      isApproved={isApproved}
-      isAdmin={isAdmin}
       onApprove={() => approve.mutate({ id: podcastId })}
       onRevoke={() => revoke.mutate({ id: podcastId })}
-      isApprovalPending={approve.isPending || revoke.isPending}
     />
   );
 }

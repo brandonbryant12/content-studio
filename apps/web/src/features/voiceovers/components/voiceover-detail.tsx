@@ -15,41 +15,47 @@ interface DisplayAudio {
   duration: number | null;
 }
 
-export interface VoiceoverDetailProps {
-  voiceover: Voiceover;
-  settings: UseVoiceoverSettingsReturn;
-  displayAudio: DisplayAudio | null;
+export interface VoiceoverWorkbenchState {
   hasChanges: boolean;
   hasText: boolean;
   isGenerating: boolean;
   isSaving: boolean;
   isDeleting: boolean;
-  onGenerate: () => void;
-  onDelete: () => void;
+}
+
+export interface VoiceoverApprovalState {
   isApproved: boolean;
   isAdmin: boolean;
+  isApprovalPending: boolean;
+}
+
+export interface VoiceoverDetailProps {
+  voiceover: Voiceover;
+  settings: UseVoiceoverSettingsReturn;
+  displayAudio: DisplayAudio | null;
+  workbenchState: VoiceoverWorkbenchState;
+  approvalState: VoiceoverApprovalState;
+  onGenerate: () => void;
+  onDelete: () => void;
   onApprove: () => void;
   onRevoke: () => void;
-  isApprovalPending: boolean;
 }
 
 export function VoiceoverDetail({
   voiceover,
   settings,
   displayAudio,
-  hasChanges,
-  hasText,
-  isGenerating,
-  isSaving,
-  isDeleting,
+  workbenchState,
+  approvalState,
   onGenerate,
   onDelete,
-  isApproved,
-  isAdmin,
   onApprove,
   onRevoke,
-  isApprovalPending,
 }: VoiceoverDetailProps) {
+  const { hasChanges, hasText, isGenerating, isSaving, isDeleting } =
+    workbenchState;
+  const { isApproved, isAdmin, isApprovalPending } = approvalState;
+
   return (
     <WorkbenchLayout
       voiceover={voiceover}

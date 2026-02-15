@@ -191,11 +191,13 @@ export function usePodcastSettings({
     hasUserEdits: false,
   }));
 
-  // Reset on navigation to a different podcast
-  if (podcast?.id !== podcastIdRef.current) {
-    podcastIdRef.current = podcast?.id;
-    dispatch({ type: 'RESET', values: getInitialValues(podcast) });
-  }
+  // Reset on navigation to a different podcast.
+  useEffect(() => {
+    if (podcast?.id !== podcastIdRef.current) {
+      podcastIdRef.current = podcast?.id;
+      dispatch({ type: 'RESET', values: getInitialValues(podcast) });
+    }
+  }, [podcast, podcast?.id]);
 
   // Sync from server when data changes externally (wizard saves, SSE updates)
   useEffect(() => {
@@ -204,6 +206,7 @@ export function usePodcastSettings({
       values: getInitialValues(podcast),
     });
   }, [
+    podcast,
     podcast?.hostVoice,
     podcast?.coHostVoice,
     podcast?.targetDurationMinutes,
@@ -343,6 +346,12 @@ export function usePodcastSettings({
       updateMutation.isPending,
       saveSettings,
       discardChanges,
+      setHostVoice,
+      setCoHostVoice,
+      setTargetDuration,
+      setInstructions,
+      setHostPersona,
+      setCoHostPersona,
     ],
   );
 }

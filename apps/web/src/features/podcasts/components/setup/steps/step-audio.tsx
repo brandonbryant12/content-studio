@@ -1,12 +1,12 @@
 import { Slider } from '@repo/ui/components/slider';
 import type { MouseEvent, KeyboardEvent } from 'react';
-import { useVoicePreview, useVoices } from '@/shared/hooks';
 import {
   VOICES,
   MIN_DURATION,
   MAX_DURATION,
 } from '../../../hooks/use-podcast-settings';
 import { PersonaPicker } from '../../workbench/persona-picker';
+import { useVoicePreview, useVoices } from '@/shared/hooks';
 
 function SetupVoicePreviewBtn({
   voiceId,

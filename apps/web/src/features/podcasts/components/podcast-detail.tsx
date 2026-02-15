@@ -16,25 +16,33 @@ interface DisplayAudio {
   duration: number | null;
 }
 
+export interface PodcastWorkbenchState {
+  hasChanges: boolean;
+  isGenerating: boolean;
+  isPendingGeneration: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+}
+
+export interface PodcastApprovalState {
+  isApproved: boolean;
+  isAdmin: boolean;
+  isApprovalPending: boolean;
+}
+
 export interface PodcastDetailProps {
   podcast: Podcast;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;
   documentSelection: UseDocumentSelectionReturn;
   displayAudio: DisplayAudio | null;
-  hasChanges: boolean;
-  isGenerating: boolean;
-  isPendingGeneration: boolean;
-  isSaving: boolean;
-  isDeleting: boolean;
+  workbenchState: PodcastWorkbenchState;
+  approvalState: PodcastApprovalState;
   onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
-  isApproved: boolean;
-  isAdmin: boolean;
   onApprove: () => void;
   onRevoke: () => void;
-  isApprovalPending: boolean;
 }
 
 export function PodcastDetail({
@@ -43,20 +51,18 @@ export function PodcastDetail({
   settings,
   documentSelection,
   displayAudio,
-  hasChanges,
-  isGenerating,
-  isPendingGeneration,
-  isSaving,
-  isDeleting,
+  workbenchState,
+  approvalState,
   onSave,
   onGenerate,
   onDelete,
-  isApproved,
-  isAdmin,
   onApprove,
   onRevoke,
-  isApprovalPending,
 }: PodcastDetailProps) {
+  const { hasChanges, isGenerating, isPendingGeneration, isSaving, isDeleting } =
+    workbenchState;
+  const { isApproved, isAdmin, isApprovalPending } = approvalState;
+
   return (
     <WorkbenchLayout
       podcast={podcast}

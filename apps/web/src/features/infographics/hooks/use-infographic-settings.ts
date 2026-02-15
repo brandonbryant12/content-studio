@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -12,6 +12,13 @@ type InfographicFormat = InfographicFull['format'];
 
 interface UseInfographicSettingsOptions {
   infographic: InfographicFull | undefined;
+}
+
+interface InfographicDraft {
+  prompt: string;
+  infographicType: InfographicType;
+  stylePreset: InfographicStyle;
+  format: InfographicFormat;
 }
 
 export interface UseInfographicSettingsReturn {
@@ -36,111 +43,112 @@ export interface UseInfographicSettingsReturn {
   discardChanges: () => void;
 }
 
-function getInitialValues(infographic: InfographicFull | undefined) {
-  return {
-    prompt: infographic?.prompt ?? '',
-    infographicType: infographic?.infographicType ?? 'key_takeaways',
-    stylePreset: infographic?.stylePreset ?? 'modern_minimal',
-    format: infographic?.format ?? 'portrait',
-  } as const;
+function areEqualDrafts(a: InfographicDraft, b: InfographicDraft): boolean {
+  return (
+    a.prompt === b.prompt &&
+    a.infographicType === b.infographicType &&
+    a.stylePreset === b.stylePreset &&
+    a.format === b.format
+  );
 }
 
 export function useInfographicSettings({
   infographic,
 }: UseInfographicSettingsOptions): UseInfographicSettingsReturn {
-  const [prevInfographicId, setPrevInfographicId] = useState(infographic?.id);
-  const [hasUserEdits, setHasUserEdits] = useState(false);
+  const [draftsByInfographicId, setDraftsByInfographicId] = useState<
+    Record<string, InfographicDraft>
+  >({});
 
-  // Track previous server values to detect external changes
-  const [prevServerValues, setPrevServerValues] = useState(() => ({
-    prompt: infographic?.prompt,
-    infographicType: infographic?.infographicType,
-    stylePreset: infographic?.stylePreset,
-    format: infographic?.format,
-  }));
+  const infographicId = infographic?.id;
+  const serverPrompt = infographic?.prompt ?? '';
+  const serverInfographicType = infographic?.infographicType ?? 'key_takeaways';
+  const serverStylePreset = infographic?.stylePreset ?? 'modern_minimal';
+  const serverFormat = infographic?.format ?? 'portrait';
+  const draftValues = infographicId
+    ? draftsByInfographicId[infographicId]
+    : undefined;
 
-  const initial = getInitialValues(infographic);
-  const [prompt, setPromptInternal] = useState(initial.prompt);
-  const [infographicType, setTypeInternal] = useState(initial.infographicType);
-  const [stylePreset, setStyleInternal] = useState(initial.stylePreset);
-  const [format, setFormatInternal] = useState(initial.format);
+  const prompt = draftValues?.prompt ?? serverPrompt;
+  const infographicType = draftValues?.infographicType ?? serverInfographicType;
+  const stylePreset = draftValues?.stylePreset ?? serverStylePreset;
+  const format = draftValues?.format ?? serverFormat;
 
-  // Wrapped setters that track user edits
-  const setPrompt = useCallback((value: string) => {
-    setHasUserEdits(true);
-    setPromptInternal(value);
-  }, []);
-
-  const setInfographicType = useCallback((value: InfographicType) => {
-    setHasUserEdits(true);
-    setTypeInternal(value);
-  }, []);
-
-  const setStylePreset = useCallback((value: InfographicStyle) => {
-    setHasUserEdits(true);
-    setStyleInternal(value);
-  }, []);
-
-  const setFormat = useCallback((value: InfographicFormat) => {
-    setHasUserEdits(true);
-    setFormatInternal(value);
-  }, []);
-
-  // Reset state when navigating to a different infographic
-  if (infographic?.id !== prevInfographicId) {
-    setPrevInfographicId(infographic?.id);
-    setHasUserEdits(false);
-    const newInitial = getInitialValues(infographic);
-    setPromptInternal(newInitial.prompt);
-    setTypeInternal(newInitial.infographicType);
-    setStyleInternal(newInitial.stylePreset);
-    setFormatInternal(newInitial.format);
-    setPrevServerValues({
-      prompt: infographic?.prompt,
-      infographicType: infographic?.infographicType,
-      stylePreset: infographic?.stylePreset,
-      format: infographic?.format,
+  const clearDraft = useCallback((id: string) => {
+    setDraftsByInfographicId((prev) => {
+      if (!(id in prev)) return prev;
+      const { [id]: _removed, ...rest } = prev;
+      return rest;
     });
-  }
+  }, []);
 
-  // Sync local state when server data changes externally (e.g., SSE update)
-  // Only sync if user hasn't made local edits
-  useEffect(() => {
-    const serverChanged =
-      infographic?.prompt !== prevServerValues.prompt ||
-      infographic?.infographicType !== prevServerValues.infographicType ||
-      infographic?.stylePreset !== prevServerValues.stylePreset ||
-      infographic?.format !== prevServerValues.format;
+  const updateDraft = useCallback(
+    (patch: Partial<InfographicDraft>) => {
+      if (!infographicId) return;
 
-    if (serverChanged) {
-      setPrevServerValues({
-        prompt: infographic?.prompt,
-        infographicType: infographic?.infographicType,
-        stylePreset: infographic?.stylePreset,
-        format: infographic?.format,
+      setDraftsByInfographicId((prev) => {
+        const serverValues: InfographicDraft = {
+          prompt: serverPrompt,
+          infographicType: serverInfographicType,
+          stylePreset: serverStylePreset,
+          format: serverFormat,
+        };
+        const current = prev[infographicId] ?? serverValues;
+        const next = { ...current, ...patch };
+
+        if (areEqualDrafts(next, serverValues)) {
+          if (!(infographicId in prev)) return prev;
+          const { [infographicId]: _removed, ...rest } = prev;
+          return rest;
+        }
+
+        return {
+          ...prev,
+          [infographicId]: next,
+        };
       });
-      if (!hasUserEdits) {
-        const newInitial = getInitialValues(infographic);
-        setPromptInternal(newInitial.prompt);
-        setTypeInternal(newInitial.infographicType);
-        setStyleInternal(newInitial.stylePreset);
-        setFormatInternal(newInitial.format);
-      }
-    }
-  }, [
-    infographic?.prompt,
-    infographic?.infographicType,
-    infographic?.stylePreset,
-    infographic?.format,
-    prevServerValues,
-    hasUserEdits,
-  ]);
+    },
+    [
+      infographicId,
+      serverPrompt,
+      serverInfographicType,
+      serverStylePreset,
+      serverFormat,
+    ],
+  );
+
+  const setPrompt = useCallback(
+    (value: string) => {
+      updateDraft({ prompt: value });
+    },
+    [updateDraft],
+  );
+
+  const setInfographicType = useCallback(
+    (value: InfographicType) => {
+      updateDraft({ infographicType: value });
+    },
+    [updateDraft],
+  );
+
+  const setStylePreset = useCallback(
+    (value: InfographicStyle) => {
+      updateDraft({ stylePreset: value });
+    },
+    [updateDraft],
+  );
+
+  const setFormat = useCallback(
+    (value: InfographicFormat) => {
+      updateDraft({ format: value });
+    },
+    [updateDraft],
+  );
 
   const hasChanges =
-    prompt !== (infographic?.prompt ?? '') ||
-    infographicType !== (infographic?.infographicType ?? 'key_takeaways') ||
-    stylePreset !== (infographic?.stylePreset ?? 'modern_minimal') ||
-    format !== (infographic?.format ?? 'portrait');
+    prompt !== serverPrompt ||
+    infographicType !== serverInfographicType ||
+    stylePreset !== serverStylePreset ||
+    format !== serverFormat;
 
   const updateMutation = useMutation(
     apiClient.infographics.update.mutationOptions({
@@ -152,10 +160,10 @@ export function useInfographicSettings({
 
   const saveSettings = useCallback(
     async (extra?: { sourceDocumentIds?: string[] }) => {
-      if (!infographic?.id) return;
+      if (!infographicId) return;
 
       await updateMutation.mutateAsync({
-        id: infographic.id,
+        id: infographicId,
         prompt,
         infographicType,
         stylePreset,
@@ -163,19 +171,23 @@ export function useInfographicSettings({
         ...extra,
       });
 
-      setHasUserEdits(false);
+      clearDraft(infographicId);
     },
-    [infographic, prompt, infographicType, stylePreset, format, updateMutation],
+    [
+      infographicId,
+      prompt,
+      infographicType,
+      stylePreset,
+      format,
+      updateMutation,
+      clearDraft,
+    ],
   );
 
   const discardChanges = useCallback(() => {
-    setHasUserEdits(false);
-    const initial = getInitialValues(infographic);
-    setPromptInternal(initial.prompt);
-    setTypeInternal(initial.infographicType);
-    setStyleInternal(initial.stylePreset);
-    setFormatInternal(initial.format);
-  }, [infographic]);
+    if (!infographicId) return;
+    clearDraft(infographicId);
+  }, [infographicId, clearDraft]);
 
   return {
     prompt,

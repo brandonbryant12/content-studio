@@ -188,6 +188,11 @@ export class PodcastRepo extends Context.Tag('@repo/media/PodcastRepo')<
 // Implementation
 // =============================================================================
 
+const requirePodcast = <T extends Podcast>(id: string) =>
+  Effect.flatMap((pod: T | null | undefined) =>
+    pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
+  );
+
 const make: PodcastRepoService = {
   insert: (data, documentIds) =>
     withDb('podcastRepo.insert', async (db) => {
@@ -252,13 +257,7 @@ const make: PodcastRepoService = {
         .filter((d): d is Document => d !== undefined);
 
       return { ...pod, documents: sortedDocs };
-    }).pipe(
-      Effect.flatMap((result) =>
-        result
-          ? Effect.succeed(result)
-          : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   update: (id, data) =>
     withDb('podcastRepo.update', async (db) => {
@@ -281,11 +280,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   delete: (id) =>
     withDb('podcastRepo.delete', async (db) => {
@@ -374,11 +369,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   updateStatus: (id, status, errorMessage) =>
     withDb('podcastRepo.updateStatus', async (db) => {
@@ -392,11 +383,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   updateScript: (id, options) =>
     withDb('podcastRepo.updateScript', async (db) => {
@@ -411,11 +398,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   updateAudio: (id, options) =>
     withDb('podcastRepo.updateAudio', async (db) => {
@@ -429,11 +412,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   clearAudio: (id) =>
     withDb('podcastRepo.clearAudio', async (db) => {
@@ -447,11 +426,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   setApproval: (id, approvedBy) =>
     withDb('podcastRepo.setApproval', async (db) => {
@@ -465,11 +440,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 
   clearApproval: (id) =>
     withDb('podcastRepo.clearApproval', async (db) => {
@@ -483,11 +454,7 @@ const make: PodcastRepoService = {
         .where(eq(podcast.id, id as PodcastId))
         .returning();
       return pod;
-    }).pipe(
-      Effect.flatMap((pod) =>
-        pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-      ),
-    ),
+    }).pipe(requirePodcast(id)),
 };
 
 // =============================================================================

@@ -123,6 +123,11 @@ export class InfographicRepo extends Context.Tag('@repo/media/InfographicRepo')<
 // Implementation
 // =============================================================================
 
+const requireInfographic = (id: string) =>
+  Effect.flatMap((row: Infographic | null | undefined) =>
+    row ? Effect.succeed(row) : Effect.fail(new InfographicNotFound({ id })),
+  );
+
 const make: InfographicRepoService = {
   insert: (data) =>
     withDb('infographicRepo.insert', async (db) => {
@@ -153,13 +158,7 @@ const make: InfographicRepoService = {
         .where(eq(infographic.id, id as InfographicId))
         .limit(1);
       return row ?? null;
-    }).pipe(
-      Effect.flatMap((result) =>
-        result
-          ? Effect.succeed(result)
-          : Effect.fail(new InfographicNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireInfographic(id)),
 
   list: (options) =>
     withDb('infographicRepo.list', (db) =>
@@ -191,13 +190,7 @@ const make: InfographicRepoService = {
         .where(eq(infographic.id, id as InfographicId))
         .returning();
       return row ?? null;
-    }).pipe(
-      Effect.flatMap((row) =>
-        row
-          ? Effect.succeed(row)
-          : Effect.fail(new InfographicNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireInfographic(id)),
 
   delete: (id) =>
     withDb('infographicRepo.delete', async (db) => {
@@ -285,13 +278,7 @@ const make: InfographicRepoService = {
         .where(eq(infographic.id, id as InfographicId))
         .returning();
       return row ?? null;
-    }).pipe(
-      Effect.flatMap((row) =>
-        row
-          ? Effect.succeed(row)
-          : Effect.fail(new InfographicNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireInfographic(id)),
 
   clearApproval: (id) =>
     withDb('infographicRepo.clearApproval', async (db) => {
@@ -305,13 +292,7 @@ const make: InfographicRepoService = {
         .where(eq(infographic.id, id as InfographicId))
         .returning();
       return row ?? null;
-    }).pipe(
-      Effect.flatMap((row) =>
-        row
-          ? Effect.succeed(row)
-          : Effect.fail(new InfographicNotFound({ id })),
-      ),
-    ),
+    }).pipe(requireInfographic(id)),
 };
 
 // =============================================================================

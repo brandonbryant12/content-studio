@@ -2,11 +2,11 @@ import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { RouterOutput } from '@repo/api/client';
 import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
-import { PersonaCard } from './persona-card';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
-import { BulkActionBar } from '@/shared/components/bulk-action-bar/bulk-action-bar';
+import type { RouterOutput } from '@repo/api/client';
+import { PersonaCard } from './persona-card';
+import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 

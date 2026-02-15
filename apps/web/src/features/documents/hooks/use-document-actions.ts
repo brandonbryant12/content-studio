@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -37,20 +37,26 @@ export function useDocumentActions({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [title, setTitleInternal] = useState(document.title);
-  const hasUserEdits = useRef(false);
+  const [draftTitlesByDocumentId, setDraftTitlesByDocumentId] = useState<
+    Record<string, string>
+  >({});
 
-  const setTitle = useCallback((value: string) => {
-    hasUserEdits.current = true;
-    setTitleInternal(value);
+  const title = draftTitlesByDocumentId[document.id] ?? document.title;
+
+  const clearDraftTitle = useCallback((documentId: string) => {
+    setDraftTitlesByDocumentId((prev) => {
+      if (!(documentId in prev)) return prev;
+      const { [documentId]: _removed, ...rest } = prev;
+      return rest;
+    });
   }, []);
 
-  // Sync from server when title changes externally (SSE/cache invalidation)
-  useEffect(() => {
-    if (!hasUserEdits.current) {
-      setTitleInternal(document.title);
-    }
-  }, [document.title]);
+  const setTitle = useCallback((value: string) => {
+    setDraftTitlesByDocumentId((prev) => ({
+      ...prev,
+      [document.id]: value,
+    }));
+  }, [document.id]);
 
   const hasChanges = title.trim() !== document.title;
 
@@ -58,8 +64,7 @@ export function useDocumentActions({
     apiClient.documents.update.mutationOptions({
       onSuccess: (updated) => {
         toast.success('Document updated');
-        hasUserEdits.current = false;
-        setTitleInternal(updated.title);
+        clearDraftTitle(document.id);
         // Update the single-document cache
         queryClient.setQueryData(
           apiClient.documents.get.queryOptions({ input: { id: document.id } })
@@ -100,9 +105,8 @@ export function useDocumentActions({
   }, [deleteMutation, document.id]);
 
   const discardChanges = useCallback(() => {
-    hasUserEdits.current = false;
-    setTitleInternal(document.title);
-  }, [document.title]);
+    clearDraftTitle(document.id);
+  }, [clearDraftTitle, document.id]);
 
   return {
     title,

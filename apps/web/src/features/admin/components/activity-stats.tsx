@@ -6,8 +6,8 @@ import {
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import type { ComponentType } from 'react';
 import type { Period, StatBreakdown } from '../types';
+import type { ComponentType } from 'react';
 
 interface ActivityStatsProps {
   total: number;

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { usePersonaChat } from '../hooks/use-persona-chat';
-import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
+import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
 import { PersonaChatDialog } from './persona-chat-dialog';
 
 interface PersonaChatContainerProps {

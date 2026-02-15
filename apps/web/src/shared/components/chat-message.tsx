@@ -1,5 +1,5 @@
-import type { UIMessage } from 'ai';
 import { cn } from '@repo/ui/lib/utils';
+import type { UIMessage } from 'ai';
 import { Markdown } from '@/components/markdown';
 
 interface ChatMessageProps {

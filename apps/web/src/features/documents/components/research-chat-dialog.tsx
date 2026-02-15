@@ -1,5 +1,4 @@
 import { MagnifyingGlassIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
-import type { UIMessage } from 'ai';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback, useRef, useEffect } from 'react';
+import type { UIMessage } from 'ai';
 import { ChatMessage } from './chat-message';
 
 const EXAMPLE_TOPICS = [
