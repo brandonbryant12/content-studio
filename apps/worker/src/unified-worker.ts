@@ -1,10 +1,3 @@
-import type {
-  DocumentJobCompletionEvent,
-  InfographicJobCompletionEvent,
-  JobCompletionEvent,
-  SSEEvent,
-  VoiceoverJobCompletionEvent,
-} from '@repo/api/contracts';
 import { withCurrentUser } from '@repo/auth/policy';
 import { JobStatus } from '@repo/db/schema';
 import {
@@ -20,6 +13,12 @@ import {
   type ProcessUrlPayload,
 } from '@repo/queue';
 import { Effect } from 'effect';
+import type {
+  DocumentJobCompletionEvent,
+  InfographicJobCompletionEvent,
+  JobCompletionEvent,
+  VoiceoverJobCompletionEvent,
+} from '@repo/api/contracts';
 import {
   createWorker,
   makeJobUser,

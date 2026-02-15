@@ -9,6 +9,9 @@
 #   - API server:    http://<HOST_IP>:3036
 #   - MinIO S3 API:  http://<HOST_IP>:9001
 #   - MinIO Console: http://<HOST_IP>:9090
+# Internal services:
+#   - Worker:        background job processor
+#   - Redis:         SSE/event pub-sub
 
 services:
   # ------------------------------------------------------------------ #
@@ -49,6 +52,7 @@ services:
       NODE_ENV: production
       SERVER_AUTH_SECRET: "${SERVER_AUTH_SECRET:-please_change_this_in_production}"
       SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
+      SERVER_REDIS_URL: "redis://redis:6379"
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "3036"
       PUBLIC_WEB_URL: "http://${HOST_IP:-localhost}:8086"
@@ -77,6 +81,40 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+
+  # ------------------------------------------------------------------ #
+  # Worker (background jobs)
+  # ------------------------------------------------------------------ #
+  worker:
+    build:
+      context: .
+      dockerfile: ./apps/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
+      SERVER_REDIS_URL: "redis://redis:6379"
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
+      USE_MOCK_AI: "${USE_MOCK_AI:-true}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      # S3 / MinIO storage
+      STORAGE_PROVIDER: s3
+      S3_BUCKET: content-studio
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_ENDPOINT: "http://minio:9001"
+      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:9001"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
       minio-init:
@@ -101,6 +139,20 @@ services:
       timeout: 5s
       retries: 5
       test: ["CMD-SHELL", "pg_isready -U postgres -d content_studio"]
+
+  # ------------------------------------------------------------------ #
+  # Redis (SSE pub/sub)
+  # ------------------------------------------------------------------ #
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # ------------------------------------------------------------------ #
   # Database migrations
@@ -157,3 +209,4 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  redis_data:

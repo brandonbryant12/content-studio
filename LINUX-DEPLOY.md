@@ -26,6 +26,8 @@ HOST_IP=$HOST_IP docker compose up --build -d
 | -------------- | ---- | ---------------------------- |
 | Web app        | 8086 | `http://<HOST_IP>:8086`      |
 | API server     | 3036 | `http://<HOST_IP>:3036`      |
+| Worker         | -    | Internal background processor |
+| Redis          | -    | Internal pub/sub service      |
 | MinIO S3 API   | 9001 | `http://<HOST_IP>:9001`      |
 | MinIO Console  | 9090 | `http://<HOST_IP>:9090`      |
 | PostgreSQL     | 5432 | `postgres://localhost:5432`   |
@@ -117,6 +119,7 @@ docker compose logs -f
 
 # View logs for a specific service
 docker compose logs -f server
+docker compose logs -f worker
 
 # Restart a single service
 docker compose restart server

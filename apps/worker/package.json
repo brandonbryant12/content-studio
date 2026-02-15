@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "pnpm dev:standalone",
     "dev:standalone": "NODE_OPTIONS='--enable-source-maps' pnpm env:run tsx watch src/worker.ts",
     "env:copy-example": "shx -- cp -n .env.example .env",
     "env:remove": "shx -- rm -f .env",

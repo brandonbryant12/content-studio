@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { rateLimiter } from '../middleware/rate-limit';
 
 describe('rateLimiter middleware', () => {
@@ -170,5 +170,28 @@ describe('rateLimiter middleware', () => {
     expect(res1.headers.get('X-RateLimit-Remaining')).toBe('2');
     expect(res2.headers.get('X-RateLimit-Remaining')).toBe('1');
     expect(res3.headers.get('X-RateLimit-Remaining')).toBe('0');
+  });
+
+  it('supports async custom store adapters', async () => {
+    const consume = vi.fn(async () => ({
+      count: 4,
+      resetAt: Date.now() + 60_000,
+    }));
+
+    app.use(
+      rateLimiter({
+        limit: 3,
+        windowMs: 60_000,
+        store: { consume },
+      }),
+    );
+    app.get('/', (c) => c.text('ok'));
+
+    const res = await app.request('/', {
+      headers: { 'x-forwarded-for': '1.2.3.4' },
+    });
+
+    expect(res.status).toBe(429);
+    expect(consume).toHaveBeenCalledOnce();
   });
 });

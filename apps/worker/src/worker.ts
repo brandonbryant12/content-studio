@@ -4,7 +4,12 @@
 import { configureProxy } from './proxy';
 configureProxy();
 
-import { createServerRuntime } from '@repo/api/server';
+import {
+  configureSSEPublisher,
+  createServerRuntime,
+  shutdownSSEPublisher,
+  ssePublisher,
+} from '@repo/api/server';
 import { createDb, verifyDbConnection } from '@repo/db/client';
 import { buildStorageConfig } from './config';
 import { MAX_CONCURRENT_JOBS, QUEUE_DEFAULTS } from './constants';
@@ -35,6 +40,11 @@ async function startWorker(): Promise<void> {
   const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
   const storageConfig = buildStorageConfig();
 
+  configureSSEPublisher({
+    redisUrl: env.SERVER_REDIS_URL,
+    channelPrefix: env.SSE_REDIS_CHANNEL_PREFIX,
+  });
+
   try {
     await verifyDbConnection(db);
     console.log('Database connection verified');
@@ -56,6 +66,7 @@ async function startWorker(): Promise<void> {
   const worker = createUnifiedWorker({
     pollInterval: QUEUE_DEFAULTS.POLL_INTERVAL_MS,
     runtime: serverRuntime,
+    publishEvent: (userId, event) => ssePublisher.publish(userId, event),
   });
 
   worker.start().catch((error) => {
@@ -90,6 +101,9 @@ async function startWorker(): Promise<void> {
 
       await db.$client.end();
       console.log('Database pool closed');
+
+      await shutdownSSEPublisher();
+      console.log('SSE publisher stopped');
 
       console.log('Worker has stopped gracefully.');
     } catch (error) {

@@ -76,6 +76,13 @@ export const envSchema = Schema.Struct({
   S3_ENDPOINT: Schema.optional(Schema.String),
   S3_PUBLIC_ENDPOINT: Schema.optional(Schema.String),
 
+  SERVER_REDIS_URL: Schema.optionalWith(Schema.String, {
+    default: () => 'redis://localhost:6379',
+  }),
+  SSE_REDIS_CHANNEL_PREFIX: Schema.optionalWith(Schema.String, {
+    default: () => 'cs:sse:user',
+  }),
+
   CORS_ORIGINS: Schema.optional(Schema.String),
 
   HTTPS_PROXY: Schema.optional(Schema.String),

@@ -36,8 +36,15 @@ export {
   type EffectSuccess,
 } from './effect-handler';
 
-// Export SSE publisher
-export { ssePublisher } from './publisher';
+// Export SSE publisher and lifecycle helpers
+export {
+  ssePublisher,
+  publishSSEEvent,
+  subscribeToSSEEvents,
+  configureSSEPublisher,
+  pingSSEPublisher,
+  shutdownSSEPublisher,
+} from './publisher';
 
 export type AppRouter = typeof appRouter;
 

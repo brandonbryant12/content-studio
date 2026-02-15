@@ -2,8 +2,10 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { corsOriginConfig } from '../config';
 import { env } from '../env';
-import { authRateLimit } from '../middleware/rate-limit';
+import { createAuthRateLimit } from '../middleware/rate-limit';
 import { auth } from '../services';
+
+const authRateLimit = createAuthRateLimit({ redisUrl: env.SERVER_REDIS_URL });
 
 export const authRoute = new Hono()
   .use(

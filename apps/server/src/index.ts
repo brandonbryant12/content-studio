@@ -1,3 +1,4 @@
+import { pingSSEPublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
@@ -50,6 +51,18 @@ app.get('/healthcheck/deep', async (c) => {
     checks.database = {
       status: 'error',
       latencyMs: Date.now() - dbStart,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  const redisStart = Date.now();
+  try {
+    await pingSSEPublisher();
+    checks.redis = { status: 'ok', latencyMs: Date.now() - redisStart };
+  } catch (err) {
+    checks.redis = {
+      status: 'error',
+      latencyMs: Date.now() - redisStart,
       error: err instanceof Error ? err.message : String(err),
     };
   }

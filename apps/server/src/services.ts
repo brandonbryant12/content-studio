@@ -1,4 +1,8 @@
-import { createApi, createServerRuntime } from '@repo/api/server';
+import {
+  configureSSEPublisher,
+  createApi,
+  createServerRuntime,
+} from '@repo/api/server';
 import { createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { buildStorageConfig } from './config';
@@ -14,6 +18,11 @@ export const auth = createAuth({
   apiPath: env.PUBLIC_SERVER_API_PATH,
   authSecret: env.SERVER_AUTH_SECRET,
   db,
+});
+
+configureSSEPublisher({
+  redisUrl: env.SERVER_REDIS_URL,
+  channelPrefix: env.SSE_REDIS_CHANNEL_PREFIX,
 });
 
 export const serverRuntime = createServerRuntime({

@@ -18,16 +18,16 @@
   "prettier": "@repo/prettier-config",
   "dependencies": {
     "@hono/node-server": "catalog:",
+    "@repo/ai": "workspace:*",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
-    "@repo/ai": "workspace:*",
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
-    "worker": "workspace:*",
     "effect": "^3.16.0",
     "hono": "catalog:",
+    "redis": "^5.10.0",
     "undici": "^7.3.0"
   },
   "devDependencies": {

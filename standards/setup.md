@@ -31,7 +31,7 @@ pnpm install
 # 3. Copy environment files
 pnpm env:copy-example
 
-# 4. Start development database (if using Docker)
+# 4. Start development services (Postgres + Redis)
 docker compose up -d
 
 # 5. Push database schema
@@ -152,6 +152,7 @@ After running `pnpm env:copy-example`, configure these in your `.env` files:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `STORAGE_TYPE` | Storage backend (s3/local) | local |
+| `SERVER_REDIS_URL` | Redis connection for SSE pub/sub | `redis://localhost:6379` |
 | `S3_BUCKET` | S3 bucket name | - |
 | `S3_REGION` | S3 region | - |
 
