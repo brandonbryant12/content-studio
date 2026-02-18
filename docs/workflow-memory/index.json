@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-18-docs-knowledge-drift-mark-agent-harnessing-as-experimental-and-add-effect-vs-nestjs-r",
+    "date": "2026-02-18",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Mark agent harnessing as experimental and add Effect-vs-NestJS rationale",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "docs",
+      "workflow",
+      "architecture",
+      "effect"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-18-self-improvement-migrate-workflow-memory-to-structured-store",
     "date": "2026-02-18",
     "month": "2026-02",

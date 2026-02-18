@@ -5,6 +5,10 @@ This directory is the standards source of record, built from the multi-agent deb
 - `scripts/standards-debate/workspace/synthesis.md`
 - `scripts/standards-debate/workspace/improved/`
 
+These standards are part of an experimental technique called **Agent Harnessing**:
+steering AI-authored changes with explicit docs, skills, and automated checks.
+Treat this operating model as experimental and expected to evolve.
+
 All new code reviews and feature work should reference `docs/` paths.
 
 ## Start Here
@@ -19,6 +23,7 @@ All new code reviews and feature work should reference `docs/` paths.
 8. `docs/architecture/observability.md`
 9. `docs/workflow.md`
 10. `docs/workflow-memory/README.md`
+11. `docs/architecture/effect-vs-nestjs.md`
 
 ## Directory Layout
 

@@ -2,6 +2,9 @@
 
 Content Studio is engineered as a spec-driven system.
 Behavior is defined in specs, implemented in code, and proven by automated gates.
+This repository also uses an experimental delivery technique called **Agent Harnessing**:
+we steer AI agents with explicit specs, targeted skills, and hard quality gates.
+This technique is still evolving and should be treated as experimental, not final doctrine.
 
 ## Read This First
 
@@ -23,9 +26,9 @@ Contracts define API behavior, handlers orchestrate, use cases own business logi
 5. Treat tests as executable policy.
 Type checks, tests, invariants, and build outputs are required evidence for merge.
 
-## How Agent Skills And Specs Work Together
+## Experimental Agent Harnessing (Skills + Specs)
 
-The codebase is built by pairing spec artifacts with focused agent skills:
+The codebase pairs spec artifacts with focused agent skills to constrain AI-authored changes:
 
 1. `content-studio-feature-delivery`
 Translates spec deltas into vertical slices with tests and docs updates.
@@ -83,3 +86,4 @@ packages/
 2. Architecture: `docs/architecture/overview.md`
 3. Delivery workflow and memory loop: `docs/workflow.md`
 4. Setup details: `docs/setup.md`
+5. Framework rationale (Effect TS vs NestJS): `docs/architecture/effect-vs-nestjs.md`

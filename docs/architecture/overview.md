@@ -132,3 +132,4 @@ Key files:
 - `docs/patterns/api-handler.md` -- Handler + serialization pipeline
 - `docs/patterns/effect-runtime.md` -- Layer construction rules
 - `docs/patterns/error-handling.md` -- Error class definitions
+- `docs/architecture/effect-vs-nestjs.md` -- Framework choice rationale for AI-driven development

@@ -1,6 +1,8 @@
-# AI Workflow
+# AI Workflow (Experimental Agent Harnessing)
 
-This project is AI-authored and docs-driven. Skills and standards are first-class engineering controls, not optional guidance.
+This project uses an experimental engineering technique called **Agent Harnessing**.
+We steer AI-authored changes with specs, skills, and quality gates.
+Skills and standards are first-class engineering controls, but this workflow is intentionally iterative and may change as we learn.
 
 ## Skill Topology
 
