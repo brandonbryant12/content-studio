@@ -28,7 +28,7 @@
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "effect": "^3.16.0",
-    "undici": "^7.3.0"
+    "undici": "^7.22.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
