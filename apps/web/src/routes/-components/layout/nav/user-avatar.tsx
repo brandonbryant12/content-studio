@@ -1,4 +1,4 @@
-import { ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { ExitIcon } from '@radix-ui/react-icons';
 import {
   Avatar,
   AvatarFallback,
@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
-import { useTheme } from 'next-themes';
 import { authClient } from '@/clients/authClient';
 import { getInitials } from '@/shared/lib/get-initials';
 
@@ -21,8 +20,6 @@ export default function UserAvatar({
   user: typeof authClient.$Infer.Session.user;
   collapsed?: boolean;
 }>) {
-  const { resolvedTheme, setTheme } = useTheme();
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -57,16 +54,6 @@ export default function UserAvatar({
         </div>
 
         <hr className="mb-2" />
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.preventDefault();
-            setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-          }}
-        >
-          {resolvedTheme === 'dark' ? <MoonIcon /> : <SunIcon />}
-          <span className="ml-[5px] capitalize">Theme</span>
-        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={async () => {
             await authClient.signOut();

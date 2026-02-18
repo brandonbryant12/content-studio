@@ -1,7 +1,7 @@
 import { Toaster } from '@repo/ui/components/sonner';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
-import React, { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import { authClient } from '@/clients/authClient';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 import { Navbar } from '@/routes/-components/layout/nav/navbar';
@@ -11,16 +11,6 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
-// Dev-only router devtools — stripped in production builds by Vite
-/* eslint-disable no-restricted-syntax -- React.lazy requires dynamic import for conditional dev-only loading */
-const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null
-  : React.lazy(() =>
-      import('@tanstack/router-devtools').then((res) => ({
-        default: res.TanStackRouterDevtools,
-      })),
-    );
-/* eslint-enable no-restricted-syntax */
 
 const emptySubscribe = () => () => {};
 
@@ -60,9 +50,6 @@ function RootComponent() {
         <Navbar session={session} />
         {mounted && <Toaster position="bottom-right" />}
         <Outlet />
-        <React.Suspense>
-          <TanStackRouterDevtools position="top-right" />
-        </React.Suspense>
       </div>
     </ErrorBoundary>
   );

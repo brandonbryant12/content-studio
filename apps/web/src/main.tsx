@@ -21,9 +21,7 @@ if (!rootElement.innerHTML) {
     <React.StrictMode>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        themes={['light', 'dark']}
-        enableSystem
+        forcedTheme="dark"
         disableTransitionOnChange
       >
         <RouterProvider router={router} />

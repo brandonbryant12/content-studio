@@ -86,7 +86,7 @@ function RouteComponent() {
               fontVariationSettings: "'SOFT' 50, 'WONK' 1",
             }}
           >
-            One studio, <span className="text-primary">every</span> format
+            Where ideas become <span className="text-primary">content</span>
           </h1>
 
           {/* Subtitle */}
@@ -116,52 +116,87 @@ function RouteComponent() {
 
       {/* Features */}
       <section className="px-6 pb-20 md:pb-28">
-        <div className="content-grid-4 max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto space-y-24">
           {[
             {
               icon: FileTextIcon,
-              label: 'Documents',
-              desc: 'Import source material or let AI draft from scratch',
-              color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-              delay: 'stagger-3',
+              label: 'Knowledge Base',
+              headline: 'Your content starts here',
+              desc: 'Upload documents, import from URLs, or use AI-powered deep research to build your knowledge base. Every piece of content you create draws from this foundation.',
+              image: '/screenshots/documents.png',
+              color: 'text-sky-400',
+              iconBg: 'bg-sky-500/10',
             },
             {
               icon: MixerHorizontalIcon,
               label: 'Podcasts',
-              desc: 'Multi-voice conversational audio, generated in minutes',
-              color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-              delay: 'stagger-4',
+              headline: 'Conversations, crafted by AI',
+              desc: 'Generate multi-voice podcast episodes with custom personas drawn from your knowledge base. Interactively edit every line of the script, then export broadcast-ready audio.',
+              image: '/screenshots/podcasts.png',
+              color: 'text-violet-400',
+              iconBg: 'bg-violet-500/10',
+              reverse: true,
             },
             {
               icon: SpeakerLoudIcon,
               label: 'Voiceovers',
-              desc: 'Natural-sounding narration for any content',
-              color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-              delay: 'stagger-5',
+              headline: 'Crisp narration, built-in writing assistant',
+              desc: 'Create polished voiceovers with natural-sounding voices. A built-in writing assistant helps you refine your script before generating audio — perfect for explainers, intros, and more.',
+              image: '/screenshots/voiceovers.png',
+              color: 'text-emerald-400',
+              iconBg: 'bg-emerald-500/10',
             },
             {
               icon: ImageIcon,
               label: 'Infographics',
-              desc: 'Visual summaries and graphics, ready to share',
-              color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-              delay: 'stagger-6',
+              headline: 'Custom visuals, your style',
+              desc: 'Generate eye-catching images and infographics from prompts. Save custom styles to keep your brand consistent across every visual you create.',
+              image: '/screenshots/infographics.png',
+              color: 'text-amber-400',
+              iconBg: 'bg-amber-500/10',
+              reverse: true,
             },
-          ].map(({ icon: Icon, label, desc, color, delay }) => (
-            <div
-              key={label}
-              className={`card-padded flex flex-col items-center text-center gap-3 animate-fade-in-up ${delay}`}
-            >
+          ].map(
+            ({
+              icon: Icon,
+              label,
+              headline,
+              desc,
+              image,
+              color,
+              iconBg,
+              reverse,
+            }) => (
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+                key={label}
+                className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-10 md:gap-16`}
               >
-                <Icon className="w-5 h-5" aria-hidden="true" />
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={`inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full ${iconBg}`}
+                  >
+                    <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
+                    <span className={`text-sm font-medium ${color}`}>
+                      {label}
+                    </span>
+                  </div>
+                  <h3 className="font-serif font-bold text-2xl md:text-3xl text-foreground mb-3">
+                    {headline}
+                  </h3>
+                  <p className="text-body-lg text-muted-foreground leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0 w-full">
+                  <img
+                    src={image}
+                    alt={`${label} screenshot`}
+                    className="rounded-xl border border-border shadow-2xl shadow-black/20 w-full"
+                  />
+                </div>
               </div>
-              <h3 className="font-serif font-semibold text-foreground">
-                {label}
-              </h3>
-              <p className="text-body">{desc}</p>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </section>
 
