@@ -34,8 +34,6 @@ export function InfographicListContainer() {
   const handleCreate = useCallback(() => {
     createMutation.mutate({
       title: 'Untitled Infographic',
-      infographicType: 'key_takeaways',
-      stylePreset: 'modern_minimal',
       format: 'portrait',
     });
   }, [createMutation]);

@@ -2,75 +2,43 @@ import { describe, it, expect } from 'vitest';
 import { buildInfographicPrompt, FORMAT_DIMENSIONS } from '../prompts';
 
 describe('buildInfographicPrompt', () => {
-  it('includes type directive for timeline', () => {
+  it('includes user prompt in first generation', () => {
     const result = buildInfographicPrompt({
-      infographicType: 'timeline',
-      stylePreset: 'modern_minimal',
+      styleProperties: [],
       format: 'portrait',
-      prompt: 'Company history',
+      prompt: 'Create a timeline of company history',
     });
 
-    expect(result).toContain('chronological timeline');
-    expect(result).toContain('Company history');
+    expect(result).toContain(
+      "User's prompt: Create a timeline of company history",
+    );
   });
 
-  it('includes type directive for comparison', () => {
+  it('serializes style properties as key-value pairs', () => {
     const result = buildInfographicPrompt({
-      infographicType: 'comparison',
-      stylePreset: 'corporate',
-      format: 'landscape',
-      prompt: 'Product A vs B',
-    });
-
-    expect(result).toContain('comparison');
-    expect(result).toContain('side-by-side');
-    expect(result).toContain('Product A vs B');
-  });
-
-  it('includes type directive for stats_dashboard', () => {
-    const result = buildInfographicPrompt({
-      infographicType: 'stats_dashboard',
-      stylePreset: 'bold_colorful',
-      format: 'square',
-      prompt: 'Q4 metrics',
-    });
-
-    expect(result).toContain('statistics dashboard');
-    expect(result).toContain('Q4 metrics');
-  });
-
-  it('includes type directive for key_takeaways', () => {
-    const result = buildInfographicPrompt({
-      infographicType: 'key_takeaways',
-      stylePreset: 'playful',
+      styleProperties: [
+        { key: 'Background', value: '#1a1a2e', type: 'color' },
+        { key: 'Mood', value: 'professional', type: 'text' },
+        { key: 'Font Size', value: '16', type: 'number' },
+      ],
       format: 'portrait',
-      prompt: 'Meeting summary',
+      prompt: 'Company report',
     });
 
-    expect(result).toContain('key takeaways');
-    expect(result).toContain('Meeting summary');
+    expect(result).toContain('Visual style parameters:');
+    expect(result).toContain('- Background: #1a1a2e');
+    expect(result).toContain('- Mood: professional');
+    expect(result).toContain('- Font Size: 16');
   });
 
-  it('includes style modifier for each preset', () => {
-    const styles = [
-      { preset: 'modern_minimal', keyword: 'whitespace' },
-      { preset: 'bold_colorful', keyword: 'Vibrant' },
-      { preset: 'corporate', keyword: 'Professional' },
-      { preset: 'playful', keyword: 'Rounded' },
-      { preset: 'dark_mode', keyword: 'Dark background' },
-      { preset: 'editorial', keyword: 'Magazine' },
-    ] as const;
+  it('omits style section when no properties', () => {
+    const result = buildInfographicPrompt({
+      styleProperties: [],
+      format: 'portrait',
+      prompt: 'Test',
+    });
 
-    for (const { preset, keyword } of styles) {
-      const result = buildInfographicPrompt({
-        infographicType: 'key_takeaways',
-        stylePreset: preset,
-        format: 'portrait',
-        prompt: 'test',
-      });
-
-      expect(result).toContain(keyword);
-    }
+    expect(result).not.toContain('Visual style parameters');
   });
 
   it('includes correct format dimensions', () => {
@@ -78,8 +46,7 @@ describe('buildInfographicPrompt', () => {
 
     for (const format of formats) {
       const result = buildInfographicPrompt({
-        infographicType: 'timeline',
-        stylePreset: 'modern_minimal',
+        styleProperties: [],
         format,
         prompt: 'test',
       });
@@ -91,8 +58,7 @@ describe('buildInfographicPrompt', () => {
 
   it('uses edit framing when isEdit is true', () => {
     const result = buildInfographicPrompt({
-      infographicType: 'key_takeaways',
-      stylePreset: 'modern_minimal',
+      styleProperties: [{ key: 'Accent', value: '#ff0000', type: 'color' }],
       format: 'portrait',
       prompt: 'Make the title bigger',
       isEdit: true,
@@ -100,18 +66,21 @@ describe('buildInfographicPrompt', () => {
 
     expect(result).toContain('existing infographic');
     expect(result).toContain('Edit instructions: Make the title bigger');
-    expect(result).not.toContain('key takeaways');
+    expect(result).not.toContain("User's prompt:");
+    // Style properties should still be included in edits
+    expect(result).toContain('- Accent: #ff0000');
   });
 
-  it('includes user prompt in first generation', () => {
+  it('includes closing quality instruction', () => {
     const result = buildInfographicPrompt({
-      infographicType: 'key_takeaways',
-      stylePreset: 'modern_minimal',
+      styleProperties: [],
       format: 'portrait',
-      prompt: 'Generic prompt',
+      prompt: 'test',
     });
 
-    expect(result).toContain("User's prompt: Generic prompt");
+    expect(result).toContain(
+      'Create a professional, clear, and visually appealing infographic',
+    );
   });
 });
 

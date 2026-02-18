@@ -3,6 +3,8 @@ import {
   serializeInfographicsEffect,
   serializeInfographicVersionsEffect,
   serializeJobEffect,
+  serializeStylePresetEffect,
+  serializeStylePresetsEffect,
 } from '@repo/db/schema';
 import {
   listInfographics,
@@ -15,6 +17,9 @@ import {
   getInfographicVersions,
   approveInfographic,
   revokeInfographicApproval,
+  listStylePresets,
+  createStylePreset,
+  deleteStylePreset,
 } from '@repo/media';
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
@@ -212,6 +217,53 @@ const infographicRouter = {
       );
     },
   ),
+
+  stylePresets: {
+    list: protectedProcedure.infographics.stylePresets.list.handler(
+      async ({ context, errors }) => {
+        return handleEffectWithProtocol(
+          context.runtime,
+          context.user,
+          listStylePresets().pipe(
+            Effect.flatMap((result) =>
+              serializeStylePresetsEffect([...result]),
+            ),
+          ),
+          errors,
+          { span: 'api.infographics.stylePresets.list' },
+        );
+      },
+    ),
+
+    create: protectedProcedure.infographics.stylePresets.create.handler(
+      async ({ context, input, errors }) => {
+        return handleEffectWithProtocol(
+          context.runtime,
+          context.user,
+          createStylePreset(input).pipe(
+            Effect.flatMap(serializeStylePresetEffect),
+          ),
+          errors,
+          { span: 'api.infographics.stylePresets.create' },
+        );
+      },
+    ),
+
+    delete: protectedProcedure.infographics.stylePresets.delete.handler(
+      async ({ context, input, errors }) => {
+        return handleEffectWithProtocol(
+          context.runtime,
+          context.user,
+          deleteStylePreset({ id: input.id }).pipe(Effect.map(() => ({}))),
+          errors,
+          {
+            span: 'api.infographics.stylePresets.delete',
+            attributes: { 'preset.id': input.id },
+          },
+        );
+      },
+    ),
+  },
 };
 
 export default infographicRouter;

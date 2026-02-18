@@ -143,6 +143,21 @@ export type PersonaId = typeof PersonaIdSchema.Type;
 export const generatePersonaId = (): PersonaId =>
   `per_${generateRandomBase32()}` as PersonaId;
 
+// Infographic Style Preset ID
+
+export const InfographicStylePresetIdSchema = Schema.String.pipe(
+  Schema.pattern(/^stpr_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid style preset ID format',
+  }),
+  Schema.brand('InfographicStylePresetId'),
+);
+
+export type InfographicStylePresetId =
+  typeof InfographicStylePresetIdSchema.Type;
+
+export const generateInfographicStylePresetId = (): InfographicStylePresetId =>
+  `stpr_${generateRandomBase32()}` as InfographicStylePresetId;
+
 // Infographic Version ID
 
 export const InfographicVersionIdSchema = Schema.String.pipe(

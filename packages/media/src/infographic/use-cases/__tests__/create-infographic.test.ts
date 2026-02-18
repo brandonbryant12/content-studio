@@ -12,6 +12,7 @@ const mockInsertFn = (data: InsertInfographic) =>
   Effect.succeed({
     ...data,
     prompt: data.prompt ?? null,
+    styleProperties: data.styleProperties ?? [],
     imageStorageKey: null,
     thumbnailStorageKey: null,
     errorMessage: null,
@@ -35,22 +36,19 @@ describe('createInfographic', () => {
       withTestUser(user)(
         createInfographic({
           title: 'My Infographic',
-          infographicType: 'timeline',
-          stylePreset: 'modern_minimal',
           format: 'portrait',
         }),
       ).pipe(Effect.provide(layers)),
     );
 
     expect(result.title).toBe('My Infographic');
-    expect(result.infographicType).toBe('timeline');
-    expect(result.stylePreset).toBe('modern_minimal');
     expect(result.format).toBe('portrait');
+    expect(result.styleProperties).toEqual([]);
     expect(result.status).toBe('draft');
     expect(result.createdBy).toBe(user.id);
   });
 
-  it('creates with optional prompt', async () => {
+  it('creates with optional prompt and style properties', async () => {
     const user = createTestUser();
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
@@ -59,16 +57,22 @@ describe('createInfographic', () => {
     const result = await Effect.runPromise(
       withTestUser(user)(
         createInfographic({
-          title: 'With Prompt',
-          infographicType: 'comparison',
-          stylePreset: 'bold_colorful',
+          title: 'With Style',
           format: 'square',
           prompt: 'Compare sales data',
+          styleProperties: [
+            { key: 'Background', value: '#000', type: 'color' },
+            { key: 'Mood', value: 'dark', type: 'text' },
+          ],
         }),
       ).pipe(Effect.provide(layers)),
     );
 
     expect(result.prompt).toBe('Compare sales data');
+    expect(result.styleProperties).toEqual([
+      { key: 'Background', value: '#000', type: 'color' },
+      { key: 'Mood', value: 'dark', type: 'text' },
+    ]);
   });
 
   it('fails when user is not authenticated', async () => {
@@ -78,8 +82,6 @@ describe('createInfographic', () => {
     const result = await Effect.runPromiseExit(
       createInfographic({
         title: 'No Auth',
-        infographicType: 'timeline',
-        stylePreset: 'modern_minimal',
         format: 'portrait',
       }).pipe(Effect.provide(layers)),
     );

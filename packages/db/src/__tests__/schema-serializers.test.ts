@@ -123,8 +123,7 @@ const makeInfographic = (overrides?: Partial<Infographic>): Infographic => ({
   id: 'inf_0123456789abcdef' as InfographicId,
   title: 'Test Infographic',
   prompt: null,
-  infographicType: 'timeline',
-  stylePreset: 'modern_minimal',
+  styleProperties: [],
   format: 'portrait',
   imageStorageKey: null,
   thumbnailStorageKey: null,
@@ -145,8 +144,7 @@ const makeInfographicVersion = (
   infographicId: 'inf_0123456789abcdef' as InfographicId,
   versionNumber: 1,
   prompt: null,
-  infographicType: 'timeline',
-  stylePreset: 'modern_minimal',
+  styleProperties: [],
   format: 'portrait',
   imageStorageKey: 'infographics/v1.png',
   thumbnailStorageKey: null,
@@ -377,10 +375,17 @@ describe('infographic serializers', () => {
       expect(result.approvedAt).toBeNull();
     });
 
-    it('preserves enum values', () => {
-      const result = serializeInfographic(makeInfographic());
-      expect(result.infographicType).toBe('timeline');
-      expect(result.stylePreset).toBe('modern_minimal');
+    it('preserves enum values and style properties', () => {
+      const result = serializeInfographic(
+        makeInfographic({
+          styleProperties: [
+            { key: 'Background', value: '#fff', type: 'color' },
+          ],
+        }),
+      );
+      expect(result.styleProperties).toEqual([
+        { key: 'Background', value: '#fff', type: 'color' },
+      ]);
       expect(result.format).toBe('portrait');
       expect(result.status).toBe('draft');
     });

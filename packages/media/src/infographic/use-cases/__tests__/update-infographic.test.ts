@@ -74,8 +74,9 @@ describe('updateInfographic', () => {
             id: infographic.id,
             title: 'New Title',
             prompt: 'New Prompt',
-            infographicType: 'comparison',
-            stylePreset: 'bold_colorful',
+            styleProperties: [
+              { key: 'Background', value: '#ff0000', type: 'color' },
+            ],
             format: 'landscape',
           }),
         ).pipe(Effect.provide(layers)),
@@ -83,8 +84,9 @@ describe('updateInfographic', () => {
 
       expect(result.title).toBe('New Title');
       expect(result.prompt).toBe('New Prompt');
-      expect(result.infographicType).toBe('comparison');
-      expect(result.stylePreset).toBe('bold_colorful');
+      expect(result.styleProperties).toEqual([
+        { key: 'Background', value: '#ff0000', type: 'color' },
+      ]);
       expect(result.format).toBe('landscape');
     });
   });

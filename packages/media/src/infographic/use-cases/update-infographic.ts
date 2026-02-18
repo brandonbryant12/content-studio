@@ -1,10 +1,6 @@
 import { requireOwnership } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import type {
-  InfographicType,
-  InfographicStyle,
-  InfographicFormat,
-} from '@repo/db/schema';
+import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -15,8 +11,7 @@ export interface UpdateInfographicInput {
   id: string;
   title?: string;
   prompt?: string;
-  infographicType?: InfographicType;
-  stylePreset?: InfographicStyle;
+  styleProperties?: readonly StyleProperty[];
   format?: InfographicFormat;
 }
 
@@ -34,8 +29,9 @@ export const updateInfographic = (input: UpdateInfographicInput) =>
     return yield* repo.update(input.id, {
       title: input.title,
       prompt: input.prompt,
-      infographicType: input.infographicType,
-      stylePreset: input.stylePreset,
+      styleProperties: input.styleProperties
+        ? [...input.styleProperties]
+        : undefined,
       format: input.format,
     });
   }).pipe(

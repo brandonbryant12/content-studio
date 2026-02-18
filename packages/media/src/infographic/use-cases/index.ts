@@ -47,3 +47,15 @@ export {
   type ExecuteGenerationInput,
   type ExecuteGenerationResult,
 } from './execute-generation';
+
+export { listStylePresets } from './list-style-presets';
+
+export {
+  createStylePreset,
+  type CreateStylePresetInput,
+} from './create-style-preset';
+
+export {
+  deleteStylePreset,
+  type DeleteStylePresetInput,
+} from './delete-style-preset';

@@ -16,8 +16,6 @@ export interface InfographicListItem {
   id: string;
   title: string;
   prompt: string | null;
-  infographicType: string;
-  stylePreset: string;
   format: string;
   status: InfographicStatusType;
   imageStorageKey: string | null;
@@ -39,13 +37,6 @@ function StatusBadge({
     </Badge>
   );
 }
-
-const TYPE_LABELS: Record<string, string> = {
-  timeline: 'Timeline',
-  comparison: 'Comparison',
-  stats_dashboard: 'Stats Dashboard',
-  key_takeaways: 'Key Takeaways',
-};
 
 const FORMAT_LABELS: Record<string, string> = {
   portrait: 'Portrait',
@@ -148,21 +139,15 @@ export const InfographicItem = memo(function InfographicItem({
           <div className="content-card-meta">
             <StatusBadge status={infographic.status} />
             <span className="text-meta">
-              {TYPE_LABELS[infographic.infographicType] ??
-                infographic.infographicType}
+              {FORMAT_LABELS[infographic.format] ?? infographic.format}
             </span>
           </div>
         </div>
       </Link>
       <div className="content-card-footer">
-        <div className="flex items-center gap-2">
-          <span className="text-meta">
-            {FORMAT_LABELS[infographic.format] ?? infographic.format}
-          </span>
-          <span className="text-meta">
-            {new Date(infographic.createdAt).toLocaleDateString()}
-          </span>
-        </div>
+        <span className="text-meta">
+          {new Date(infographic.createdAt).toLocaleDateString()}
+        </span>
         <Button
           variant="ghost"
           size="icon"

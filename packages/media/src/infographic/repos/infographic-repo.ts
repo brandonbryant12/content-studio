@@ -6,6 +6,7 @@ import {
   type InfographicVersion,
   type InfographicId,
   type InfographicStatusType,
+  type StyleProperty,
 } from '@repo/db/schema';
 import { eq, desc, asc, inArray } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
@@ -19,8 +20,7 @@ export interface InsertInfographic {
   id: InfographicId;
   title: string;
   prompt?: string;
-  infographicType: Infographic['infographicType'];
-  stylePreset: Infographic['stylePreset'];
+  styleProperties?: StyleProperty[];
   format: Infographic['format'];
   status?: InfographicStatusType;
   createdBy: string;
@@ -29,8 +29,7 @@ export interface InsertInfographic {
 export interface UpdateInfographic {
   title?: string;
   prompt?: string;
-  infographicType?: Infographic['infographicType'];
-  stylePreset?: Infographic['stylePreset'];
+  styleProperties?: StyleProperty[];
   format?: Infographic['format'];
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
@@ -42,8 +41,7 @@ export interface InsertInfographicVersion {
   infographicId: InfographicId;
   versionNumber: number;
   prompt?: string;
-  infographicType: InfographicVersion['infographicType'];
-  stylePreset: InfographicVersion['stylePreset'];
+  styleProperties?: StyleProperty[];
   format: InfographicVersion['format'];
   imageStorageKey: string;
   thumbnailStorageKey?: string;
@@ -135,8 +133,7 @@ const make: InfographicRepoService = {
           id: data.id,
           title: data.title,
           prompt: data.prompt,
-          infographicType: data.infographicType,
-          stylePreset: data.stylePreset,
+          styleProperties: data.styleProperties ?? [],
           format: data.format,
           status: data.status ?? 'draft',
           createdBy: data.createdBy,
@@ -200,8 +197,7 @@ const make: InfographicRepoService = {
           infographicId: data.infographicId,
           versionNumber: data.versionNumber,
           prompt: data.prompt,
-          infographicType: data.infographicType,
-          stylePreset: data.stylePreset,
+          styleProperties: data.styleProperties ?? [],
           format: data.format,
           imageStorageKey: data.imageStorageKey,
           thumbnailStorageKey: data.thumbnailStorageKey,

@@ -8,6 +8,9 @@ import {
   JobOutputSchema,
   JobStatusSchema,
   JobIdSchema,
+  StylePresetOutputSchema,
+  CreateStylePresetSchema,
+  InfographicStylePresetIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
 import { std, PaginationFields, authErrors, jobErrors } from './shared';
@@ -18,6 +21,17 @@ const infographicErrors = {
     data: std(
       Schema.Struct({
         infographicId: Schema.String,
+      }),
+    ),
+  },
+} as const;
+
+const stylePresetErrors = {
+  STYLE_PRESET_NOT_FOUND: {
+    status: 404,
+    data: std(
+      Schema.Struct({
+        presetId: Schema.String,
       }),
     ),
   },
@@ -151,6 +165,39 @@ const infographicContract = oc
       .errors({ ...infographicErrors, ...authErrors })
       .input(std(Schema.Struct({ id: InfographicIdSchema })))
       .output(std(InfographicOutputSchema)),
+
+    // Style preset sub-routes
+    stylePresets: oc.prefix('/style-presets').router({
+      list: oc
+        .route({
+          method: 'GET',
+          path: '/',
+          summary: 'List style presets',
+          description: 'List built-in and user-owned style presets',
+        })
+        .output(std(Schema.Array(StylePresetOutputSchema))),
+
+      create: oc
+        .route({
+          method: 'POST',
+          path: '/',
+          summary: 'Create style preset',
+          description: 'Create a new user-owned style preset',
+        })
+        .input(std(CreateStylePresetSchema))
+        .output(std(StylePresetOutputSchema)),
+
+      delete: oc
+        .route({
+          method: 'DELETE',
+          path: '/{id}',
+          summary: 'Delete style preset',
+          description: 'Delete a user-owned style preset',
+        })
+        .errors({ ...stylePresetErrors, ...authErrors })
+        .input(std(Schema.Struct({ id: InfographicStylePresetIdSchema })))
+        .output(std(Schema.Struct({}))),
+    }),
   });
 
 export default infographicContract;

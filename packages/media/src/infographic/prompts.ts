@@ -1,16 +1,11 @@
-import type {
-  InfographicType,
-  InfographicStyle,
-  InfographicFormat,
-} from '@repo/db/schema';
+import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface BuildPromptOptions {
-  infographicType: InfographicType;
-  stylePreset: InfographicStyle;
+  styleProperties: StyleProperty[];
   format: InfographicFormat;
   /** User's prompt — describes what to create (first gen) or what to change (edit). */
   prompt: string;
@@ -29,45 +24,11 @@ export const FORMAT_DIMENSIONS: Record<
 };
 
 // =============================================================================
-// Type Directives
-// =============================================================================
-
-const TYPE_DIRECTIVES: Record<InfographicType, string> = {
-  timeline:
-    'Create an infographic showing a chronological timeline. Arrange events along a visual timeline with dates, descriptions, and icons. Use a clear flow direction.',
-  comparison:
-    'Create a comparison infographic with items shown side-by-side. Use columns or dividers to separate each item. Include matching categories for easy comparison.',
-  stats_dashboard:
-    'Create a statistics dashboard infographic. Visualize data using charts, large numbers, and icons. Highlight key metrics prominently.',
-  key_takeaways:
-    'Create a key takeaways infographic. Present the most important points as a numbered visual list with icons. Use clear hierarchy.',
-};
-
-// =============================================================================
-// Style Modifiers
-// =============================================================================
-
-const STYLE_MODIFIERS: Record<InfographicStyle, string> = {
-  modern_minimal:
-    'Style: Clean lines, generous whitespace, neutral palette (black, white, gray, one accent color), sans-serif typography.',
-  bold_colorful:
-    'Style: Vibrant colors, strong contrast, large text, energetic layout, dynamic shapes.',
-  corporate:
-    'Style: Professional palette (navy, gray, white), structured grid, restrained decoration, clear data presentation.',
-  playful:
-    'Style: Rounded shapes, bright warm colors, hand-drawn style elements, friendly typography.',
-  dark_mode:
-    'Style: Dark background, light text, neon/bright accent colors, modern feel.',
-  editorial:
-    'Style: Magazine-inspired layout, sophisticated typography, muted color palette, elegant spacing.',
-};
-
-// =============================================================================
 // Prompt Builder
 // =============================================================================
 
 export function buildInfographicPrompt(options: BuildPromptOptions): string {
-  const { isEdit, prompt } = options;
+  const { isEdit, prompt, styleProperties } = options;
   const parts: string[] = [];
 
   if (isEdit) {
@@ -76,11 +37,13 @@ export function buildInfographicPrompt(options: BuildPromptOptions): string {
     );
     parts.push(`Edit instructions: ${prompt}`);
   } else {
-    parts.push(TYPE_DIRECTIVES[options.infographicType]);
     parts.push(`User's prompt: ${prompt}`);
   }
 
-  parts.push(STYLE_MODIFIERS[options.stylePreset]);
+  if (styleProperties.length > 0) {
+    const lines = styleProperties.map((p) => `- ${p.key}: ${p.value}`);
+    parts.push(`Visual style parameters:\n${lines.join('\n')}`);
+  }
 
   const dims = FORMAT_DIMENSIONS[options.format];
   parts.push(

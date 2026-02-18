@@ -8,5 +8,6 @@ export * from './schemas/voiceovers';
 export * from './schemas/jobs';
 export * from './schemas/media-types';
 export * from './schemas/infographics';
+export * from './schemas/style-presets';
 export * from './schemas/activity-log';
 export * from './schemas/serialization';

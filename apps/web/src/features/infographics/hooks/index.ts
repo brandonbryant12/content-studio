@@ -7,6 +7,7 @@ export { useInfographic, getInfographicQueryKey } from './use-infographic';
 export {
   useInfographicSettings,
   type UseInfographicSettingsReturn,
+  type StyleProperty,
 } from './use-infographic-settings';
 export {
   useInfographicVersions,
@@ -20,3 +21,8 @@ export {
 export { useOptimisticGeneration } from './use-optimistic-generation';
 export { useCreateInfographic } from './use-create-infographic';
 export { useOptimisticDeleteList } from './use-optimistic-delete-list';
+export {
+  useStylePresets,
+  useCreateStylePreset,
+  useDeleteStylePreset,
+} from './use-style-presets';

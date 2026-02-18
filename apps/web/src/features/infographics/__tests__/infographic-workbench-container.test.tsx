@@ -65,12 +65,8 @@ vi.mock('../components/prompt-panel', () => ({
   PromptPanel: () => <div data-testid="prompt-panel" />,
 }));
 
-vi.mock('../components/style-selector', () => ({
-  StyleSelector: () => <div data-testid="style-selector" />,
-}));
-
-vi.mock('../components/type-selector', () => ({
-  TypeSelector: () => <div data-testid="type-selector" />,
+vi.mock('../components/style-section', () => ({
+  StyleSection: () => <div data-testid="style-section" />,
 }));
 
 vi.mock('../components/version-history-strip', () => ({
@@ -125,12 +121,10 @@ describe('InfographicWorkbenchContainer', () => {
 
     vi.mocked(useInfographicSettings).mockReturnValue({
       prompt: 'Create an infographic',
-      infographicType: 'key_takeaways',
-      stylePreset: 'modern_minimal',
+      styleProperties: [],
       format: 'portrait',
       setPrompt: vi.fn(),
-      setInfographicType: vi.fn(),
-      setStylePreset: vi.fn(),
+      setStyleProperties: vi.fn(),
       setFormat: vi.fn(),
       hasChanges: false,
       isSaving: false,

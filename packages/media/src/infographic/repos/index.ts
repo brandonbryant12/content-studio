@@ -7,3 +7,11 @@ export {
   type InsertInfographicVersion,
   type ListOptions,
 } from './infographic-repo';
+
+export {
+  StylePresetRepo,
+  StylePresetRepoLive,
+  StylePresetNotFound,
+  type StylePresetRepoService,
+  type InsertStylePreset,
+} from './style-preset-repo';

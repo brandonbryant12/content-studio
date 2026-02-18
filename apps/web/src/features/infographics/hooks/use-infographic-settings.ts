@@ -6,9 +6,13 @@ import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 type InfographicFull = RouterOutput['infographics']['get'];
-type InfographicType = InfographicFull['infographicType'];
-type InfographicStyle = InfographicFull['stylePreset'];
 type InfographicFormat = InfographicFull['format'];
+
+export interface StyleProperty {
+  key: string;
+  value: string;
+  type?: 'text' | 'color' | 'number';
+}
 
 interface UseInfographicSettingsOptions {
   infographic: InfographicFull | undefined;
@@ -16,22 +20,19 @@ interface UseInfographicSettingsOptions {
 
 interface InfographicDraft {
   prompt: string;
-  infographicType: InfographicType;
-  stylePreset: InfographicStyle;
+  styleProperties: StyleProperty[];
   format: InfographicFormat;
 }
 
 export interface UseInfographicSettingsReturn {
   // Current values
   prompt: string;
-  infographicType: InfographicType;
-  stylePreset: InfographicStyle;
+  styleProperties: StyleProperty[];
   format: InfographicFormat;
 
   // Setters
   setPrompt: (prompt: string) => void;
-  setInfographicType: (type: InfographicType) => void;
-  setStylePreset: (style: InfographicStyle) => void;
+  setStyleProperties: (properties: StyleProperty[]) => void;
   setFormat: (format: InfographicFormat) => void;
 
   // State
@@ -46,8 +47,7 @@ export interface UseInfographicSettingsReturn {
 function areEqualDrafts(a: InfographicDraft, b: InfographicDraft): boolean {
   return (
     a.prompt === b.prompt &&
-    a.infographicType === b.infographicType &&
-    a.stylePreset === b.stylePreset &&
+    JSON.stringify(a.styleProperties) === JSON.stringify(b.styleProperties) &&
     a.format === b.format
   );
 }
@@ -61,16 +61,15 @@ export function useInfographicSettings({
 
   const infographicId = infographic?.id;
   const serverPrompt = infographic?.prompt ?? '';
-  const serverInfographicType = infographic?.infographicType ?? 'key_takeaways';
-  const serverStylePreset = infographic?.stylePreset ?? 'modern_minimal';
+  const serverStyleProperties: StyleProperty[] =
+    (infographic?.styleProperties as StyleProperty[] | undefined) ?? [];
   const serverFormat = infographic?.format ?? 'portrait';
   const draftValues = infographicId
     ? draftsByInfographicId[infographicId]
     : undefined;
 
   const prompt = draftValues?.prompt ?? serverPrompt;
-  const infographicType = draftValues?.infographicType ?? serverInfographicType;
-  const stylePreset = draftValues?.stylePreset ?? serverStylePreset;
+  const styleProperties = draftValues?.styleProperties ?? serverStyleProperties;
   const format = draftValues?.format ?? serverFormat;
 
   const clearDraft = useCallback((id: string) => {
@@ -88,8 +87,7 @@ export function useInfographicSettings({
       setDraftsByInfographicId((prev) => {
         const serverValues: InfographicDraft = {
           prompt: serverPrompt,
-          infographicType: serverInfographicType,
-          stylePreset: serverStylePreset,
+          styleProperties: serverStyleProperties,
           format: serverFormat,
         };
         const current = prev[infographicId] ?? serverValues;
@@ -107,13 +105,7 @@ export function useInfographicSettings({
         };
       });
     },
-    [
-      infographicId,
-      serverPrompt,
-      serverInfographicType,
-      serverStylePreset,
-      serverFormat,
-    ],
+    [infographicId, serverPrompt, serverStyleProperties, serverFormat],
   );
 
   const setPrompt = useCallback(
@@ -123,16 +115,9 @@ export function useInfographicSettings({
     [updateDraft],
   );
 
-  const setInfographicType = useCallback(
-    (value: InfographicType) => {
-      updateDraft({ infographicType: value });
-    },
-    [updateDraft],
-  );
-
-  const setStylePreset = useCallback(
-    (value: InfographicStyle) => {
-      updateDraft({ stylePreset: value });
+  const setStyleProperties = useCallback(
+    (value: StyleProperty[]) => {
+      updateDraft({ styleProperties: value });
     },
     [updateDraft],
   );
@@ -146,8 +131,7 @@ export function useInfographicSettings({
 
   const hasChanges =
     prompt !== serverPrompt ||
-    infographicType !== serverInfographicType ||
-    stylePreset !== serverStylePreset ||
+    JSON.stringify(styleProperties) !== JSON.stringify(serverStyleProperties) ||
     format !== serverFormat;
 
   const updateMutation = useMutation(
@@ -164,8 +148,7 @@ export function useInfographicSettings({
     await updateMutation.mutateAsync({
       id: infographicId,
       prompt,
-      infographicType,
-      stylePreset,
+      styleProperties,
       format,
     });
 
@@ -173,8 +156,7 @@ export function useInfographicSettings({
   }, [
     infographicId,
     prompt,
-    infographicType,
-    stylePreset,
+    styleProperties,
     format,
     updateMutation,
     clearDraft,
@@ -187,12 +169,10 @@ export function useInfographicSettings({
 
   return {
     prompt,
-    infographicType,
-    stylePreset,
+    styleProperties,
     format,
     setPrompt,
-    setInfographicType,
-    setStylePreset,
+    setStyleProperties,
     setFormat,
     hasChanges,
     isSaving: updateMutation.isPending,

@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { DocumentSourceSchema } from '../schemas/documents';
 import {
   InfographicStatus,
-  InfographicTypeSchema,
-  InfographicStyleSchema,
   InfographicFormatSchema,
   InfographicStatusSchema,
+  StylePropertySchema,
+  StylePropertiesSchema,
 } from '../schemas/infographics';
 import { JobStatus, JobType, JobStatusSchema } from '../schemas/jobs';
 import {
@@ -128,35 +128,40 @@ describe('enum schemas', () => {
     });
   });
 
-  describe('InfographicTypeSchema', () => {
-    const decode = Schema.decodeUnknownSync(InfographicTypeSchema);
+  describe('StylePropertySchema', () => {
+    const decode = Schema.decodeUnknownSync(StylePropertySchema);
 
-    it('accepts valid types', () => {
-      expect(decode('timeline')).toBe('timeline');
-      expect(decode('comparison')).toBe('comparison');
-      expect(decode('stats_dashboard')).toBe('stats_dashboard');
-      expect(decode('key_takeaways')).toBe('key_takeaways');
+    it('accepts valid style property', () => {
+      expect(decode({ key: 'Background', value: '#fff' })).toEqual({
+        key: 'Background',
+        value: '#fff',
+      });
     });
 
-    it('rejects invalid types', () => {
-      expect(() => decode('chart')).toThrow();
+    it('accepts style property with type', () => {
+      expect(
+        decode({ key: 'Background', value: '#fff', type: 'color' }),
+      ).toEqual({ key: 'Background', value: '#fff', type: 'color' });
+    });
+
+    it('rejects invalid type value', () => {
+      expect(() => decode({ key: 'x', value: 'y', type: 'invalid' })).toThrow();
     });
   });
 
-  describe('InfographicStyleSchema', () => {
-    const decode = Schema.decodeUnknownSync(InfographicStyleSchema);
+  describe('StylePropertiesSchema', () => {
+    const decode = Schema.decodeUnknownSync(StylePropertiesSchema);
 
-    it('accepts valid styles', () => {
-      expect(decode('modern_minimal')).toBe('modern_minimal');
-      expect(decode('bold_colorful')).toBe('bold_colorful');
-      expect(decode('corporate')).toBe('corporate');
-      expect(decode('playful')).toBe('playful');
-      expect(decode('dark_mode')).toBe('dark_mode');
-      expect(decode('editorial')).toBe('editorial');
+    it('accepts an array of style properties', () => {
+      const result = decode([
+        { key: 'BG', value: '#000', type: 'color' },
+        { key: 'Mood', value: 'dark' },
+      ]);
+      expect(result).toHaveLength(2);
     });
 
-    it('rejects invalid styles', () => {
-      expect(() => decode('neon')).toThrow();
+    it('accepts empty array', () => {
+      expect(decode([])).toEqual([]);
     });
   });
 

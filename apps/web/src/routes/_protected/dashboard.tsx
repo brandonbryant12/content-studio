@@ -368,8 +368,6 @@ function Dashboard() {
               onClick={() =>
                 createInfographic.mutate({
                   title: 'Untitled Infographic',
-                  infographicType: 'key_takeaways',
-                  stylePreset: 'modern_minimal',
                   format: 'portrait',
                 })
               }
@@ -397,9 +395,7 @@ function Dashboard() {
               </div>
               <div className="recent-item-info">
                 <div className="recent-item-title">{ig.title}</div>
-                <div className="recent-item-meta">
-                  {ig.infographicType.replace(/_/g, ' ')} · {ig.format}
-                </div>
+                <div className="recent-item-meta">{ig.format}</div>
               </div>
             </Link>
           )}

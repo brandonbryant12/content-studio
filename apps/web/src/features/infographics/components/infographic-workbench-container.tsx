@@ -12,8 +12,7 @@ import { ExportDropdown } from './export-dropdown';
 import { FormatSelector } from './format-selector';
 import { PreviewPanel } from './preview-panel';
 import { PromptPanel } from './prompt-panel';
-import { StyleSelector } from './style-selector';
-import { TypeSelector } from './type-selector';
+import { StyleSection } from './style-section';
 import { VersionHistoryStrip } from './version-history-strip';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
@@ -160,15 +159,9 @@ export function InfographicWorkbenchContainer({
               isEditMode={hasExistingImage}
             />
 
-            <TypeSelector
-              value={settings.infographicType}
-              onChange={settings.setInfographicType}
-              disabled={actions.isGenerating}
-            />
-
-            <StyleSelector
-              value={settings.stylePreset}
-              onChange={settings.setStylePreset}
+            <StyleSection
+              properties={settings.styleProperties}
+              onChange={settings.setStyleProperties}
               disabled={actions.isGenerating}
             />
 

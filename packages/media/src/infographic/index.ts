@@ -7,6 +7,11 @@ export {
   type UpdateInfographic as RepoUpdateInfographic,
   type InsertInfographicVersion,
   type ListOptions as InfographicListOptions,
+  StylePresetRepo,
+  StylePresetRepoLive,
+  StylePresetNotFound,
+  type StylePresetRepoService,
+  type InsertStylePreset,
 } from './repos';
 
 // Infographic module - Use Cases
@@ -34,18 +39,20 @@ export {
   executeInfographicGeneration,
   type ExecuteGenerationInput,
   type ExecuteGenerationResult,
+  listStylePresets,
+  createStylePreset,
+  type CreateStylePresetInput,
+  deleteStylePreset,
+  type DeleteStylePresetInput,
 } from './use-cases';
 
 // Re-export types from schema
 export type {
   Infographic,
-  InfographicType,
-  InfographicStyle,
   InfographicFormat,
   InfographicStatusType,
   InfographicOutput,
   InfographicVersion,
   InfographicVersionOutput,
-  CreateInfographic,
-  UpdateInfographic,
+  StyleProperty,
 } from '@repo/db/schema';

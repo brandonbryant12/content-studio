@@ -62,8 +62,7 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
 
     const isEdit = latestVersion !== null;
     const prompt = buildInfographicPrompt({
-      infographicType: infographic.infographicType,
-      stylePreset: infographic.stylePreset,
+      styleProperties: infographic.styleProperties ?? [],
       format: infographic.format,
       prompt: infographic.prompt ?? 'Create an infographic',
       isEdit,
@@ -98,8 +97,7 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
         infographicId: infographic.id,
         versionNumber: nextVersion,
         prompt: infographic.prompt ?? undefined,
-        infographicType: infographic.infographicType,
-        stylePreset: infographic.stylePreset,
+        styleProperties: infographic.styleProperties ?? [],
         format: infographic.format,
         imageStorageKey: storageKey,
       })

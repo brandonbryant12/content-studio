@@ -141,6 +141,11 @@ export {
   InfographicRepoLive,
   type InfographicRepoService,
   type InfographicListOptions,
+  StylePresetRepo,
+  StylePresetRepoLive,
+  StylePresetNotFound,
+  type StylePresetRepoService,
+  type InsertStylePreset,
 } from './infographic';
 
 export {
@@ -167,17 +172,21 @@ export {
   executeInfographicGeneration,
   type ExecuteGenerationInput,
   type ExecuteGenerationResult,
+  listStylePresets,
+  createStylePreset,
+  type CreateStylePresetInput,
+  deleteStylePreset,
+  type DeleteStylePresetInput,
 } from './infographic';
 
 export type {
   Infographic,
-  InfographicType,
-  InfographicStyle,
   InfographicFormat,
   InfographicStatusType,
   InfographicOutput,
   InfographicVersion,
   InfographicVersionOutput,
+  StyleProperty,
 } from './infographic';
 
 export {
@@ -206,17 +215,18 @@ export {
 import type { ActivityLogRepo } from './activity';
 import type { DocumentRepo } from './document';
 import type { InfographicRepo } from './infographic';
+import type { StylePresetRepo } from './infographic';
+import type { PersonaRepo } from './persona';
 import type { PodcastRepo } from './podcast';
 import type { VoiceoverRepo } from './voiceover';
-import type { PersonaRepo } from './persona';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 import { ActivityLogRepoLive } from './activity';
 import { DocumentRepoLive } from './document';
-import { InfographicRepoLive } from './infographic';
+import { InfographicRepoLive, StylePresetRepoLive } from './infographic';
+import { PersonaRepoLive } from './persona';
 import { PodcastRepoLive } from './podcast';
 import { VoiceoverRepoLive } from './voiceover';
-import { PersonaRepoLive } from './persona';
 
 // When adding a new repo, add it to both Media and MediaLive.
 export type Media =
@@ -224,6 +234,7 @@ export type Media =
   | PodcastRepo
   | VoiceoverRepo
   | InfographicRepo
+  | StylePresetRepo
   | ActivityLogRepo
   | PersonaRepo;
 
@@ -233,6 +244,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     PodcastRepoLive,
     VoiceoverRepoLive,
     InfographicRepoLive,
+    StylePresetRepoLive,
     ActivityLogRepoLive,
     PersonaRepoLive,
   );

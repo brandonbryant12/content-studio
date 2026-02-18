@@ -1,9 +1,8 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import {
   generateInfographicId,
-  type InfographicType,
-  type InfographicStyle,
   type InfographicFormat,
+  type StyleProperty,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
 import { InfographicRepo } from '../repos';
@@ -14,10 +13,9 @@ import { InfographicRepo } from '../repos';
 
 export interface CreateInfographicInput {
   title: string;
-  infographicType: InfographicType;
-  stylePreset: InfographicStyle;
   format: InfographicFormat;
   prompt?: string;
+  styleProperties?: readonly StyleProperty[];
 }
 
 // =============================================================================
@@ -33,8 +31,7 @@ export const createInfographic = (input: CreateInfographicInput) =>
       id: generateInfographicId(),
       title: input.title,
       prompt: input.prompt,
-      infographicType: input.infographicType,
-      stylePreset: input.stylePreset,
+      styleProperties: [...(input.styleProperties ?? [])],
       format: input.format,
       status: 'draft',
       createdBy: user.id,

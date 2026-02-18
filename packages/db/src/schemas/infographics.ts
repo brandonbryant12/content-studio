@@ -6,6 +6,7 @@ import {
   integer,
   index,
   pgEnum,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
 import { user } from './auth';
@@ -22,21 +23,29 @@ import {
   createBatchEffectSerializer,
 } from './serialization';
 
-export const infographicTypeEnum = pgEnum('infographic_type', [
-  'timeline',
-  'comparison',
-  'stats_dashboard',
-  'key_takeaways',
-]);
+// =============================================================================
+// Style Properties
+// =============================================================================
 
-export const infographicStyleEnum = pgEnum('infographic_style', [
-  'modern_minimal',
-  'bold_colorful',
-  'corporate',
-  'playful',
-  'dark_mode',
-  'editorial',
-]);
+export interface StyleProperty {
+  key: string;
+  value: string;
+  type?: 'text' | 'color' | 'number';
+}
+
+export const StylePropertySchema = Schema.Struct({
+  key: Schema.String,
+  value: Schema.String,
+  type: Schema.optional(Schema.Literal('text', 'color', 'number')),
+});
+
+export const StylePropertiesSchema = Schema.Array(StylePropertySchema);
+
+export type StylePropertyType = typeof StylePropertySchema.Type;
+
+// =============================================================================
+// Enums
+// =============================================================================
 
 export const infographicFormatEnum = pgEnum('infographic_format', [
   'portrait',
@@ -59,6 +68,10 @@ export const InfographicStatus = {
   FAILED: 'failed',
 } as const;
 
+// =============================================================================
+// Tables
+// =============================================================================
+
 export const infographic = pgTable(
   'infographic',
   {
@@ -68,8 +81,10 @@ export const infographic = pgTable(
       .primaryKey(),
     title: text('title').notNull(),
     prompt: text('prompt'),
-    infographicType: infographicTypeEnum('infographic_type').notNull(),
-    stylePreset: infographicStyleEnum('style_preset').notNull(),
+    styleProperties: jsonb('style_properties')
+      .$type<StyleProperty[]>()
+      .notNull()
+      .default([]),
     format: infographicFormatEnum('format').notNull(),
     imageStorageKey: text('image_storage_key'),
     thumbnailStorageKey: text('thumbnail_storage_key'),
@@ -106,8 +121,10 @@ export const infographicVersion = pgTable(
       .$type<InfographicId>(),
     versionNumber: integer('version_number').notNull(),
     prompt: text('prompt'),
-    infographicType: infographicTypeEnum('infographic_type_v').notNull(),
-    stylePreset: infographicStyleEnum('style_preset_v').notNull(),
+    styleProperties: jsonb('style_properties_v')
+      .$type<StyleProperty[]>()
+      .notNull()
+      .default([]),
     format: infographicFormatEnum('format_v').notNull(),
     imageStorageKey: text('image_storage_key').notNull(),
     thumbnailStorageKey: text('thumbnail_storage_key'),
@@ -120,13 +137,9 @@ export const infographicVersion = pgTable(
   ],
 );
 
-export const InfographicTypeSchema = Schema.Literal(
-  ...infographicTypeEnum.enumValues,
-);
-
-export const InfographicStyleSchema = Schema.Literal(
-  ...infographicStyleEnum.enumValues,
-);
+// =============================================================================
+// Effect Schemas
+// =============================================================================
 
 export const InfographicFormatSchema = Schema.Literal(
   ...infographicFormatEnum.enumValues,
@@ -138,10 +151,9 @@ export const InfographicStatusSchema = Schema.Literal(
 
 export const CreateInfographicSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
-  infographicType: InfographicTypeSchema,
-  stylePreset: InfographicStyleSchema,
   format: InfographicFormatSchema,
   prompt: Schema.optional(Schema.String),
+  styleProperties: Schema.optional(StylePropertiesSchema),
 });
 
 export const UpdateInfographicFields = {
@@ -149,9 +161,8 @@ export const UpdateInfographicFields = {
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
   prompt: Schema.optional(Schema.String),
-  infographicType: Schema.optional(InfographicTypeSchema),
-  stylePreset: Schema.optional(InfographicStyleSchema),
   format: Schema.optional(InfographicFormatSchema),
+  styleProperties: Schema.optional(StylePropertiesSchema),
 };
 
 export const UpdateInfographicSchema = Schema.Struct(UpdateInfographicFields);
@@ -160,8 +171,7 @@ export const InfographicOutputSchema = Schema.Struct({
   id: InfographicIdSchema,
   title: Schema.String,
   prompt: Schema.NullOr(Schema.String),
-  infographicType: InfographicTypeSchema,
-  stylePreset: InfographicStyleSchema,
+  styleProperties: StylePropertiesSchema,
   format: InfographicFormatSchema,
   imageStorageKey: Schema.NullOr(Schema.String),
   thumbnailStorageKey: Schema.NullOr(Schema.String),
@@ -179,17 +189,18 @@ export const InfographicVersionOutputSchema = Schema.Struct({
   infographicId: InfographicIdSchema,
   versionNumber: Schema.Number,
   prompt: Schema.NullOr(Schema.String),
-  infographicType: InfographicTypeSchema,
-  stylePreset: InfographicStyleSchema,
+  styleProperties: StylePropertiesSchema,
   format: InfographicFormatSchema,
   imageStorageKey: Schema.String,
   thumbnailStorageKey: Schema.NullOr(Schema.String),
   createdAt: Schema.String,
 });
 
+// =============================================================================
+// Types
+// =============================================================================
+
 export type Infographic = typeof infographic.$inferSelect;
-export type InfographicType = Infographic['infographicType'];
-export type InfographicStyle = Infographic['stylePreset'];
 export type InfographicFormat = Infographic['format'];
 export type InfographicStatusType = Infographic['status'];
 export type InfographicOutput = typeof InfographicOutputSchema.Type;
@@ -200,12 +211,15 @@ export type InfographicVersion = typeof infographicVersion.$inferSelect;
 export type InfographicVersionOutput =
   typeof InfographicVersionOutputSchema.Type;
 
+// =============================================================================
+// Serialization
+// =============================================================================
+
 const infographicTransform = (row: Infographic): InfographicOutput => ({
   id: row.id,
   title: row.title,
   prompt: row.prompt ?? null,
-  infographicType: row.infographicType,
-  stylePreset: row.stylePreset,
+  styleProperties: row.styleProperties ?? [],
   format: row.format,
   imageStorageKey: row.imageStorageKey ?? null,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
@@ -225,8 +239,7 @@ const infographicVersionTransform = (
   infographicId: row.infographicId,
   versionNumber: row.versionNumber,
   prompt: row.prompt ?? null,
-  infographicType: row.infographicType,
-  stylePreset: row.stylePreset,
+  styleProperties: row.styleProperties ?? [],
   format: row.format,
   imageStorageKey: row.imageStorageKey,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
