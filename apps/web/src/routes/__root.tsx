@@ -11,7 +11,6 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
-
 const emptySubscribe = () => () => {};
 
 function RootComponent() {
