@@ -62,4 +62,5 @@ const runtimeEnv: Record<string, unknown> = {
 export const env = Schema.decodeUnknownSync(envSchema)(runtimeEnv);
 
 export const isPasswordAuthEnabled = env.PUBLIC_AUTH_MODE !== 'sso-only';
-export const isMicrosoftSSOAuthEnabled = env.PUBLIC_AUTH_MODE !== 'dev-password';
+export const isMicrosoftSSOAuthEnabled =
+  env.PUBLIC_AUTH_MODE !== 'dev-password';

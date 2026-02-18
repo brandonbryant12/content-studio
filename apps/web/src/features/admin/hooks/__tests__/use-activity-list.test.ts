@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { apiClient } from '@/clients/apiClient';
 import { getActivityListQueryKey } from '../use-activity-list';
+import { apiClient } from '@/clients/apiClient';
 
 vi.mock('@/env', () => ({
   env: {

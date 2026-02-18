@@ -1,7 +1,10 @@
 const FILE_SLUG_FALLBACK = 'export';
 const FILE_EXTENSION_REGEX = /\.([a-z0-9]{2,5})$/i;
 
-export function toFileSlug(value: string, fallback = FILE_SLUG_FALLBACK): string {
+export function toFileSlug(
+  value: string,
+  fallback = FILE_SLUG_FALLBACK,
+): string {
   const trimmed = value.trim().toLowerCase();
   if (!trimmed) return fallback;
 
@@ -28,7 +31,9 @@ export function getFileExtensionFromUrl(url: string, fallback: string): string {
   };
 
   try {
-    return parse(new URL(url, 'http://localhost').pathname) ?? normalizedFallback;
+    return (
+      parse(new URL(url, 'http://localhost').pathname) ?? normalizedFallback
+    );
   } catch {
     return parse(url) ?? normalizedFallback;
   }

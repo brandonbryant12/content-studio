@@ -12,7 +12,16 @@ export function createRouter() {
     basepath: env.PUBLIC_BASE_PATH,
     scrollRestoration: true,
     defaultPreload: 'intent',
-    defaultPendingComponent: () => <Spinner />,
+    // Query staleTime controls freshness for loader-backed data.
+    defaultPreloadStaleTime: 0,
+    defaultPendingComponent: () => (
+      <div
+        className="flex w-full items-center justify-center h-full min-h-[200px]"
+        data-testid="route-loading-spinner"
+      >
+        <Spinner className="w-6 h-6" />
+      </div>
+    ),
     Wrap: function WrapComponent({ children }) {
       return (
         <QueryClientProvider client={queryClient}>

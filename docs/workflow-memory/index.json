@@ -1,0 +1,17 @@
+[
+  {
+    "id": "2026-02-18-self-improvement-migrate-workflow-memory-to-structured-store",
+    "date": "2026-02-18",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Migrate workflow memory to structured store",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "memory",
+      "workflow",
+      "tooling"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  }
+]

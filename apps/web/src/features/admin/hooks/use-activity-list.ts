@@ -1,9 +1,9 @@
-import type { RouterOutput } from '@repo/api/client';
 import {
   useInfiniteQuery,
   type InfiniteData,
   type QueryKey,
 } from '@tanstack/react-query';
+import type { RouterOutput } from '@repo/api/client';
 import { apiClient, rawApiClient } from '@/clients/apiClient';
 
 type ActivityListPage = RouterOutput['admin']['list'];
@@ -48,9 +48,7 @@ export function getActivityListQueryKey(
 /**
  * Fetch paginated activity list with cursor-based pagination.
  */
-export function useActivityList(
-  options: UseActivityListOptions = {},
-) {
+export function useActivityList(options: UseActivityListOptions = {}) {
   const { userId, entityType, search, limit = 50, enabled = true } = options;
   const normalizedSearch = normalizeSearch(search);
 

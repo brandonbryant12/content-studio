@@ -60,7 +60,9 @@ describe('useBulkDelete', () => {
     });
 
     expect(deleteFn).toHaveBeenCalledTimes(2);
-    expect(queryClient.getQueryData(queryKey)).toEqual([{ id: 'c', title: 'C' }]);
+    expect(queryClient.getQueryData(queryKey)).toEqual([
+      { id: 'c', title: 'C' },
+    ]);
     expect(toast.success).toHaveBeenCalledWith('Deleted 2 documents');
     expect(result.current.isBulkDeleting).toBe(false);
   });

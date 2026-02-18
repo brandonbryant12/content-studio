@@ -29,7 +29,11 @@ function buildResearchSourcesText(document: Document): string[] {
   const sources = document.researchConfig?.sources ?? [];
   if (sources.length === 0) return [];
 
-  return ['Sources:', ...sources.map((source) => `- ${source.title}: ${source.url}`), ''];
+  return [
+    'Sources:',
+    ...sources.map((source) => `- ${source.title}: ${source.url}`),
+    '',
+  ];
 }
 
 export function buildDocumentMarkdownExport({

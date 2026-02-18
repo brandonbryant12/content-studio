@@ -82,8 +82,7 @@ export const initTelemetry = (config: TelemetryConfig): void => {
     resource: new Resource({
       [ATTR_SERVICE_NAME]: config.serviceName,
       [ATTR_SERVICE_VERSION]: config.serviceVersion ?? '0.0.0',
-      [DEPLOYMENT_ENVIRONMENT]:
-        config.environment ?? process.env.NODE_ENV ?? 'development',
+      [DEPLOYMENT_ENVIRONMENT]: config.environment ?? 'development',
     }),
   });
 

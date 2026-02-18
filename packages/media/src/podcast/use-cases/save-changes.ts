@@ -1,11 +1,11 @@
 import { requireOwnership } from '@repo/auth/policy';
-import { Effect, Schema } from 'effect';
 import {
   VersionStatus,
   type PersonaId,
   type Podcast,
   type ScriptSegment,
 } from '@repo/db/schema';
+import { Effect, Schema } from 'effect';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================

@@ -12,10 +12,7 @@ import {
 import { DocumentDetail } from './document-detail';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
-import {
-  downloadTextFile,
-  toFileSlug,
-} from '@/shared/lib/file-download';
+import { downloadTextFile, toFileSlug } from '@/shared/lib/file-download';
 
 interface DocumentDetailContainerProps {
   documentId: string;

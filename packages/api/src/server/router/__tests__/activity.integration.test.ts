@@ -317,10 +317,12 @@ describe('activity router', () => {
           (byEntityTypeBefore.get('voiceover') ?? 0),
       ).toBe(1);
       expect(
-        (byActionAfter.get('created') ?? 0) - (byActionBefore.get('created') ?? 0),
+        (byActionAfter.get('created') ?? 0) -
+          (byActionBefore.get('created') ?? 0),
       ).toBe(2);
       expect(
-        (byActionAfter.get('updated') ?? 0) - (byActionBefore.get('updated') ?? 0),
+        (byActionAfter.get('updated') ?? 0) -
+          (byActionBefore.get('updated') ?? 0),
       ).toBe(1);
     });
   });

@@ -62,6 +62,7 @@ export function usePodcast(podcastId: string) {
 | ----------- | ----------------- | ---------------------------------------------- |
 | `staleTime` | `60_000` (1 min)  | Prevents redundant refetches during navigation |
 | `gcTime`    | `300_000` (5 min) | Keeps cache for back-navigation                |
+| `defaultPreloadStaleTime` (router) | `0` | Lets React Query own freshness for loader-backed data |
 
 Configure in the shared QueryClient:
 
@@ -72,7 +73,7 @@ const queryClient = new QueryClient({
       staleTime: 60_000,
       gcTime: 300_000,
       retry: (count, error) => {
-        if (isNotFoundError(error)) return false;
+        if (hasCode(error) && error.code.endsWith('_NOT_FOUND')) return false;
         return count < 3;
       },
     },
@@ -81,6 +82,18 @@ const queryClient = new QueryClient({
 ```
 
 **Reference:** `apps/web/src/clients/queryClient.ts`
+
+Set router preload freshness to `0` when route loaders use `ensureQueryData` so Query cache settings control data staleness:
+
+```tsx
+const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+  defaultPreloadStaleTime: 0,
+});
+```
+
+**Reference:** `apps/web/src/router.tsx`
 
 ## Prefetching Strategy
 

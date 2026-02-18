@@ -9,13 +9,16 @@ All new code reviews and feature work should reference `docs/` paths.
 
 ## Start Here
 
-1. `docs/architecture/overview.md`
-2. `docs/patterns/use-case.md`
-3. `docs/patterns/api-handler.md`
-4. `docs/patterns/safety-primitives.md`
-5. `docs/testing/overview.md`
-6. `docs/frontend/project-structure.md`
-7. `docs/architecture/observability.md`
+1. `docs/master-spec.md`
+2. `docs/architecture/overview.md`
+3. `docs/patterns/use-case.md`
+4. `docs/patterns/api-handler.md`
+5. `docs/patterns/safety-primitives.md`
+6. `docs/testing/overview.md`
+7. `docs/frontend/project-structure.md`
+8. `docs/architecture/observability.md`
+9. `docs/workflow.md`
+10. `docs/workflow-memory/README.md`
 
 ## Directory Layout
 
@@ -24,6 +27,9 @@ All new code reviews and feature work should reference `docs/` paths.
 - `docs/frontend/` - frontend architecture and UI standards
 - `docs/testing/` - testing strategy and required coverage by change type
 - `docs/setup.md` - local development and test environment setup
+- `docs/master-spec.md` - canonical, PR-governed master application specification
+- `docs/workflow.md` - AI feature-delivery flow, scan cadence, and self-improvement loop
+- `docs/workflow-memory/` - structured workflow memory system (events, index, summaries, guardrails)
 - `docs/debate-decisions.md` - resolved debate decisions and open follow-ups
 
 ## Debate Outcomes Applied

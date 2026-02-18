@@ -35,7 +35,8 @@ export function useBulkDelete({
       try {
         // Cancel in-flight queries and snapshot for rollback
         await queryClient.cancelQueries({ queryKey });
-        previous = queryClient.getQueryData<readonly { id: string }[]>(queryKey);
+        previous =
+          queryClient.getQueryData<readonly { id: string }[]>(queryKey);
 
         // Optimistically remove all selected items
         if (previous) {
@@ -59,7 +60,9 @@ export function useBulkDelete({
         if (failedIds.size > 0) {
           // Only restore items whose deletion failed
           if (previous) {
-            const successfullyDeleted = idList.filter((id) => !failedIds.has(id));
+            const successfullyDeleted = idList.filter(
+              (id) => !failedIds.has(id),
+            );
             const successfulSet = new Set(successfullyDeleted);
             queryClient.setQueryData(
               queryKey,

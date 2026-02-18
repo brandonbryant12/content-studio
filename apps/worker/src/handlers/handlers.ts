@@ -1,3 +1,4 @@
+import { DocumentStatus } from '@repo/db/schema';
 import {
   generateScript,
   generateAudio,
@@ -8,7 +9,6 @@ import {
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
-import { DocumentStatus } from '@repo/db/schema';
 import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
 import type {

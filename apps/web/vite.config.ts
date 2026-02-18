@@ -78,24 +78,36 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        /**
-         * Modified from:
-         * https://github.com/vitejs/vite/discussions/9440#discussioncomment-11430454
-         */
+        // Keep chunking coarse-grained. The previous per-package strategy
+        // created many tiny/empty chunks in production builds.
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            const modulePath = id.split('node_modules/')[1];
-            const topLevelFolder = modulePath?.split('/')[0];
-            if (topLevelFolder !== '.pnpm') {
-              return topLevelFolder;
-            }
-            const scopedPackageName = modulePath?.split('/')[1];
-            const chunkName =
-              scopedPackageName?.split('@')[
-                scopedPackageName.startsWith('@') ? 1 : 0
-              ];
-            return chunkName;
+          if (!id.includes('node_modules')) return undefined;
+
+          if (id.includes('/node_modules/react/')) return 'vendor-react';
+          if (id.includes('/node_modules/react-dom/')) return 'vendor-react';
+
+          if (id.includes('/node_modules/@tanstack/')) {
+            return 'vendor-tanstack';
           }
+
+          if (
+            id.includes('/node_modules/react-markdown/') ||
+            id.includes('/node_modules/react-syntax-highlighter/') ||
+            id.includes('/node_modules/remark-') ||
+            id.includes('/node_modules/rehype-') ||
+            id.includes('/node_modules/micromark') ||
+            id.includes('/node_modules/mdast-') ||
+            id.includes('/node_modules/hast-') ||
+            id.includes('/node_modules/unified/') ||
+            id.includes('/node_modules/vfile')
+          ) {
+            return 'vendor-markdown';
+          }
+
+          if (id.includes('/node_modules/effect/')) return 'vendor-effect';
+          if (id.includes('/node_modules/@radix-ui/')) return 'vendor-radix';
+
+          return 'vendor';
         },
       },
     },

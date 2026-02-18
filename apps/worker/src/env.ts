@@ -50,7 +50,9 @@ export const envSchema = Schema.Struct({
   OTEL_EXPORTER_OTLP_HEADERS: Schema.optional(Schema.String),
   OTEL_SERVICE_NAME: Schema.optional(Schema.String),
   OTEL_SERVICE_VERSION: Schema.optional(Schema.String),
-  OTEL_ENV: Schema.optional(Schema.String),
+  OTEL_ENV: Schema.optionalWith(Schema.String, {
+    default: () => process.env.NODE_ENV ?? 'development',
+  }),
 
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),

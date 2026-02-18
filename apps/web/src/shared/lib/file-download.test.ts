@@ -10,11 +10,16 @@ describe('file download utils', () => {
 
   it('extracts extensions from urls with query params', () => {
     expect(
-      getFileExtensionFromUrl('https://cdn.example.com/audio/final.wav?x=1', 'mp3'),
+      getFileExtensionFromUrl(
+        'https://cdn.example.com/audio/final.wav?x=1',
+        'mp3',
+      ),
     ).toBe('wav');
-    expect(getFileExtensionFromUrl('/exports/file.mp3#t=10', 'wav')).toBe('mp3');
-    expect(getFileExtensionFromUrl('https://example.com/no-extension', 'txt')).toBe(
-      'txt',
+    expect(getFileExtensionFromUrl('/exports/file.mp3#t=10', 'wav')).toBe(
+      'mp3',
     );
+    expect(
+      getFileExtensionFromUrl('https://example.com/no-extension', 'txt'),
+    ).toBe('txt');
   });
 });

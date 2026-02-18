@@ -43,6 +43,30 @@ packages/
 - **Frontend**: React 19, TanStack Query/Router/Form, Tailwind CSS, Radix UI
 - **Testing**: Vitest, MSW, Playwright
 
+## AI Workflow + Skills
+
+- **Follow `docs/workflow.md`** for intake, delivery, review, scans, release/incident, and self-improvement loops.
+- **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
+- Preferred memory write helper:
+  - `node scripts/workflow-memory/add-entry.mjs --help`
+- **Canonical skills live in `.agents/skills/`**.
+- **`.claude/skills`, `.agent/skills`, `.github/skills` must stay symlinked mirrors** of `.agents/skills`.
+- After any skill add/update/delete, run:
+  - `scripts/sync-skills.sh`
+- Preferred project skills:
+  - `content-studio-intake-triage`
+  - `content-studio-feature-delivery`
+  - `content-studio-pr-risk-review`
+  - `content-studio-test-surface-steward`
+  - `content-studio-architecture-adr-guard`
+  - `content-studio-periodic-scans`
+  - `content-studio-security-dependency-hygiene`
+  - `content-studio-performance-cost-guard`
+  - `content-studio-release-incident-response`
+  - `content-studio-docs-knowledge-drift`
+  - `content-studio-self-improvement`
+  - `content-studio-tanstack-vite`
+
 ## Validation
 
 ```bash
@@ -61,11 +85,14 @@ pnpm test:db:setup # Start test DB container + push schema
 ## Regression Guardrails
 
 - **Never hardcode query keys** for invalidation. Export/use `getXQueryKey()` helpers derived from `apiClient...queryOptions().queryKey`.
+- **When Router preloading and Query caching are combined**, keep freshness in Query (`defaultPreloadStaleTime: 0` at router level unless route-specific override is intentional).
 - **No unsafe production casts** like `as never` for API/mutation inputs. Prefer typed inputs/outputs at the contract boundary.
 - **Chat streams must be concretely typed** (`UIMessageChunk`) in contracts. Avoid `eventIterator(type<unknown>())` for chat endpoints.
 - **`useChat` streaming state must be explicit**: `status === 'submitted' || status === 'streaming'` (not `status !== 'ready'`).
 - **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
+- **Query retry policy must be explicit**: disable retries for `*_NOT_FOUND` class errors; retry bounded times for transient failures.
+- **Avoid aggressive Vite per-package `manualChunks` strategies** that create many tiny or empty chunks; prefer Router auto code splitting and targeted overrides only.
 - **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
 - **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.
 - **Use standard OTLP env inputs**: `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` and optional `OTEL_EXPORTER_OTLP_HEADERS` (`KEY=value,KEY2=value2`).

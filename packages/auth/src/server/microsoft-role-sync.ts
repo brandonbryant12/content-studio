@@ -1,6 +1,6 @@
 import { and, desc, eq } from '@repo/db';
-import type { DatabaseInstance } from '@repo/db/client';
 import { account, user } from '@repo/db/schema';
+import type { DatabaseInstance } from '@repo/db/client';
 import { Role } from '../policy/types';
 
 export interface MicrosoftRoleGroupConfig {

@@ -1,0 +1,878 @@
+{
+  "info": {
+    "description": "Generated from oRPC contract metadata. Request/response schemas are intentionally omitted in this initial snapshot.",
+    "title": "Content Studio API (Spec Snapshot)",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/admin/activity/": {
+      "get": {
+        "description": "Retrieve paginated activity log entries (admin only)",
+        "operationId": "admin.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List activity log",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/activity/stats": {
+      "get": {
+        "description": "Retrieve activity statistics summary (admin only)",
+        "operationId": "admin.stats",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get activity stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/chat/persona-chat": {
+      "post": {
+        "operationId": "chat.personaChat",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/chat/research": {
+      "post": {
+        "operationId": "chat.research",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/chat/synthesize-persona": {
+      "post": {
+        "operationId": "chat.synthesizePersona",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/chat/synthesize-research-query": {
+      "post": {
+        "operationId": "chat.synthesizeResearchQuery",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/chat/writing-assistant": {
+      "post": {
+        "operationId": "chat.writingAssistant",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/documents/": {
+      "get": {
+        "description": "Retrieve all documents for the current user",
+        "operationId": "documents.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List documents",
+        "tags": [
+          "document"
+        ]
+      },
+      "post": {
+        "description": "Create a new document from text content",
+        "operationId": "documents.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create document",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/{id}": {
+      "delete": {
+        "description": "Permanently delete a document",
+        "operationId": "documents.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete document",
+        "tags": [
+          "document"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a document by ID",
+        "operationId": "documents.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get document",
+        "tags": [
+          "document"
+        ]
+      },
+      "patch": {
+        "description": "Update document metadata or content",
+        "operationId": "documents.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update document",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/{id}/content": {
+      "get": {
+        "description": "Retrieve the parsed text content of a document",
+        "operationId": "documents.getContent",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get document content",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/{id}/retry": {
+      "post": {
+        "description": "Retry processing a failed document",
+        "operationId": "documents.retry",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Retry processing",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/from-research": {
+      "post": {
+        "description": "Start a deep research operation that produces a knowledge base document",
+        "operationId": "documents.fromResearch",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create from research",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/from-url": {
+      "post": {
+        "description": "Create a document by scraping a URL",
+        "operationId": "documents.fromUrl",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create from URL",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/documents/upload": {
+      "post": {
+        "description": "Upload a document file (TXT, PDF, DOCX, PPTX). Max 10MB.",
+        "operationId": "documents.upload",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Upload document",
+        "tags": [
+          "document"
+        ]
+      }
+    },
+    "/events/": {
+      "get": {
+        "operationId": "events.subscribe",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/infographics/": {
+      "get": {
+        "description": "Retrieve all infographics for the current user",
+        "operationId": "infographics.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List infographics",
+        "tags": [
+          "infographic"
+        ]
+      },
+      "post": {
+        "description": "Create a new infographic",
+        "operationId": "infographics.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create infographic",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/{id}": {
+      "delete": {
+        "description": "Permanently delete an infographic",
+        "operationId": "infographics.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete infographic",
+        "tags": [
+          "infographic"
+        ]
+      },
+      "get": {
+        "description": "Retrieve an infographic by ID",
+        "operationId": "infographics.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get infographic",
+        "tags": [
+          "infographic"
+        ]
+      },
+      "patch": {
+        "description": "Update infographic settings",
+        "operationId": "infographics.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update infographic",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/{id}/approve": {
+      "delete": {
+        "description": "Revoke approval on an infographic. Admin-only.",
+        "operationId": "infographics.revokeApproval",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Revoke approval",
+        "tags": [
+          "infographic"
+        ]
+      },
+      "post": {
+        "description": "Approve the current infographic content. Admin-only.",
+        "operationId": "infographics.approve",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Approve infographic",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/{id}/generate": {
+      "post": {
+        "description": "Generate an image for the infographic. Returns a job ID to poll for status.",
+        "operationId": "infographics.generate",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Generate infographic",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/{id}/versions": {
+      "get": {
+        "description": "List all generated versions of an infographic",
+        "operationId": "infographics.listVersions",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List versions",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/jobs/{jobId}": {
+      "get": {
+        "description": "Get the status of an infographic generation job",
+        "operationId": "infographics.getJob",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get job status",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/style-presets/": {
+      "get": {
+        "description": "List built-in and user-owned style presets",
+        "operationId": "infographics.stylePresets.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List style presets",
+        "tags": [
+          "infographic"
+        ]
+      },
+      "post": {
+        "description": "Create a new user-owned style preset",
+        "operationId": "infographics.stylePresets.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create style preset",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/infographics/style-presets/{id}": {
+      "delete": {
+        "description": "Delete a user-owned style preset",
+        "operationId": "infographics.stylePresets.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete style preset",
+        "tags": [
+          "infographic"
+        ]
+      }
+    },
+    "/personas/": {
+      "get": {
+        "description": "Retrieve all personas for the current user",
+        "operationId": "personas.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List personas",
+        "tags": [
+          "persona"
+        ]
+      },
+      "post": {
+        "description": "Create a new persona",
+        "operationId": "personas.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create persona",
+        "tags": [
+          "persona"
+        ]
+      }
+    },
+    "/personas/{id}": {
+      "delete": {
+        "description": "Permanently delete a persona",
+        "operationId": "personas.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete persona",
+        "tags": [
+          "persona"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a persona by ID",
+        "operationId": "personas.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get persona",
+        "tags": [
+          "persona"
+        ]
+      },
+      "patch": {
+        "description": "Update persona settings",
+        "operationId": "personas.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update persona",
+        "tags": [
+          "persona"
+        ]
+      }
+    },
+    "/personas/{id}/avatar": {
+      "post": {
+        "description": "Generate an AI avatar image for the persona",
+        "operationId": "personas.generateAvatar",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Generate avatar",
+        "tags": [
+          "persona"
+        ]
+      }
+    },
+    "/podcasts/": {
+      "get": {
+        "description": "Retrieve all podcasts for the current user",
+        "operationId": "podcasts.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List podcasts",
+        "tags": [
+          "podcast"
+        ]
+      },
+      "post": {
+        "description": "Create a new podcast from documents",
+        "operationId": "podcasts.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create podcast",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}": {
+      "delete": {
+        "description": "Permanently delete a podcast and all associated data",
+        "operationId": "podcasts.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete podcast",
+        "tags": [
+          "podcast"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a podcast with its documents",
+        "operationId": "podcasts.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get podcast",
+        "tags": [
+          "podcast"
+        ]
+      },
+      "patch": {
+        "description": "Update podcast settings",
+        "operationId": "podcasts.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update podcast",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}/approve": {
+      "delete": {
+        "description": "Revoke approval on a podcast. Admin-only.",
+        "operationId": "podcasts.revokeApproval",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Revoke approval",
+        "tags": [
+          "podcast"
+        ]
+      },
+      "post": {
+        "description": "Approve the current podcast content. Admin-only.",
+        "operationId": "podcasts.approve",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Approve podcast",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}/generate": {
+      "post": {
+        "description": "Generate complete podcast (script + audio) in a single async job. Returns a job ID to poll for status.",
+        "operationId": "podcasts.generate",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Generate podcast",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}/save-changes": {
+      "post": {
+        "description": "Update script segments and/or voice settings, then regenerate audio. Only allowed when podcast is in ready status.",
+        "operationId": "podcasts.saveChanges",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Save changes and regenerate audio",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}/script": {
+      "get": {
+        "description": "Get the script for a podcast",
+        "operationId": "podcasts.getScript",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get script",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/jobs/{jobId}": {
+      "get": {
+        "description": "Get the status of a generation job",
+        "operationId": "podcasts.getJob",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get job status",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/voiceovers/": {
+      "get": {
+        "description": "Retrieve all voiceovers for the current user",
+        "operationId": "voiceovers.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List voiceovers",
+        "tags": [
+          "voiceover"
+        ]
+      },
+      "post": {
+        "description": "Create a new voiceover",
+        "operationId": "voiceovers.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create voiceover",
+        "tags": [
+          "voiceover"
+        ]
+      }
+    },
+    "/voiceovers/{id}": {
+      "delete": {
+        "description": "Permanently delete a voiceover",
+        "operationId": "voiceovers.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete voiceover",
+        "tags": [
+          "voiceover"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a voiceover by ID",
+        "operationId": "voiceovers.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get voiceover",
+        "tags": [
+          "voiceover"
+        ]
+      },
+      "patch": {
+        "description": "Update voiceover settings",
+        "operationId": "voiceovers.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update voiceover",
+        "tags": [
+          "voiceover"
+        ]
+      }
+    },
+    "/voiceovers/{id}/approve": {
+      "delete": {
+        "description": "Revoke approval on a voiceover. Admin-only.",
+        "operationId": "voiceovers.revokeApproval",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Revoke approval",
+        "tags": [
+          "voiceover"
+        ]
+      },
+      "post": {
+        "description": "Approve the current voiceover content. Admin-only.",
+        "operationId": "voiceovers.approve",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Approve voiceover",
+        "tags": [
+          "voiceover"
+        ]
+      }
+    },
+    "/voiceovers/{id}/generate": {
+      "post": {
+        "description": "Generate audio for the voiceover text. Returns a job ID to poll for status.",
+        "operationId": "voiceovers.generate",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Generate audio",
+        "tags": [
+          "voiceover"
+        ]
+      }
+    },
+    "/voiceovers/jobs/{jobId}": {
+      "get": {
+        "description": "Get the status of a generation job",
+        "operationId": "voiceovers.getJob",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get job status",
+        "tags": [
+          "voiceover"
+        ]
+      }
+    },
+    "/voices/": {
+      "get": {
+        "description": "Retrieve all available TTS voices, optionally filtered by gender",
+        "operationId": "voices.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List voices",
+        "tags": [
+          "voices"
+        ]
+      }
+    },
+    "/voices/{voiceId}/preview": {
+      "post": {
+        "description": "Generate a short audio preview of a voice",
+        "operationId": "voices.preview",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Preview voice",
+        "tags": [
+          "voices"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ]
+}

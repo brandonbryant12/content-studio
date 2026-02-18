@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
