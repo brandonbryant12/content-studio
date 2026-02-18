@@ -98,7 +98,7 @@ export const envSchema = Schema.Struct({
   GEMINI_API_KEY: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
 
   USE_MOCK_AI: Schema.optionalWith(BooleanStringSchema, {
-    default: () => process.env.NODE_ENV !== 'production',
+    default: () => true,
   }),
 
   STORAGE_PROVIDER: Schema.optionalWith(StorageProviderSchema, {
