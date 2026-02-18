@@ -75,7 +75,7 @@ function RouteComponent() {
 
           {/* Eyebrow */}
           <p className="page-eyebrow animate-fade-in-up">
-            Create. Transform. Publish.
+            Ideate. Generate. Publish.
           </p>
 
           {/* Headline */}
@@ -86,14 +86,13 @@ function RouteComponent() {
               fontVariationSettings: "'SOFT' 50, 'WONK' 1",
             }}
           >
-            Your documents, <span className="text-primary">reimagined</span> as
-            audio
+            One studio, <span className="text-primary">every</span> format
           </h1>
 
           {/* Subtitle */}
           <p className="text-body-lg mt-6 max-w-xl mx-auto animate-fade-in-up stagger-2">
-            Upload documents and transform them into podcasts, voiceovers, and
-            infographics — all from one studio.
+            Generate podcasts, voiceovers, infographics, and more — AI-powered
+            content creation across every modality.
           </p>
 
           {/* CTAs */}
@@ -122,28 +121,28 @@ function RouteComponent() {
             {
               icon: FileTextIcon,
               label: 'Documents',
-              desc: 'Upload PDFs, DOCX, and text files as source material',
+              desc: 'Import source material or let AI draft from scratch',
               color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
               delay: 'stagger-3',
             },
             {
               icon: MixerHorizontalIcon,
               label: 'Podcasts',
-              desc: 'Generate multi-voice conversational audio content',
+              desc: 'Multi-voice conversational audio, generated in minutes',
               color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
               delay: 'stagger-4',
             },
             {
               icon: SpeakerLoudIcon,
               label: 'Voiceovers',
-              desc: 'Create narrated audio with natural-sounding voices',
+              desc: 'Natural-sounding narration for any content',
               color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
               delay: 'stagger-5',
             },
             {
               icon: ImageIcon,
               label: 'Infographics',
-              desc: 'Design visual summaries from your content',
+              desc: 'Visual summaries and graphics, ready to share',
               color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
               delay: 'stagger-6',
             },
