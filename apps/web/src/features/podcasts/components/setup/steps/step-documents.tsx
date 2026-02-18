@@ -22,6 +22,7 @@ import {
   getDocumentListQueryKey,
 } from '@/features/documents/hooks/use-document-list';
 import { getErrorMessage } from '@/shared/lib/errors';
+import { fileToBase64 } from '@/shared/lib/file-base64';
 
 interface StepDocumentsProps {
   selectedIds: string[];
@@ -113,12 +114,7 @@ export function StepDocuments({
   const handleUpload = async () => {
     if (!uploadFile) return;
 
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string).split(',')[1]!);
-      reader.onerror = reject;
-      reader.readAsDataURL(uploadFile);
-    });
+    const base64 = await fileToBase64(uploadFile);
 
     uploadMutation.mutate(
       {

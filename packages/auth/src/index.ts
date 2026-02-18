@@ -1,12 +1,18 @@
 // Re-export from server
 export {
+  AuthMode,
   createAuth,
+  fetchMicrosoftGroupIds,
   getBaseOptions,
   getSession,
   getSessionWithRole,
+  resolveRoleFromGroupIds,
   requireSession,
+  syncUserRoleFromMicrosoftGraph,
   type AuthOptions,
   type AuthInstance,
+  type MicrosoftRoleGroupConfig,
+  type MicrosoftSSOConfig,
 } from './server';
 
 // Re-export from policy

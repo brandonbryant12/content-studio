@@ -15,10 +15,8 @@ import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  useOptimisticUpload,
-  fileToBase64,
-} from '../hooks/use-optimistic-upload';
+import { useOptimisticUpload } from '../hooks/use-optimistic-upload';
+import { fileToBase64 } from '@/shared/lib/file-base64';
 
 const SUPPORTED_TYPES = [
   'text/plain',

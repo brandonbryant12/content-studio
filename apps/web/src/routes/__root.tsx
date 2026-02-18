@@ -54,7 +54,6 @@ function RootComponent() {
         if (import.meta.env.DEV) {
           console.error('Root error boundary caught:', error);
         }
-        // TODO: Send to error tracking service in production
       }}
     >
       <div className="min-h-screen bg-background">

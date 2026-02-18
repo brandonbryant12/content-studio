@@ -1,8 +1,13 @@
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 import { useApproveVoiceover } from '../hooks/use-approve-voiceover';
 import { useVoiceover } from '../hooks/use-voiceover';
 import { useVoiceoverActions } from '../hooks/use-voiceover-actions';
 import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
+import {
+  buildVoiceoverTextExport,
+  buildVoiceoverTranscriptMarkdown,
+} from '../lib/export';
 import { VoiceoverDetail } from './voiceover-detail';
 import { WritingAssistantContainer } from './workbench/writing-assistant-container';
 import {
@@ -11,6 +16,13 @@ import {
   useSessionGuard,
   useIsAdmin,
 } from '@/shared/hooks';
+import { copyTextToClipboard } from '@/shared/lib/clipboard';
+import {
+  downloadFromUrl,
+  downloadTextFile,
+  getFileExtensionFromUrl,
+  toFileSlug,
+} from '@/shared/lib/file-download';
 
 interface VoiceoverDetailContainerProps {
   voiceoverId: string;
@@ -74,6 +86,51 @@ export function VoiceoverDetailContainer({
     isApprovalPending: approve.isPending || revoke.isPending,
   };
 
+  const canExportAudio = !!voiceover.audioUrl;
+  const canExportScript = settings.text.trim().length > 0;
+
+  const handleExportAudio = useCallback(() => {
+    if (!voiceover.audioUrl) return;
+    const extension = getFileExtensionFromUrl(voiceover.audioUrl, 'mp3');
+    const fileName = `${toFileSlug(voiceover.title, 'voiceover')}.${extension}`;
+    downloadFromUrl(voiceover.audioUrl, fileName);
+  }, [voiceover.audioUrl, voiceover.title]);
+
+  const handleExportScript = useCallback(() => {
+    if (!settings.text.trim()) return;
+
+    const script = buildVoiceoverTextExport({
+      title: voiceover.title,
+      text: settings.text,
+      voice: settings.voice,
+      voiceName: voiceover.voiceName,
+    });
+    const fileName = `${toFileSlug(voiceover.title, 'voiceover')}.txt`;
+    downloadTextFile(script, fileName);
+  }, [settings.text, settings.voice, voiceover.title, voiceover.voiceName]);
+
+  const handleCopyTranscript = useCallback(async () => {
+    if (!settings.text.trim()) return;
+
+    const transcript = buildVoiceoverTranscriptMarkdown({
+      title: voiceover.title,
+      text: settings.text,
+      voice: settings.voice,
+      voiceName: voiceover.voiceName,
+    });
+
+    try {
+      const copied = await copyTextToClipboard(transcript);
+      if (copied) {
+        toast.success('Transcript copied');
+      } else {
+        toast.error('Clipboard not available');
+      }
+    } catch {
+      toast.error('Failed to copy transcript');
+    }
+  }, [settings.text, settings.voice, voiceover.title, voiceover.voiceName]);
+
   return (
     <VoiceoverDetail
       voiceover={voiceover}
@@ -86,6 +143,11 @@ export function VoiceoverDetailContainer({
       onDelete={actions.handleDelete}
       onApprove={handleApprove}
       onRevoke={handleRevoke}
+      canExportAudio={canExportAudio}
+      canExportScript={canExportScript}
+      onExportAudio={handleExportAudio}
+      onExportScript={handleExportScript}
+      onCopyTranscript={handleCopyTranscript}
     />
   );
 }

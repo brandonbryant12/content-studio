@@ -7,6 +7,7 @@ configureProxy();
 import { serve } from '@hono/node-server';
 import { shutdownSSEPublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
+import { initTelemetry, shutdownTelemetry } from '@repo/db/telemetry';
 import { env } from './env';
 import { shutdownRateLimiters } from './middleware/rate-limit';
 import app, { db } from '.';
@@ -30,6 +31,15 @@ process.on('uncaughtException', (error) => {
 });
 
 const startServer = async () => {
+  initTelemetry({
+    enabled: env.TELEMETRY_ENABLED,
+    serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-server',
+    serviceVersion: env.OTEL_SERVICE_VERSION,
+    environment: env.OTEL_ENV,
+    otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
+  });
+
   console.log('Verifying database connection...');
 
   try {
@@ -92,6 +102,9 @@ Hono
 
       await db.$client.end();
       console.log('Database pool closed');
+
+      await shutdownTelemetry();
+      console.log('Telemetry exporter stopped');
 
       console.log('Server has stopped gracefully.');
     } catch (error) {

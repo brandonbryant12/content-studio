@@ -69,6 +69,11 @@ const expectErrorWithMessage = async (
   }
 };
 
+const expectIsoTimestamp = (value: string) => {
+  expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(Number.isNaN(Date.parse(value))).toBe(false);
+};
+
 // Handler args type
 type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
 
@@ -276,13 +281,10 @@ describe('document router', () => {
       expect(result.id).toMatch(/^doc_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string
-      expect(typeof result.updatedAt).toBe('string');
-      expect(() => new Date(result.updatedAt)).not.toThrow();
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('persists document to database', async () => {
@@ -422,8 +424,7 @@ describe('document router', () => {
       expect(result.id).toMatch(/^doc_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - contentKey is set
       expect(result.contentKey).toMatch(/^documents\//);
@@ -731,16 +732,14 @@ describe('document router', () => {
       // Verify serialized format
       expect(returned.id).toMatch(/^doc_/);
       expect(returned.title).toBe('Serialization Test');
-      expect(returned.contentKey).toBeDefined();
-      expect(returned.mimeType).toBeDefined();
-      expect(typeof returned.wordCount).toBe('number');
-      expect(returned.source).toBeDefined();
+      expect(returned.contentKey).toMatch(/^documents\//);
+      expect(returned.mimeType).toBe('text/plain');
+      expect(returned.wordCount).toBe(2);
+      expect(returned.source).toBe('manual');
       expect(returned.createdBy).toBe(testUser.id);
       // Dates should be ISO strings
-      expect(typeof returned.createdAt).toBe('string');
-      expect(typeof returned.updatedAt).toBe('string');
-      expect(() => new Date(returned.createdAt)).not.toThrow();
-      expect(() => new Date(returned.updatedAt)).not.toThrow();
+      expectIsoTimestamp(returned.createdAt);
+      expectIsoTimestamp(returned.updatedAt);
     });
 
     it('uses default pagination when not specified', async () => {
@@ -867,8 +866,8 @@ describe('document router', () => {
       expect(result.metadata).toEqual({ key: 'value' });
       expect(result.createdBy).toBe(testUser.id);
       // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
     });
   });
 
@@ -1090,12 +1089,10 @@ describe('document router', () => {
       expect(result.id).toMatch(/^doc_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string and different from createdAt
-      expect(typeof result.updatedAt).toBe('string');
-      expect(result.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('throws DOCUMENT_NOT_FOUND when document does not exist', async () => {
@@ -1195,24 +1192,6 @@ describe('document router', () => {
 
       // Assert - returns empty object on success
       expect(result).toEqual({});
-    });
-
-    it('returns empty object on successful delete', async () => {
-      // Arrange
-      const doc = await createDocumentForTest();
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.delete({
-        context,
-        input: { id: doc.id },
-        errors,
-      });
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('object');
-      expect(Object.keys(result)).toHaveLength(0);
     });
 
     it('throws DOCUMENT_NOT_FOUND when document does not exist', async () => {

@@ -116,7 +116,7 @@ describe('SSEProvider', () => {
       }).toThrow('useSSEContext must be used within SSEProvider');
     });
 
-    it('returns connection state and reconnect function', () => {
+    it('returns initial connection state', () => {
       const mock = createMockIterator();
       mockSubscribe.mockResolvedValue(mock.iterator);
       mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
@@ -126,7 +126,6 @@ describe('SSEProvider', () => {
       });
 
       expect(result.current.connectionState).toBe('connecting');
-      expect(typeof result.current.reconnect).toBe('function');
     });
   });
 

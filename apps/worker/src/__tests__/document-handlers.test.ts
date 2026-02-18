@@ -141,7 +141,7 @@ describe('handleProcessUrl', () => {
       );
       expect(contentData.wordCount).toBe(9);
       expect(contentData.contentHash).toBeDefined();
-      expect(typeof contentData.contentHash).toBe('string');
+      expect(contentData.contentHash).toMatch(/^[a-f0-9]{64}$/i);
       expect(contentData.contentHash.length).toBe(64); // SHA-256 hex
 
       // Status was set to ready

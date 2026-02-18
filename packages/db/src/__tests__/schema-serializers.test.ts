@@ -220,7 +220,7 @@ describe('document serializers', () => {
         serializeDocumentEffect(makeDocument()),
       );
       expect(result.id).toBe('doc_0123456789abcdef');
-      expect(typeof result.createdAt).toBe('string');
+      expect(result.createdAt).toBe(now.toISOString());
     });
   });
 
@@ -293,7 +293,7 @@ describe('podcast serializers', () => {
       const result = serializePodcastFull({ ...podcast, documents: docs });
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0]!.id).toBe('doc_0123456789abcdef');
-      expect(typeof result.documents[0]!.createdAt).toBe('string');
+      expect(result.documents[0]!.createdAt).toBe(now.toISOString());
     });
   });
 

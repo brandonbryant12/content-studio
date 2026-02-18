@@ -11,6 +11,7 @@ import {
   ssePublisher,
 } from '@repo/api/server';
 import { createDb, verifyDbConnection } from '@repo/db/client';
+import { initTelemetry, shutdownTelemetry } from '@repo/db/telemetry';
 import { buildStorageConfig } from './config';
 import { MAX_CONCURRENT_JOBS, QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
@@ -35,6 +36,15 @@ process.on('uncaughtException', (error) => {
 });
 
 async function startWorker(): Promise<void> {
+  initTelemetry({
+    enabled: env.TELEMETRY_ENABLED,
+    serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',
+    serviceVersion: env.OTEL_SERVICE_VERSION,
+    environment: env.OTEL_ENV,
+    otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
+  });
+
   console.log('Verifying database connection...');
 
   const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
@@ -104,6 +114,9 @@ async function startWorker(): Promise<void> {
 
       await shutdownSSEPublisher();
       console.log('SSE publisher stopped');
+
+      await shutdownTelemetry();
+      console.log('Telemetry exporter stopped');
 
       console.log('Worker has stopped gracefully.');
     } catch (error) {

@@ -106,12 +106,16 @@ if [[ "$MODE" == "docker" ]]; then
   DEFAULT_POSTGRES_URL="postgres://postgres:postgres@localhost:5432/content_studio"
   DEFAULT_REDIS_URL="redis://localhost:6379"
   DEFAULT_STORAGE_PROVIDER="s3"
+  DEFAULT_TELEMETRY_ENABLED="true"
+  DEFAULT_OTEL_ENV="production"
 else
   DEFAULT_SERVER_PORT="3035"
   DEFAULT_WEB_PORT="8085"
   DEFAULT_POSTGRES_URL="postgres://postgres:postgres@localhost:5432/postgres"
   DEFAULT_REDIS_URL="redis://localhost:6379"
   DEFAULT_STORAGE_PROVIDER="filesystem"
+  DEFAULT_TELEMETRY_ENABLED="false"
+  DEFAULT_OTEL_ENV="development"
 fi
 
 # ─── Hosting ──────────────────────────────────────────────────────────
@@ -218,6 +222,16 @@ EOF
 [[ -n "$GEMINI_API_KEY" ]] && echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> "$ROOT_DIR/apps/server/.env"
 [[ -n "$CORS_ORIGINS" ]] && echo -e "\nCORS_ORIGINS=${CORS_ORIGINS}" >> "$ROOT_DIR/apps/server/.env"
 
+cat >> "$ROOT_DIR/apps/server/.env" <<EOF
+
+# Telemetry (Datadog / OTLP)
+TELEMETRY_ENABLED=${DEFAULT_TELEMETRY_ENABLED}
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+# OTEL_EXPORTER_OTLP_HEADERS=DD-API-KEY=your-datadog-api-key
+OTEL_SERVICE_NAME=content-studio-server
+OTEL_ENV=${DEFAULT_OTEL_ENV}
+EOF
+
 # Storage
 echo -e "\n# Storage\nSTORAGE_PROVIDER=${STORAGE_PROVIDER}" >> "$ROOT_DIR/apps/server/.env"
 
@@ -261,6 +275,16 @@ USE_MOCK_AI=${USE_MOCK_AI}
 EOF
 
 [[ -n "$GEMINI_API_KEY" ]] && echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> "$ROOT_DIR/apps/worker/.env"
+
+cat >> "$ROOT_DIR/apps/worker/.env" <<EOF
+
+# Telemetry (Datadog / OTLP)
+TELEMETRY_ENABLED=${DEFAULT_TELEMETRY_ENABLED}
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+# OTEL_EXPORTER_OTLP_HEADERS=DD-API-KEY=your-datadog-api-key
+OTEL_SERVICE_NAME=content-studio-worker
+OTEL_ENV=${DEFAULT_OTEL_ENV}
+EOF
 
 # Storage (worker needs same storage config as server)
 echo -e "\n# Storage\nSTORAGE_PROVIDER=${STORAGE_PROVIDER}" >> "$ROOT_DIR/apps/worker/.env"

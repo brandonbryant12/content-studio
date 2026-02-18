@@ -1,13 +1,21 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
 import { useDocumentSearch } from '../hooks/use-document-search';
 import { useRetryProcessing } from '../hooks/use-retry-processing';
+import {
+  buildDocumentMarkdownExport,
+  buildDocumentTextExport,
+} from '../lib/export';
 import { DocumentDetail } from './document-detail';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
+import {
+  downloadTextFile,
+  toFileSlug,
+} from '@/shared/lib/file-download';
 
 interface DocumentDetailContainerProps {
   documentId: string;
@@ -21,12 +29,40 @@ export function DocumentDetailContainer({
   // Only fetch content when document is ready (hook always called, `enabled` controls fetching)
   const isReady = document.status === 'ready';
   const { data: contentData } = useDocumentContentOptional(documentId, isReady);
+  const documentContent = contentData?.content ?? null;
 
   const actions = useDocumentActions({ document });
-  const search = useDocumentSearch(contentData?.content ?? '');
+  const search = useDocumentSearch(documentContent ?? '');
   const retryMutation = useRetryProcessing();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const canExport = isReady && !!documentContent?.trim();
+
+  const handleExportMarkdown = useCallback(() => {
+    if (!documentContent) return;
+
+    const exportTitle = actions.title.trim() || document.title;
+    const markdown = buildDocumentMarkdownExport({
+      document,
+      title: exportTitle,
+      content: documentContent,
+    });
+    const fileName = `${toFileSlug(exportTitle, 'document')}.md`;
+    downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
+  }, [actions.title, document, documentContent]);
+
+  const handleExportText = useCallback(() => {
+    if (!documentContent) return;
+
+    const exportTitle = actions.title.trim() || document.title;
+    const text = buildDocumentTextExport({
+      document,
+      title: exportTitle,
+      content: documentContent,
+    });
+    const fileName = `${toFileSlug(exportTitle, 'document')}.txt`;
+    downloadTextFile(text, fileName);
+  }, [actions.title, document, documentContent]);
 
   useKeyboardShortcut({
     key: 's',
@@ -49,7 +85,7 @@ export function DocumentDetailContainer({
     <>
       <DocumentDetail
         document={document}
-        content={contentData?.content ?? null}
+        content={documentContent}
         title={actions.title}
         onTitleChange={actions.setTitle}
         hasChanges={actions.hasChanges}
@@ -61,6 +97,9 @@ export function DocumentDetailContainer({
         onDeleteRequest={() => setIsDeleteDialogOpen(true)}
         onRetry={() => retryMutation.mutate({ id: documentId })}
         search={search}
+        canExport={canExport}
+        onExportMarkdown={handleExportMarkdown}
+        onExportText={handleExportText}
       />
       <ConfirmationDialog
         open={isDeleteDialogOpen}

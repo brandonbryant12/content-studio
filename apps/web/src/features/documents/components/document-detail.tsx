@@ -5,11 +5,18 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   Cross2Icon,
+  DownloadIcon,
   MagnifyingGlassIcon,
   Pencil1Icon,
   TrashIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
@@ -319,6 +326,9 @@ export interface DocumentDetailProps {
   onDeleteRequest: () => void;
   onRetry: () => void;
   search: UseDocumentSearchReturn;
+  canExport?: boolean;
+  onExportMarkdown?: () => void;
+  onExportText?: () => void;
 }
 
 export function DocumentDetail({
@@ -335,7 +345,13 @@ export function DocumentDetail({
   onDeleteRequest,
   onRetry,
   search,
+  canExport = false,
+  onExportMarkdown,
+  onExportText,
 }: DocumentDetailProps) {
+  const handleExportMarkdown = onExportMarkdown ?? (() => {});
+  const handleExportText = onExportText ?? (() => {});
+
   const paragraphs = useMemo(
     () => (content ? content.split('\n') : []),
     [content],
@@ -404,6 +420,32 @@ export function DocumentDetail({
                 >
                   <MagnifyingGlassIcon className="w-4 h-4" />
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={!canExport}
+                      aria-label="Export document"
+                    >
+                      <DownloadIcon className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={handleExportMarkdown}
+                      disabled={!canExport || !onExportMarkdown}
+                    >
+                      Download Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleExportText}
+                      disabled={!canExport || !onExportText}
+                    >
+                      Download Text
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="ghost"
                   size="icon"

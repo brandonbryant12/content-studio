@@ -82,7 +82,6 @@ describe.skipIf(!hasS3Config)('S3 Storage Live Integration', () => {
       const url = await Effect.runPromise(effect);
 
       expect(url).toBeDefined();
-      expect(typeof url).toBe('string');
       expect(url).toContain(key);
     });
 
@@ -259,7 +258,6 @@ describe.skipIf(!hasS3Config)('S3 Storage Live Integration', () => {
       const url = await Effect.runPromise(effect);
 
       expect(url).toBeDefined();
-      expect(typeof url).toBe('string');
       expect(url).toContain(key);
       expect(url).toContain(S3_BUCKET);
     });

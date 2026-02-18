@@ -355,7 +355,7 @@ describe('generateVoiceoverAudio', () => {
 
       // Verify duration was calculated (from audio buffer size / 48000)
       expect(result.duration).toBeGreaterThan(0);
-      expect(typeof result.duration).toBe('number');
+      expect(Number.isFinite(result.duration)).toBe(true);
 
       // Verify updateAudio was called with correct values
       expect(updateAudioSpy).toHaveBeenCalledWith(voiceover.id, {

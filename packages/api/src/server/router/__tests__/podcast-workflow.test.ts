@@ -188,7 +188,7 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(startResult.jobId).toBeDefined();
+      expect(startResult.jobId).toMatch(/^job_/);
       expect(startResult.status).toBe('pending');
 
       // Verify: Podcast status was updated to drafting
@@ -207,7 +207,7 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(scriptResult.podcast).toBeDefined();
+      expect(scriptResult.podcast.id).toBe(podcast.id);
       expect(scriptResult.segmentCount).toBeGreaterThan(0);
 
       // Verify: Status is now script_ready
@@ -226,8 +226,8 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(audioResult.podcast).toBeDefined();
-      expect(audioResult.audioUrl).toBeDefined();
+      expect(audioResult.podcast.id).toBe(podcast.id);
+      expect(audioResult.audioUrl).toMatch(/^[a-z]+:\/\//);
       expect(audioResult.duration).toBeGreaterThan(0);
 
       // Verify: Final status is ready
@@ -236,7 +236,7 @@ describe('podcast job workflow', () => {
         .from(podcastTable)
         .where(eq(podcastTable.id, podcast.id));
       expect(afterAudio?.status).toBe(VersionStatus.READY);
-      expect(afterAudio?.audioUrl).toBeDefined();
+      expect(afterAudio?.audioUrl).toMatch(/^[a-z]+:\/\//);
     });
   });
 
@@ -262,7 +262,7 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(startResult.jobId).toBeDefined();
+      expect(startResult.jobId).toMatch(/^job_/);
       expect(startResult.status).toBe('pending');
 
       // Verify: Podcast status was updated to script_ready (by saveChanges)
@@ -283,8 +283,8 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(audioResult.podcast).toBeDefined();
-      expect(audioResult.audioUrl).toBeDefined();
+      expect(audioResult.podcast.id).toBe(podcast.id);
+      expect(audioResult.audioUrl).toMatch(/^[a-z]+:\/\//);
 
       // Verify: Final status is ready with new audio
       const [afterAudio] = await ctx.db
@@ -477,7 +477,6 @@ describe('podcast job workflow', () => {
         withCurrentUser(user)(generateAudio({ podcastId: podcast.id })),
       );
 
-      expect(result.podcast).toBeDefined();
       expect(result.podcast.status).toBe(VersionStatus.READY);
     });
   });
@@ -522,7 +521,7 @@ describe('podcast job workflow', () => {
         ),
       );
 
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
 
       // Verify status changed

@@ -595,7 +595,7 @@ describe('startVoiceoverGeneration', () => {
         ),
       );
 
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(updateStatusSpy).toHaveBeenCalledWith(
         voiceover.id,
         'generating_audio',

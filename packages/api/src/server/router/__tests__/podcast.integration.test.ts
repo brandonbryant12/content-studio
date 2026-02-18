@@ -61,6 +61,11 @@ const callHandler = <T>(
   return procedure['~orpc'].handler(args) as Promise<T>;
 };
 
+const expectIsoTimestamp = (value: string) => {
+  expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(Number.isNaN(Date.parse(value))).toBe(false);
+};
+
 // Handler args type
 type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
 
@@ -398,13 +403,11 @@ describe('podcast router', () => {
       // Verify serialized format
       expect(returned.id).toMatch(/^pod_/);
       expect(returned.title).toBe('Serialization Test');
-      expect(returned.format).toBeDefined();
+      expect(returned.format).toBe('conversation');
       expect(returned.createdBy).toBe(testUser.id);
       // Dates should be ISO strings
-      expect(typeof returned.createdAt).toBe('string');
-      expect(typeof returned.updatedAt).toBe('string');
-      expect(() => new Date(returned.createdAt)).not.toThrow();
-      expect(() => new Date(returned.updatedAt)).not.toThrow();
+      expectIsoTimestamp(returned.createdAt);
+      expectIsoTimestamp(returned.updatedAt);
     });
 
     it('includes status and duration when present', async () => {
@@ -552,14 +555,13 @@ describe('podcast router', () => {
       // Assert
       expect(result.id).toBe(podcast.id);
       expect(result.title).toBe('Full Format Test');
-      expect(result.documents).toBeDefined();
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0]!.title).toBe('Source Doc');
       expect(result.status).toBe('ready');
       expect(result.segments).toEqual(DEFAULT_TEST_SEGMENTS);
       // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
     });
   });
 
@@ -679,13 +681,10 @@ describe('podcast router', () => {
       expect(result.id).toMatch(/^pod_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string
-      expect(typeof result.updatedAt).toBe('string');
-      expect(() => new Date(result.updatedAt)).not.toThrow();
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('persists podcast to database', async () => {
@@ -729,8 +728,7 @@ describe('podcast router', () => {
       });
 
       // Assert - should have a default title
-      expect(result.title).toBeDefined();
-      expect(result.title.length).toBeGreaterThan(0);
+      expect(result.title).toMatch(/\S/);
     });
   });
 
@@ -858,12 +856,10 @@ describe('podcast router', () => {
       expect(result.id).toMatch(/^pod_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string
-      expect(typeof result.updatedAt).toBe('string');
-      expect(result.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('throws error when podcast does not exist', async () => {
@@ -1131,7 +1127,6 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
@@ -1157,7 +1152,7 @@ describe('podcast router', () => {
       });
 
       // Assert - should return existing job
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1212,7 +1207,6 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
@@ -1335,11 +1329,10 @@ describe('podcast router', () => {
         duration: 300,
       });
       // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
-      expect(typeof result.startedAt).toBe('string');
-      expect(typeof result.completedAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
+      expectIsoTimestamp(result.startedAt!);
+      expectIsoTimestamp(result.completedAt!);
     });
 
     it('returns null for optional date fields when not set', async () => {
@@ -1422,7 +1415,6 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
@@ -1448,7 +1440,7 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1518,7 +1510,6 @@ describe('podcast router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
@@ -1550,7 +1541,7 @@ describe('podcast router', () => {
       });
 
       // Assert - should return existing job
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1575,7 +1566,7 @@ describe('podcast router', () => {
       });
 
       // Assert - job is still created
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
   });

@@ -34,7 +34,7 @@ describe.skipIf(!GEMINI_API_KEY)('LLM Live Integration', () => {
 
         expect(result.object).toBeDefined();
         expect(result.object.greeting).toBeDefined();
-        expect(typeof result.object.greeting).toBe('string');
+        expect(result.object.greeting.trim().length).toBeGreaterThan(0);
       }).pipe(Effect.provide(layer)),
     );
 

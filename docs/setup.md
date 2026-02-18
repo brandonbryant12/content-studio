@@ -60,17 +60,67 @@ pnpm test:db:down               # Stop test DB container
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `GEMINI_API_KEY` | Google Gemini API key |
+| `SERVER_POSTGRES_URL` | PostgreSQL connection string used by `apps/server` and `apps/worker` |
+| `DB_POSTGRES_URL` | PostgreSQL connection string used by Drizzle CLI (`pnpm db:push`, `pnpm db:migrate`) |
+| `PUBLIC_SERVER_URL` | Public API URL used for server responses and web client configuration |
+| `PUBLIC_WEB_URL` | Public web app URL used by server CORS/auth redirects |
+| `SERVER_AUTH_SECRET` | Auth secret for `better-auth` session signing |
+| `GEMINI_API_KEY` | Google Gemini API key when `USE_MOCK_AI=false` |
 
 ### Optional
 
 | Variable | Description | Default |
 |---|---|---|
-| `STORAGE_TYPE` | Storage backend (`s3` / `local`) | `local` |
+| `AUTH_MODE` | Auth behavior (`dev-password`, `hybrid`, `sso-only`) | `dev-password` |
+| `PUBLIC_AUTH_MODE` | Web login UI mode; keep aligned with server `AUTH_MODE` | `dev-password` |
+| `USE_MOCK_AI` | Use mock AI providers instead of live Gemini providers | `true` |
+| `STORAGE_PROVIDER` | Storage backend (`filesystem` / `s3`) | `filesystem` |
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
 | `S3_BUCKET` | S3 bucket name | -- |
 | `S3_REGION` | S3 region | -- |
+| `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTLP traces endpoint (Datadog Agent/Collector) | `http://localhost:4318/v1/traces` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers (`KEY=value,KEY2=value2`) | -- |
+| `OTEL_SERVICE_NAME` | Override backend service name (`server` / `worker`) | app default |
+| `OTEL_SERVICE_VERSION` | Override service version | `0.0.0` |
+| `OTEL_ENV` | Deployment environment tag | `NODE_ENV` |
+
+Telemetry settings apply to backend services (`apps/server`, `apps/worker`) only.
+
+### SSO Variables (Required When `AUTH_MODE=hybrid` Or `AUTH_MODE=sso-only`)
+
+| Variable | Description |
+|---|---|
+| `AUTH_MICROSOFT_CLIENT_ID` | Microsoft Entra app client ID |
+| `AUTH_MICROSOFT_CLIENT_SECRET` | Microsoft Entra app client secret |
+| `AUTH_MICROSOFT_TENANT_ID` | Microsoft Entra tenant ID |
+| `AUTH_ROLE_ADMIN_GROUP_IDS` | Comma-separated Graph group IDs that map to role `admin` |
+| `AUTH_ROLE_USER_GROUP_IDS` | Comma-separated Graph group IDs that map to role `user` |
+
+### Datadog Configuration (Backend)
+
+Set the following in both `apps/server/.env` and `apps/worker/.env`.
+
+Use a local Datadog Agent or OTLP Collector:
+
+```bash
+TELEMETRY_ENABLED=true
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_SERVICE_NAME=content-studio-server
+OTEL_ENV=production
+```
+
+Use direct Datadog OTLP intake:
+
+```bash
+TELEMETRY_ENABLED=true
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=<your-datadog-otlp-traces-endpoint>
+OTEL_EXPORTER_OTLP_HEADERS=DD-API-KEY=<your-datadog-api-key>
+OTEL_SERVICE_NAME=content-studio-server
+OTEL_ENV=production
+```
+
+Set `OTEL_SERVICE_NAME=content-studio-worker` in worker env files.
 
 ## Troubleshooting
 

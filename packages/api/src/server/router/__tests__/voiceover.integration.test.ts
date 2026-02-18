@@ -52,6 +52,11 @@ const callHandler = <T>(
   return procedure['~orpc'].handler(args) as Promise<T>;
 };
 
+const expectIsoTimestamp = (value: string) => {
+  expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(Number.isNaN(Date.parse(value))).toBe(false);
+};
+
 // Handler args type
 type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
 
@@ -369,13 +374,11 @@ describe('voiceover router', () => {
       // Verify serialized format
       expect(returned.id).toMatch(/^voc_/);
       expect(returned.title).toBe('Serialization Test');
-      expect(returned.voice).toBeDefined();
+      expect(returned.voice).toBe('Charon');
       expect(returned.createdBy).toBe(testUser.id);
       // Dates should be ISO strings
-      expect(typeof returned.createdAt).toBe('string');
-      expect(typeof returned.updatedAt).toBe('string');
-      expect(() => new Date(returned.createdAt)).not.toThrow();
-      expect(() => new Date(returned.updatedAt)).not.toThrow();
+      expectIsoTimestamp(returned.createdAt);
+      expectIsoTimestamp(returned.updatedAt);
     });
 
     it('includes status and duration when present', async () => {
@@ -509,8 +512,8 @@ describe('voiceover router', () => {
       expect(result.status).toBe('ready');
       expect(result.voice).toBe('Kore');
       // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
     });
   });
 
@@ -571,13 +574,10 @@ describe('voiceover router', () => {
       expect(result.id).toMatch(/^voc_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string
-      expect(typeof result.updatedAt).toBe('string');
-      expect(() => new Date(result.updatedAt)).not.toThrow();
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('persists voiceover to database', async () => {
@@ -732,12 +732,10 @@ describe('voiceover router', () => {
       expect(result.id).toMatch(/^voc_/);
 
       // Assert - createdAt is an ISO string
-      expect(typeof result.createdAt).toBe('string');
-      expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.createdAt);
 
       // Assert - updatedAt is an ISO string
-      expect(typeof result.updatedAt).toBe('string');
-      expect(result.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expectIsoTimestamp(result.updatedAt);
     });
 
     it('throws error when voiceover does not exist', async () => {
@@ -1011,7 +1009,6 @@ describe('voiceover router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
@@ -1040,7 +1037,7 @@ describe('voiceover router', () => {
       });
 
       // Assert - should return existing job
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
 
@@ -1101,7 +1098,7 @@ describe('voiceover router', () => {
       });
 
       // Assert
-      expect(result.jobId).toBeDefined();
+      expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
   });
@@ -1194,11 +1191,10 @@ describe('voiceover router', () => {
         duration: 120,
       });
       // Dates should be ISO strings
-      expect(typeof result.createdAt).toBe('string');
-      expect(typeof result.updatedAt).toBe('string');
-      expect(typeof result.startedAt).toBe('string');
-      expect(typeof result.completedAt).toBe('string');
-      expect(() => new Date(result.createdAt)).not.toThrow();
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
+      expectIsoTimestamp(result.startedAt!);
+      expectIsoTimestamp(result.completedAt!);
     });
 
     it('returns null for optional date fields when not set', async () => {

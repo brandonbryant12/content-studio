@@ -44,11 +44,8 @@ describe('queue errors', () => {
     it('httpMessage falls back to default when message is empty', () => {
       const error = new JobNotFoundError({ jobId: 'job-123' });
 
-      // Schema.optional(Schema.String) defaults to '' (empty string).
-      // httpMessage uses `??` which only catches null/undefined, not empty string.
-      // So with no message provided, httpMessage returns the empty string.
       const result = JobNotFoundError.httpMessage(error);
-      expect(typeof result).toBe('string');
+      expect(result).toBe('Job job-123 not found');
     });
 
     it('httpMessage returns custom message when provided', () => {

@@ -25,14 +25,4 @@ export function useOptimisticUpload(options?: { onSuccess?: () => void }) {
   );
 }
 
-/**
- * Convert file to base64 for upload.
- */
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(',')[1]!);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+export { fileToBase64 } from '@/shared/lib/file-base64';

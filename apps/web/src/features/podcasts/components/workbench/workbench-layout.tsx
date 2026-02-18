@@ -1,11 +1,18 @@
 import {
   ArrowLeftIcon,
+  DownloadIcon,
   TrashIcon,
   FileTextIcon,
   MixerHorizontalIcon,
 } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { type ReactNode, useState, useCallback } from 'react';
@@ -31,6 +38,11 @@ interface WorkbenchLayoutProps {
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;
+  canExportAudio?: boolean;
+  canExportScript?: boolean;
+  onExportAudio?: () => void;
+  onExportScript?: () => void;
+  onCopyTranscript?: () => void;
 }
 
 export function WorkbenchLayout({
@@ -45,9 +57,18 @@ export function WorkbenchLayout({
   onApprove,
   onRevoke,
   isApprovalPending,
+  canExportAudio = false,
+  canExportScript = false,
+  onExportAudio,
+  onExportScript,
+  onCopyTranscript,
 }: WorkbenchLayoutProps) {
   const statusConfig = getStatusConfig(podcast.status);
   const isGenerating = isGeneratingStatus(podcast.status);
+  const canExport = canExportAudio || canExportScript;
+  const handleExportAudio = onExportAudio ?? (() => {});
+  const handleExportScript = onExportScript ?? (() => {});
+  const handleCopyTranscript = onCopyTranscript ?? (() => {});
   const [activeTab, setActiveTab] = useState<TabId>('script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -95,6 +116,38 @@ export function WorkbenchLayout({
             onRevoke={onRevoke}
             isPending={isApprovalPending}
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!canExport}
+                aria-label="Export podcast"
+              >
+                <DownloadIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={handleExportAudio}
+                disabled={!canExportAudio}
+              >
+                Download Audio
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleExportScript}
+                disabled={!canExportScript}
+              >
+                Download Script
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleCopyTranscript}
+                disabled={!canExportScript}
+              >
+                Copy Transcript
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="workbench-v3-divider" />
           <Button
             variant="ghost"

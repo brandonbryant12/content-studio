@@ -57,6 +57,46 @@ pnpm db:push                                  # apply schema
 pnpm dev                                      # start all services
 ```
 
+## Architecture
+
+```mermaid
+graph TD
+  Web[apps/web React + TanStack] -->|Typed oRPC calls| Server[apps/server Hono + oRPC]
+  Server -->|Effect runtime| Domain[packages/media use cases]
+  Server -->|SSE events| Web
+
+  Domain --> DB[(PostgreSQL)]
+  Domain --> Queue[packages/queue job queue]
+  Domain --> Storage[(S3 / Filesystem)]
+  Domain --> AI[packages/ai LLM + TTS]
+
+  Queue --> Worker[apps/worker job processor]
+  Worker --> Domain
+```
+
+## Docs-Driven AI Development
+
+This project is 100% written by AI agents and maintained through standards docs.
+The `docs/` folder is the source of truth for implementation patterns, architecture
+rules, testing requirements, and safety constraints used by coding agents.
+
+For full index and reading order, see `docs/README.md`.
+
+`docs/` structure:
+
+- `docs/architecture/` - boundaries, access control, observability
+- `docs/patterns/` - backend implementation contracts (use cases, handlers, repos, runtime)
+- `docs/frontend/` - frontend architecture, data-fetching, forms, real-time, UI patterns
+- `docs/testing/` - required test strategy by change type
+- `docs/setup.md` - local/dev/test environment setup
+
+### How this is enforced
+
+- Agents are expected to read relevant `docs/...` files before making changes
+- New features are implemented against these docs, not ad hoc conventions
+- Test suites and invariant tests are used to catch regressions against the standards
+- Agent skills are used to accelerate feature implementation, refactors, and testing workflows
+
 ## Environment Variables
 
 ### AI Configuration
@@ -85,7 +125,21 @@ pnpm dev                                      # start all services
 |---|---|---|
 | `PUBLIC_SERVER_URL` | — | **Required.** Backend API URL |
 | `PUBLIC_SERVER_API_PATH` | `/api` | API path prefix |
+| `PUBLIC_AUTH_MODE` | `dev-password` | Login UI mode (`dev-password`, `hybrid`, `sso-only`) |
 | `PUBLIC_WEB_URL` | `http://localhost:8085` | Dev server host/port |
+
+### Authentication (SSO + Roles)
+
+| Variable | Default | Description |
+|---|---|---|
+| `AUTH_MODE` | `dev-password` | Server auth mode: `dev-password`, `hybrid`, `sso-only` |
+| `AUTH_MICROSOFT_CLIENT_ID` | — | Required for `hybrid` / `sso-only` |
+| `AUTH_MICROSOFT_CLIENT_SECRET` | — | Required for `hybrid` / `sso-only` |
+| `AUTH_MICROSOFT_TENANT_ID` | — | Required for `hybrid` / `sso-only` |
+| `AUTH_ROLE_ADMIN_GROUP_IDS` | — | Comma-separated Graph group IDs that map to role `admin` |
+| `AUTH_ROLE_USER_GROUP_IDS` | — | Comma-separated Graph group IDs that map to role `user` |
+
+In SSO modes, role resolution is done by calling Microsoft Graph `transitiveMemberOf` on session creation (not token `groups` claims), which handles users with high group counts.
 
 ### Storage
 
@@ -113,6 +167,45 @@ S3_SECRET_ACCESS_KEY=minioadmin
 S3_ENDPOINT=http://minio:9001          # internal to docker network
 S3_PUBLIC_ENDPOINT=http://<host>:9001   # public access
 ```
+
+### Telemetry (Backend Only)
+
+Server and worker export OpenTelemetry spans to Datadog-compatible OTLP endpoints.
+The web frontend does not send client-side error telemetry.
+
+| Variable | Default | Description |
+|---|---|---|
+| `TELEMETRY_ENABLED` | `true` in production, else `false` | Enables backend trace export |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | `http://localhost:4318/v1/traces` | OTLP traces endpoint (Datadog Agent/Collector) |
+| `OTEL_EXPORTER_OTLP_HEADERS` | — | Optional comma-separated headers (`KEY=value,KEY2=value2`) |
+| `OTEL_SERVICE_NAME` | app default | Override service name |
+| `OTEL_SERVICE_VERSION` | `0.0.0` | Override service version |
+| `OTEL_ENV` | `NODE_ENV` | Deployment environment tag |
+
+#### Configure Datadog
+
+Set telemetry vars in both `apps/server/.env` and `apps/worker/.env`.
+
+Use a local Datadog Agent/Collector:
+
+```bash
+TELEMETRY_ENABLED=true
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_SERVICE_NAME=content-studio-server
+OTEL_ENV=production
+```
+
+Use direct Datadog OTLP intake:
+
+```bash
+TELEMETRY_ENABLED=true
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=<your-datadog-otlp-traces-endpoint>
+OTEL_EXPORTER_OTLP_HEADERS=DD-API-KEY=<your-datadog-api-key>
+OTEL_SERVICE_NAME=content-studio-server
+OTEL_ENV=production
+```
+
+Repeat with `OTEL_SERVICE_NAME=content-studio-worker` for worker telemetry.
 
 ## Project Structure
 

@@ -6,7 +6,7 @@ import type {
   DeadlockError,
   ConnectionError,
 } from '../effect';
-import { withDb, Db, DbLive } from '../effect';
+import { withDb, Db } from '../effect';
 
 const mockDbLayer = Layer.succeed(Db, { db: {} as never });
 
@@ -149,13 +149,5 @@ describe('withDb', () => {
         expect((error.value as DbError).message).toBe('raw string error');
       }
     }
-  });
-});
-
-describe('DbLive', () => {
-  it('creates a Db layer from a database instance', () => {
-    const mockDb = {} as never;
-    const layer = DbLive(mockDb);
-    expect(layer).toBeDefined();
   });
 });

@@ -76,6 +76,40 @@ The invariant test at `packages/media/src/shared/__tests__/safety-invariants.tes
 | `apps/web/` | `console.*` permitted in dev | No restriction |
 | Test files | `console.*` permitted | No restriction |
 
+## Telemetry Export (Datadog OTLP)
+<!-- enforced-by: manual-review -->
+
+Trace export is configured for backend processes only:
+
+- `apps/server`
+- `apps/worker`
+
+The web frontend currently does not send client-side error telemetry.
+
+### Runtime Wiring Pattern
+
+1. Parse telemetry env vars in each backend app's `env.ts`.
+2. Call `initTelemetry(...)` at process startup before serving requests or jobs.
+3. Call `shutdownTelemetry()` during graceful shutdown before process exit.
+
+This ensures spans are exported reliably and flush on termination.
+
+### OTLP Environment Contract
+
+| Variable | Purpose | Notes |
+|---|---|---|
+| `TELEMETRY_ENABLED` | Enable export | Defaults to `true` in production, else `false` |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace exporter endpoint | Normalized to include `/v1/traces` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers | Comma-separated `KEY=value,KEY2=value2` |
+| `OTEL_SERVICE_NAME` | Service identifier | Set distinct values for server and worker |
+| `OTEL_SERVICE_VERSION` | Service version tag | Optional override |
+| `OTEL_ENV` | Deployment environment tag | Defaults to `NODE_ENV` |
+
+### Exporter Behavior
+
+- If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use OTLP HTTP exporter + `BatchSpanProcessor`.
+- If endpoint is not configured, fall back to `ConsoleSpanExporter` for local debugging.
+
 ## Error Observability
 <!-- enforced-by: architecture -->
 
@@ -94,3 +128,6 @@ Typed errors carry their `_tag` into spans automatically via `handleEffectWithPr
 | `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` -- span creation + error mapping |
 | `packages/media/src/shared/safety-primitives.ts` | `withSpan` re-export and safety wrappers |
 | `packages/media/src/shared/__tests__/safety-invariants.test.ts` | Invariant enforcement |
+| `packages/db/src/telemetry.ts` | OTLP exporter setup + provider lifecycle (`initTelemetry` / `shutdownTelemetry`) |
+| `apps/server/src/server.ts` | Server telemetry bootstrap + graceful shutdown hook |
+| `apps/worker/src/worker.ts` | Worker telemetry bootstrap + graceful shutdown hook |

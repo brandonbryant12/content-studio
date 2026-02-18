@@ -4,6 +4,8 @@
 graph LR
   Request[HTTP Request] --> Middleware[better-auth Middleware]
   Middleware -->|AuthN| Session[Session + User]
+  Middleware -->|SSO mode role sync| Graph[Microsoft Graph transitiveMemberOf]
+  Graph -->|Group IDs -> app role| DB[(PostgreSQL)]
   Session --> Handler[oRPC Handler]
   Handler --> FiberRef[FiberRef: getCurrentUser]
   FiberRef --> UseCase[Use Case]
@@ -31,10 +33,14 @@ graph LR
 | Layer | Mechanism |
 |---|---|
 | HTTP | `better-auth` middleware validates session cookie on every request |
+| Login mode | `AUTH_MODE` selects providers: `dev-password`, `hybrid`, `sso-only` |
+| SSO role sync | In SSO modes, `databaseHooks.session.create.after` calls Microsoft Graph `transitiveMemberOf` and maps configured group IDs to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
 | Handler | Receives `AuthenticatedORPCContext` with typed `user` field |
 
 The `protectedProcedure` type guarantees that handlers receive a non-null user. Handlers that use `baseProcedure` receive `user: User | null` and must handle the null case explicitly.
+
+Role mapping intentionally uses Graph API lookup (instead of token `groups` claim) to avoid group-claim overage behavior for users in many groups.
 
 ## Authorization (AuthZ)
 <!-- enforced-by: architecture -->

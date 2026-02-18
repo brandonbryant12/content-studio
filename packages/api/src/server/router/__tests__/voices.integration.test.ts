@@ -185,14 +185,10 @@ describe('voices router', () => {
 
       // Assert
       const firstVoice = result[0]!;
-      expect(firstVoice).toHaveProperty('id');
-      expect(firstVoice).toHaveProperty('name');
-      expect(firstVoice).toHaveProperty('gender');
-      expect(firstVoice).toHaveProperty('description');
-      expect(typeof firstVoice.id).toBe('string');
-      expect(typeof firstVoice.name).toBe('string');
+      expect(firstVoice.id).toBe(MOCK_VOICES[0]!.id);
+      expect(firstVoice.name).toBe(MOCK_VOICES[0]!.name);
       expect(['male', 'female']).toContain(firstVoice.gender);
-      expect(typeof firstVoice.description).toBe('string');
+      expect(firstVoice.description).toBe(MOCK_VOICES[0]!.description);
     });
 
     it('returns mock voices from test layer', async () => {
@@ -261,8 +257,8 @@ describe('voices router', () => {
 
       // Assert
       expect(result.voiceId).toBe('Charon');
-      expect(result.audioEncoding).toBeDefined();
-      expect(typeof result.audioContent).toBe('string');
+      expect(result.audioEncoding).toBe('LINEAR16');
+      expect(result.audioContent.length).toBeGreaterThan(0);
       // Verify it's base64 encoded
       expect(() => Buffer.from(result.audioContent, 'base64')).not.toThrow();
     });
@@ -280,7 +276,6 @@ describe('voices router', () => {
       });
 
       // Assert
-      expect(typeof result.audioContent).toBe('string');
       const decoded = Buffer.from(result.audioContent, 'base64');
       expect(decoded.length).toBeGreaterThan(0);
     });
@@ -368,47 +363,4 @@ describe('voices router', () => {
     });
   });
 
-  // ===========================================================================
-  // Tests: Response format
-  // ===========================================================================
-
-  describe('response format', () => {
-    it('list returns array of voice objects', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.list({
-        context,
-        errors,
-      });
-
-      // Assert
-      expect(Array.isArray(result)).toBe(true);
-      result.forEach((voice) => {
-        expect(typeof voice.id).toBe('string');
-        expect(typeof voice.name).toBe('string');
-        expect(typeof voice.gender).toBe('string');
-        expect(typeof voice.description).toBe('string');
-      });
-    });
-
-    it('preview returns audio preview object', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = { voiceId: 'Charon' };
-
-      // Act
-      const result = await handlers.preview({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert
-      expect(typeof result.audioContent).toBe('string');
-      expect(typeof result.audioEncoding).toBe('string');
-      expect(typeof result.voiceId).toBe('string');
-    });
-  });
 });

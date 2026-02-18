@@ -1,5 +1,11 @@
-import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, DownloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useState, useCallback, type ReactNode } from 'react';
@@ -24,6 +30,11 @@ interface WorkbenchLayoutProps {
   onApprove: () => void;
   onRevoke: () => void;
   isApprovalPending: boolean;
+  canExportAudio?: boolean;
+  canExportScript?: boolean;
+  onExportAudio?: () => void;
+  onExportScript?: () => void;
+  onCopyTranscript?: () => void;
 }
 
 export function WorkbenchLayout({
@@ -38,8 +49,17 @@ export function WorkbenchLayout({
   onApprove,
   onRevoke,
   isApprovalPending,
+  canExportAudio = false,
+  canExportScript = false,
+  onExportAudio,
+  onExportScript,
+  onCopyTranscript,
 }: WorkbenchLayoutProps) {
   const isGenerating = isGeneratingStatus(voiceover.status);
+  const canExport = canExportAudio || canExportScript;
+  const handleExportAudio = onExportAudio ?? (() => {});
+  const handleExportScript = onExportScript ?? (() => {});
+  const handleCopyTranscript = onCopyTranscript ?? (() => {});
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleDeleteClick = useCallback(() => {
@@ -110,6 +130,38 @@ export function WorkbenchLayout({
 
                 {/* Delete button */}
                 <div className="workbench-actions">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={!canExport}
+                        aria-label="Export voiceover"
+                      >
+                        <DownloadIcon className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={handleExportAudio}
+                        disabled={!canExportAudio}
+                      >
+                        Download Audio
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleExportScript}
+                        disabled={!canExportScript}
+                      >
+                        Download Script
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCopyTranscript}
+                        disabled={!canExportScript}
+                      >
+                        Copy Transcript
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="icon"

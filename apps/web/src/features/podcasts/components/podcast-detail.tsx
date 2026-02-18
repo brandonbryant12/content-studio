@@ -43,6 +43,11 @@ export interface PodcastDetailProps {
   onDelete: () => void;
   onApprove: () => void;
   onRevoke: () => void;
+  canExportAudio?: boolean;
+  canExportScript?: boolean;
+  onExportAudio?: () => void;
+  onExportScript?: () => void;
+  onCopyTranscript?: () => void;
 }
 
 export function PodcastDetail({
@@ -58,6 +63,11 @@ export function PodcastDetail({
   onDelete,
   onApprove,
   onRevoke,
+  canExportAudio = false,
+  canExportScript = false,
+  onExportAudio,
+  onExportScript,
+  onCopyTranscript,
 }: PodcastDetailProps) {
   const {
     hasChanges,
@@ -78,6 +88,11 @@ export function PodcastDetail({
       onApprove={onApprove}
       onRevoke={onRevoke}
       isApprovalPending={isApprovalPending}
+      canExportAudio={canExportAudio}
+      canExportScript={canExportScript}
+      onExportAudio={onExportAudio}
+      onExportScript={onExportScript}
+      onCopyTranscript={onCopyTranscript}
       leftPanel={
         <ScriptPanel
           segments={scriptEditor.segments}

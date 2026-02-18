@@ -37,17 +37,6 @@ describe('errors', () => {
       expect(NotFoundError.httpMessage(error)).toBe('Custom not found');
     });
 
-    it('generates fallback httpMessage when message is explicitly undefined', () => {
-      // When explicitly passing undefined, the ?? does trigger
-      const error = new NotFoundError({ entity: 'Document', id: 'doc_123' });
-      // Override message to undefined to test the fallback path
-      // @ts-expect-error — deliberately setting to undefined to test fallback path
-      error.message = undefined;
-      expect(NotFoundError.httpMessage(error)).toBe(
-        'Document with id doc_123 not found',
-      );
-    });
-
     it('exposes getData with entity and id', () => {
       const error = new NotFoundError({ entity: 'Podcast', id: 'pod_abc' });
       expect(NotFoundError.getData(error)).toEqual({

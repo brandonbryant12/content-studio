@@ -11,6 +11,7 @@ graph TD
 
   subgraph API[API Layer - oRPC + Hono]
     Contract --> Handler
+    Handler --> AuthN[better-auth]
     Handler --> EffectRuntime[handleEffectWithProtocol]
   end
 
@@ -27,8 +28,16 @@ graph TD
     AI[LLM + TTS]
   end
 
+  subgraph Identity[Identity]
+    Entra[Microsoft Entra SSO]
+    Graph[Microsoft Graph]
+  end
+
   FE -->|oRPC client| Contract
   EffectRuntime --> UseCase
+  AuthN --> Entra
+  AuthN -->|SSO mode role sync| Graph
+  Graph -->|group IDs -> app role| DB
   UseCase --> Repo --> DB
   UseCase --> Queue
   UseCase --> Storage
@@ -55,14 +64,15 @@ graph TD
 <!-- enforced-by: architecture -->
 
 1. **Client** calls oRPC contract method via typed client
-2. **Hono middleware** validates session (AuthN via `better-auth`)
-3. **oRPC router** resolves to handler, validates input against contract schema
-4. **Handler** calls `handleEffectWithProtocol` with the use case effect and span name
-5. **Effect runtime** resolves all services (repos, AI, storage, queue) from the managed runtime
-6. **Use case** executes domain logic, yields typed errors on failure
-7. **Serializer** transforms domain objects to API response shape (dates to strings, etc.)
-8. **Error mapper** in `handleEffectWithProtocol` converts Effect typed errors to oRPC error codes
-9. **Response** returned to client as JSON
+2. **Hono middleware** validates session (AuthN via `better-auth`; provider behavior controlled by `AUTH_MODE`)
+3. **SSO modes only:** auth hook resolves role from Microsoft Graph `transitiveMemberOf` and persists `admin`/`user`
+4. **oRPC router** resolves to handler, validates input against contract schema
+5. **Handler** calls `handleEffectWithProtocol` with the use case effect and span name
+6. **Effect runtime** resolves all services (repos, AI, storage, queue) from the managed runtime
+7. **Use case** executes domain logic, yields typed errors on failure
+8. **Serializer** transforms domain objects to API response shape (dates to strings, etc.)
+9. **Error mapper** in `handleEffectWithProtocol` converts Effect typed errors to oRPC error codes
+10. **Response** returned to client as JSON
 
 ## Layer Rules
 <!-- enforced-by: types -->
@@ -107,7 +117,7 @@ Key files:
 
 | Concern | Mechanism | Standard |
 |---|---|---|
-| Authentication | `better-auth` middleware on Hono | `docs/architecture/access-control.md` |
+| Authentication | `better-auth` middleware on Hono (`AUTH_MODE`: dev-password/hybrid/sso-only) | `docs/architecture/access-control.md` |
 | Authorization | `getCurrentUser` FiberRef in use cases | `docs/architecture/access-control.md` |
 | Error handling | Typed Effect errors mapped to oRPC codes | `docs/patterns/error-handling.md` |
 | Observability | `withSpan` on every use case | `docs/architecture/observability.md` |

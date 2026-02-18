@@ -42,6 +42,25 @@ const StorageProviderSchema = Schema.Union(
   Schema.Literal('s3'),
 );
 
+const AuthModeSchema = Schema.Union(
+  Schema.Literal('dev-password'),
+  Schema.Literal('hybrid'),
+  Schema.Literal('sso-only'),
+);
+
+const CsvStringArraySchema = Schema.transform(
+  Schema.String,
+  Schema.Array(Schema.String),
+  {
+    decode: (input) =>
+      input
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0),
+    encode: (parts) => parts.join(','),
+  },
+);
+
 export const envSchema = Schema.Struct({
   SERVER_PORT: Schema.optionalWith(PortSchema, {
     default: () => DEFAULT_SERVER_PORT,
@@ -50,6 +69,24 @@ export const envSchema = Schema.Struct({
     default: () => DEFAULT_SERVER_HOST,
   }),
   SERVER_AUTH_SECRET: Schema.String.pipe(Schema.minLength(1)),
+  AUTH_MODE: Schema.optionalWith(AuthModeSchema, {
+    default: () => 'dev-password' as const,
+  }),
+  AUTH_MICROSOFT_CLIENT_ID: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  AUTH_MICROSOFT_CLIENT_SECRET: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  AUTH_MICROSOFT_TENANT_ID: Schema.optional(
+    Schema.String.pipe(Schema.minLength(1)),
+  ),
+  AUTH_ROLE_ADMIN_GROUP_IDS: Schema.optionalWith(CsvStringArraySchema, {
+    default: () => [],
+  }),
+  AUTH_ROLE_USER_GROUP_IDS: Schema.optionalWith(CsvStringArraySchema, {
+    default: () => [],
+  }),
   SERVER_POSTGRES_URL: Schema.String,
 
   PUBLIC_SERVER_URL: UrlSchema,
@@ -85,6 +122,17 @@ export const envSchema = Schema.Struct({
 
   CORS_ORIGINS: Schema.optional(Schema.String),
 
+  TELEMETRY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
+    default: () => process.env.NODE_ENV === 'production',
+  }),
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: Schema.optionalWith(Schema.String, {
+    default: () => 'http://localhost:4318/v1/traces',
+  }),
+  OTEL_EXPORTER_OTLP_HEADERS: Schema.optional(Schema.String),
+  OTEL_SERVICE_NAME: Schema.optional(Schema.String),
+  OTEL_SERVICE_VERSION: Schema.optional(Schema.String),
+  OTEL_ENV: Schema.optional(Schema.String),
+
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),
   NO_PROXY: Schema.optional(Schema.String),
@@ -95,6 +143,27 @@ const rawEnv = Schema.decodeUnknownSync(envSchema)(process.env);
 if (!rawEnv.USE_MOCK_AI) {
   if (!rawEnv.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is required when USE_MOCK_AI=false');
+  }
+}
+
+if (rawEnv.AUTH_MODE !== 'dev-password') {
+  if (
+    !rawEnv.AUTH_MICROSOFT_CLIENT_ID ||
+    !rawEnv.AUTH_MICROSOFT_CLIENT_SECRET ||
+    !rawEnv.AUTH_MICROSOFT_TENANT_ID
+  ) {
+    throw new Error(
+      'AUTH_MICROSOFT_CLIENT_ID, AUTH_MICROSOFT_CLIENT_SECRET, and AUTH_MICROSOFT_TENANT_ID are required when AUTH_MODE is hybrid or sso-only',
+    );
+  }
+
+  if (
+    rawEnv.AUTH_ROLE_ADMIN_GROUP_IDS.length === 0 ||
+    rawEnv.AUTH_ROLE_USER_GROUP_IDS.length === 0
+  ) {
+    throw new Error(
+      'AUTH_ROLE_ADMIN_GROUP_IDS and AUTH_ROLE_USER_GROUP_IDS must be configured when AUTH_MODE is hybrid or sso-only',
+    );
   }
 }
 

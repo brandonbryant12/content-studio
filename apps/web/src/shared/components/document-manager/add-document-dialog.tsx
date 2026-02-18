@@ -11,6 +11,7 @@ import {
 } from '@/features/documents/hooks/use-document-list';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import { getErrorMessage } from '@/shared/lib/errors';
+import { fileToBase64 } from '@/shared/lib/file-base64';
 
 interface AddDocumentDialogProps {
   open: boolean;
@@ -75,13 +76,7 @@ export function AddDocumentDialog({
 
   const handleUpload = useCallback(
     async (file: File, title: string | undefined) => {
-      const arrayBuffer = await file.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          '',
-        ),
-      );
+      const base64 = await fileToBase64(file);
 
       uploadMutation.mutate({
         fileName: file.name,

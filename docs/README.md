@@ -15,6 +15,7 @@ All new code reviews and feature work should reference `docs/` paths.
 4. `docs/patterns/safety-primitives.md`
 5. `docs/testing/overview.md`
 6. `docs/frontend/project-structure.md`
+7. `docs/architecture/observability.md`
 
 ## Directory Layout
 

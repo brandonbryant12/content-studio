@@ -10,6 +10,7 @@
 | API endpoints | `docs/patterns/api-handler.md` |
 | Error handling | `docs/patterns/error-handling.md`, `docs/patterns/enum-constants.md` |
 | Effect runtime | `docs/patterns/effect-runtime.md` |
+| Observability | `docs/architecture/observability.md`, `docs/setup.md` |
 | Frontend components | `docs/frontend/components.md`, `docs/frontend/styling.md` |
 | Data fetching | `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md` |
 | Forms | `docs/frontend/forms.md` |
@@ -65,6 +66,9 @@ pnpm test:db:setup # Start test DB container + push schema
 - **`useChat` streaming state must be explicit**: `status === 'submitted' || status === 'streaming'` (not `status !== 'ready'`).
 - **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
+- **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
+- **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.
+- **Use standard OTLP env inputs**: `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` and optional `OTEL_EXPORTER_OTLP_HEADERS` (`KEY=value,KEY2=value2`).
 
 ## Effect Layer Rules
 

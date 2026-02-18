@@ -30,47 +30,57 @@ export function useBulkDelete({
       if (ids.size === 0) return;
       setIsBulkDeleting(true);
 
-      // Cancel in-flight queries and snapshot for rollback
-      await queryClient.cancelQueries({ queryKey });
-      const previous =
-        queryClient.getQueryData<readonly { id: string }[]>(queryKey);
+      let previous: readonly { id: string }[] | undefined;
 
-      // Optimistically remove all selected items
-      if (previous) {
-        queryClient.setQueryData(
-          queryKey,
-          previous.filter((item) => !ids.has(item.id)),
-        );
-      }
+      try {
+        // Cancel in-flight queries and snapshot for rollback
+        await queryClient.cancelQueries({ queryKey });
+        previous = queryClient.getQueryData<readonly { id: string }[]>(queryKey);
 
-      // Fire all deletes in parallel
-      const idList = [...ids];
-      const results = await Promise.allSettled(
-        idList.map((id) => deleteFn({ id })),
-      );
-
-      const failedIds = new Set(
-        idList.filter((_, i) => results[i]!.status === 'rejected'),
-      );
-
-      if (failedIds.size > 0) {
-        // Only restore items whose deletion failed
+        // Optimistically remove all selected items
         if (previous) {
-          const successfullyDeleted = idList.filter((id) => !failedIds.has(id));
-          const successfulSet = new Set(successfullyDeleted);
           queryClient.setQueryData(
             queryKey,
-            previous.filter((item) => !successfulSet.has(item.id)),
+            previous.filter((item) => !ids.has(item.id)),
           );
         }
-        const plural = entityName + (failedIds.size > 1 ? 's' : '');
-        toast.error(`Failed to delete ${failedIds.size} ${plural}`);
-      } else {
-        const plural = entityName + (ids.size > 1 ? 's' : '');
-        toast.success(`Deleted ${ids.size} ${plural}`);
-      }
 
-      setIsBulkDeleting(false);
+        // Fire all deletes in parallel. Promise.resolve() prevents sync throws
+        // from escaping Promise.allSettled and skipping cleanup.
+        const idList = [...ids];
+        const results = await Promise.allSettled(
+          idList.map((id) => Promise.resolve().then(() => deleteFn({ id }))),
+        );
+
+        const failedIds = new Set(
+          idList.filter((_, i) => results[i]!.status === 'rejected'),
+        );
+
+        if (failedIds.size > 0) {
+          // Only restore items whose deletion failed
+          if (previous) {
+            const successfullyDeleted = idList.filter((id) => !failedIds.has(id));
+            const successfulSet = new Set(successfullyDeleted);
+            queryClient.setQueryData(
+              queryKey,
+              previous.filter((item) => !successfulSet.has(item.id)),
+            );
+          }
+          const plural = entityName + (failedIds.size > 1 ? 's' : '');
+          toast.error(`Failed to delete ${failedIds.size} ${plural}`);
+        } else {
+          const plural = entityName + (ids.size > 1 ? 's' : '');
+          toast.success(`Deleted ${ids.size} ${plural}`);
+        }
+      } catch {
+        if (previous) {
+          queryClient.setQueryData(queryKey, previous);
+        }
+        const plural = entityName + (ids.size > 1 ? 's' : '');
+        toast.error(`Failed to delete ${plural}`);
+      } finally {
+        setIsBulkDeleting(false);
+      }
     },
     [queryClient, queryKey, deleteFn, entityName],
   );

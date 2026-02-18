@@ -9,6 +9,12 @@ const PathStartingWithSlash = Schema.String.pipe(
   }),
 );
 
+const AuthModeSchema = Schema.Union(
+  Schema.Literal('dev-password'),
+  Schema.Literal('hybrid'),
+  Schema.Literal('sso-only'),
+);
+
 export const envSchema = Schema.Struct({
   /** Backend API server URL. Injected at runtime via env.js in production. */
   PUBLIC_SERVER_URL: Schema.String.pipe(
@@ -26,6 +32,9 @@ export const envSchema = Schema.Struct({
   ),
   PUBLIC_SERVER_API_PATH: Schema.optionalWith(PathStartingWithSlash, {
     default: () => '/api' as `/${string}`,
+  }),
+  PUBLIC_AUTH_MODE: Schema.optionalWith(AuthModeSchema, {
+    default: () => 'dev-password' as const,
   }),
 
   /**
@@ -51,3 +60,6 @@ const runtimeEnv: Record<string, unknown> = {
 };
 
 export const env = Schema.decodeUnknownSync(envSchema)(runtimeEnv);
+
+export const isPasswordAuthEnabled = env.PUBLIC_AUTH_MODE !== 'sso-only';
+export const isMicrosoftSSOAuthEnabled = env.PUBLIC_AUTH_MODE !== 'dev-password';
