@@ -54,46 +54,56 @@ export function StylePropertyEditor({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {properties.map((prop, index) => (
         <div
           key={`${index}-${prop.key}-${prop.type}`}
-          className="flex items-center gap-1.5"
+          className="rounded-lg border border-border/40 bg-muted/10 p-2 space-y-1.5"
         >
-          <Input
-            value={prop.key}
-            onChange={(e) => updateProperty(index, { key: e.target.value })}
-            placeholder="Property"
-            disabled={disabled}
-            className="h-8 text-xs flex-[2] min-w-0 px-2"
-          />
-
-          <div className="shrink-0 h-8 inline-flex items-center rounded-md border border-border/60 bg-muted/20 p-0.5">
-            {PROPERTY_TYPES.map((option) => {
-              const isActive = (prop.type ?? 'text') === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => changeType(index, option.value)}
-                  disabled={disabled}
-                  className={`h-6 min-w-6 px-1.5 rounded text-[10px] font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                  } disabled:opacity-50 disabled:pointer-events-none`}
-                  title={`Set type: ${option.label}`}
-                  aria-label={`Set ${prop.key || 'property'} type to ${option.label}`}
-                  aria-pressed={isActive}
-                >
-                  {option.icon}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-1.5">
+            <Input
+              value={prop.key}
+              onChange={(e) => updateProperty(index, { key: e.target.value })}
+              placeholder="Property"
+              disabled={disabled}
+              className="h-7 text-xs min-w-0 flex-1 px-2"
+            />
+            <div className="shrink-0 h-7 inline-flex items-center rounded-md border border-border/60 bg-muted/20 p-0.5">
+              {PROPERTY_TYPES.map((option) => {
+                const isActive = (prop.type ?? 'text') === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => changeType(index, option.value)}
+                    disabled={disabled}
+                    className={`h-5.5 min-w-5.5 px-1.5 rounded text-[10px] font-semibold transition-colors ${
+                      isActive
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                    } disabled:opacity-50 disabled:pointer-events-none`}
+                    title={`Set type: ${option.label}`}
+                    aria-label={`Set ${prop.key || 'property'} type to ${option.label}`}
+                    aria-pressed={isActive}
+                  >
+                    {option.icon}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => removeProperty(index)}
+              disabled={disabled}
+              className="shrink-0 w-5.5 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive disabled:opacity-50 disabled:pointer-events-none"
+              aria-label={`Remove ${prop.key || 'property'}`}
+            >
+              <Cross2Icon className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {prop.type === 'color' ? (
-            <div className="flex items-center gap-1 flex-[3] min-w-0">
+            <div className="flex items-center gap-1.5">
               <input
                 type="color"
                 value={prop.value || '#000000'}
@@ -101,7 +111,7 @@ export function StylePropertyEditor({
                   updateProperty(index, { value: e.target.value })
                 }
                 disabled={disabled}
-                className="w-8 h-8 rounded border border-border/60 cursor-pointer p-0.5 shrink-0 disabled:opacity-50"
+                className="w-7 h-7 rounded border border-border/60 cursor-pointer p-0.5 shrink-0 disabled:opacity-50"
               />
               <Input
                 value={prop.value}
@@ -110,7 +120,7 @@ export function StylePropertyEditor({
                 }
                 placeholder="#000000"
                 disabled={disabled}
-                className="h-8 text-xs min-w-0 px-2"
+                className="h-7 text-xs min-w-0 flex-1 px-2"
               />
             </div>
           ) : prop.type === 'number' ? (
@@ -120,7 +130,7 @@ export function StylePropertyEditor({
               onChange={(e) => updateProperty(index, { value: e.target.value })}
               placeholder="0"
               disabled={disabled}
-              className="h-8 text-xs flex-[3] min-w-0 px-2"
+              className="h-7 text-xs min-w-0 px-2"
             />
           ) : (
             <Input
@@ -128,19 +138,9 @@ export function StylePropertyEditor({
               onChange={(e) => updateProperty(index, { value: e.target.value })}
               placeholder="Value"
               disabled={disabled}
-              className="h-8 text-xs flex-[3] min-w-0 px-2"
+              className="h-7 text-xs min-w-0 px-2"
             />
           )}
-
-          <button
-            type="button"
-            onClick={() => removeProperty(index)}
-            disabled={disabled}
-            className="shrink-0 w-6 h-8 flex items-center justify-center text-muted-foreground hover:text-destructive disabled:opacity-50 disabled:pointer-events-none"
-            aria-label={`Remove ${prop.key || 'property'}`}
-          >
-            <Cross2Icon className="w-3.5 h-3.5" />
-          </button>
         </div>
       ))}
 

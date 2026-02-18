@@ -1792,12 +1792,12 @@
      SEGMENT ROW - Clean, minimal segment display
      ----------------------------------------- */
   .segment-row {
-    @apply relative flex gap-3 py-3 px-4 rounded-lg border bg-card border-border/50
+    @apply relative flex gap-4 py-3 px-4 rounded-lg border bg-card border-border/50
            hover:border-warning/40 hover:bg-card/80 transition-all duration-200;
   }
 
   .segment-row-speaker {
-    @apply shrink-0 w-16 pt-0.5;
+    @apply shrink-0 w-20 pt-0.5;
   }
 
   .segment-row-speaker-badge {
