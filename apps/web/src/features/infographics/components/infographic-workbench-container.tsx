@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
 import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
@@ -15,15 +15,12 @@ import { PromptPanel } from './prompt-panel';
 import { StyleSelector } from './style-selector';
 import { TypeSelector } from './type-selector';
 import { VersionHistoryStrip } from './version-history-strip';
-import { useDocumentList } from '@/features/documents/hooks/use-document-list';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { DocumentManager } from '@/shared/components/document-manager';
 import {
   useSessionGuard,
   useKeyboardShortcut,
   useNavigationBlock,
-  useDocumentSelection,
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { getStorageUrl } from '@/shared/lib/storage-url';
@@ -49,21 +46,10 @@ export function InfographicWorkbenchContainer({
   const isApproved = infographic.approvedBy !== null;
   const isApprovalPending = approve.isPending || revoke.isPending;
 
-  // Document selection — resolve sourceDocumentIds to DocumentInfo objects
-  const { data: allDocuments } = useDocumentList();
-  const initialDocuments = useMemo(() => {
-    const ids = infographic.sourceDocumentIds ?? [];
-    if (ids.length === 0 || !allDocuments) return [];
-    return allDocuments.filter((d) => ids.includes(d.id));
-  }, [infographic.sourceDocumentIds, allDocuments]);
-
-  const documentSelection = useDocumentSelection({ initialDocuments });
-
   const actions = useInfographicActions({
     infographicId,
     infographic,
     settings,
-    documentSelection,
   });
 
   const { data: versions = [], isLoading: versionsLoading } =
@@ -173,26 +159,6 @@ export function InfographicWorkbenchContainer({
               disabled={actions.isGenerating}
               isEditMode={hasExistingImage}
             />
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">
-                Source Documents
-                {documentSelection.documents.length > 0 && (
-                  <span className="ml-1.5 text-xs text-muted-foreground">
-                    ({documentSelection.documents.length})
-                  </span>
-                )}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Add documents to use as content source for your infographic
-              </p>
-              <DocumentManager
-                documents={documentSelection.documents}
-                onAddDocuments={documentSelection.addDocuments}
-                onRemoveDocument={documentSelection.removeDocument}
-                disabled={actions.isGenerating}
-              />
-            </div>
 
             <TypeSelector
               value={settings.infographicType}

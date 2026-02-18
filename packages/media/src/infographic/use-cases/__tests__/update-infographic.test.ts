@@ -87,39 +87,6 @@ describe('updateInfographic', () => {
       expect(result.stylePreset).toBe('bold_colorful');
       expect(result.format).toBe('landscape');
     });
-
-    it('updates sourceDocumentIds', async () => {
-      const user = createTestUser();
-      const infographic = createTestInfographic({
-        createdBy: user.id,
-        sourceDocumentIds: [],
-      });
-
-      const repo = createMockInfographicRepo({
-        findById: () => Effect.succeed(infographic),
-        update: (_id: string, data) =>
-          Effect.succeed({
-            ...infographic,
-            ...data,
-            sourceDocumentIds: data.sourceDocumentIds
-              ? [...data.sourceDocumentIds]
-              : infographic.sourceDocumentIds,
-            updatedAt: new Date(),
-          } as Infographic),
-      });
-      const layers = Layer.mergeAll(MockDbLive, repo);
-
-      const result = await Effect.runPromise(
-        withTestUser(user)(
-          updateInfographic({
-            id: infographic.id,
-            sourceDocumentIds: ['doc1', 'doc2'],
-          }),
-        ).pipe(Effect.provide(layers)),
-      );
-
-      expect(result.sourceDocumentIds).toEqual(['doc1', 'doc2']);
-    });
   });
 
   describe('authorization', () => {

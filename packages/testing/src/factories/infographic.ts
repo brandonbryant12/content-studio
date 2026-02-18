@@ -13,7 +13,6 @@ export interface CreateTestInfographicOptions {
   infographicType?: Infographic['infographicType'];
   stylePreset?: Infographic['stylePreset'];
   format?: Infographic['format'];
-  sourceDocumentIds?: string[] | null;
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
   status?: Infographic['status'];
@@ -44,7 +43,6 @@ export function createTestInfographic(
     infographicType: options.infographicType ?? 'key_takeaways',
     stylePreset: options.stylePreset ?? 'modern_minimal',
     format: options.format ?? 'portrait',
-    sourceDocumentIds: options.sourceDocumentIds ?? [],
     imageStorageKey: options.imageStorageKey ?? null,
     thumbnailStorageKey: options.thumbnailStorageKey ?? null,
     status: options.status ?? 'draft',

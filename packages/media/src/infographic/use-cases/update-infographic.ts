@@ -18,7 +18,6 @@ export interface UpdateInfographicInput {
   infographicType?: InfographicType;
   stylePreset?: InfographicStyle;
   format?: InfographicFormat;
-  sourceDocumentIds?: readonly string[];
 }
 
 // =============================================================================
@@ -38,7 +37,6 @@ export const updateInfographic = (input: UpdateInfographicInput) =>
       infographicType: input.infographicType,
       stylePreset: input.stylePreset,
       format: input.format,
-      sourceDocumentIds: input.sourceDocumentIds,
     });
   }).pipe(
     Effect.withSpan('useCase.updateInfographic', {

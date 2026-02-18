@@ -3,11 +3,7 @@ import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { syncEntityTitle } from '../../activity';
-import {
-  buildInfographicPrompt,
-  extractDocumentContent,
-  formatExtractedContent,
-} from '../prompts';
+import { buildInfographicPrompt } from '../prompts';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -32,18 +28,11 @@ const TitleSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const generateTitle = (
-  prompt: string,
-  currentTitle: string,
-  documentContent?: string,
-) =>
+const generateTitle = (prompt: string, currentTitle: string) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
-    const context = documentContent
-      ? `The infographic is based on source documents with this content:\n${documentContent}\n\nThe user's direction: "${prompt}"`
-      : `The infographic is about: "${prompt}"`;
     const { object } = yield* llm.generate({
-      prompt: `Generate a short, descriptive title (3-6 words) for an infographic. ${context}\n\nReturn only the title, no quotes or punctuation at the end.`,
+      prompt: `Generate a short, descriptive title (3-6 words) for an infographic. The infographic is about: "${prompt}"\n\nReturn only the title, no quotes or punctuation at the end.`,
       schema: TitleSchema,
       maxTokens: 30,
       temperature: 0.7,
@@ -71,23 +60,12 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const existingVersions = yield* repo.listVersions(infographicId);
     const latestVersion = existingVersions.at(-1) ?? null;
 
-    let documentContent: string | undefined;
-    const sourceIds = infographic.sourceDocumentIds as string[] | null;
-    if (sourceIds && sourceIds.length > 0) {
-      const extracted = yield* extractDocumentContent(
-        sourceIds,
-        infographic.infographicType,
-      );
-      documentContent = formatExtractedContent(extracted);
-    }
-
     const isEdit = latestVersion !== null;
     const prompt = buildInfographicPrompt({
       infographicType: infographic.infographicType,
       stylePreset: infographic.stylePreset,
       format: infographic.format,
       prompt: infographic.prompt ?? 'Create an infographic',
-      documentContent,
       isEdit,
     });
 
@@ -133,9 +111,9 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const shouldGenerateTitle =
       !isEdit &&
       infographic.title === 'Untitled Infographic' &&
-      (userPrompt.length > 0 || documentContent);
+      userPrompt.length > 0;
     const title = shouldGenerateTitle
-      ? yield* generateTitle(userPrompt, infographic.title, documentContent)
+      ? yield* generateTitle(userPrompt, infographic.title)
       : infographic.title;
 
     yield* repo.update(infographicId, {

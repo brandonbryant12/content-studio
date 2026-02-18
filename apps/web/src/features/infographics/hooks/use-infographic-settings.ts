@@ -39,7 +39,7 @@ export interface UseInfographicSettingsReturn {
   isSaving: boolean;
 
   // Actions
-  saveSettings: (extra?: { sourceDocumentIds?: string[] }) => Promise<void>;
+  saveSettings: () => Promise<void>;
   discardChanges: () => void;
 }
 
@@ -158,31 +158,27 @@ export function useInfographicSettings({
     }),
   );
 
-  const saveSettings = useCallback(
-    async (extra?: { sourceDocumentIds?: string[] }) => {
-      if (!infographicId) return;
+  const saveSettings = useCallback(async () => {
+    if (!infographicId) return;
 
-      await updateMutation.mutateAsync({
-        id: infographicId,
-        prompt,
-        infographicType,
-        stylePreset,
-        format,
-        ...extra,
-      });
-
-      clearDraft(infographicId);
-    },
-    [
-      infographicId,
+    await updateMutation.mutateAsync({
+      id: infographicId,
       prompt,
       infographicType,
       stylePreset,
       format,
-      updateMutation,
-      clearDraft,
-    ],
-  );
+    });
+
+    clearDraft(infographicId);
+  }, [
+    infographicId,
+    prompt,
+    infographicType,
+    stylePreset,
+    format,
+    updateMutation,
+    clearDraft,
+  ]);
 
   const discardChanges = useCallback(() => {
     if (!infographicId) return;

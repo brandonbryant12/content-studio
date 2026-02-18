@@ -18,7 +18,6 @@ export interface CreateInfographicInput {
   stylePreset: InfographicStyle;
   format: InfographicFormat;
   prompt?: string;
-  sourceDocumentIds?: readonly string[];
 }
 
 // =============================================================================
@@ -37,7 +36,6 @@ export const createInfographic = (input: CreateInfographicInput) =>
       infographicType: input.infographicType,
       stylePreset: input.stylePreset,
       format: input.format,
-      sourceDocumentIds: input.sourceDocumentIds,
       status: 'draft',
       createdBy: user.id,
     });

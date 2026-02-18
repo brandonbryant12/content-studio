@@ -3,7 +3,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { UseInfographicSettingsReturn } from './use-infographic-settings';
-import type { UseDocumentSelectionReturn } from '@/shared/hooks/use-document-selection';
 import type { RouterOutput } from '@repo/api/client';
 import { isGeneratingStatus } from '../lib/status';
 import { useOptimisticGeneration } from './use-optimistic-generation';
@@ -28,14 +27,12 @@ interface UseInfographicActionsOptions {
   infographicId: string;
   infographic: InfographicFull;
   settings: UseInfographicSettingsReturn;
-  documentSelection: UseDocumentSelectionReturn;
 }
 
 export function useInfographicActions({
   infographicId,
   infographic,
   settings,
-  documentSelection,
 }: UseInfographicActionsOptions): UseInfographicActionsReturn {
   const navigate = useNavigate();
 
@@ -59,22 +56,17 @@ export function useInfographicActions({
 
   const handleSave = useCallback(async () => {
     if (settings.isSaving || generateMutation.isPending) return;
-    if (!settings.hasChanges && !documentSelection.hasChanges) return;
+    if (!settings.hasChanges) return;
 
-    await settings.saveSettings({
-      sourceDocumentIds: documentSelection.documentIds,
-    });
+    await settings.saveSettings();
     toast.success('Settings saved');
-  }, [settings, generateMutation.isPending, documentSelection]);
+  }, [settings, generateMutation.isPending]);
 
   const handleGenerate = useCallback(async () => {
     if (isPendingGeneration || isGenerating) return;
 
-    // Save any pending changes first (including document selections)
-    if (settings.hasChanges || documentSelection.hasChanges) {
-      await settings.saveSettings({
-        sourceDocumentIds: documentSelection.documentIds,
-      });
+    if (settings.hasChanges) {
+      await settings.saveSettings();
     }
 
     generateMutation.mutate({ id: infographic.id });
@@ -82,7 +74,6 @@ export function useInfographicActions({
     isPendingGeneration,
     isGenerating,
     settings,
-    documentSelection,
     generateMutation,
     infographic.id,
   ]);
@@ -92,7 +83,7 @@ export function useInfographicActions({
   }, [deleteMutation, infographic.id]);
 
   return {
-    hasChanges: settings.hasChanges || documentSelection.hasChanges,
+    hasChanges: settings.hasChanges,
     isSaving: settings.isSaving,
     isGenerating: isGenerating || isPendingGeneration,
     isPendingGeneration,

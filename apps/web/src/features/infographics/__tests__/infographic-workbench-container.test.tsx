@@ -5,12 +5,7 @@ import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
 import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import { useInfographicVersions } from '../hooks/use-infographic-versions';
-import { useDocumentList } from '@/features/documents/hooks/use-document-list';
-import {
-  useNavigationBlock,
-  useSessionGuard,
-  useDocumentSelection,
-} from '@/shared/hooks';
+import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { render } from '@/test-utils';
 
@@ -44,15 +39,10 @@ vi.mock('../hooks/use-approve-infographic', () => ({
   useApproveInfographic: vi.fn(),
 }));
 
-vi.mock('@/features/documents/hooks/use-document-list', () => ({
-  useDocumentList: vi.fn(),
-}));
-
 vi.mock('@/shared/hooks', () => ({
   useSessionGuard: vi.fn(),
   useKeyboardShortcut: vi.fn(),
   useNavigationBlock: vi.fn(),
-  useDocumentSelection: vi.fn(),
 }));
 
 vi.mock('@/shared/hooks/use-is-admin', () => ({
@@ -95,10 +85,6 @@ vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
   ConfirmationDialog: () => null,
 }));
 
-vi.mock('@/shared/components/document-manager', () => ({
-  DocumentManager: () => <div data-testid="document-manager" />,
-}));
-
 vi.mock('@/shared/lib/storage-url', () => ({
   getStorageUrl: (key: string) => `/storage/${key}`,
 }));
@@ -132,7 +118,6 @@ describe('InfographicWorkbenchContainer', () => {
         id: 'infographic-1',
         title: 'Test Infographic',
         approvedBy: null,
-        sourceDocumentIds: [],
         imageStorageKey: null,
         errorMessage: null,
       },
@@ -161,19 +146,6 @@ describe('InfographicWorkbenchContainer', () => {
     vi.mocked(useApproveInfographic).mockReturnValue({
       approve: { mutate: vi.fn(), isPending: false },
       revoke: { mutate: vi.fn(), isPending: false },
-    } as never);
-
-    vi.mocked(useDocumentList).mockReturnValue({
-      data: [],
-    } as never);
-
-    vi.mocked(useDocumentSelection).mockReturnValue({
-      documents: [],
-      documentIds: [],
-      addDocuments: vi.fn(),
-      removeDocument: vi.fn(),
-      discardChanges: vi.fn(),
-      hasChanges: false,
     } as never);
   });
 

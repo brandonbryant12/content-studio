@@ -4,7 +4,6 @@ import {
   timestamp,
   varchar,
   integer,
-  jsonb,
   index,
   pgEnum,
 } from 'drizzle-orm/pg-core';
@@ -72,9 +71,6 @@ export const infographic = pgTable(
     infographicType: infographicTypeEnum('infographic_type').notNull(),
     stylePreset: infographicStyleEnum('style_preset').notNull(),
     format: infographicFormatEnum('format').notNull(),
-    sourceDocumentIds: jsonb('source_document_ids')
-      .$type<string[]>()
-      .default([]),
     imageStorageKey: text('image_storage_key'),
     thumbnailStorageKey: text('thumbnail_storage_key'),
     status: infographicStatusEnum('status').notNull().default('draft'),
@@ -146,7 +142,6 @@ export const CreateInfographicSchema = Schema.Struct({
   stylePreset: InfographicStyleSchema,
   format: InfographicFormatSchema,
   prompt: Schema.optional(Schema.String),
-  sourceDocumentIds: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export const UpdateInfographicFields = {
@@ -157,7 +152,6 @@ export const UpdateInfographicFields = {
   infographicType: Schema.optional(InfographicTypeSchema),
   stylePreset: Schema.optional(InfographicStyleSchema),
   format: Schema.optional(InfographicFormatSchema),
-  sourceDocumentIds: Schema.optional(Schema.Array(Schema.String)),
 };
 
 export const UpdateInfographicSchema = Schema.Struct(UpdateInfographicFields);
@@ -169,7 +163,6 @@ export const InfographicOutputSchema = Schema.Struct({
   infographicType: InfographicTypeSchema,
   stylePreset: InfographicStyleSchema,
   format: InfographicFormatSchema,
-  sourceDocumentIds: Schema.Array(Schema.String),
   imageStorageKey: Schema.NullOr(Schema.String),
   thumbnailStorageKey: Schema.NullOr(Schema.String),
   status: InfographicStatusSchema,
@@ -214,7 +207,6 @@ const infographicTransform = (row: Infographic): InfographicOutput => ({
   infographicType: row.infographicType,
   stylePreset: row.stylePreset,
   format: row.format,
-  sourceDocumentIds: row.sourceDocumentIds ?? [],
   imageStorageKey: row.imageStorageKey ?? null,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
   status: row.status,

@@ -12,7 +12,6 @@ const mockInsertFn = (data: InsertInfographic) =>
   Effect.succeed({
     ...data,
     prompt: data.prompt ?? null,
-    sourceDocumentIds: (data.sourceDocumentIds as string[]) ?? [],
     imageStorageKey: null,
     thumbnailStorageKey: null,
     errorMessage: null,
@@ -51,7 +50,7 @@ describe('createInfographic', () => {
     expect(result.createdBy).toBe(user.id);
   });
 
-  it('creates with optional prompt and source documents', async () => {
+  it('creates with optional prompt', async () => {
     const user = createTestUser();
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
@@ -65,13 +64,11 @@ describe('createInfographic', () => {
           stylePreset: 'bold_colorful',
           format: 'square',
           prompt: 'Compare sales data',
-          sourceDocumentIds: ['doc1', 'doc2'],
         }),
       ).pipe(Effect.provide(layers)),
     );
 
     expect(result.prompt).toBe('Compare sales data');
-    expect(result.sourceDocumentIds).toEqual(['doc1', 'doc2']);
   });
 
   it('fails when user is not authenticated', async () => {

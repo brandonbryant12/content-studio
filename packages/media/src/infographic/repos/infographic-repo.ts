@@ -22,7 +22,6 @@ export interface InsertInfographic {
   infographicType: Infographic['infographicType'];
   stylePreset: Infographic['stylePreset'];
   format: Infographic['format'];
-  sourceDocumentIds?: readonly string[];
   status?: InfographicStatusType;
   createdBy: string;
 }
@@ -33,7 +32,6 @@ export interface UpdateInfographic {
   infographicType?: Infographic['infographicType'];
   stylePreset?: Infographic['stylePreset'];
   format?: Infographic['format'];
-  sourceDocumentIds?: readonly string[];
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
   status?: InfographicStatusType;
@@ -140,9 +138,6 @@ const make: InfographicRepoService = {
           infographicType: data.infographicType,
           stylePreset: data.stylePreset,
           format: data.format,
-          sourceDocumentIds: data.sourceDocumentIds
-            ? [...data.sourceDocumentIds]
-            : [],
           status: data.status ?? 'draft',
           createdBy: data.createdBy,
         })
@@ -173,14 +168,10 @@ const make: InfographicRepoService = {
 
   update: (id, data) =>
     withDb('infographicRepo.update', async (db) => {
-      const { sourceDocumentIds, ...rest } = data;
       const updateValues: Record<string, unknown> = {
         ...Object.fromEntries(
-          Object.entries(rest).filter(([, v]) => v !== undefined),
+          Object.entries(data).filter(([, v]) => v !== undefined),
         ),
-        ...(sourceDocumentIds !== undefined && {
-          sourceDocumentIds: [...sourceDocumentIds],
-        }),
         updatedAt: new Date(),
       };
 

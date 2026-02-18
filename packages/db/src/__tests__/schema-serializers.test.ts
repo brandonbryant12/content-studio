@@ -126,7 +126,6 @@ const makeInfographic = (overrides?: Partial<Infographic>): Infographic => ({
   infographicType: 'timeline',
   stylePreset: 'modern_minimal',
   format: 'portrait',
-  sourceDocumentIds: [],
   imageStorageKey: null,
   thumbnailStorageKey: null,
   status: 'draft',
