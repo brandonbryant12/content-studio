@@ -1,6 +1,6 @@
 import { authClient, type AuthSession } from '@/clients/authClient';
 
-export interface UseSessionGuardReturn {
+interface UseSessionGuardReturn {
   session: AuthSession;
   user: NonNullable<AuthSession>['user'] | null;
   isPending: boolean;

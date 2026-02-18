@@ -5,7 +5,7 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import { ConfirmationDialog } from '../confirmation-dialog/confirmation-dialog';
 
-export interface BulkActionBarProps {
+interface BulkActionBarProps {
   selectedCount: number;
   totalCount: number;
   isAllSelected: boolean;

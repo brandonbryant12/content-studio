@@ -33,7 +33,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const format = podcast.format ?? 'conversation';
 
   // Step 2 state
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(() =>
     podcast.documents.map((d) => d.id),
   );
   const [researchDocId, setResearchDocId] = useState<string | null>(null);
@@ -174,7 +174,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
 
     const success = await saveStepData(currentStep);
     if (success && currentStep < TOTAL_STEPS) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep((prev) => prev + 1);
     }
     // If final step, generation was triggered and the component will unmount
     // as the podcast status changes
@@ -182,7 +182,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 

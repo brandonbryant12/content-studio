@@ -157,7 +157,7 @@ const DocumentRow = memo(function DocumentRow({
   );
 });
 
-export interface DocumentListProps {
+interface DocumentListProps {
   documents: readonly DocumentListItem[];
   searchQuery: string;
   uploadOpen: boolean;

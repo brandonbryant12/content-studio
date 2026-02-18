@@ -11,7 +11,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 type InfographicFull = RouterOutput['infographics']['get'];
 
-export interface UseInfographicActionsReturn {
+interface UseInfographicActionsReturn {
   hasChanges: boolean;
   isSaving: boolean;
   isGenerating: boolean;

@@ -1,8 +1,6 @@
 import {
   useQuery,
-  useSuspenseQuery,
   type UseQueryResult,
-  type UseSuspenseQueryResult,
   type QueryKey,
 } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
@@ -28,20 +26,6 @@ export function usePodcastList(
     ...apiClient.podcasts.list.queryOptions({ input: { limit } }),
     enabled,
   });
-}
-
-/**
- * Fetch podcast list with Suspense.
- * Use this when the list is required to render.
- */
-export function useSuspensePodcastList(
-  options: { limit?: number } = {},
-): UseSuspenseQueryResult<PodcastList, Error> {
-  const { limit } = options;
-
-  return useSuspenseQuery(
-    apiClient.podcasts.list.queryOptions({ input: { limit } }),
-  );
 }
 
 /**

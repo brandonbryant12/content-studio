@@ -8,7 +8,7 @@ interface UseBulkDeleteOptions {
   entityName: string;
 }
 
-export interface UseBulkDeleteReturn {
+interface UseBulkDeleteReturn {
   executeBulkDelete: (ids: ReadonlySet<string>) => Promise<void>;
   isBulkDeleting: boolean;
 }

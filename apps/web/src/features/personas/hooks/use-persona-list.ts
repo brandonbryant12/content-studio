@@ -1,8 +1,6 @@
 import {
   useQuery,
-  useSuspenseQuery,
   type UseQueryResult,
-  type UseSuspenseQueryResult,
   type QueryKey,
 } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
@@ -28,18 +26,6 @@ export function usePersonaList(
     ...apiClient.personas.list.queryOptions({ input: { limit } }),
     enabled,
   });
-}
-
-/**
- * Fetch persona list with Suspense.
- * Use this when the list is required to render.
- */
-export function useSuspensePersonaList(
-  options: { limit?: number } = {},
-): UseSuspenseQueryResult<PersonaList, Error> {
-  return useSuspenseQuery(
-    apiClient.personas.list.queryOptions({ input: options }),
-  );
 }
 
 /**

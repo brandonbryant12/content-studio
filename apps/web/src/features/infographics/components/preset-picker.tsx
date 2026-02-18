@@ -31,9 +31,9 @@ function ColorDots({ properties }: { properties: readonly StyleProperty[] }) {
 
   return (
     <span className="flex items-center -space-x-0.5 shrink-0">
-      {colors.map((c, i) => (
+      {colors.map((c) => (
         <span
-          key={i}
+          key={c.value}
           className="w-2.5 h-2.5 rounded-full ring-1 ring-background"
           style={{ backgroundColor: c.value }}
         />

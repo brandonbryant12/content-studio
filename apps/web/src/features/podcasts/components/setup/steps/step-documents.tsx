@@ -24,6 +24,250 @@ import {
 import { getErrorMessage } from '@/shared/lib/errors';
 import { fileToBase64 } from '@/shared/lib/file-base64';
 
+type DocumentItem = {
+  id: string;
+  title: string;
+  source: string;
+  mimeType: string;
+  wordCount: number;
+  status: string;
+};
+
+function ExistingDocumentsPanel({
+  documents,
+  loadingDocs,
+  filteredDocuments,
+  selectedIds,
+  searchQuery,
+  onSearchQueryChange,
+  onToggleDocument,
+  onSwitchToUpload,
+}: {
+  documents: readonly DocumentItem[] | null;
+  loadingDocs: boolean;
+  filteredDocuments: readonly DocumentItem[];
+  selectedIds: string[];
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  onToggleDocument: (docId: string) => void;
+  onSwitchToUpload: () => void;
+}) {
+  if (loadingDocs) {
+    return (
+      <div className="loading-center">
+        <Spinner className="w-6 h-6" />
+      </div>
+    );
+  }
+
+  if (!documents || documents.length === 0) {
+    return (
+      <div className="setup-doc-empty">
+        <div className="setup-doc-empty-icon">
+          <FileTextIcon />
+        </div>
+        <p className="setup-doc-empty-title">No documents yet</p>
+        <p className="setup-doc-empty-description">
+          Upload your first document to get started.
+        </p>
+        <Button variant="outline" onClick={onSwitchToUpload} className="mt-4">
+          <UploadIcon className="w-4 h-4 mr-2" />
+          Upload Document
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="relative mb-4">
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Search documents..."
+          value={searchQuery}
+          onChange={(e) => onSearchQueryChange(e.target.value)}
+          className="setup-input pl-9"
+          aria-label="Search documents"
+        />
+      </div>
+
+      {filteredDocuments.length > 0 ? (
+        <div className="setup-doc-grid">
+          {filteredDocuments.map((doc) => (
+            <button
+              key={doc.id}
+              type="button"
+              onClick={() => onToggleDocument(doc.id)}
+              className={`setup-doc-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
+            >
+              <div className="setup-doc-icon">
+                <span>
+                  {doc.source === 'url'
+                    ? 'URL'
+                    : doc.source === 'research'
+                      ? 'RES'
+                      : doc.source === 'manual'
+                        ? 'TXT'
+                        : doc.mimeType
+                            .split('/')[1]
+                            ?.toUpperCase()
+                            .slice(0, 3) || 'DOC'}
+                </span>
+              </div>
+              <div className="setup-doc-info">
+                <p className="setup-doc-title">{doc.title}</p>
+                <p className="setup-doc-meta">
+                  {doc.wordCount.toLocaleString()} words
+                </p>
+              </div>
+              <div className="setup-doc-checkbox">
+                {selectedIds.includes(doc.id) && <CheckIcon />}
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="setup-doc-empty">
+          <div className="setup-doc-empty-icon">
+            <MagnifyingGlassIcon />
+          </div>
+          <p className="setup-doc-empty-title">No documents found</p>
+          <p className="setup-doc-empty-description">
+            No documents match your search.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function UploadPanel({
+  uploadFile,
+  uploadTitle,
+  onUploadTitleChange,
+  onClearFile,
+  onUpload,
+  isUploading,
+  isDragging,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onFilePick,
+  fileInputRef,
+  onFileSelect,
+}: {
+  uploadFile: File | null;
+  uploadTitle: string;
+  onUploadTitleChange: (title: string) => void;
+  onClearFile: () => void;
+  onUpload: () => void;
+  isUploading: boolean;
+  isDragging: boolean;
+  onDragOver: () => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onFilePick: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFileSelect: (file: File | null) => void;
+}) {
+  if (uploadFile) {
+    return (
+      <div className="space-y-4">
+        <div className="setup-file-preview">
+          <div className="setup-file-icon">
+            <FileTextIcon />
+          </div>
+          <div className="setup-file-info">
+            <p className="setup-file-name">{uploadFile.name}</p>
+            <p className="setup-file-size">
+              {(uploadFile.size / 1024).toFixed(1)} KB
+            </p>
+          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClearFile}
+            className="setup-file-remove"
+            aria-label="Remove file"
+          >
+            <Cross2Icon className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="setup-field">
+          <label htmlFor="doc-title" className="setup-label">
+            Title{' '}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
+          </label>
+          <input
+            id="doc-title"
+            type="text"
+            value={uploadTitle}
+            onChange={(e) => onUploadTitleChange(e.target.value)}
+            placeholder="Document title"
+            className="setup-input"
+          />
+        </div>
+
+        <Button onClick={onUpload} disabled={isUploading} className="w-full">
+          {isUploading ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <UploadIcon className="w-4 h-4 mr-2" />
+              Upload Document
+            </>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        onDragOver();
+      }}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={onFilePick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onFilePick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
+      className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={SUPPORTED_EXTENSIONS}
+        className="hidden"
+        onChange={(e) => onFileSelect(e.target.files?.[0] ?? null)}
+      />
+      <div className="setup-upload-icon">
+        <UploadIcon />
+      </div>
+      <p className="setup-upload-title">Drop your file here</p>
+      <p className="setup-upload-hint">or click to browse</p>
+      <p className="setup-upload-formats">
+        Supports TXT, PDF, DOCX, PPTX (max 10MB)
+      </p>
+    </div>
+  );
+}
+
 interface StepDocumentsProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
@@ -203,199 +447,42 @@ export function StepDocuments({
         </button>
       </div>
 
-      {/* Existing documents tab */}
       <div hidden={activeTab !== 'existing'}>
-        {loadingDocs ? (
-          <div className="loading-center">
-            <Spinner className="w-6 h-6" />
-          </div>
-        ) : documents && documents.length > 0 ? (
-          <>
-            {/* Search bar */}
-            <div className="relative mb-4">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search documents..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="setup-input pl-9"
-                aria-label="Search documents"
-              />
-            </div>
-
-            {filteredDocuments.length > 0 ? (
-              <div className="setup-doc-grid">
-                {filteredDocuments.map((doc) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => toggleDocument(doc.id)}
-                    className={`setup-doc-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
-                  >
-                    <div className="setup-doc-icon">
-                      <span>
-                        {doc.source === 'url'
-                          ? 'URL'
-                          : doc.source === 'research'
-                            ? 'RES'
-                            : doc.source === 'manual'
-                              ? 'TXT'
-                              : doc.mimeType
-                                  .split('/')[1]
-                                  ?.toUpperCase()
-                                  .slice(0, 3) || 'DOC'}
-                      </span>
-                    </div>
-                    <div className="setup-doc-info">
-                      <p className="setup-doc-title">{doc.title}</p>
-                      <p className="setup-doc-meta">
-                        {doc.wordCount.toLocaleString()} words
-                      </p>
-                    </div>
-                    <div className="setup-doc-checkbox">
-                      {selectedIds.includes(doc.id) && <CheckIcon />}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="setup-doc-empty">
-                <div className="setup-doc-empty-icon">
-                  <MagnifyingGlassIcon />
-                </div>
-                <p className="setup-doc-empty-title">No documents found</p>
-                <p className="setup-doc-empty-description">
-                  No documents match your search.
-                </p>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="setup-doc-empty">
-            <div className="setup-doc-empty-icon">
-              <FileTextIcon />
-            </div>
-            <p className="setup-doc-empty-title">No documents yet</p>
-            <p className="setup-doc-empty-description">
-              Upload your first document to get started.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => setActiveTab('upload')}
-              className="mt-4"
-            >
-              <UploadIcon className="w-4 h-4 mr-2" />
-              Upload Document
-            </Button>
-          </div>
-        )}
+        <ExistingDocumentsPanel
+          documents={documents ?? null}
+          loadingDocs={loadingDocs}
+          filteredDocuments={filteredDocuments}
+          selectedIds={selectedIds}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          onToggleDocument={toggleDocument}
+          onSwitchToUpload={() => setActiveTab('upload')}
+        />
       </div>
 
-      {/* Upload tab */}
       <div
         role="tabpanel"
         aria-label="Upload New"
         hidden={activeTab !== 'upload'}
       >
-        {uploadFile ? (
-          <div className="space-y-4">
-            <div className="setup-file-preview">
-              <div className="setup-file-icon">
-                <FileTextIcon />
-              </div>
-              <div className="setup-file-info">
-                <p className="setup-file-name">{uploadFile.name}</p>
-                <p className="setup-file-size">
-                  {(uploadFile.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => {
-                  setUploadFile(null);
-                  setUploadTitle('');
-                }}
-                className="setup-file-remove"
-                aria-label="Remove file"
-              >
-                <Cross2Icon className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="setup-field">
-              <label htmlFor="doc-title" className="setup-label">
-                Title{' '}
-                <span className="text-muted-foreground font-normal">
-                  (optional)
-                </span>
-              </label>
-              <input
-                id="doc-title"
-                type="text"
-                value={uploadTitle}
-                onChange={(e) => setUploadTitle(e.target.value)}
-                placeholder="Document title"
-                className="setup-input"
-              />
-            </div>
-
-            <Button
-              onClick={handleUpload}
-              disabled={uploadMutation.isPending}
-              className="w-full"
-            >
-              {uploadMutation.isPending ? (
-                <>
-                  <Spinner className="w-4 h-4 mr-2" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <UploadIcon className="w-4 h-4 mr-2" />
-                  Upload Document
-                </>
-              )}
-            </Button>
-          </div>
-        ) : (
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            onClick={openFilePicker}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openFilePicker();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
-            className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={SUPPORTED_EXTENSIONS}
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
-            />
-            <div className="setup-upload-icon">
-              <UploadIcon />
-            </div>
-            <p className="setup-upload-title">Drop your file here</p>
-            <p className="setup-upload-hint">or click to browse</p>
-            <p className="setup-upload-formats">
-              Supports TXT, PDF, DOCX, PPTX (max 10MB)
-            </p>
-          </div>
-        )}
+        <UploadPanel
+          uploadFile={uploadFile}
+          uploadTitle={uploadTitle}
+          onUploadTitleChange={setUploadTitle}
+          onClearFile={() => {
+            setUploadFile(null);
+            setUploadTitle('');
+          }}
+          onUpload={handleUpload}
+          isUploading={uploadMutation.isPending}
+          isDragging={isDragging}
+          onDragOver={() => setIsDragging(true)}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onFilePick={openFilePicker}
+          fileInputRef={fileInputRef}
+          onFileSelect={handleFileSelect}
+        />
       </div>
 
       {/* Research tab */}

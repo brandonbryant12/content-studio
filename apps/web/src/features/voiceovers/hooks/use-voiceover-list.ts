@@ -1,8 +1,6 @@
 import {
   useQuery,
-  useSuspenseQuery,
   type UseQueryResult,
-  type UseSuspenseQueryResult,
   type QueryKey,
 } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
@@ -28,18 +26,6 @@ export function useVoiceoverList(
     ...apiClient.voiceovers.list.queryOptions({ input: { limit } }),
     enabled,
   });
-}
-
-/**
- * Fetch voiceover list with Suspense.
- * Use this when the list is required to render.
- */
-export function useSuspenseVoiceoverList(
-  options: { limit?: number } = {},
-): UseSuspenseQueryResult<VoiceoverList, Error> {
-  return useSuspenseQuery(
-    apiClient.voiceovers.list.queryOptions({ input: options }),
-  );
 }
 
 /**

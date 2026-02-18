@@ -16,7 +16,7 @@ interface DisplayAudio {
   duration: number | null;
 }
 
-export interface PodcastWorkbenchState {
+interface PodcastWorkbenchState {
   hasChanges: boolean;
   isGenerating: boolean;
   isPendingGeneration: boolean;
@@ -24,13 +24,13 @@ export interface PodcastWorkbenchState {
   isDeleting: boolean;
 }
 
-export interface PodcastApprovalState {
+interface PodcastApprovalState {
   isApproved: boolean;
   isAdmin: boolean;
   isApprovalPending: boolean;
 }
 
-export interface PodcastDetailProps {
+interface PodcastDetailProps {
   podcast: Podcast;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;

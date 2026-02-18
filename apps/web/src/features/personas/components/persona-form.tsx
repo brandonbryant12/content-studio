@@ -15,7 +15,7 @@ export interface PersonaFormValues {
   voiceName: string;
 }
 
-export interface PersonaFormProps {
+interface PersonaFormProps {
   values: PersonaFormValues;
   onChange: (values: PersonaFormValues) => void;
   disabled?: boolean;
@@ -162,7 +162,7 @@ export function PersonaForm({
         )}
         <div className="space-y-2">
           {values.exampleQuotes.map((quote, index) => (
-            <div key={index} className="flex items-start gap-2">
+            <div key={`quote-${index}`} className="flex items-start gap-2">
               <Input
                 value={quote}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>

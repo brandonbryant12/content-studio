@@ -1,12 +1,8 @@
 export { useOptimisticMutation } from './use-optimistic-mutation';
-export type { OptimisticMutationOptions } from './use-optimistic-mutation';
 export { useNavigationBlock } from './use-navigation-block';
 export { useKeyboardShortcut } from './use-keyboard-shortcut';
 export { useSessionGuard } from './use-session-guard';
-export type { UseSessionGuardReturn } from './use-session-guard';
-export { usePrevious } from './use-previous';
 export { useSSE } from './use-sse';
-export type { SSEConnectionState } from './use-sse';
 export { handleJobCompletion, handleEntityChange } from './sse-handlers';
 export {
   useAudioPlayer,
@@ -22,14 +18,8 @@ export {
   useBulkSelection,
   type UseBulkSelectionReturn,
 } from './use-bulk-selection';
-export { useBulkDelete, type UseBulkDeleteReturn } from './use-bulk-delete';
-export {
-  useVoicePreview,
-  type UseVoicePreviewReturn,
-} from './use-voice-preview';
-export {
-  useVoicePreviewController,
-  type UseVoicePreviewControllerReturn,
-} from './use-voice-preview-controller';
+export { useBulkDelete } from './use-bulk-delete';
+export { useVoicePreview } from './use-voice-preview';
+export { useVoicePreviewController } from './use-voice-preview-controller';
 export { useVoices } from './use-voices';
 export { useIsAdmin } from './use-is-admin';

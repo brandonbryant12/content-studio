@@ -65,7 +65,7 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   );
 }
 
-export interface PodcastListProps {
+interface PodcastListProps {
   podcasts: readonly PodcastListItem[];
   searchQuery: string;
   isCreating: boolean;

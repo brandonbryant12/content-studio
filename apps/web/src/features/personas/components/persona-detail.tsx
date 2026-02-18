@@ -12,7 +12,7 @@ import { useVoicePreviewController } from '@/shared/hooks';
 
 type Persona = RouterOutput['personas']['get'];
 
-export interface PersonaDetailProps {
+interface PersonaDetailProps {
   persona: Persona;
   formValues: PersonaFormValues;
   hasChanges: boolean;

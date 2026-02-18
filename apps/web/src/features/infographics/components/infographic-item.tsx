@@ -45,7 +45,7 @@ const FORMAT_LABELS: Record<string, string> = {
   og_card: 'OG Card',
 };
 
-export interface InfographicItemProps {
+interface InfographicItemProps {
   infographic: InfographicListItem;
   onDelete: (id: string) => void;
   isDeleting: boolean;
@@ -96,7 +96,15 @@ export const InfographicItem = memo(function InfographicItem({
             <div
               className="content-card-checkbox"
               data-visible={hasSelection || isSelected || undefined}
+              role="button"
+              tabIndex={0}
               onClick={handleCheckboxClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onToggleSelect?.(infographic.id);
+                }
+              }}
             >
               <Checkbox
                 checked={isSelected}

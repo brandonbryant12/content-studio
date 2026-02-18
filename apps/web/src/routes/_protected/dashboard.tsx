@@ -102,6 +102,40 @@ function RecentSection<T>({
   );
 }
 
+interface StatCardProps {
+  label: string;
+  linkTo: string;
+  icon: ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  count: number;
+  isLoading: boolean;
+}
+
+function StatCard({
+  label,
+  linkTo,
+  icon: Icon,
+  iconBg,
+  iconColor,
+  count,
+  isLoading,
+}: StatCardProps) {
+  return (
+    <Link to={linkTo} className="stat-card group">
+      <div className="stat-card-header">
+        <span className="stat-card-label">{label}</span>
+        <div className={`stat-card-icon ${iconBg}`}>
+          <Icon className={iconColor} />
+        </div>
+      </div>
+      <span className="stat-card-value">
+        {isLoading ? <Spinner className="w-5 h-5" /> : count}
+      </span>
+    </Link>
+  );
+}
+
 function Dashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -140,61 +174,42 @@ function Dashboard() {
 
       {/* Stats Row */}
       <div className="content-grid-4 mb-8 animate-fade-in-up stagger-1">
-        <Link to="/documents" className="stat-card group">
-          <div className="stat-card-header">
-            <span className="stat-card-label">Documents</span>
-            <div className="stat-card-icon bg-sky-500/10">
-              <FileTextIcon className="text-sky-600 dark:text-sky-400" />
-            </div>
-          </div>
-          <span className="stat-card-value">
-            {docsLoading ? <Spinner className="w-5 h-5" /> : docCount}
-          </span>
-        </Link>
-
-        <Link to="/podcasts" className="stat-card group">
-          <div className="stat-card-header">
-            <span className="stat-card-label">Podcasts</span>
-            <div className="stat-card-icon bg-violet-500/10">
-              <MixerHorizontalIcon className="text-violet-600 dark:text-violet-400" />
-            </div>
-          </div>
-          <span className="stat-card-value">
-            {podcastsLoading ? <Spinner className="w-5 h-5" /> : podcastCount}
-          </span>
-        </Link>
-
-        <Link to="/voiceovers" className="stat-card group">
-          <div className="stat-card-header">
-            <span className="stat-card-label">Voiceovers</span>
-            <div className="stat-card-icon bg-emerald-500/10">
-              <SpeakerLoudIcon className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </div>
-          <span className="stat-card-value">
-            {voiceoversLoading ? (
-              <Spinner className="w-5 h-5" />
-            ) : (
-              voiceoverCount
-            )}
-          </span>
-        </Link>
-
-        <Link to="/infographics" className="stat-card group">
-          <div className="stat-card-header">
-            <span className="stat-card-label">Infographics</span>
-            <div className="stat-card-icon bg-amber-500/10">
-              <ImageIcon className="text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-          <span className="stat-card-value">
-            {infographicsLoading ? (
-              <Spinner className="w-5 h-5" />
-            ) : (
-              infographicCount
-            )}
-          </span>
-        </Link>
+        <StatCard
+          label="Documents"
+          linkTo="/documents"
+          icon={FileTextIcon}
+          iconBg="bg-sky-500/10"
+          iconColor="text-sky-600 dark:text-sky-400"
+          count={docCount}
+          isLoading={docsLoading}
+        />
+        <StatCard
+          label="Podcasts"
+          linkTo="/podcasts"
+          icon={MixerHorizontalIcon}
+          iconBg="bg-violet-500/10"
+          iconColor="text-violet-600 dark:text-violet-400"
+          count={podcastCount}
+          isLoading={podcastsLoading}
+        />
+        <StatCard
+          label="Voiceovers"
+          linkTo="/voiceovers"
+          icon={SpeakerLoudIcon}
+          iconBg="bg-emerald-500/10"
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          count={voiceoverCount}
+          isLoading={voiceoversLoading}
+        />
+        <StatCard
+          label="Infographics"
+          linkTo="/infographics"
+          icon={ImageIcon}
+          iconBg="bg-amber-500/10"
+          iconColor="text-amber-600 dark:text-amber-400"
+          count={infographicCount}
+          isLoading={infographicsLoading}
+        />
       </div>
 
       {/* Content Grid - 2 columns on large screens */}

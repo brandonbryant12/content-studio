@@ -15,7 +15,7 @@ export function useStylePresets() {
   return useQuery(getStylePresetsQueryOptions());
 }
 
-export function getStylePresetsQueryKey(): QueryKey {
+function getStylePresetsQueryKey(): QueryKey {
   return getStylePresetsQueryOptions().queryKey;
 }
 

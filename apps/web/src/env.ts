@@ -1,7 +1,5 @@
 import { Schema } from 'effect';
 
-export const CLIENT_ENV_PREFIX = 'PUBLIC_';
-
 // Custom schema for path that starts with /
 const PathStartingWithSlash = Schema.String.pipe(
   Schema.filter((input): input is `/${string}` => input.startsWith('/'), {
@@ -15,7 +13,7 @@ const AuthModeSchema = Schema.Union(
   Schema.Literal('sso-only'),
 );
 
-export const envSchema = Schema.Struct({
+const envSchema = Schema.Struct({
   /** Backend API server URL. Injected at runtime via env.js in production. */
   PUBLIC_SERVER_URL: Schema.String.pipe(
     Schema.filter(

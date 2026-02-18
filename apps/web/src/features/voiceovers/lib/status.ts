@@ -14,10 +14,7 @@ interface StatusConfig {
 /**
  * Status flow: drafting -> generating_audio -> ready
  */
-export const VOICEOVER_STATUS_CONFIG: Record<
-  VoiceoverStatusType,
-  StatusConfig
-> = {
+const VOICEOVER_STATUS_CONFIG: Record<VoiceoverStatusType, StatusConfig> = {
   [VoiceoverStatus.DRAFTING]: {
     label: 'Drafting',
     message: 'Ready to generate',

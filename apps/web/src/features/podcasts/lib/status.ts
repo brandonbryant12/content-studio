@@ -19,7 +19,7 @@ interface StatusConfig {
 /**
  * Status flow: drafting → generating_script → script_ready → generating_audio → ready
  */
-export const VERSION_STATUS_CONFIG: Record<VersionStatusType, StatusConfig> = {
+const VERSION_STATUS_CONFIG: Record<VersionStatusType, StatusConfig> = {
   [VersionStatus.DRAFTING]: {
     label: 'Drafting',
     message: 'Ready to generate',

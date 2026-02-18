@@ -24,5 +24,3 @@ export function useOptimisticUpload(options?: { onSuccess?: () => void }) {
     }),
   );
 }
-
-export { fileToBase64 } from '@/shared/lib/file-base64';

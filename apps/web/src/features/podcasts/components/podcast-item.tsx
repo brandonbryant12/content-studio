@@ -49,7 +49,7 @@ function FormatBadge({ format }: { format: 'voice_over' | 'conversation' }) {
   );
 }
 
-export interface PodcastItemProps {
+interface PodcastItemProps {
   podcast: PodcastListItem;
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
@@ -124,7 +124,15 @@ export const PodcastItem = memo(function PodcastItem({
               <div
                 className="content-card-checkbox"
                 data-visible={hasSelection || isSelected || undefined}
+                role="button"
+                tabIndex={0}
                 onClick={handleCheckboxClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onToggleSelect?.(podcast.id);
+                  }
+                }}
               >
                 <Checkbox
                   checked={isSelected}

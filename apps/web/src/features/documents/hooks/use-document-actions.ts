@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 type Document = RouterOutput['documents']['get'];
 
-export interface UseDocumentActionsReturn {
+interface UseDocumentActionsReturn {
   /** Current edited title */
   title: string;
   /** Update the local title */

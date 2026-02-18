@@ -1,6 +1,6 @@
 import type { StyleProperty } from '../hooks/use-infographic-settings';
 
-export interface StaticInfographicPreset {
+interface StaticInfographicPreset {
   id: string;
   name: string;
   description: string;

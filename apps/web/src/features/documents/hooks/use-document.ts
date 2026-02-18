@@ -23,18 +23,6 @@ export function useDocument(
 }
 
 /**
- * Fetch document text content by ID with Suspense.
- * Use this to display the parsed text of a document.
- */
-export function useDocumentContent(
-  id: string,
-): UseSuspenseQueryResult<DocumentContent, Error> {
-  return useSuspenseQuery(
-    apiClient.documents.getContent.queryOptions({ input: { id } }),
-  );
-}
-
-/**
  * Fetch document text content by ID (non-suspense).
  * Use this when content may not be available yet (e.g. processing/failed documents).
  */

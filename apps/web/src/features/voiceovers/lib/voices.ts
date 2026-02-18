@@ -52,6 +52,3 @@ export const VOICES = [
     description: 'Friendly and conversational',
   },
 ] as const;
-
-export type Voice = (typeof VOICES)[number];
-export type VoiceId = Voice['id'];

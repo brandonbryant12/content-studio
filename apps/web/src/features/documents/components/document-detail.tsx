@@ -312,7 +312,7 @@ const SearchBar = memo(function SearchBar({
   );
 });
 
-export interface DocumentDetailProps {
+interface DocumentDetailProps {
   document: Document;
   content: string | null;
   title: string;
@@ -329,6 +329,235 @@ export interface DocumentDetailProps {
   canExport?: boolean;
   onExportMarkdown?: () => void;
   onExportText?: () => void;
+}
+
+function MetadataBar({ document }: { document: Document }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 mb-8 text-sm">
+      <span className={getFileBadgeClass(document.source)}>
+        {getFileLabel(document.source)}
+      </span>
+      {document.status === 'ready' && (
+        <span className="text-muted-foreground">
+          {document.wordCount.toLocaleString()} words
+        </span>
+      )}
+      {document.originalFileSize && (
+        <>
+          <span className="text-border" aria-hidden="true">
+            |
+          </span>
+          <span className="text-muted-foreground">
+            {formatFileSize(document.originalFileSize)}
+          </span>
+        </>
+      )}
+      {document.originalFileName && (
+        <>
+          <span className="text-border" aria-hidden="true">
+            |
+          </span>
+          <span
+            className="text-muted-foreground truncate max-w-[200px]"
+            title={document.originalFileName}
+          >
+            {document.originalFileName}
+          </span>
+        </>
+      )}
+      <span className="text-border" aria-hidden="true">
+        |
+      </span>
+      <span
+        className="text-muted-foreground"
+        title={`Created: ${formatDateTime(document.createdAt)}`}
+      >
+        {formatDate(document.createdAt)}
+      </span>
+      {document.updatedAt !== document.createdAt && (
+        <span
+          className="text-muted-foreground italic"
+          title={`Updated: ${formatDateTime(document.updatedAt)}`}
+        >
+          (edited)
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SourceCallout({ document }: { document: Document }) {
+  if (document.source === 'url' && document.sourceUrl) {
+    return (
+      <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+        <span className="text-muted-foreground">Scraped from </span>
+        <a
+          href={document.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline break-all"
+        >
+          {document.sourceUrl}
+        </a>
+        <span className="text-muted-foreground">
+          {' '}
+          on {formatDate(document.createdAt)}
+        </span>
+      </div>
+    );
+  }
+  if (document.source === 'research' && document.researchConfig) {
+    return <ResearchCallout config={document.researchConfig} />;
+  }
+  return null;
+}
+
+function ProcessingState({ source }: { source: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <Spinner className="w-8 h-8" />
+      <p className="text-muted-foreground text-sm">
+        {source === 'research'
+          ? 'Researching — this may take a few minutes...'
+          : 'Processing content...'}
+      </p>
+    </div>
+  );
+}
+
+function FailedState({
+  errorMessage,
+  onRetry,
+  isRetrying,
+}: {
+  errorMessage: string | null;
+  onRetry: () => void;
+  isRetrying: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
+        <svg
+          className="w-6 h-6 text-red-600 dark:text-red-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+          />
+        </svg>
+      </div>
+      <p className="text-muted-foreground text-sm text-center max-w-md">
+        {errorMessage || 'Processing failed'}
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRetry}
+        disabled={isRetrying}
+      >
+        {isRetrying ? (
+          <>
+            <Spinner className="w-3.5 h-3.5 mr-2" />
+            Retrying...
+          </>
+        ) : (
+          'Retry'
+        )}
+      </Button>
+    </div>
+  );
+}
+
+function ContentReader({
+  content,
+  paragraphs,
+  search,
+  matchesByParagraph,
+}: {
+  content: string | null;
+  paragraphs: string[];
+  search: UseDocumentSearchReturn;
+  matchesByParagraph: Map<number, ParagraphMatch[]>;
+}) {
+  return (
+    <article className="document-content-reader">
+      {content ? (
+        paragraphs.map((paragraph, i) =>
+          paragraph.trim() === '' ? (
+            <br key={i} />
+          ) : (
+            <p key={i}>
+              {search.query.length >= 2 && search.matches.length > 0
+                ? highlightParagraph(
+                    paragraph,
+                    matchesByParagraph.get(i),
+                    search.currentMatchIndex,
+                  )
+                : paragraph}
+            </p>
+          ),
+        )
+      ) : (
+        <p className="text-muted-foreground italic">
+          No content available for this document.
+        </p>
+      )}
+    </article>
+  );
+}
+
+function UnsavedChangesBar({
+  isSaving,
+  title,
+  onDiscard,
+  onSave,
+}: {
+  isSaving: boolean;
+  title: string;
+  onDiscard: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="workbench-action-bar">
+      <div className="flex items-center justify-between w-full px-6">
+        <span className="text-sm text-muted-foreground">
+          Unsaved title changes
+        </span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDiscard}
+            disabled={isSaving}
+            type="button"
+          >
+            Discard
+          </Button>
+          <Button
+            size="sm"
+            onClick={onSave}
+            disabled={isSaving || !title.trim()}
+            type="button"
+          >
+            {isSaving ? (
+              <>
+                <Spinner className="w-3.5 h-3.5 mr-2" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function DocumentDetail({
@@ -377,7 +606,6 @@ export function DocumentDetail({
       <header className="workbench-header">
         <div className="workbench-header-content">
           <div className="workbench-header-row">
-            {/* Back button */}
             <Link
               to="/documents"
               className="workbench-back-btn"
@@ -386,7 +614,6 @@ export function DocumentDetail({
               <ArrowLeftIcon />
             </Link>
 
-            {/* Document icon and title */}
             <div className="workbench-title-group">
               <DocumentIcon source={document.source} />
               <div className="min-w-0 flex-1">
@@ -407,7 +634,6 @@ export function DocumentDetail({
               </div>
             </div>
 
-            {/* Actions */}
             <div className="workbench-meta">
               <div className="workbench-actions">
                 <Button
@@ -466,204 +692,45 @@ export function DocumentDetail({
         </div>
       </header>
 
-      {/* Search bar */}
       <SearchBar search={search} />
 
-      {/* Main content */}
       <div className="workbench-main">
         <div className="workbench-scroll-container">
           <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {/* Metadata bar */}
-            <div className="flex flex-wrap items-center gap-3 mb-8 text-sm">
-              <span className={getFileBadgeClass(document.source)}>
-                {getFileLabel(document.source)}
-              </span>
-              {document.status === 'ready' && (
-                <span className="text-muted-foreground">
-                  {document.wordCount.toLocaleString()} words
-                </span>
-              )}
-              {document.originalFileSize && (
-                <>
-                  <span className="text-border" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="text-muted-foreground">
-                    {formatFileSize(document.originalFileSize)}
-                  </span>
-                </>
-              )}
-              {document.originalFileName && (
-                <>
-                  <span className="text-border" aria-hidden="true">
-                    |
-                  </span>
-                  <span
-                    className="text-muted-foreground truncate max-w-[200px]"
-                    title={document.originalFileName}
-                  >
-                    {document.originalFileName}
-                  </span>
-                </>
-              )}
-              <span className="text-border" aria-hidden="true">
-                |
-              </span>
-              <span
-                className="text-muted-foreground"
-                title={`Created: ${formatDateTime(document.createdAt)}`}
-              >
-                {formatDate(document.createdAt)}
-              </span>
-              {document.updatedAt !== document.createdAt && (
-                <span
-                  className="text-muted-foreground italic"
-                  title={`Updated: ${formatDateTime(document.updatedAt)}`}
-                >
-                  (edited)
-                </span>
-              )}
-            </div>
+            <MetadataBar document={document} />
+            <SourceCallout document={document} />
 
-            {/* Source info callout */}
-            {document.source === 'url' && document.sourceUrl && (
-              <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4 text-sm">
-                <span className="text-muted-foreground">Scraped from </span>
-                <a
-                  href={document.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline break-all"
-                >
-                  {document.sourceUrl}
-                </a>
-                <span className="text-muted-foreground">
-                  {' '}
-                  on {formatDate(document.createdAt)}
-                </span>
-              </div>
-            )}
-            {document.source === 'research' && document.researchConfig && (
-              <ResearchCallout config={document.researchConfig} />
-            )}
-
-            {/* Processing state */}
             {document.status === 'processing' && (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Spinner className="w-8 h-8" />
-                <p className="text-muted-foreground text-sm">
-                  {document.source === 'research'
-                    ? 'Researching — this may take a few minutes...'
-                    : 'Processing content...'}
-                </p>
-              </div>
+              <ProcessingState source={document.source} />
             )}
 
-            {/* Failed state */}
             {document.status === 'failed' && (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-red-600 dark:text-red-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-muted-foreground text-sm text-center max-w-md">
-                  {document.errorMessage || 'Processing failed'}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onRetry}
-                  disabled={isRetrying}
-                >
-                  {isRetrying ? (
-                    <>
-                      <Spinner className="w-3.5 h-3.5 mr-2" />
-                      Retrying...
-                    </>
-                  ) : (
-                    'Retry'
-                  )}
-                </Button>
-              </div>
+              <FailedState
+                errorMessage={document.errorMessage}
+                onRetry={onRetry}
+                isRetrying={isRetrying}
+              />
             )}
 
-            {/* Document content */}
             {document.status === 'ready' && (
-              <article className="document-content-reader">
-                {content ? (
-                  paragraphs.map((paragraph, i) =>
-                    paragraph.trim() === '' ? (
-                      <br key={i} />
-                    ) : (
-                      <p key={i}>
-                        {search.query.length >= 2 && search.matches.length > 0
-                          ? highlightParagraph(
-                              paragraph,
-                              matchesByParagraph.get(i),
-                              search.currentMatchIndex,
-                            )
-                          : paragraph}
-                      </p>
-                    ),
-                  )
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    No content available for this document.
-                  </p>
-                )}
-              </article>
+              <ContentReader
+                content={content}
+                paragraphs={paragraphs}
+                search={search}
+                matchesByParagraph={matchesByParagraph}
+              />
             )}
           </div>
         </div>
       </div>
 
-      {/* Action bar - only visible when there are changes */}
       {hasChanges && (
-        <div className="workbench-action-bar">
-          <div className="flex items-center justify-between w-full px-6">
-            <span className="text-sm text-muted-foreground">
-              Unsaved title changes
-            </span>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onDiscard}
-                disabled={isSaving}
-                type="button"
-              >
-                Discard
-              </Button>
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={isSaving || !title.trim()}
-                type="button"
-              >
-                {isSaving ? (
-                  <>
-                    <Spinner className="w-3.5 h-3.5 mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <UnsavedChangesBar
+          isSaving={isSaving}
+          title={title}
+          onDiscard={onDiscard}
+          onSave={onSave}
+        />
       )}
     </div>
   );

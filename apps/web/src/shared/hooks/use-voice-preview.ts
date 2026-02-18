@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-export interface UseVoicePreviewReturn {
+interface UseVoicePreviewReturn {
   playingVoiceId: string | null;
   play: (voiceId: string, url: string) => void;
   stop: () => void;

@@ -9,7 +9,7 @@ interface VoiceSymbolProps {
 }
 
 /** Aoede (muse of song) - Lyre shape */
-export function AoedeSymbol({ className }: VoiceSymbolProps) {
+function AoedeSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ export function AoedeSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Kore (maiden) - Spring flower */
-export function KoreSymbol({ className }: VoiceSymbolProps) {
+function KoreSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -57,7 +57,7 @@ export function KoreSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Leda (queen) - Swan silhouette */
-export function LedaSymbol({ className }: VoiceSymbolProps) {
+function LedaSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export function LedaSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Zephyr (west wind) - Flowing wind lines */
-export function ZephyrSymbol({ className }: VoiceSymbolProps) {
+function ZephyrSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -98,7 +98,7 @@ export function ZephyrSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Charon (ferryman) - Boat prow */
-export function CharonSymbol({ className }: VoiceSymbolProps) {
+function CharonSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -119,7 +119,7 @@ export function CharonSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Fenrir (wolf) - Wolf profile */
-export function FenrirSymbol({ className }: VoiceSymbolProps) {
+function FenrirSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ export function FenrirSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Puck (trickster) - Spiral */
-export function PuckSymbol({ className }: VoiceSymbolProps) {
+function PuckSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -164,7 +164,7 @@ export function PuckSymbol({ className }: VoiceSymbolProps) {
 }
 
 /** Orus (Horus) - Eye symbol */
-export function OrusSymbol({ className }: VoiceSymbolProps) {
+function OrusSymbol({ className }: VoiceSymbolProps) {
   return (
     <svg
       viewBox="0 0 24 24"

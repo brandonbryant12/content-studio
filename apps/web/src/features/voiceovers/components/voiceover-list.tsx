@@ -242,7 +242,7 @@ const VoiceoverRow = memo(function VoiceoverRow({
   );
 });
 
-export interface VoiceoverListProps {
+interface VoiceoverListProps {
   voiceovers: readonly VoiceoverListItem[];
   searchQuery: string;
   isCreating: boolean;

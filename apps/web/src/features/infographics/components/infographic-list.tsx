@@ -62,7 +62,7 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   );
 }
 
-export interface InfographicListProps {
+interface InfographicListProps {
   infographics: readonly InfographicListItem[];
   searchQuery: string;
   isCreating: boolean;

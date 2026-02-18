@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 const API_BASE = '/rpc';
 
 // Mock data factories
-export const createMockPodcast = (overrides = {}) => ({
+const createMockPodcast = (overrides = {}) => ({
   id: 'podcast-1',
   title: 'Test Podcast',
   status: 'draft',
@@ -24,7 +24,7 @@ export const createMockPodcast = (overrides = {}) => ({
   ...overrides,
 });
 
-export const createMockDocument = (overrides = {}) => ({
+const createMockDocument = (overrides = {}) => ({
   id: 'doc-1',
   title: 'Test Document',
   mimeType: 'text/plain',

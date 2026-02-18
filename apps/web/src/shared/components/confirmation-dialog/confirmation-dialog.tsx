@@ -10,7 +10,7 @@ import {
 } from '@repo/ui/components/dialog';
 import { Spinner } from '@repo/ui/components/spinner';
 
-export interface ConfirmationDialogProps {
+interface ConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;

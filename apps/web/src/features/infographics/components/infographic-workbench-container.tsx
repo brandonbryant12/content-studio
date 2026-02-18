@@ -3,6 +3,9 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
+import type { UseInfographicSettingsReturn } from '../hooks/use-infographic-settings';
+import type { InfographicVersion } from '../hooks/use-infographic-versions';
+import type { RouterOutput } from '@repo/api/client';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
 import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
@@ -23,6 +26,201 @@ import {
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { getStorageUrl } from '@/shared/lib/storage-url';
+
+type InfographicFull = RouterOutput['infographics']['get'];
+
+interface WorkbenchHeaderProps {
+  infographic: InfographicFull;
+  isApproved: boolean;
+  isAdmin: boolean;
+  isApprovalPending: boolean;
+  onApprove: () => void;
+  onRevoke: () => void;
+  displayImageUrl: string | null;
+  hasUnsavedChanges: boolean;
+  onSave: () => void;
+  onDeleteRequest: () => void;
+  actions: { isGenerating: boolean; isSaving: boolean; isDeleting: boolean };
+}
+
+function WorkbenchHeader({
+  infographic,
+  isApproved,
+  isAdmin,
+  isApprovalPending,
+  onApprove,
+  onRevoke,
+  displayImageUrl,
+  hasUnsavedChanges,
+  onSave,
+  onDeleteRequest,
+  actions,
+}: WorkbenchHeaderProps) {
+  return (
+    <header className="workbench-header">
+      <div className="workbench-header-content">
+        <div className="workbench-header-row">
+          <Link
+            to="/infographics"
+            className="workbench-back-btn"
+            aria-label="Back to infographics"
+          >
+            <ArrowLeftIcon />
+          </Link>
+          <div className="workbench-title-group">
+            <div className="min-w-0">
+              <h1 className="workbench-title">{infographic.title}</h1>
+            </div>
+          </div>
+          <div className="workbench-meta">
+            <ApproveButton
+              isApproved={isApproved}
+              isAdmin={isAdmin}
+              onApprove={onApprove}
+              onRevoke={onRevoke}
+              isPending={isApprovalPending}
+            />
+            <ExportDropdown
+              imageUrl={displayImageUrl}
+              title={infographic.title}
+              disabled={actions.isGenerating}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSave}
+              disabled={!hasUnsavedChanges || actions.isSaving}
+            >
+              {actions.isSaving ? <Spinner className="w-4 h-4 mr-1.5" /> : null}
+              Save
+            </Button>
+            <div className="workbench-actions">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDeleteRequest}
+                disabled={actions.isDeleting}
+                className="workbench-delete-btn"
+                aria-label={`Delete ${infographic.title}`}
+              >
+                {actions.isDeleting ? (
+                  <Spinner className="w-4 h-4" />
+                ) : (
+                  <TrashIcon className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+interface ControlsSidebarProps {
+  prompt: string;
+  onPromptChange: (prompt: string) => void;
+  hasExistingImage: boolean;
+  isViewingHistoricalVersion: boolean;
+  selectedVersion: InfographicVersion | null;
+  latestVersionNumber: number | null;
+  settings: UseInfographicSettingsReturn;
+  actions: { isGenerating: boolean; isDeleting: boolean };
+  infographic: InfographicFull;
+  hasPrompt: boolean;
+  onGenerate: () => void;
+}
+
+function ControlsSidebar({
+  prompt,
+  onPromptChange,
+  hasExistingImage,
+  isViewingHistoricalVersion,
+  selectedVersion,
+  latestVersionNumber,
+  settings,
+  actions,
+  infographic,
+  hasPrompt,
+  onGenerate,
+}: ControlsSidebarProps) {
+  return (
+    <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain">
+        <div className="p-5 pb-4">
+          {hasExistingImage && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Iteration Mode
+              </p>
+              <p className="text-xs text-foreground/80 mt-1 leading-relaxed">
+                Editing an existing image. Generating creates a new version from
+                the latest result.
+              </p>
+              {isViewingHistoricalVersion && selectedVersion && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  Viewing v{selectedVersion.versionNumber}. New changes will
+                  build on v
+                  {latestVersionNumber ?? selectedVersion.versionNumber}.
+                </p>
+              )}
+            </div>
+          )}
+
+          <PromptPanel
+            prompt={prompt}
+            onPromptChange={onPromptChange}
+            disabled={actions.isGenerating}
+            isEditMode={hasExistingImage}
+          />
+        </div>
+
+        <div className="border-t border-border/40 p-5 pb-4">
+          <StyleSection
+            properties={settings.styleProperties}
+            onChange={settings.setStyleProperties}
+            disabled={actions.isGenerating}
+          />
+        </div>
+
+        <div className="border-t border-border/40 p-5">
+          <FormatSelector
+            value={settings.format}
+            onChange={settings.setFormat}
+            disabled={actions.isGenerating}
+          />
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-border p-4 space-y-3">
+        {infographic.errorMessage && !actions.isGenerating && (
+          <div
+            className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
+            role="alert"
+          >
+            {infographic.errorMessage}
+          </div>
+        )}
+        <Button
+          className="w-full"
+          onClick={onGenerate}
+          disabled={!hasPrompt || actions.isGenerating}
+        >
+          {actions.isGenerating ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2" />
+              {hasExistingImage ? 'Generating New Version...' : 'Generating...'}
+            </>
+          ) : hasExistingImage ? (
+            'Generate New Version'
+          ) : (
+            'Generate'
+          )}
+        </Button>
+      </div>
+    </aside>
+  );
+}
 
 interface InfographicWorkbenchContainerProps {
   infographicId: string;
@@ -177,152 +375,35 @@ export function InfographicWorkbenchContainer({
   return (
     <>
       <div className="workbench">
-        {/* Header */}
-        <header className="workbench-header">
-          <div className="workbench-header-content">
-            <div className="workbench-header-row">
-              <Link
-                to="/infographics"
-                className="workbench-back-btn"
-                aria-label="Back to infographics"
-              >
-                <ArrowLeftIcon />
-              </Link>
-              <div className="workbench-title-group">
-                <div className="min-w-0">
-                  <h1 className="workbench-title">{infographic.title}</h1>
-                </div>
-              </div>
-              <div className="workbench-meta">
-                <ApproveButton
-                  isApproved={isApproved}
-                  isAdmin={isAdmin}
-                  onApprove={() => approve.mutate({ id: infographicId })}
-                  onRevoke={() => revoke.mutate({ id: infographicId })}
-                  isPending={isApprovalPending}
-                />
-                <ExportDropdown
-                  imageUrl={displayImageUrl}
-                  title={infographic.title}
-                  disabled={actions.isGenerating}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={!hasUnsavedChanges || actions.isSaving}
-                >
-                  {actions.isSaving ? (
-                    <Spinner className="w-4 h-4 mr-1.5" />
-                  ) : null}
-                  Save
-                </Button>
-                <div className="workbench-actions">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    disabled={actions.isDeleting}
-                    className="workbench-delete-btn"
-                    aria-label={`Delete ${infographic.title}`}
-                  >
-                    {actions.isDeleting ? (
-                      <Spinner className="w-4 h-4" />
-                    ) : (
-                      <TrashIcon className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        <WorkbenchHeader
+          infographic={infographic}
+          isApproved={isApproved}
+          isAdmin={isAdmin}
+          isApprovalPending={isApprovalPending}
+          onApprove={() => approve.mutate({ id: infographicId })}
+          onRevoke={() => revoke.mutate({ id: infographicId })}
+          displayImageUrl={displayImageUrl}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onSave={handleSave}
+          onDeleteRequest={() => setDeleteConfirmOpen(true)}
+          actions={actions}
+        />
 
-        {/* Main: Sidebar + Canvas */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* Controls Sidebar */}
-          <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto overscroll-y-contain">
-              {/* Prompt Section */}
-              <div className="p-5 pb-4">
-                {hasExistingImage && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mb-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-                      Iteration Mode
-                    </p>
-                    <p className="text-xs text-foreground/80 mt-1 leading-relaxed">
-                      Editing an existing image. Generating creates a new
-                      version from the latest result.
-                    </p>
-                    {isViewingHistoricalVersion && selectedVersion && (
-                      <p className="text-[11px] text-muted-foreground mt-1.5">
-                        Viewing v{selectedVersion.versionNumber}. New changes
-                        will build on v
-                        {latestVersionNumber ?? selectedVersion.versionNumber}.
-                      </p>
-                    )}
-                  </div>
-                )}
+          <ControlsSidebar
+            prompt={prompt}
+            onPromptChange={handlePromptChange}
+            hasExistingImage={hasExistingImage}
+            isViewingHistoricalVersion={isViewingHistoricalVersion}
+            selectedVersion={selectedVersion}
+            latestVersionNumber={latestVersionNumber}
+            settings={settings}
+            actions={actions}
+            infographic={infographic}
+            hasPrompt={hasPrompt}
+            onGenerate={handleGenerate}
+          />
 
-                <PromptPanel
-                  prompt={prompt}
-                  onPromptChange={handlePromptChange}
-                  disabled={actions.isGenerating}
-                  isEditMode={hasExistingImage}
-                />
-              </div>
-
-              {/* Style Section */}
-              <div className="border-t border-border/40 p-5 pb-4">
-                <StyleSection
-                  properties={settings.styleProperties}
-                  onChange={settings.setStyleProperties}
-                  disabled={actions.isGenerating}
-                />
-              </div>
-
-              {/* Format Section */}
-              <div className="border-t border-border/40 p-5">
-                <FormatSelector
-                  value={settings.format}
-                  onChange={settings.setFormat}
-                  disabled={actions.isGenerating}
-                />
-              </div>
-            </div>
-
-            {/* Sticky Generate Footer */}
-            <div className="shrink-0 border-t border-border p-4 space-y-3">
-              {infographic.errorMessage && !actions.isGenerating && (
-                <div
-                  className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
-                  role="alert"
-                >
-                  {infographic.errorMessage}
-                </div>
-              )}
-              <Button
-                className="w-full"
-                onClick={handleGenerate}
-                disabled={!hasPrompt || actions.isGenerating}
-              >
-                {actions.isGenerating ? (
-                  <>
-                    <Spinner className="w-4 h-4 mr-2" />
-                    {hasExistingImage
-                      ? 'Generating New Version...'
-                      : 'Generating...'}
-                  </>
-                ) : hasExistingImage ? (
-                  'Generate New Version'
-                ) : (
-                  'Generate'
-                )}
-              </Button>
-            </div>
-          </aside>
-
-          {/* Canvas Area */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
               <PreviewPanel

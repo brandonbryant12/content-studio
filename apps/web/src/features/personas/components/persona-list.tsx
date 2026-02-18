@@ -66,7 +66,7 @@ function NoResults({ searchQuery }: { searchQuery: string }) {
   );
 }
 
-export interface PersonaListProps {
+interface PersonaListProps {
   personas: readonly PersonaListItem[];
   searchQuery: string;
   isCreating: boolean;

@@ -64,7 +64,3 @@ export function renderWithQuery(
     queryClient,
   };
 }
-
-// Re-export handlers and server for convenience
-export { server } from './server';
-export { handlers, createMockPodcast, createMockDocument } from './handlers';

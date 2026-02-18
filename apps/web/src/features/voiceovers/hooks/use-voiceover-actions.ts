@@ -11,7 +11,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
-export interface UseVoiceoverActionsReturn {
+interface UseVoiceoverActionsReturn {
   hasChanges: boolean;
   isSaving: boolean;
   isGenerating: boolean;

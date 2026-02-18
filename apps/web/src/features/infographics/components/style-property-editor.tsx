@@ -56,7 +56,10 @@ export function StylePropertyEditor({
   return (
     <div className="space-y-2">
       {properties.map((prop, index) => (
-        <div key={index} className="flex items-center gap-1.5">
+        <div
+          key={`${index}-${prop.key}-${prop.type}`}
+          className="flex items-center gap-1.5"
+        >
           <Input
             value={prop.key}
             onChange={(e) => updateProperty(index, { key: e.target.value })}

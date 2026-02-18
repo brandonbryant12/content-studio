@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useVoicePreview } from './use-voice-preview';
 import { useVoices } from './use-voices';
 
-export interface UseVoicePreviewControllerReturn {
+interface UseVoicePreviewControllerReturn {
   playingVoiceId: string | null;
   previewUrls: Record<string, string>;
   togglePreview: (voiceId: string) => void;

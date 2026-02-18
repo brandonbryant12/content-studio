@@ -14,7 +14,7 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 type Podcast = RouterOutput['podcasts']['get'];
 
-export interface UsePodcastActionsReturn {
+interface UsePodcastActionsReturn {
   hasAnyChanges: boolean;
   isSaving: boolean;
   isGenerating: boolean;

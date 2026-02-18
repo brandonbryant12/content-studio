@@ -7,7 +7,7 @@ import {
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-export interface OptimisticMutationOptions<TData, TVariables, TCache = TData> {
+interface OptimisticMutationOptions<TData, TVariables, TCache = TData> {
   /** Query key to apply optimistic update to */
   queryKey: QueryKey;
 

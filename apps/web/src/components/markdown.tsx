@@ -264,5 +264,3 @@ export const Markdown = memo(function Markdown({
     </div>
   );
 });
-
-export type { MarkdownProps };

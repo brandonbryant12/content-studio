@@ -5,7 +5,7 @@ import type { RouterOutput } from '@repo/api/client';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 
-export interface PersonaCardProps {
+interface PersonaCardProps {
   persona: PersonaListItem;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
