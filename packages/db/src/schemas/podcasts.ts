@@ -19,12 +19,12 @@ import {
   PersonaIdSchema,
   generatePodcastId,
 } from './brands';
-import { persona } from './personas';
 import {
   DocumentOutputSchema,
   serializeDocument,
   type Document,
 } from './documents';
+import { persona } from './personas';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,

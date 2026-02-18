@@ -5,7 +5,6 @@ import { ProxyAgent, setGlobalDispatcher } from 'undici';
  * Must be called before any network requests.
  */
 export const configureProxy = (): void => {
-  // eslint-disable-next-line no-restricted-properties
   const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY;
 
   if (!proxyUrl) {
@@ -14,10 +13,8 @@ export const configureProxy = (): void => {
 
   console.log(`[Proxy] Configuring proxy: ${proxyUrl}`);
 
-  // eslint-disable-next-line no-restricted-properties
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-  // eslint-disable-next-line no-restricted-properties
   const noProxy = process.env.NO_PROXY;
 
   const proxyAgent = new ProxyAgent({

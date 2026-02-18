@@ -1,3 +1,4 @@
+import { Layer, Effect } from 'effect';
 import {
   LLM,
   type LLMService,
@@ -5,7 +6,6 @@ import {
   LLMError,
   type LLMRateLimitError,
 } from '..';
-import { Layer, Effect } from 'effect';
 
 export const DEFAULT_MOCK_SCRIPT = {
   title: 'Test Podcast Title',

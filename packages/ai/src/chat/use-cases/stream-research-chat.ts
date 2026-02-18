@@ -1,10 +1,10 @@
-import { Effect } from 'effect';
 import {
   streamText,
   convertToModelMessages,
   type UIMessage,
   type LanguageModel,
 } from 'ai';
+import { Effect } from 'effect';
 import { LLM } from '../../llm/service';
 
 const RESEARCH_SYSTEM_PROMPT = `You are a research topic refinement assistant for Content Studio.

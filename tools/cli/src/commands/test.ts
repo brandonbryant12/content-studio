@@ -1,7 +1,7 @@
 import { Command } from '@effect/cli';
 import { testLlm } from './test-llm';
-import { testTts } from './test-tts';
 import { testStorage } from './test-storage';
+import { testTts } from './test-tts';
 
 export const test = Command.make('test', {}).pipe(
   Command.withDescription('Test integrations (LLM, TTS, Storage)'),

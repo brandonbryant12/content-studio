@@ -1,10 +1,10 @@
-import { Effect } from 'effect';
 import {
   streamText,
   convertToModelMessages,
   type UIMessage,
   type LanguageModel,
 } from 'ai';
+import { Effect } from 'effect';
 import { LLM } from '../../llm/service';
 
 const PERSONA_SYSTEM_PROMPT = `You are a podcast persona creation assistant for Content Studio.

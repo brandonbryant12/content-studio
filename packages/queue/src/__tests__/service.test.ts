@@ -22,7 +22,6 @@ describe('Queue service', () => {
       deleteJob: () => Effect.die('not implemented'),
     };
 
-    // eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements
     const layer = Layer.succeed(Queue, mockService);
 
     // If we can build a program that resolves the Queue tag, the DI wiring works

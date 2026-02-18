@@ -2,8 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command, Prompt } from '@effect/cli';
-import { Console, Effect } from 'effect';
 import { FEMALE_VOICES, MALE_VOICES, type GeminiVoiceId } from '@repo/ai';
+import { Console, Effect } from 'effect';
 import { loadEnv } from '../lib/env';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

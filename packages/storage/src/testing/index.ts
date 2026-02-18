@@ -1,5 +1,5 @@
-import { Storage, type StorageService, StorageNotFoundError } from '..';
 import { Layer, Effect } from 'effect';
+import { Storage, type StorageService, StorageNotFoundError } from '..';
 
 export interface MockStorageOptions {
   delay?: number;

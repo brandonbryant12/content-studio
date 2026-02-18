@@ -1,9 +1,9 @@
 import { it } from '@effect/vitest';
-import { describe, expect, vi } from 'vitest';
 import { Effect, Layer } from 'effect';
+import { describe, expect, vi } from 'vitest';
+import type { UIMessage } from 'ai';
 import { LLM, type LLMService } from '../../llm/service';
 import { streamResearchChat } from '../use-cases/stream-research-chat';
-import type { UIMessage } from 'ai';
 
 // We can't actually call streamText with a mock model (it needs a real LanguageModel),
 // so we mock the `ai` module to verify the use case passes correct args.

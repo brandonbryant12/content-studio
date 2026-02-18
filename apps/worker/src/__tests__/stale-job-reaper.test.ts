@@ -1,4 +1,3 @@
-import { Queue, type QueueService, type Job } from '@repo/queue';
 import {
   createMockDocumentRepo,
   createMockPodcastRepo,
@@ -6,9 +5,10 @@ import {
   createMockInfographicRepo,
   MockDbLive,
 } from '@repo/media/test-utils';
-import type { JobId, JobStatus } from '@repo/db/schema';
+import { Queue, type QueueService, type Job } from '@repo/queue';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
+import type { JobId, JobStatus } from '@repo/db/schema';
 import { reapStaleJobs } from '../stale-job-reaper';
 
 // =============================================================================

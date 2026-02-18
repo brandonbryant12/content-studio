@@ -1,9 +1,9 @@
+import { Layer, Effect } from 'effect';
 import {
   DeepResearch,
   type DeepResearchService,
   type ResearchResult,
 } from '..';
-import { Layer, Effect } from 'effect';
 
 export interface MockDeepResearchOptions {
   delay?: number;

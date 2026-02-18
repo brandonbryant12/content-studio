@@ -1,6 +1,6 @@
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
-import type { Effect } from 'effect';
 import type { TestUser } from '../factories/user';
+import type { Effect } from 'effect';
 
 /** Convert a TestUser to a User for policy context. */
 export function toUser(testUser: TestUser): User {

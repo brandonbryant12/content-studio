@@ -1,7 +1,7 @@
-import { Storage } from '../service';
-import { StorageNotFoundError } from '../errors';
 import { Effect, Exit, Cause, Option } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
+import { StorageNotFoundError } from '../errors';
+import { Storage } from '../service';
 import { createInMemoryStorage } from '../testing';
 
 // ---------------------------------------------------------------------------

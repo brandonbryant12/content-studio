@@ -1,17 +1,15 @@
-import { describe, it, expect, afterEach } from 'vitest';
 import { Effect } from 'effect';
+import { describe, it, expect, afterEach } from 'vitest';
 import { loadEnv } from '../lib/env';
 
 describe('loadEnv', () => {
-  const originalEnv = { ...process.env }; // eslint-disable-line no-restricted-properties
+  const originalEnv = { ...process.env };
 
   afterEach(() => {
-    // eslint-disable-next-line no-restricted-properties
     process.env = { ...originalEnv };
   });
 
   it('returns env with GEMINI_API_KEY when set', async () => {
-    // eslint-disable-next-line no-restricted-properties
     process.env.GEMINI_API_KEY = 'test-key-123';
 
     const result = await Effect.runPromise(loadEnv());
@@ -19,7 +17,6 @@ describe('loadEnv', () => {
   });
 
   it('succeeds when no API keys are set', async () => {
-    // eslint-disable-next-line no-restricted-properties
     delete process.env.GEMINI_API_KEY;
 
     const result = await Effect.runPromise(loadEnv());

@@ -1,10 +1,10 @@
+import { Layer, Effect } from 'effect';
 import {
   ImageGen,
   type ImageGenService,
   type GenerateImageResult,
   ImageGenError,
 } from '..';
-import { Layer, Effect } from 'effect';
 
 export interface MockImageGenOptions {
   delay?: number;

@@ -1,6 +1,6 @@
 import { Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
 import { Storage } from '@repo/storage';
+import { Console, Effect } from 'effect';
 import { createStorageLayer } from '../lib/storage-layer';
 
 const TEST_KEY = 'cli-test/hello.txt';

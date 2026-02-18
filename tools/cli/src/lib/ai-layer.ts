@@ -1,5 +1,5 @@
-import { Layer } from 'effect';
 import { GoogleAILive, type AI } from '@repo/ai';
+import type { Layer } from 'effect';
 
 export interface AILayerOptions {
   readonly apiKey: string;

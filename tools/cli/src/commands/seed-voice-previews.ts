@@ -1,7 +1,7 @@
 import { Command } from '@effect/cli';
-import { Console, Effect, Layer } from 'effect';
 import { VOICES, GoogleTTSLive, previewVoice } from '@repo/ai/tts';
 import { Storage, FilesystemStorageLive, S3StorageLive } from '@repo/storage';
+import { Console, Effect, Layer } from 'effect';
 import { loadEnv, type EnvError } from '../lib/env';
 
 /** The 8 voices exposed in the frontend UI */

@@ -10,11 +10,11 @@
  * Run with: GEMINI_API_KEY=xxx pnpm --filter @repo/ai test:live:llm
  */
 import { it } from '@effect/vitest';
+import { expectEffectFailure } from '@repo/testing';
 import { Effect, Exit, Schema } from 'effect';
 import { describe, expect } from 'vitest';
 import { LLMError, LLMRateLimitError } from '../../errors';
 import { GoogleLive, LLM } from '../../llm';
-import { expectEffectFailure } from '@repo/testing';
 import { liveTestEnv } from './env';
 
 const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;

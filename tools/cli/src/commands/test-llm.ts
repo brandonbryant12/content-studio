@@ -1,6 +1,6 @@
 import { Command, Prompt } from '@effect/cli';
-import { Console, Effect, Schema } from 'effect';
 import { LLM } from '@repo/ai';
+import { Console, Effect, Schema } from 'effect';
 import { createAILayer } from '../lib/ai-layer';
 import { loadEnv } from '../lib/env';
 

@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { Effect, Schema } from 'effect';
 import { LLM, LLMError } from '@repo/ai';
 import { MockLLMLive, createMockLLM } from '@repo/ai/testing';
+import { Effect, Schema } from 'effect';
+import { describe, it, expect } from 'vitest';
 
 describe('test-llm command logic', () => {
   it('calls LLM.generate with a schema and returns structured output', async () => {

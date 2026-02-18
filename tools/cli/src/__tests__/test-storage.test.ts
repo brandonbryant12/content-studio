@@ -1,13 +1,13 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Effect } from 'effect';
 import {
   Storage,
   FilesystemStorageLive,
   StorageNotFoundError,
 } from '@repo/storage';
+import { Effect } from 'effect';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 let tempDir: string;
 

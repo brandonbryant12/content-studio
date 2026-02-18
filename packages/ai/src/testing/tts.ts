@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Layer, Effect } from 'effect';
 import {
   TTS,
   type TTSService,
@@ -10,7 +11,6 @@ import {
   TTSError,
   type TTSQuotaExceededError,
 } from '..';
-import { Layer, Effect } from 'effect';
 
 export const MOCK_VOICES: readonly VoiceInfo[] = [
   {

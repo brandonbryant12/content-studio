@@ -26,7 +26,6 @@ export class EnvError {
 }
 
 export const loadEnv = (): Effect.Effect<Env, EnvError> =>
-  // eslint-disable-next-line no-restricted-properties
   Schema.decodeUnknown(EnvSchema)(process.env).pipe(
     Effect.mapError(
       () => new EnvError('Failed to parse environment variables.'),

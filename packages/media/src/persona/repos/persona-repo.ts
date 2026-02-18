@@ -1,7 +1,8 @@
+import { type DatabaseError, withDb } from '@repo/db/effect';
+import { type Persona, type PersonaId, persona } from '@repo/db/schema';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
-import { type Persona, type PersonaId, persona } from '@repo/db/schema';
-import { type DatabaseError, Db, withDb } from '@repo/db/effect';
+import type { Db } from '@repo/db/effect';
 import { PersonaNotFound } from '../../errors';
 
 export interface ListOptions {

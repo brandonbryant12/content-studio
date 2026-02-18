@@ -1,8 +1,8 @@
 import { Args, Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
-import { createDb } from '@repo/db/client';
 import { eq } from '@repo/db';
+import { createDb } from '@repo/db/client';
 import { user } from '@repo/db/schema';
+import { Console, Effect } from 'effect';
 import { loadEnv, type EnvError } from '../lib/env';
 
 const emailArg = Args.text({ name: 'email' }).pipe(
