@@ -1,12 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-const STYLE_PRESETS_QUERY_KEY = ['infographic-style-presets'] as const;
+const getStylePresetsQueryOptions = () =>
+  apiClient.infographics.stylePresets.list.queryOptions();
 
 export function useStylePresets() {
-  return useQuery(apiClient.infographics.stylePresets.list.queryOptions());
+  return useQuery(getStylePresetsQueryOptions());
+}
+
+export function getStylePresetsQueryKey(): QueryKey {
+  return getStylePresetsQueryOptions().queryKey;
 }
 
 export function useCreateStylePreset() {
@@ -16,7 +26,7 @@ export function useCreateStylePreset() {
     apiClient.infographics.stylePresets.create.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: STYLE_PRESETS_QUERY_KEY,
+          queryKey: getStylePresetsQueryKey(),
         });
         toast.success('Preset saved');
       },
@@ -34,7 +44,7 @@ export function useDeleteStylePreset() {
     apiClient.infographics.stylePresets.delete.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: STYLE_PRESETS_QUERY_KEY,
+          queryKey: getStylePresetsQueryKey(),
         });
         toast.success('Preset deleted');
       },

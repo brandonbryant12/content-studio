@@ -1,4 +1,5 @@
 import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
+import { sanitizeStyleProperties } from './style-properties';
 
 // =============================================================================
 // Types
@@ -78,7 +79,8 @@ function buildStyleSection(properties: StyleProperty[]): string {
 
 export function buildInfographicPrompt(options: BuildPromptOptions): string {
   const { isEdit, prompt, styleProperties } = options;
-  const hasStyles = styleProperties.length > 0;
+  const sanitizedStyles = sanitizeStyleProperties(styleProperties);
+  const hasStyles = sanitizedStyles.length > 0;
   const parts: string[] = [];
 
   if (isEdit) {
@@ -95,7 +97,7 @@ export function buildInfographicPrompt(options: BuildPromptOptions): string {
   }
 
   if (hasStyles) {
-    parts.push(buildStyleSection(styleProperties));
+    parts.push(buildStyleSection(sanitizedStyles));
   }
 
   const dims = FORMAT_DIMENSIONS[options.format];

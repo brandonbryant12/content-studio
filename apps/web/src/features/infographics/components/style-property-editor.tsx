@@ -4,16 +4,10 @@ import { Input } from '@repo/ui/components/input';
 import { useCallback } from 'react';
 import type { StyleProperty } from '../hooks/use-infographic-settings';
 
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  text: 'T',
-  color: 'C',
-  number: '#',
-};
-
-const PROPERTY_TYPE_CYCLE: Array<StyleProperty['type']> = [
-  'text',
-  'color',
-  'number',
+const PROPERTY_TYPES = [
+  { value: 'text' as const, label: 'Text', icon: 'Aa' },
+  { value: 'color' as const, label: 'Color', icon: '\u25CF' },
+  { value: 'number' as const, label: 'Number', icon: '#' },
 ];
 
 interface StylePropertyEditorProps {
@@ -48,13 +42,13 @@ export function StylePropertyEditor({
     onChange([...properties, { key: '', value: '', type: 'text' }]);
   }, [properties, onChange]);
 
-  const cycleType = useCallback(
-    (index: number) => {
+  const changeType = useCallback(
+    (index: number, type: StyleProperty['type']) => {
       const current = properties[index]?.type ?? 'text';
-      const currentIdx = PROPERTY_TYPE_CYCLE.indexOf(current);
-      const nextType =
-        PROPERTY_TYPE_CYCLE[(currentIdx + 1) % PROPERTY_TYPE_CYCLE.length];
-      updateProperty(index, { type: nextType });
+      if (current === type) return;
+      // Clear value when switching to/from color to avoid invalid data
+      const needsClear = current === 'color' || type === 'color';
+      updateProperty(index, { type, ...(needsClear ? { value: '' } : {}) });
     },
     [properties, updateProperty],
   );
@@ -71,15 +65,29 @@ export function StylePropertyEditor({
             className="h-8 text-xs flex-[2] min-w-0 px-2"
           />
 
-          <button
-            type="button"
-            onClick={() => cycleType(index)}
-            disabled={disabled}
-            className="shrink-0 w-6 h-8 flex items-center justify-center rounded border border-border/60 text-[10px] font-bold text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:pointer-events-none"
-            title={`Type: ${prop.type ?? 'text'} (click to cycle)`}
-          >
-            {PROPERTY_TYPE_LABELS[prop.type ?? 'text']}
-          </button>
+          <div className="shrink-0 h-8 inline-flex items-center rounded-md border border-border/60 bg-muted/20 p-0.5">
+            {PROPERTY_TYPES.map((option) => {
+              const isActive = (prop.type ?? 'text') === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => changeType(index, option.value)}
+                  disabled={disabled}
+                  className={`h-6 min-w-6 px-1.5 rounded text-[10px] font-semibold transition-colors ${
+                    isActive
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  } disabled:opacity-50 disabled:pointer-events-none`}
+                  title={`Set type: ${option.label}`}
+                  aria-label={`Set ${prop.key || 'property'} type to ${option.label}`}
+                  aria-pressed={isActive}
+                >
+                  {option.icon}
+                </button>
+              );
+            })}
+          </div>
 
           {prop.type === 'color' ? (
             <div className="flex items-center gap-1 flex-[3] min-w-0">

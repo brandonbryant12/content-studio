@@ -25,4 +25,5 @@ export {
   useStylePresets,
   useCreateStylePreset,
   useDeleteStylePreset,
+  getStylePresetsQueryKey,
 } from './use-style-presets';

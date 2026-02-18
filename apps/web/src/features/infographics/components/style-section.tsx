@@ -14,20 +14,25 @@ export function StyleSection({
   disabled,
 }: StyleSectionProps) {
   return (
-    <fieldset className="space-y-2" disabled={disabled}>
-      <div className="flex items-center justify-between">
-        <legend className="text-sm font-medium">Style</legend>
-        <PresetPicker
-          currentProperties={properties}
-          onApplyPreset={onChange}
+    <fieldset className="space-y-4" disabled={disabled}>
+      <legend className="text-sm font-medium">Style</legend>
+
+      <PresetPicker
+        currentProperties={properties}
+        onApplyPreset={onChange}
+        disabled={disabled}
+      />
+
+      <div>
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          Properties
+        </p>
+        <StylePropertyEditor
+          properties={properties}
+          onChange={onChange}
           disabled={disabled}
         />
       </div>
-      <StylePropertyEditor
-        properties={properties}
-        onChange={onChange}
-        disabled={disabled}
-      />
     </fieldset>
   );
 }

@@ -14,3 +14,7 @@ export {
   synthesizePersona,
   type SynthesizePersonaInput,
 } from './synthesize-persona';
+export {
+  streamWritingAssistantChat,
+  type StreamWritingAssistantChatInput,
+} from './stream-writing-assistant-chat';

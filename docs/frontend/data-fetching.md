@@ -13,6 +13,7 @@ graph LR
 2. Prefetch in route loaders with `ensureQueryData` for instant navigation <!-- enforced-by: manual-review -->
 3. `useSuspenseQuery` for required data; `useQuery` for optional <!-- enforced-by: manual-review -->
 4. SSE handles cache invalidation, not `onSettled` <!-- enforced-by: manual-review -->
+5. Mutation invalidation must use exported key helpers derived from `queryOptions().queryKey` <!-- enforced-by: lint -->
 
 ## oRPC Query Integration
 
@@ -20,7 +21,7 @@ All queries go through the typed oRPC client. Never construct query keys manuall
 
 ```tsx
 // Route loader — prefetch for instant navigation
-export const Route = createFileRoute('/_protected/podcasts/$podcastId')({
+export const Route = createFileRoute("/_protected/podcasts/$podcastId")({
   loader: ({ params }) =>
     queryClient.ensureQueryData(
       apiClient.podcasts.get.queryOptions({ input: { id: params.podcastId } }),
@@ -48,19 +49,19 @@ export function usePodcast(podcastId: string) {
 
 ## Query Hook Selection
 
-| Scenario | Hook | Loading UI | Boundary required? |
-|----------|------|------------|-------------------|
-| Required page data | `useSuspenseQuery` | `<SuspenseBoundary>` | Yes |
-| Optional/supplementary | `useQuery` | `isPending` check | No |
-| Conditional (user action) | `useQuery` + `enabled` | `isPending` check | No |
-| Infinite list | `useSuspenseInfiniteQuery` | `<SuspenseBoundary>` | Yes |
+| Scenario                  | Hook                       | Loading UI           | Boundary required? |
+| ------------------------- | -------------------------- | -------------------- | ------------------ |
+| Required page data        | `useSuspenseQuery`         | `<SuspenseBoundary>` | Yes                |
+| Optional/supplementary    | `useQuery`                 | `isPending` check    | No                 |
+| Conditional (user action) | `useQuery` + `enabled`     | `isPending` check    | No                 |
+| Infinite list             | `useSuspenseInfiniteQuery` | `<SuspenseBoundary>` | Yes                |
 
 ## Stale Time Defaults
 
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| `staleTime` | `60_000` (1 min) | Prevents redundant refetches during navigation |
-| `gcTime` | `300_000` (5 min) | Keeps cache for back-navigation |
+| Setting     | Value             | Rationale                                      |
+| ----------- | ----------------- | ---------------------------------------------- |
+| `staleTime` | `60_000` (1 min)  | Prevents redundant refetches during navigation |
+| `gcTime`    | `300_000` (5 min) | Keeps cache for back-navigation                |
 
 Configure in the shared QueryClient:
 
@@ -83,16 +84,17 @@ const queryClient = new QueryClient({
 
 ## Prefetching Strategy
 
-| Navigation type | Strategy |
-|----------------|----------|
-| Route navigation | `ensureQueryData` in route `loader` |
-| Hover prefetch | `queryClient.prefetchQuery` on mouse enter |
-| Pagination | Prefetch next page in `useEffect` |
+| Navigation type  | Strategy                                   |
+| ---------------- | ------------------------------------------ |
+| Route navigation | `ensureQueryData` in route `loader`        |
+| Hover prefetch   | `queryClient.prefetchQuery` on mouse enter |
+| Pagination       | Prefetch next page in `useEffect`          |
 
 ## Rules
 
 - One query hook per feature entity (e.g., `usePodcast`, `useDocumentList`) <!-- enforced-by: manual-review -->
 - Hooks live in `features/{domain}/hooks/` <!-- enforced-by: manual-review -->
 - Index files re-export hooks for public API <!-- enforced-by: manual-review -->
+- For invalidation, prefer `getXQueryKey()` helpers rather than inline arrays <!-- enforced-by: lint -->
 - Never use `queryClient.fetchQuery` in components -- use hooks <!-- enforced-by: manual-review -->
 - Error retry: disable for 404s, retry 3x for transient errors <!-- enforced-by: manual-review -->

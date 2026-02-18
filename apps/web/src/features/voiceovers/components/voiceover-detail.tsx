@@ -1,5 +1,6 @@
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
+import type { ReactNode } from 'react';
 import {
   WorkbenchLayout,
   TextEditor,
@@ -33,6 +34,7 @@ export interface VoiceoverDetailProps {
   voiceover: Voiceover;
   settings: UseVoiceoverSettingsReturn;
   displayAudio: DisplayAudio | null;
+  assistantPanel?: ReactNode;
   workbenchState: VoiceoverWorkbenchState;
   approvalState: VoiceoverApprovalState;
   onGenerate: () => void;
@@ -45,6 +47,7 @@ export function VoiceoverDetail({
   voiceover,
   settings,
   displayAudio,
+  assistantPanel,
   workbenchState,
   approvalState,
   onGenerate,
@@ -66,6 +69,7 @@ export function VoiceoverDetail({
       onApprove={onApprove}
       onRevoke={onRevoke}
       isApprovalPending={isApprovalPending}
+      rightPanel={assistantPanel}
       actionBar={
         <ActionBar
           status={voiceover.status}

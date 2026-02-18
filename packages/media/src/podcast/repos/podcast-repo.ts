@@ -1,4 +1,4 @@
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { Db, withDb, type DatabaseError } from '@repo/db/effect';
 import {
   podcast,
   document,
@@ -462,4 +462,7 @@ const make: PodcastRepoService = {
 // =============================================================================
 
 export const PodcastRepoLive: Layer.Layer<PodcastRepo, never, Db> =
-  Layer.succeed(PodcastRepo, make);
+  Layer.effect(
+    PodcastRepo,
+    Effect.map(Db, () => make),
+  );

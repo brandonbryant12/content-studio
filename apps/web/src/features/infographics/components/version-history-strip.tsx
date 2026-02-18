@@ -61,7 +61,7 @@ export function VersionHistoryStrip({
   isLoading,
 }: VersionHistoryStripProps) {
   return (
-    <div className="border-t border-border/40 px-4 py-3">
+    <div className="shrink-0 border-t border-border bg-card px-5 py-3">
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading versions...</p>
       ) : versions.length === 0 ? (
@@ -70,11 +70,11 @@ export function VersionHistoryStrip({
           history
         </p>
       ) : (
-        <>
-          <p className="text-xs font-medium text-muted-foreground mb-2">
-            Version History ({versions.length})
+        <div className="flex items-center gap-4">
+          <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+            Versions ({versions.length})
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-1" role="list">
+          <div className="flex gap-2 overflow-x-auto pb-0.5" role="list">
             {versions.map((version) => (
               <VersionCard
                 key={version.id}
@@ -84,7 +84,7 @@ export function VersionHistoryStrip({
               />
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

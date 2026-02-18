@@ -6,6 +6,7 @@ import {
 } from '@repo/db/schema';
 import { Effect } from 'effect';
 import { InfographicRepo } from '../repos';
+import { sanitizeStyleProperties } from '../style-properties';
 
 // =============================================================================
 // Types
@@ -31,7 +32,7 @@ export const createInfographic = (input: CreateInfographicInput) =>
       id: generateInfographicId(),
       title: input.title,
       prompt: input.prompt,
-      styleProperties: [...(input.styleProperties ?? [])],
+      styleProperties: sanitizeStyleProperties(input.styleProperties ?? []),
       format: input.format,
       status: 'draft',
       createdBy: user.id,

@@ -31,6 +31,10 @@ vi.mock('../components/voiceover-detail', () => ({
   VoiceoverDetail: () => <div data-testid="voiceover-detail" />,
 }));
 
+vi.mock('../components/workbench/writing-assistant-container', () => ({
+  WritingAssistantContainer: () => <div data-testid="writing-assistant" />,
+}));
+
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
   useNavigationBlock: vi.fn(),

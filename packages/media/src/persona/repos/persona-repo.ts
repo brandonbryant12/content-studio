@@ -1,8 +1,7 @@
-import { type DatabaseError, withDb } from '@repo/db/effect';
+import { Db, type DatabaseError, withDb } from '@repo/db/effect';
 import { type Persona, type PersonaId, persona } from '@repo/db/schema';
 import { eq, desc, count as drizzleCount } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
-import type { Db } from '@repo/db/effect';
 import { PersonaNotFound } from '../../errors';
 
 export interface ListOptions {
@@ -152,4 +151,7 @@ const make: PersonaRepoService = {
 };
 
 export const PersonaRepoLive: Layer.Layer<PersonaRepo, never, Db> =
-  Layer.succeed(PersonaRepo, make);
+  Layer.effect(
+    PersonaRepo,
+    Effect.map(Db, () => make),
+  );

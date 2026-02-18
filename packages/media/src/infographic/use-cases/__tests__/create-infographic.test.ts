@@ -75,6 +75,31 @@ describe('createInfographic', () => {
     ]);
   });
 
+  it('sanitizes style properties before insert', async () => {
+    const user = createTestUser();
+
+    const repo = createMockInfographicRepo({ insert: mockInsertFn });
+    const layers = Layer.mergeAll(MockDbLive, repo);
+
+    const result = await Effect.runPromise(
+      withTestUser(user)(
+        createInfographic({
+          title: 'Sanitized',
+          format: 'square',
+          styleProperties: [
+            { key: '  Background  ', value: ' #111111 ', type: 'color' },
+            { key: '   ', value: 'drop me', type: 'text' },
+            { key: 'Mood', value: '   ' },
+          ],
+        }),
+      ).pipe(Effect.provide(layers)),
+    );
+
+    expect(result.styleProperties).toEqual([
+      { key: 'Background', value: '#111111', type: 'color' },
+    ]);
+  });
+
   it('fails when user is not authenticated', async () => {
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
     const layers = Layer.mergeAll(MockDbLive, repo);

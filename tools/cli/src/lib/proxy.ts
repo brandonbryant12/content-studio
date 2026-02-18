@@ -1,5 +1,9 @@
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
+const log = (message: string): void => {
+  process.stdout.write(`${message}\n`);
+};
+
 /**
  * Configure global HTTP/HTTPS proxy when proxy env vars are present.
  * Must be called before any network requests.
@@ -11,7 +15,7 @@ export const configureProxy = (): void => {
     return;
   }
 
-  console.log(`[Proxy] Configuring proxy: ${proxyUrl}`);
+  log(`[Proxy] Configuring proxy: ${proxyUrl}`);
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -23,9 +27,9 @@ export const configureProxy = (): void => {
   });
 
   setGlobalDispatcher(proxyAgent);
-  console.log('[Proxy] Global fetch dispatcher configured with proxy agent');
+  log('[Proxy] Global fetch dispatcher configured with proxy agent');
 
   if (noProxy) {
-    console.log(`[Proxy] NO_PROXY hosts: ${noProxy}`);
+    log(`[Proxy] NO_PROXY hosts: ${noProxy}`);
   }
 };

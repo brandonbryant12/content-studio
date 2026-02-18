@@ -23,6 +23,7 @@ sequenceDiagram
 2. **Use Effect-based serializers** (`serializeXxxEffect`) in handlers for tracing <!-- enforced-by: manual-review -->
 3. **Span required**: every call to `handleEffectWithProtocol` must include `{ span }` <!-- enforced-by: types -->
 4. **Don't serialize in use cases** -- handlers only <!-- enforced-by: invariant-test -->
+5. **Streaming endpoints must keep typed streams end-to-end** (no `unknown` stream payloads) <!-- enforced-by: lint -->
 
 ## Canonical Example
 
@@ -53,29 +54,37 @@ handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWit
 Every handler follows this exact shape. Custom error overrides are rare -- only for business logic like upsell flows:
 
 ```typescript
-handleEffectWithProtocol(runtime, user, effect, errors,
-  { span: 'api.documents.create' },
-  { DocumentQuotaExceeded: (e) => { throw errors.PAYMENT_REQUIRED({ message: '...' }); } },
+handleEffectWithProtocol(
+  runtime,
+  user,
+  effect,
+  errors,
+  { span: "api.documents.create" },
+  {
+    DocumentQuotaExceeded: (e) => {
+      throw errors.PAYMENT_REQUIRED({ message: "..." });
+    },
+  },
 );
 ```
 
 ## Span Naming <!-- enforced-by: invariant-test -->
 
-| Layer | Format | Example |
-|---|---|---|
-| Handler | `api.{domain}.{action}` | `api.documents.get` |
-| Serializer | `serialize.{entity}` | `serialize.document` |
-| Batch serializer | `serialize.{entities}` | `serialize.documents` |
+| Layer            | Format                  | Example               |
+| ---------------- | ----------------------- | --------------------- |
+| Handler          | `api.{domain}.{action}` | `api.documents.get`   |
+| Serializer       | `serialize.{entity}`    | `serialize.document`  |
+| Batch serializer | `serialize.{entities}`  | `serialize.documents` |
 
 ## Serializer Variants <!-- enforced-by: manual-review -->
 
 Each entity in `packages/db/src/schemas/{entity}.ts` exports three variants:
 
-| Variant | Where to Use | Tracing |
-|---|---|---|
-| `serializeXxxEffect(item)` | Handlers (single) | Yes |
-| `serializeXxxsEffect(items)` | Handlers (batch/list) | Yes, parallel |
-| `serializeXxx(item)` | Tests, intermediate transforms | No |
+| Variant                      | Where to Use                   | Tracing       |
+| ---------------------------- | ------------------------------ | ------------- |
+| `serializeXxxEffect(item)`   | Handlers (single)              | Yes           |
+| `serializeXxxsEffect(items)` | Handlers (batch/list)          | Yes, parallel |
+| `serializeXxx(item)`         | Tests, intermediate transforms | No            |
 
 Batch is derived from single via `Effect.all(..., { concurrency: 'unbounded' })`.
 
@@ -94,25 +103,31 @@ export const serializeDocument = (doc: Document): SerializedDocument => ({
 // Effect (traced) -- used in handlers
 export const serializeDocumentEffect = (doc: Document) =>
   Effect.sync(() => serializeDocument(doc)).pipe(
-    Effect.withSpan('serialize.document', { attributes: { 'document.id': doc.id } }),
+    Effect.withSpan("serialize.document", {
+      attributes: { "document.id": doc.id },
+    }),
   );
 
 // Batch (traced, parallel) -- used in list handlers
 export const serializeDocumentsEffect = (docs: Document[]) =>
-  Effect.all(docs.map(serializeDocumentEffect), { concurrency: 'unbounded' }).pipe(
-    Effect.withSpan('serialize.documents', { attributes: { count: docs.length } }),
+  Effect.all(docs.map(serializeDocumentEffect), {
+    concurrency: "unbounded",
+  }).pipe(
+    Effect.withSpan("serialize.documents", {
+      attributes: { count: docs.length },
+    }),
   );
 ```
 
 ## Transformation Rules <!-- enforced-by: manual-review -->
 
-| Field Type | Transformation |
-|---|---|
-| `Date` | `.toISOString()` |
-| Optional / nullable | `?? null` |
-| Nested entity | Recursive `serializeXxx(nested)` |
-| Internal fields (`userId`) | Omit from serialized type |
-| Computed fields | Derive in serializer (`wordCount`, `estimatedReadTime`) |
+| Field Type                 | Transformation                                          |
+| -------------------------- | ------------------------------------------------------- |
+| `Date`                     | `.toISOString()`                                        |
+| Optional / nullable        | `?? null`                                               |
+| Nested entity              | Recursive `serializeXxx(nested)`                        |
+| Internal fields (`userId`) | Omit from serialized type                               |
+| Computed fields            | Derive in serializer (`wordCount`, `estimatedReadTime`) |
 
 ## Protocol-Based Errors <!-- enforced-by: invariant-test -->
 
@@ -125,3 +140,11 @@ return handleEffectWithProtocol(runtime, user, effect, errors, { span });
 // Wrong -- legacy manual mapping
 return handleEffect(runtime, user, effect, { DocumentNotFound: (e) => { ... } }, { span });
 ```
+
+## Streaming Handlers
+
+For chat/streaming endpoints:
+
+- Contract output must use concrete chunk types (for chat: `eventIterator(type<UIMessageChunk>())`)
+- Handler should return `streamToEventIterator(stream)` directly from the typed use-case stream
+- Avoid `unknown` stream payload contracts that force client-side casting

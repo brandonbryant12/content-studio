@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { ComponentProps } from 'react';
 import { InfographicWorkbenchContainer } from '../components/infographic-workbench-container';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
 import { useInfographic } from '../hooks/use-infographic';
@@ -7,7 +8,11 @@ import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import { useInfographicVersions } from '../hooks/use-infographic-versions';
 import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { render } from '@/test-utils';
+import { act, fireEvent, render, screen, waitFor } from '@/test-utils';
+
+const { promptPanelSpy } = vi.hoisted(() => ({
+  promptPanelSpy: vi.fn(),
+}));
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -62,7 +67,12 @@ vi.mock('../components/preview-panel', () => ({
 }));
 
 vi.mock('../components/prompt-panel', () => ({
-  PromptPanel: () => <div data-testid="prompt-panel" />,
+  PromptPanel: (
+    props: ComponentProps<'textarea'> & Record<string, unknown>,
+  ) => {
+    promptPanelSpy(props);
+    return <div data-testid="prompt-panel" />;
+  },
 }));
 
 vi.mock('../components/style-section', () => ({
@@ -98,6 +108,12 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
     handleDelete: vi.fn(),
     ...overrides,
   };
+}
+
+function getLastPromptPanelProps<T>(): T | undefined {
+  const lastCall =
+    promptPanelSpy.mock.calls[promptPanelSpy.mock.calls.length - 1];
+  return lastCall?.[0] as T | undefined;
 }
 
 describe('InfographicWorkbenchContainer', () => {
@@ -164,6 +180,74 @@ describe('InfographicWorkbenchContainer', () => {
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: false,
+    });
+  });
+
+  it('starts with a blank iteration prompt for existing images', () => {
+    vi.mocked(useInfographic).mockReturnValue({
+      data: {
+        id: 'infographic-1',
+        title: 'Test Infographic',
+        approvedBy: null,
+        imageStorageKey: 'infographics/one.png',
+        errorMessage: null,
+      },
+    } as never);
+    vi.mocked(useInfographicActions).mockReturnValue(
+      createMockActions() as never,
+    );
+
+    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+
+    const promptPanelProps = getLastPromptPanelProps<{
+      prompt: string;
+      isEditMode: boolean;
+    }>();
+    expect(promptPanelProps).toMatchObject({
+      prompt: '',
+      isEditMode: true,
+    });
+    expect(
+      screen.getByRole('button', { name: 'Generate New Version' }),
+    ).toBeDisabled();
+  });
+
+  it('passes typed iteration prompt to generate action', async () => {
+    vi.mocked(useInfographic).mockReturnValue({
+      data: {
+        id: 'infographic-1',
+        title: 'Test Infographic',
+        approvedBy: null,
+        imageStorageKey: 'infographics/one.png',
+        errorMessage: null,
+      },
+    } as never);
+    const actions = createMockActions();
+    vi.mocked(useInfographicActions).mockReturnValue(actions as never);
+
+    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+
+    const initialPromptPanelProps = getLastPromptPanelProps<{
+      onPromptChange: (value: string) => void;
+    }>();
+
+    act(() => {
+      initialPromptPanelProps?.onPromptChange('Make the title larger');
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Generate New Version' }),
+    );
+
+    expect(actions.handleGenerate).toHaveBeenCalledWith(
+      'Make the title larger',
+    );
+
+    await waitFor(() => {
+      const latestPromptPanelProps = getLastPromptPanelProps<{
+        prompt: string;
+      }>();
+      expect(latestPromptPanelProps?.prompt).toBe('');
     });
   });
 });

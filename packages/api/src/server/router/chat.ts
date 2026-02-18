@@ -4,6 +4,7 @@ import {
   synthesizeResearchQuery,
   streamPersonaChat,
   synthesizePersona,
+  streamWritingAssistantChat,
 } from '@repo/ai/chat';
 import { protectedProcedure } from '../orpc';
 
@@ -30,6 +31,15 @@ const chatRouter = {
     async ({ context, input }) => {
       const stream = await context.runtime.runPromise(
         streamPersonaChat({ messages: input.messages }),
+      );
+      return streamToEventIterator(stream);
+    },
+  ),
+
+  writingAssistant: protectedProcedure.chat.writingAssistant.handler(
+    async ({ context, input }) => {
+      const stream = await context.runtime.runPromise(
+        streamWritingAssistantChat({ messages: input.messages }),
       );
       return streamToEventIterator(stream);
     },

@@ -1,6 +1,6 @@
 import { useChat } from '@ai-sdk/react';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { UIMessage } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -9,7 +9,7 @@ const transport = {
     messages: UIMessage[];
     abortSignal: AbortSignal | undefined;
   }) => {
-    const iterator = await rawApiClient.chat.research(
+    const iterator = await rawApiClient.chat.writingAssistant(
       { messages: options.messages },
       { signal: options.abortSignal },
     );
@@ -18,18 +18,12 @@ const transport = {
   reconnectToStream: async () => null,
 };
 
-export function useResearchChat() {
+export function useWritingAssistantChat() {
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport,
   });
 
   const isStreaming = status === 'submitted' || status === 'streaming';
-
-  const canStartResearch = useMemo(
-    () => !isStreaming && messages.some((m) => m.role === 'assistant'),
-    [isStreaming, messages],
-  );
-
   const reset = useCallback(() => setMessages([]), [setMessages]);
 
   return {
@@ -38,7 +32,6 @@ export function useResearchChat() {
     status,
     isStreaming,
     error,
-    canStartResearch,
     reset,
   };
 }

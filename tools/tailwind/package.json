@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint"
+    "lint": "eslint --max-warnings=0"
   },
   "exports": {
     "./style.css": "./style.css"

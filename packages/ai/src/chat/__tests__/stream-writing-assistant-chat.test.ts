@@ -3,10 +3,8 @@ import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
 import { LLM, type LLMService } from '../../llm/service';
-import { streamResearchChat } from '../use-cases/stream-research-chat';
+import { streamWritingAssistantChat } from '../use-cases/stream-writing-assistant-chat';
 
-// We can't actually call streamText with a mock model (it needs a real LanguageModel),
-// so we mock the `ai` module to verify the use case passes correct args.
 const mockStreamText = vi.fn();
 const mockConvertToModelMessages = vi.fn();
 
@@ -31,15 +29,18 @@ const testMessages: UIMessage[] = [
   {
     id: '1',
     role: 'user',
-    parts: [{ type: 'text', text: 'AI in healthcare' }],
+    parts: [{ type: 'text', text: 'Help me rewrite my intro narration.' }],
   },
 ];
 
-describe('streamResearchChat', () => {
-  it.effect('calls streamText with correct system prompt and model', () =>
+describe('streamWritingAssistantChat', () => {
+  it.effect('calls streamText with writing assistant prompt and model', () =>
     Effect.gen(function* () {
       const mockModelMessages = [
-        { role: 'user' as const, content: 'AI in healthcare' },
+        {
+          role: 'user' as const,
+          content: 'Help me rewrite my intro narration.',
+        },
       ];
       const mockStream = new ReadableStream();
 
@@ -48,13 +49,15 @@ describe('streamResearchChat', () => {
         toUIMessageStream: () => mockStream,
       });
 
-      const result = yield* streamResearchChat({ messages: testMessages });
+      const result = yield* streamWritingAssistantChat({
+        messages: testMessages,
+      });
 
       expect(mockConvertToModelMessages).toHaveBeenCalledWith(testMessages);
       expect(mockStreamText).toHaveBeenCalledWith(
         expect.objectContaining({
           model: mockModel,
-          system: expect.stringContaining('research topic refinement'),
+          system: expect.stringContaining('voiceover narration'),
           messages: mockModelMessages,
           maxOutputTokens: 1024,
           temperature: 0.7,
@@ -70,9 +73,9 @@ describe('streamResearchChat', () => {
         new Error('conversion failed'),
       );
 
-      const exit = yield* streamResearchChat({ messages: testMessages }).pipe(
-        Effect.exit,
-      );
+      const exit = yield* streamWritingAssistantChat({
+        messages: testMessages,
+      }).pipe(Effect.exit);
 
       expect(exit._tag).toBe('Failure');
     }).pipe(Effect.provide(MockLLMLayer)),

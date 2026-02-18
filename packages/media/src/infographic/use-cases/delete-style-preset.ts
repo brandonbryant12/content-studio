@@ -1,4 +1,5 @@
 import { ForbiddenError } from '@repo/auth';
+import { requireOwnership } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { StylePresetRepo } from '../repos';
 
@@ -26,6 +27,13 @@ export const deleteStylePreset = (input: DeleteStylePresetInput) =>
       );
     }
 
+    if (!preset.createdBy) {
+      return yield* Effect.fail(
+        new ForbiddenError({ message: 'Cannot delete shared presets' }),
+      );
+    }
+
+    yield* requireOwnership(preset.createdBy);
     yield* repo.delete(input.id);
     return { deleted: true };
   }).pipe(

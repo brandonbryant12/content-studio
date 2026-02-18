@@ -5,6 +5,12 @@ import { Effect, Schema } from 'effect';
 import { syncEntityTitle } from '../../activity';
 import { buildInfographicPrompt } from '../prompts';
 import { InfographicRepo } from '../repos';
+import {
+  resolveInfographicTitle,
+  selectOriginalTitlePrompt,
+  buildFallbackInfographicTitle,
+  UNTITLED_INFOGRAPHIC_TITLE,
+} from './title-utils';
 
 // =============================================================================
 // Types
@@ -25,21 +31,25 @@ export interface ExecuteGenerationResult {
 // =============================================================================
 
 const TitleSchema = Schema.Struct({
-  title: Schema.String,
+  title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(80)),
 });
 
-const generateTitle = (prompt: string, currentTitle: string) =>
+const generateTitle = (sourcePrompt: string) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
+
+    // Keep title generation cheap: short, low-temperature structured call.
     const { object } = yield* llm.generate({
-      prompt: `Generate a short, descriptive title (3-6 words) for an infographic. The infographic is about: "${prompt}"\n\nReturn only the title, no quotes or punctuation at the end.`,
+      prompt: `Generate a short infographic title (3-6 words) from this source query: "${sourcePrompt}"`,
       schema: TitleSchema,
-      maxTokens: 30,
-      temperature: 0.7,
+      maxTokens: 20,
+      temperature: 0.2,
     });
-    return object.title;
+    return resolveInfographicTitle(object.title, sourcePrompt);
   }).pipe(
-    Effect.catchAll(() => Effect.succeed(currentTitle)),
+    Effect.catchAll(() =>
+      Effect.succeed(buildFallbackInfographicTitle(sourcePrompt)),
+    ),
     Effect.withSpan('infographic.generateTitle'),
   );
 
@@ -59,6 +69,10 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
 
     const existingVersions = yield* repo.listVersions(infographicId);
     const latestVersion = existingVersions.at(-1) ?? null;
+    const originalQueryPrompt = selectOriginalTitlePrompt({
+      currentPrompt: infographic.prompt ?? null,
+      existingVersions,
+    });
 
     const isEdit = latestVersion !== null;
     const prompt = buildInfographicPrompt({
@@ -105,13 +119,11 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
         Effect.tapError(() => storage.delete(storageKey).pipe(Effect.ignore)),
       );
 
-    const userPrompt = infographic.prompt ?? '';
     const shouldGenerateTitle =
-      !isEdit &&
-      infographic.title === 'Untitled Infographic' &&
-      userPrompt.length > 0;
+      infographic.title === UNTITLED_INFOGRAPHIC_TITLE &&
+      originalQueryPrompt.length > 0;
     const title = shouldGenerateTitle
-      ? yield* generateTitle(userPrompt, infographic.title)
+      ? yield* generateTitle(originalQueryPrompt)
       : infographic.title;
 
     yield* repo.update(infographicId, {

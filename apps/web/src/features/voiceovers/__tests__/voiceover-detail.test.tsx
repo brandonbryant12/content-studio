@@ -17,13 +17,16 @@ vi.mock('../components/workbench', () => ({
   WorkbenchLayout: ({
     children,
     actionBar,
+    rightPanel,
   }: {
     children: React.ReactNode;
     actionBar: React.ReactNode;
+    rightPanel?: React.ReactNode;
   }) => (
     <div data-testid="workbench-layout">
       <div data-testid="action-bar-container">{actionBar}</div>
       <div data-testid="workbench-content">{children}</div>
+      <div data-testid="assistant-panel-container">{rightPanel}</div>
     </div>
   ),
   TextEditor: ({
@@ -301,5 +304,17 @@ describe('VoiceoverDetail', () => {
     expect(screen.getByTestId('workbench-layout')).toBeInTheDocument();
     expect(screen.getByTestId('action-bar-container')).toBeInTheDocument();
     expect(screen.getByTestId('action-bar')).toBeInTheDocument();
+  });
+
+  it('renders assistant panel when provided', () => {
+    render(
+      <VoiceoverDetail
+        {...createDefaultProps({
+          assistantPanel: <div>Writing Assistant Panel</div>,
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Writing Assistant Panel')).toBeInTheDocument();
   });
 });

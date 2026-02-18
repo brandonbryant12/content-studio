@@ -28,8 +28,8 @@ export function PromptPanel({
         {label}
       </label>
       {isEditMode && (
-        <p className="text-xs text-muted-foreground">
-          Your changes will build on the current image
+        <p className="text-xs font-medium text-primary">
+          You are editing an existing infographic version
         </p>
       )}
       <textarea

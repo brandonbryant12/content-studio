@@ -21,7 +21,11 @@ export function FormatSelector({
   return (
     <fieldset className="space-y-2" disabled={disabled}>
       <legend className="text-sm font-medium">Format</legend>
-      <div className="flex gap-2" role="radiogroup" aria-label="Image format">
+      <div
+        className="grid grid-cols-4 gap-2"
+        role="radiogroup"
+        aria-label="Image format"
+      >
         {FORMAT_OPTIONS.map((option) => (
           <button
             key={option.value}
@@ -29,14 +33,14 @@ export function FormatSelector({
             role="radio"
             aria-checked={value === option.value}
             onClick={() => onChange(option.value)}
-            className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-colors min-w-[60px] ${
+            className={`flex flex-col items-center gap-1.5 p-2.5 rounded-lg border transition-all duration-150 ${
               value === option.value
-                ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/30 shadow-sm'
                 : 'border-border/60 hover:border-border hover:bg-muted/50'
             } disabled:opacity-50 disabled:pointer-events-none`}
           >
             <div
-              className={`w-6 ${option.aspect} rounded-sm border border-current opacity-50`}
+              className={`w-6 ${option.aspect} rounded-sm border border-current opacity-40`}
               aria-hidden="true"
             />
             <span className="text-[11px] font-medium">{option.label}</span>

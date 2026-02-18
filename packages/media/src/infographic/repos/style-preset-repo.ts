@@ -1,4 +1,4 @@
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { Db, withDb, type DatabaseError } from '@repo/db/effect';
 import {
   infographicStylePreset,
   type InfographicStylePreset,
@@ -49,15 +49,6 @@ export interface StylePresetRepoService {
   readonly list: (
     userId: string,
   ) => Effect.Effect<readonly InfographicStylePreset[], DatabaseError, Db>;
-
-  readonly update: (
-    id: string,
-    data: { name?: string; properties?: StyleProperty[] },
-  ) => Effect.Effect<
-    InfographicStylePreset,
-    StylePresetNotFound | DatabaseError,
-    Db
-  >;
 
   readonly delete: (id: string) => Effect.Effect<boolean, DatabaseError, Db>;
 }
@@ -121,23 +112,6 @@ const make: StylePresetRepoService = {
         .orderBy(infographicStylePreset.name),
     ),
 
-  update: (id, data) =>
-    withDb('stylePresetRepo.update', async (db) => {
-      const updateValues: Record<string, unknown> = {
-        ...Object.fromEntries(
-          Object.entries(data).filter(([, v]) => v !== undefined),
-        ),
-        updatedAt: new Date(),
-      };
-
-      const [row] = await db
-        .update(infographicStylePreset)
-        .set(updateValues)
-        .where(eq(infographicStylePreset.id, id as InfographicStylePresetId))
-        .returning();
-      return row ?? null;
-    }).pipe(requirePreset(id)),
-
   delete: (id) =>
     withDb('stylePresetRepo.delete', async (db) => {
       const result = await db
@@ -153,4 +127,7 @@ const make: StylePresetRepoService = {
 // =============================================================================
 
 export const StylePresetRepoLive: Layer.Layer<StylePresetRepo, never, Db> =
-  Layer.succeed(StylePresetRepo, make);
+  Layer.effect(
+    StylePresetRepo,
+    Effect.map(Db, () => make),
+  );

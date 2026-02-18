@@ -7,7 +7,10 @@ import eslintPluginImport from 'eslint-plugin-import';
 import turboPlugin from 'eslint-plugin-turbo';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
-import onlyWarn from 'eslint-plugin-only-warn';
+import customRules from './custom-rules.js';
+
+/** @type {any} */
+const repoCustomPlugin = customRules;
 
 export const restrictEnvAccess = defineConfig([
   { ignores: ['**/env.ts', 'dist/**'] },
@@ -52,11 +55,6 @@ export default defineConfig([
   },
   {
     plugins: {
-      onlyWarn,
-    },
-  },
-  {
-    plugins: {
       import: eslintPluginImport,
     },
     rules: {
@@ -82,6 +80,11 @@ export default defineConfig([
     },
   },
   {
+    plugins: {
+      'repo-custom': repoCustomPlugin,
+    },
+  },
+  {
     rules: {
       semi: ['warn', 'always'],
       '@typescript-eslint/consistent-type-imports': 'error',
@@ -94,6 +97,33 @@ export default defineConfig([
         },
       ],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  // Chat contract streams must be concretely typed
+  {
+    files: ['**/src/contracts/chat.ts'],
+    rules: {
+      'repo-custom/no-unknown-chat-stream-contract': 'error',
+    },
+  },
+  // Chat hooks should use explicit streaming statuses
+  {
+    files: [
+      '**/src/features/**/hooks/use-*-chat.ts',
+      '**/src/features/**/hooks/use-*-chat.tsx',
+    ],
+    rules: {
+      'repo-custom/no-chat-status-not-ready': 'error',
+    },
+  },
+  // Invalidate query keys must use key helpers, not inline arrays
+  {
+    files: [
+      '**/src/features/**/hooks/**/*.ts',
+      '**/src/features/**/hooks/**/*.tsx',
+    ],
+    rules: {
+      'repo-custom/no-inline-invalidate-querykey-array': 'error',
     },
   },
   // No dynamic imports

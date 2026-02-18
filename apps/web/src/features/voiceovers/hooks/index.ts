@@ -24,3 +24,5 @@ export {
   useVoiceoverActions,
   type UseVoiceoverActionsReturn,
 } from './use-voiceover-actions';
+
+export { useWritingAssistantChat } from './use-writing-assistant-chat';

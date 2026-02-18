@@ -1,4 +1,4 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
@@ -54,6 +54,9 @@ export function InfographicWorkbenchContainer({
   const { data: versions = [], isLoading: versionsLoading } =
     useInfographicVersions(infographicId);
 
+  const [iterationPromptById, setIterationPromptById] = useState<
+    Record<string, string>
+  >({});
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
     null,
   );
@@ -61,7 +64,7 @@ export function InfographicWorkbenchContainer({
 
   // Determine which image to show: selected version or current
   const selectedVersion = selectedVersionId
-    ? versions.find((v) => v.id === selectedVersionId)
+    ? (versions.find((v) => v.id === selectedVersionId) ?? null)
     : null;
 
   const storageKey =
@@ -70,24 +73,96 @@ export function InfographicWorkbenchContainer({
 
   // Edit mode: once at least one version has been generated
   const hasExistingImage = infographic.imageStorageKey !== null;
+  const latestVersion =
+    versions.length > 0 ? (versions[versions.length - 1] ?? null) : null;
+  const latestVersionNumber = latestVersion?.versionNumber ?? null;
+  const isViewingHistoricalVersion =
+    selectedVersion !== null && selectedVersion.id !== latestVersion?.id;
+
+  const iterationPrompt = iterationPromptById[infographic.id] ?? '';
+
+  const setIterationPrompt = useCallback(
+    (nextPrompt: string) => {
+      setIterationPromptById((prev) => {
+        if (nextPrompt.length === 0) {
+          if (!(infographic.id in prev)) return prev;
+          const { [infographic.id]: _removed, ...rest } = prev;
+          return rest;
+        }
+
+        if (prev[infographic.id] === nextPrompt) return prev;
+        return {
+          ...prev,
+          [infographic.id]: nextPrompt,
+        };
+      });
+    },
+    [infographic.id],
+  );
+
+  const prompt = hasExistingImage ? iterationPrompt : settings.prompt;
+  const hasPrompt = prompt.trim().length > 0;
+  const hasPromptDraft =
+    hasExistingImage &&
+    iterationPrompt.trim().length > 0 &&
+    iterationPrompt !== settings.prompt;
+  const hasUnsavedChanges = actions.hasChanges || hasPromptDraft;
+
+  const getPromptOverride = useCallback(() => {
+    if (!hasExistingImage) return undefined;
+    return iterationPrompt.trim().length > 0 ? iterationPrompt : undefined;
+  }, [hasExistingImage, iterationPrompt]);
+
+  const handlePromptChange = useCallback(
+    (nextPrompt: string) => {
+      if (hasExistingImage) {
+        setIterationPrompt(nextPrompt);
+        return;
+      }
+      settings.setPrompt(nextPrompt);
+    },
+    [hasExistingImage, settings, setIterationPrompt],
+  );
+
+  const handleSave = useCallback(async () => {
+    try {
+      await actions.handleSave(getPromptOverride());
+    } catch {
+      // Errors are surfaced in mutation toasts.
+    }
+  }, [actions, getPromptOverride]);
+
+  const handleGenerate = useCallback(async () => {
+    const promptOverride = getPromptOverride();
+
+    try {
+      await actions.handleGenerate(promptOverride);
+
+      if (hasExistingImage && promptOverride) {
+        setIterationPrompt('');
+      }
+    } catch {
+      // Errors are surfaced in mutation toasts.
+    }
+  }, [actions, getPromptOverride, hasExistingImage, setIterationPrompt]);
 
   // Keyboard shortcuts
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
-    onTrigger: actions.handleSave,
-    enabled: actions.hasChanges,
+    onTrigger: handleSave,
+    enabled: hasUnsavedChanges,
   });
 
   useKeyboardShortcut({
     key: 'Enter',
     cmdOrCtrl: true,
-    onTrigger: actions.handleGenerate,
-    enabled: actions.hasPrompt && !actions.isGenerating,
+    onTrigger: handleGenerate,
+    enabled: hasPrompt && !actions.isGenerating,
   });
 
   useNavigationBlock({
-    shouldBlock: actions.hasChanges && !actions.isGenerating,
+    shouldBlock: hasUnsavedChanges && !actions.isGenerating,
   });
 
   const handleSelectVersion = useCallback((versionId: string) => {
@@ -101,120 +176,169 @@ export function InfographicWorkbenchContainer({
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-57px)]">
-        {/* Top Bar */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40">
-          <Link
-            to="/infographics"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Back to infographics"
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
-          </Link>
-          <h1 className="text-lg font-semibold truncate flex-1">
-            {infographic.title}
-          </h1>
-          <div className="flex items-center gap-2">
-            <ApproveButton
-              isApproved={isApproved}
-              isAdmin={isAdmin}
-              onApprove={() => approve.mutate({ id: infographicId })}
-              onRevoke={() => revoke.mutate({ id: infographicId })}
-              isPending={isApprovalPending}
-            />
-            <ExportDropdown
-              imageUrl={displayImageUrl}
-              title={infographic.title}
-              disabled={actions.isGenerating}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={actions.handleSave}
-              disabled={!actions.hasChanges || actions.isSaving}
-            >
-              {actions.isSaving ? <Spinner className="w-4 h-4 mr-1.5" /> : null}
-              Save
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setDeleteConfirmOpen(true)}
-              disabled={actions.isDeleting}
-              aria-label={`Delete ${infographic.title}`}
-            >
-              Delete
-            </Button>
-          </div>
-        </div>
-
-        {/* Main Area */}
-        <div className="flex-1 flex min-h-0">
-          {/* Left Panel - Controls */}
-          <div className="w-[340px] border-r border-border/40 overflow-y-auto p-4 space-y-5">
-            <PromptPanel
-              prompt={settings.prompt}
-              onPromptChange={settings.setPrompt}
-              disabled={actions.isGenerating}
-              isEditMode={hasExistingImage}
-            />
-
-            <StyleSection
-              properties={settings.styleProperties}
-              onChange={settings.setStyleProperties}
-              disabled={actions.isGenerating}
-            />
-
-            <FormatSelector
-              value={settings.format}
-              onChange={settings.setFormat}
-              disabled={actions.isGenerating}
-            />
-
-            <Button
-              className="w-full"
-              onClick={actions.handleGenerate}
-              disabled={!actions.hasPrompt || actions.isGenerating}
-            >
-              {actions.isGenerating ? (
-                <>
-                  <Spinner className="w-4 h-4 mr-2" />
-                  {hasExistingImage ? 'Iterating...' : 'Generating...'}
-                </>
-              ) : hasExistingImage ? (
-                'Iterate'
-              ) : (
-                'Generate'
-              )}
-            </Button>
-
-            {infographic.errorMessage && !actions.isGenerating && (
-              <div
-                className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
-                role="alert"
+      <div className="workbench">
+        {/* Header */}
+        <header className="workbench-header">
+          <div className="workbench-header-content">
+            <div className="workbench-header-row">
+              <Link
+                to="/infographics"
+                className="workbench-back-btn"
+                aria-label="Back to infographics"
               >
-                {infographic.errorMessage}
+                <ArrowLeftIcon />
+              </Link>
+              <div className="workbench-title-group">
+                <div className="min-w-0">
+                  <h1 className="workbench-title">{infographic.title}</h1>
+                </div>
               </div>
-            )}
+              <div className="workbench-meta">
+                <ApproveButton
+                  isApproved={isApproved}
+                  isAdmin={isAdmin}
+                  onApprove={() => approve.mutate({ id: infographicId })}
+                  onRevoke={() => revoke.mutate({ id: infographicId })}
+                  isPending={isApprovalPending}
+                />
+                <ExportDropdown
+                  imageUrl={displayImageUrl}
+                  title={infographic.title}
+                  disabled={actions.isGenerating}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={!hasUnsavedChanges || actions.isSaving}
+                >
+                  {actions.isSaving ? (
+                    <Spinner className="w-4 h-4 mr-1.5" />
+                  ) : null}
+                  Save
+                </Button>
+                <div className="workbench-actions">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    disabled={actions.isDeleting}
+                    className="workbench-delete-btn"
+                    aria-label={`Delete ${infographic.title}`}
+                  >
+                    {actions.isDeleting ? (
+                      <Spinner className="w-4 h-4" />
+                    ) : (
+                      <TrashIcon className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
+        </header>
 
-          {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col p-4 overflow-auto">
-            <PreviewPanel
-              imageUrl={displayImageUrl}
-              title={infographic.title}
-              isGenerating={actions.isGenerating}
+        {/* Main: Sidebar + Canvas */}
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* Controls Sidebar */}
+          <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto overscroll-y-contain">
+              {/* Prompt Section */}
+              <div className="p-5 pb-4">
+                {hasExistingImage && (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mb-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                      Iteration Mode
+                    </p>
+                    <p className="text-xs text-foreground/80 mt-1 leading-relaxed">
+                      Editing an existing image. Generating creates a new
+                      version from the latest result.
+                    </p>
+                    {isViewingHistoricalVersion && selectedVersion && (
+                      <p className="text-[11px] text-muted-foreground mt-1.5">
+                        Viewing v{selectedVersion.versionNumber}. New changes
+                        will build on v
+                        {latestVersionNumber ?? selectedVersion.versionNumber}.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <PromptPanel
+                  prompt={prompt}
+                  onPromptChange={handlePromptChange}
+                  disabled={actions.isGenerating}
+                  isEditMode={hasExistingImage}
+                />
+              </div>
+
+              {/* Style Section */}
+              <div className="border-t border-border/40 p-5 pb-4">
+                <StyleSection
+                  properties={settings.styleProperties}
+                  onChange={settings.setStyleProperties}
+                  disabled={actions.isGenerating}
+                />
+              </div>
+
+              {/* Format Section */}
+              <div className="border-t border-border/40 p-5">
+                <FormatSelector
+                  value={settings.format}
+                  onChange={settings.setFormat}
+                  disabled={actions.isGenerating}
+                />
+              </div>
+            </div>
+
+            {/* Sticky Generate Footer */}
+            <div className="shrink-0 border-t border-border p-4 space-y-3">
+              {infographic.errorMessage && !actions.isGenerating && (
+                <div
+                  className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
+                  role="alert"
+                >
+                  {infographic.errorMessage}
+                </div>
+              )}
+              <Button
+                className="w-full"
+                onClick={handleGenerate}
+                disabled={!hasPrompt || actions.isGenerating}
+              >
+                {actions.isGenerating ? (
+                  <>
+                    <Spinner className="w-4 h-4 mr-2" />
+                    {hasExistingImage
+                      ? 'Generating New Version...'
+                      : 'Generating...'}
+                  </>
+                ) : hasExistingImage ? (
+                  'Generate New Version'
+                ) : (
+                  'Generate'
+                )}
+              </Button>
+            </div>
+          </aside>
+
+          {/* Canvas Area */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
+              <PreviewPanel
+                imageUrl={displayImageUrl}
+                title={infographic.title}
+                isGenerating={actions.isGenerating}
+              />
+            </div>
+            <VersionHistoryStrip
+              versions={versions}
+              selectedVersionId={selectedVersionId}
+              onSelectVersion={handleSelectVersion}
+              isLoading={versionsLoading}
             />
           </div>
         </div>
-
-        {/* Bottom - Version History */}
-        <VersionHistoryStrip
-          versions={versions}
-          selectedVersionId={selectedVersionId}
-          onSelectVersion={handleSelectVersion}
-          isLoading={versionsLoading}
-        />
       </div>
 
       <ConfirmationDialog

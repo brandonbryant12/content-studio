@@ -85,7 +85,10 @@
     "SERVER_POSTGRES_URL",
     "SSE_REDIS_CHANNEL_PREFIX",
     "REDIS_URL",
-    "NODE_TLS_REJECT_UNAUTHORIZED"
+    "NODE_TLS_REJECT_UNAUTHORIZED",
+    "HTTPS_PROXY",
+    "HTTP_PROXY",
+    "NO_PROXY"
   ],
   "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event", "DEV"]
 }

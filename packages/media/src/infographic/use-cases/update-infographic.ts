@@ -2,6 +2,7 @@ import { requireOwnership } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
 import { InfographicRepo } from '../repos';
+import { sanitizeStyleProperties } from '../style-properties';
 
 // =============================================================================
 // Types
@@ -30,7 +31,7 @@ export const updateInfographic = (input: UpdateInfographicInput) =>
       title: input.title,
       prompt: input.prompt,
       styleProperties: input.styleProperties
-        ? [...input.styleProperties]
+        ? sanitizeStyleProperties(input.styleProperties)
         : undefined,
       format: input.format,
     });

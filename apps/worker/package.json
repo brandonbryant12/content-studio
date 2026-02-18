@@ -14,7 +14,7 @@
     "env:remove": "shx -- rm -f .env",
     "env:run": "dotenv --",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
     "start": "NODE_ENV=production NODE_OPTIONS='--enable-source-maps' pnpm env:run node dist/worker.js",
     "typecheck": "tsc --noEmit"
   },

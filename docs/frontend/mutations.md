@@ -54,8 +54,8 @@ export function useOptimisticSaveChanges(podcastId: string) {
       status: VersionStatus.GENERATING_AUDIO,
       segments: variables.segments ?? current.segments,
     }),
-    successMessage: 'Regenerating audio...',
-    errorMessage: 'Failed to save changes',
+    successMessage: "Regenerating audio...",
+    errorMessage: "Failed to save changes",
     showSuccessToast: true,
   });
 }
@@ -65,21 +65,21 @@ export function useOptimisticSaveChanges(podcastId: string) {
 
 ## Cache Update Decision Tree
 
-| Mutation changes cached data? | Other components read this cache? | Needs instant feedback? | Strategy |
-|------|------|------|------|
-| No | -- | -- | None |
-| Yes | No | -- | None |
-| Yes | Yes | Yes | Optimistic (`onMutate`) |
-| Yes | Yes | No | Update in `onSuccess` |
+| Mutation changes cached data? | Other components read this cache? | Needs instant feedback? | Strategy                |
+| ----------------------------- | --------------------------------- | ----------------------- | ----------------------- |
+| No                            | --                                | --                      | None                    |
+| Yes                           | No                                | --                      | None                    |
+| Yes                           | Yes                               | Yes                     | Optimistic (`onMutate`) |
+| Yes                           | Yes                               | No                      | Update in `onSuccess`   |
 
 ## Toast Policy
 
-| Scenario | Toast type | When |
-|----------|-----------|------|
-| Mutation error | `toast.error(getErrorMessage(error, fallback))` | Always |
-| Long operation started | `toast.success("Regenerating audio...")` | Only when `showSuccessToast: true` |
-| SSE confirms completion | `toast.success` in SSE handler | For user-visible completions |
-| Quick CRUD | No success toast | SSE provides confirmation |
+| Scenario                | Toast type                                      | When                               |
+| ----------------------- | ----------------------------------------------- | ---------------------------------- |
+| Mutation error          | `toast.error(getErrorMessage(error, fallback))` | Always                             |
+| Long operation started  | `toast.success("Regenerating audio...")`        | Only when `showSuccessToast: true` |
+| SSE confirms completion | `toast.success` in SSE handler                  | For user-visible completions       |
+| Quick CRUD              | No success toast                                | SSE provides confirmation          |
 
 ## Non-Optimistic Mutations
 
@@ -90,22 +90,46 @@ const deleteMutation = useMutation({
   ...apiClient.podcasts.delete.mutationOptions(),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: listQueryKey });
-    navigate({ to: '/podcasts' });
-    toast.success('Podcast deleted');
+    navigate({ to: "/podcasts" });
+    toast.success("Podcast deleted");
   },
   onError: (error) => {
-    toast.error(getErrorMessage(error, 'Failed to delete podcast'));
+    toast.error(getErrorMessage(error, "Failed to delete podcast"));
   },
 });
 ```
 
 ## Mutation Hook Organization
 
-| Pattern | Location |
-|---------|----------|
-| Shared factory | `apps/web/src/shared/hooks/use-optimistic-mutation.ts` |
-| Feature mutations | `apps/web/src/features/{domain}/hooks/use-optimistic-*.ts` |
+| Pattern              | Location                                                       |
+| -------------------- | -------------------------------------------------------------- |
+| Shared factory       | `apps/web/src/shared/hooks/use-optimistic-mutation.ts`         |
+| Feature mutations    | `apps/web/src/features/{domain}/hooks/use-optimistic-*.ts`     |
 | Action orchestration | `apps/web/src/features/{domain}/hooks/use-{domain}-actions.ts` |
+
+## Chat Stream Hook Pattern
+
+For `useChat` hooks backed by oRPC event iterators:
+
+```tsx
+const transport = {
+  sendMessages: async ({ messages, abortSignal }) => {
+    const iterator = await rawApiClient.chat.research(
+      { messages },
+      { signal: abortSignal },
+    );
+    return eventIteratorToUnproxiedDataStream(iterator);
+  },
+  reconnectToStream: async () => null,
+};
+
+const { status } = useChat({ transport });
+const isStreaming = status === "submitted" || status === "streaming";
+```
+
+- Avoid `ReadableStream<...>` casts in hook code if contract output is properly typed
+- Do not use `status !== 'ready'` for stream state, because it treats error states as active streaming
+- This pattern is lint-enforced in `use-*-chat` hooks
 
 ## Rules
 

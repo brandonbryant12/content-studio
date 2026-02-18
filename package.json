@@ -16,7 +16,7 @@
     "env:remove": "turbo run env:remove",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "pnpm format --write",
-    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
+    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache --max-warnings=0",
     "lint:fix": "pnpm lint --fix",
     "postclean": "git clean -xdf .cache .turbo node_modules",
     "start": "turbo run start",

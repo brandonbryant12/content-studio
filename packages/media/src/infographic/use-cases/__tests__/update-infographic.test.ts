@@ -89,6 +89,38 @@ describe('updateInfographic', () => {
       ]);
       expect(result.format).toBe('landscape');
     });
+
+    it('sanitizes style properties before update', async () => {
+      const user = createTestUser();
+      const infographic = createTestInfographic({ createdBy: user.id });
+
+      const repo = createMockInfographicRepo({
+        findById: () => Effect.succeed(infographic),
+        update: (_id: string, data) =>
+          Effect.succeed({
+            ...infographic,
+            ...data,
+            updatedAt: new Date(),
+          } as Infographic),
+      });
+      const layers = Layer.mergeAll(MockDbLive, repo);
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          updateInfographic({
+            id: infographic.id,
+            styleProperties: [
+              { key: '  Accent  ', value: ' #00ff00 ', type: 'color' },
+              { key: '', value: 'drop me', type: 'text' },
+            ],
+          }),
+        ).pipe(Effect.provide(layers)),
+      );
+
+      expect(result.styleProperties).toEqual([
+        { key: 'Accent', value: '#00ff00', type: 'color' },
+      ]);
+    });
   });
 
   describe('authorization', () => {

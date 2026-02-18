@@ -52,7 +52,7 @@
     "env:remove": "shx -- rm -f .env",
     "env:run": "dotenv --",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
     "push": "pnpm env:run drizzle-kit push",
     "migrate": "pnpm env:run drizzle-kit migrate",
     "generate": "pnpm env:run drizzle-kit generate",

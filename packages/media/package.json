@@ -37,7 +37,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc --build tsconfig.package.json",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"

@@ -9,7 +9,7 @@ import { Queue, type QueueService } from '@repo/queue';
 import { createTestDocument, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { JobId, JobStatus, Document } from '@repo/db/schema';
+import type { JobId, JobStatus } from '@repo/db/schema';
 import { recoverOrphanedResearch } from '../research-recovery';
 
 // =============================================================================

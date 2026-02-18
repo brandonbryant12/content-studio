@@ -1,7 +1,7 @@
 import { useChat } from '@ai-sdk/react';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
 import { useMemo, useCallback } from 'react';
-import type { UIMessage, UIMessageChunk } from 'ai';
+import type { UIMessage } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
 
 const transport = {
@@ -13,9 +13,7 @@ const transport = {
       { messages: options.messages },
       { signal: options.abortSignal },
     );
-    return eventIteratorToUnproxiedDataStream(
-      iterator,
-    ) as ReadableStream<UIMessageChunk>;
+    return eventIteratorToUnproxiedDataStream(iterator);
   },
   reconnectToStream: async () => null,
 };
@@ -25,7 +23,7 @@ export function usePersonaChat() {
     transport,
   });
 
-  const isStreaming = status !== 'ready';
+  const isStreaming = status === 'submitted' || status === 'streaming';
 
   const canCreatePersona = useMemo(
     () => !isStreaming && messages.some((m) => m.role === 'assistant'),

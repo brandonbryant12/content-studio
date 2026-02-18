@@ -1,12 +1,12 @@
-import { configureProxy } from './lib/proxy';
-configureProxy();
-
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Effect } from 'effect';
 import { admin } from './commands/admin';
 import { seed } from './commands/seed';
 import { test } from './commands/test';
+import { configureProxy } from './lib/proxy';
+
+configureProxy();
 
 const cli = Command.make('cli', {}).pipe(
   Command.withDescription('Content Studio developer CLI'),

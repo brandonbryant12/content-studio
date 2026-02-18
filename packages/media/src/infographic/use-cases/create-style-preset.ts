@@ -1,7 +1,8 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import type { StyleProperty } from '@repo/db/schema';
 import { Effect } from 'effect';
+import type { StyleProperty } from '@repo/db/schema';
 import { StylePresetRepo } from '../repos';
+import { sanitizeStyleProperties } from '../style-properties';
 
 // =============================================================================
 // Types
@@ -23,7 +24,7 @@ export const createStylePreset = (input: CreateStylePresetInput) =>
 
     return yield* repo.insert({
       name: input.name,
-      properties: [...input.properties],
+      properties: sanitizeStyleProperties(input.properties),
       isBuiltIn: false,
       createdBy: user.id,
     });

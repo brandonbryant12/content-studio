@@ -1,4 +1,4 @@
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { Db, withDb, type DatabaseError } from '@repo/db/effect';
 import {
   infographic,
   infographicVersion,
@@ -287,4 +287,7 @@ const make: InfographicRepoService = {
 // =============================================================================
 
 export const InfographicRepoLive: Layer.Layer<InfographicRepo, never, Db> =
-  Layer.succeed(InfographicRepo, make);
+  Layer.effect(
+    InfographicRepo,
+    Effect.map(Db, () => make),
+  );

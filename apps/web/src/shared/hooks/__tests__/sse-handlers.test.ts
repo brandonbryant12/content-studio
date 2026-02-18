@@ -3,8 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type {
   JobCompletionEvent,
   EntityChangeEvent,
+  InfographicJobCompletionEvent,
 } from '@repo/api/contracts';
-import { handleJobCompletion, handleEntityChange } from '../sse-handlers';
+import {
+  handleJobCompletion,
+  handleEntityChange,
+  handleInfographicJobCompletion,
+} from '../sse-handlers';
 
 // Mock the apiClient
 vi.mock('@/clients/apiClient', () => ({
@@ -30,6 +35,23 @@ vi.mock('@/clients/apiClient', () => ({
       list: {
         queryOptions: vi.fn(() => ({
           queryKey: ['documents', 'list'],
+        })),
+      },
+    },
+    infographics: {
+      get: {
+        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+          queryKey: ['infographics', 'get', input.id],
+        })),
+      },
+      list: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ['infographics', 'list'],
+        })),
+      },
+      listVersions: {
+        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+          queryKey: ['infographics', 'versions', input.id],
         })),
       },
     },
@@ -136,6 +158,31 @@ describe('SSE Handlers', () => {
       handleJobCompletion(event, queryClient);
 
       expect(invalidateSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('handleInfographicJobCompletion', () => {
+    it('invalidates infographic, list, and versions queries', () => {
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+      const event: InfographicJobCompletionEvent = {
+        type: 'infographic_job_completion',
+        jobId: 'job-123',
+        jobType: 'generate-infographic',
+        status: 'completed',
+        infographicId: 'infographic-456',
+      };
+
+      handleInfographicJobCompletion(event, queryClient);
+
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['infographics', 'get', 'infographic-456'],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['infographics', 'list'],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['infographics', 'versions', 'infographic-456'],
+      });
     });
   });
 
@@ -273,6 +320,30 @@ describe('SSE Handlers', () => {
           queryKey: ['documents', 'list'],
         });
         expect(invalidateSpy).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('infographic changes', () => {
+      it('invalidates infographic query and versions on update', () => {
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+        const event: EntityChangeEvent = {
+          type: 'entity_change',
+          entityType: 'infographic',
+          changeType: 'update',
+          entityId: 'infographic-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+        };
+
+        handleEntityChange(event, queryClient);
+
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['infographics', 'get', 'infographic-123'],
+        });
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['infographics', 'versions', 'infographic-123'],
+        });
       });
     });
   });

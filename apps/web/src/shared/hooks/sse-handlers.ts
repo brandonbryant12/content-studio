@@ -35,6 +35,11 @@ const getInfographicQueryKey = (infographicId: string) =>
 const getInfographicsListQueryKey = () =>
   apiClient.infographics.list.queryOptions({ input: {} }).queryKey;
 
+const getInfographicVersionsQueryKey = (infographicId: string) =>
+  apiClient.infographics.listVersions.queryOptions({
+    input: { id: infographicId },
+  }).queryKey;
+
 export function handleJobCompletion(
   event: JobCompletionEvent,
   queryClient: QueryClient,
@@ -92,6 +97,11 @@ export function handleInfographicJobCompletion(
   queryClient.invalidateQueries({
     queryKey: getInfographicsListQueryKey(),
   });
+
+  // Versions are rendered in the workbench timeline.
+  queryClient.invalidateQueries({
+    queryKey: getInfographicVersionsQueryKey(infographicId),
+  });
 }
 
 export function handleDocumentJobCompletion(
@@ -144,6 +154,12 @@ export function handleEntityChange(
   if (!keys) return;
 
   queryClient.invalidateQueries({ queryKey: keys.get(entityId) });
+
+  if (entityType === 'infographic') {
+    queryClient.invalidateQueries({
+      queryKey: getInfographicVersionsQueryKey(entityId),
+    });
+  }
 
   if (changeType === 'insert' || changeType === 'delete') {
     queryClient.invalidateQueries({ queryKey: keys.list() });

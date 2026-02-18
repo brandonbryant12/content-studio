@@ -36,9 +36,7 @@ describe('buildInfographicPrompt', () => {
 
   it('formats color properties with exact-color instruction', () => {
     const result = buildInfographicPrompt({
-      styleProperties: [
-        { key: 'Primary', value: '#0050ff', type: 'color' },
-      ],
+      styleProperties: [{ key: 'Primary', value: '#0050ff', type: 'color' }],
       format: 'square',
       prompt: 'test',
     });
@@ -98,7 +96,9 @@ describe('buildInfographicPrompt', () => {
 
     expect(result).toContain('existing infographic');
     expect(result).toContain('Apply the style directives provided');
-    expect(result).not.toContain('Preserve the overall layout, typography, and color scheme');
+    expect(result).not.toContain(
+      'Preserve the overall layout, typography, and color scheme',
+    );
     expect(result).toContain('Edit instructions: Make the title bigger');
     expect(result).not.toContain('Content direction:');
     expect(result).toContain('Accent: #ff0000');
@@ -124,7 +124,11 @@ describe('buildInfographicPrompt', () => {
         { key: 'Background', value: '#0a0a0f', type: 'color' },
         { key: 'Glow Color', value: '#ff00ff', type: 'color' },
         { key: 'Columns', value: '3', type: 'number' },
-        { key: 'Typography', value: 'Uppercase, wide letter-spacing', type: 'text' },
+        {
+          key: 'Typography',
+          value: 'Uppercase, wide letter-spacing',
+          type: 'text',
+        },
         { key: 'Mood', value: 'Blade Runner meets data', type: 'text' },
       ],
       format: 'landscape',

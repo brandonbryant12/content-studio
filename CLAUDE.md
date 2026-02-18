@@ -57,6 +57,15 @@ pnpm test:e2e     # Run Playwright e2e tests
 pnpm test:db:setup # Start test DB container + push schema
 ```
 
+## Regression Guardrails
+
+- **Never hardcode query keys** for invalidation. Export/use `getXQueryKey()` helpers derived from `apiClient...queryOptions().queryKey`.
+- **No unsafe production casts** like `as never` for API/mutation inputs. Prefer typed inputs/outputs at the contract boundary.
+- **Chat streams must be concretely typed** (`UIMessageChunk`) in contracts. Avoid `eventIterator(type<unknown>())` for chat endpoints.
+- **`useChat` streaming state must be explicit**: `status === 'submitted' || status === 'streaming'` (not `status !== 'ready'`).
+- **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
+- **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
+
 ## Effect Layer Rules
 
 - **`Layer.succeed`** — only for pure object literals (repos, plain config). No `new` or factory calls.

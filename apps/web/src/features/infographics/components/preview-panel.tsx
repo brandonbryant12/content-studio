@@ -9,14 +9,14 @@ interface PreviewPanelProps {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
-        <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+    <div className="flex flex-col items-center justify-center text-center px-8">
+      <div className="w-20 h-20 rounded-2xl bg-card border border-border/60 flex items-center justify-center mb-5 shadow-sm">
+        <ImageIcon className="w-9 h-9 text-muted-foreground/40" />
       </div>
       <p className="text-sm font-medium text-muted-foreground">
         No image generated yet
       </p>
-      <p className="text-xs text-muted-foreground/70 mt-1">
+      <p className="text-xs text-muted-foreground/60 mt-1.5 max-w-[260px] leading-relaxed">
         Write a prompt and click Generate to create your infographic
       </p>
     </div>
@@ -25,7 +25,7 @@ function EmptyState() {
 
 function LoadingSkeleton() {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center gap-4">
+    <div className="flex flex-col items-center justify-center text-center gap-4">
       <Spinner className="w-8 h-8" />
       <div>
         <p className="text-sm font-medium">Generating infographic...</p>
@@ -42,27 +42,14 @@ export function PreviewPanel({
   title,
   isGenerating,
 }: PreviewPanelProps) {
-  const content = isGenerating ? (
-    <LoadingSkeleton />
-  ) : !imageUrl ? (
-    <EmptyState />
-  ) : (
+  if (isGenerating) return <LoadingSkeleton />;
+  if (!imageUrl) return <EmptyState />;
+
+  return (
     <img
       src={imageUrl}
       alt={`${title} infographic`}
-      className="max-w-full max-h-full rounded-lg object-contain"
+      className="max-w-full max-h-full rounded-lg object-contain shadow-lg ring-1 ring-border/10"
     />
-  );
-
-  return (
-    <div
-      className={`flex-1 flex flex-col items-center justify-center border border-border/40 rounded-xl min-h-[400px] ${
-        imageUrl && !isGenerating
-          ? 'bg-muted/10 p-4 overflow-hidden'
-          : 'bg-muted/20'
-      }`}
-    >
-      {content}
-    </div>
   );
 }

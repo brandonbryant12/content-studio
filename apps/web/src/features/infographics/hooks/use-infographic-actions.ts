@@ -18,8 +18,8 @@ export interface UseInfographicActionsReturn {
   isPendingGeneration: boolean;
   isDeleting: boolean;
   hasPrompt: boolean;
-  handleSave: () => Promise<void>;
-  handleGenerate: () => Promise<void>;
+  handleSave: (promptOverride?: string) => Promise<void>;
+  handleGenerate: (promptOverride?: string) => Promise<void>;
   handleDelete: () => void;
 }
 
@@ -54,29 +54,49 @@ export function useInfographicActions({
   const isPendingGeneration = generateMutation.isPending;
   const hasPrompt = settings.prompt.trim().length > 0;
 
-  const handleSave = useCallback(async () => {
-    if (settings.isSaving || generateMutation.isPending) return;
-    if (!settings.hasChanges) return;
+  const handleSave = useCallback(
+    async (promptOverride?: string) => {
+      if (settings.isSaving || generateMutation.isPending) return;
+      const hasPromptOverride =
+        typeof promptOverride === 'string' &&
+        promptOverride !== settings.prompt;
+      if (!settings.hasChanges && !hasPromptOverride) return;
 
-    await settings.saveSettings();
-    toast.success('Settings saved');
-  }, [settings, generateMutation.isPending]);
+      await settings.saveSettings(
+        hasPromptOverride ? { prompt: promptOverride } : undefined,
+      );
+      toast.success('Settings saved');
+    },
+    [settings, generateMutation.isPending],
+  );
 
-  const handleGenerate = useCallback(async () => {
-    if (isPendingGeneration || isGenerating) return;
+  const handleGenerate = useCallback(
+    async (promptOverride?: string) => {
+      if (isPendingGeneration || isGenerating) return;
 
-    if (settings.hasChanges) {
-      await settings.saveSettings();
-    }
+      const nextPrompt = promptOverride ?? settings.prompt;
+      if (nextPrompt.trim().length === 0) return;
 
-    generateMutation.mutate({ id: infographic.id });
-  }, [
-    isPendingGeneration,
-    isGenerating,
-    settings,
-    generateMutation,
-    infographic.id,
-  ]);
+      const hasPromptOverride =
+        typeof promptOverride === 'string' &&
+        promptOverride !== settings.prompt;
+
+      if (settings.hasChanges || hasPromptOverride) {
+        await settings.saveSettings(
+          hasPromptOverride ? { prompt: promptOverride } : undefined,
+        );
+      }
+
+      generateMutation.mutate({ id: infographic.id });
+    },
+    [
+      isPendingGeneration,
+      isGenerating,
+      settings,
+      generateMutation,
+      infographic.id,
+    ],
+  );
 
   const handleDelete = useCallback(() => {
     deleteMutation.mutate({ id: infographic.id });

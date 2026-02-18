@@ -17,6 +17,8 @@ export interface CreateTestPodcastOptions {
   hostVoiceName?: string | null;
   coHostVoice?: string | null;
   coHostVoiceName?: string | null;
+  hostPersonaId?: Podcast['hostPersonaId'];
+  coHostPersonaId?: Podcast['coHostPersonaId'];
   promptInstructions?: string | null;
   targetDurationMinutes?: number | null;
   tags?: string[];
@@ -62,6 +64,8 @@ export function createTestPodcast(
     hostVoiceName: options.hostVoiceName ?? 'Charon',
     coHostVoice: options.coHostVoice ?? 'Kore',
     coHostVoiceName: options.coHostVoiceName ?? 'Kore',
+    hostPersonaId: options.hostPersonaId ?? null,
+    coHostPersonaId: options.coHostPersonaId ?? null,
     promptInstructions: options.promptInstructions ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
     tags: options.tags ?? [],

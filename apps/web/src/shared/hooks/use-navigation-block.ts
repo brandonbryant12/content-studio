@@ -1,22 +1,33 @@
 import { useBlocker } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 interface UseNavigationBlockOptions {
   shouldBlock: boolean;
+  confirmMessage?: string;
 }
 
-export function useNavigationBlock({ shouldBlock }: UseNavigationBlockOptions) {
+const DEFAULT_CONFIRM_MESSAGE =
+  'You have unsaved changes. If you leave this page, your changes will be lost.';
+
+export function useNavigationBlock({
+  shouldBlock,
+  confirmMessage = DEFAULT_CONFIRM_MESSAGE,
+}: UseNavigationBlockOptions) {
+  const shouldBlockNavigation = useCallback(() => {
+    if (!shouldBlock) return false;
+    return !window.confirm(confirmMessage);
+  }, [shouldBlock, confirmMessage]);
+
   useBlocker({
-    shouldBlockFn: () => shouldBlock,
-    withResolver: true,
+    shouldBlockFn: shouldBlockNavigation,
   });
 
   useEffect(() => {
+    if (!shouldBlock) return;
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (shouldBlock) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
+      e.preventDefault();
+      e.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);

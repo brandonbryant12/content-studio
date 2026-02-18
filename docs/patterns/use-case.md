@@ -106,6 +106,22 @@ Use cases access data through repos, never via direct DB imports. If a repo meth
 
 Never swallow errors with `Effect.catchAll(() => Effect.succeed(null))`. Propagate or handle explicitly.
 
+### 9. Authorize Before Mutating Existing Data <!-- enforced-by: manual-review -->
+
+For update/delete operations on existing entities:
+
+- Load existing entity first
+- Enforce `requireOwnership(...)` (or explicit role policy) before write/delete
+- Do not rely on client filtering as authorization
+
+### 10. Sanitize User-Editable Structured Inputs <!-- enforced-by: manual-review -->
+
+When persisting prompt/style-like key-value inputs:
+
+- Trim whitespace
+- Drop empty key/value entries
+- Normalize optional enum-like fields before storing or prompt composition
+
 ## Index File
 
 ```typescript

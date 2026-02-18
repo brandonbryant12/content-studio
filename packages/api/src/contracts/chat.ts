@@ -1,5 +1,8 @@
 import { oc, eventIterator, type } from '@orpc/contract';
-import type { UIMessage } from 'ai';
+import type { UIMessage, UIMessageChunk } from 'ai';
+
+const ChatMessagesInput = type<{ messages: UIMessage[] }>();
+const ChatStreamOutput = eventIterator(type<UIMessageChunk>());
 
 const chatContract = oc
   .prefix('/chat')
@@ -7,22 +10,27 @@ const chatContract = oc
   .router({
     research: oc
       .route({ method: 'POST', path: '/research' })
-      .input(type<{ messages: UIMessage[] }>())
-      .output(eventIterator(type<unknown>())),
+      .input(ChatMessagesInput)
+      .output(ChatStreamOutput),
 
     synthesizeResearchQuery: oc
       .route({ method: 'POST', path: '/synthesize-research-query' })
-      .input(type<{ messages: UIMessage[] }>())
+      .input(ChatMessagesInput)
       .output(type<{ query: string; title: string }>()),
 
     personaChat: oc
       .route({ method: 'POST', path: '/persona-chat' })
-      .input(type<{ messages: UIMessage[] }>())
-      .output(eventIterator(type<unknown>())),
+      .input(ChatMessagesInput)
+      .output(ChatStreamOutput),
+
+    writingAssistant: oc
+      .route({ method: 'POST', path: '/writing-assistant' })
+      .input(ChatMessagesInput)
+      .output(ChatStreamOutput),
 
     synthesizePersona: oc
       .route({ method: 'POST', path: '/synthesize-persona' })
-      .input(type<{ messages: UIMessage[] }>())
+      .input(ChatMessagesInput)
       .output(
         type<{
           name: string;

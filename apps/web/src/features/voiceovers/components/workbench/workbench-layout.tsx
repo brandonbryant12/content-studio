@@ -15,6 +15,7 @@ type VoiceoverFull = RouterOutput['voiceovers']['get'];
 interface WorkbenchLayoutProps {
   voiceover: VoiceoverFull;
   children: ReactNode;
+  rightPanel?: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
@@ -28,6 +29,7 @@ interface WorkbenchLayoutProps {
 export function WorkbenchLayout({
   voiceover,
   children,
+  rightPanel,
   actionBar,
   onDelete,
   isDeleting,
@@ -128,9 +130,20 @@ export function WorkbenchLayout({
           </div>
         </header>
 
-        {/* Main content - single panel (voiceover is simpler than podcast) */}
+        {/* Main content */}
         <div className="workbench-main">
-          <div className="workbench-scroll-container">{children}</div>
+          {rightPanel ? (
+            <>
+              <div className="workbench-panel-left">
+                <div className="workbench-scroll-container">{children}</div>
+              </div>
+              <aside className="workbench-panel-right flex flex-col">
+                {rightPanel}
+              </aside>
+            </>
+          ) : (
+            <div className="workbench-scroll-container">{children}</div>
+          )}
         </div>
 
         {/* Global Action Bar */}

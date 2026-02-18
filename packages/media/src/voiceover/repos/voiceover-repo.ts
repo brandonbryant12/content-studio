@@ -1,4 +1,4 @@
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { Db, withDb, type DatabaseError } from '@repo/db/effect';
 import {
   voiceover,
   type Voiceover,
@@ -297,4 +297,7 @@ const make: VoiceoverRepoService = {
 // =============================================================================
 
 export const VoiceoverRepoLive: Layer.Layer<VoiceoverRepo, never, Db> =
-  Layer.succeed(VoiceoverRepo, make);
+  Layer.effect(
+    VoiceoverRepo,
+    Effect.map(Db, () => make),
+  );

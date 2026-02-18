@@ -4,6 +4,7 @@ import { useVoiceover } from '../hooks/use-voiceover';
 import { useVoiceoverActions } from '../hooks/use-voiceover-actions';
 import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
 import { VoiceoverDetail } from './voiceover-detail';
+import { WritingAssistantContainer } from './workbench/writing-assistant-container';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
@@ -78,6 +79,7 @@ export function VoiceoverDetailContainer({
       voiceover={voiceover}
       settings={settings}
       displayAudio={displayAudio}
+      assistantPanel={<WritingAssistantContainer voiceoverId={voiceoverId} />}
       workbenchState={workbenchState}
       approvalState={approvalState}
       onGenerate={actions.handleGenerate}

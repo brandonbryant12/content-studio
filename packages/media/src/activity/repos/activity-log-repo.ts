@@ -1,4 +1,4 @@
-import { withDb, type Db, type DatabaseError } from '@repo/db/effect';
+import { Db, withDb, type DatabaseError } from '@repo/db/effect';
 import {
   activityLog,
   type ActivityLog,
@@ -15,8 +15,7 @@ import {
   count as drizzleCount,
   gt,
 } from 'drizzle-orm';
-import { Context, Layer } from 'effect';
-import type { Effect } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
 // =============================================================================
 // Input Types
@@ -248,4 +247,7 @@ const make: ActivityLogRepoService = {
 // =============================================================================
 
 export const ActivityLogRepoLive: Layer.Layer<ActivityLogRepo, never, Db> =
-  Layer.succeed(ActivityLogRepo, make);
+  Layer.effect(
+    ActivityLogRepo,
+    Effect.map(Db, () => make),
+  );
