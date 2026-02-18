@@ -8,7 +8,7 @@ import {
   type VoiceoverOutput,
   type VoiceoverListItemOutput,
 } from '@repo/db/schema';
-import { VoiceoverRepoLive } from '@repo/media';
+import { ActivityLogRepoLive, VoiceoverRepoLive } from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
@@ -147,6 +147,9 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const voiceoverRepoLayer = VoiceoverRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const activityLogRepoLayer = ActivityLogRepoLive.pipe(
+    Layer.provide(ctx.dbLayer),
+  );
   const queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -154,6 +157,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     mockAILayers,
     policyLayer,
     voiceoverRepoLayer,
+    activityLogRepoLayer,
     queueLayer,
   );
 

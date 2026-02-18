@@ -1,6 +1,11 @@
 import { requireOwnership } from '@repo/auth/policy';
 import { Effect, Schema } from 'effect';
-import type { PersonaId, Podcast, ScriptSegment } from '@repo/db/schema';
+import {
+  VersionStatus,
+  type PersonaId,
+  type Podcast,
+  type ScriptSegment,
+} from '@repo/db/schema';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -55,12 +60,12 @@ export const saveChanges = (input: SaveChangesInput) =>
     const podcast = yield* podcastRepo.findById(input.podcastId);
     yield* requireOwnership(podcast.createdBy);
 
-    if (podcast.status !== 'ready') {
+    if (podcast.status !== VersionStatus.READY) {
       return yield* Effect.fail(
         new InvalidSaveError({
           podcastId: podcast.id,
           currentStatus: podcast.status,
-          message: `Cannot save changes when status is '${podcast.status}'. Podcast must be in 'ready' status.`,
+          message: `Cannot save changes when status is '${podcast.status}'. Podcast must be in '${VersionStatus.READY}' status.`,
         }),
       );
     }
@@ -108,7 +113,7 @@ export const saveChanges = (input: SaveChangesInput) =>
     yield* podcastRepo.clearAudio(input.podcastId);
     const updatedPodcast = yield* podcastRepo.updateStatus(
       input.podcastId,
-      'script_ready',
+      VersionStatus.SCRIPT_READY,
     );
     yield* podcastRepo.clearApproval(input.podcastId);
 

@@ -11,7 +11,11 @@ import {
   type PodcastId,
   type JobId,
 } from '@repo/db/schema';
-import { PodcastRepoLive, DocumentRepoLive } from '@repo/media';
+import {
+  ActivityLogRepoLive,
+  PodcastRepoLive,
+  DocumentRepoLive,
+} from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
@@ -158,6 +162,9 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const activityLogRepoLayer = ActivityLogRepoLive.pipe(
+    Layer.provide(ctx.dbLayer),
+  );
   const queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -166,6 +173,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     policyLayer,
     documentRepoLayer,
     podcastRepoLayer,
+    activityLogRepoLayer,
     queueLayer,
   );
 

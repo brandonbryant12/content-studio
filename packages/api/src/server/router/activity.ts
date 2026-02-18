@@ -1,7 +1,4 @@
-import {
-  serializeActivityLogsEffect,
-  type ActivityLogWithUser,
-} from '@repo/db/schema';
+import { serializeActivityLogsEffect } from '@repo/db/schema';
 import { listActivity, getActivityStats } from '@repo/media';
 import { Effect } from 'effect';
 import { handleEffectWithProtocol } from '../effect-handler';
@@ -15,9 +12,7 @@ const activityRouter = {
         context.user,
         listActivity(input).pipe(
           Effect.flatMap((result) =>
-            serializeActivityLogsEffect(
-              result.data as readonly ActivityLogWithUser[],
-            ).pipe(
+            serializeActivityLogsEffect(result.data).pipe(
               Effect.map((data) => ({
                 data,
                 hasMore: result.hasMore,

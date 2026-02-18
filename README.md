@@ -48,7 +48,7 @@ MinIO credentials: `minioadmin` / `minioadmin`
 
 ### 2b. Local development
 
-Requires Node.js 20+, pnpm, and Docker (for Postgres + Redis).
+Requires Node.js 22.10+, pnpm, and Docker (for Postgres + Redis).
 
 ```bash
 pnpm install

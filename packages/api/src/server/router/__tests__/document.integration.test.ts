@@ -6,7 +6,7 @@ import {
   type DocumentOutput,
   type DocumentId,
 } from '@repo/db/schema';
-import { DocumentRepoLive } from '@repo/media';
+import { ActivityLogRepoLive, DocumentRepoLive } from '@repo/media';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
@@ -134,12 +134,16 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
   );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
   const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const activityLogRepoLayer = ActivityLogRepoLive.pipe(
+    Layer.provide(ctx.dbLayer),
+  );
 
   const allLayers = Layer.mergeAll(
     ctx.dbLayer,
     mockAILayers,
     policyLayer,
     documentRepoLayer,
+    activityLogRepoLayer,
   );
 
   return createTestServerRuntime(allLayers);

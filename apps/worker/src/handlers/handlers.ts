@@ -8,6 +8,7 @@ import {
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
+import { DocumentStatus } from '@repo/db/schema';
 import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
 import type {
@@ -27,7 +28,9 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
     // Wait for any pending research documents before generating script
     const podcastRepo = yield* PodcastRepo;
     const podcast = yield* podcastRepo.findById(podcastId);
-    const pendingDocs = podcast.documents.filter((d) => d.status !== 'ready');
+    const pendingDocs = podcast.documents.filter(
+      (d) => d.status !== DocumentStatus.READY,
+    );
     if (pendingDocs.length > 0) {
       yield* Effect.logInfo(
         `Waiting for ${pendingDocs.length} document(s) to become ready...`,
