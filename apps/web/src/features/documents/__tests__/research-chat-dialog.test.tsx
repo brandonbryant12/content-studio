@@ -15,6 +15,8 @@ const defaultProps = {
   onSendMessage: vi.fn(),
   onStartResearch: vi.fn(),
   isStartingResearch: false,
+  autoGeneratePodcast: false,
+  onAutoGeneratePodcastChange: vi.fn(),
 };
 
 const messagesFixture: UIMessage[] = [
@@ -215,5 +217,25 @@ describe('ResearchChatDialog', () => {
     expect(
       screen.getByPlaceholderText('Research is starting automatically...'),
     ).toBeInTheDocument();
+  });
+
+  it('calls onAutoGeneratePodcastChange when checkbox toggled', async () => {
+    const user = userEvent.setup();
+    const onAutoGeneratePodcastChange = vi.fn();
+
+    render(
+      <ResearchChatDialog
+        {...defaultProps}
+        onAutoGeneratePodcastChange={onAutoGeneratePodcastChange}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'Auto-generate podcast from findings',
+      }),
+    );
+
+    expect(onAutoGeneratePodcastChange).toHaveBeenCalledWith(true);
   });
 });

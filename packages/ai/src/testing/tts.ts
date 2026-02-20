@@ -162,7 +162,6 @@ export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
       }),
   };
 
-   
   return Layer.succeed(TTS, service);
 }
 

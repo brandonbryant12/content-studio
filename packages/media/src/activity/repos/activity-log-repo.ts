@@ -1,7 +1,7 @@
 import { type Db, type DatabaseError } from '@repo/db/effect';
 import { type ActivityLog, type ActivityLogWithUser } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { activityLogReadMethods } from './activity-log-repo.reads';
 import { activityLogWriteMethods } from './activity-log-repo.writes';
 

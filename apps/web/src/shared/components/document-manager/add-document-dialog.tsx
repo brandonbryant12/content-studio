@@ -1,3 +1,6 @@
+import { GlobeIcon } from '@radix-ui/react-icons';
+import { Button } from '@repo/ui/components/button';
+import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -28,7 +31,11 @@ export function AddDocumentDialog({
 }: AddDocumentDialogProps) {
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing');
+  const [activeTab, setActiveTab] = useState<'existing' | 'upload' | 'url'>(
+    'existing',
+  );
+  const [urlInput, setUrlInput] = useState('');
+  const [urlTitle, setUrlTitle] = useState('');
 
   const { data: allDocuments, isLoading: loadingDocs } = useDocuments({
     enabled: open,
@@ -44,6 +51,20 @@ export function AddDocumentDialog({
       },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to upload document'));
+      },
+    }),
+  );
+
+  const fromUrlMutation = useMutation(
+    apiClient.documents.fromUrl.mutationOptions({
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
+        toast.success('URL added — content is being processed');
+        onAddDocuments([data]);
+        handleClose();
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to add URL'));
       },
     }),
   );
@@ -72,6 +93,8 @@ export function AddDocumentDialog({
     onOpenChange(false);
     setSelectedIds([]);
     setActiveTab('existing');
+    setUrlInput('');
+    setUrlTitle('');
   };
 
   const handleUpload = useCallback(
@@ -88,6 +111,16 @@ export function AddDocumentDialog({
     [uploadMutation],
   );
 
+  const handleCreateFromUrl = useCallback(() => {
+    const url = urlInput.trim();
+    if (!url) return;
+
+    fromUrlMutation.mutate({
+      url,
+      title: urlTitle.trim() || undefined,
+    });
+  }, [fromUrlMutation, urlInput, urlTitle]);
+
   return (
     <BaseDialog
       open={open}
@@ -96,7 +129,7 @@ export function AddDocumentDialog({
         else onOpenChange(isOpen);
       }}
       title="Add Documents"
-      description="Select existing documents or upload new ones."
+      description="Select existing documents, upload new ones, or add from a URL."
       maxWidth="lg"
       scrollable
       footer={
@@ -130,6 +163,15 @@ export function AddDocumentDialog({
         >
           Upload New
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'url'}
+          onClick={() => setActiveTab('url')}
+          className={`setup-tab ${activeTab === 'url' ? 'active' : ''}`}
+        >
+          From URL
+        </button>
       </div>
 
       {activeTab === 'existing' ? (
@@ -140,11 +182,72 @@ export function AddDocumentDialog({
           onToggleDocument={toggleDocument}
           onSwitchToUpload={() => setActiveTab('upload')}
         />
-      ) : (
+      ) : activeTab === 'upload' ? (
         <DocumentUploader
           onUpload={handleUpload}
           isUploading={uploadMutation.isPending}
         />
+      ) : (
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateFromUrl();
+          }}
+        >
+          <div className="setup-field">
+            <label htmlFor="dialog-doc-url" className="setup-label">
+              URL
+            </label>
+            <input
+              id="dialog-doc-url"
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="https://example.com/article"
+              className="setup-input"
+              required
+              disabled={fromUrlMutation.isPending}
+              autoFocus
+            />
+          </div>
+
+          <div className="setup-field">
+            <label htmlFor="dialog-doc-url-title" className="setup-label">
+              Title{' '}
+              <span className="text-muted-foreground font-normal">
+                (optional)
+              </span>
+            </label>
+            <input
+              id="dialog-doc-url-title"
+              type="text"
+              value={urlTitle}
+              onChange={(e) => setUrlTitle(e.target.value)}
+              placeholder="Auto-detected from page"
+              className="setup-input"
+              disabled={fromUrlMutation.isPending}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={!urlInput.trim() || fromUrlMutation.isPending}
+            className="w-full"
+          >
+            {fromUrlMutation.isPending ? (
+              <>
+                <Spinner className="w-4 h-4 mr-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <GlobeIcon className="w-4 h-4 mr-2" />
+                Add URL
+              </>
+            )}
+          </Button>
+        </form>
       )}
     </BaseDialog>
   );

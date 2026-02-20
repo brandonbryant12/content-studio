@@ -77,7 +77,6 @@ export function createMockDeepResearch(
       }),
   };
 
-   
   return Layer.succeed(DeepResearch, service);
 }
 

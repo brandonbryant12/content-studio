@@ -1,10 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import {
-  Storage,
-  FilesystemStorageLive,
-} from '@repo/storage';
+import { Storage, FilesystemStorageLive } from '@repo/storage';
 import { Effect } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { StorageNotFoundError } from '@repo/storage';

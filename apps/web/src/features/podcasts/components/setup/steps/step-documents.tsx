@@ -1,6 +1,7 @@
 import {
   FileTextIcon,
   UploadIcon,
+  GlobeIcon,
   Cross2Icon,
   CheckIcon,
   CheckCircledIcon,
@@ -268,6 +269,82 @@ function UploadPanel({
   );
 }
 
+function UrlPanel({
+  url,
+  title,
+  onUrlChange,
+  onTitleChange,
+  onSubmit,
+  isSubmitting,
+}: {
+  url: string;
+  title: string;
+  onUrlChange: (url: string) => void;
+  onTitleChange: (title: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+}) {
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
+      <div className="setup-field">
+        <label htmlFor="doc-url" className="setup-label">
+          URL
+        </label>
+        <input
+          id="doc-url"
+          type="url"
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          placeholder="https://example.com/article"
+          className="setup-input"
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <div className="setup-field">
+        <label htmlFor="doc-url-title" className="setup-label">
+          Title{' '}
+          <span className="text-muted-foreground font-normal">(optional)</span>
+        </label>
+        <input
+          id="doc-url-title"
+          type="text"
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Auto-detected from page"
+          className="setup-input"
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={!url.trim() || isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? (
+          <>
+            <Spinner className="w-4 h-4 mr-2" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <GlobeIcon className="w-4 h-4 mr-2" />
+            Add URL
+          </>
+        )}
+      </Button>
+    </form>
+  );
+}
+
 interface StepDocumentsProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
@@ -283,10 +360,12 @@ export function StepDocuments({
 }: StepDocumentsProps) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
-    'existing' | 'upload' | 'research'
+    'existing' | 'upload' | 'url' | 'research'
   >('existing');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
+  const [urlInput, setUrlInput] = useState('');
+  const [urlTitle, setUrlTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const selectedIdsRef = useRef(selectedIds);
@@ -311,6 +390,14 @@ export function StepDocuments({
     apiClient.documents.upload.mutationOptions({
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to upload document'));
+      },
+    }),
+  );
+
+  const fromUrlMutation = useMutation(
+    apiClient.documents.fromUrl.mutationOptions({
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to add URL'));
       },
     }),
   );
@@ -387,6 +474,35 @@ export function StepDocuments({
     );
   };
 
+  const handleCreateFromUrl = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+
+    fromUrlMutation.mutate(
+      {
+        url,
+        title: urlTitle.trim() || undefined,
+      },
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries({
+            queryKey: getDocumentListQueryKey(),
+          });
+          toast.success('URL added — content is being processed');
+          const currentSelectedIds = selectedIdsRef.current;
+          onSelectionChange(
+            currentSelectedIds.includes(data.id)
+              ? currentSelectedIds
+              : [...currentSelectedIds, data.id],
+          );
+          setUrlInput('');
+          setUrlTitle('');
+          setActiveTab('existing');
+        },
+      },
+    );
+  };
+
   const openFilePicker = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -432,6 +548,15 @@ export function StepDocuments({
           className={`setup-tab ${activeTab === 'upload' ? 'active' : ''}`}
         >
           Upload New
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'url'}
+          onClick={() => setActiveTab('url')}
+          className={`setup-tab ${activeTab === 'url' ? 'active' : ''}`}
+        >
+          From URL
         </button>
         <button
           type="button"
@@ -482,6 +607,17 @@ export function StepDocuments({
           onFilePick={openFilePicker}
           fileInputRef={fileInputRef}
           onFileSelect={handleFileSelect}
+        />
+      </div>
+
+      <div role="tabpanel" aria-label="From URL" hidden={activeTab !== 'url'}>
+        <UrlPanel
+          url={urlInput}
+          title={urlTitle}
+          onUrlChange={setUrlInput}
+          onTitleChange={setUrlTitle}
+          onSubmit={handleCreateFromUrl}
+          isSubmitting={fromUrlMutation.isPending}
         />
       </div>
 

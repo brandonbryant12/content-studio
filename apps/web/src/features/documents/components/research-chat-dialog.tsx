@@ -1,5 +1,6 @@
 import { MagnifyingGlassIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,8 @@ interface ResearchChatDialogProps {
   onSendMessage: (text: string) => void;
   onStartResearch: () => void;
   isStartingResearch: boolean;
+  autoGeneratePodcast: boolean;
+  onAutoGeneratePodcastChange: (value: boolean) => void;
 }
 
 export function ResearchChatDialog({
@@ -45,6 +48,8 @@ export function ResearchChatDialog({
   onSendMessage,
   onStartResearch,
   isStartingResearch,
+  autoGeneratePodcast,
+  onAutoGeneratePodcastChange,
 }: ResearchChatDialogProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -134,9 +139,28 @@ export function ResearchChatDialog({
           <div ref={messagesEndRef} />
         </div>
 
+        <div className="border-t px-6 py-3">
+          <label className="flex items-start gap-3">
+            <Checkbox
+              checked={autoGeneratePodcast}
+              onCheckedChange={(checked) =>
+                onAutoGeneratePodcastChange(checked === true)
+              }
+              disabled={isStartingResearch}
+              aria-label="Auto-generate podcast from findings"
+            />
+            <span className="text-sm leading-5">
+              Auto-generate podcast from findings
+              <span className="block text-xs text-muted-foreground">
+                Uses defaults: 5 min, no custom instructions, Aoede + Charon.
+              </span>
+            </span>
+          </label>
+        </div>
+
         {/* Start Research button */}
         {canStartResearch && (
-          <div className="border-t px-6 py-3 space-y-2">
+          <div className="px-6 pb-3 space-y-2">
             {startError && (
               <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
                 Failed to start research. Please try again.

@@ -48,13 +48,19 @@ const classNameFromMatcherArg = (raw: string): string => {
 
 describe('error assertion invariants', () => {
   it('forbids toBeInstanceOf for tagged/backend errors outside allowlisted built-ins', () => {
-    const roots = [path.join(repoRoot, 'packages'), path.join(repoRoot, 'apps')];
+    const roots = [
+      path.join(repoRoot, 'packages'),
+      path.join(repoRoot, 'apps'),
+    ];
     const testFiles = roots.flatMap(collectTestFiles);
     const offenders: string[] = [];
     const matcher = /toBeInstanceOf\(\s*([A-Za-z0-9_$.]+)\s*\)/g;
 
     for (const file of testFiles) {
-      const relativePath = path.relative(repoRoot, file).split(path.sep).join('/');
+      const relativePath = path
+        .relative(repoRoot, file)
+        .split(path.sep)
+        .join('/');
       if (relativePath.startsWith('apps/web/')) continue;
       if (relativePath.startsWith('packages/testing/')) continue;
 

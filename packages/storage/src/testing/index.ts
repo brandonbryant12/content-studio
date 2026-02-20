@@ -62,7 +62,6 @@ export function createInMemoryStorage(options: MockStorageOptions = {}) {
   };
 
   return {
-     
     layer: Layer.succeed(Storage, service),
     clear: () => store.clear(),
     getStore: () => store,
@@ -93,7 +92,6 @@ export function createMockStorage(
     exists: () => withDelay(options.delay, Effect.succeed(true)),
   };
 
-   
   return Layer.succeed(Storage, service);
 }
 

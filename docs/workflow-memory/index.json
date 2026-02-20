@@ -32,6 +32,39 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-added-url-source-option-to-podcast-document-selection-flows",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added URL source option to podcast document selection flows",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "podcasts",
+      "documents",
+      "url",
+      "frontend"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-auto-generate-podcasts-from-deep-research-documents",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Auto-generate podcasts from deep research documents",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "documents",
+      "research",
+      "podcast",
+      "frontend",
+      "backend"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-auto-start-persona-research-chat-with-bounded-follow-ups",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -255,6 +288,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-tanstack-vite-covered-new-podcast-url-document-paths-with-focused-component-te",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "TanStack + Vite",
+    "title": "Covered new podcast URL document paths with focused component tests",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "tanstack-query",
+      "tests",
+      "podcasts",
+      "documents"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-tanstack-vite-guardrail-auto-trigger-chat-ux-for-research-persona-dialogs",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -267,6 +316,23 @@
       "react-query",
       "chat",
       "ux"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-tanstack-vite-tested-research-auto-podcast-payload-in-manual-and-auto-start-fl",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "TanStack + Vite",
+    "title": "Tested research auto-podcast payload in manual and auto-start flows",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "tanstack-query",
+      "frontend",
+      "tests",
+      "documents",
+      "research"
     ],
     "eventFile": "events/2026-02.jsonl"
   },

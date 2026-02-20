@@ -47,7 +47,6 @@ export function createMockImageGen(
       }),
   };
 
-   
   return Layer.succeed(ImageGen, service);
 }
 

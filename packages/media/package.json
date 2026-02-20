@@ -54,7 +54,8 @@
     "effect": "catalog:",
     "mammoth": "^1.8.0",
     "pdf-parse": "^1.1.1",
-    "pptx-parser": "^1.1.1"
+    "pptx-parser": "^1.1.1",
+    "webpack": "catalog:"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

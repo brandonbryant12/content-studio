@@ -55,7 +55,6 @@ export interface TestContext {
  * @repo/db/client for context.
  */
 function toDbLayer(db: TestDatabaseInstance): Layer.Layer<Db> {
-   
   return Layer.succeed(Db, { db: db as unknown as DatabaseInstance });
 }
 

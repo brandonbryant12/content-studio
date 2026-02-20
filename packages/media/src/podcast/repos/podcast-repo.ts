@@ -10,7 +10,7 @@ import {
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { DocumentNotFound, PodcastNotFound } from '../../errors';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { podcastReadMethods } from './podcast-repo.reads';
 import { podcastWriteMethods } from './podcast-repo.writes';
 

@@ -2,7 +2,7 @@ import { type Db, type DatabaseError } from '@repo/db/effect';
 import { type Voiceover, type VoiceoverStatus } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { VoiceoverNotFound } from '../../errors';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { voiceoverReadMethods } from './voiceover-repo.reads';
 import { voiceoverWriteMethods } from './voiceover-repo.writes';
 

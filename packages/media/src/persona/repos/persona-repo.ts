@@ -2,7 +2,7 @@ import { type Db, type DatabaseError } from '@repo/db/effect';
 import { type Persona } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { PersonaNotFound } from '../../errors';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { personaReadMethods } from './persona-repo.reads';
 import { personaWriteMethods } from './persona-repo.writes';
 

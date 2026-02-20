@@ -1,10 +1,19 @@
 import { DeepResearch, type DeepResearchService } from '@repo/ai';
+import { generateJobId } from '@repo/db/schema';
+import { Queue, type QueueService } from '@repo/queue';
 import { createMockStorage } from '@repo/storage/testing';
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import {
+  createTestDocument,
+  createTestPodcast,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createMockDocumentRepo,
+  createMockPodcastRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { type DocumentRepoService } from '../../repos';
@@ -29,6 +38,22 @@ const mockDocRepo = (overrides: Partial<DocumentRepoService>) =>
     updateResearchConfig: () => Effect.succeed({} as never),
     ...overrides,
   });
+
+const createMockQueue = (overrides: Partial<QueueService> = {}) =>
+  Layer.succeed(Queue, {
+    enqueue: () => Effect.die('not implemented'),
+    getJob: () => Effect.die('not implemented'),
+    getJobsByUser: () => Effect.die('not implemented'),
+    updateJobStatus: () => Effect.die('not implemented'),
+    processNextJob: () => Effect.die('not implemented'),
+    processJobById: () => Effect.die('not implemented'),
+    findPendingJobForPodcast: () => Effect.die('not implemented'),
+    findPendingJobForVoiceover: () => Effect.die('not implemented'),
+    claimNextJob: () => Effect.die('not implemented'),
+    deleteJob: () => Effect.die('not implemented'),
+    failStaleJobs: () => Effect.die('not implemented'),
+    ...overrides,
+  } satisfies QueueService);
 
 // =============================================================================
 // Tests
@@ -56,6 +81,8 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        createMockPodcastRepo(),
+        createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(existingDoc),
           updateContent: () => Effect.succeed(existingDoc),
@@ -102,6 +129,8 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        createMockPodcastRepo(),
+        createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),
@@ -146,6 +175,8 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        createMockPodcastRepo(),
+        createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),
@@ -191,6 +222,8 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        createMockPodcastRepo(),
+        createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(existingDoc),
           updateContent: () => Effect.succeed(existingDoc),
@@ -223,6 +256,128 @@ describe('processResearch', () => {
         const c = config as { researchStatus?: string };
         expect(c.researchStatus).not.toBe('in_progress');
       }
+    });
+  });
+
+  describe('auto podcast generation', () => {
+    it('creates and queues a default podcast when autoGeneratePodcast is enabled', async () => {
+      const user = createTestUser();
+      const enqueueSpy = vi.fn();
+      const insertSpy = vi.fn();
+
+      const doc = createTestDocument({
+        createdBy: user.id,
+        source: 'research',
+        status: 'processing',
+        researchConfig: {
+          query: 'test query',
+          autoGeneratePodcast: true,
+        },
+      });
+
+      let podcast = createTestPodcast({
+        createdBy: user.id,
+        sourceDocumentIds: [doc.id],
+        status: 'drafting',
+      });
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        mockDocRepo({
+          findById: () => Effect.succeed(doc),
+          updateContent: () => Effect.succeed(doc),
+          updateStatus: () => Effect.succeed(doc),
+        }),
+        createMockPodcastRepo({
+          verifyDocumentsExist: () => Effect.succeed([doc]),
+          insert: (data, documentIds) =>
+            Effect.sync(() => {
+              insertSpy(data, documentIds);
+              podcast = createTestPodcast({
+                id: podcast.id,
+                createdBy: data.createdBy,
+                title: data.title ?? podcast.title,
+                format: data.format,
+                sourceDocumentIds: [...documentIds],
+                status: podcast.status,
+                targetDurationMinutes: data.targetDurationMinutes ?? 5,
+                hostVoice: data.hostVoice ?? null,
+                hostVoiceName: data.hostVoiceName ?? null,
+                coHostVoice: data.coHostVoice ?? null,
+                coHostVoiceName: data.coHostVoiceName ?? null,
+              });
+              return { ...podcast, documents: [doc] };
+            }),
+          findByIdForUser: () =>
+            Effect.succeed({ ...podcast, documents: [doc] }),
+          updateStatus: (_id, status) =>
+            Effect.sync(() => {
+              podcast = { ...podcast, status };
+              return podcast;
+            }),
+          clearApproval: () => Effect.succeed(podcast),
+        }),
+        createMockQueue({
+          findPendingJobForPodcast: () => Effect.succeed(null),
+          enqueue: (type, payload, createdBy) =>
+            Effect.sync(() => {
+              enqueueSpy(type, payload, createdBy);
+              return {
+                id: generateJobId(),
+                type,
+                status: 'pending',
+                payload,
+                result: null,
+                error: null,
+                createdBy,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                startedAt: null,
+                completedAt: null,
+              };
+            }),
+        }),
+        createMockDeepResearch({
+          startResearch: () => Effect.succeed({ interactionId: 'op-auto' }),
+          getResult: () =>
+            Effect.succeed({
+              content: 'Research result content',
+              sources: [],
+              wordCount: 3,
+            }),
+        }),
+        createMockStorage(),
+      );
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+
+      expect(insertSpy).toHaveBeenCalledTimes(1);
+      expect(insertSpy.mock.calls[0]?.[0]).toEqual(
+        expect.objectContaining({
+          format: 'conversation',
+          targetDurationMinutes: 5,
+          hostVoice: 'Aoede',
+          hostVoiceName: 'Aoede',
+          coHostVoice: 'Charon',
+          coHostVoiceName: 'Charon',
+        }),
+      );
+      expect(insertSpy.mock.calls[0]?.[1]).toEqual([doc.id]);
+
+      expect(enqueueSpy).toHaveBeenCalledTimes(1);
+      expect(enqueueSpy.mock.calls[0]?.[0]).toBe('generate-podcast');
+      expect(enqueueSpy.mock.calls[0]?.[1]).toEqual(
+        expect.objectContaining({
+          podcastId: podcast.id,
+          userId: user.id,
+        }),
+      );
     });
   });
 });

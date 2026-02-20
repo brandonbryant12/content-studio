@@ -3,11 +3,7 @@
 const isIdentifierNamed = (node, name) =>
   node?.type === 'Identifier' && node.name === name;
 
-const isMemberExpressionNamed = (
-  node,
-  objectName,
-  propertyName,
-) =>
+const isMemberExpressionNamed = (node, objectName, propertyName) =>
   node?.type === 'MemberExpression' &&
   node.computed === false &&
   isIdentifierNamed(node.object, objectName) &&
@@ -155,12 +151,14 @@ const noThrowInEffectGen = {
     return {
       ThrowStatement(node) {
         const ancestors = getAncestors(node);
-        const nearestFunction = [...ancestors].reverse().find(
-          (ancestor) =>
-            ancestor.type === 'FunctionExpression' ||
-            ancestor.type === 'FunctionDeclaration' ||
-            ancestor.type === 'ArrowFunctionExpression',
-        );
+        const nearestFunction = [...ancestors]
+          .reverse()
+          .find(
+            (ancestor) =>
+              ancestor.type === 'FunctionExpression' ||
+              ancestor.type === 'FunctionDeclaration' ||
+              ancestor.type === 'ArrowFunctionExpression',
+          );
 
         if (!nearestFunction) return;
         if (nearestFunction.type !== 'FunctionExpression') return;

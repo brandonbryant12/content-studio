@@ -7,7 +7,7 @@ import {
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { DocumentNotFound } from '../../errors';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { documentReadMethods } from './document-repo.reads';
 import { documentWriteMethods } from './document-repo.writes';
 

@@ -47,6 +47,7 @@ export interface ResearchConfig {
   researchStatus?: string;
   sourceCount?: number;
   sources?: ResearchSource[];
+  autoGeneratePodcast?: boolean;
 }
 
 export const document = pgTable(
@@ -144,6 +145,7 @@ export const ResearchConfigSchema = Schema.Struct({
   researchStatus: Schema.optional(Schema.String),
   sourceCount: Schema.optional(Schema.Number),
   sources: Schema.optional(Schema.Array(ResearchSourceSchema)),
+  autoGeneratePodcast: Schema.optional(Schema.Boolean),
 });
 
 export const DocumentOutputSchema = Schema.Struct({

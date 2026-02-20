@@ -72,7 +72,6 @@ export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
       }),
   };
 
-   
   return Layer.succeed(LLM, service);
 }
 

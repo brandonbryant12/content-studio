@@ -217,6 +217,7 @@ const documentContract = oc
             title: Schema.optional(
               Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
             ),
+            autoGeneratePodcast: Schema.optional(Schema.Boolean),
           }),
         ),
       )

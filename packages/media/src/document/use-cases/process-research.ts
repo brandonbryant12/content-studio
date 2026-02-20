@@ -2,6 +2,9 @@ import { DeepResearch } from '@repo/ai';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Data, Effect } from 'effect';
+import { createPodcast } from '../../podcast/use-cases/create-podcast';
+import { startGeneration } from '../../podcast/use-cases/start-generation';
+import { formatUnknownError } from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 
@@ -43,6 +46,8 @@ export const processResearch = (input: ProcessResearchInput) =>
     const canResume =
       doc.researchConfig?.operationId &&
       doc.researchConfig?.researchStatus === 'in_progress';
+    const autoGeneratePodcast =
+      doc.researchConfig?.autoGeneratePodcast === true;
 
     let interactionId: string;
     if (canResume) {
@@ -60,6 +65,7 @@ export const processResearch = (input: ProcessResearchInput) =>
         query,
         operationId: interactionId,
         researchStatus: 'in_progress',
+        autoGeneratePodcast,
       });
     }
 
@@ -87,6 +93,7 @@ export const processResearch = (input: ProcessResearchInput) =>
         query,
         operationId: interactionId,
         researchStatus: 'failed',
+        autoGeneratePodcast,
       });
       yield* documentRepo.updateStatus(
         documentId,
@@ -101,6 +108,7 @@ export const processResearch = (input: ProcessResearchInput) =>
         query,
         operationId: interactionId,
         researchStatus: 'failed',
+        autoGeneratePodcast,
       });
       yield* documentRepo.updateStatus(
         documentId,
@@ -143,10 +151,37 @@ export const processResearch = (input: ProcessResearchInput) =>
       researchStatus: 'completed',
       sourceCount: result.sources.length,
       sources: result.sources.map((s) => ({ title: s.title, url: s.url })),
+      autoGeneratePodcast,
     });
 
     // 8. Mark document as ready
     yield* documentRepo.updateStatus(documentId, DocumentStatus.READY);
+
+    if (autoGeneratePodcast) {
+      yield* Effect.gen(function* () {
+        const podcast = yield* createPodcast({
+          title: `Podcast: ${doc.title}`,
+          format: 'conversation',
+          documentIds: [doc.id],
+          targetDurationMinutes: 5,
+          hostVoice: 'Aoede',
+          hostVoiceName: 'Aoede',
+          coHostVoice: 'Charon',
+          coHostVoiceName: 'Charon',
+        });
+
+        yield* startGeneration({ podcastId: podcast.id });
+        yield* Effect.logInfo(
+          `Auto-started podcast generation for document ${documentId}`,
+        );
+      }).pipe(
+        Effect.catchAll((error) =>
+          Effect.logWarning(
+            `Failed to auto-generate podcast for document ${documentId}: ${formatUnknownError(error)}`,
+          ),
+        ),
+      );
+    }
 
     return { documentId, wordCount: result.wordCount };
   }).pipe(

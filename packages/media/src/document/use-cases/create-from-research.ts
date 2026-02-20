@@ -12,6 +12,7 @@ import { DocumentRepo } from '../repos';
 export interface CreateFromResearchInput {
   query: string;
   title?: string;
+  autoGeneratePodcast?: boolean;
 }
 
 export const createFromResearch = (input: CreateFromResearchInput) =>
@@ -34,7 +35,10 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
           wordCount: 0,
           source: 'research',
           status: 'processing',
-          researchConfig: { query: input.query },
+          researchConfig: {
+            query: input.query,
+            autoGeneratePodcast: input.autoGeneratePodcast === true,
+          },
           createdBy: user.id,
         });
         insertedDocumentId = doc.id;

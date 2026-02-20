@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
@@ -17,6 +17,7 @@ export function ResearchChatContainer({
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
   const autoStartTriggeredRef = useRef(false);
+  const [autoGeneratePodcast, setAutoGeneratePodcast] = useState(false);
 
   const isStartingResearch =
     synthesizeMutation.isPending || startResearchMutation.isPending;
@@ -27,6 +28,7 @@ export function ResearchChatContainer({
     (isOpen: boolean) => {
       if (!isOpen) {
         autoStartTriggeredRef.current = false;
+        setAutoGeneratePodcast(false);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -48,7 +50,7 @@ export function ResearchChatContainer({
     synthesizeMutation.mutate(chat.messages, {
       onSuccess: ({ query, title }) => {
         startResearchMutation.mutate(
-          { query, title },
+          { query, title, autoGeneratePodcast },
           {
             onSuccess: () => handleOpenChange(false),
           },
@@ -60,6 +62,7 @@ export function ResearchChatContainer({
     isStartingResearch,
     synthesizeMutation,
     startResearchMutation,
+    autoGeneratePodcast,
     handleOpenChange,
   ]);
 
@@ -88,6 +91,8 @@ export function ResearchChatContainer({
       onSendMessage={handleSendMessage}
       onStartResearch={handleStartResearch}
       isStartingResearch={isStartingResearch}
+      autoGeneratePodcast={autoGeneratePodcast}
+      onAutoGeneratePodcastChange={setAutoGeneratePodcast}
     />
   );
 }

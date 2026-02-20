@@ -5,7 +5,7 @@ import {
   type StyleProperty,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { StylePresetNotFound } from '../../errors';
 import { stylePresetMethods } from './style-preset-repo.methods';
 

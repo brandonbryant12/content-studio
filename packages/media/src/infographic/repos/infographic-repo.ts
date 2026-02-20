@@ -8,7 +8,7 @@ import {
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { InfographicNotFound } from '../../errors';
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { infographicReadMethods } from './infographic-repo.reads';
 import { infographicWriteMethods } from './infographic-repo.writes';
 
