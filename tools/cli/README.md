@@ -22,7 +22,11 @@ pnpm cli test <command>
 
 ### `pnpm cli test llm`
 
-Tests LLM structured output generation. Prompts you to select a model (Gemini 2.5 Flash or Pro), calls `LLM.generate` with a schema, and displays the response with token usage.
+Gemini playground for terminal experiments. Prompts for API key + model ID, then lets you pick a mode:
+
+- **Smoke test**: structured greeting + fact response to verify key/model wiring.
+- **Single prompt**: run one custom prompt with optional system prompt, temperature, and max tokens.
+- **Interactive chat**: multi-turn REPL session (`/exit` to quit, `/reset` to clear history) with per-turn token usage output.
 
 ### `pnpm cli test tts`
 

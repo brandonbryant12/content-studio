@@ -2,8 +2,44 @@ import { LLM, LLMError } from '@repo/ai';
 import { MockLLMLive, createMockLLM } from '@repo/ai/testing';
 import { Effect, Schema } from 'effect';
 import { describe, it, expect } from 'vitest';
+import { buildChatPrompt, parseBoundedNumber } from '../commands/test-llm';
 
 describe('test-llm command logic', () => {
+  it('builds a chat prompt with prior turns', () => {
+    const prompt = buildChatPrompt(
+      [
+        { role: 'user', text: 'Hello' },
+        { role: 'assistant', text: 'Hi there' },
+      ],
+      'What can you do?',
+    );
+
+    expect(prompt).toContain('User: Hello');
+    expect(prompt).toContain('Assistant: Hi there');
+    expect(prompt).toContain('User: What can you do?');
+    expect(prompt.endsWith('Assistant:')).toBe(true);
+  });
+
+  it('parses bounded numbers with fallback', () => {
+    expect(parseBoundedNumber('1.2', { fallback: 0.7, min: 0, max: 2 })).toBe(
+      1.2,
+    );
+    expect(
+      parseBoundedNumber('not-a-number', { fallback: 0.7, min: 0, max: 2 }),
+    ).toBe(0.7);
+    expect(
+      parseBoundedNumber('9000', { fallback: 1024, min: 1, max: 8192 }),
+    ).toBe(1024);
+    expect(
+      parseBoundedNumber('99.9', {
+        fallback: 128,
+        min: 1,
+        max: 200,
+        integer: true,
+      }),
+    ).toBe(100);
+  });
+
   it('calls LLM.generate with a schema and returns structured output', async () => {
     const TestSchema = Schema.Struct({
       greeting: Schema.String,
