@@ -225,6 +225,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-migrated-vitest-runner-from-workspace-file-to-projects-config",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Migrated Vitest runner from workspace file to projects config",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "vitest",
+      "tooling",
+      "testing"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-resolved-web-import-order-lint-regressions-in-chat-and-document-",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -395,6 +411,22 @@
       "quality-closure-loop",
       "memory-coverage",
       "lint"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-periodic-scans-quality-loop-found-vitest-workspace-file-deprecation-warning",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Quality loop found Vitest workspace-file deprecation warning",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "vitest",
+      "deprecation",
+      "quality-closure-loop"
     ],
     "eventFile": "events/2026-02.jsonl"
   },

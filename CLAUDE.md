@@ -119,6 +119,6 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 
 - **All dependencies use `catalog:`** in package.json for version alignment via pnpm catalog
 - **Mock repo factories** are in `packages/media/src/test-utils/` — use `createMockPodcastRepo(overrides)` instead of manually stubbing every method with `Effect.die`
-- **Web app tests** are included in the vitest workspace — `pnpm test` runs them
+- **Web app tests** are included in the vitest projects config — `pnpm test` runs them
 - **Don't add jest/ts-jest** — this project uses Vitest exclusively
 - **Root `package.json` only has workspace-level deps** — feature-specific deps go in the consuming package
