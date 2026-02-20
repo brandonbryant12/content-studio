@@ -47,6 +47,7 @@ export const createMockPodcastRepo = (
   const defaults: PodcastRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -61,7 +62,20 @@ export const createMockPodcastRepo = (
     clearApproval: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(PodcastRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            PodcastRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(PodcastRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };
 
 /**
@@ -81,6 +95,7 @@ export const createMockVoiceoverRepo = (
   const defaults: VoiceoverRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -92,7 +107,20 @@ export const createMockVoiceoverRepo = (
     clearApproval: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(VoiceoverRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            VoiceoverRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(VoiceoverRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };
 
 /**
@@ -113,6 +141,7 @@ export const createMockDocumentRepo = (
   const defaults: DocumentRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -124,7 +153,20 @@ export const createMockDocumentRepo = (
     findOrphanedResearch: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(DocumentRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            DocumentRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(DocumentRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };
 
 /**
@@ -157,6 +199,7 @@ export const createMockInfographicRepo = (
   const defaults: InfographicRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -167,7 +210,20 @@ export const createMockInfographicRepo = (
     clearApproval: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(InfographicRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            InfographicRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(InfographicRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };
 
 /**
@@ -180,13 +236,27 @@ export const createMockPersonaRepo = (
   const defaults: PersonaRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(PersonaRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            PersonaRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(PersonaRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };
 
 /**

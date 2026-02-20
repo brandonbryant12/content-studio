@@ -62,7 +62,7 @@ export function createInMemoryStorage(options: MockStorageOptions = {}) {
   };
 
   return {
-    // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
+     
     layer: Layer.succeed(Storage, service),
     clear: () => store.clear(),
     getStore: () => store,
@@ -93,7 +93,7 @@ export function createMockStorage(
     exists: () => withDelay(options.delay, Effect.succeed(true)),
   };
 
-  // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
+   
   return Layer.succeed(Storage, service);
 }
 

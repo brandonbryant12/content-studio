@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import {
   createTestUser,
@@ -49,6 +48,23 @@ const createMockPodcastRepo = (
     clearApproval: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
 
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() => {
+        const podcast = state.podcasts.find(
+          (p) => p.id === id && p.createdBy === userId,
+        );
+        if (!podcast) {
+          return Effect.fail(new PodcastNotFound({ id }));
+        }
+        const docs = state.documents.filter((d) =>
+          podcast.sourceDocumentIds.includes(d.id),
+        );
+        const result: PodcastWithDocuments = {
+          ...podcast,
+          documents: docs,
+        };
+        return Effect.succeed(result);
+      }),
     findById: (id: string) =>
       Effect.suspend(() => {
         const podcast = state.podcasts.find((p) => p.id === id);
@@ -238,7 +254,7 @@ describe('getPodcast', () => {
   });
 
   describe('authorization', () => {
-    it('fails with ForbiddenError when non-owner tries to access', async () => {
+    it('fails with PodcastNotFound when non-owner tries to access', async () => {
       const owner = createTestUser();
       const nonOwner = createTestUser();
       const podcast = createTestPodcast({ createdBy: owner.id });
@@ -258,7 +274,8 @@ describe('getPodcast', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('PodcastNotFound');
+        expect((error as PodcastNotFound).id).toBe(podcast.id);
       }
     });
   });
@@ -283,7 +300,7 @@ describe('getPodcast', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
         expect((error as PodcastNotFound).id).toBe(nonExistentId);
       }
     });
@@ -307,7 +324,7 @@ describe('getPodcast', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
       }
     });
   });

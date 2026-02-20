@@ -50,6 +50,21 @@ const createMockPodcastRepo = (
     clearApproval: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
 
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() => {
+        const podcast = state.podcasts.get(id);
+        if (!podcast || podcast.createdBy !== userId) {
+          return Effect.fail(new PodcastNotFound({ id }));
+        }
+        const docs = state.documents.filter((d) =>
+          podcast.sourceDocumentIds.includes(d.id),
+        );
+        const result: PodcastWithDocuments = {
+          ...podcast,
+          documents: docs,
+        };
+        return Effect.succeed(result);
+      }),
     findById: (id: string) =>
       Effect.suspend(() => {
         const podcast = state.podcasts.get(id);
@@ -184,6 +199,15 @@ describe('deletePodcast', () => {
         clearAudio: () => Effect.die('not implemented'),
         clearApproval: () => Effect.die('not implemented'),
         setApproval: () => Effect.die('not implemented'),
+        findByIdForUser: (id: string, userId: string) =>
+          Effect.suspend(() => {
+            findByIdCalls.push(id);
+            const pod = podcasts.get(id);
+            if (!pod || pod.createdBy !== userId) {
+              return Effect.fail(new PodcastNotFound({ id }));
+            }
+            return Effect.succeed({ ...pod, documents: [] });
+          }),
         findById: (id: string) =>
           Effect.suspend(() => {
             findByIdCalls.push(id);
@@ -223,6 +247,7 @@ describe('deletePodcast', () => {
 
   describe('error handling', () => {
     it('fails with PodcastNotFound when podcast does not exist', async () => {
+      const user = createTestUser();
       const nonExistentId = 'pod_nonexistent';
       const podcasts = new Map<string, Podcast>();
 
@@ -230,20 +255,23 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        deletePodcast({ podcastId: nonExistentId }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          deletePodcast({ podcastId: nonExistentId }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
         expect((error as PodcastNotFound).id).toBe(nonExistentId);
       }
     });
 
     it('does not call delete when podcast not found', async () => {
+      const user = createTestUser();
       const nonExistentId = 'pod_nonexistent';
       const podcasts = new Map<string, Podcast>();
       const deleteCalls: string[] = [];
@@ -255,8 +283,10 @@ describe('deletePodcast', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromiseExit(
-        deletePodcast({ podcastId: nonExistentId }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          deletePodcast({ podcastId: nonExistentId }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 

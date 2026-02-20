@@ -19,6 +19,7 @@ graph TD
 ```
 
 Run `scripts/sync-skills.sh` after any skill add/update/delete.
+Then run `pnpm skills:check:strict` to catch metadata/path/mirror drift.
 
 ## Workflow Stack
 
@@ -38,6 +39,8 @@ Use the smallest set of workflows needed for a change, but keep memory updates m
 | Periodic Scans | `content-studio-periodic-scans` | Daily/weekly/monthly quality loops | `Periodic Scans` |
 | Release + Incident Response | `content-studio-release-incident-response` | Release train, hotfix, production incident | `Release + Incident Response` |
 | Self-Improvement | `content-studio-self-improvement` | Repeat failures, escaped defects, notable incidents | `Self-Improvement` |
+| Codebase Navigation (support) | `content-studio-codebase-nav` | Fast orientation for file paths and test locations | Use parent workflow memory key |
+| Debug + Fix (support) | `content-studio-debug-fix` | Failing tests, regressions, or uncertain root cause | Use parent workflow memory key |
 
 Persistent memory system: `docs/workflow-memory/` (`events`, `index`, `summaries`, `guardrails`).
 
@@ -81,6 +84,8 @@ flowchart LR
 6. `content-studio-test-surface-steward` when coverage confidence is weak
 7. `content-studio-docs-knowledge-drift` when behavior/docs changed
 8. `content-studio-self-improvement` when repeat patterns emerge
+9. `content-studio-codebase-nav` when rapid repo orientation is needed
+10. `content-studio-debug-fix` when narrowing and fixing failing tests
 
 ## E2E Delivery Checklist
 
@@ -94,8 +99,9 @@ Composition-first React APIs, explicit UI states, and accessibility baseline.
 `pnpm typecheck`, `pnpm test`, `pnpm test:invariants` (backend), `pnpm --filter web build` (frontend).
 6. Run PR risk review and test surface check before merge.
 7. Update docs for behavior/guardrail changes.
-8. Append workflow memory notes for workflows used.
-9. Merge only with validation evidence and unresolved risk notes.
+8. Append workflow memory notes for workflows used and include each event `id` in delivery notes.
+9. For skill edits, run `pnpm skills:check:strict` and `scripts/sync-skills.sh`.
+10. Merge only with validation evidence and unresolved risk notes.
 
 ## Continuous And Periodic Scans
 
@@ -181,6 +187,12 @@ If the same pattern appears in 2+ memory entries, escalate immediately to `conte
 Use the write helper to avoid schema drift:
 
 `node scripts/workflow-memory/add-entry.mjs --help`
+
+Run coverage audit weekly (and before release readiness reviews):
+
+`pnpm workflow-memory:coverage:strict`
+
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately.
 
 Run weekly compaction to control growth:
 

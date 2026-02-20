@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db, type DbService } from '@repo/db/effect';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
@@ -64,6 +63,14 @@ const createMockVoiceoverRepo = (
     clearApproval: () => Effect.die('Not implemented'),
     setApproval: () => Effect.die('Not implemented'),
 
+    findByIdForUser: (id, userId) =>
+      Effect.suspend(() => {
+        const voiceover = options.voiceovers.get(id);
+        if (!voiceover || voiceover.createdBy !== userId) {
+          return Effect.fail(new VoiceoverNotFound({ id }));
+        }
+        return Effect.succeed(voiceover);
+      }),
     findById: (id) =>
       Effect.suspend(() => {
         const voiceover = options.voiceovers.get(id);
@@ -252,7 +259,7 @@ describe('deleteVoiceover', () => {
       expect(voiceovers.has(voiceover.id)).toBe(false);
     });
 
-    it('fails with ForbiddenError when non-owner tries to delete', async () => {
+    it('fails with VoiceoverNotFound when non-owner tries to delete', async () => {
       const owner = createTestUser({ id: 'owner-123' });
       const nonOwner = createTestUser({ id: 'non-owner-456' });
       const voiceover = createMockVoiceover({
@@ -271,7 +278,8 @@ describe('deleteVoiceover', () => {
         { voiceovers },
       );
 
-      expect(error).toBeInstanceOf(ForbiddenError);
+      expect(error?._tag).toBe('VoiceoverNotFound');
+      expect((error as VoiceoverNotFound).id).toBe(voiceover.id);
     });
 
     it('does not delete when authorization fails', async () => {
@@ -316,7 +324,7 @@ describe('deleteVoiceover', () => {
         { voiceovers },
       );
 
-      expect(error).toBeInstanceOf(VoiceoverNotFound);
+      expect(error?._tag).toBe('VoiceoverNotFound');
       expect((error as VoiceoverNotFound).id).toBe(nonExistentId);
     });
   });

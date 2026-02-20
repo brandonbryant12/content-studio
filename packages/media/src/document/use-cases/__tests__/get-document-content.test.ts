@@ -1,5 +1,4 @@
 import { Db, type DbService } from '@repo/db/effect';
-import { ForbiddenError } from '@repo/db/errors';
 import {
   Storage,
   type StorageService,
@@ -15,8 +14,9 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { DocumentContentNotFound } from '../../../errors';
 import type { Document, DocumentId } from '@repo/db/schema';
-import { DocumentNotFound, DocumentContentNotFound } from '../../../errors';
+import { DocumentNotFound } from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { getDocumentContent } from '../get-document-content';
 
@@ -34,6 +34,10 @@ const MockDbLive = Layer.succeed(Db, { db: {} } as DbService);
  */
 type MockDocumentRepoMethods = {
   findById?: (id: string) => Effect.Effect<Document, DocumentNotFound>;
+  findByIdForUser?: (
+    id: string,
+    userId: string,
+  ) => Effect.Effect<Document, DocumentNotFound>;
 };
 
 /**
@@ -45,6 +49,16 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
 
   const service: DocumentRepoService = {
     insert: () => Effect.succeed(defaultDoc),
+    findByIdForUser: (id, userId) =>
+      overrides.findByIdForUser
+        ? (overrides.findByIdForUser(id, userId) as ReturnType<
+            DocumentRepoService['findByIdForUser']
+          >)
+        : overrides.findById
+          ? (overrides.findById(id) as ReturnType<
+              DocumentRepoService['findByIdForUser']
+            >)
+          : Effect.succeed(defaultDoc),
     findById: (id) =>
       overrides.findById
         ? (overrides.findById(id) as ReturnType<
@@ -119,52 +133,44 @@ describe('getDocumentContent', () => {
       expect(result.content).toBe(expectedContent);
     });
 
-    it('should return document content when user is admin (even if not owner)', async () => {
+    it('should fail with DocumentNotFound when user is admin and does not own document', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
-      const otherUserId = 'other-user-456';
-      const doc = createTestDocument({
-        id: 'doc_test2' as DocumentId,
-        contentKey: 'documents/other.txt',
-        mimeType: 'text/plain',
-        createdBy: otherUserId, // Document belongs to someone else
-      });
-
-      const expectedContent = 'Admin can access this content.';
+      const docId = 'doc_test2' as DocumentId;
 
       const mockRepo = createMockDocumentRepo({
-        findById: () => Effect.succeed(doc),
+        findByIdForUser: (id) => Effect.fail(new DocumentNotFound({ id })),
       });
 
       const mockStorage = createMockStorage({
-        download: () => Effect.succeed(Buffer.from(expectedContent)),
+        download: () =>
+          Effect.succeed(Buffer.from('Admin can access this content.')),
       });
 
-      const effect = getDocumentContent({ id: doc.id }).pipe(
+      const effect = getDocumentContent({ id: docId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
-      const result = await Effect.runPromise(withTestUser(admin)(effect));
+      const result = await Effect.runPromiseExit(withTestUser(admin)(effect));
 
-      expect(result.content).toBe(expectedContent);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(docId);
+      }
     });
 
-    it('should fail with ForbiddenError when non-owner tries to access', async () => {
+    it('should fail with DocumentNotFound when non-owner tries to access', async () => {
       const user = createTestUser({ id: 'user-123' });
-      const otherUserId = 'other-user-456';
-      const doc = createTestDocument({
-        id: 'doc_test3' as DocumentId,
-        contentKey: 'documents/private.txt',
-        mimeType: 'text/plain',
-        createdBy: otherUserId, // Document belongs to someone else
-      });
+      const docId = 'doc_test3' as DocumentId;
 
       const mockRepo = createMockDocumentRepo({
-        findById: () => Effect.succeed(doc),
+        findByIdForUser: (id) => Effect.fail(new DocumentNotFound({ id })),
       });
 
       const mockStorage = createMockStorage();
 
-      const effect = getDocumentContent({ id: doc.id }).pipe(
+      const effect = getDocumentContent({ id: docId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -173,10 +179,8 @@ describe('getDocumentContent', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
-        expect((error as ForbiddenError).message).toBe(
-          'You do not own this resource',
-        );
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(docId);
       }
     });
   });
@@ -201,7 +205,7 @@ describe('getDocumentContent', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentNotFound);
+        expect(error?._tag).toBe('DocumentNotFound');
         expect((error as DocumentNotFound).id).toBe(nonExistentId);
       }
     });
@@ -237,7 +241,7 @@ describe('getDocumentContent', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(StorageError);
+        expect(error?._tag).toBe('StorageError');
         expect((error as StorageError).message).toBe(
           'Failed to download from storage',
         );
@@ -271,7 +275,7 @@ describe('getDocumentContent', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentContentNotFound);
+        expect(error?._tag).toBe('DocumentContentNotFound');
         expect((error as DocumentContentNotFound).id).toBe(doc.id);
         expect((error as DocumentContentNotFound).contentKey).toBe(
           doc.contentKey,

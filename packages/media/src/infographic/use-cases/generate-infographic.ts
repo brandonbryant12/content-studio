@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateInfographicPayload } from '@repo/queue';
@@ -24,10 +24,10 @@ export interface GenerateInfographicResult {
 
 export const generateInfographic = (input: GenerateInfographicInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
 
-    const existing = yield* repo.findById(input.id);
-    yield* requireOwnership(existing.createdBy);
+    const existing = yield* repo.findByIdForUser(input.id, user.id);
 
     // Enqueue job
     const payload: GenerateInfographicPayload = {

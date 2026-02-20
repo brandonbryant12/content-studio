@@ -1,5 +1,5 @@
 import { LLM } from '@repo/ai/llm';
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import { getDocumentContent } from '../../document';
@@ -49,11 +49,14 @@ const ScriptOutputSchema = Schema.Struct({
 
 export const generateScript = (input: GenerateScriptInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
     const llm = yield* LLM;
 
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
 
     yield* podcastRepo.updateStatus(input.podcastId, 'generating_script');
 

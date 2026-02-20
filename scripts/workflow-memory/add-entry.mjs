@@ -19,6 +19,21 @@ const REQUIRED_ARGS = [
   "status",
 ];
 
+const KNOWN_WORKFLOWS = [
+  "Intake + Triage",
+  "Feature Delivery",
+  "TanStack + Vite",
+  "Architecture + ADR Guard",
+  "PR Risk Review",
+  "Test Surface Steward",
+  "Security + Dependency Hygiene",
+  "Performance + Cost Guard",
+  "Docs + Knowledge Drift",
+  "Periodic Scans",
+  "Release + Incident Response",
+  "Self-Improvement",
+];
+
 const USAGE = `Usage:
   node scripts/workflow-memory/add-entry.mjs \\
     --workflow "Feature Delivery" \\
@@ -48,6 +63,9 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (!token.startsWith("--")) {
+      continue;
+    }
+    if (token === "--") {
       continue;
     }
 
@@ -130,6 +148,28 @@ async function ensureMonthlySummary(month) {
 
 function validateDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
+function printCoverageSummary(index, month) {
+  const workflowsInMonth = new Set(
+    index
+      .filter((row) => row && typeof row.month === "string" && row.month === month)
+      .map((row) => row.workflow)
+      .filter((workflow) => typeof workflow === "string"),
+  );
+
+  const missingWorkflows = KNOWN_WORKFLOWS.filter((workflow) => !workflowsInMonth.has(workflow));
+
+  console.log(
+    `Workflow coverage for ${month}: ${KNOWN_WORKFLOWS.length - missingWorkflows.length}/${KNOWN_WORKFLOWS.length} workflows with events.`,
+  );
+
+  if (missingWorkflows.length > 0) {
+    console.log(`Workflows with zero entries in ${month}: ${missingWorkflows.join(", ")}`);
+    console.log(
+      `Run coverage audit: node scripts/workflow-memory/check-coverage.mjs --month ${month}`,
+    );
+  }
 }
 
 function buildEvent(args) {
@@ -225,6 +265,7 @@ async function main() {
   console.log(`Added workflow memory event: ${event.id}`);
   console.log(`Event file: ${eventFile}`);
   console.log(`Index updated: ${INDEX_PATH}`);
+  printCoverageSummary(deduped, month);
 }
 
 main().catch((error) => {

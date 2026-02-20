@@ -1,6 +1,10 @@
 import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
+import {
+  formatMessagesForSynthesis,
+  getMessageText,
+} from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
   query: Schema.String,
@@ -15,18 +19,42 @@ Given a conversation between a user and a research assistant, synthesize the dis
 
 Keep the query brief and specific. Do not elaborate beyond what was discussed.`;
 
-function formatMessages(messages: UIMessage[]): string {
-  return messages
-    .map((m) => {
-      const text = m.parts
-        .filter(
-          (p): p is Extract<typeof p, { type: 'text' }> => p.type === 'text',
-        )
-        .map((p) => p.text)
-        .join('');
-      return `${m.role === 'user' ? 'User' : 'Assistant'}: ${text}`;
-    })
-    .join('\n\n');
+const PRIMARY_FORMAT_OPTIONS = {
+  maxMessages: 24,
+  maxCharsPerMessage: 700,
+  maxTotalChars: 12_000,
+} as const;
+
+const FALLBACK_FORMAT_OPTIONS = {
+  maxMessages: 10,
+  maxCharsPerMessage: 300,
+  maxTotalChars: 4_000,
+} as const;
+
+function normalizeString(value: string, fallback: string) {
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : fallback;
+}
+
+function buildFallbackTitle(topic: string) {
+  const words = topic
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 8);
+  return words.join(' ') || 'Research Brief';
+}
+
+function getFallbackTopic(messages: readonly UIMessage[]) {
+  const latestUserMessage = [...messages]
+    .reverse()
+    .find((message) => message.role === 'user');
+  const fallback = latestUserMessage ? getMessageText(latestUserMessage) : '';
+  return normalizeString(
+    fallback,
+    'Research this topic using the latest conversation context.',
+  );
 }
 
 export interface SynthesizeResearchQueryInput {
@@ -36,16 +64,36 @@ export interface SynthesizeResearchQueryInput {
 export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
+    const generate = (prompt: string, temperature: number, maxTokens: number) =>
+      llm.generate({
+        system: SYSTEM_PROMPT,
+        prompt,
+        schema: SynthesisResult,
+        temperature,
+        maxTokens,
+      });
 
-    const result = yield* llm.generate({
-      system: SYSTEM_PROMPT,
-      prompt: formatMessages(input.messages),
-      schema: SynthesisResult,
-      temperature: 0.3,
-      maxTokens: 2048,
-    });
+    const primaryPrompt = formatMessagesForSynthesis(
+      input.messages,
+      PRIMARY_FORMAT_OPTIONS,
+    );
+    const fallbackPrompt = formatMessagesForSynthesis(
+      input.messages,
+      FALLBACK_FORMAT_OPTIONS,
+    );
 
-    return result.object;
+    const result = yield* generate(primaryPrompt, 0.3, 2048).pipe(
+      Effect.catchTag('LLMError', () => generate(fallbackPrompt, 0.2, 1024)),
+    );
+
+    const fallbackTopic = getFallbackTopic(input.messages);
+    return {
+      query: normalizeString(result.object.query, fallbackTopic),
+      title: normalizeString(
+        result.object.title,
+        buildFallbackTitle(fallbackTopic),
+      ),
+    };
   }).pipe(
     Effect.withSpan('useCase.synthesizeResearchQuery', {
       attributes: { 'chat.messageCount': input.messages.length },

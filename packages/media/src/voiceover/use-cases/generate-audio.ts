@@ -1,6 +1,6 @@
 import { LLM } from '@repo/ai/llm';
 import { TTS } from '@repo/ai/tts';
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
@@ -67,13 +67,15 @@ export interface GenerateVoiceoverAudioResult {
 
 export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
     const tts = yield* TTS;
     const storage = yield* Storage;
 
-    const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
-
-    yield* requireOwnership(voiceover.createdBy);
+    const voiceover = yield* voiceoverRepo.findByIdForUser(
+      input.voiceoverId,
+      user.id,
+    );
 
     if (!ALLOWED_GENERATION_STATUSES.includes(voiceover.status)) {
       return yield* Effect.fail(

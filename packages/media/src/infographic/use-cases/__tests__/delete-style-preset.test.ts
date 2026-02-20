@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import {
   generateInfographicStylePresetId,
   type InfographicStylePreset,
@@ -69,11 +68,11 @@ describe('deleteStylePreset', () => {
 
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
-      expect(result.cause.error).toBeInstanceOf(ForbiddenError);
+      expect(result.cause.error?._tag).toBe('ForbiddenError');
     }
   });
 
-  it('fails when deleting another user preset', async () => {
+  it('fails with StylePresetNotFound when deleting another user preset', async () => {
     const user = createTestUser();
     const otherUser = createTestUser();
     const preset = createPreset({ createdBy: otherUser.id });
@@ -91,7 +90,7 @@ describe('deleteStylePreset', () => {
 
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
-      expect(result.cause.error).toBeInstanceOf(ForbiddenError);
+      expect(result.cause.error?._tag).toBe('StylePresetNotFound');
     }
   });
 });

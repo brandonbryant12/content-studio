@@ -30,6 +30,7 @@ sequenceDiagram
 3. **Never cast Effect requirements to `unknown`** -- let the compiler verify all deps are satisfied <!-- enforced-by: eslint -->
 4. **Layer.succeed** (pure objects), **Layer.sync** (factories/`new`), **Layer.effect** (dependencies) <!-- enforced-by: eslint -->
 5. **Derive env type from layer**: `type Env = Layer.Layer.Context<typeof Live>` <!-- enforced-by: types -->
+6. **Inside `Effect.gen`, use `Effect.fail` / `Effect.die`, not `throw`** <!-- enforced-by: eslint -->
 
 ## Shared ManagedRuntime
 
@@ -93,6 +94,7 @@ export const createDocument = (input: CreateInput) =>
 <!-- enforced-by: eslint -->
 
 Rule of thumb: if `make*` calls `new SomeClass(...)` or `createSomeSDK(...)`, use `Layer.sync`.
+For repository services built as plain object literals, use `Layer.succeed` even when methods require `Db` in their `Effect` environment.
 
 ## Adding New Services <!-- enforced-by: types -->
 

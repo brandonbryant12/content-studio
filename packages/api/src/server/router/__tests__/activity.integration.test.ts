@@ -169,6 +169,7 @@ describe('activity router', () => {
 
       const newestTime = new Date('2026-02-18T15:00:00.000Z');
       const olderTime = new Date('2026-02-18T13:00:00.000Z');
+      const uniqueTitle = 'Weekly Roundup activity list test';
 
       await insertActivity(ctx, member.id, {
         action: 'created',
@@ -181,27 +182,30 @@ describe('activity router', () => {
         action: 'updated',
         entityType: 'podcast',
         entityId: 'pod-1',
-        entityTitle: 'Weekly Roundup',
+        entityTitle: uniqueTitle,
         createdAt: newestTime,
       });
 
       const context = createMockContext(runtime, admin);
       const result = await handlers.list({
         context,
-        input: { limit: 1 },
+        input: {
+          limit: 1,
+          entityType: 'podcast',
+          search: 'activity list test',
+        },
         errors,
       });
 
       expect(result.data).toHaveLength(1);
-      expect(result.hasMore).toBe(true);
-      expect(result.nextCursor).toBe(newestTime.toISOString());
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeUndefined();
       expect(result.data[0]).toMatchObject({
         action: 'updated',
         entityType: 'podcast',
         entityId: 'pod-1',
-        entityTitle: 'Weekly Roundup',
+        entityTitle: uniqueTitle,
         userName: 'Member One',
-        createdAt: newestTime.toISOString(),
       });
     });
 

@@ -6,7 +6,6 @@ import {
   type UrlScraperService,
   UrlFetchError,
 } from '@repo/media';
-import { JobProcessingError } from '@repo/queue';
 import {
   Storage,
   type StorageService,
@@ -16,6 +15,7 @@ import { createTestDocument, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { DocumentId, JobId, JobStatus } from '@repo/db/schema';
+import type { JobProcessingError } from '@repo/queue';
 import type { ProcessUrlPayload, Job } from '@repo/queue';
 import { handleProcessUrl } from '../handlers/document-handlers';
 
@@ -49,6 +49,7 @@ const createMockDocumentRepo = (options?: {
   const service: DocumentRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -333,7 +334,7 @@ describe('handleProcessUrl', () => {
       expect(exit._tag).toBe('Failure');
       if (exit._tag === 'Failure') {
         const error = exit.cause._tag === 'Fail' ? exit.cause.error : null;
-        expect(error).toBeInstanceOf(JobProcessingError);
+        expect(error?._tag).toBe('JobProcessingError');
         expect((error as JobProcessingError).message).toContain(
           'Failed to process URL',
         );
@@ -373,7 +374,7 @@ describe('handleProcessUrl', () => {
       expect(exit._tag).toBe('Failure');
       if (exit._tag === 'Failure') {
         const error = exit.cause._tag === 'Fail' ? exit.cause.error : null;
-        expect(error).toBeInstanceOf(JobProcessingError);
+        expect(error?._tag).toBe('JobProcessingError');
       }
 
       // Document should be marked as failed
@@ -391,6 +392,7 @@ describe('handleProcessUrl', () => {
       const failingDocRepoLayer = Layer.succeed(DocumentRepo, {
         insert: () => Effect.die('not implemented'),
         findById: () => Effect.die('not implemented'),
+        findByIdForUser: () => Effect.die('not implemented'),
         list: () => Effect.die('not implemented'),
         update: () => Effect.die('not implemented'),
         delete: () => Effect.die('not implemented'),
@@ -426,7 +428,7 @@ describe('handleProcessUrl', () => {
       expect(exit._tag).toBe('Failure');
       if (exit._tag === 'Failure') {
         const error = exit.cause._tag === 'Fail' ? exit.cause.error : null;
-        expect(error).toBeInstanceOf(JobProcessingError);
+        expect(error?._tag).toBe('JobProcessingError');
       }
     });
   });

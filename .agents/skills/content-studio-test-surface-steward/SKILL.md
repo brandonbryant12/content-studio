@@ -42,8 +42,4 @@ Include file evidence and expected confidence gain for each recommendation.
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Test Surface Steward"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- escaped defect class
-- missing/weak test layer that allowed it
-- test guardrail added and verification result
+Record one event with workflow key `Test Surface Steward` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

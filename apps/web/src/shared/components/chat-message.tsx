@@ -1,6 +1,7 @@
 import { cn } from '@repo/ui/lib/utils';
 import type { UIMessage } from 'ai';
 import { Markdown } from '@/components/markdown';
+import { stripChatControlTokens } from '@/shared/lib/chat-control';
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -15,7 +16,9 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
     .map((p) => p.text)
     .join('');
 
-  if (!text) return null;
+  const displayText = isUser ? text : stripChatControlTokens(text);
+
+  if (!displayText) return null;
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -28,9 +31,9 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
         )}
       >
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap">{text}</p>
+          <p className="text-sm whitespace-pre-wrap">{displayText}</p>
         ) : (
-          <Markdown compact>{text}</Markdown>
+          <Markdown compact>{displayText}</Markdown>
         )}
         {isStreaming && !isUser && (
           <span className="inline-block w-1.5 h-4 ml-0.5 bg-foreground/60 animate-pulse rounded-sm" />

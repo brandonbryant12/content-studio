@@ -1,5 +1,4 @@
 import { Db, type DbService } from '@repo/db/effect';
-import { ForbiddenError } from '@repo/db/errors';
 import { Storage, type StorageService } from '@repo/storage';
 import {
   createTestUser,
@@ -80,6 +79,14 @@ const createMockDocumentRepoLayer = (options: {
         });
         options.documents.set(doc.id, doc);
         return doc;
+      }),
+    findByIdForUser: (id, userId) =>
+      Effect.suspend(() => {
+        const doc = options.documents.get(id);
+        if (!doc || doc.createdBy !== userId) {
+          return Effect.fail(new DocumentNotFound({ id }));
+        }
+        return Effect.succeed(doc);
       }),
     findById: (id) =>
       Effect.suspend(() => {
@@ -361,7 +368,7 @@ describe('updateDocument', () => {
       expect(result.title).toBe('Updated by Owner');
     });
 
-    it('should allow admin to update any document', async () => {
+    it('should reject admin updates for documents they do not own', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const admin = createTestAdmin({ id: 'admin-id' });
       const doc = createTestDocument({
@@ -377,14 +384,16 @@ describe('updateDocument', () => {
         title: 'Updated by Admin',
       };
 
-      const result = await runTest(withTestUser(admin)(updateDocument(input)), {
-        documents,
-      });
+      const error = await runTestExpectFailure(
+        withTestUser(admin)(updateDocument(input)),
+        { documents },
+      );
 
-      expect(result.title).toBe('Updated by Admin');
+      expect(error?._tag).toBe('DocumentNotFound');
+      expect((error as DocumentNotFound).id).toBe(doc.id);
     });
 
-    it('should reject update from non-owner non-admin user', async () => {
+    it('should reject update from non-owner user', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const otherUser = createTestUser({ id: 'other-user-id' });
       const doc = createTestDocument({
@@ -405,10 +414,8 @@ describe('updateDocument', () => {
         { documents },
       );
 
-      expect(error).toBeInstanceOf(ForbiddenError);
-      expect((error as ForbiddenError).message).toBe(
-        'You do not own this resource',
-      );
+      expect(error?._tag).toBe('DocumentNotFound');
+      expect((error as DocumentNotFound).id).toBe(doc.id);
     });
   });
 
@@ -427,7 +434,7 @@ describe('updateDocument', () => {
         { documents },
       );
 
-      expect(error).toBeInstanceOf(DocumentNotFound);
+      expect(error?._tag).toBe('DocumentNotFound');
       expect((error as DocumentNotFound).id).toBe('doc_nonexistent');
     });
   });

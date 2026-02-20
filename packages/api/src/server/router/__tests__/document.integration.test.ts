@@ -1111,7 +1111,7 @@ describe('document router', () => {
       );
     });
 
-    it("throws FORBIDDEN when trying to update another user's document", async () => {
+    it("throws DOCUMENT_NOT_FOUND when trying to update another user's document", async () => {
       // Arrange - create document as first user
       const doc = await createDocumentForTest();
 
@@ -1128,7 +1128,7 @@ describe('document router', () => {
           input: { id: doc.id, title: 'Hijacked' },
           errors,
         }),
-        /FORBIDDEN|do not own/i,
+        /DOCUMENT_NOT_FOUND|not found/i,
       );
     });
 
@@ -1210,7 +1210,7 @@ describe('document router', () => {
       );
     });
 
-    it("throws FORBIDDEN when trying to delete another user's document", async () => {
+    it("throws DOCUMENT_NOT_FOUND when trying to delete another user's document", async () => {
       // Arrange - create document as first user
       const doc = await createDocumentForTest();
 
@@ -1227,7 +1227,7 @@ describe('document router', () => {
           input: { id: doc.id },
           errors,
         }),
-        /FORBIDDEN|do not own/i,
+        /DOCUMENT_NOT_FOUND|not found/i,
       );
     });
 
@@ -1258,7 +1258,7 @@ describe('document router', () => {
       expect(afterDelete).toBeUndefined();
     });
 
-    it('allows admin to delete any document', async () => {
+    it('returns DOCUMENT_NOT_FOUND when admin deletes another user document', async () => {
       // Arrange - create document as regular user
       const doc = await createDocumentForTest();
 
@@ -1271,22 +1271,14 @@ describe('document router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      // Act - admin deletes another user's document
-      const result = await handlers.delete({
-        context,
-        input: { id: doc.id },
-        errors,
-      });
-
-      // Assert - delete succeeded
-      expect(result).toEqual({});
-
-      // Verify - document is gone
-      const [afterDelete] = await ctx.db
-        .select()
-        .from(documentTable)
-        .where(eq(documentTable.id, doc.id as DocumentId));
-      expect(afterDelete).toBeUndefined();
+      await expectErrorWithMessage(
+        handlers.delete({
+          context,
+          input: { id: doc.id },
+          errors,
+        }),
+        /DOCUMENT_NOT_FOUND|not found/i,
+      );
     });
 
     it('cannot delete same document twice', async () => {

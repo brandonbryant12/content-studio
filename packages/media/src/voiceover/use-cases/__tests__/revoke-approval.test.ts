@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import { generateVoiceoverId } from '@repo/db/schema';
 import {
@@ -39,6 +38,9 @@ const createMockVoiceoverRepo = (
     clearAudio: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
 
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: (id: string) =>
       Effect.suspend(() => {
         const voiceover = state.voiceovers.find((v) => v.id === id);
@@ -146,7 +148,7 @@ describe('revokeVoiceoverApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('ForbiddenError');
       }
     });
 
@@ -167,7 +169,7 @@ describe('revokeVoiceoverApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(VoiceoverNotFound);
+        expect(error?._tag).toBe('VoiceoverNotFound');
       }
     });
   });

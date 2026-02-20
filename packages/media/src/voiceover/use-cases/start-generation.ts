@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
@@ -28,12 +28,14 @@ export const startVoiceoverGeneration = (
   input: StartVoiceoverGenerationInput,
 ) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
     const queue = yield* Queue;
 
-    const voiceover = yield* voiceoverRepo.findById(input.voiceoverId);
-
-    yield* requireOwnership(voiceover.createdBy);
+    const voiceover = yield* voiceoverRepo.findByIdForUser(
+      input.voiceoverId,
+      user.id,
+    );
 
     const text = voiceover.text.trim();
     if (!text) {

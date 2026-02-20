@@ -47,3 +47,20 @@ export class InfographicError extends Schema.TaggedError<InfographicError>()(
   static readonly httpMessage = 'Infographic operation failed';
   static readonly logLevel = 'error-with-stack' as const;
 }
+
+export class StylePresetNotFound extends Schema.TaggedError<StylePresetNotFound>()(
+  'StylePresetNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 404 as const;
+  static readonly httpCode = 'STYLE_PRESET_NOT_FOUND' as const;
+  static readonly httpMessage = (e: StylePresetNotFound) =>
+    e.message ?? `Style preset ${e.id} not found`;
+  static readonly logLevel = 'silent' as const;
+  static getData(e: StylePresetNotFound) {
+    return { presetId: e.id };
+  }
+}

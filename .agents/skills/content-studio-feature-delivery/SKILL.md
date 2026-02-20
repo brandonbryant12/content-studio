@@ -34,11 +34,12 @@ This is the default loop inspired by compound engineering practices.
 ## 2) Work
 
 - Implement one vertical slice at a time.
-- Keep contracts and boundaries explicit:
-  - API and domain behavior typed at boundaries
-  - no hardcoded query keys
-  - authorization before mutating existing resources
-  - sanitize user-editable structured fields before persistence
+- Apply regression guardrails from `AGENTS.md`/`CLAUDE.md` for:
+  - boundary typing and unsafe casts
+  - auth before mutating existing resources
+  - structured-field sanitization
+  - query key, retry, and streaming-state rules
+  - telemetry lifecycle requirements
 - Apply composition-first React APIs:
   - avoid boolean-prop proliferation for behavior toggles
   - prefer compound components/context and explicit variants
@@ -65,16 +66,9 @@ This is the default loop inspired by compound engineering practices.
 
 ## 4) Compound
 
-After each merged change, capture:
+After each merged change, capture what worked, what failed, and the smallest guardrail/script improvement worth adding.
 
-- what worked
-- what failed or slowed the cycle
-- which guardrail should be added (test, lint rule, docs rule, skill update)
-- which repeated step should move into a script or skill reference
-
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Feature Delivery"` (prefer `node scripts/workflow-memory/add-entry.mjs`).
-
-Feed these learnings into `content-studio-self-improvement` and update skills/docs.
+Record one event with workflow key `Feature Delivery` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`, then include the event `id` in output.
 
 ## Output Contract
 
@@ -84,4 +78,4 @@ When this skill is used, produce:
 2. Code + tests + docs updates
 3. Validation summary
 4. Compound notes (2-6 bullets)
-5. Memory note entry summary (what was appended to `docs/workflow-memory/events/YYYY-MM.jsonl`)
+5. Memory note entry summary with event `id` and `workflow` (what was appended to `docs/workflow-memory/events/YYYY-MM.jsonl`)

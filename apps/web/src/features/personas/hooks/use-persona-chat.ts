@@ -3,6 +3,10 @@ import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
 import { useMemo, useCallback } from 'react';
 import type { UIMessage } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
+import {
+  CHAT_CONTROL_TOKENS,
+  getChatAutomationState,
+} from '@/shared/lib/chat-control';
 
 const transport = {
   sendMessages: async (options: {
@@ -25,9 +29,13 @@ export function usePersonaChat() {
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
-  const canCreatePersona = useMemo(
-    () => !isStreaming && messages.some((m) => m.role === 'assistant'),
-    [isStreaming, messages],
+  const automation = useMemo(
+    () =>
+      getChatAutomationState(messages, {
+        token: CHAT_CONTROL_TOKENS.createPersona,
+        isStreaming,
+      }),
+    [messages, isStreaming],
   );
 
   const reset = useCallback(() => setMessages([]), [setMessages]);
@@ -38,7 +46,9 @@ export function usePersonaChat() {
     status,
     isStreaming,
     error,
-    canCreatePersona,
+    canCreatePersona: !isStreaming && automation.hasAssistantResponse,
+    shouldAutoCreate: automation.shouldAutoTrigger,
+    followUpCount: automation.assistantMessageCount,
     reset,
   };
 }

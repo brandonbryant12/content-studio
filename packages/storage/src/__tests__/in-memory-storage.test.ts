@@ -1,6 +1,6 @@
 import { Effect, Exit, Cause, Option } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { StorageNotFoundError } from '../errors';
+import type { StorageNotFoundError } from '../errors';
 import { Storage } from '../service';
 import { createInMemoryStorage } from '../testing';
 
@@ -84,7 +84,7 @@ describe('createInMemoryStorage', () => {
         const option = Cause.failureOption(exit.cause);
         expect(Option.isSome(option)).toBe(true);
         if (Option.isSome(option)) {
-          expect(option.value).toBeInstanceOf(StorageNotFoundError);
+          expect(option.value?._tag).toBe('StorageNotFoundError');
           expect((option.value as StorageNotFoundError).key).toBe(
             'does-not-exist',
           );

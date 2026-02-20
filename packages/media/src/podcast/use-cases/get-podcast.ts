@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -8,9 +8,12 @@ export interface GetPodcastInput {
 
 export const getPodcast = (input: GetPodcastInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
     return podcast;
   }).pipe(
     Effect.withSpan('useCase.getPodcast', {

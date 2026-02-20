@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
@@ -26,11 +26,14 @@ export interface StartGenerationResult {
 
 export const startGeneration = (input: StartGenerationInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
     const queue = yield* Queue;
 
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
 
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {

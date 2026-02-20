@@ -49,11 +49,17 @@ packages/
 - **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `node scripts/workflow-memory/add-entry.mjs --help`
+- Preferred memory coverage helper:
+  - `pnpm workflow-memory:coverage:strict`
+- Preferred skill quality helper:
+  - `pnpm skills:check:strict`
 - **Canonical skills live in `.agents/skills/`**.
 - **`.claude/skills`, `.agent/skills`, `.github/skills` must stay symlinked mirrors** of `.agents/skills`.
 - After any skill add/update/delete, run:
   - `scripts/sync-skills.sh`
 - Preferred project skills:
+  - `content-studio-codebase-nav`
+  - `content-studio-debug-fix`
   - `content-studio-intake-triage`
   - `content-studio-feature-delivery`
   - `content-studio-pr-risk-review`
@@ -80,6 +86,8 @@ pnpm db:push      # Push Drizzle schema to database
 pnpm db:studio    # Open Drizzle Studio GUI
 pnpm test:e2e     # Run Playwright e2e tests
 pnpm test:db:setup # Start test DB container + push schema
+pnpm skills:check:strict # Validate skill metadata, paths, and mirror symlinks
+pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage baseline
 ```
 
 ## Regression Guardrails
@@ -92,6 +100,7 @@ pnpm test:db:setup # Start test DB container + push schema
 - **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
 - **Query retry policy must be explicit**: disable retries for `*_NOT_FOUND` class errors; retry bounded times for transient failures.
+- **Backend Effect error tests must assert `_tag` + fields**, not `toBeInstanceOf(...)` for domain/app errors (built-in classes like `URL`/`Buffer` are allowed).
 - **Avoid aggressive Vite per-package `manualChunks` strategies** that create many tiny or empty chunks; prefer Router auto code splitting and targeted overrides only.
 - **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
 - **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.

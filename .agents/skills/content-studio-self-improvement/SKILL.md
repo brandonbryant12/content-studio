@@ -26,6 +26,7 @@ Collect:
 - post-merge defects and hotfixes
 - repeated review comments
 - periodic scan findings
+- workflow-memory coverage gaps from `pnpm workflow-memory:coverage`
 
 ## 2) Classify Failure Mode
 
@@ -52,6 +53,8 @@ Apply the lightest fix that prevents recurrence:
 - Run targeted tests and lint.
 - Run repo-level validation for affected surfaces.
 - Confirm the guardrail fails before the fix and passes after the fix where possible.
+- For memory-system changes, run `pnpm workflow-memory:coverage:strict` after updates.
+- For skill changes, run `pnpm skills:check:strict` and `scripts/sync-skills.sh`.
 
 ## 5) Broadcast
 
@@ -71,6 +74,14 @@ Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl
 - guardrail change shipped
 - validation evidence
 - what should be automated next
+
+## Output Contract
+
+1. Root cause class and evidence
+2. Guardrail shipped (test/lint/docs/skill/script)
+3. Validation evidence
+4. Broadcasted instruction updates
+5. Memory event id appended for this loop
 
 ## Definition of Done
 

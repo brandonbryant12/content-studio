@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { DocumentContentNotFound } from '../../errors';
@@ -15,11 +15,11 @@ export interface GetDocumentContentResult {
 
 export const getDocumentContent = (input: GetDocumentContentInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 
-    const doc = yield* documentRepo.findById(input.id);
-    yield* requireOwnership(doc.createdBy);
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     // Fast path: return denormalized extracted text if available
     if (doc.extractedText) {

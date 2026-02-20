@@ -55,7 +55,7 @@ export interface TestContext {
  * @repo/db/client for context.
  */
 function toDbLayer(db: TestDatabaseInstance): Layer.Layer<Db> {
-  // eslint-disable-next-line no-restricted-syntax -- test infrastructure wrapping PoolClient as DbService
+   
   return Layer.succeed(Db, { db: db as unknown as DatabaseInstance });
 }
 

@@ -1,5 +1,276 @@
 [
   {
+    "id": "2026-02-20-docs-knowledge-drift-clarified-effect-error-assertion-guidance",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Clarified Effect error assertion guidance",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "testing",
+      "effect",
+      "docs",
+      "clarity"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-docs-knowledge-drift-repository-guidance-drift-is-reducing-agentic-reliability",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Repository guidance drift is reducing agentic reliability",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "docs",
+      "architecture",
+      "repository",
+      "agentic-coding"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-auto-start-persona-research-chat-with-bounded-follow-ups",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Auto-start persona/research chat with bounded follow-ups",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "feature-delivery",
+      "chat",
+      "persona",
+      "research",
+      "ux"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-effect-gen-throw-guardrail-via-eslint",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Effect.gen throw guardrail via ESLint",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "effect",
+      "eslint",
+      "guardrail",
+      "docs"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-enforced-tagged-error-assertions-in-effect-use-case-tests",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Enforced tagged-error assertions in Effect use-case tests",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "effect",
+      "testing",
+      "eslint",
+      "guardrail"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-expand-cli-llm-command-into-gemini-playground-modes",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Expand CLI LLM command into Gemini playground modes",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "cli",
+      "gemini",
+      "feature-delivery",
+      "developer-experience"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-extended-tagged-error-assertion-migration-beyond-use-cases",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Extended tagged-error assertion migration beyond use-cases",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "effect",
+      "eslint",
+      "testing",
+      "backend"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-made-error-assertion-guardrails-package-agnostic",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Made error-assertion guardrails package-agnostic",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "effect",
+      "lint",
+      "invariants",
+      "agentic",
+      "scalability"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-split-media-repos-into-method-modules-and-standardized-layer-suc",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Split media repos into method modules and standardized Layer.succeed",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "feature-delivery",
+      "repositories",
+      "effect",
+      "docs"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-tighten-chat-follow-up-cap-from-3-to-2",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Tighten chat follow-up cap from 3 to 2",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "feature-delivery",
+      "chat",
+      "ux",
+      "follow-up-cap"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-intake-triage-scope-memory-coverage-hardening-and-remove-react-doctor",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Intake + Triage",
+    "title": "Scope memory coverage hardening and remove react-doctor",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "workflow-memory",
+      "intake",
+      "guardrails"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-periodic-scans-add-monthly-workflow-memory-coverage-baseline-scan",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Add monthly workflow-memory coverage baseline scan",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "workflow-memory",
+      "coverage"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-self-improvement-add-codebase-navigation-and-debug-fix-support-skills",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Add codebase navigation and debug-fix support skills",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "skills",
+      "self-improvement",
+      "navigation",
+      "debugging"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-self-improvement-add-skills-quality-checker-and-slim-duplicated-skill-boilerplate",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Add skills quality checker and slim duplicated skill boilerplate",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "skills",
+      "self-improvement",
+      "automation",
+      "quality"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-self-improvement-add-workflow-memory-coverage-audits-and-remove-react-doctor-skil",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Add workflow-memory coverage audits and remove react-doctor skill",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "memory",
+      "workflow",
+      "self-improvement",
+      "skills"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-self-improvement-strengthen-skill-quality-checks-with-procedural-path-anchor-rule",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Strengthen skill quality checks with procedural/path anchor rules",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skills",
+      "quality",
+      "workflow-memory"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-tanstack-vite-guardrail-auto-trigger-chat-ux-for-research-persona-dialogs",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "TanStack + Vite",
+    "title": "Guardrail auto-trigger chat UX for research/persona dialogs",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "tanstack",
+      "react-query",
+      "chat",
+      "ux"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-18-docs-knowledge-drift-mark-agent-harnessing-as-experimental-and-add-effect-vs-nestjs-r",
     "date": "2026-02-18",
     "month": "2026-02",

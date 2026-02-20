@@ -1,21 +1,9 @@
-import { Db, withDb, type DatabaseError } from '@repo/db/effect';
-import {
-  activityLog,
-  type ActivityLog,
-  type ActivityLogWithUser,
-  user,
-} from '@repo/db/schema';
-import {
-  desc,
-  eq,
-  and,
-  or,
-  lt,
-  ilike,
-  count as drizzleCount,
-  gt,
-} from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
+import { type Db, type DatabaseError } from '@repo/db/effect';
+import { type ActivityLog, type ActivityLogWithUser } from '@repo/db/schema';
+import { Context, Layer } from 'effect';
+import type { Effect} from 'effect';
+import { activityLogReadMethods } from './activity-log-repo.reads';
+import { activityLogWriteMethods } from './activity-log-repo.writes';
 
 // =============================================================================
 // Input Types
@@ -95,159 +83,16 @@ export class ActivityLogRepo extends Context.Tag('@repo/media/ActivityLogRepo')<
   ActivityLogRepoService
 >() {}
 
-// =============================================================================
-// Implementation
-// =============================================================================
-
 const make: ActivityLogRepoService = {
-  insert: (data) =>
-    withDb('activityLogRepo.insert', async (db) => {
-      const [row] = await db
-        .insert(activityLog)
-        .values({
-          userId: data.userId,
-          action: data.action,
-          entityType: data.entityType,
-          entityId: data.entityId ?? null,
-          entityTitle: data.entityTitle ?? null,
-          metadata: data.metadata ?? null,
-        })
-        .returning();
-
-      // Keep entityTitle current across all entries for this entity
-      if (data.entityId && data.entityTitle) {
-        await db
-          .update(activityLog)
-          .set({ entityTitle: data.entityTitle })
-          .where(eq(activityLog.entityId, data.entityId));
-      }
-
-      return row!;
-    }),
-
-  list: (options) =>
-    withDb('activityLogRepo.list', async (db) => {
-      const conditions = [];
-
-      if (options.userId) {
-        conditions.push(eq(activityLog.userId, options.userId));
-      }
-      if (options.entityType) {
-        conditions.push(eq(activityLog.entityType, options.entityType));
-      }
-      if (options.action) {
-        conditions.push(eq(activityLog.action, options.action));
-      }
-      if (options.search) {
-        const pattern = `%${options.search}%`;
-        conditions.push(
-          or(
-            ilike(user.name, pattern),
-            ilike(activityLog.entityTitle, pattern),
-          )!,
-        );
-      }
-      if (options.afterCursor) {
-        conditions.push(
-          lt(activityLog.createdAt, new Date(options.afterCursor)),
-        );
-      }
-
-      const where = conditions.length > 0 ? and(...conditions) : undefined;
-
-      // Use DISTINCT ON (entityId) to show only the latest entry per entity.
-      // This gives a clean entity-level feed rather than individual action records.
-      const rows = await db
-        .selectDistinctOn([activityLog.entityId], {
-          id: activityLog.id,
-          userId: activityLog.userId,
-          action: activityLog.action,
-          entityType: activityLog.entityType,
-          entityId: activityLog.entityId,
-          entityTitle: activityLog.entityTitle,
-          metadata: activityLog.metadata,
-          createdAt: activityLog.createdAt,
-          userName: user.name,
-        })
-        .from(activityLog)
-        .innerJoin(user, eq(activityLog.userId, user.id))
-        .where(where)
-        .orderBy(activityLog.entityId, desc(activityLog.createdAt))
-        .limit(options.limit + 1);
-
-      // Re-sort by createdAt since DISTINCT ON requires ordering by entityId first
-      rows.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-
-      return rows;
-    }),
-
-  countByEntityType: (since) =>
-    withDb('activityLogRepo.countByEntityType', (db) =>
-      db
-        .select({
-          field: activityLog.entityType,
-          count: drizzleCount(),
-        })
-        .from(activityLog)
-        .where(gt(activityLog.createdAt, since))
-        .groupBy(activityLog.entityType),
-    ),
-
-  countByAction: (since) =>
-    withDb('activityLogRepo.countByAction', (db) =>
-      db
-        .select({
-          field: activityLog.action,
-          count: drizzleCount(),
-        })
-        .from(activityLog)
-        .where(gt(activityLog.createdAt, since))
-        .groupBy(activityLog.action),
-    ),
-
-  countByUser: (since, limit = 10) =>
-    withDb('activityLogRepo.countByUser', (db) =>
-      db
-        .select({
-          userId: activityLog.userId,
-          userName: user.name,
-          count: drizzleCount(),
-        })
-        .from(activityLog)
-        .innerJoin(user, eq(activityLog.userId, user.id))
-        .where(gt(activityLog.createdAt, since))
-        .groupBy(activityLog.userId, user.name)
-        .orderBy(desc(drizzleCount()))
-        .limit(limit),
-    ),
-
-  countTotal: (since) =>
-    withDb('activityLogRepo.countTotal', async (db) => {
-      const [result] = await db
-        .select({ count: drizzleCount() })
-        .from(activityLog)
-        .where(gt(activityLog.createdAt, since));
-      return result?.count ?? 0;
-    }),
-
-  updateEntityTitle: (entityId, title) =>
-    withDb('activityLogRepo.updateEntityTitle', async (db) => {
-      await db
-        .update(activityLog)
-        .set({ entityTitle: title })
-        .where(eq(activityLog.entityId, entityId));
-    }),
+  ...activityLogReadMethods,
+  ...activityLogWriteMethods,
 };
 
 // =============================================================================
 // Layer
 // =============================================================================
 
-export const ActivityLogRepoLive: Layer.Layer<ActivityLogRepo, never, Db> =
-  Layer.effect(
-    ActivityLogRepo,
-    Effect.map(Db, () => make),
-  );
+export const ActivityLogRepoLive: Layer.Layer<ActivityLogRepo> = Layer.succeed(
+  ActivityLogRepo,
+  make,
+);

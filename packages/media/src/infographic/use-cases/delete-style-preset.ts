@@ -1,6 +1,7 @@
 import { ForbiddenError } from '@repo/auth';
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { StylePresetNotFound } from '../../errors';
 import { StylePresetRepo } from '../repos';
 
 // =============================================================================
@@ -17,6 +18,7 @@ export interface DeleteStylePresetInput {
 
 export const deleteStylePreset = (input: DeleteStylePresetInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const repo = yield* StylePresetRepo;
 
     const preset = yield* repo.findById(input.id);
@@ -33,7 +35,10 @@ export const deleteStylePreset = (input: DeleteStylePresetInput) =>
       );
     }
 
-    yield* requireOwnership(preset.createdBy);
+    if (preset.createdBy !== user.id) {
+      return yield* Effect.fail(new StylePresetNotFound({ id: input.id }));
+    }
+
     yield* repo.delete(input.id);
     return { deleted: true };
   }).pipe(

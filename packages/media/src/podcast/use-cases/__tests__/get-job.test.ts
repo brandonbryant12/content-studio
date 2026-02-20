@@ -182,7 +182,7 @@ describe('getJob', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(JobNotFoundError);
+        expect(error?._tag).toBe('JobNotFoundError');
         expect((error as JobNotFoundError).jobId).toBe('job_nonexistent');
       }
     });
@@ -203,7 +203,7 @@ describe('getJob', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(JobNotFoundError);
+        expect(error?._tag).toBe('JobNotFoundError');
       }
     });
 

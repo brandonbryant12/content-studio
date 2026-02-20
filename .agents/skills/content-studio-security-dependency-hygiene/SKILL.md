@@ -9,11 +9,11 @@ Use this skill in weekly scans, before releases, and after dependency updates.
 
 ## Security Surfaces
 
-- authentication and authorization flows
-- user-owned resource access paths
-- prompt/input sanitization boundaries
-- secret handling in config and logs
-- dependency and supply-chain risk
+- authentication and authorization flows in `packages/auth/`, `packages/api/src/server/router/`, and `packages/media/src/*/use-cases/`
+- user-owned resource access paths in mutating use cases under `packages/media/src/*/use-cases/`
+- prompt/input sanitization boundaries in `packages/ai/src/` and use-case input mappers
+- secret handling in config/log points (`apps/server/src/`, `apps/worker/src/`, env loading code)
+- dependency and supply-chain risk in root `package.json`, `pnpm-lock.yaml`, and `packages/*/package.json`
 
 ## Hygiene Flow
 
@@ -39,8 +39,4 @@ Each item includes severity, exploitability, impact, and file/package evidence.
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Security + Dependency Hygiene"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- vulnerable package or exposure pattern
-- remediation taken
-- prevention policy (pinning, lint/test rule, review checklist)
+Record one event with workflow key `Security + Dependency Hygiene` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

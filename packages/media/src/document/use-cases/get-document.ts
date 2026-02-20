@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { DocumentRepo } from '../repos';
 
@@ -16,10 +16,10 @@ export interface GetDocumentInput {
 
 export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const doc = yield* documentRepo.findById(input.id);
-    yield* requireOwnership(doc.createdBy);
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     return doc;
   }).pipe(

@@ -49,15 +49,11 @@ Produce this before implementation starts:
 3. Test intent by slice
 4. Guardrails/docs likely to change
 5. Open questions and assumptions
+6. Memory event id after triage note is persisted
 
 ## Memory + Compounding
 
-After triage, record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Intake + Triage"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- trigger
-- ambiguity pattern observed
-- decision taken
-- prevention added for future intake cycles
+After triage, record one event with workflow key `Intake + Triage` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
 
 ## Definition Of Done
 

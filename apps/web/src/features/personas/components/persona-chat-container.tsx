@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePersonaChat } from '../hooks/use-persona-chat';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
 import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
@@ -16,10 +16,17 @@ export function PersonaChatContainer({
   const chat = usePersonaChat();
   const synthesizeMutation = useSynthesizePersona();
   const createMutation = useCreatePersona();
+  const autoCreateTriggeredRef = useRef(false);
+
+  const isCreatingPersona =
+    synthesizeMutation.isPending || createMutation.isPending;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
-      if (!isOpen) chat.reset();
+      if (!isOpen) {
+        autoCreateTriggeredRef.current = false;
+        chat.reset();
+      }
       onOpenChange(isOpen);
     },
     [onOpenChange, chat],
@@ -33,6 +40,9 @@ export function PersonaChatContainer({
   );
 
   const handleCreatePersona = useCallback(() => {
+    if (chat.messages.length === 0 || isCreatingPersona) return;
+    autoCreateTriggeredRef.current = true;
+
     synthesizeMutation.mutate(chat.messages, {
       onSuccess: (persona) => {
         createMutation.mutate(
@@ -51,13 +61,28 @@ export function PersonaChatContainer({
         );
       },
     });
-  }, [synthesizeMutation, createMutation, chat.messages, handleOpenChange]);
-
-  const isCreatingPersona =
-    synthesizeMutation.isPending || createMutation.isPending;
+  }, [
+    chat.messages,
+    isCreatingPersona,
+    synthesizeMutation,
+    createMutation,
+    handleOpenChange,
+  ]);
 
   const synthesizeError =
     synthesizeMutation.error ?? createMutation.error ?? undefined;
+
+  useEffect(() => {
+    if (!open || autoCreateTriggeredRef.current) return;
+    if (!chat.shouldAutoCreate || chat.isStreaming || isCreatingPersona) return;
+    handleCreatePersona();
+  }, [
+    open,
+    chat.shouldAutoCreate,
+    chat.isStreaming,
+    isCreatingPersona,
+    handleCreatePersona,
+  ]);
 
   return (
     <PersonaChatDialog
@@ -68,6 +93,7 @@ export function PersonaChatContainer({
       error={chat.error}
       synthesizeError={synthesizeError}
       canCreatePersona={chat.canCreatePersona}
+      autoCreateReady={chat.shouldAutoCreate}
       onSendMessage={handleSendMessage}
       onCreatePersona={handleCreatePersona}
       isCreatingPersona={isCreatingPersona}

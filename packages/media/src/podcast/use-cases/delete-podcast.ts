@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -16,10 +16,10 @@ export interface DeletePodcastInput {
 
 export const deletePodcast = (input: DeletePodcastInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
 
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
 
     yield* podcastRepo.delete(input.podcastId);
   }).pipe(

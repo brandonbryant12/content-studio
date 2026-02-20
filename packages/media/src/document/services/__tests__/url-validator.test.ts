@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { InvalidUrlError } from '../../../errors';
+import type { InvalidUrlError } from '../../../errors';
 import { validateUrl } from '../url-validator';
 
 describe('validateUrl', () => {
@@ -44,7 +44,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
         expect((error as InvalidUrlError).message).toContain(
           'Unsupported URL scheme',
         );
@@ -58,7 +58,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -69,7 +69,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
   });
@@ -82,7 +82,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
         expect((error as InvalidUrlError).message).toContain('private');
       }
     });
@@ -94,7 +94,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -105,7 +105,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -116,7 +116,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -127,7 +127,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -138,7 +138,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -149,7 +149,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
   });
@@ -160,7 +160,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
         expect((error as InvalidUrlError).message).toContain(
           'Invalid URL format',
         );
@@ -172,7 +172,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
   });
@@ -184,7 +184,7 @@ describe('validateUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
         expect((error as InvalidUrlError).message).toContain('maximum length');
       }
     });

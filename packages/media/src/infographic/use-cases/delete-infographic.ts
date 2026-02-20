@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { InfographicRepo } from '../repos';
@@ -17,11 +17,11 @@ export interface DeleteInfographicInput {
 
 export const deleteInfographic = (input: DeleteInfographicInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
     const storage = yield* Storage;
 
-    const existing = yield* repo.findById(input.id);
-    yield* requireOwnership(existing.createdBy);
+    const existing = yield* repo.findByIdForUser(input.id, user.id);
 
     // Clean up storage for all versions
     const versions = yield* repo.listVersions(input.id);

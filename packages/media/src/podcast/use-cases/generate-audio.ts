@@ -1,5 +1,5 @@
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment } from '@repo/db/schema';
@@ -47,12 +47,15 @@ export class InvalidAudioGenerationError extends Schema.TaggedError<InvalidAudio
 
 export const generateAudio = (input: GenerateAudioInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
     const tts = yield* TTS;
     const storage = yield* Storage;
 
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
 
     if (podcast.status !== 'script_ready') {
       return yield* Effect.fail(

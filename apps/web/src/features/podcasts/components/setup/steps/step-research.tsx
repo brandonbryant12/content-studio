@@ -28,12 +28,18 @@ export function StepResearch({
   createdDocumentId,
 }: StepResearchProps) {
   const queryClient = useQueryClient();
-  const { messages, sendMessage, isStreaming, canStartResearch } =
-    useResearchChat();
+  const {
+    messages,
+    sendMessage,
+    isStreaming,
+    canStartResearch,
+    shouldAutoStart,
+  } = useResearchChat();
   const synthesize = useSynthesizeResearch();
   const [inputValue, setInputValue] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const autoStartTriggeredRef = useRef(false);
 
   const startResearchMutation = useMutation(
     apiClient.documents.fromResearch.mutationOptions({
@@ -77,15 +83,30 @@ export function StepResearch({
     [sendMessage],
   );
 
+  const isStarting = synthesize.isPending || startResearchMutation.isPending;
+
   const handleStartResearch = useCallback(async () => {
+    if (messages.length === 0 || isStarting) return;
+    autoStartTriggeredRef.current = true;
+
     const result = await synthesize.mutateAsync(messages);
     startResearchMutation.mutate({
       query: result.query,
       title: result.title,
     });
-  }, [messages, synthesize, startResearchMutation]);
+  }, [messages, isStarting, synthesize, startResearchMutation]);
 
-  const isStarting = synthesize.isPending || startResearchMutation.isPending;
+  useEffect(() => {
+    if (createdDocumentId || autoStartTriggeredRef.current) return;
+    if (!shouldAutoStart || isStreaming || isStarting) return;
+    void handleStartResearch();
+  }, [
+    createdDocumentId,
+    shouldAutoStart,
+    isStreaming,
+    isStarting,
+    handleStartResearch,
+  ]);
 
   // Complete state — research document created
   if (createdDocumentId) {

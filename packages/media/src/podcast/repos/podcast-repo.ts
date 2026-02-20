@@ -1,20 +1,18 @@
-import { Db, withDb, type DatabaseError } from '@repo/db/effect';
+import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
-  podcast,
-  document,
   type Podcast,
   type CreatePodcast,
   type UpdatePodcast,
   type GenerationContext,
   type Document,
-  type PodcastId,
-  type DocumentId,
   type VersionStatus,
   type ScriptSegment,
 } from '@repo/db/schema';
-import { eq, desc, inArray, count as drizzleCount } from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
-import { PodcastNotFound, DocumentNotFound } from '../../errors';
+import { Context, Layer } from 'effect';
+import type { DocumentNotFound, PodcastNotFound } from '../../errors';
+import type { Effect} from 'effect';
+import { podcastReadMethods } from './podcast-repo.reads';
+import { podcastWriteMethods } from './podcast-repo.writes';
 
 // =============================================================================
 // Types
@@ -82,6 +80,15 @@ export interface PodcastRepoService {
    */
   readonly findById: (
     id: string,
+  ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
+
+  /**
+   * Find podcast by ID with resolved documents scoped to owner.
+   * Fails with PodcastNotFound for missing or not-owned records.
+   */
+  readonly findByIdForUser: (
+    id: string,
+    userId: string,
   ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
 
   /**
@@ -184,285 +191,16 @@ export class PodcastRepo extends Context.Tag('@repo/media/PodcastRepo')<
   PodcastRepoService
 >() {}
 
-// =============================================================================
-// Implementation
-// =============================================================================
-
-const requirePodcast = <T extends Podcast>(id: string) =>
-  Effect.flatMap((pod: T | null | undefined) =>
-    pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
-  );
-
 const make: PodcastRepoService = {
-  insert: (data, documentIds) =>
-    withDb('podcastRepo.insert', async (db) => {
-      const docIds = [...documentIds] as DocumentId[];
-
-      return db.transaction(async (tx) => {
-        const [pod] = await tx
-          .insert(podcast)
-          .values({
-            title: data.title ?? 'Generating...',
-            description: data.description,
-            format: data.format,
-            promptInstructions: data.promptInstructions,
-            targetDurationMinutes: data.targetDurationMinutes,
-            hostVoice: data.hostVoice,
-            hostVoiceName: data.hostVoiceName,
-            coHostVoice: data.coHostVoice,
-            coHostVoiceName: data.coHostVoiceName,
-            sourceDocumentIds: docIds,
-            createdBy: data.createdBy,
-          })
-          .returning();
-
-        const docs =
-          docIds.length > 0
-            ? await tx
-                .select()
-                .from(document)
-                .where(inArray(document.id, docIds))
-            : [];
-
-        const docMap = new Map(docs.map((d) => [d.id, d]));
-        const sortedDocs = docIds
-          .map((id) => docMap.get(id))
-          .filter((d): d is Document => d !== undefined);
-
-        return { ...pod!, documents: sortedDocs };
-      });
-    }),
-
-  findById: (id) =>
-    withDb('podcastRepo.findById', async (db) => {
-      const [pod] = await db
-        .select()
-        .from(podcast)
-        .where(eq(podcast.id, id as PodcastId))
-        .limit(1);
-
-      if (!pod) return null;
-
-      const docs =
-        pod.sourceDocumentIds.length > 0
-          ? await db
-              .select()
-              .from(document)
-              .where(inArray(document.id, pod.sourceDocumentIds))
-          : [];
-
-      const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = pod.sourceDocumentIds
-        .map((id) => docMap.get(id))
-        .filter((d): d is Document => d !== undefined);
-
-      return { ...pod, documents: sortedDocs };
-    }).pipe(requirePodcast(id)),
-
-  update: (id, data) =>
-    withDb('podcastRepo.update', async (db) => {
-      const { documentIds, tags, ...rest } = data;
-      const updateValues: Partial<Podcast> = {
-        ...rest,
-        updatedAt: new Date(),
-      };
-
-      if (documentIds) {
-        updateValues.sourceDocumentIds = [...documentIds] as DocumentId[];
-      }
-      if (tags) {
-        updateValues.tags = [...tags];
-      }
-
-      const [pod] = await db
-        .update(podcast)
-        .set(updateValues)
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  delete: (id) =>
-    withDb('podcastRepo.delete', async (db) => {
-      const result = await db
-        .delete(podcast)
-        .where(eq(podcast.id, id as PodcastId))
-        .returning({ id: podcast.id });
-      return result.length > 0;
-    }),
-
-  list: (options) =>
-    withDb('podcastRepo.list', (db) => {
-      const createdBy = options.userId || options.createdBy;
-
-      return db
-        .select()
-        .from(podcast)
-        .where(createdBy ? eq(podcast.createdBy, createdBy) : undefined)
-        .orderBy(desc(podcast.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0);
-    }),
-
-  count: (options) =>
-    withDb('podcastRepo.count', async (db) => {
-      const createdBy = options?.userId || options?.createdBy;
-
-      const [result] = await db
-        .select({ count: drizzleCount() })
-        .from(podcast)
-        .where(createdBy ? eq(podcast.createdBy, createdBy) : undefined);
-      return result?.count ?? 0;
-    }),
-
-  verifyDocumentsExist: (documentIds, userId) =>
-    withDb('podcastRepo.verifyDocuments', async (db) => {
-      const docIds = [...documentIds] as DocumentId[];
-      if (docIds.length === 0) {
-        return {
-          docs: [] as Document[],
-          missingId: undefined as string | undefined,
-          notOwnedId: undefined as string | undefined,
-        };
-      }
-
-      const docs = await db
-        .select()
-        .from(document)
-        .where(inArray(document.id, docIds));
-
-      const foundIds = new Set(docs.map((d) => d.id as string));
-      const missingId = docIds.find((id) => !foundIds.has(id as string));
-
-      const notOwned = docs.find((d) => d.createdBy !== userId);
-
-      return {
-        docs,
-        missingId: missingId as string | undefined,
-        notOwnedId: notOwned?.id as string | undefined,
-      };
-    }).pipe(
-      Effect.flatMap((result) => {
-        if (result.missingId) {
-          return Effect.fail(new DocumentNotFound({ id: result.missingId }));
-        }
-        if (result.notOwnedId) {
-          return Effect.fail(
-            new DocumentNotFound({
-              id: result.notOwnedId,
-              message: 'Document not found or access denied',
-            }),
-          );
-        }
-        return Effect.succeed(result.docs);
-      }),
-    ),
-
-  updateGenerationContext: (id, generationContext) =>
-    withDb('podcastRepo.updateGenerationContext', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          generationContext,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  updateStatus: (id, status, errorMessage) =>
-    withDb('podcastRepo.updateStatus', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          status,
-          errorMessage: errorMessage ?? null,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  updateScript: (id, options) =>
-    withDb('podcastRepo.updateScript', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          segments: options.segments,
-          summary: options.summary,
-          generationPrompt: options.generationPrompt,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  updateAudio: (id, options) =>
-    withDb('podcastRepo.updateAudio', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          audioUrl: options.audioUrl,
-          duration: options.duration,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  clearAudio: (id) =>
-    withDb('podcastRepo.clearAudio', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          audioUrl: null,
-          duration: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  setApproval: (id, approvedBy) =>
-    withDb('podcastRepo.setApproval', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          approvedBy,
-          approvedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
-
-  clearApproval: (id) =>
-    withDb('podcastRepo.clearApproval', async (db) => {
-      const [pod] = await db
-        .update(podcast)
-        .set({
-          approvedBy: null,
-          approvedAt: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(podcast.id, id as PodcastId))
-        .returning();
-      return pod;
-    }).pipe(requirePodcast(id)),
+  ...podcastReadMethods,
+  ...podcastWriteMethods,
 };
 
 // =============================================================================
 // Layer
 // =============================================================================
 
-export const PodcastRepoLive: Layer.Layer<PodcastRepo, never, Db> =
-  Layer.effect(
-    PodcastRepo,
-    Effect.map(Db, () => make),
-  );
+export const PodcastRepoLive: Layer.Layer<PodcastRepo> = Layer.succeed(
+  PodcastRepo,
+  make,
+);

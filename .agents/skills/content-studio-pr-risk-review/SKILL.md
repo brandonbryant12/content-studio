@@ -15,21 +15,38 @@ Use this skill before merge for agent-authored or high-risk human-authored chang
 4. missing or weak test evidence
 5. docs/guardrail drift
 
+## Review Flow
+
+1. Map changed files to the five review priorities.
+2. Walk `Must-Check Risks` against those files.
+3. Validate with targeted tests first, then repo-level gates if needed.
+4. Emit findings-first output with exact file/line evidence.
+
 ## Must-Check Risks
 
-- auth before mutating existing resources
-- sanitize user-editable structured fields
-- query key invalidation safety (no hardcoded keys)
-- explicit streaming state handling and typed stream contracts
-- unsafe casts at production boundaries
-- retry semantics for expected-not-found paths
-- telemetry lifecycle for server/worker startup and shutdown
+- auth before mutating existing resources:
+  - `packages/media/src/*/use-cases/`
+- sanitize user-editable structured fields:
+  - prompt/config inputs in `packages/media/src/*/use-cases/` and `packages/media/src/*/prompts.ts`
+- query key invalidation safety (no hardcoded keys):
+  - `apps/web/src/features/*/hooks/`
+- explicit streaming state + typed stream contracts:
+  - `apps/web/src/features/*/hooks/use-*-chat.ts`
+  - `packages/api/src/contracts/chat.ts`
+- unsafe casts at production boundaries:
+  - changed files (`as never`, `as unknown as`)
+- retry semantics for expected-not-found paths:
+  - `apps/web/src/clients/queryClient.ts`
+- telemetry lifecycle for server/worker startup and shutdown:
+  - `apps/server/src/server.ts`
+  - `apps/worker/src/worker.ts`
 
 ## Evidence Expectations
 
 - changed files and risk mapping
 - targeted test results
 - repo-level checks when required (`pnpm typecheck`, `pnpm test`, `pnpm test:invariants`, `pnpm --filter web build`)
+- for each finding, exact file path + line pointer
 
 ## Output Contract
 
@@ -49,8 +66,4 @@ For each finding include:
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "PR Risk Review"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- top risk category this PR
-- what check caught it (or missed it)
-- new guardrail required if pattern repeats
+Record one event with workflow key `PR Risk Review` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

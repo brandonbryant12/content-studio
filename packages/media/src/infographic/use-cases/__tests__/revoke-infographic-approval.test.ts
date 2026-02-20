@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import {
   createTestUser,
   createTestAdmin,
@@ -80,7 +79,7 @@ describe('revokeInfographicApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('ForbiddenError');
       }
     });
 
@@ -101,7 +100,7 @@ describe('revokeInfographicApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InfographicNotFound);
+        expect(error?._tag).toBe('InfographicNotFound');
       }
     });
   });

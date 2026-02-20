@@ -1,5 +1,4 @@
 import { Db, type DbService } from '@repo/db/effect';
-import { ForbiddenError } from '@repo/db/errors';
 import { Storage, type StorageService, StorageError } from '@repo/storage';
 import {
   createTestUser,
@@ -29,6 +28,10 @@ const MockDbLive = Layer.succeed(Db, { db: {} } as DbService);
  */
 type MockDocumentRepoMethods = {
   findById?: (id: string) => Effect.Effect<Document, DocumentNotFound>;
+  findByIdForUser?: (
+    id: string,
+    userId: string,
+  ) => Effect.Effect<Document, DocumentNotFound>;
   delete?: (id: string) => Effect.Effect<boolean>;
 };
 
@@ -41,6 +44,16 @@ const createMockDocumentRepo = (overrides: MockDocumentRepoMethods = {}) => {
 
   const service: DocumentRepoService = {
     insert: () => Effect.succeed(defaultDoc),
+    findByIdForUser: (id, userId) =>
+      overrides.findByIdForUser
+        ? (overrides.findByIdForUser(id, userId) as ReturnType<
+            DocumentRepoService['findByIdForUser']
+          >)
+        : overrides.findById
+          ? (overrides.findById(id) as ReturnType<
+              DocumentRepoService['findByIdForUser']
+            >)
+          : Effect.succeed(defaultDoc),
     findById: (id) =>
       overrides.findById
         ? (overrides.findById(id) as ReturnType<
@@ -129,20 +142,15 @@ describe('deleteDocument', () => {
       expect(repoDeleteCalls).toContain(doc.id);
     });
 
-    it('should delete document when user is admin (even if not owner)', async () => {
+    it('should fail with DocumentNotFound when user is admin and does not own document', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
-      const otherUserId = 'other-user-456';
-      const doc = createTestDocument({
-        id: 'doc_test2' as DocumentId,
-        contentKey: 'documents/other.txt',
-        createdBy: otherUserId, // Document belongs to someone else
-      });
+      const docId = 'doc_test2' as DocumentId;
 
       const deleteCalls: string[] = [];
       const repoDeleteCalls: string[] = [];
 
       const mockRepo = createMockDocumentRepo({
-        findById: () => Effect.succeed(doc),
+        findByIdForUser: (id) => Effect.fail(new DocumentNotFound({ id })),
         delete: (id) => {
           repoDeleteCalls.push(id);
           return Effect.succeed(true);
@@ -156,32 +164,33 @@ describe('deleteDocument', () => {
         },
       });
 
-      const effect = deleteDocument({ id: doc.id }).pipe(
+      const effect = deleteDocument({ id: docId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
-      await Effect.runPromise(withTestUser(admin)(effect));
+      const result = await Effect.runPromiseExit(withTestUser(admin)(effect));
 
-      // Admin should still be able to delete
-      expect(deleteCalls).toContain(doc.contentKey);
-      expect(repoDeleteCalls).toContain(doc.id);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(docId);
+      }
+      expect(deleteCalls).toHaveLength(0);
+      expect(repoDeleteCalls).toHaveLength(0);
     });
 
-    it('should fail with ForbiddenError when non-owner tries to delete', async () => {
+    it('should fail with DocumentNotFound when non-owner tries to delete', async () => {
       const user = createTestUser({ id: 'user-123' });
-      const otherUserId = 'other-user-456';
-      const doc = createTestDocument({
-        id: 'doc_test3' as DocumentId,
-        createdBy: otherUserId, // Document belongs to someone else
-      });
+      const docId = 'doc_test3' as DocumentId;
 
       const mockRepo = createMockDocumentRepo({
-        findById: () => Effect.succeed(doc),
+        findByIdForUser: (id) => Effect.fail(new DocumentNotFound({ id })),
       });
 
       const mockStorage = createMockStorage();
 
-      const effect = deleteDocument({ id: doc.id }).pipe(
+      const effect = deleteDocument({ id: docId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -190,10 +199,8 @@ describe('deleteDocument', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
-        expect((error as ForbiddenError).message).toBe(
-          'You do not own this resource',
-        );
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(docId);
       }
     });
   });
@@ -218,7 +225,7 @@ describe('deleteDocument', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentNotFound);
+        expect(error?._tag).toBe('DocumentNotFound');
         expect((error as DocumentNotFound).id).toBe(nonExistentId);
       }
     });

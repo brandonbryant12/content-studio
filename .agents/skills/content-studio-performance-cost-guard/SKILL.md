@@ -9,18 +9,18 @@ Use this skill for performance-sensitive changes, weekly quality scans, and rele
 
 ## Performance + Cost Surfaces
 
-- route-level frontend bundles and load behavior
-- backend hot paths and job throughput
-- CI/test runtime and build time
-- AI/provider usage patterns and token/call cost
+- route-level frontend bundles and load behavior in `apps/web/src/routes/_protected/` and `apps/web/src/features/`
+- backend hot paths and job throughput in `packages/media/src/**/use-cases/` and `apps/worker/src/`
+- CI/test runtime and build time via `package.json` scripts and affected package test folders
+- AI/provider usage patterns and token/call cost in `packages/ai/src/` and provider call sites
 
 ## Guard Flow
 
 1. Establish baseline from recent known-good runs.
 2. Compare current change impact:
    - `pnpm --filter web build` output for bundle drift
-   - targeted benchmark/test timings where applicable
-   - telemetry trend snapshots for hot use cases/jobs
+   - targeted timings for changed tests in `packages/*/src/**/__tests__/`
+   - telemetry trend snapshots for hot use cases/jobs in `apps/server/src/` and `apps/worker/src/`
 3. Flag regressions with practical thresholds and user impact.
 4. Recommend fixes prioritized by impact-to-effort.
 5. Record whether regression is blocked, accepted, or deferred.
@@ -36,8 +36,4 @@ Include evidence source, confidence, and expected gain.
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Performance + Cost Guard"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- baseline metric and new metric
-- regression signature
-- optimization applied or backlog decision
+Record one event with workflow key `Performance + Cost Guard` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

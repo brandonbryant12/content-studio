@@ -126,6 +126,28 @@ export default defineConfig([
       'repo-custom/no-inline-invalidate-querykey-array': 'error',
     },
   },
+  // Backend tests should assert tagged errors via `_tag`, not class instances
+  {
+    files: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'src/**/*.integration.test.ts',
+      'src/**/*.integration.test.tsx',
+    ],
+    rules: {
+      'repo-custom/no-error-instanceof-in-backend-tests': 'error',
+    },
+  },
+  // Effect use-case tests should assert tagged errors, not class instances
+  {
+    files: [
+      'src/**/use-cases/__tests__/*.test.ts',
+      'src/**/use-cases/__tests__/*.test.tsx',
+    ],
+    rules: {
+      'repo-custom/no-instanceof-in-effect-tests': 'error',
+    },
+  },
   // No dynamic imports
   {
     rules: {
@@ -143,42 +165,7 @@ export default defineConfig([
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      'no-restricted-syntax': [
-        'warn',
-        {
-          selector: 'ImportExpression',
-          message:
-            'Dynamic imports are not allowed. Use static imports instead.',
-        },
-        {
-          selector:
-            'CallExpression[callee.object.name="Layer"][callee.property.name="succeed"]',
-          message:
-            'Avoid Layer.succeed - it hides method-level Effect context requirements from the layer type. ' +
-            'Use Layer.effect instead to capture dependencies at layer construction time for compile-time safety. ' +
-            'If this service has NO methods returning Effects with context requirements, add: ' +
-            '// eslint-disable-next-line no-restricted-syntax -- CRUD-only service with no Effect context requirements',
-        },
-      ],
-    },
-  },
-  // Allow Layer.succeed in test files and test utilities — mocks intentionally have R=never
-  {
-    files: [
-      '**/*.test.ts',
-      '**/*.test.tsx',
-      '**/*.integration.test.ts',
-      '**/test-utils/**/*.ts',
-    ],
-    rules: {
-      'no-restricted-syntax': [
-        'warn',
-        {
-          selector: 'ImportExpression',
-          message:
-            'Dynamic imports are not allowed. Use static imports instead.',
-        },
-      ],
+      'repo-custom/no-throw-in-effect-gen': 'error',
     },
   },
   // Ban `as any` in test files — use branded types or typed helpers instead

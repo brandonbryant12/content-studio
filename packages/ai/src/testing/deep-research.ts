@@ -77,7 +77,7 @@ export function createMockDeepResearch(
       }),
   };
 
-  // eslint-disable-next-line no-restricted-syntax -- mock service with no Effect context requirements
+   
   return Layer.succeed(DeepResearch, service);
 }
 

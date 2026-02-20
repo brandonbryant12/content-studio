@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import {
   VersionStatus,
   type PersonaId,
@@ -55,10 +55,13 @@ export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
 
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const podcastRepo = yield* PodcastRepo;
 
-    const podcast = yield* podcastRepo.findById(input.podcastId);
-    yield* requireOwnership(podcast.createdBy);
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
 
     if (podcast.status !== VersionStatus.READY) {
       return yield* Effect.fail(

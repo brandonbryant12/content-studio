@@ -461,10 +461,10 @@ describe('voiceover router', () => {
           input: { id: otherVoiceover.id },
           errors,
         }),
-      ).rejects.toThrow('do not own');
+      ).rejects.toThrow('Not Found');
     });
 
-    it('allows admin to access any voiceover', async () => {
+    it('returns Not Found for admin when accessing another user voiceover', async () => {
       // Arrange - create voiceover as regular user
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         title: 'Regular User Voiceover',
@@ -476,16 +476,13 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      // Act - admin accesses another user's voiceover
-      const result = await handlers.get({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(voiceover.id);
-      expect(result.title).toBe('Regular User Voiceover');
+      await expect(
+        handlers.get({
+          context,
+          input: { id: voiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('Not Found');
     });
 
     it('returns voiceover in serialized format', async () => {
@@ -770,10 +767,10 @@ describe('voiceover router', () => {
           input: { id: otherVoiceover.id, title: 'Updated Title' },
           errors,
         }),
-      ).rejects.toThrow('do not own');
+      ).rejects.toThrow('Not Found');
     });
 
-    it('allows admin to update any voiceover', async () => {
+    it('returns Not Found for admin when updating another user voiceover', async () => {
       // Arrange - create voiceover as regular user
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         title: 'Original Title',
@@ -785,16 +782,13 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      // Act - admin updates another user's voiceover
-      const result = await handlers.update({
-        context,
-        input: { id: voiceover.id, title: 'Admin Updated' },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(voiceover.id);
-      expect(result.title).toBe('Admin Updated');
+      await expect(
+        handlers.update({
+          context,
+          input: { id: voiceover.id, title: 'Admin Updated' },
+          errors,
+        }),
+      ).rejects.toThrow('Not Found');
     });
 
     it('persists updates to database', async () => {
@@ -889,10 +883,10 @@ describe('voiceover router', () => {
           input: { id: otherVoiceover.id },
           errors,
         }),
-      ).rejects.toThrow('do not own');
+      ).rejects.toThrow('Not Found');
     });
 
-    it('allows admin to delete any voiceover', async () => {
+    it('returns Not Found for admin when deleting another user voiceover', async () => {
       // Arrange - create voiceover as regular user
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
 
@@ -902,22 +896,13 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      // Act - admin deletes another user's voiceover
-      const result = await handlers.delete({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert - delete succeeded
-      expect(result).toEqual({});
-
-      // Verify - voiceover is gone
-      const [afterDelete] = await ctx.db
-        .select()
-        .from(voiceoverTable)
-        .where(eq(voiceoverTable.id, voiceover.id));
-      expect(afterDelete).toBeUndefined();
+      await expect(
+        handlers.delete({
+          context,
+          input: { id: voiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('Not Found');
     });
 
     it('verifies voiceover is actually removed from database after delete', async () => {
@@ -1074,10 +1059,10 @@ describe('voiceover router', () => {
           input: { id: otherVoiceover.id },
           errors,
         }),
-      ).rejects.toThrow('do not own');
+      ).rejects.toThrow('Not Found');
     });
 
-    it('allows admin to generate any voiceover', async () => {
+    it('returns Not Found for admin when generating another user voiceover', async () => {
       // Arrange - create voiceover as regular user
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         text: 'Some text to generate audio for',
@@ -1090,16 +1075,13 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      // Act - admin generates another user's voiceover
-      const result = await handlers.generate({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
+      await expect(
+        handlers.generate({
+          context,
+          input: { id: voiceover.id },
+          errors,
+        }),
+      ).rejects.toThrow('Not Found');
     });
   });
 

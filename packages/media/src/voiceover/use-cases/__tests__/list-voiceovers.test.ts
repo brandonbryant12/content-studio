@@ -59,6 +59,9 @@ const createMockVoiceoverRepo = (
 ): Layer.Layer<VoiceoverRepo> => {
   const service: VoiceoverRepoService = {
     insert: () => Effect.die('Not implemented'),
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: () => Effect.die('Not implemented'),
     update: () => Effect.die('Not implemented'),
     delete: () => Effect.die('Not implemented'),

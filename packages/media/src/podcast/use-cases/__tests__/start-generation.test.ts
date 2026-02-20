@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import { Queue, QueueError, type QueueService, type Job } from '@repo/queue';
 import {
@@ -33,6 +32,14 @@ const createMockPodcastRepo = (
   },
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() =>
+        state.podcast &&
+        state.podcast.id === id &&
+        state.podcast.createdBy === userId
+          ? Effect.succeed({ ...state.podcast, documents: [] })
+          : Effect.fail(new PodcastNotFound({ id })),
+      ),
     findById: (id: string) =>
       Effect.suspend(() =>
         state.podcast
@@ -295,7 +302,7 @@ describe('startGeneration', () => {
   });
 
   describe('authorization', () => {
-    it('fails with ForbiddenError when non-owner tries to start generation', async () => {
+    it('fails with PodcastNotFound when non-owner tries to start generation', async () => {
       const owner = createTestUser();
       const nonOwner = createTestUser();
       const podcast = createTestPodcast({ createdBy: owner.id });
@@ -317,7 +324,8 @@ describe('startGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('PodcastNotFound');
+        expect((error as PodcastNotFound).id).toBe(podcast.id);
       }
     });
   });
@@ -342,7 +350,7 @@ describe('startGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
       }
     });
 
@@ -391,7 +399,7 @@ describe('startGeneration', () => {
       expect(updateStatusSpy).toHaveBeenNthCalledWith(2, podcast.id, 'ready');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(QueueError);
+        expect(error?._tag).toBe('QueueError');
       }
     });
   });

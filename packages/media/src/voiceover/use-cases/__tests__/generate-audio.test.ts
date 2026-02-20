@@ -1,15 +1,16 @@
-import { TTS, type TTSService, TTSError } from '@repo/ai';
+import { TTS, type TTSService } from '@repo/ai';
 import { createMockTTS, createMockLLM } from '@repo/ai/testing';
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import { createMockStorage } from '@repo/storage/testing';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type {
+  InvalidVoiceoverAudioGeneration} from '../../../errors';
+import type { TTSError } from '@repo/ai';
 import type { Voiceover, VoiceoverId, VoiceoverStatus } from '@repo/db/schema';
 import {
-  VoiceoverNotFound,
-  InvalidVoiceoverAudioGeneration,
+  VoiceoverNotFound
 } from '../../../errors';
 import {
   VoiceoverRepo,
@@ -113,6 +114,12 @@ const createMockVoiceoverRepo = (
   },
 ): Layer.Layer<VoiceoverRepo> => {
   const service: VoiceoverRepoService = {
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() =>
+        state.voiceover && state.voiceover.createdBy === userId
+          ? Effect.succeed(state.voiceover)
+          : Effect.fail(new VoiceoverNotFound({ id })),
+      ),
     findById: (id: string) =>
       Effect.suspend(() =>
         state.voiceover
@@ -387,12 +394,12 @@ describe('generateVoiceoverAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(VoiceoverNotFound);
+        expect(error?._tag).toBe('VoiceoverNotFound');
         expect((error as VoiceoverNotFound).id).toBe('voc_nonexistent');
       }
     });
 
-    it('fails with ForbiddenError when caller is not the owner', async () => {
+    it('fails with VoiceoverNotFound when caller is not the owner', async () => {
       const owner = createTestUser();
       const otherUser = createTestUser();
       const voiceover = createTestVoiceover({
@@ -420,7 +427,8 @@ describe('generateVoiceoverAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('VoiceoverNotFound');
+        expect((error as VoiceoverNotFound).id).toBe(voiceover.id);
       }
     });
 
@@ -451,7 +459,7 @@ describe('generateVoiceoverAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
+        expect(error?._tag).toBe('InvalidVoiceoverAudioGeneration');
         expect((error as InvalidVoiceoverAudioGeneration).voiceoverId).toBe(
           voiceover.id,
         );
@@ -488,7 +496,7 @@ describe('generateVoiceoverAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
+        expect(error?._tag).toBe('InvalidVoiceoverAudioGeneration');
       }
     });
 
@@ -562,7 +570,7 @@ describe('generateVoiceoverAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(TTSError);
+        expect(error?._tag).toBe('TTSError');
         expect((error as TTSError).message).toBe('TTS service unavailable');
       }
 

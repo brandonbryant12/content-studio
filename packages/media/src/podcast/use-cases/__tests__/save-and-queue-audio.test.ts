@@ -8,6 +8,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { InvalidSaveError } from '../save-changes';
 import type { Podcast, JobId, JobStatus } from '@repo/db/schema';
 import { PodcastNotFound } from '../../../errors';
 import { PodcastRepo, type PodcastRepoService } from '../../repos/podcast-repo';
@@ -15,7 +16,6 @@ import {
   saveAndQueueAudio,
   NoChangesToSaveError,
 } from '../save-and-queue-audio';
-import { InvalidSaveError } from '../save-changes';
 
 // =============================================================================
 // Test Setup
@@ -36,6 +36,14 @@ const createMockPodcastRepo = (
   },
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() =>
+        state.podcast &&
+        state.podcast.id === id &&
+        state.podcast.createdBy === userId
+          ? Effect.succeed({ ...state.podcast, documents: [] })
+          : Effect.fail(new PodcastNotFound({ id })),
+      ),
     findById: (id) =>
       Effect.suspend(() =>
         state.podcast
@@ -258,6 +266,7 @@ describe('saveAndQueueAudio', () => {
 
   describe('error handling', () => {
     it('fails when podcast not found', async () => {
+      const user = createTestUser();
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo({}),
@@ -265,16 +274,18 @@ describe('saveAndQueueAudio', () => {
       );
 
       const result = await Effect.runPromiseExit(
-        saveAndQueueAudio({
-          podcastId: 'pod_nonexistent',
-          segments: [{ speaker: 'Host', line: 'Test', index: 0 }],
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          saveAndQueueAudio({
+            podcastId: 'pod_nonexistent',
+            segments: [{ speaker: 'Host', line: 'Test', index: 0 }],
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
       }
     });
 
@@ -303,7 +314,7 @@ describe('saveAndQueueAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidSaveError);
+        expect(error?._tag).toBe('InvalidSaveError');
         expect((error as InvalidSaveError).currentStatus).toBe('drafting');
       }
     });
@@ -333,7 +344,7 @@ describe('saveAndQueueAudio', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(NoChangesToSaveError);
+        expect(error?._tag).toBe('NoChangesToSaveError');
         expect((error as NoChangesToSaveError).podcastId).toBe(podcast.id);
       }
     });

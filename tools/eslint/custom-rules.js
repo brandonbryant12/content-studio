@@ -3,6 +3,16 @@
 const isIdentifierNamed = (node, name) =>
   node?.type === 'Identifier' && node.name === name;
 
+const isMemberExpressionNamed = (
+  node,
+  objectName,
+  propertyName,
+) =>
+  node?.type === 'MemberExpression' &&
+  node.computed === false &&
+  isIdentifierNamed(node.object, objectName) &&
+  isIdentifierNamed(node.property, propertyName);
+
 const isStringLiteral = (node, value) =>
   node?.type === 'Literal' && node.value === value;
 
@@ -118,11 +128,130 @@ const noInlineInvalidateQueryKeyArray = {
   },
 };
 
+const noThrowInEffectGen = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Disallow throw statements directly inside Effect.gen generators.',
+    },
+    schema: [],
+    messages: {
+      noThrowInGen:
+        'Do not throw inside Effect.gen. Use Effect.fail(...) for typed failures or Effect.die(...) for defects.',
+    },
+  },
+  create(context) {
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
+    const getAncestors = (node) =>
+      typeof sourceCode.getAncestors === 'function'
+        ? sourceCode.getAncestors(node)
+        : context.getAncestors();
+
+    const isEffectGenCall = (node) =>
+      node?.type === 'CallExpression' &&
+      isMemberExpressionNamed(node.callee, 'Effect', 'gen');
+
+    return {
+      ThrowStatement(node) {
+        const ancestors = getAncestors(node);
+        const nearestFunction = [...ancestors].reverse().find(
+          (ancestor) =>
+            ancestor.type === 'FunctionExpression' ||
+            ancestor.type === 'FunctionDeclaration' ||
+            ancestor.type === 'ArrowFunctionExpression',
+        );
+
+        if (!nearestFunction) return;
+        if (nearestFunction.type !== 'FunctionExpression') return;
+        if (nearestFunction.generator !== true) return;
+
+        const callExpression = nearestFunction.parent;
+        if (!isEffectGenCall(callExpression)) return;
+
+        context.report({ node, messageId: 'noThrowInGen' });
+      },
+    };
+  },
+};
+
+const noInstanceofInEffectTests = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Disallow toBeInstanceOf assertions in Effect-oriented use-case tests.',
+    },
+    schema: [],
+    messages: {
+      noInstanceof:
+        'Use tagged error assertions (error._tag and error fields) instead of toBeInstanceOf(...) in Effect use-case tests.',
+    },
+  },
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (node.callee?.type !== 'MemberExpression') return;
+        if (!isIdentifierNamed(node.callee.property, 'toBeInstanceOf')) return;
+
+        context.report({ node, messageId: 'noInstanceof' });
+      },
+    };
+  },
+};
+
+const ALLOWED_INSTANCEOF_CLASSES = new Set(['URL', 'Buffer', 'AbortSignal']);
+
+const noErrorInstanceofInBackendTests = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Disallow toBeInstanceOf for tagged error assertions in backend tests.',
+    },
+    schema: [],
+    messages: {
+      noErrorInstanceof:
+        'For tagged errors, assert `_tag` and fields instead of toBeInstanceOf(...).',
+    },
+  },
+  create(context) {
+    const getClassName = (node) => {
+      if (!node) return null;
+      if (node.type === 'Identifier') return node.name;
+      if (
+        node.type === 'MemberExpression' &&
+        node.computed === false &&
+        node.property.type === 'Identifier'
+      ) {
+        return node.property.name;
+      }
+      return null;
+    };
+
+    return {
+      CallExpression(node) {
+        if (node.callee?.type !== 'MemberExpression') return;
+        if (!isIdentifierNamed(node.callee.property, 'toBeInstanceOf')) return;
+
+        const className = getClassName(node.arguments[0]);
+        if (!className) return;
+        if (ALLOWED_INSTANCEOF_CLASSES.has(className)) return;
+
+        context.report({ node, messageId: 'noErrorInstanceof' });
+      },
+    };
+  },
+};
+
 const customRules = {
   rules: {
     'no-unknown-chat-stream-contract': noUnknownChatStreamContract,
     'no-chat-status-not-ready': noChatStatusNotReady,
     'no-inline-invalidate-querykey-array': noInlineInvalidateQueryKeyArray,
+    'no-throw-in-effect-gen': noThrowInEffectGen,
+    'no-instanceof-in-effect-tests': noInstanceofInEffectTests,
+    'no-error-instanceof-in-backend-tests': noErrorInstanceofInBackendTests,
   },
 };
 

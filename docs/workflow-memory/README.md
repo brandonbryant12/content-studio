@@ -95,6 +95,28 @@ node scripts/workflow-memory/add-entry.mjs \
 
 This appends an event to the current month and updates `index.json`.
 
+## Coverage Audit
+
+Use the coverage audit to spot sparse workflow memory before it drifts:
+
+```bash
+pnpm workflow-memory:coverage
+```
+
+Optional flags:
+
+- `--month YYYY-MM` checks a specific month
+- `--min N` requires at least `N` entries per workflow
+- `--strict` exits non-zero when any workflow is below threshold
+
+Weekly baseline:
+
+```bash
+pnpm workflow-memory:coverage:strict
+```
+
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with `scripts/workflow-memory/add-entry.mjs`.
+
 ## Migration
 
 Run this once to migrate legacy markdown entries:

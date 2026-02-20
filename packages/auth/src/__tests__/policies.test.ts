@@ -1,6 +1,6 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { ForbiddenError } from '../errors';
+import type { ForbiddenError } from '../errors';
 import { requireOwnership, requireRole } from '../policy/policies';
 import { Policy, type PolicyService } from '../policy/service';
 import { Role } from '../policy/types';
@@ -82,7 +82,7 @@ describe('error types', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(ForbiddenError);
+      expect(error?._tag).toBe('ForbiddenError');
       expect((error as ForbiddenError).message).toBe(
         'You do not own this resource',
       );
@@ -98,7 +98,7 @@ describe('error types', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(ForbiddenError);
+      expect(error?._tag).toBe('ForbiddenError');
       expect((error as ForbiddenError).message).toBe('Requires admin role');
     }
   });

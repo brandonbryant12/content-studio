@@ -45,6 +45,7 @@ const createMockDocumentRepo = (
 ): Layer.Layer<DocumentRepo> =>
   Layer.succeed(DocumentRepo, {
     insert: insertFn,
+    findByIdForUser: () => Effect.die('Not implemented'),
     findById: () => Effect.die('Not implemented'),
     list: () => Effect.die('Not implemented'),
     update: () => Effect.die('Not implemented'),

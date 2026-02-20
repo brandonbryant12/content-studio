@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { replaceTextContentSafely } from '../../shared';
 import {
@@ -23,10 +23,10 @@ export interface UpdateDocumentInput {
 
 export const updateDocument = (input: UpdateDocumentInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const existing = yield* documentRepo.findById(input.id);
-    yield* requireOwnership(existing.createdBy);
+    const existing = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     const updateInput: RepoUpdateInput = {};
 

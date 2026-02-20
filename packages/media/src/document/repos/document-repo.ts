@@ -1,18 +1,18 @@
-import { Db, withDb, type DatabaseError } from '@repo/db/effect';
+import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
-  document,
   type Document,
-  type DocumentId,
   type DocumentSource,
   type DocumentStatus,
   type ResearchConfig,
 } from '@repo/db/schema';
-import { eq, desc, and, count as drizzleCount, sql } from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
-import { DocumentNotFound } from '../../errors';
+import { Context, Layer } from 'effect';
+import type { DocumentNotFound } from '../../errors';
+import type { Effect} from 'effect';
+import { documentReadMethods } from './document-repo.reads';
+import { documentWriteMethods } from './document-repo.writes';
 
 // =============================================================================
-// Input Types (previously in repository.ts)
+// Input Types
 // =============================================================================
 
 /**
@@ -106,6 +106,15 @@ export interface DocumentRepoService {
   ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
 
   /**
+   * Find document by ID scoped to owner.
+   * Fails with DocumentNotFound for missing or not-owned records.
+   */
+  readonly findByIdForUser: (
+    id: string,
+    userId: string,
+  ) => Effect.Effect<Document, DocumentNotFound | DatabaseError, Db>;
+
+  /**
    * List documents with optional filters.
    */
   readonly list: (
@@ -188,182 +197,16 @@ export class DocumentRepo extends Context.Tag('@repo/media/DocumentRepo')<
   DocumentRepoService
 >() {}
 
-// =============================================================================
-// Implementation
-// =============================================================================
-
 const make: DocumentRepoService = {
-  insert: (data) =>
-    withDb('documentRepo.insert', async (db) => {
-      const [doc] = await db.insert(document).values(data).returning();
-      return doc!;
-    }),
-
-  findById: (id) =>
-    withDb('documentRepo.findById', (db) =>
-      db
-        .select()
-        .from(document)
-        .where(eq(document.id, id as DocumentId))
-        .limit(1)
-        .then((rows) => rows[0]),
-    ).pipe(
-      Effect.flatMap((doc) =>
-        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
-      ),
-    ),
-
-  list: (options) =>
-    withDb('documentRepo.list', (db) => {
-      const filters = [];
-      if (options.createdBy)
-        filters.push(eq(document.createdBy, options.createdBy));
-      if (options.source)
-        filters.push(eq(document.source, options.source as DocumentSource));
-      if (options.status)
-        filters.push(eq(document.status, options.status as DocumentStatus));
-
-      const conditions = filters.length > 0 ? and(...filters) : undefined;
-
-      return db
-        .select()
-        .from(document)
-        .where(conditions)
-        .orderBy(desc(document.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0);
-    }),
-
-  update: (id, data) =>
-    withDb('documentRepo.update', async (db) => {
-      const updates: Partial<typeof document.$inferInsert> = {
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      const [doc] = await db
-        .update(document)
-        .set(updates)
-        .where(eq(document.id, id as DocumentId))
-        .returning();
-      return doc;
-    }).pipe(
-      Effect.flatMap((doc) =>
-        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
-      ),
-    ),
-
-  delete: (id) =>
-    withDb('documentRepo.delete', async (db) => {
-      const result = await db
-        .delete(document)
-        .where(eq(document.id, id as DocumentId))
-        .returning({ id: document.id });
-      return result.length > 0;
-    }),
-
-  count: (options) =>
-    withDb('documentRepo.count', async (db) => {
-      const conditions = options?.createdBy
-        ? eq(document.createdBy, options.createdBy)
-        : undefined;
-      const [result] = await db
-        .select({ count: drizzleCount() })
-        .from(document)
-        .where(conditions);
-      return result?.count ?? 0;
-    }),
-
-  updateStatus: (id, status, errorMessage) =>
-    withDb('documentRepo.updateStatus', async (db) => {
-      const updates: Partial<typeof document.$inferInsert> = {
-        status,
-        updatedAt: new Date(),
-        // Set error message when failed, clear it otherwise
-        errorMessage: status === 'failed' ? (errorMessage ?? null) : null,
-      };
-
-      const [doc] = await db
-        .update(document)
-        .set(updates)
-        .where(eq(document.id, id as DocumentId))
-        .returning();
-      return doc;
-    }).pipe(
-      Effect.flatMap((doc) =>
-        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
-      ),
-    ),
-
-  updateContent: (id, data) =>
-    withDb('documentRepo.updateContent', async (db) => {
-      const updates: Partial<typeof document.$inferInsert> = {
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      const [doc] = await db
-        .update(document)
-        .set(updates)
-        .where(eq(document.id, id as DocumentId))
-        .returning();
-      return doc;
-    }).pipe(
-      Effect.flatMap((doc) =>
-        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
-      ),
-    ),
-
-  findBySourceUrl: (url, createdBy) =>
-    withDb('documentRepo.findBySourceUrl', (db) =>
-      db
-        .select()
-        .from(document)
-        .where(
-          and(eq(document.sourceUrl, url), eq(document.createdBy, createdBy)),
-        )
-        .limit(1)
-        .then((rows) => rows[0] ?? null),
-    ),
-
-  updateResearchConfig: (id, config) =>
-    withDb('documentRepo.updateResearchConfig', async (db) => {
-      const [doc] = await db
-        .update(document)
-        .set({
-          researchConfig: config,
-          updatedAt: new Date(),
-        })
-        .where(eq(document.id, id as DocumentId))
-        .returning();
-      return doc;
-    }).pipe(
-      Effect.flatMap((doc) =>
-        doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
-      ),
-    ),
-
-  findOrphanedResearch: () =>
-    withDb('documentRepo.findOrphanedResearch', (db) =>
-      db
-        .select()
-        .from(document)
-        .where(
-          and(
-            eq(document.source, 'research'),
-            sql`${document.researchConfig}->>'operationId' IS NOT NULL`,
-            sql`${document.researchConfig}->>'researchStatus' = 'in_progress'`,
-          ),
-        ),
-    ),
+  ...documentReadMethods,
+  ...documentWriteMethods,
 };
 
 // =============================================================================
 // Layer
 // =============================================================================
 
-export const DocumentRepoLive: Layer.Layer<DocumentRepo, never, Db> =
-  Layer.effect(
-    DocumentRepo,
-    Effect.map(Db, () => make),
-  );
+export const DocumentRepoLive: Layer.Layer<DocumentRepo> = Layer.succeed(
+  DocumentRepo,
+  make,
+);

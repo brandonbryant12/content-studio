@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import { generateVoiceoverId } from '@repo/db/schema';
 import { Queue, QueueError, type QueueService, type Job } from '@repo/queue';
@@ -93,6 +92,14 @@ const createMockVoiceoverRepo = (
   },
 ): Layer.Layer<VoiceoverRepo> => {
   const service: VoiceoverRepoService = {
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() =>
+        state.voiceover &&
+        state.voiceover.id === id &&
+        state.voiceover.createdBy === userId
+          ? Effect.succeed(state.voiceover)
+          : Effect.fail(new VoiceoverNotFound({ id })),
+      ),
     findById: (id: string) =>
       Effect.suspend(() =>
         state.voiceover && state.voiceover.id === id
@@ -386,11 +393,11 @@ describe('startVoiceoverGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(VoiceoverNotFound);
+        expect(error?._tag).toBe('VoiceoverNotFound');
       }
     });
 
-    it('fails with ForbiddenError when caller is not owner', async () => {
+    it('fails with VoiceoverNotFound when caller is not owner', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const otherUser = createTestUser({ id: 'other-user-id' });
       const voiceover = createTestVoiceover({
@@ -415,7 +422,8 @@ describe('startVoiceoverGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('VoiceoverNotFound');
+        expect((error as VoiceoverNotFound).id).toBe(voiceover.id);
       }
     });
 
@@ -443,7 +451,7 @@ describe('startVoiceoverGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
+        expect(error?._tag).toBe('InvalidVoiceoverAudioGeneration');
         if (error instanceof InvalidVoiceoverAudioGeneration) {
           expect(error.voiceoverId).toBe(voiceover.id);
           expect(error.reason).toContain('no text');
@@ -475,7 +483,7 @@ describe('startVoiceoverGeneration', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidVoiceoverAudioGeneration);
+        expect(error?._tag).toBe('InvalidVoiceoverAudioGeneration');
       }
     });
 
@@ -528,7 +536,7 @@ describe('startVoiceoverGeneration', () => {
       expect(updateStatusSpy).toHaveBeenNthCalledWith(2, voiceover.id, 'ready');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(QueueError);
+        expect(error?._tag).toBe('QueueError');
       }
     });
   });

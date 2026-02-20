@@ -1,7 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi } from 'vitest';
+import type { UnauthorizedError } from '../errors';
 import type { AuthInstance } from '../server/auth';
-import { UnauthorizedError } from '../errors';
 import { Policy, type PolicyService } from '../policy/service';
 import { Role } from '../policy/types';
 import {
@@ -147,7 +147,7 @@ describe('requireSession', () => {
     expect(exit._tag).toBe('Failure');
     if (exit._tag === 'Failure') {
       const error = exit.cause._tag === 'Fail' ? exit.cause.error : null;
-      expect(error).toBeInstanceOf(UnauthorizedError);
+      expect(error?._tag).toBe('UnauthorizedError');
       expect((error as UnauthorizedError).message).toBe(
         'Authentication required',
       );

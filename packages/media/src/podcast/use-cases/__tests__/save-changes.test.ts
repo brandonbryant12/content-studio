@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db } from '@repo/db/effect';
 import {
   createTestUser,
@@ -45,6 +44,17 @@ const createMockPodcastRepo = (
     setApproval: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
 
+    findByIdForUser: (id: string, userId: string) =>
+      Effect.suspend(() => {
+        const podcast = state.podcasts.get(id);
+        if (!podcast || podcast.createdBy !== userId) {
+          return Effect.fail(new PodcastNotFound({ id }));
+        }
+        return Effect.succeed({
+          ...podcast,
+          documents: [],
+        } as PodcastWithDocuments);
+      }),
     findById: (id: string) =>
       Effect.suspend(() => {
         const podcast = state.podcasts.get(id);
@@ -194,7 +204,7 @@ describe('saveChanges', () => {
   });
 
   describe('authorization', () => {
-    it('fails with ForbiddenError when non-owner tries to save', async () => {
+    it('fails with PodcastNotFound when non-owner tries to save', async () => {
       const user = createTestUser();
       const otherUser = createTestUser();
       const podcast = createTestPodcast({
@@ -219,7 +229,8 @@ describe('saveChanges', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('PodcastNotFound');
+        expect((error as PodcastNotFound).id).toBe(podcast.id);
       }
     });
   });
@@ -249,7 +260,7 @@ describe('saveChanges', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidSaveError);
+        expect(error?._tag).toBe('InvalidSaveError');
         expect((error as InvalidSaveError).podcastId).toBe(podcast.id);
         expect((error as InvalidSaveError).currentStatus).toBe(
           'generating_audio',
@@ -275,7 +286,7 @@ describe('saveChanges', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
       }
     });
 

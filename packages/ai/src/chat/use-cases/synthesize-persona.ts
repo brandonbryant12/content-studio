@@ -1,6 +1,7 @@
 import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
+import { formatMessagesForSynthesis } from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
   name: Schema.String,
@@ -40,18 +41,55 @@ Pick the voice that best matches the persona's personality, energy level, and sp
 
 Focus on creating a vivid, distinctive character based on the conversation.`;
 
-function formatMessages(messages: UIMessage[]): string {
-  return messages
-    .map((m) => {
-      const text = m.parts
-        .filter(
-          (p): p is Extract<typeof p, { type: 'text' }> => p.type === 'text',
-        )
-        .map((p) => p.text)
-        .join('');
-      return `${m.role === 'user' ? 'User' : 'Assistant'}: ${text}`;
-    })
-    .join('\n\n');
+const PRIMARY_FORMAT_OPTIONS = {
+  maxMessages: 24,
+  maxCharsPerMessage: 700,
+  maxTotalChars: 12_000,
+} as const;
+
+const FALLBACK_FORMAT_OPTIONS = {
+  maxMessages: 10,
+  maxCharsPerMessage: 300,
+  maxTotalChars: 4_000,
+} as const;
+
+const FALLBACK_QUOTE = 'Let us unpack this topic with clarity and curiosity.';
+const FALLBACK_VOICE = 'Puck';
+
+function normalizeString(value: string, fallback: string) {
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : fallback;
+}
+
+function normalizeSynthesisResult(result: {
+  readonly name: string;
+  readonly role: string;
+  readonly personalityDescription: string;
+  readonly speakingStyle: string;
+  readonly exampleQuotes: readonly string[];
+  readonly voiceId: string;
+  readonly voiceName: string;
+}) {
+  const exampleQuotes = result.exampleQuotes
+    .map((quote) => quote.trim())
+    .filter((quote) => quote.length > 0)
+    .slice(0, 3);
+
+  return {
+    name: normalizeString(result.name, 'Podcast Persona'),
+    role: normalizeString(result.role, 'Podcast Co-Host'),
+    personalityDescription: normalizeString(
+      result.personalityDescription,
+      'Confident, insightful, and engaging communicator.',
+    ),
+    speakingStyle: normalizeString(
+      result.speakingStyle,
+      'Conversational, concise, and audience-focused.',
+    ),
+    exampleQuotes: exampleQuotes.length > 0 ? exampleQuotes : [FALLBACK_QUOTE],
+    voiceId: normalizeString(result.voiceId, FALLBACK_VOICE),
+    voiceName: normalizeString(result.voiceName, FALLBACK_VOICE),
+  };
 }
 
 export interface SynthesizePersonaInput {
@@ -61,16 +99,31 @@ export interface SynthesizePersonaInput {
 export const synthesizePersona = (input: SynthesizePersonaInput) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
+    const generate = (prompt: string, temperature: number, maxTokens: number) =>
+      llm.generate({
+        system: SYSTEM_PROMPT,
+        prompt,
+        schema: SynthesisResult,
+        temperature,
+        maxTokens,
+      });
 
-    const result = yield* llm.generate({
-      system: SYSTEM_PROMPT,
-      prompt: formatMessages(input.messages),
-      schema: SynthesisResult,
-      temperature: 0.3,
-      maxTokens: 1024,
-    });
+    const primaryPrompt = formatMessagesForSynthesis(
+      input.messages,
+      PRIMARY_FORMAT_OPTIONS,
+    );
+    const fallbackPrompt = formatMessagesForSynthesis(
+      input.messages,
+      FALLBACK_FORMAT_OPTIONS,
+    );
 
-    return result.object;
+    const primaryResult = yield* generate(primaryPrompt, 0.3, 1024).pipe(
+      // Lengthy conversations can degrade structured output reliability.
+      // Retry once with a compact context window before surfacing the error.
+      Effect.catchTag('LLMError', () => generate(fallbackPrompt, 0.2, 768)),
+    );
+
+    return normalizeSynthesisResult(primaryResult.object);
   }).pipe(
     Effect.withSpan('useCase.synthesizePersona', {
       attributes: { 'chat.messageCount': input.messages.length },

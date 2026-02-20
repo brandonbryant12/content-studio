@@ -89,7 +89,10 @@ This decouples use cases from HTTP context while ensuring every use case has acc
 Repositories must:
 - Accept `userId` as an explicit parameter on ownership-scoped queries
 - Never import or call `getCurrentUser`
-- Return `Option.none()` or empty results when resource is not found (use case converts to typed error)
+- Prefer querying with ownership predicate (`id + userId`) for owner-only resources
+- Prefer domain typed not-found for both true-missing and not-owned (concealment)
+
+Use cases should prefer ownership-scoped repo methods over `findById` + `requireOwnership` for owner-only flows.
 
 ## Multi-User / Collaboration
 <!-- enforced-by: manual-review -->

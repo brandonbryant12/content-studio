@@ -29,6 +29,7 @@ export {
   InfographicNotFound,
   NotInfographicOwner,
   InfographicError,
+  StylePresetNotFound,
 } from './infographic-errors';
 
 export { PersonaNotFound, NotPersonaOwner } from './persona-errors';

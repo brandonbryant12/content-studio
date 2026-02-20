@@ -1,7 +1,8 @@
-import { TTS, TTSError } from '@repo/ai';
+import { TTS } from '@repo/ai';
 import { MockTTSLive, MOCK_VOICES, createMockTTS } from '@repo/ai/testing';
 import { Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
+import type { TTSError } from '@repo/ai';
 
 describe('test-tts command logic', () => {
   it('lists available voices', async () => {
@@ -62,7 +63,9 @@ describe('test-tts command logic', () => {
 
     expect(exit._tag).toBe('Failure');
     if (exit._tag === 'Failure' && exit.cause._tag === 'Fail') {
-      expect(exit.cause.error).toBeInstanceOf(TTSError);
+      const error = exit.cause.error;
+      expect(error?._tag).toBe('TTSError');
+      expect((error as TTSError).message).toBe('Quota exceeded');
     }
   });
 });

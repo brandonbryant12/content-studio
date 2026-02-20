@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Db, type DbService } from '@repo/db/effect';
 import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
@@ -50,6 +49,7 @@ const createMockVoiceoverRepo = (
 ): Layer.Layer<VoiceoverRepo> =>
   Layer.succeed(VoiceoverRepo, {
     insert: () => Effect.die('Not implemented'),
+    findByIdForUser: (id) => findByIdFn(id),
     findById: findByIdFn,
     list: () => Effect.die('Not implemented'),
     update: () => Effect.die('Not implemented'),
@@ -190,7 +190,7 @@ describe('getVoiceover', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(VoiceoverNotFound);
+        expect(error?._tag).toBe('VoiceoverNotFound');
         expect((error as VoiceoverNotFound).id).toBe(nonExistentId);
       }
     });
@@ -222,30 +222,26 @@ describe('getVoiceover', () => {
       expect(capturedId).toBe(voiceoverId);
     });
 
-    it('fails with ForbiddenError when non-owner tries to access', async () => {
+    it('fails with VoiceoverNotFound when non-owner tries to access', async () => {
       const requestingUser = createTestUser({ id: 'requesting-user-123' });
-      const ownerId = 'owner-user-456';
-      const voiceover = createMockVoiceover({
-        id: 'voc_otheruser12345' as VoiceoverId,
-        title: 'Other User Voiceover',
-        createdBy: ownerId,
-      });
+      const voiceoverId = 'voc_otheruser12345' as VoiceoverId;
 
-      const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
+      const mockRepo = createMockVoiceoverRepo((id) =>
+        Effect.fail(new VoiceoverNotFound({ id })),
+      );
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromiseExit(
         withTestUser(requestingUser)(
-          getVoiceover({ voiceoverId: voiceover.id }).pipe(
-            Effect.provide(layers),
-          ),
+          getVoiceover({ voiceoverId }).pipe(Effect.provide(layers)),
         ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('VoiceoverNotFound');
+        expect((error as VoiceoverNotFound).id).toBe(voiceoverId);
       }
     });
   });

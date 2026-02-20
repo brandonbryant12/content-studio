@@ -27,6 +27,7 @@ interface PersonaChatDialogProps {
   error: Error | undefined;
   synthesizeError: Error | undefined;
   canCreatePersona: boolean;
+  autoCreateReady: boolean;
   onSendMessage: (text: string) => void;
   onCreatePersona: () => void;
   isCreatingPersona: boolean;
@@ -40,6 +41,7 @@ export function PersonaChatDialog({
   error,
   synthesizeError,
   canCreatePersona,
+  autoCreateReady,
   onSendMessage,
   onCreatePersona,
   isCreatingPersona,
@@ -139,7 +141,9 @@ export function PersonaChatDialog({
             )}
             <Button
               onClick={onCreatePersona}
-              disabled={isCreatingPersona}
+              disabled={
+                isCreatingPersona || (autoCreateReady && !synthesizeError)
+              }
               className="w-full"
             >
               {isCreatingPersona ? (
@@ -149,6 +153,8 @@ export function PersonaChatDialog({
                 </>
               ) : synthesizeError ? (
                 'Retry'
+              ) : autoCreateReady ? (
+                'Creating automatically...'
               ) : (
                 'Create Persona'
               )}
@@ -162,9 +168,11 @@ export function PersonaChatDialog({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              canCreatePersona
-                ? 'Add more details or click Create Persona...'
-                : 'Describe your persona idea...'
+              autoCreateReady && !synthesizeError
+                ? 'Persona is being created automatically...'
+                : canCreatePersona
+                  ? 'Add more details or click Create Persona...'
+                  : 'Describe your persona idea...'
             }
             disabled={isStreaming || isCreatingPersona}
             autoFocus

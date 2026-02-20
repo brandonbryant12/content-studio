@@ -14,6 +14,9 @@
 4. Use `Effect.runPromiseExit` + `_tag` assertions for typed errors.
 <!-- enforced-by: manual-review -->
 
+4a. In use-case tests, do not use `toBeInstanceOf(...)` for Effect failures; assert `_tag` + fields instead.
+<!-- enforced-by: eslint -->
+
 5. Run `pnpm test:invariants` alongside use case tests for backend changes.
 <!-- enforced-by: invariant-test -->
 
@@ -119,4 +122,5 @@ const doc = await DocumentFactory.create(ctx.db, { userId: user.id });
 |---|---|
 | Verify error type only | `Effect.runPromiseExit` + `_tag` check |
 | Verify error type + properties | `Effect.runPromiseExit` + destructure error value |
+| Add runtime class guard (non-use-case tests only) | Optional outside use-case tests; use `_tag` + fields inside use-case tests |
 | Quick check in test prototyping | `rejects.toThrow('TagName')` (upgrade before merge) |

@@ -160,7 +160,7 @@ describe('generateInfographic', () => {
     ]);
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(QueueError);
+      expect(error?._tag).toBe('QueueError');
     }
   });
 });

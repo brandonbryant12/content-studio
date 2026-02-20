@@ -15,6 +15,8 @@ flowchart LR
 2. **Each package owns its errors** -- import from the owning package <!-- enforced-by: eslint -->
 3. **Use `handleEffectWithProtocol`** -- never legacy `handleEffect` with manual mapping <!-- enforced-by: invariant-test -->
 4. **Let Effect infer the error union**; export derived alias for consumers/tests <!-- enforced-by: types -->
+5. **In Effect logic, prefer `Effect.fail` / `Effect.die` over `throw`**; especially never `throw` directly inside `Effect.gen` <!-- enforced-by: eslint -->
+6. **In backend tests, assert tagged errors via `_tag` + fields** rather than `toBeInstanceOf(...)` for domain/app errors <!-- enforced-by: eslint -->
 
 ## Error Template
 
@@ -63,6 +65,7 @@ Returns structured data for the response body. Include it when the frontend need
 | Auth / policy | `@repo/auth/errors` | `PolicyError` |
 
 Import from the owning package, never cross-import domain errors through `@repo/db`.
+Do not define domain error classes inline inside repository files.
 
 ## Log Levels <!-- enforced-by: manual-review -->
 

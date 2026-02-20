@@ -1,5 +1,4 @@
 import { Db } from '@repo/db/effect';
-import { ForbiddenError } from '@repo/db/errors';
 import {
   createTestUser,
   createTestAdmin,
@@ -41,6 +40,9 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
     clearAudio: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
 
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: (id: string) =>
       Effect.suspend(() => {
         const podcast = state.podcasts.find((p) => p.id === id);
@@ -146,7 +148,7 @@ describe('revokeApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('ForbiddenError');
       }
     });
 
@@ -170,7 +172,7 @@ describe('revokeApproval', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(PodcastNotFound);
+        expect(error?._tag).toBe('PodcastNotFound');
       }
     });
   });

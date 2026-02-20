@@ -48,6 +48,7 @@ const createMockVoiceoverRepo = (
 ): Layer.Layer<VoiceoverRepo> =>
   Layer.succeed(VoiceoverRepo, {
     insert: insertFn,
+    findByIdForUser: () => Effect.die('Not implemented'),
     findById: () => Effect.die('Not implemented'),
     list: () => Effect.die('Not implemented'),
     update: () => Effect.die('Not implemented'),

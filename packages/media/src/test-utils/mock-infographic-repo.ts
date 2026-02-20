@@ -14,6 +14,7 @@ export const createMockInfographicRepo = (
   const defaults: InfographicRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
+    findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
@@ -24,5 +25,18 @@ export const createMockInfographicRepo = (
     clearApproval: () => Effect.die('not implemented'),
   };
 
-  return Layer.succeed(InfographicRepo, { ...defaults, ...overrides });
+  const findByIdForUser =
+    overrides.findByIdForUser ??
+    (overrides.findById
+      ? (id: string, _userId: string) =>
+          overrides.findById!(id) as ReturnType<
+            InfographicRepoService['findByIdForUser']
+          >
+      : defaults.findByIdForUser);
+
+  return Layer.succeed(InfographicRepo, {
+    ...defaults,
+    ...overrides,
+    findByIdForUser,
+  });
 };

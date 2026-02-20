@@ -59,11 +59,11 @@ describe('getInfographic', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(InfographicNotFound);
+      expect(error?._tag).toBe('InfographicNotFound');
     }
   });
 
-  it('fails with ForbiddenError when owned by another user', async () => {
+  it('fails with InfographicNotFound when owned by another user', async () => {
     const user = createTestUser();
     const otherUser = createTestUser();
     const infographic = createTestInfographic({
@@ -71,7 +71,8 @@ describe('getInfographic', () => {
     });
 
     const repo = createMockInfographicRepo({
-      findById: () => Effect.succeed(infographic),
+      findByIdForUser: (id: string) =>
+        Effect.fail(new InfographicNotFound({ id })),
     });
     const layers = Layer.mergeAll(MockDbLive, repo);
 
@@ -82,5 +83,10 @@ describe('getInfographic', () => {
     );
 
     expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+      expect(error?._tag).toBe('InfographicNotFound');
+      expect((error as InfographicNotFound).id).toBe(infographic.id);
+    }
   });
 });

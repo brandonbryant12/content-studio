@@ -26,3 +26,23 @@ Use this format:
 - Evidence: `docs/workflow-memory/README.md`, `scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`
 - Owner: @ai-workflow
 - Status: active
+
+## 2026-02-20 - Workflow Memory Coverage Audits
+
+- Source workflow: Self-Improvement
+- Problem signature: Workflow memory entries were structurally correct but sparse across active workflows.
+- Control type: automation + docs rule + skill update
+- Change landed: `scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
+- Evidence: `scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/content-studio-periodic-scans/SKILL.md`
+- Owner: @ai-workflow
+- Status: active
+
+## 2026-02-20 - Skill Quality Checks For Skill Drift
+
+- Source workflow: Self-Improvement
+- Problem signature: Skill content drift and stale path examples reduce reliability of skill-guided edits.
+- Control type: automation + docs rule
+- Change landed: `scripts/skills/check-quality.mjs`, `skills:check:strict` command, workflow/docs updates requiring quality checks after skill edits.
+- Evidence: `scripts/skills/check-quality.mjs`, `package.json`, `docs/workflow.md`, `AGENTS.md`, `CLAUDE.md`
+- Owner: @ai-workflow
+- Status: active

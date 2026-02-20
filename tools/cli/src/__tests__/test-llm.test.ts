@@ -1,7 +1,8 @@
-import { LLM, LLMError } from '@repo/ai';
+import { LLM } from '@repo/ai';
 import { MockLLMLive, createMockLLM } from '@repo/ai/testing';
 import { Effect, Schema } from 'effect';
 import { describe, it, expect } from 'vitest';
+import type { LLMError } from '@repo/ai';
 import { buildChatPrompt, parseBoundedNumber } from '../commands/test-llm';
 
 describe('test-llm command logic', () => {
@@ -95,7 +96,9 @@ describe('test-llm command logic', () => {
 
     expect(exit._tag).toBe('Failure');
     if (exit._tag === 'Failure' && exit.cause._tag === 'Fail') {
-      expect(exit.cause.error).toBeInstanceOf(LLMError);
+      const error = exit.cause.error;
+      expect(error?._tag).toBe('LLMError');
+      expect((error as LLMError).message).toBe('API key invalid');
     }
   });
 });

@@ -26,6 +26,8 @@ interface ResearchChatDialogProps {
   isStreaming: boolean;
   error: Error | undefined;
   canStartResearch: boolean;
+  autoStartReady: boolean;
+  startError: Error | undefined;
   onSendMessage: (text: string) => void;
   onStartResearch: () => void;
   isStartingResearch: boolean;
@@ -38,6 +40,8 @@ export function ResearchChatDialog({
   isStreaming,
   error,
   canStartResearch,
+  autoStartReady,
+  startError,
   onSendMessage,
   onStartResearch,
   isStartingResearch,
@@ -132,10 +136,15 @@ export function ResearchChatDialog({
 
         {/* Start Research button */}
         {canStartResearch && (
-          <div className="border-t px-6 py-3">
+          <div className="border-t px-6 py-3 space-y-2">
+            {startError && (
+              <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
+                Failed to start research. Please try again.
+              </p>
+            )}
             <Button
               onClick={onStartResearch}
-              disabled={isStartingResearch}
+              disabled={isStartingResearch || (autoStartReady && !startError)}
               className="w-full"
             >
               {isStartingResearch ? (
@@ -143,6 +152,10 @@ export function ResearchChatDialog({
                   <Spinner className="w-4 h-4 mr-2" />
                   Preparing research...
                 </>
+              ) : startError ? (
+                'Retry'
+              ) : autoStartReady ? (
+                'Starting automatically...'
               ) : (
                 'Start Research'
               )}
@@ -157,9 +170,11 @@ export function ResearchChatDialog({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              canStartResearch
-                ? 'Add more details or click Start Research...'
-                : 'Describe your research topic...'
+              autoStartReady && !startError
+                ? 'Research is starting automatically...'
+                : canStartResearch
+                  ? 'Add more details or click Start Research...'
+                  : 'Describe your research topic...'
             }
             disabled={isStreaming || isStartingResearch}
             autoFocus

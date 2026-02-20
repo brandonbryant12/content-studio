@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
@@ -16,10 +16,19 @@ export function ResearchChatContainer({
   const chat = useResearchChat();
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
+  const autoStartTriggeredRef = useRef(false);
+
+  const isStartingResearch =
+    synthesizeMutation.isPending || startResearchMutation.isPending;
+  const startError =
+    synthesizeMutation.error ?? startResearchMutation.error ?? undefined;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
-      if (!isOpen) chat.reset();
+      if (!isOpen) {
+        autoStartTriggeredRef.current = false;
+        chat.reset();
+      }
       onOpenChange(isOpen);
     },
     [onOpenChange, chat],
@@ -33,6 +42,9 @@ export function ResearchChatContainer({
   );
 
   const handleStartResearch = useCallback(() => {
+    if (chat.messages.length === 0 || isStartingResearch) return;
+    autoStartTriggeredRef.current = true;
+
     synthesizeMutation.mutate(chat.messages, {
       onSuccess: ({ query, title }) => {
         startResearchMutation.mutate(
@@ -44,14 +56,24 @@ export function ResearchChatContainer({
       },
     });
   }, [
+    chat.messages,
+    isStartingResearch,
     synthesizeMutation,
     startResearchMutation,
-    chat.messages,
     handleOpenChange,
   ]);
 
-  const isStartingResearch =
-    synthesizeMutation.isPending || startResearchMutation.isPending;
+  useEffect(() => {
+    if (!open || autoStartTriggeredRef.current) return;
+    if (!chat.shouldAutoStart || chat.isStreaming || isStartingResearch) return;
+    handleStartResearch();
+  }, [
+    open,
+    chat.shouldAutoStart,
+    chat.isStreaming,
+    isStartingResearch,
+    handleStartResearch,
+  ]);
 
   return (
     <ResearchChatDialog
@@ -61,6 +83,8 @@ export function ResearchChatContainer({
       isStreaming={chat.isStreaming}
       error={chat.error}
       canStartResearch={chat.canStartResearch}
+      autoStartReady={chat.shouldAutoStart}
+      startError={startError}
       onSendMessage={handleSendMessage}
       onStartResearch={handleStartResearch}
       isStartingResearch={isStartingResearch}

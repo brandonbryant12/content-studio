@@ -1,13 +1,10 @@
-import { Db, withDb, type DatabaseError } from '@repo/db/effect';
-import {
-  voiceover,
-  type Voiceover,
-  type VoiceoverId,
-  type VoiceoverStatus,
-} from '@repo/db/schema';
-import { eq, desc, count as drizzleCount } from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
-import { VoiceoverNotFound } from '../../errors';
+import { type Db, type DatabaseError } from '@repo/db/effect';
+import { type Voiceover, type VoiceoverStatus } from '@repo/db/schema';
+import { Context, Layer } from 'effect';
+import type { VoiceoverNotFound } from '../../errors';
+import type { Effect} from 'effect';
+import { voiceoverReadMethods } from './voiceover-repo.reads';
+import { voiceoverWriteMethods } from './voiceover-repo.writes';
 
 // =============================================================================
 // Types
@@ -54,6 +51,15 @@ export interface VoiceoverRepoService {
    */
   readonly findById: (
     id: string,
+  ) => Effect.Effect<Voiceover, VoiceoverNotFound | DatabaseError, Db>;
+
+  /**
+   * Find voiceover by ID scoped to owner.
+   * Fails with VoiceoverNotFound for missing or not-owned records.
+   */
+  readonly findByIdForUser: (
+    id: string,
+    userId: string,
   ) => Effect.Effect<Voiceover, VoiceoverNotFound | DatabaseError, Db>;
 
   /**
@@ -137,167 +143,16 @@ export class VoiceoverRepo extends Context.Tag('@repo/media/VoiceoverRepo')<
   VoiceoverRepoService
 >() {}
 
-// =============================================================================
-// Implementation
-// =============================================================================
-
-const requireVoiceover = (id: string) =>
-  Effect.flatMap((voiceover: Voiceover | null | undefined) =>
-    voiceover
-      ? Effect.succeed(voiceover)
-      : Effect.fail(new VoiceoverNotFound({ id })),
-  );
-
 const make: VoiceoverRepoService = {
-  insert: (data) =>
-    withDb('voiceoverRepo.insert', async (db) => {
-      const [vo] = await db
-        .insert(voiceover)
-        .values({
-          title: data.title,
-          createdBy: data.createdBy,
-        })
-        .returning();
-      return vo!;
-    }),
-
-  findById: (id) =>
-    withDb('voiceoverRepo.findById', async (db) => {
-      const [vo] = await db
-        .select()
-        .from(voiceover)
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .limit(1);
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  update: (id, data) =>
-    withDb('voiceoverRepo.update', async (db) => {
-      const updateValues: Partial<Voiceover> = {
-        ...Object.fromEntries(
-          Object.entries(data).filter(([, v]) => v !== undefined),
-        ),
-        updatedAt: new Date(),
-      };
-
-      const [vo] = await db
-        .update(voiceover)
-        .set(updateValues)
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  delete: (id) =>
-    withDb('voiceoverRepo.delete', async (db) => {
-      const result = await db
-        .delete(voiceover)
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning({ id: voiceover.id });
-      return result.length > 0;
-    }),
-
-  list: (options) =>
-    withDb('voiceoverRepo.list', (db) => {
-      const createdBy = options.userId || options.createdBy;
-
-      return db
-        .select()
-        .from(voiceover)
-        .where(createdBy ? eq(voiceover.createdBy, createdBy) : undefined)
-        .orderBy(desc(voiceover.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0);
-    }),
-
-  count: (options) =>
-    withDb('voiceoverRepo.count', async (db) => {
-      const createdBy = options?.userId || options?.createdBy;
-
-      const [result] = await db
-        .select({ count: drizzleCount() })
-        .from(voiceover)
-        .where(createdBy ? eq(voiceover.createdBy, createdBy) : undefined);
-      return result?.count ?? 0;
-    }),
-
-  updateStatus: (id, status, errorMessage) =>
-    withDb('voiceoverRepo.updateStatus', async (db) => {
-      const [vo] = await db
-        .update(voiceover)
-        .set({
-          status,
-          errorMessage: errorMessage ?? null,
-          updatedAt: new Date(),
-        })
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  updateAudio: (id, options) =>
-    withDb('voiceoverRepo.updateAudio', async (db) => {
-      const [vo] = await db
-        .update(voiceover)
-        .set({
-          audioUrl: options.audioUrl,
-          duration: options.duration,
-          updatedAt: new Date(),
-        })
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  clearAudio: (id) =>
-    withDb('voiceoverRepo.clearAudio', async (db) => {
-      const [vo] = await db
-        .update(voiceover)
-        .set({
-          audioUrl: null,
-          duration: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  setApproval: (id, approvedBy) =>
-    withDb('voiceoverRepo.setApproval', async (db) => {
-      const [vo] = await db
-        .update(voiceover)
-        .set({
-          approvedBy,
-          approvedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
-
-  clearApproval: (id) =>
-    withDb('voiceoverRepo.clearApproval', async (db) => {
-      const [vo] = await db
-        .update(voiceover)
-        .set({
-          approvedBy: null,
-          approvedAt: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .returning();
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
+  ...voiceoverReadMethods,
+  ...voiceoverWriteMethods,
 };
 
 // =============================================================================
 // Layer
 // =============================================================================
 
-export const VoiceoverRepoLive: Layer.Layer<VoiceoverRepo, never, Db> =
-  Layer.effect(
-    VoiceoverRepo,
-    Effect.map(Db, () => make),
-  );
+export const VoiceoverRepoLive: Layer.Layer<VoiceoverRepo> = Layer.succeed(
+  VoiceoverRepo,
+  make,
+);

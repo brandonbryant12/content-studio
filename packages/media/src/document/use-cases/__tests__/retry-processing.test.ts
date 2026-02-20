@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Queue, type QueueService } from '@repo/queue';
 import {
   createTestUser,
@@ -9,7 +8,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { JobId, JobStatus, Document } from '@repo/db/schema';
-import { DocumentAlreadyProcessing, DocumentNotFound } from '../../../errors';
+import { DocumentNotFound } from '../../../errors';
 import { MockDbLive } from '../../../test-utils/mock-repos';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { retryProcessing } from '../retry-processing';
@@ -25,6 +24,12 @@ const createMockDocumentRepo = (
   },
 ): Layer.Layer<DocumentRepo> => {
   const service: DocumentRepoService = {
+    findByIdForUser: (id, userId) =>
+      Effect.suspend(() =>
+        doc && doc.createdBy === userId
+          ? Effect.succeed(doc)
+          : Effect.fail(new DocumentNotFound({ id })),
+      ),
     findById: (id) =>
       Effect.suspend(() =>
         doc ? Effect.succeed(doc) : Effect.fail(new DocumentNotFound({ id })),
@@ -195,7 +200,7 @@ describe('retryProcessing', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentAlreadyProcessing);
+        expect(error?._tag).toBe('DocumentAlreadyProcessing');
       }
     });
 
@@ -219,7 +224,7 @@ describe('retryProcessing', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentNotFound);
+        expect(error?._tag).toBe('DocumentNotFound');
       }
     });
 
@@ -277,7 +282,8 @@ describe('retryProcessing', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(doc.id);
       }
     });
   });

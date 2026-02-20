@@ -10,8 +10,10 @@ Use this skill for release trains, hotfixes, and production incidents.
 ## Release Readiness Flow
 
 1. Confirm release scope and risk profile.
-2. Run required validation gates for affected surfaces.
-3. Verify migration/backfill and rollback compatibility.
+2. Run required validation gates for affected surfaces:
+   - backend/API: `pnpm --filter @repo/api test`, `pnpm --filter @repo/media test`
+   - frontend: `pnpm --filter web test`, `pnpm --filter web build`
+3. Verify migration/backfill and rollback compatibility across `packages/db/src/`, `apps/server/src/`, and `apps/worker/src/`.
 4. Define canary checks and stop/rollback triggers.
 5. Publish release notes with known risks.
 
@@ -19,8 +21,8 @@ Use this skill for release trains, hotfixes, and production incidents.
 
 1. Triage severity and user impact.
 2. Stabilize first (rollback, feature flag, hotfix).
-3. Identify root cause with evidence.
-4. Patch and validate.
+3. Identify root cause with evidence from changed files and failing tests in `packages/*/src/**/__tests__/` or `apps/web/src/**/__tests__/`.
+4. Patch and validate in the narrowest layer first (`packages/media/src/*/use-cases/`, `packages/api/src/server/router/`, or `apps/web/src/features/`).
 5. Run self-improvement loop to prevent recurrence.
 
 ## Rollback Triggers (Examples)
@@ -40,9 +42,4 @@ Use this skill for release trains, hotfixes, and production incidents.
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Release + Incident Response"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- release/incident signature
-- fastest successful mitigation
-- rollback trigger effectiveness
-- follow-up guardrails landed
+Record one event with workflow key `Release + Incident Response` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

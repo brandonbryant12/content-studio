@@ -27,6 +27,9 @@ interface MockRepoState {
 
 const createMockDocumentRepo = (state: MockRepoState): DocumentRepoService => ({
   insert: () => Effect.die('Not implemented in mock'),
+  findByIdForUser(id, _userId) {
+    return this.findById(id);
+  },
   findById: () => Effect.die('Not implemented in mock'),
   update: () => Effect.die('Not implemented in mock'),
   delete: () => Effect.die('Not implemented in mock'),

@@ -107,7 +107,7 @@ describe('previewVoice', () => {
           const error = exit.cause;
           expect(error._tag).toBe('Fail');
           if (error._tag === 'Fail') {
-            expect(error.error).toBeInstanceOf(VoiceNotFoundError);
+            expect(error.error._tag).toBe('VoiceNotFoundError');
             expect((error.error as VoiceNotFoundError).voiceId).toBe(
               'InvalidVoice',
             );

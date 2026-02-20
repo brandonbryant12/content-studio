@@ -1,8 +1,10 @@
-import { Db, type DatabaseError, withDb } from '@repo/db/effect';
-import { type Persona, type PersonaId, persona } from '@repo/db/schema';
-import { eq, desc, count as drizzleCount } from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
-import { PersonaNotFound } from '../../errors';
+import { type Db, type DatabaseError } from '@repo/db/effect';
+import { type Persona } from '@repo/db/schema';
+import { Context, Layer } from 'effect';
+import type { PersonaNotFound } from '../../errors';
+import type { Effect} from 'effect';
+import { personaReadMethods } from './persona-repo.reads';
+import { personaWriteMethods } from './persona-repo.writes';
 
 export interface ListOptions {
   createdBy?: string;
@@ -24,6 +26,15 @@ export interface PersonaRepoService {
 
   readonly findById: (
     id: string,
+  ) => Effect.Effect<Persona, PersonaNotFound | DatabaseError, Db>;
+
+  /**
+   * Find persona by ID scoped to owner.
+   * Fails with PersonaNotFound for missing or not-owned records.
+   */
+  readonly findByIdForUser: (
+    id: string,
+    userId: string,
   ) => Effect.Effect<Persona, PersonaNotFound | DatabaseError, Db>;
 
   readonly list: (
@@ -57,101 +68,11 @@ export class PersonaRepo extends Context.Tag('@repo/media/PersonaRepo')<
 >() {}
 
 const make: PersonaRepoService = {
-  insert: (data) =>
-    withDb('personaRepo.insert', async (db) => {
-      const [p] = await db
-        .insert(persona)
-        .values({
-          name: data.name,
-          role: data.role ?? null,
-          personalityDescription: data.personalityDescription ?? null,
-          speakingStyle: data.speakingStyle ?? null,
-          exampleQuotes: data.exampleQuotes ?? [],
-          voiceId: data.voiceId ?? null,
-          voiceName: data.voiceName ?? null,
-          createdBy: data.createdBy,
-        })
-        .returning();
-      return p!;
-    }),
-
-  findById: (id) =>
-    withDb('personaRepo.findById', async (db) => {
-      const [p] = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, id as PersonaId))
-        .limit(1);
-      return p ?? null;
-    }).pipe(
-      Effect.flatMap((result) =>
-        result
-          ? Effect.succeed(result)
-          : Effect.fail(new PersonaNotFound({ id })),
-      ),
-    ),
-
-  list: (options) =>
-    withDb('personaRepo.list', (db) => {
-      return db
-        .select()
-        .from(persona)
-        .where(
-          options.createdBy
-            ? eq(persona.createdBy, options.createdBy)
-            : undefined,
-        )
-        .orderBy(desc(persona.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0);
-    }),
-
-  update: (id, data) =>
-    withDb('personaRepo.update', async (db) => {
-      const updateValues: Partial<Persona> = {
-        ...Object.fromEntries(
-          Object.entries(data).filter(([, v]) => v !== undefined),
-        ),
-        updatedAt: new Date(),
-      };
-
-      const [p] = await db
-        .update(persona)
-        .set(updateValues)
-        .where(eq(persona.id, id as PersonaId))
-        .returning();
-      return p ?? null;
-    }).pipe(
-      Effect.flatMap((p) =>
-        p ? Effect.succeed(p) : Effect.fail(new PersonaNotFound({ id })),
-      ),
-    ),
-
-  delete: (id) =>
-    withDb('personaRepo.delete', async (db) => {
-      const result = await db
-        .delete(persona)
-        .where(eq(persona.id, id as PersonaId))
-        .returning({ id: persona.id });
-      return result.length > 0;
-    }),
-
-  count: (options) =>
-    withDb('personaRepo.count', async (db) => {
-      const [result] = await db
-        .select({ count: drizzleCount() })
-        .from(persona)
-        .where(
-          options?.createdBy
-            ? eq(persona.createdBy, options.createdBy)
-            : undefined,
-        );
-      return result?.count ?? 0;
-    }),
+  ...personaReadMethods,
+  ...personaWriteMethods,
 };
 
-export const PersonaRepoLive: Layer.Layer<PersonaRepo, never, Db> =
-  Layer.effect(
-    PersonaRepo,
-    Effect.map(Db, () => make),
-  );
+export const PersonaRepoLive: Layer.Layer<PersonaRepo> = Layer.succeed(
+  PersonaRepo,
+  make,
+);

@@ -1,6 +1,5 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { NotPersonaOwner } from '../../errors';
 import { PersonaRepo } from '../repos';
 
 export interface UpdatePersonaInput {
@@ -22,13 +21,7 @@ export const updatePersona = (input: UpdatePersonaInput) =>
     const user = yield* getCurrentUser;
     const personaRepo = yield* PersonaRepo;
 
-    const existing = yield* personaRepo.findById(input.personaId);
-
-    if (existing.createdBy !== user.id) {
-      return yield* Effect.fail(
-        new NotPersonaOwner({ personaId: existing.id, userId: user.id }),
-      );
-    }
+    yield* personaRepo.findByIdForUser(input.personaId, user.id);
 
     return yield* personaRepo.update(input.personaId, input.data);
   }).pipe(

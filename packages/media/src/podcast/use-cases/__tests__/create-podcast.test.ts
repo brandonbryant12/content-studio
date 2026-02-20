@@ -46,6 +46,9 @@ const createMockPodcastRepo = (
   },
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
@@ -235,7 +238,7 @@ describe('createPodcast', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentNotFound);
+        expect(error?._tag).toBe('DocumentNotFound');
         expect((error as DocumentNotFound).id).toBe('doc_missing');
       }
     });

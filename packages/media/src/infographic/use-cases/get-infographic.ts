@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { InfographicRepo } from '../repos';
 
@@ -16,10 +16,10 @@ export interface GetInfographicInput {
 
 export const getInfographic = (input: GetInfographicInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
 
-    const infographic = yield* repo.findById(input.id);
-    yield* requireOwnership(infographic.createdBy);
+    const infographic = yield* repo.findByIdForUser(input.id, user.id);
 
     return infographic;
   }).pipe(

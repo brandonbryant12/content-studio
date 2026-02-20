@@ -17,6 +17,15 @@ Use this skill when a change may cross package boundaries, layer rules, or core 
 - `docs/patterns/api-handler.md`
 - `docs/patterns/effect-runtime.md`
 
+## High-Signal Files
+
+- Contract boundaries: `packages/api/src/contracts/`
+- Handler boundaries: `packages/api/src/server/router/`
+- Use case boundaries: `packages/media/src/*/use-cases/`
+- Repo boundaries and layering: `packages/media/src/*/repos/`
+- Runtime/layer composition: `packages/api/src/server/runtime.ts`
+- Telemetry lifecycle: `apps/server/src/server.ts`, `apps/worker/src/worker.ts`
+
 ## Guard Flow
 
 1. Identify touched packages and layer boundaries.
@@ -52,8 +61,4 @@ Each finding must include severity, file evidence, and suggested fix.
 
 ## Memory + Compounding
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Architecture + ADR Guard"` (prefer `node scripts/workflow-memory/add-entry.mjs`):
-
-- repeated boundary violation pattern
-- accepted exception and why
-- guardrail added to prevent recurrence
+Record one event with workflow key `Architecture + ADR Guard` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

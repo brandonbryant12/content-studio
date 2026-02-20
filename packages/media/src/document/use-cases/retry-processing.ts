@@ -1,4 +1,4 @@
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { JobType } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessUrlPayload, ProcessResearchPayload } from '@repo/queue';
@@ -16,10 +16,10 @@ export interface RetryProcessingInput {
 
 export const retryProcessing = (input: RetryProcessingInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const doc = yield* documentRepo.findById(input.id);
-    yield* requireOwnership(doc.createdBy);
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     // Only allow retry on failed documents
     if (doc.status === 'processing') {
@@ -79,7 +79,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
       yield* documentRepo.updateStatus(doc.id, 'processing');
     }
 
-    return yield* documentRepo.findById(doc.id);
+    return yield* documentRepo.findByIdForUser(doc.id, user.id);
   }).pipe(
     Effect.withSpan('useCase.retryProcessing', {
       attributes: { 'document.id': input.id },

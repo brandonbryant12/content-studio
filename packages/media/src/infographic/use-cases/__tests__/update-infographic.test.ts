@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import {
   createTestUser,
   createTestInfographic,
@@ -124,7 +123,7 @@ describe('updateInfographic', () => {
   });
 
   describe('authorization', () => {
-    it('fails with ForbiddenError when non-owner tries to update', async () => {
+    it('fails with InfographicNotFound when non-owner tries to update', async () => {
       const user = createTestUser();
       const otherUser = createTestUser();
       const infographic = createTestInfographic({
@@ -132,7 +131,8 @@ describe('updateInfographic', () => {
       });
 
       const repo = createMockInfographicRepo({
-        findById: () => Effect.succeed(infographic),
+        findByIdForUser: (id: string) =>
+          Effect.fail(new InfographicNotFound({ id })),
       });
       const layers = Layer.mergeAll(MockDbLive, repo);
 
@@ -145,7 +145,8 @@ describe('updateInfographic', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('InfographicNotFound');
+        expect((error as InfographicNotFound).id).toBe(infographic.id);
       }
     });
   });
@@ -168,7 +169,7 @@ describe('updateInfographic', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InfographicNotFound);
+        expect(error?._tag).toBe('InfographicNotFound');
       }
     });
   });

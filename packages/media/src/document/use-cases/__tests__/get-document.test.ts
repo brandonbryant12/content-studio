@@ -1,5 +1,4 @@
 import { Db } from '@repo/db/effect';
-import { ForbiddenError, UnauthorizedError } from '@repo/db/errors';
 import {
   createTestUser,
   createTestAdmin,
@@ -9,6 +8,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { UnauthorizedError } from '@repo/db/errors';
 import { DocumentNotFound } from '../../../errors';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { getDocument } from '../get-document';
@@ -24,6 +24,7 @@ const createMockDocumentRepo = (
   findById: DocumentRepoService['findById'],
 ): Layer.Layer<DocumentRepo> =>
   Layer.succeed(DocumentRepo, {
+    findByIdForUser: (id) => findById(id),
     findById,
     insert: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
@@ -75,50 +76,49 @@ describe('getDocument', () => {
       expect(result.createdBy).toBe(user.id);
     });
 
-    it('returns document when user is admin (even if not owner)', async () => {
+    it('fails with DocumentNotFound when user is admin and does not own document', async () => {
       const admin = createTestAdmin({ id: 'admin-1' });
-      const document = createTestDocument({
-        title: 'Other User Document',
-        createdBy: 'other-user-id',
-      });
+      const documentId = 'doc_hidden';
 
-      const mockRepo = createMockDocumentRepo(() => Effect.succeed(document));
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
-
-      const result = await Effect.runPromise(
-        withTestUser(admin)(
-          getDocument({ id: document.id }).pipe(Effect.provide(layers)),
-        ),
+      const mockRepo = createMockDocumentRepo((id) =>
+        Effect.fail(new DocumentNotFound({ id })),
       );
-
-      expect(result.id).toBe(document.id);
-      expect(result.title).toBe('Other User Document');
-      expect(result.createdBy).toBe('other-user-id');
-    });
-
-    it('fails with ForbiddenError when non-owner tries to access', async () => {
-      const user = createTestUser({ id: 'user-1' });
-      const document = createTestDocument({
-        title: 'Someone Else Document',
-        createdBy: 'other-user-id',
-      });
-
-      const mockRepo = createMockDocumentRepo(() => Effect.succeed(document));
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
-        withTestUser(user)(
-          getDocument({ id: document.id }).pipe(Effect.provide(layers)),
+        withTestUser(admin)(
+          getDocument({ id: documentId }).pipe(Effect.provide(layers)),
         ),
       );
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
-        expect((error as ForbiddenError).message).toBe(
-          'You do not own this resource',
-        );
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(documentId);
+      }
+    });
+
+    it('fails with DocumentNotFound when non-owner tries to access', async () => {
+      const user = createTestUser({ id: 'user-1' });
+      const documentId = 'doc_hidden';
+
+      const mockRepo = createMockDocumentRepo((id) =>
+        Effect.fail(new DocumentNotFound({ id })),
+      );
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(user)(
+          getDocument({ id: documentId }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('DocumentNotFound');
+        expect((error as DocumentNotFound).id).toBe(documentId);
       }
     });
   });
@@ -142,7 +142,7 @@ describe('getDocument', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentNotFound);
+        expect(error?._tag).toBe('DocumentNotFound');
         expect((error as DocumentNotFound).id).toBe(nonExistentId);
       }
     });
@@ -163,7 +163,7 @@ describe('getDocument', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(UnauthorizedError);
+        expect(error?._tag).toBe('UnauthorizedError');
         expect((error as UnauthorizedError).message).toBe(
           'Authentication required',
         );

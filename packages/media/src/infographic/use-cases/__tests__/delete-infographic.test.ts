@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@repo/auth';
 import { Storage, type StorageService } from '@repo/storage';
 import {
   createTestUser,
@@ -155,7 +154,7 @@ describe('deleteInfographic', () => {
   });
 
   describe('authorization', () => {
-    it('fails with ForbiddenError when non-owner tries to delete', async () => {
+    it('fails with InfographicNotFound when non-owner tries to delete', async () => {
       const user = createTestUser();
       const otherUser = createTestUser();
       const infographic = createTestInfographic({
@@ -163,7 +162,8 @@ describe('deleteInfographic', () => {
       });
 
       const repo = createMockInfographicRepo({
-        findById: () => Effect.succeed(infographic),
+        findByIdForUser: (id: string) =>
+          Effect.fail(new InfographicNotFound({ id })),
       });
 
       const layers = Layer.mergeAll(MockDbLive, repo, createMockStorage());
@@ -177,7 +177,8 @@ describe('deleteInfographic', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(ForbiddenError);
+        expect(error?._tag).toBe('InfographicNotFound');
+        expect((error as InfographicNotFound).id).toBe(infographic.id);
       }
     });
   });
@@ -201,7 +202,7 @@ describe('deleteInfographic', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InfographicNotFound);
+        expect(error?._tag).toBe('InfographicNotFound');
       }
     });
   });

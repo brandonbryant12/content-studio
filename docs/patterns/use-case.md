@@ -106,6 +106,12 @@ Use cases access data through repos, never via direct DB imports. If a repo meth
 
 Never swallow errors with `Effect.catchAll(() => Effect.succeed(null))`. Propagate or handle explicitly.
 
+### 8a. Never Throw Inside `Effect.gen` <!-- enforced-by: eslint -->
+
+Inside use cases, model typed failures with `Effect.fail(...)`.
+If a code path is truly unrecoverable, use `Effect.die(...)`.
+Do not use `throw` statements directly in `Effect.gen` generators.
+
 ### 9. Authorize Before Mutating Existing Data <!-- enforced-by: manual-review -->
 
 For update/delete operations on existing entities:

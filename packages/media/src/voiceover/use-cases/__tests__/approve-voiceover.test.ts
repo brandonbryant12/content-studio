@@ -92,6 +92,9 @@ const createMockVoiceoverRepo = (
     clearAudio: () => Effect.die('not implemented'),
     clearApproval: () => Effect.die('not implemented'),
 
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: (id: string) =>
       Effect.suspend(() => {
         const voiceover = state.voiceovers.find((v) => v.id === id);
@@ -244,7 +247,7 @@ describe('approveVoiceover', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(VoiceoverNotFound);
+        expect(error?._tag).toBe('VoiceoverNotFound');
       }
     });
 

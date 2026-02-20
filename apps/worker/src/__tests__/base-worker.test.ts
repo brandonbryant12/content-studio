@@ -35,21 +35,21 @@ describe('wrapJobError', () => {
   it('wraps a plain Error in JobProcessingError', () => {
     const error = new Error('Something broke');
     const wrapped = wrapJobError('job_2', error);
-    expect(wrapped).toBeInstanceOf(JobProcessingError);
+    expect(wrapped._tag).toBe('JobProcessingError');
     expect(wrapped.jobId).toBe('job_2');
     expect(wrapped.message).toContain('Something broke');
   });
 
   it('wraps a string in JobProcessingError', () => {
     const wrapped = wrapJobError('job_3', 'string error');
-    expect(wrapped).toBeInstanceOf(JobProcessingError);
+    expect(wrapped._tag).toBe('JobProcessingError');
     expect(wrapped.jobId).toBe('job_3');
     expect(wrapped.message).toContain('string error');
   });
 
   it('wraps null/undefined in JobProcessingError', () => {
     const wrapped = wrapJobError('job_4', null);
-    expect(wrapped).toBeInstanceOf(JobProcessingError);
+    expect(wrapped._tag).toBe('JobProcessingError');
     expect(wrapped.jobId).toBe('job_4');
     expect(wrapped.message).toContain('null');
   });

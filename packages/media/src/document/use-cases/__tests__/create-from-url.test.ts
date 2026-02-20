@@ -8,7 +8,6 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { JobId, JobStatus, Document } from '@repo/db/schema';
-import { DocumentAlreadyProcessing, InvalidUrlError } from '../../../errors';
 import { MockDbLive } from '../../../test-utils/mock-repos';
 import { DocumentRepo, type DocumentRepoService } from '../../repos';
 import { createFromUrl } from '../create-from-url';
@@ -31,6 +30,9 @@ const createMockDocumentRepo = (
   },
 ): Layer.Layer<DocumentRepo> => {
   const service: DocumentRepoService = {
+    findByIdForUser(id, _userId) {
+      return this.findById(id);
+    },
     findById: (id) =>
       state.insertedDoc && state.insertedDoc.id === id
         ? Effect.succeed(state.insertedDoc)
@@ -291,7 +293,7 @@ describe('createFromUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(DocumentAlreadyProcessing);
+        expect(error?._tag).toBe('DocumentAlreadyProcessing');
       }
     });
 
@@ -350,7 +352,7 @@ describe('createFromUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -374,7 +376,7 @@ describe('createFromUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(InvalidUrlError);
+        expect(error?._tag).toBe('InvalidUrlError');
       }
     });
 
@@ -423,7 +425,7 @@ describe('createFromUrl', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(QueueError);
+        expect(error?._tag).toBe('QueueError');
       }
     });
   });

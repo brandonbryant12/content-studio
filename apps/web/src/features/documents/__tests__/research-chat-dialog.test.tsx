@@ -10,6 +10,8 @@ const defaultProps = {
   isStreaming: false,
   error: undefined,
   canStartResearch: false,
+  autoStartReady: false,
+  startError: undefined,
   onSendMessage: vi.fn(),
   onStartResearch: vi.fn(),
   isStartingResearch: false,
@@ -196,6 +198,22 @@ describe('ResearchChatDialog', () => {
       screen.getByPlaceholderText(
         'Add more details or click Start Research...',
       ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows auto-start state when assistant marked ready', () => {
+    render(
+      <ResearchChatDialog
+        {...defaultProps}
+        messages={messagesFixture}
+        canStartResearch
+        autoStartReady
+      />,
+    );
+
+    expect(screen.getByText('Starting automatically...')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Research is starting automatically...'),
     ).toBeInTheDocument();
   });
 });

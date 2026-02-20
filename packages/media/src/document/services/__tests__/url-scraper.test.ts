@@ -100,7 +100,7 @@ describe('UrlScraper', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(UrlFetchError);
+        expect(error?._tag).toBe('UrlFetchError');
         expect((error as UrlFetchError).url).toBe(
           'https://nonexistent.example.com',
         );
@@ -130,7 +130,7 @@ describe('UrlScraper', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error).toBeInstanceOf(UrlFetchError);
+        expect(error?._tag).toBe('UrlFetchError');
         expect((error as UrlFetchError).message).toContain('No content');
       }
     });
@@ -197,7 +197,7 @@ describe('UrlScraperLive', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(UrlFetchError);
+      expect(error?._tag).toBe('UrlFetchError');
       expect((error as UrlFetchError).message).toContain('No content');
     }
   });
@@ -217,7 +217,7 @@ describe('UrlScraperLive', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure') {
       const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-      expect(error).toBeInstanceOf(UrlFetchError);
+      expect(error?._tag).toBe('UrlFetchError');
       expect((error as UrlFetchError).message).toBe('Network timeout');
       expect((error as UrlFetchError).url).toBe('https://slow.example.com');
     }

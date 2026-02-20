@@ -1,16 +1,16 @@
-import { Db, withDb, type DatabaseError } from '@repo/db/effect';
+import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
-  infographic,
-  infographicVersion,
   type Infographic,
   type InfographicVersion,
   type InfographicId,
   type InfographicStatusType,
   type StyleProperty,
 } from '@repo/db/schema';
-import { eq, desc, asc, inArray } from 'drizzle-orm';
-import { Context, Effect, Layer } from 'effect';
-import { InfographicNotFound } from '../../errors';
+import { Context, Layer } from 'effect';
+import type { InfographicNotFound } from '../../errors';
+import type { Effect} from 'effect';
+import { infographicReadMethods } from './infographic-repo.reads';
+import { infographicWriteMethods } from './infographic-repo.writes';
 
 // =============================================================================
 // Types
@@ -66,6 +66,15 @@ export interface InfographicRepoService {
     id: string,
   ) => Effect.Effect<Infographic, InfographicNotFound | DatabaseError, Db>;
 
+  /**
+   * Find infographic by ID scoped to owner.
+   * Fails with InfographicNotFound for missing or not-owned records.
+   */
+  readonly findByIdForUser: (
+    id: string,
+    userId: string,
+  ) => Effect.Effect<Infographic, InfographicNotFound | DatabaseError, Db>;
+
   readonly list: (
     options: ListOptions,
   ) => Effect.Effect<readonly Infographic[], DatabaseError, Db>;
@@ -115,179 +124,16 @@ export class InfographicRepo extends Context.Tag('@repo/media/InfographicRepo')<
   InfographicRepoService
 >() {}
 
-// =============================================================================
-// Implementation
-// =============================================================================
-
-const requireInfographic = (id: string) =>
-  Effect.flatMap((row: Infographic | null | undefined) =>
-    row ? Effect.succeed(row) : Effect.fail(new InfographicNotFound({ id })),
-  );
-
 const make: InfographicRepoService = {
-  insert: (data) =>
-    withDb('infographicRepo.insert', async (db) => {
-      const [row] = await db
-        .insert(infographic)
-        .values({
-          id: data.id,
-          title: data.title,
-          prompt: data.prompt,
-          styleProperties: data.styleProperties ?? [],
-          format: data.format,
-          status: data.status ?? 'draft',
-          createdBy: data.createdBy,
-        })
-        .returning();
-      return row!;
-    }),
-
-  findById: (id) =>
-    withDb('infographicRepo.findById', async (db) => {
-      const [row] = await db
-        .select()
-        .from(infographic)
-        .where(eq(infographic.id, id as InfographicId))
-        .limit(1);
-      return row ?? null;
-    }).pipe(requireInfographic(id)),
-
-  list: (options) =>
-    withDb('infographicRepo.list', (db) =>
-      db
-        .select()
-        .from(infographic)
-        .where(eq(infographic.createdBy, options.createdBy))
-        .orderBy(desc(infographic.createdAt))
-        .limit(options.limit ?? 50)
-        .offset(options.offset ?? 0),
-    ),
-
-  update: (id, data) =>
-    withDb('infographicRepo.update', async (db) => {
-      const updateValues: Record<string, unknown> = {
-        ...Object.fromEntries(
-          Object.entries(data).filter(([, v]) => v !== undefined),
-        ),
-        updatedAt: new Date(),
-      };
-
-      const [row] = await db
-        .update(infographic)
-        .set(updateValues)
-        .where(eq(infographic.id, id as InfographicId))
-        .returning();
-      return row ?? null;
-    }).pipe(requireInfographic(id)),
-
-  delete: (id) =>
-    withDb('infographicRepo.delete', async (db) => {
-      const result = await db
-        .delete(infographic)
-        .where(eq(infographic.id, id as InfographicId))
-        .returning({ id: infographic.id });
-      return result.length > 0;
-    }),
-
-  insertVersion: (data) =>
-    withDb('infographicRepo.insertVersion', async (db) => {
-      const [row] = await db
-        .insert(infographicVersion)
-        .values({
-          infographicId: data.infographicId,
-          versionNumber: data.versionNumber,
-          prompt: data.prompt,
-          styleProperties: data.styleProperties ?? [],
-          format: data.format,
-          imageStorageKey: data.imageStorageKey,
-          thumbnailStorageKey: data.thumbnailStorageKey,
-        })
-        .returning();
-      return row!;
-    }),
-
-  listVersions: (infographicId) =>
-    withDb('infographicRepo.listVersions', (db) =>
-      db
-        .select()
-        .from(infographicVersion)
-        .where(
-          eq(infographicVersion.infographicId, infographicId as InfographicId),
-        )
-        .orderBy(asc(infographicVersion.versionNumber)),
-    ),
-
-  deleteOldVersions: (infographicId, keepCount) =>
-    withDb('infographicRepo.deleteOldVersions', async (db) => {
-      // Get versions to keep (newest N)
-      const toKeep = await db
-        .select({ id: infographicVersion.id })
-        .from(infographicVersion)
-        .where(
-          eq(infographicVersion.infographicId, infographicId as InfographicId),
-        )
-        .orderBy(desc(infographicVersion.versionNumber))
-        .limit(keepCount);
-
-      if (toKeep.length === 0) return 0;
-
-      const keepIds = toKeep.map((v) => v.id);
-
-      // Delete all versions not in the keep list
-      const allVersions = await db
-        .select({ id: infographicVersion.id })
-        .from(infographicVersion)
-        .where(
-          eq(infographicVersion.infographicId, infographicId as InfographicId),
-        );
-
-      const toDeleteIds = allVersions
-        .filter((v) => !keepIds.includes(v.id))
-        .map((v) => v.id);
-      if (toDeleteIds.length === 0) return 0;
-
-      await db
-        .delete(infographicVersion)
-        .where(inArray(infographicVersion.id, toDeleteIds));
-
-      return toDeleteIds.length;
-    }),
-
-  setApproval: (id, approvedBy) =>
-    withDb('infographicRepo.setApproval', async (db) => {
-      const [row] = await db
-        .update(infographic)
-        .set({
-          approvedBy,
-          approvedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(infographic.id, id as InfographicId))
-        .returning();
-      return row ?? null;
-    }).pipe(requireInfographic(id)),
-
-  clearApproval: (id) =>
-    withDb('infographicRepo.clearApproval', async (db) => {
-      const [row] = await db
-        .update(infographic)
-        .set({
-          approvedBy: null,
-          approvedAt: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(infographic.id, id as InfographicId))
-        .returning();
-      return row ?? null;
-    }).pipe(requireInfographic(id)),
+  ...infographicReadMethods,
+  ...infographicWriteMethods,
 };
 
 // =============================================================================
 // Layer
 // =============================================================================
 
-export const InfographicRepoLive: Layer.Layer<InfographicRepo, never, Db> =
-  Layer.effect(
-    InfographicRepo,
-    Effect.map(Db, () => make),
-  );
+export const InfographicRepoLive: Layer.Layer<InfographicRepo> = Layer.succeed(
+  InfographicRepo,
+  make,
+);

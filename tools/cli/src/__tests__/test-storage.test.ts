@@ -4,10 +4,10 @@ import * as path from 'node:path';
 import {
   Storage,
   FilesystemStorageLive,
-  StorageNotFoundError,
 } from '@repo/storage';
 import { Effect } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import type { StorageNotFoundError } from '@repo/storage';
 
 let tempDir: string;
 
@@ -93,7 +93,9 @@ describe('Storage CRUD lifecycle', () => {
 
     expect(exit._tag).toBe('Failure');
     if (exit._tag === 'Failure' && exit.cause._tag === 'Fail') {
-      expect(exit.cause.error).toBeInstanceOf(StorageNotFoundError);
+      const error = exit.cause.error;
+      expect(error?._tag).toBe('StorageNotFoundError');
+      expect((error as StorageNotFoundError).key).toBe('nonexistent/file.txt');
     }
   });
 });
