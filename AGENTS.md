@@ -51,6 +51,7 @@ packages/
   - `node scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
+  - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.
 - Preferred skill quality helper:
   - `pnpm skills:check:strict`
 - **Canonical skills live in `.agents/skills/`**.

@@ -11,12 +11,12 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useCallback } from 'react';
 import type { UIMessage } from 'ai';
+import { ChatThread } from '@/shared/components/chat-thread';
+import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
-import { ChatThread } from '@/shared/components/chat-thread';
-import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 
 const EXAMPLE_PROMPTS = [
   'A witty science communicator',

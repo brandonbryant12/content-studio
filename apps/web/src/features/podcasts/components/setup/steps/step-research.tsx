@@ -11,11 +11,11 @@ import { useResearchChat } from '@/features/documents/hooks/use-research-chat';
 import { useSynthesizeResearch } from '@/features/documents/hooks/use-synthesize-research';
 import { ChatThread } from '@/shared/components/chat-thread';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
-import { getErrorMessage } from '@/shared/lib/errors';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 interface StepResearchProps {
   onDocumentCreated: (documentId: string, title: string) => void;

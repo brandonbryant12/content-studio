@@ -1,7 +1,7 @@
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
-import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import type { DocumentDetailDocument } from './document-detail-types';
+import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 
 function extractDomain(url: string): string {

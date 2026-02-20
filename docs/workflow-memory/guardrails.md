@@ -46,3 +46,13 @@ Use this format:
 - Evidence: `scripts/skills/check-quality.mjs`, `package.json`, `docs/workflow.md`, `AGENTS.md`, `CLAUDE.md`
 - Owner: @ai-workflow
 - Status: active
+
+## 2026-02-20 - Close Missing Workflow Coverage In-Loop
+
+- Source workflow: Self-Improvement
+- Problem signature: Quality closure loops can finish with `workflow-memory:coverage:strict` failures when monthly workflow classes have zero entries.
+- Control type: docs rule
+- Change landed: Require the active quality loop cycle to run lightweight passes for workflows reported missing by `pnpm workflow-memory:coverage:strict` and append those workflow events before final closure.
+- Evidence: `docs/workflow.md`, `docs/workflow-memory/guardrails.md`
+- Owner: @codex
+- Status: active

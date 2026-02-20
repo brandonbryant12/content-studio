@@ -18,19 +18,19 @@ import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
+import type { DocumentDetailDocument } from './document-detail-types';
 import type { UseDocumentSearchReturn } from '../hooks/use-document-search';
-import { DocumentDetailSearchBar } from './document-detail-search-bar';
 import {
   buildMatchesByParagraph,
   DocumentContentReader,
   DocumentFailedState,
   DocumentProcessingState,
 } from './document-detail-content';
+import { DocumentDetailSearchBar } from './document-detail-search-bar';
 import {
   DocumentMetadataBar,
   DocumentSourceCallout,
 } from './document-detail-source-sections';
-import type { DocumentDetailDocument } from './document-detail-types';
 import { DocumentDetailUnsavedChangesBar } from './document-detail-unsaved-changes-bar';
 import { DocumentIcon } from './document-icon';
 

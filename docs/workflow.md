@@ -197,6 +197,7 @@ Run coverage audit weekly (and before release readiness reviews):
 `pnpm workflow-memory:coverage:strict`
 
 If coverage reports a workflow as missing and that workflow was run, add the missing event immediately.
+If `coverage:strict` fails during an active quality closure cycle because workflows are missing for the current month, run lightweight passes for each missing workflow and append those workflow events in the same cycle before closing.
 
 Run weekly compaction to control growth:
 
