@@ -415,6 +415,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-periodic-scans-quality-loop-blocked-by-missing-tooling",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Quality loop blocked by missing tooling",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "tooling",
+      "ci",
+      "quality"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-periodic-scans-quality-loop-found-vitest-workspace-file-deprecation-warning",
     "date": "2026-02-20",
     "month": "2026-02",
