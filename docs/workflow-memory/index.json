@@ -32,6 +32,37 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-add-explicit-frontend-design-skill-without-duplicating-external-",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add explicit frontend-design skill without duplicating external prompts",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skills",
+      "frontend",
+      "design",
+      "workflow"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-feature-delivery-add-single-llm-smoke-test-with-full-success-error-output",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add single LLM smoke test with full success/error output",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "llm",
+      "live-test",
+      "smoke-test"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-added-url-source-option-to-podcast-document-selection-flows",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -163,6 +194,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-simplified-chat-document-detail-worker-and-effect-handler-flows-",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Simplified chat, document detail, worker, and effect handler flows with behavior parity",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "feature-delivery",
+      "simplification",
+      "maintainability",
+      "frontend",
+      "backend"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-smart-media-export-filenames-for-podcast-voiceover-and-infograph",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -257,6 +305,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-periodic-scans-frontend-and-runtime-simplification-hotspots",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Frontend and runtime simplification hotspots",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "simplification",
+      "frontend",
+      "backend"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-security-dependency-hygiene-resolved-ajv-redos-advisory-via-override-cleanup",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -285,6 +348,22 @@
       "self-improvement",
       "navigation",
       "debugging"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-self-improvement-add-quality-closure-loop-orchestrator-skill-for-scan-to-fix-exec",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Add quality-closure-loop orchestrator skill for scan-to-fix execution",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "self-improvement",
+      "periodic-scans",
+      "workflow",
+      "skills"
     ],
     "eventFile": "events/2026-02.jsonl"
   },

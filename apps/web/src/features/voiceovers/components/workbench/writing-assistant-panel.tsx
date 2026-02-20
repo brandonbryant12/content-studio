@@ -1,13 +1,14 @@
 import { ChatBubbleIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback } from 'react';
 import type { UIMessage } from 'ai';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
-import { ChatMessage } from '@/shared/components/chat-message';
+import { ChatThread } from '@/shared/components/chat-thread';
+import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 
 const EXAMPLE_PROMPTS = [
   'Give me three stronger opening lines for this narration.',
@@ -30,34 +31,10 @@ export function WritingAssistantPanel({
   onSendMessage,
   onReset,
 }: WritingAssistantPanelProps) {
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const trimmed = input.trim();
-      if (!trimmed || isStreaming) return;
-      onSendMessage(trimmed);
-      setInput('');
-    },
-    [input, isStreaming, onSendMessage],
-  );
-
-  const handleInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.nativeEvent.isComposing) return;
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        e.currentTarget.form?.requestSubmit();
-      }
-    },
-    [],
-  );
+  const composer = useChatComposer({
+    isDisabled: isStreaming,
+    onSendMessage,
+  });
 
   const handleExampleClick = useCallback(
     (prompt: string) => {
@@ -97,8 +74,12 @@ export function WritingAssistantPanel({
         </p>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3">
-        {messages.length === 0 ? (
+      <ChatThread
+        messages={messages}
+        isStreaming={isStreaming}
+        error={error}
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3"
+        emptyState={
           <div className="h-full flex flex-col items-center justify-center text-center gap-4">
             <p className="text-sm text-muted-foreground">
               Ask for rewrites, better hooks, or smoother transitions.
@@ -117,39 +98,17 @@ export function WritingAssistantPanel({
               ))}
             </div>
           </div>
-        ) : (
-          messages.map((message, index) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              isStreaming={
-                isStreaming &&
-                message.role === 'assistant' &&
-                index === messages.length - 1
-              }
-            />
-          ))
-        )}
-
-        {error && (
-          <div className="flex justify-center">
-            <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
-              Something went wrong. Please try again.
-            </p>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
+        }
+      />
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={composer.handleSubmit}
         className="border-t border-border p-3 flex items-end gap-2"
       >
         <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleInputKeyDown}
+          value={composer.input}
+          onChange={(e) => composer.setInput(e.target.value)}
+          onKeyDown={composer.handleInputKeyDown}
           placeholder="Ask for a rewrite, stronger hook, or tone shift..."
           disabled={isStreaming}
           maxLength={CHAT_INPUT_MAX_LENGTH}
@@ -160,7 +119,7 @@ export function WritingAssistantPanel({
         <Button
           type="submit"
           size="icon"
-          disabled={!input.trim() || isStreaming}
+          disabled={!composer.canSubmit}
           className="shrink-0"
         >
           <PaperPlaneIcon className="w-4 h-4" />

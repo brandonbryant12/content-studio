@@ -39,6 +39,7 @@ Use the smallest set of workflows needed for a change, but keep memory updates m
 | Periodic Scans | `periodic-scans` | Daily/weekly/monthly quality loops | `Periodic Scans` |
 | Release + Incident Response | `release-incident-response` | Release train, hotfix, production incident | `Release + Incident Response` |
 | Self-Improvement | `self-improvement` | Repeat failures, escaped defects, notable incidents | `Self-Improvement` |
+| Quality Closure Loop (support) | `quality-closure-loop` | One-pass scan -> triage -> fixes -> guardrails execution | Use workflow keys executed in the loop |
 | Code Simplifier (support) | `code-simplifier` | Post-change readability/maintainability cleanup with no behavior change | Use parent workflow memory key |
 | Codebase Navigation (support) | `codebase-nav` | Fast orientation for file paths and test locations | Use parent workflow memory key |
 | Debug + Fix (support) | `debug-fix` | Failing tests, regressions, or uncertain root cause | Use parent workflow memory key |
@@ -86,8 +87,9 @@ flowchart LR
 7. `docs-knowledge-drift` when behavior/docs changed
 8. `self-improvement` when repeat patterns emerge
 9. `code-simplifier` for post-change clarity cleanup with no behavior changes
-10. `codebase-nav` when rapid repo orientation is needed
-11. `debug-fix` when narrowing and fixing failing tests
+10. `quality-closure-loop` to execute scan findings through fix and guardrail closure
+11. `codebase-nav` when rapid repo orientation is needed
+12. `debug-fix` when narrowing and fixing failing tests
 
 ## E2E Delivery Checklist
 

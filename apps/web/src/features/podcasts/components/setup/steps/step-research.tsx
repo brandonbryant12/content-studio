@@ -3,13 +3,14 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { ChatMessage } from '@/features/documents/components/chat-message';
 import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
 import { useResearchChat } from '@/features/documents/hooks/use-research-chat';
 import { useSynthesizeResearch } from '@/features/documents/hooks/use-synthesize-research';
+import { ChatThread } from '@/shared/components/chat-thread';
+import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import { getErrorMessage } from '@/shared/lib/errors';
 import {
   CHAT_INPUT_MAX_LENGTH,
@@ -41,8 +42,6 @@ export function StepResearch({
     shouldAutoStart,
   } = useResearchChat();
   const synthesize = useSynthesizeResearch();
-  const [inputValue, setInputValue] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const autoStartTriggeredRef = useRef(false);
 
@@ -60,13 +59,6 @@ export function StepResearch({
     }),
   );
 
-  // Auto-scroll on new messages
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   // Auto-focus input on mount
   useEffect(() => {
     if (!createdDocumentId) {
@@ -75,24 +67,13 @@ export function StepResearch({
   }, [createdDocumentId]);
 
   const isStarting = synthesize.isPending || startResearchMutation.isPending;
-
-  const handleSend = useCallback(() => {
-    const text = inputValue.trim();
-    if (!text || isStreaming || isStarting) return;
-    setInputValue('');
-    sendMessage({ text });
-  }, [inputValue, isStreaming, isStarting, sendMessage]);
-
-  const handleInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.nativeEvent.isComposing) return;
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
+  const isInputDisabled = isStreaming || isStarting;
+  const composer = useChatComposer({
+    isDisabled: isInputDisabled,
+    onSendMessage: (text) => {
+      sendMessage({ text });
     },
-    [handleSend],
-  );
+  });
 
   const handleTopicClick = useCallback(
     (topic: string) => {
@@ -145,44 +126,34 @@ export function StepResearch({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Messages area */}
-      {messages.length > 0 ? (
-        <div
-          ref={scrollRef}
-          className="flex flex-col gap-3 max-h-[320px] overflow-y-auto p-1"
-        >
-          {messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              isStreaming={
-                isStreaming &&
-                msg === messages[messages.length - 1] &&
-                msg.role === 'assistant'
-              }
-            />
-          ))}
-        </div>
-      ) : (
-        /* Empty state with example topics */
-        <div className="flex flex-col items-center gap-4 py-8">
-          <p className="text-sm text-muted-foreground">
-            Describe a topic to research for your podcast
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {EXAMPLE_TOPICS.map((topic) => (
-              <button
-                key={topic}
-                type="button"
-                onClick={() => handleTopicClick(topic)}
-                className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {topic}
-              </button>
-            ))}
+      <ChatThread
+        messages={messages}
+        isStreaming={isStreaming}
+        className={
+          messages.length > 0
+            ? 'flex flex-col gap-3 max-h-[320px] overflow-y-auto p-1'
+            : undefined
+        }
+        emptyState={
+          <div className="flex flex-col items-center gap-4 py-8">
+            <p className="text-sm text-muted-foreground">
+              Describe a topic to research for your podcast
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {EXAMPLE_TOPICS.map((topic) => (
+                <button
+                  key={topic}
+                  type="button"
+                  onClick={() => handleTopicClick(topic)}
+                  className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        }
+      />
 
       {/* Start Research button */}
       {canStartResearch && !isStarting && (
@@ -205,19 +176,16 @@ export function StepResearch({
 
       {/* Input bar */}
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSend();
-        }}
+        onSubmit={composer.handleSubmit}
         className="relative"
       >
         <Textarea
           ref={inputRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleInputKeyDown}
+          value={composer.input}
+          onChange={(e) => composer.setInput(e.target.value)}
+          onKeyDown={composer.handleInputKeyDown}
           placeholder="Describe your research topic..."
-          disabled={isStreaming || isStarting}
+          disabled={isInputDisabled}
           maxLength={CHAT_INPUT_MAX_LENGTH}
           rows={1}
           className={`setup-textarea pr-12 ${CHAT_INPUT_TEXTAREA_CLASS}`}
@@ -227,7 +195,7 @@ export function StepResearch({
           type="submit"
           size="icon"
           variant="ghost"
-          disabled={!inputValue.trim() || isStreaming || isStarting}
+          disabled={!composer.canSubmit}
           className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 text-muted-foreground hover:text-foreground"
         >
           <PaperPlaneIcon className="w-4 h-4" />

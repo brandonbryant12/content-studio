@@ -8,6 +8,7 @@ Live tests verify external services (LLM, TTS, Storage) with real credentials. S
 ```bash
 pnpm test:live              # All live tests (requires all env vars)
 pnpm test:live:llm          # LLM only (requires GEMINI_API_KEY)
+pnpm test:live:llm:smoke    # Single LLM chat smoke test (requires GEMINI_API_KEY)
 pnpm test:live:tts          # TTS only (requires GEMINI_API_KEY)
 pnpm test:live:storage      # Storage only (requires S3_* vars)
 ```
@@ -25,6 +26,7 @@ pnpm test:live:storage      # Storage only (requires S3_* vars)
 
 ```
 packages/ai/src/__tests__/live/llm.live.test.ts
+packages/ai/src/__tests__/live/llm.smoke.live.test.ts
 packages/ai/src/__tests__/live/tts.live.test.ts
 packages/storage/src/__tests__/live/s3.live.test.ts
 ```

@@ -59,6 +59,7 @@ packages/
   - `scripts/sync-skills.sh`
 - Preferred project skills:
   - `code-simplifier`
+  - `quality-closure-loop`
   - `codebase-nav`
   - `debug-fix`
   - `intake-triage`

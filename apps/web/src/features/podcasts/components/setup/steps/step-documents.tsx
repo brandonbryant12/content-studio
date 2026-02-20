@@ -34,6 +34,30 @@ type DocumentItem = {
   status: string;
 };
 
+const SOURCE_BADGE_BY_TYPE = {
+  url: 'URL',
+  research: 'RES',
+  manual: 'TXT',
+} as const;
+
+const STEP_DOCUMENT_TABS = [
+  { key: 'existing', label: 'Select Existing' },
+  { key: 'upload', label: 'Upload New' },
+  { key: 'url', label: 'From URL' },
+  { key: 'research', label: 'Research New' },
+] as const;
+
+type StepDocumentsTab = (typeof STEP_DOCUMENT_TABS)[number]['key'];
+
+function getDocumentSourceBadge(doc: DocumentItem): string {
+  if (doc.source in SOURCE_BADGE_BY_TYPE) {
+    return SOURCE_BADGE_BY_TYPE[doc.source as keyof typeof SOURCE_BADGE_BY_TYPE];
+  }
+
+  const subtype = doc.mimeType.split('/')[1];
+  return subtype?.toUpperCase().slice(0, 3) || 'DOC';
+}
+
 function ExistingDocumentsPanel({
   documents,
   loadingDocs,
@@ -103,18 +127,7 @@ function ExistingDocumentsPanel({
               className={`setup-doc-item ${selectedIds.includes(doc.id) ? 'selected' : ''}`}
             >
               <div className="setup-doc-icon">
-                <span>
-                  {doc.source === 'url'
-                    ? 'URL'
-                    : doc.source === 'research'
-                      ? 'RES'
-                      : doc.source === 'manual'
-                        ? 'TXT'
-                        : doc.mimeType
-                            .split('/')[1]
-                            ?.toUpperCase()
-                            .slice(0, 3) || 'DOC'}
-                </span>
+                <span>{getDocumentSourceBadge(doc)}</span>
               </div>
               <div className="setup-doc-info">
                 <p className="setup-doc-title">{doc.title}</p>
@@ -359,9 +372,7 @@ export function StepDocuments({
   onDocumentCreated,
 }: StepDocumentsProps) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<
-    'existing' | 'upload' | 'url' | 'research'
-  >('existing');
+  const [activeTab, setActiveTab] = useState<StepDocumentsTab>('existing');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [urlInput, setUrlInput] = useState('');
@@ -410,6 +421,25 @@ export function StepDocuments({
     );
   };
 
+  const handleDocumentCreated = useCallback(
+    (documentId: string, onCreated?: () => void) => {
+      queryClient.invalidateQueries({
+        queryKey: getDocumentListQueryKey(),
+      });
+
+      const currentSelectedIds = selectedIdsRef.current;
+      onSelectionChange(
+        currentSelectedIds.includes(documentId)
+          ? currentSelectedIds
+          : [...currentSelectedIds, documentId],
+      );
+
+      onCreated?.();
+      setActiveTab('existing');
+    },
+    [queryClient, onSelectionChange],
+  );
+
   const handleFileSelect = useCallback((file: File | null) => {
     if (!file) return;
 
@@ -456,19 +486,11 @@ export function StepDocuments({
       },
       {
         onSuccess: (data) => {
-          queryClient.invalidateQueries({
-            queryKey: getDocumentListQueryKey(),
-          });
           toast.success('Document uploaded');
-          const currentSelectedIds = selectedIdsRef.current;
-          onSelectionChange(
-            currentSelectedIds.includes(data.id)
-              ? currentSelectedIds
-              : [...currentSelectedIds, data.id],
-          );
-          setUploadFile(null);
-          setUploadTitle('');
-          setActiveTab('existing');
+          handleDocumentCreated(data.id, () => {
+            setUploadFile(null);
+            setUploadTitle('');
+          });
         },
       },
     );
@@ -485,19 +507,11 @@ export function StepDocuments({
       },
       {
         onSuccess: (data) => {
-          queryClient.invalidateQueries({
-            queryKey: getDocumentListQueryKey(),
-          });
           toast.success('URL added — content is being processed');
-          const currentSelectedIds = selectedIdsRef.current;
-          onSelectionChange(
-            currentSelectedIds.includes(data.id)
-              ? currentSelectedIds
-              : [...currentSelectedIds, data.id],
-          );
-          setUrlInput('');
-          setUrlTitle('');
-          setActiveTab('existing');
+          handleDocumentCreated(data.id, () => {
+            setUrlInput('');
+            setUrlTitle('');
+          });
         },
       },
     );
@@ -505,6 +519,11 @@ export function StepDocuments({
 
   const openFilePicker = useCallback(() => {
     fileInputRef.current?.click();
+  }, []);
+
+  const clearUploadFile = useCallback(() => {
+    setUploadFile(null);
+    setUploadTitle('');
   }, []);
 
   return (
@@ -531,45 +550,21 @@ export function StepDocuments({
 
       {/* Tabs */}
       <div className="setup-tabs" role="tablist" aria-label="Document source">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'existing'}
-          onClick={() => setActiveTab('existing')}
-          className={`setup-tab ${activeTab === 'existing' ? 'active' : ''}`}
-        >
-          Select Existing
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'upload'}
-          onClick={() => setActiveTab('upload')}
-          className={`setup-tab ${activeTab === 'upload' ? 'active' : ''}`}
-        >
-          Upload New
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'url'}
-          onClick={() => setActiveTab('url')}
-          className={`setup-tab ${activeTab === 'url' ? 'active' : ''}`}
-        >
-          From URL
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'research'}
-          onClick={() => setActiveTab('research')}
-          className={`setup-tab ${activeTab === 'research' ? 'active' : ''}`}
-        >
-          Research New
-          {researchDocId && (
-            <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
-          )}
-        </button>
+        {STEP_DOCUMENT_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`setup-tab ${activeTab === tab.key ? 'active' : ''}`}
+          >
+            {tab.label}
+            {tab.key === 'research' && researchDocId && (
+              <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
+            )}
+          </button>
+        ))}
       </div>
 
       <div hidden={activeTab !== 'existing'}>
@@ -594,10 +589,7 @@ export function StepDocuments({
           uploadFile={uploadFile}
           uploadTitle={uploadTitle}
           onUploadTitleChange={setUploadTitle}
-          onClearFile={() => {
-            setUploadFile(null);
-            setUploadTitle('');
-          }}
+          onClearFile={clearUploadFile}
           onUpload={handleUpload}
           isUploading={uploadMutation.isPending}
           isDragging={isDragging}

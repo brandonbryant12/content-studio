@@ -9,13 +9,14 @@ import {
 } from '@repo/ui/components/dialog';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback } from 'react';
 import type { UIMessage } from 'ai';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
-import { ChatMessage } from '@/shared/components/chat-message';
+import { ChatThread } from '@/shared/components/chat-thread';
+import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 
 const EXAMPLE_PROMPTS = [
   'A witty science communicator',
@@ -50,35 +51,11 @@ export function PersonaChatDialog({
   onCreatePersona,
   isCreatingPersona,
 }: PersonaChatDialogProps) {
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const trimmed = input.trim();
-      if (!trimmed || isStreaming || isCreatingPersona) return;
-      onSendMessage(trimmed);
-      setInput('');
-    },
-    [input, isStreaming, isCreatingPersona, onSendMessage],
-  );
-
-  const handleInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.nativeEvent.isComposing) return;
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        e.currentTarget.form?.requestSubmit();
-      }
-    },
-    [],
-  );
+  const isInputDisabled = isStreaming || isCreatingPersona;
+  const composer = useChatComposer({
+    isDisabled: isInputDisabled,
+    onSendMessage,
+  });
 
   const handleExampleClick = useCallback(
     (prompt: string) => {
@@ -101,8 +78,12 @@ export function PersonaChatDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0">
-          {messages.length === 0 ? (
+        <ChatThread
+          messages={messages}
+          isStreaming={isStreaming}
+          error={error}
+          className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0"
+          emptyState={
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
               <p className="text-sm text-muted-foreground">
                 What kind of persona would you like to create? Try one of these:
@@ -120,32 +101,8 @@ export function PersonaChatDialog({
                 ))}
               </div>
             </div>
-          ) : (
-            <>
-              {messages.map((message, index) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  isStreaming={
-                    isStreaming &&
-                    message.role === 'assistant' &&
-                    index === messages.length - 1
-                  }
-                />
-              ))}
-            </>
-          )}
-
-          {error && (
-            <div className="flex justify-center">
-              <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
-                Something went wrong. Please try again.
-              </p>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
+          }
+        />
 
         {canCreatePersona && (
           <div className="border-t px-6 py-3 space-y-2">
@@ -178,14 +135,13 @@ export function PersonaChatDialog({
         )}
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={composer.handleSubmit}
           className="border-t px-6 py-4 flex items-end gap-2"
         >
           <Textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleInputKeyDown}
+            value={composer.input}
+            onChange={(e) => composer.setInput(e.target.value)}
+            onKeyDown={composer.handleInputKeyDown}
             placeholder={
               autoCreateReady && !synthesizeError
                 ? 'Persona is being created automatically...'
@@ -193,7 +149,7 @@ export function PersonaChatDialog({
                   ? 'Add more details or click Create Persona...'
                   : 'Describe your persona idea...'
             }
-            disabled={isStreaming || isCreatingPersona}
+            disabled={isInputDisabled}
             maxLength={CHAT_INPUT_MAX_LENGTH}
             rows={1}
             className={CHAT_INPUT_TEXTAREA_CLASS}
@@ -202,7 +158,7 @@ export function PersonaChatDialog({
           <Button
             type="submit"
             size="icon"
-            disabled={!input.trim() || isStreaming || isCreatingPersona}
+            disabled={!composer.canSubmit}
             className="shrink-0"
           >
             <PaperPlaneIcon className="w-4 h-4" />

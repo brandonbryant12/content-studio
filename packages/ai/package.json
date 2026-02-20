@@ -38,6 +38,7 @@
     "test:watch": "vitest",
     "test:live": "vitest run --testPathPattern=live",
     "test:live:llm": "vitest run src/__tests__/live/llm.live.test.ts",
+    "test:live:llm:smoke": "vitest run src/__tests__/live/llm.smoke.live.test.ts",
     "test:live:tts": "vitest run src/__tests__/live/tts.live.test.ts",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },

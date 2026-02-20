@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { UIMessage } from 'ai';
-import { ChatMessage } from '../components/chat-message';
+import { ChatMessage } from '@/shared/components/chat-message';
 import { render, screen } from '@/test-utils';
 
 const userMessage: UIMessage = {
@@ -52,27 +52,34 @@ describe('ChatMessage', () => {
     expect(bubble).toBeInTheDocument();
   });
 
-  it('shows streaming cursor for assistant message when streaming', () => {
+  it.each([
+    {
+      name: 'shows streaming cursor for assistant message when streaming',
+      message: assistantMessage,
+      isStreaming: true,
+      shouldRenderCursor: true,
+    },
+    {
+      name: 'does not show streaming cursor when not streaming',
+      message: assistantMessage,
+      isStreaming: false,
+      shouldRenderCursor: false,
+    },
+    {
+      name: 'does not show streaming cursor for user messages even when streaming',
+      message: userMessage,
+      isStreaming: true,
+      shouldRenderCursor: false,
+    },
+  ])('$name', ({ message, isStreaming, shouldRenderCursor }) => {
     const { container } = render(
-      <ChatMessage message={assistantMessage} isStreaming={true} />,
+      <ChatMessage message={message} isStreaming={isStreaming} />,
     );
     const cursor = container.querySelector('.animate-pulse');
-    expect(cursor).toBeInTheDocument();
-  });
-
-  it('does not show streaming cursor when not streaming', () => {
-    const { container } = render(
-      <ChatMessage message={assistantMessage} isStreaming={false} />,
-    );
-    const cursor = container.querySelector('.animate-pulse');
-    expect(cursor).not.toBeInTheDocument();
-  });
-
-  it('does not show streaming cursor for user messages even when streaming', () => {
-    const { container } = render(
-      <ChatMessage message={userMessage} isStreaming={true} />,
-    );
-    const cursor = container.querySelector('.animate-pulse');
-    expect(cursor).not.toBeInTheDocument();
+    if (shouldRenderCursor) {
+      expect(cursor).toBeInTheDocument();
+    } else {
+      expect(cursor).not.toBeInTheDocument();
+    }
   });
 });

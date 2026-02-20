@@ -1,12 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
+import type { ComponentProps } from 'react';
 import { ResearchChatDialog } from '../components/research-chat-dialog';
 import { render, screen, userEvent } from '@/test-utils';
 
-const defaultProps = {
+type ResearchChatDialogProps = ComponentProps<typeof ResearchChatDialog>;
+
+const defaultProps: ResearchChatDialogProps = {
   open: true,
   onOpenChange: vi.fn(),
-  messages: [] as UIMessage[],
+  messages: [],
   isStreaming: false,
   error: undefined,
   canStartResearch: false,
@@ -18,6 +21,10 @@ const defaultProps = {
   autoGeneratePodcast: false,
   onAutoGeneratePodcastChange: vi.fn(),
 };
+
+const renderDialog = (
+  overrides: Partial<ResearchChatDialogProps> = {},
+) => render(<ResearchChatDialog {...defaultProps} {...overrides} />);
 
 const messagesFixture: UIMessage[] = [
   {
@@ -36,12 +43,12 @@ const messagesFixture: UIMessage[] = [
 
 describe('ResearchChatDialog', () => {
   it('renders dialog with title when open', () => {
-    render(<ResearchChatDialog {...defaultProps} />);
+    renderDialog();
     expect(screen.getByText('Deep Research')).toBeInTheDocument();
   });
 
   it('shows empty state with example topics when no messages', () => {
-    render(<ResearchChatDialog {...defaultProps} />);
+    renderDialog();
     expect(
       screen.getByText('What would you like to research? Try one of these:'),
     ).toBeInTheDocument();
@@ -51,13 +58,7 @@ describe('ResearchChatDialog', () => {
   });
 
   it('displays messages when present', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-      />,
-    );
+    renderDialog({ messages: messagesFixture, canStartResearch: true });
     expect(screen.getByText('AI in healthcare')).toBeInTheDocument();
     expect(
       screen.getByText('What aspect of AI in healthcare interests you?'),
@@ -68,9 +69,7 @@ describe('ResearchChatDialog', () => {
     const onSendMessage = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <ResearchChatDialog {...defaultProps} onSendMessage={onSendMessage} />,
-    );
+    renderDialog({ onSendMessage });
 
     const input = screen.getByPlaceholderText(
       'Describe your research topic...',
@@ -85,9 +84,7 @@ describe('ResearchChatDialog', () => {
     const onSendMessage = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <ResearchChatDialog {...defaultProps} onSendMessage={onSendMessage} />,
-    );
+    renderDialog({ onSendMessage });
 
     const input = screen.getByPlaceholderText(
       'Describe your research topic...',
@@ -100,7 +97,7 @@ describe('ResearchChatDialog', () => {
   });
 
   it('applies a high maxLength for multiline input', () => {
-    render(<ResearchChatDialog {...defaultProps} />);
+    renderDialog();
 
     const input = screen.getByPlaceholderText(
       'Describe your research topic...',
@@ -111,7 +108,7 @@ describe('ResearchChatDialog', () => {
   it('clears input after sending', async () => {
     const user = userEvent.setup();
 
-    render(<ResearchChatDialog {...defaultProps} />);
+    renderDialog();
 
     const input = screen.getByPlaceholderText(
       'Describe your research topic...',
@@ -123,7 +120,7 @@ describe('ResearchChatDialog', () => {
   });
 
   it('disables input while streaming', () => {
-    render(<ResearchChatDialog {...defaultProps} isStreaming={true} />);
+    renderDialog({ isStreaming: true });
 
     const input = screen.getByPlaceholderText(
       'Describe your research topic...',
@@ -132,25 +129,13 @@ describe('ResearchChatDialog', () => {
   });
 
   it('shows Start Research button when canStartResearch is true', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-      />,
-    );
+    renderDialog({ messages: messagesFixture, canStartResearch: true });
 
     expect(screen.getByText('Start Research')).toBeInTheDocument();
   });
 
   it('does not show Start Research button when canStartResearch is false', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch={false}
-      />,
-    );
+    renderDialog({ messages: messagesFixture, canStartResearch: false });
 
     expect(screen.queryByText('Start Research')).not.toBeInTheDocument();
   });
@@ -159,14 +144,11 @@ describe('ResearchChatDialog', () => {
     const onStartResearch = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-        onStartResearch={onStartResearch}
-      />,
-    );
+    renderDialog({
+      messages: messagesFixture,
+      canStartResearch: true,
+      onStartResearch,
+    });
 
     const startButton = screen.getByText('Start Research');
     await user.click(startButton);
@@ -175,26 +157,20 @@ describe('ResearchChatDialog', () => {
   });
 
   it('shows spinner when isStartingResearch', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-        isStartingResearch={true}
-      />,
-    );
+    renderDialog({
+      messages: messagesFixture,
+      canStartResearch: true,
+      isStartingResearch: true,
+    });
 
     expect(screen.getByText('Preparing research...')).toBeInTheDocument();
   });
 
   it('shows error message when error is set', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        error={new Error('Stream failed')}
-      />,
-    );
+    renderDialog({
+      messages: messagesFixture,
+      error: new Error('Stream failed'),
+    });
 
     expect(
       screen.getByText('Something went wrong. Please try again.'),
@@ -205,9 +181,7 @@ describe('ResearchChatDialog', () => {
     const onSendMessage = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <ResearchChatDialog {...defaultProps} onSendMessage={onSendMessage} />,
-    );
+    renderDialog({ onSendMessage });
 
     await user.click(screen.getByText('AI trends in healthcare 2026'));
 
@@ -215,13 +189,7 @@ describe('ResearchChatDialog', () => {
   });
 
   it('changes placeholder when research can be started', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-      />,
-    );
+    renderDialog({ messages: messagesFixture, canStartResearch: true });
 
     expect(
       screen.getByPlaceholderText(
@@ -231,14 +199,11 @@ describe('ResearchChatDialog', () => {
   });
 
   it('shows auto-start state when assistant marked ready', () => {
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        messages={messagesFixture}
-        canStartResearch
-        autoStartReady
-      />,
-    );
+    renderDialog({
+      messages: messagesFixture,
+      canStartResearch: true,
+      autoStartReady: true,
+    });
 
     expect(screen.getByText('Starting automatically...')).toBeInTheDocument();
     expect(
@@ -250,12 +215,7 @@ describe('ResearchChatDialog', () => {
     const user = userEvent.setup();
     const onAutoGeneratePodcastChange = vi.fn();
 
-    render(
-      <ResearchChatDialog
-        {...defaultProps}
-        onAutoGeneratePodcastChange={onAutoGeneratePodcastChange}
-      />,
-    );
+    renderDialog({ onAutoGeneratePodcastChange });
 
     await user.click(
       screen.getByRole('checkbox', {

@@ -71,7 +71,12 @@ If a simplification conflicts with standards docs, follow docs and keep the orig
 5. Coverage gaps found and tests added (or explicit reason not added)
 6. Behavior-preservation notes (what was intentionally unchanged)
 7. Residual risks or follow-ups
+8. Parent workflow memory evidence (workflow key + event `id`, or explicit defer reason + owner)
 
 ## Memory + Compounding
 
-No standalone memory key for this support skill. Record simplification outcomes in the parent workflow memory event (`Feature Delivery`, `PR Risk Review`, or `Self-Improvement`) using `node scripts/workflow-memory/add-entry.mjs` when those workflows are run.
+No standalone memory key for this support skill.
+
+- Record simplification outcomes in the parent workflow memory event (`Feature Delivery`, `PR Risk Review`, `Self-Improvement`, or `Periodic Scans`) using `node scripts/workflow-memory/add-entry.mjs`.
+- Include the parent workflow + event `id` in final delivery notes.
+- If memory logging is intentionally deferred, state the reason and who owns the follow-up.

@@ -67,6 +67,39 @@ export const wrapJobError = (
         cause: error,
       });
 
+const createWorkerRuntime = (
+  name: string,
+  config: BaseWorkerConfig,
+): ServerRuntime => {
+  if (config.runtime) {
+    return config.runtime;
+  }
+
+  if (!config.databaseUrl || !config.storageConfig) {
+    throw new Error(
+      `[${name}] Either 'runtime' or 'databaseUrl' and 'storageConfig' must be provided`,
+    );
+  }
+
+  if (!config.useMockAI && !config.geminiApiKey) {
+    throw new Error(`[${name}] 'geminiApiKey' is required when useMockAI=false`);
+  }
+
+  const db = createDb({ databaseUrl: config.databaseUrl });
+  const runtime = createServerRuntime({
+    db,
+    storageConfig: config.storageConfig,
+    useMockAI: config.useMockAI,
+    geminiApiKey: config.geminiApiKey,
+  });
+
+  if (config.useMockAI) {
+    console.warn(`[${name}] Using mock AI layers for testing`);
+  }
+
+  return runtime;
+};
+
 /**
  * Log an error or defect with its stack trace, then return null.
  * Used to swallow claim-time failures so the poll loop continues.
@@ -140,40 +173,56 @@ export const createWorker = <
     config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
   const maxConcurrent = config.maxConcurrent ?? MAX_CONCURRENT_JOBS;
 
-  let runtime: ServerRuntime;
-  if (config.runtime) {
-    runtime = config.runtime;
-  } else {
-    if (!config.databaseUrl || !config.storageConfig) {
-      throw new Error(
-        `[${name}] Either 'runtime' or 'databaseUrl' and 'storageConfig' must be provided`,
-      );
-    }
-
-    if (!config.useMockAI && !config.geminiApiKey) {
-      throw new Error(
-        `[${name}] 'geminiApiKey' is required when useMockAI=false`,
-      );
-    }
-
-    const db = createDb({ databaseUrl: config.databaseUrl });
-    runtime = createServerRuntime({
-      db,
-      storageConfig: config.storageConfig,
-      useMockAI: config.useMockAI,
-      geminiApiKey: config.geminiApiKey,
-    });
-
-    if (config.useMockAI) {
-      console.warn(`[${name}] Using mock AI layers for testing`);
-    }
-  }
+  const runtime = createWorkerRuntime(name, config);
 
   const IDLE_SUMMARY_INTERVAL = Math.max(1, Math.round(60_000 / pollInterval));
 
   let shutdownDeferred: Deferred.Deferred<void> | null = null;
   let loopFiber: Fiber.RuntimeFiber<void, unknown> | null = null;
   let activeJobsRef: Ref.Ref<number> | null = null;
+
+  const claimNextJobSafely = (queue: QueueService, jobType: JobType) =>
+    queue.claimNextJob(jobType).pipe(
+      Effect.catchAll((err) => logAndSwallow(`Error claiming ${jobType}`, err)),
+      Effect.catchAllDefect((defect) =>
+        logAndSwallow(`Defect claiming ${jobType}`, defect),
+      ),
+    );
+
+  const notifyJobComplete = (job: Job) =>
+    Effect.sync(() => onJobComplete?.(job as Job<TPayload>));
+
+  const forkJobProcessing = (
+    queue: QueueService,
+    job: Job,
+    activeJobs: Ref.Ref<number>,
+  ) =>
+    Effect.forkDaemon(
+      processJob(job as Job<TPayload>).pipe(
+        Effect.flatMap(() => queue.updateJobStatus(job.id, JobStatus.COMPLETED)),
+        Effect.tap((result) =>
+          Effect.logInfo(
+            `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,
+          ),
+        ),
+        Effect.tap(notifyJobComplete),
+        Effect.catchAll((err) =>
+          handleJobFailure(queue, job, formatError(err), onJobComplete),
+        ),
+        Effect.catchAllDefect((defect) =>
+          handleJobFailure(
+            queue,
+            job,
+            `Unexpected defect: ${formatError(defect)}`,
+            onJobComplete,
+          ),
+        ),
+        Effect.ensuring(Ref.update(activeJobs, (n) => n - 1)),
+        Effect.annotateLogs('worker', name),
+        Effect.annotateLogs('job.id', job.id),
+        Effect.annotateLogs('job.type', job.type),
+      ),
+    );
 
   const pollOnce = (idleCount: Ref.Ref<number>, activeJobs: Ref.Ref<number>) =>
     Effect.gen(function* () {
@@ -193,14 +242,7 @@ export const createWorker = <
       for (const jobType of jobTypes) {
         if (claimed >= capacity) break;
 
-        const job = yield* queue.claimNextJob(jobType).pipe(
-          Effect.catchAll((err) =>
-            logAndSwallow(`Error claiming ${jobType}`, err),
-          ),
-          Effect.catchAllDefect((defect) =>
-            logAndSwallow(`Defect claiming ${jobType}`, defect),
-          ),
-        );
+        const job = yield* claimNextJobSafely(queue, jobType);
 
         if (!job) continue;
 
@@ -208,36 +250,7 @@ export const createWorker = <
         yield* Ref.update(activeJobs, (n) => n + 1);
         yield* Ref.set(idleCount, 0);
 
-        yield* Effect.forkDaemon(
-          processJob(job as Job<TPayload>).pipe(
-            Effect.flatMap(() =>
-              queue.updateJobStatus(job.id, JobStatus.COMPLETED),
-            ),
-            Effect.tap((result) =>
-              Effect.logInfo(
-                `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,
-              ),
-            ),
-            Effect.tap((result) =>
-              Effect.sync(() => onJobComplete?.(result as Job<TPayload>)),
-            ),
-            Effect.catchAll((err) =>
-              handleJobFailure(queue, job, formatError(err), onJobComplete),
-            ),
-            Effect.catchAllDefect((defect) =>
-              handleJobFailure(
-                queue,
-                job,
-                `Unexpected defect: ${formatError(defect)}`,
-                onJobComplete,
-              ),
-            ),
-            Effect.ensuring(Ref.update(activeJobs, (n) => n - 1)),
-            Effect.annotateLogs('worker', name),
-            Effect.annotateLogs('job.id', job.id),
-            Effect.annotateLogs('job.type', job.type),
-          ),
-        );
+        yield* forkJobProcessing(queue, job, activeJobs);
 
         yield* Effect.logInfo(
           `Forked ${job.type} job ${job.id} (active: ${activeCount + claimed}/${maxConcurrent})`,
@@ -356,6 +369,26 @@ export const createWorker = <
   const DRAIN_POLL_MS = 500;
   const DRAIN_TIMEOUT_MS = 30_000;
 
+  const drainActiveJobs = (ref: Ref.Ref<number>) =>
+    Effect.gen(function* () {
+      const startMs = Date.now();
+      let active = yield* Ref.get(ref);
+      while (active > 0) {
+        if (Date.now() - startMs > DRAIN_TIMEOUT_MS) {
+          yield* Effect.logWarning(
+            `Drain timeout after ${DRAIN_TIMEOUT_MS}ms, ${active} jobs still running`,
+          );
+          break;
+        }
+        yield* Effect.logInfo(`Draining: ${active} active job(s), waiting...`);
+        yield* Effect.sleep(DRAIN_POLL_MS);
+        active = yield* Ref.get(ref);
+      }
+      if (active === 0) {
+        yield* Effect.logInfo('All active jobs drained');
+      }
+    }).pipe(Effect.annotateLogs('worker', name));
+
   const stop = async () => {
     if (shutdownDeferred) {
       await runtime.runPromise(
@@ -370,29 +403,7 @@ export const createWorker = <
 
     // Drain active jobs — daemon fibers outlive the poll loop
     if (activeJobsRef) {
-      const ref = activeJobsRef;
-      const drain = Effect.gen(function* () {
-        const startMs = Date.now();
-        let active = yield* Ref.get(ref);
-        while (active > 0) {
-          if (Date.now() - startMs > DRAIN_TIMEOUT_MS) {
-            yield* Effect.logWarning(
-              `Drain timeout after ${DRAIN_TIMEOUT_MS}ms, ${active} jobs still running`,
-            );
-            break;
-          }
-          yield* Effect.logInfo(
-            `Draining: ${active} active job(s), waiting...`,
-          );
-          yield* Effect.sleep(DRAIN_POLL_MS);
-          active = yield* Ref.get(ref);
-        }
-        if (active === 0) {
-          yield* Effect.logInfo('All active jobs drained');
-        }
-      }).pipe(Effect.annotateLogs('worker', name));
-
-      await runtime.runPromise(drain).catch(() => {
+      await runtime.runPromise(drainActiveJobs(activeJobsRef)).catch(() => {
         // Best-effort drain — force timer in worker.ts is the backstop
       });
     }
