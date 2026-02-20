@@ -24,7 +24,7 @@ Use this format:
 - Control type: automation + docs rule
 - Change landed: `scripts/workflow-memory/add-entry.mjs`, `docs/workflow-memory/README.md`, workflow protocol updates.
 - Evidence: `docs/workflow-memory/README.md`, `scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`
-- Owner: @ai-workflow
+- Owner: brandon@ai-workflow
 - Status: active
 
 ## 2026-02-20 - Workflow Memory Coverage Audits
@@ -34,7 +34,7 @@ Use this format:
 - Control type: automation + docs rule + skill update
 - Change landed: `scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
 - Evidence: `scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`
-- Owner: @ai-workflow
+- Owner: brandon@ai-workflow
 - Status: active
 
 ## 2026-02-20 - Skill Quality Checks For Skill Drift
@@ -44,7 +44,7 @@ Use this format:
 - Control type: automation + docs rule
 - Change landed: `scripts/skills/check-quality.mjs`, `skills:check:strict` command, workflow/docs updates requiring quality checks after skill edits.
 - Evidence: `scripts/skills/check-quality.mjs`, `package.json`, `docs/workflow.md`, `AGENTS.md`, `CLAUDE.md`
-- Owner: @ai-workflow
+- Owner: brandon@ai-workflow
 - Status: active
 
 ## 2026-02-20 - Close Missing Workflow Coverage In-Loop
@@ -54,5 +54,5 @@ Use this format:
 - Control type: docs rule
 - Change landed: Require the active quality loop cycle to run lightweight passes for workflows reported missing by `pnpm workflow-memory:coverage:strict` and append those workflow events before final closure.
 - Evidence: `docs/workflow.md`, `docs/workflow-memory/guardrails.md`
-- Owner: @codex
+- Owner: brandon@codex
 - Status: active
