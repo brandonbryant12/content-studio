@@ -13,6 +13,7 @@ graph LR
 2. No data fetching, mutations, or route params in presenters <!-- enforced-by: manual-review -->
 3. Wrap containers in `<SuspenseBoundary resetKeys={[id]}>` <!-- enforced-by: manual-review -->
 4. `useSuspenseQuery` when data is required + Suspense boundary; `useQuery` when optional <!-- enforced-by: manual-review -->
+5. Keep React components bounded; split when a component function exceeds lint complexity/size thresholds <!-- enforced-by: lint -->
 
 ## Responsibility Matrix
 

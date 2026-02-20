@@ -36,4 +36,22 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  {
+    files: ['**/*.tsx', '**/*.jsx'],
+    ignores: ['**/*.test.tsx', '**/*.test.jsx'],
+    rules: {
+      // Guardrail against monolithic React components.
+      'max-lines-per-function': [
+        'warn',
+        {
+          max: 275,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+      complexity: ['warn', 30],
+      'max-depth': ['warn', 4],
+      'react/jsx-max-depth': ['warn', { max: 10 }],
+    },
+  },
 ]);

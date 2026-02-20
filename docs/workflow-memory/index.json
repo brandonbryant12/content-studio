@@ -48,6 +48,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-add-low-noise-react-monolith-guardrail-lint-thresholds",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add low-noise React monolith guardrail lint thresholds",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "eslint",
+      "frontend",
+      "guardrails",
+      "maintainability"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-add-single-llm-smoke-test-with-full-success-error-output",
     "date": "2026-02-20",
     "month": "2026-02",
