@@ -211,6 +211,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-wrapped-multiline-input-across-all-ai-chat-surfaces",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Wrapped multiline input across all AI chat surfaces",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "frontend",
+      "chat",
+      "ux",
+      "text-wrapping"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-intake-triage-scope-memory-coverage-hardening-and-remove-react-doctor",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -305,6 +321,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-self-improvement-rename-skills-without-content-studio-prefix-and-add-code-simplif",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Rename skills without content-studio prefix and add code-simplifier workflow",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "skills",
+      "self-improvement",
+      "workflow",
+      "quality"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-self-improvement-strengthen-skill-quality-checks-with-procedural-path-anchor-rule",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -362,6 +394,22 @@
     "tags": [
       "tanstack",
       "react-query",
+      "chat",
+      "ux"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-tanstack-vite-standardized-ai-chat-composer-wrapping-and-submission-behavior",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "TanStack + Vite",
+    "title": "Standardized AI chat composer wrapping and submission behavior",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "tanstack",
+      "frontend",
       "chat",
       "ux"
     ],

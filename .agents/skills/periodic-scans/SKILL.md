@@ -1,0 +1,75 @@
+---
+name: periodic-scans
+description: Continuous and periodic quality scan workflow for Content Studio. Use when running daily/weekly/release audits for correctness, performance, security, testing, and docs drift.
+---
+
+# Content Studio Periodic Scans
+
+Use this skill to run recurring repo scans and produce a prioritized backlog.
+
+## Scan Cadence
+
+## Per PR (continuous)
+
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm test:invariants` for backend changes
+- `pnpm --filter web build` for frontend-impacting changes
+- verify changed contracts/handlers align in `packages/api/src/contracts/` and `packages/api/src/server/router/`
+
+## Daily
+
+- Re-run failed suites from CI and triage root cause.
+- Scan for docs/code drift in recently changed areas (`docs/`, `packages/`, `apps/`).
+- Check top flaky tests and quarantine only with owner + follow-up issue.
+- Run `pnpm workflow-memory:coverage` and flag workflows that appear missing for the current month.
+
+## Weekly
+
+- Cross-facet audit:
+  - architecture boundary violations (`packages/api/src/server/router/` -> `packages/media/src/*/use-cases/`)
+  - authz gaps for mutating use cases (`packages/media/src/*/use-cases/`)
+  - query key/invalidation safety (`apps/web/src/features/*/hooks/`)
+  - frontend loading/error-state regressions (`apps/web/src/features/`, `apps/web/src/routes/_protected/`)
+  - performance regressions in route-level bundles and hot paths (`apps/web`, `apps/worker/src`, `packages/media/src`)
+  - security/dependency hygiene drift (`package.json`, `pnpm-lock.yaml`, `packages/*/package.json`)
+- Review agent-authored merges for repeat mistakes and guardrail gaps.
+- Run `pnpm workflow-memory:coverage:strict`; if a missing workflow was run, add the missing memory event immediately.
+- Run `pnpm skills:check:strict` if any skill files changed that week.
+
+## Monthly or Release Train
+
+- Full project spirit audit and standards refresh.
+- Review telemetry and incident data for missed classes of bugs.
+- Reprioritize quality backlog and update skill/docs guardrails.
+
+## Required Output
+
+Produce findings in this order:
+
+1. Critical risks
+2. High-impact quick wins
+3. Medium/low improvements
+4. Workflow memory coverage snapshot (covered workflows, missing workflows, follow-ups)
+5. Proposed guardrail changes (tests, lint, docs, skills)
+
+For every finding include:
+
+- severity
+- impact
+- effort
+- confidence
+- file evidence
+
+## Guardrail Rule
+
+If the same failure pattern appears in 2+ merges, convert it into at least one:
+
+- invariant test
+- lint rule
+- explicit docs rule
+- skill checklist update
+
+## Memory + Compounding
+
+After each scan cycle, record one event with workflow key `Periodic Scans` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

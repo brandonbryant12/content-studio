@@ -7,10 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui/components/dialog';
-import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Textarea } from '@repo/ui/components/textarea';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
+import {
+  CHAT_INPUT_MAX_LENGTH,
+  CHAT_INPUT_TEXTAREA_CLASS,
+} from '@/shared/lib/chat-input';
 import { ChatMessage } from '@/shared/components/chat-message';
 
 const EXAMPLE_PROMPTS = [
@@ -48,7 +52,7 @@ export function PersonaChatDialog({
 }: PersonaChatDialogProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,11 +62,22 @@ export function PersonaChatDialog({
     (e: React.FormEvent) => {
       e.preventDefault();
       const trimmed = input.trim();
-      if (!trimmed || isStreaming) return;
+      if (!trimmed || isStreaming || isCreatingPersona) return;
       onSendMessage(trimmed);
       setInput('');
     },
-    [input, isStreaming, onSendMessage],
+    [input, isStreaming, isCreatingPersona, onSendMessage],
+  );
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.nativeEvent.isComposing) return;
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        e.currentTarget.form?.requestSubmit();
+      }
+    },
+    [],
   );
 
   const handleExampleClick = useCallback(
@@ -162,11 +177,15 @@ export function PersonaChatDialog({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="border-t px-6 py-4 flex gap-2">
-          <Input
+        <form
+          onSubmit={handleSubmit}
+          className="border-t px-6 py-4 flex items-end gap-2"
+        >
+          <Textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleInputKeyDown}
             placeholder={
               autoCreateReady && !synthesizeError
                 ? 'Persona is being created automatically...'
@@ -175,12 +194,16 @@ export function PersonaChatDialog({
                   : 'Describe your persona idea...'
             }
             disabled={isStreaming || isCreatingPersona}
+            maxLength={CHAT_INPUT_MAX_LENGTH}
+            rows={1}
+            className={CHAT_INPUT_TEXTAREA_CLASS}
             autoFocus
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim() || isStreaming || isCreatingPersona}
+            className="shrink-0"
           >
             <PaperPlaneIcon className="w-4 h-4" />
           </Button>

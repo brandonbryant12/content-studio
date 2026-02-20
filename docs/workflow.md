@@ -27,20 +27,21 @@ Use the smallest set of workflows needed for a change, but keep memory updates m
 
 | Workflow | Primary Skill | Typical Trigger | Memory Key |
 |---|---|---|---|
-| Intake + Triage | `content-studio-intake-triage` | New request/refactor/bug | `Intake + Triage` |
-| Feature Delivery | `content-studio-feature-delivery` | Implementation/refactor execution | `Feature Delivery` |
-| TanStack + Vite Guardrails | `content-studio-tanstack-vite` | `apps/web` data/routing/forms/build changes | `TanStack + Vite` |
-| Architecture + ADR Guard | `content-studio-architecture-adr-guard` | Boundary/layer/runtime changes | `Architecture + ADR Guard` |
-| PR Risk Review | `content-studio-pr-risk-review` | Pre-merge review | `PR Risk Review` |
-| Test Surface Steward | `content-studio-test-surface-steward` | Coverage drift, flaky tests, risky changes | `Test Surface Steward` |
-| Security + Dependency Hygiene | `content-studio-security-dependency-hygiene` | Dependency updates, release prep, weekly audits | `Security + Dependency Hygiene` |
-| Performance + Cost Guard | `content-studio-performance-cost-guard` | Perf-sensitive changes, weekly/release checks | `Performance + Cost Guard` |
-| Docs + Knowledge Drift | `content-studio-docs-knowledge-drift` | Behavior/docs mismatch, onboarding confusion | `Docs + Knowledge Drift` |
-| Periodic Scans | `content-studio-periodic-scans` | Daily/weekly/monthly quality loops | `Periodic Scans` |
-| Release + Incident Response | `content-studio-release-incident-response` | Release train, hotfix, production incident | `Release + Incident Response` |
-| Self-Improvement | `content-studio-self-improvement` | Repeat failures, escaped defects, notable incidents | `Self-Improvement` |
-| Codebase Navigation (support) | `content-studio-codebase-nav` | Fast orientation for file paths and test locations | Use parent workflow memory key |
-| Debug + Fix (support) | `content-studio-debug-fix` | Failing tests, regressions, or uncertain root cause | Use parent workflow memory key |
+| Intake + Triage | `intake-triage` | New request/refactor/bug | `Intake + Triage` |
+| Feature Delivery | `feature-delivery` | Implementation/refactor execution | `Feature Delivery` |
+| TanStack + Vite Guardrails | `tanstack-vite` | `apps/web` data/routing/forms/build changes | `TanStack + Vite` |
+| Architecture + ADR Guard | `architecture-adr-guard` | Boundary/layer/runtime changes | `Architecture + ADR Guard` |
+| PR Risk Review | `pr-risk-review` | Pre-merge review | `PR Risk Review` |
+| Test Surface Steward | `test-surface-steward` | Coverage drift, flaky tests, risky changes | `Test Surface Steward` |
+| Security + Dependency Hygiene | `security-dependency-hygiene` | Dependency updates, release prep, weekly audits | `Security + Dependency Hygiene` |
+| Performance + Cost Guard | `performance-cost-guard` | Perf-sensitive changes, weekly/release checks | `Performance + Cost Guard` |
+| Docs + Knowledge Drift | `docs-knowledge-drift` | Behavior/docs mismatch, onboarding confusion | `Docs + Knowledge Drift` |
+| Periodic Scans | `periodic-scans` | Daily/weekly/monthly quality loops | `Periodic Scans` |
+| Release + Incident Response | `release-incident-response` | Release train, hotfix, production incident | `Release + Incident Response` |
+| Self-Improvement | `self-improvement` | Repeat failures, escaped defects, notable incidents | `Self-Improvement` |
+| Code Simplifier (support) | `code-simplifier` | Post-change readability/maintainability cleanup with no behavior change | Use parent workflow memory key |
+| Codebase Navigation (support) | `codebase-nav` | Fast orientation for file paths and test locations | Use parent workflow memory key |
+| Debug + Fix (support) | `debug-fix` | Failing tests, regressions, or uncertain root cause | Use parent workflow memory key |
 
 Persistent memory system: `docs/workflow-memory/` (`events`, `index`, `summaries`, `guardrails`).
 
@@ -76,16 +77,17 @@ flowchart LR
 
 ## Happy Path Skill Set
 
-1. `content-studio-intake-triage`
-2. `content-studio-feature-delivery`
-3. `content-studio-tanstack-vite` for `apps/web` changes
-4. `content-studio-architecture-adr-guard` when boundaries/layers change
-5. `content-studio-pr-risk-review` before merge
-6. `content-studio-test-surface-steward` when coverage confidence is weak
-7. `content-studio-docs-knowledge-drift` when behavior/docs changed
-8. `content-studio-self-improvement` when repeat patterns emerge
-9. `content-studio-codebase-nav` when rapid repo orientation is needed
-10. `content-studio-debug-fix` when narrowing and fixing failing tests
+1. `intake-triage`
+2. `feature-delivery`
+3. `tanstack-vite` for `apps/web` changes
+4. `architecture-adr-guard` when boundaries/layers change
+5. `pr-risk-review` before merge
+6. `test-surface-steward` when coverage confidence is weak
+7. `docs-knowledge-drift` when behavior/docs changed
+8. `self-improvement` when repeat patterns emerge
+9. `code-simplifier` for post-change clarity cleanup with no behavior changes
+10. `codebase-nav` when rapid repo orientation is needed
+11. `debug-fix` when narrowing and fixing failing tests
 
 ## E2E Delivery Checklist
 
@@ -123,11 +125,11 @@ flowchart TD
 | Weekly | Detect systemic gaps | Cross-facet audit: architecture, authz, tests, perf/cost, security, docs |
 | Monthly/Release | Recalibrate standards | Full audit, release readiness, incident trend review, guardrail roadmap updates |
 
-Use `content-studio-periodic-scans` for scan execution and reporting format.
+Use `periodic-scans` for scan execution and reporting format.
 
 ## Release + Incident Loop
 
-Use `content-studio-release-incident-response` for release trains and hotfix/incident handling.
+Use `release-incident-response` for release trains and hotfix/incident handling.
 
 ```mermaid
 flowchart LR
@@ -142,8 +144,8 @@ flowchart LR
 
 For security-sensitive or high-impact releases, pair with:
 
-- `content-studio-security-dependency-hygiene`
-- `content-studio-performance-cost-guard`
+- `security-dependency-hygiene`
+- `performance-cost-guard`
 
 ## Self-Improvement Loop
 
@@ -163,7 +165,7 @@ flowchart LR
 - Review comments repeat in the same category.
 - Periodic scan identifies systemic risk.
 
-When triggered, run `content-studio-self-improvement` and update shared instructions and skills in the same cycle.
+When triggered, run `self-improvement` and update shared instructions and skills in the same cycle.
 
 ## Workflow Memory Protocol
 
@@ -182,7 +184,7 @@ Minimum event fields:
 9. `owner`
 10. `status`
 
-If the same pattern appears in 2+ memory entries, escalate immediately to `content-studio-self-improvement` and land a concrete prevention mechanism (test, lint, docs rule, skill update, or automation script).
+If the same pattern appears in 2+ memory entries, escalate immediately to `self-improvement` and land a concrete prevention mechanism (test, lint, docs rule, skill update, or automation script).
 
 Use the write helper to avoid schema drift:
 

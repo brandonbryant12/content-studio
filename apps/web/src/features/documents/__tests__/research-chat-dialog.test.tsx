@@ -81,6 +81,33 @@ describe('ResearchChatDialog', () => {
     expect(onSendMessage).toHaveBeenCalledWith('Test topic');
   });
 
+  it('adds newline with Shift+Enter without submitting', async () => {
+    const onSendMessage = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <ResearchChatDialog {...defaultProps} onSendMessage={onSendMessage} />,
+    );
+
+    const input = screen.getByPlaceholderText(
+      'Describe your research topic...',
+    );
+    await user.type(input, 'Line one');
+    await user.keyboard('{Shift>}{Enter}{/Shift}Line two');
+
+    expect(onSendMessage).not.toHaveBeenCalled();
+    expect(input).toHaveValue('Line one\nLine two');
+  });
+
+  it('applies a high maxLength for multiline input', () => {
+    render(<ResearchChatDialog {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText(
+      'Describe your research topic...',
+    );
+    expect(input).toHaveAttribute('maxLength', '12000');
+  });
+
   it('clears input after sending', async () => {
     const user = userEvent.setup();
 

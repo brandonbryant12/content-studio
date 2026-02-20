@@ -36,6 +36,14 @@ describe('ChatMessage', () => {
     expect(bubble).toBeInTheDocument();
   });
 
+  it('applies wrapping classes to user text', () => {
+    const { container } = render(
+      <ChatMessage message={userMessage} isStreaming={false} />,
+    );
+    const text = container.querySelector('p');
+    expect(text).toHaveClass('break-words');
+  });
+
   it('applies muted styling to assistant messages', () => {
     const { container } = render(
       <ChatMessage message={assistantMessage} isStreaming={false} />,

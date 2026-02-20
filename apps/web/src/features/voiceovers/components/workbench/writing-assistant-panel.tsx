@@ -1,8 +1,12 @@
 import { ChatBubbleIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
-import { Input } from '@repo/ui/components/input';
+import { Textarea } from '@repo/ui/components/textarea';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
+import {
+  CHAT_INPUT_MAX_LENGTH,
+  CHAT_INPUT_TEXTAREA_CLASS,
+} from '@/shared/lib/chat-input';
 import { ChatMessage } from '@/shared/components/chat-message';
 
 const EXAMPLE_PROMPTS = [
@@ -42,6 +46,17 @@ export function WritingAssistantPanel({
       setInput('');
     },
     [input, isStreaming, onSendMessage],
+  );
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.nativeEvent.isComposing) return;
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        e.currentTarget.form?.requestSubmit();
+      }
+    },
+    [],
   );
 
   const handleExampleClick = useCallback(
@@ -129,19 +144,24 @@ export function WritingAssistantPanel({
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border p-3 flex gap-2"
+        className="border-t border-border p-3 flex items-end gap-2"
       >
-        <Input
+        <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleInputKeyDown}
           placeholder="Ask for a rewrite, stronger hook, or tone shift..."
           disabled={isStreaming}
+          maxLength={CHAT_INPUT_MAX_LENGTH}
+          rows={1}
+          className={CHAT_INPUT_TEXTAREA_CLASS}
           aria-label="Writing assistant input"
         />
         <Button
           type="submit"
           size="icon"
           disabled={!input.trim() || isStreaming}
+          className="shrink-0"
         >
           <PaperPlaneIcon className="w-4 h-4" />
         </Button>

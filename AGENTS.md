@@ -58,20 +58,21 @@ packages/
 - After any skill add/update/delete, run:
   - `scripts/sync-skills.sh`
 - Preferred project skills:
-  - `content-studio-codebase-nav`
-  - `content-studio-debug-fix`
-  - `content-studio-intake-triage`
-  - `content-studio-feature-delivery`
-  - `content-studio-pr-risk-review`
-  - `content-studio-test-surface-steward`
-  - `content-studio-architecture-adr-guard`
-  - `content-studio-periodic-scans`
-  - `content-studio-security-dependency-hygiene`
-  - `content-studio-performance-cost-guard`
-  - `content-studio-release-incident-response`
-  - `content-studio-docs-knowledge-drift`
-  - `content-studio-self-improvement`
-  - `content-studio-tanstack-vite`
+  - `code-simplifier`
+  - `codebase-nav`
+  - `debug-fix`
+  - `intake-triage`
+  - `feature-delivery`
+  - `pr-risk-review`
+  - `test-surface-steward`
+  - `architecture-adr-guard`
+  - `periodic-scans`
+  - `security-dependency-hygiene`
+  - `performance-cost-guard`
+  - `release-incident-response`
+  - `docs-knowledge-drift`
+  - `self-improvement`
+  - `tanstack-vite`
 
 ## Validation
 

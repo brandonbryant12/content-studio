@@ -1,6 +1,7 @@
 import { CheckCircledIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,6 +11,10 @@ import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document
 import { useResearchChat } from '@/features/documents/hooks/use-research-chat';
 import { useSynthesizeResearch } from '@/features/documents/hooks/use-synthesize-research';
 import { getErrorMessage } from '@/shared/lib/errors';
+import {
+  CHAT_INPUT_MAX_LENGTH,
+  CHAT_INPUT_TEXTAREA_CLASS,
+} from '@/shared/lib/chat-input';
 
 interface StepResearchProps {
   onDocumentCreated: (documentId: string, title: string) => void;
@@ -38,7 +43,7 @@ export function StepResearch({
   const synthesize = useSynthesizeResearch();
   const [inputValue, setInputValue] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const autoStartTriggeredRef = useRef(false);
 
   const startResearchMutation = useMutation(
@@ -69,12 +74,25 @@ export function StepResearch({
     }
   }, [createdDocumentId]);
 
+  const isStarting = synthesize.isPending || startResearchMutation.isPending;
+
   const handleSend = useCallback(() => {
     const text = inputValue.trim();
-    if (!text || isStreaming) return;
+    if (!text || isStreaming || isStarting) return;
     setInputValue('');
     sendMessage({ text });
-  }, [inputValue, isStreaming, sendMessage]);
+  }, [inputValue, isStreaming, isStarting, sendMessage]);
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.nativeEvent.isComposing) return;
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend],
+  );
 
   const handleTopicClick = useCallback(
     (topic: string) => {
@@ -82,8 +100,6 @@ export function StepResearch({
     },
     [sendMessage],
   );
-
-  const isStarting = synthesize.isPending || startResearchMutation.isPending;
 
   const handleStartResearch = useCallback(async () => {
     if (messages.length === 0 || isStarting) return;
@@ -195,14 +211,16 @@ export function StepResearch({
         }}
         className="relative"
       >
-        <input
+        <Textarea
           ref={inputRef}
-          type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleInputKeyDown}
           placeholder="Describe your research topic..."
           disabled={isStreaming || isStarting}
-          className="setup-input pr-12"
+          maxLength={CHAT_INPUT_MAX_LENGTH}
+          rows={1}
+          className={`setup-textarea pr-12 ${CHAT_INPUT_TEXTAREA_CLASS}`}
           aria-label="Research topic"
         />
         <Button

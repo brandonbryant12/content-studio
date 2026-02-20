@@ -33,7 +33,7 @@ Use this format:
 - Problem signature: Workflow memory entries were structurally correct but sparse across active workflows.
 - Control type: automation + docs rule + skill update
 - Change landed: `scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
-- Evidence: `scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/content-studio-periodic-scans/SKILL.md`
+- Evidence: `scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`
 - Owner: @ai-workflow
 - Status: active
 

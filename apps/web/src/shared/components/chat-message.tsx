@@ -24,16 +24,18 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-2xl px-4 py-2.5',
+          'max-w-[85%] min-w-0 rounded-2xl px-4 py-2.5',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground',
         )}
       >
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap">{displayText}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">{displayText}</p>
         ) : (
-          <Markdown compact>{displayText}</Markdown>
+          <Markdown compact className="break-words">
+            {displayText}
+          </Markdown>
         )}
         {isStreaming && !isUser && (
           <span className="inline-block w-1.5 h-4 ml-0.5 bg-foreground/60 animate-pulse rounded-sm" />

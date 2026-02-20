@@ -30,14 +30,16 @@ Type checks, tests, invariants, and build outputs are required evidence for merg
 
 The codebase pairs spec artifacts with focused agent skills to constrain AI-authored changes:
 
-1. `content-studio-feature-delivery`
+1. `feature-delivery`
 Translates spec deltas into vertical slices with tests and docs updates.
-2. `content-studio-tanstack-vite`
+2. `tanstack-vite`
 Applies frontend guardrails for routing, data fetching, caching, and forms in `apps/web`.
-3. `content-studio-periodic-scans`
+3. `periodic-scans`
 Runs recurring quality audits to catch drift across architecture, tests, performance, and docs.
-4. `content-studio-self-improvement`
+4. `self-improvement`
 Converts repeated failures into stronger guardrails (docs, tests, scripts, and skill updates).
+5. `code-simplifier`
+Applies docs-aligned simplification passes to recently modified code without behavior changes.
 
 Skill source of truth is `.agents/skills`, mirrored via `scripts/sync-skills.sh`.
 
