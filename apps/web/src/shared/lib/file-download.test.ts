@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getFileExtensionFromUrl, toFileSlug } from './file-download';
+import {
+  buildDownloadFileName,
+  getFileExtensionFromUrl,
+  toFileSlug,
+} from './file-download';
 
 describe('file download utils', () => {
   it('creates a stable slug for filenames', () => {
@@ -21,5 +25,29 @@ describe('file download utils', () => {
     expect(
       getFileExtensionFromUrl('https://example.com/no-extension', 'txt'),
     ).toBe('txt');
+  });
+
+  it('builds smart download filenames with labels and date', () => {
+    expect(
+      buildDownloadFileName({
+        title: 'Quarterly Product Update',
+        extension: '.MP3',
+        fallbackSlug: 'podcast',
+        labels: ['audio', 'final_mix'],
+        date: '2026-02-20T11:30:00.000Z',
+      }),
+    ).toBe('quarterly-product-update-audio-final-mix-20260220.mp3');
+  });
+
+  it('skips empty labels and invalid dates', () => {
+    expect(
+      buildDownloadFileName({
+        title: '***',
+        extension: 'png',
+        fallbackSlug: 'infographic',
+        labels: ['', '  ', undefined],
+        date: 'not-a-date',
+      }),
+    ).toBe('infographic.png');
   });
 });

@@ -18,10 +18,10 @@ import {
 } from '@/shared/hooks';
 import { copyTextToClipboard } from '@/shared/lib/clipboard';
 import {
+  buildDownloadFileName,
   downloadFromUrl,
   downloadTextFile,
   getFileExtensionFromUrl,
-  toFileSlug,
 } from '@/shared/lib/file-download';
 
 interface VoiceoverDetailContainerProps {
@@ -92,9 +92,15 @@ export function VoiceoverDetailContainer({
   const handleExportAudio = useCallback(() => {
     if (!voiceover.audioUrl) return;
     const extension = getFileExtensionFromUrl(voiceover.audioUrl, 'mp3');
-    const fileName = `${toFileSlug(voiceover.title, 'voiceover')}.${extension}`;
+    const fileName = buildDownloadFileName({
+      title: voiceover.title,
+      extension,
+      fallbackSlug: 'voiceover',
+      labels: ['audio'],
+      date: voiceover.updatedAt,
+    });
     downloadFromUrl(voiceover.audioUrl, fileName);
-  }, [voiceover.audioUrl, voiceover.title]);
+  }, [voiceover.audioUrl, voiceover.title, voiceover.updatedAt]);
 
   const handleExportScript = useCallback(() => {
     if (!settings.text.trim()) return;
@@ -105,9 +111,21 @@ export function VoiceoverDetailContainer({
       voice: settings.voice,
       voiceName: voiceover.voiceName,
     });
-    const fileName = `${toFileSlug(voiceover.title, 'voiceover')}.txt`;
+    const fileName = buildDownloadFileName({
+      title: voiceover.title,
+      extension: 'txt',
+      fallbackSlug: 'voiceover',
+      labels: ['script'],
+      date: voiceover.updatedAt,
+    });
     downloadTextFile(script, fileName);
-  }, [settings.text, settings.voice, voiceover.title, voiceover.voiceName]);
+  }, [
+    settings.text,
+    settings.voice,
+    voiceover.title,
+    voiceover.voiceName,
+    voiceover.updatedAt,
+  ]);
 
   const handleCopyTranscript = useCallback(async () => {
     if (!settings.text.trim()) return;

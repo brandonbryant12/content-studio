@@ -21,10 +21,10 @@ import {
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { copyTextToClipboard } from '@/shared/lib/clipboard';
 import {
+  buildDownloadFileName,
   downloadFromUrl,
   downloadTextFile,
   getFileExtensionFromUrl,
-  toFileSlug,
 } from '@/shared/lib/file-download';
 
 interface PodcastDetailContainerProps {
@@ -111,9 +111,15 @@ export function PodcastDetailContainer({
   const handleExportAudio = useCallback(() => {
     if (!podcast.audioUrl) return;
     const extension = getFileExtensionFromUrl(podcast.audioUrl, 'mp3');
-    const fileName = `${toFileSlug(podcast.title, 'podcast')}.${extension}`;
+    const fileName = buildDownloadFileName({
+      title: podcast.title,
+      extension,
+      fallbackSlug: 'podcast',
+      labels: ['audio'],
+      date: podcast.updatedAt,
+    });
     downloadFromUrl(podcast.audioUrl, fileName);
-  }, [podcast.audioUrl, podcast.title]);
+  }, [podcast.audioUrl, podcast.title, podcast.updatedAt]);
 
   const handleExportScript = useCallback(() => {
     if (scriptEditor.segments.length === 0) return;
@@ -122,9 +128,20 @@ export function PodcastDetailContainer({
       summary: podcast.summary ?? null,
       segments: scriptEditor.segments,
     });
-    const fileName = `${toFileSlug(podcast.title, 'podcast')}-script.md`;
+    const fileName = buildDownloadFileName({
+      title: podcast.title,
+      extension: 'md',
+      fallbackSlug: 'podcast',
+      labels: ['script'],
+      date: podcast.updatedAt,
+    });
     downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
-  }, [podcast.summary, podcast.title, scriptEditor.segments]);
+  }, [
+    podcast.summary,
+    podcast.title,
+    podcast.updatedAt,
+    scriptEditor.segments,
+  ]);
 
   const handleCopyTranscript = useCallback(async () => {
     if (scriptEditor.segments.length === 0) return;

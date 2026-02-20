@@ -12,13 +12,13 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
-    "eslint": "catalog:",
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
+    "eslint": "catalog:",
     "prettier": "catalog:"
   }
 }

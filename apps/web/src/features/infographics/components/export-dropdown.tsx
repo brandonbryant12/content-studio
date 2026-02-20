@@ -6,27 +6,39 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
+import {
+  buildDownloadFileName,
+  downloadFromUrl,
+} from '@/shared/lib/file-download';
 
 interface ExportDropdownProps {
   imageUrl: string | null;
   title: string;
+  format?: string;
+  versionNumber?: number | null;
+  updatedAt?: string;
   disabled?: boolean;
 }
 
 export function ExportDropdown({
   imageUrl,
   title,
+  format,
+  versionNumber,
+  updatedAt,
   disabled,
 }: ExportDropdownProps) {
   const handleDownloadPng = () => {
     if (!imageUrl) return;
 
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `${title.toLowerCase().replace(/\s+/g, '-')}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fileName = buildDownloadFileName({
+      title,
+      extension: 'png',
+      fallbackSlug: 'infographic',
+      labels: [format, versionNumber ? `v${versionNumber}` : undefined],
+      date: updatedAt,
+    });
+    downloadFromUrl(imageUrl, fileName);
   };
 
   return (

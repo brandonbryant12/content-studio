@@ -1,5 +1,6 @@
 const FILE_SLUG_FALLBACK = 'export';
 const FILE_EXTENSION_REGEX = /\.([a-z0-9]{2,5})$/i;
+const FILE_DATE_REGEX = /^\d{4}-\d{2}-\d{2}/;
 
 export function toFileSlug(
   value: string,
@@ -37,6 +38,58 @@ export function getFileExtensionFromUrl(url: string, fallback: string): string {
   } catch {
     return parse(url) ?? normalizedFallback;
   }
+}
+
+function toFileDateSegment(value: Date | string | null | undefined): string {
+  if (!value) return '';
+
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    if (!normalized) return '';
+
+    const isoMatch = normalized.match(FILE_DATE_REGEX);
+    if (isoMatch?.[0]) {
+      return isoMatch[0].replace(/-/g, '');
+    }
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+export interface BuildDownloadFileNameInput {
+  title: string;
+  extension: string;
+  fallbackSlug?: string;
+  labels?: Array<string | null | undefined>;
+  date?: Date | string | null;
+}
+
+export function buildDownloadFileName({
+  title,
+  extension,
+  fallbackSlug = FILE_SLUG_FALLBACK,
+  labels = [],
+  date,
+}: BuildDownloadFileNameInput): string {
+  const base = toFileSlug(title, fallbackSlug);
+  const normalizedExtension = extension.replace(/^\./, '').toLowerCase();
+  const labelSegments = labels
+    .map((value) => (value ? toFileSlug(value, '') : ''))
+    .filter((value): value is string => value.length > 0);
+  const dateSegment = toFileDateSegment(date);
+
+  const fileNameParts = [base, ...labelSegments];
+  if (dateSegment) {
+    fileNameParts.push(dateSegment);
+  }
+
+  return `${fileNameParts.join('-')}.${normalizedExtension}`;
 }
 
 export function downloadFromUrl(url: string, fileName: string): void {

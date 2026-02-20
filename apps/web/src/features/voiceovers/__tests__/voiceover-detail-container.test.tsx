@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type * as FileDownloadModule from '@/shared/lib/file-download';
 import { VoiceoverDetailContainer } from '../components/voiceover-detail-container';
 import { useApproveVoiceover } from '../hooks/use-approve-voiceover';
 import { useVoiceover } from '../hooks/use-voiceover';
@@ -10,6 +11,13 @@ import {
   useIsAdmin,
 } from '@/shared/hooks';
 import { render } from '@/test-utils';
+
+const { voiceoverDetailSpy, downloadFromUrlSpy, downloadTextFileSpy } =
+  vi.hoisted(() => ({
+    voiceoverDetailSpy: vi.fn(),
+    downloadFromUrlSpy: vi.fn(),
+    downloadTextFileSpy: vi.fn(),
+  }));
 
 vi.mock('../hooks/use-voiceover', () => ({
   useVoiceover: vi.fn(),
@@ -28,7 +36,10 @@ vi.mock('../hooks/use-approve-voiceover', () => ({
 }));
 
 vi.mock('../components/voiceover-detail', () => ({
-  VoiceoverDetail: () => <div data-testid="voiceover-detail" />,
+  VoiceoverDetail: (props: Record<string, unknown>) => {
+    voiceoverDetailSpy(props);
+    return <div data-testid="voiceover-detail" />;
+  },
 }));
 
 vi.mock('../components/workbench/writing-assistant-container', () => ({
@@ -42,6 +53,18 @@ vi.mock('@/shared/hooks', () => ({
   useIsAdmin: vi.fn(),
 }));
 
+vi.mock('@/shared/lib/file-download', async () => {
+  const actual = await vi.importActual<typeof FileDownloadModule>(
+    '@/shared/lib/file-download',
+  );
+
+  return {
+    ...actual,
+    downloadFromUrl: downloadFromUrlSpy,
+    downloadTextFile: downloadTextFileSpy,
+  };
+});
+
 function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     hasChanges: false,
@@ -54,6 +77,12 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
     handleDelete: vi.fn(),
     ...overrides,
   };
+}
+
+function getLastVoiceoverDetailProps<T>(): T | undefined {
+  const lastCall =
+    voiceoverDetailSpy.mock.calls[voiceoverDetailSpy.mock.calls.length - 1];
+  return lastCall?.[0] as T | undefined;
 }
 
 describe('VoiceoverDetailContainer', () => {
@@ -73,6 +102,7 @@ describe('VoiceoverDetailContainer', () => {
         approvedBy: null,
         audioUrl: null,
         duration: null,
+        updatedAt: '2026-02-20T14:00:00.000Z',
       },
     } as never);
 
@@ -115,5 +145,50 @@ describe('VoiceoverDetailContainer', () => {
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: false,
     });
+  });
+
+  it('uses smart filename when exporting audio', () => {
+    vi.mocked(useVoiceover).mockReturnValue({
+      data: {
+        id: 'voiceover-1',
+        title: 'Launch Narration',
+        status: 'ready',
+        approvedBy: null,
+        audioUrl: 'https://cdn.example.com/audio/voiceover.mp3?x=1',
+        duration: 75,
+        updatedAt: '2026-02-19T14:00:00.000Z',
+      },
+    } as never);
+    vi.mocked(useVoiceoverActions).mockReturnValue(
+      createMockActions() as never,
+    );
+
+    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+
+    const props = getLastVoiceoverDetailProps<{ onExportAudio?: () => void }>();
+    props?.onExportAudio?.();
+
+    expect(downloadFromUrlSpy).toHaveBeenCalledWith(
+      'https://cdn.example.com/audio/voiceover.mp3?x=1',
+      'launch-narration-audio-20260219.mp3',
+    );
+  });
+
+  it('uses smart filename when exporting script', () => {
+    vi.mocked(useVoiceoverActions).mockReturnValue(
+      createMockActions() as never,
+    );
+
+    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+
+    const props = getLastVoiceoverDetailProps<{
+      onExportScript?: () => void;
+    }>();
+    props?.onExportScript?.();
+
+    expect(downloadTextFileSpy).toHaveBeenCalledWith(
+      expect.any(String),
+      'test-voiceover-script-20260220.txt',
+    );
   });
 });

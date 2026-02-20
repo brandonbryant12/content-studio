@@ -163,6 +163,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-20-feature-delivery-smart-media-export-filenames-for-podcast-voiceover-and-infograph",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Smart media export filenames for podcast, voiceover, and infographic downloads",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "frontend",
+      "exports",
+      "filenames",
+      "downloads"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-feature-delivery-split-media-repos-into-method-modules-and-standardized-layer-suc",
     "date": "2026-02-20",
     "month": "2026-02",
@@ -221,6 +237,22 @@
       "periodic-scans",
       "workflow-memory",
       "coverage"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-security-dependency-hygiene-resolved-ajv-redos-advisory-via-override-cleanup",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "Security + Dependency Hygiene",
+    "title": "Resolved ajv ReDoS advisory via override cleanup",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "security",
+      "dependencies",
+      "eslint",
+      "ajv"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -284,6 +316,22 @@
       "skills",
       "quality",
       "workflow-memory"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-20-tanstack-vite-aligned-web-export-flows-on-shared-smart-download-naming-helper",
+    "date": "2026-02-20",
+    "month": "2026-02",
+    "workflow": "TanStack + Vite",
+    "title": "Aligned web export flows on shared smart download naming helper",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "tanstack",
+      "frontend",
+      "tests",
+      "dx"
     ],
     "eventFile": "events/2026-02.jsonl"
   },

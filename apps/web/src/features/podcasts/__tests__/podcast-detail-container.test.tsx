@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type * as FileDownloadModule from '@/shared/lib/file-download';
 import { PodcastDetailContainer } from '../components/podcast-detail-container';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
@@ -10,6 +11,13 @@ import { isSetupMode } from '../lib/status';
 import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { render } from '@/test-utils';
+
+const { podcastDetailSpy, downloadFromUrlSpy, downloadTextFileSpy } =
+  vi.hoisted(() => ({
+    podcastDetailSpy: vi.fn(),
+    downloadFromUrlSpy: vi.fn(),
+    downloadTextFileSpy: vi.fn(),
+  }));
 
 vi.mock('../hooks/use-podcast', () => ({
   usePodcast: vi.fn(),
@@ -40,7 +48,10 @@ vi.mock('../lib/status', () => ({
 }));
 
 vi.mock('../components/podcast-detail', () => ({
-  PodcastDetail: () => <div data-testid="podcast-detail" />,
+  PodcastDetail: (props: Record<string, unknown>) => {
+    podcastDetailSpy(props);
+    return <div data-testid="podcast-detail" />;
+  },
 }));
 
 vi.mock('../components/setup-wizard-container', () => ({
@@ -57,6 +68,18 @@ vi.mock('@/shared/hooks/use-is-admin', () => ({
   useIsAdmin: vi.fn(),
 }));
 
+vi.mock('@/shared/lib/file-download', async () => {
+  const actual = await vi.importActual<typeof FileDownloadModule>(
+    '@/shared/lib/file-download',
+  );
+
+  return {
+    ...actual,
+    downloadFromUrl: downloadFromUrlSpy,
+    downloadTextFile: downloadTextFileSpy,
+  };
+});
+
 function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     hasAnyChanges: false,
@@ -69,6 +92,12 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
     handleDelete: vi.fn(),
     ...overrides,
   };
+}
+
+function getLastPodcastDetailProps<T>(): T | undefined {
+  const lastCall =
+    podcastDetailSpy.mock.calls[podcastDetailSpy.mock.calls.length - 1];
+  return lastCall?.[0] as T | undefined;
 }
 
 describe('PodcastDetailContainer', () => {
@@ -90,6 +119,7 @@ describe('PodcastDetailContainer', () => {
         approvedBy: null,
         audioUrl: null,
         duration: null,
+        updatedAt: '2026-02-20T14:00:00.000Z',
       },
     } as never);
 
@@ -168,5 +198,59 @@ describe('PodcastDetailContainer', () => {
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: false,
     });
+  });
+
+  it('uses smart filename when exporting audio', () => {
+    vi.mocked(usePodcast).mockReturnValue({
+      data: {
+        id: 'podcast-1',
+        title: 'Market Update',
+        status: 'ready',
+        segments: [],
+        documents: [],
+        approvedBy: null,
+        audioUrl: 'https://cdn.example.com/audio/final.wav?x=1',
+        duration: 120,
+        updatedAt: '2026-02-20T14:00:00.000Z',
+      },
+    } as never);
+    vi.mocked(usePodcastActions).mockReturnValue(createMockActions() as never);
+
+    render(<PodcastDetailContainer podcastId="podcast-1" />);
+
+    const props = getLastPodcastDetailProps<{ onExportAudio?: () => void }>();
+    props?.onExportAudio?.();
+
+    expect(downloadFromUrlSpy).toHaveBeenCalledWith(
+      'https://cdn.example.com/audio/final.wav?x=1',
+      'market-update-audio-20260220.wav',
+    );
+  });
+
+  it('uses smart filename when exporting script', () => {
+    vi.mocked(useScriptEditor).mockReturnValue({
+      segments: [{ speaker: 'Host', line: 'Hello', index: 0 }],
+      hasChanges: false,
+      isSaving: false,
+      updateSegment: vi.fn(),
+      addSegment: vi.fn(),
+      removeSegment: vi.fn(),
+      reorderSegments: vi.fn(),
+      saveChanges: vi.fn(),
+      discardChanges: vi.fn(),
+      resetToSegments: vi.fn(),
+    } as never);
+    vi.mocked(usePodcastActions).mockReturnValue(createMockActions() as never);
+
+    render(<PodcastDetailContainer podcastId="podcast-1" />);
+
+    const props = getLastPodcastDetailProps<{ onExportScript?: () => void }>();
+    props?.onExportScript?.();
+
+    expect(downloadTextFileSpy).toHaveBeenCalledWith(
+      expect.any(String),
+      'test-podcast-script-20260220.md',
+      'text/markdown;charset=utf-8',
+    );
   });
 });

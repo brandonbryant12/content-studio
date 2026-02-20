@@ -37,6 +37,9 @@ interface WorkbenchHeaderProps {
   onApprove: () => void;
   onRevoke: () => void;
   displayImageUrl: string | null;
+  exportFormat?: string;
+  exportVersionNumber?: number | null;
+  exportUpdatedAt?: string;
   hasUnsavedChanges: boolean;
   onSave: () => void;
   onDeleteRequest: () => void;
@@ -51,6 +54,9 @@ function WorkbenchHeader({
   onApprove,
   onRevoke,
   displayImageUrl,
+  exportFormat,
+  exportVersionNumber,
+  exportUpdatedAt,
   hasUnsavedChanges,
   onSave,
   onDeleteRequest,
@@ -83,6 +89,9 @@ function WorkbenchHeader({
             <ExportDropdown
               imageUrl={displayImageUrl}
               title={infographic.title}
+              format={exportFormat}
+              versionNumber={exportVersionNumber}
+              updatedAt={exportUpdatedAt}
               disabled={actions.isGenerating}
             />
             <Button
@@ -276,6 +285,10 @@ export function InfographicWorkbenchContainer({
   const latestVersionNumber = latestVersion?.versionNumber ?? null;
   const isViewingHistoricalVersion =
     selectedVersion !== null && selectedVersion.id !== latestVersion?.id;
+  const exportFormat = selectedVersion?.format ?? infographic.format;
+  const exportVersionNumber =
+    selectedVersion?.versionNumber ?? latestVersionNumber;
+  const exportUpdatedAt = selectedVersion?.createdAt ?? infographic.updatedAt;
 
   const iterationPrompt = iterationPromptById[infographic.id] ?? '';
 
@@ -383,6 +396,9 @@ export function InfographicWorkbenchContainer({
           onApprove={() => approve.mutate({ id: infographicId })}
           onRevoke={() => revoke.mutate({ id: infographicId })}
           displayImageUrl={displayImageUrl}
+          exportFormat={exportFormat}
+          exportVersionNumber={exportVersionNumber}
+          exportUpdatedAt={exportUpdatedAt}
           hasUnsavedChanges={hasUnsavedChanges}
           onSave={handleSave}
           onDeleteRequest={() => setDeleteConfirmOpen(true)}
