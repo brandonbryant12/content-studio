@@ -1,0 +1,7 @@
+# Merge this snippet into ~/.codex/config.toml on the target machine.
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
+personality = "pragmatic"
+
+[projects."__CONTENT_STUDIO_PATH__"]
+trust_level = "trusted"

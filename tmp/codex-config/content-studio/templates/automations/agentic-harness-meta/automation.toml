@@ -1,0 +1,9 @@
+version = 1
+id = "agentic-harness-meta"
+name = "Agentic Harness Meta Analysis"
+prompt = "Use gpt-5.3-codex with reasoning effort xhigh. Preflight GitHub access first by running `gh auth status`, `gh repo view brandonbryant12/content-studio --json viewerPermission`, and `gh issue list -R brandonbryant12/content-studio --limit 1`; if any command fails, stop and report blocker details in the inbox update and automation memory. Run a meta-analysis of this repositories self-improving agentic harness. Research the web for recent techniques and findings on AI coding agent workflows, quality closure loops, memory systems, and guardrails. Compare those practices against this repo methodology in AGENTS.md, CLAUDE.md, docs/workflow.md, and docs/workflow-memory. Rank the top recommendations by impact, effort, and confidence. For high-signal, non-duplicate findings, create GitHub issues in this repository with evidence links, proposed change, and acceptance criteria. Search existing issues first to avoid duplicates. Create at most 3 new issues per run. Add labels codex-automation and self-improvement when available. Append a concise run summary to the automation memory file and include links to any created issues in the inbox update."
+status = "ACTIVE"
+rrule = "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+cwds = ["__CONTENT_STUDIO_PATH__"]
+created_at = 1771627823000
+updated_at = 1771628462232

@@ -1,0 +1,9 @@
+version = 1
+id = "reduce-slop"
+name = "Quality-closure-loop"
+prompt = "Use gpt-5.3-codex with reasoning effort xhigh. Run quality-closure-loop for this repo now. Before scans, run pnpm install --frozen-lockfile so the workspace is bootstrapped. If install fails due to dependency state corruption, run a one-time cleanup by removing node_modules and retry pnpm install --frozen-lockfile. Include pnpm lint in the loop. If any changes are made, commit with a concise message and push directly to origin/main. If no changes are needed, report that clearly."
+status = "ACTIVE"
+rrule = "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+cwds = ["__CONTENT_STUDIO_PATH__"]
+created_at = 1771122206174
+updated_at = 1771628103138
