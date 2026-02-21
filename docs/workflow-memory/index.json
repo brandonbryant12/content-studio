@@ -330,6 +330,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-treat-workflow-memory-dirty-files-as-non-blocking-in-code-writin",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Treat workflow-memory dirty files as non-blocking in code-writing automations",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "workflow-memory",
+      "feature-delivery"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-intake-triage-codex-app-automation-lanes-normalized-for-coherent-orchestration",
     "date": "2026-02-21",
     "month": "2026-02",
