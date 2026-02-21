@@ -227,6 +227,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-hardened-automation-playbooks-against-non-interactive-corepack-s",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Hardened automation playbooks against non-interactive corepack shim resolution",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation",
+      "toolchain",
+      "playbooks",
+      "quality-sentinel"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-implemented-coherent-codex-automation-contracts-and-runtime-guar",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -292,6 +308,21 @@
     ],
     "importance": 0.6,
     "confidence": 0.7,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-removed-local-filesystem-paths-from-automation-playbooks",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Removed local filesystem paths from automation playbooks",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "playbooks",
+      "portability"
+    ],
     "eventFile": "events/2026-02.jsonl"
   },
   {

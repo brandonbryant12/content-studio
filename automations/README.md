@@ -88,7 +88,8 @@ Any automation that edits code must:
 - if any other unexpected dirty paths exist, stop and report blocker details
 
 3. Prepare runtime for reliable automation execution
-- ensure supported Node runtime
+- run Node/pnpm commands via interactive login zsh (`zsh -lic 'cd <repo-root> && <command>'`) so automation uses the same shell toolchain as interactive development
+- verify toolchain before install/gates: `zsh -lic 'cd <repo-root> && node -v && pnpm -v'` and require Node >= 22.10.0
 - `pnpm install --frozen-lockfile --prefer-offline` (fast-path, fall back to online recovery on failure)
 - `docker info --format '{{.ServerVersion}}'` (fast-path, fall back to context/socket diagnostics on failure)
 - skip `pnpm test:e2e` in automation checklists (too slow/flaky for this lane)

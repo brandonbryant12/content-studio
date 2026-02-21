@@ -16,6 +16,11 @@ GitHub interaction policy:
 - Use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, metadata).
 - Do not use browser/manual edits or non-`gh` GitHub clients.
 
+Runtime shell + toolchain preflight:
+- Run Node/pnpm commands through interactive login zsh (`zsh -lic 'cd "$PWD" && <command>'`) for this entire run.
+- Before starting scans, run `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'` and require Node >= 22.10.0.
+- If toolchain check fails, stop and report diagnostics: `echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`.
+
 Execution notes:
 - If the scan is clean, report a clean-loop completion with command evidence.
 - If findings exist, execute the workflow selection and closure rules defined by the skill.

@@ -24,8 +24,10 @@ Issue intake and judge stage:
 
 Runtime preflight for code tasks:
 1) `gh auth status`
-2) `node -v` must be >= 22.10.0 (same PATH fallback as other automations)
-3) `pnpm install --frozen-lockfile --prefer-offline` with one cleanup retry for dependency-state corruption
+2) Shell + Node runtime: run `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'` and require Node >= 22.10.0.
+   - run all remaining Node/pnpm preflight and gate commands through the same `zsh -lic` pattern in this run (do not hardcode Homebrew/corepack shim paths)
+   - if check fails, capture diagnostics and stop: `echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`
+3) `zsh -lic 'cd "$PWD" && pnpm install --frozen-lockfile --prefer-offline'` with one cleanup retry for dependency-state corruption
 4) `docker info --format '{{.ServerVersion}}'` must pass
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
@@ -51,6 +53,7 @@ Branching and implementation contract:
 - If external research/paper ideas are adopted in the implementation, add/update documentation in `research/` in the same PR (at minimum `research/implemented-ideas.md`; add a detailed markdown note file when useful).
 
 Validation gates (required, in order):
+Run each gate via `zsh -lic 'cd "$PWD" && <gate-command>'`.
 - `pnpm typecheck`
 - `pnpm lint`
 - `pnpm test:invariants`

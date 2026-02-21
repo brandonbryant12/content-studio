@@ -18,6 +18,10 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 ## 1) Scan
 
 - Anchor to standards in `docs/workflow.md`, `docs/workflow-memory/README.md`, and `AGENTS.md`.
+- Establish shell/toolchain context before running checks:
+  - run Node/pnpm commands through interactive login zsh: `zsh -lic 'cd "$PWD" && <command>'`
+  - verify toolchain first: `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
+  - require Node >= 22.10.0; if unmet, stop and report diagnostics (`echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`)
 - Run minimum checks for the requested scope:
   - `pnpm typecheck`
   - `pnpm test`
@@ -46,7 +50,7 @@ Rules:
 
 - Run the selected workflow per finding.
 - Keep edits vertical, test-backed, and behavior-preserving.
-- Validate per item with targeted tests, then rerun broad gates at cycle end:
+- Validate per item with targeted tests, then rerun broad gates at cycle end (using the same `zsh -lic` command pattern):
   - `pnpm typecheck`
   - `pnpm test`
   - `pnpm test:invariants` when backend changed
@@ -71,7 +75,7 @@ Record one memory event for each workflow actually used:
 
 Use `node scripts/workflow-memory/add-entry.mjs` and include event ids in delivery notes.
 
-Re-run `pnpm workflow-memory:coverage:strict` before completion.
+Re-run `pnpm workflow-memory:coverage:strict` before completion (via the same `zsh -lic` command pattern).
 
 ## Output Contract
 

@@ -39,8 +39,11 @@ Runtime preflight for code tasks:
   - retry once after clearing proxy env for this process: `unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy`
   - verify network path: `nslookup api.github.com`
   - if still failing, capture diagnostics and stop: `gh auth status`, `gh api rate_limit` error output, `nslookup api.github.com`
-2) Node runtime: `node -v` and require >= 22.10.0. If lower, prepend PATH with `$HOME/.nvm/versions/node/v24.13.1/bin:/opt/homebrew/opt/node@22/bin:$PATH`, re-check, and keep this PATH export for all remaining preflight and gate commands.
-3) Workspace bootstrap fast-path: run `pnpm install --frozen-lockfile --prefer-offline`. If it fails due to transient network/DNS errors (for example `ENOTFOUND`, `EAI_AGAIN`, `ECONNRESET`, `ETIMEDOUT`), run recovery before stopping:
+2) Shell + Node runtime: run toolchain checks through interactive login zsh and require Node >= 22.10.0:
+  - `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
+  - run all remaining Node/pnpm preflight and gate commands through the same `zsh -lic` pattern in this run (do not hardcode Homebrew/corepack shim paths)
+  - if check fails, capture diagnostics and stop: `echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`
+3) Workspace bootstrap fast-path: run `zsh -lic 'cd "$PWD" && pnpm install --frozen-lockfile --prefer-offline'`. If it fails due to transient network/DNS errors (for example `ENOTFOUND`, `EAI_AGAIN`, `ECONNRESET`, `ETIMEDOUT`), run recovery before stopping:
   - confirm registry settings: `npm config get registry` and `pnpm config get registry`
   - retry install with `npm_config_registry=https://registry.npmjs.org pnpm install --frozen-lockfile`
   - if still failing, retry with `npm_config_registry=https://registry.npmjs.com pnpm install --frozen-lockfile`
@@ -65,7 +68,7 @@ Branching and implementation contract:
 - Branch from latest main every run:
   - `git fetch origin main`
   - `git checkout -B codex/architecture-issue-<primary-issue-number>-<yyyymmddhhmm> origin/main`
-- Implement the selected primary issue and any conservatively bundled related issues in /Users/brandon/Development/content-studio.
+- Implement the selected primary issue and any conservatively bundled related issues in the current repository workspace.
 - Read relevant docs in docs/ before edits and follow AGENTS.md guardrails.
 - If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to `research/implemented-ideas.md` with:
   - date
@@ -75,6 +78,7 @@ Branching and implementation contract:
   - what was implemented in this repo
 
 Validation gates (required, in order):
+Run each gate via `zsh -lic 'cd "$PWD" && <gate-command>'`.
 - `pnpm typecheck`
 - `pnpm lint`
 - `pnpm test:invariants`
