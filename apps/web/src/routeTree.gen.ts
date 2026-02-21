@@ -129,11 +129,11 @@ export interface FileRoutesByFullPath {
   '/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
-  '/documents': typeof ProtectedDocumentsIndexRoute
-  '/infographics': typeof ProtectedInfographicsIndexRoute
-  '/personas': typeof ProtectedPersonasIndexRoute
-  '/podcasts': typeof ProtectedPodcastsIndexRoute
-  '/voiceovers': typeof ProtectedVoiceoversIndexRoute
+  '/documents/': typeof ProtectedDocumentsIndexRoute
+  '/infographics/': typeof ProtectedInfographicsIndexRoute
+  '/personas/': typeof ProtectedPersonasIndexRoute
+  '/podcasts/': typeof ProtectedPodcastsIndexRoute
+  '/voiceovers/': typeof ProtectedVoiceoversIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -185,11 +185,11 @@ export interface FileRouteTypes {
     | '/personas/$personaId'
     | '/podcasts/$podcastId'
     | '/voiceovers/$voiceoverId'
-    | '/documents'
-    | '/infographics'
-    | '/personas'
-    | '/podcasts'
-    | '/voiceovers'
+    | '/documents/'
+    | '/infographics/'
+    | '/personas/'
+    | '/podcasts/'
+    | '/voiceovers/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -239,14 +239,14 @@ declare module '@tanstack/react-router' {
     '/_public': {
       id: '/_public'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof PublicLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protected': {
       id: '/_protected'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof ProtectedLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -281,35 +281,35 @@ declare module '@tanstack/react-router' {
     '/_protected/voiceovers/': {
       id: '/_protected/voiceovers/'
       path: '/voiceovers'
-      fullPath: '/voiceovers'
+      fullPath: '/voiceovers/'
       preLoaderRoute: typeof ProtectedVoiceoversIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/podcasts/': {
       id: '/_protected/podcasts/'
       path: '/podcasts'
-      fullPath: '/podcasts'
+      fullPath: '/podcasts/'
       preLoaderRoute: typeof ProtectedPodcastsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/personas/': {
       id: '/_protected/personas/'
       path: '/personas'
-      fullPath: '/personas'
+      fullPath: '/personas/'
       preLoaderRoute: typeof ProtectedPersonasIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/infographics/': {
       id: '/_protected/infographics/'
       path: '/infographics'
-      fullPath: '/infographics'
+      fullPath: '/infographics/'
       preLoaderRoute: typeof ProtectedInfographicsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/documents/': {
       id: '/_protected/documents/'
       path: '/documents'
-      fullPath: '/documents'
+      fullPath: '/documents/'
       preLoaderRoute: typeof ProtectedDocumentsIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }

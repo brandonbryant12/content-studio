@@ -1,5 +1,20 @@
 [
   {
+    "id": "2026-02-21-docs-knowledge-drift-added-automation-operating-model-readme",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Added automation operating-model README",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "automations",
+      "knowledge-drift"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-added-architecture-radar-label-and-updated-issue-label-policy",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -48,6 +63,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-added-version-controlled-codex-automation-mirror",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added version-controlled Codex automation mirror",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "version-control"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-converted-workflow-decks-to-one-page-scroll-format",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -75,6 +106,22 @@
       "presentation",
       "docs",
       "communication"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-enforced-paper-traceability-in-automation-issues-and-implementat",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Enforced paper traceability in automation issues and implementations",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "research",
+      "traceability",
+      "feature-delivery"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -113,6 +160,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-implemented-coherent-codex-automation-contracts-and-runtime-guar",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Implemented coherent Codex automation contracts and runtime guardrails",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "guardrails"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-installed-codex-automations-and-removed-temporary-export-bundle",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -125,6 +188,38 @@
       "codex",
       "feature-delivery",
       "quality-closure-loop"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-renamed-codex-automation-lanes-for-clearer-intent",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Renamed Codex automation lanes for clearer intent",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "naming",
+      "feature-delivery"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-intake-triage-codex-app-automation-lanes-normalized-for-coherent-orchestration",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Intake + Triage",
+    "title": "Codex App automation lanes normalized for coherent orchestration",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "intake-triage",
+      "self-improvement"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
