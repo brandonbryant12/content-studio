@@ -25,7 +25,7 @@ export interface TelemetryConfig {
 let initialized = false;
 let provider: NodeTracerProvider | null = null;
 
-const DEPLOYMENT_ENVIRONMENT = 'deployment.environment';
+const DEPLOYMENT_ENVIRONMENT_NAME = 'deployment.environment.name';
 
 const normalizeOtlpTracesEndpoint = (endpoint: string): string => {
   const trimmed = endpoint.trim().replace(/\/+$/, '');
@@ -82,7 +82,7 @@ export const initTelemetry = (config: TelemetryConfig): void => {
     resource: new Resource({
       [ATTR_SERVICE_NAME]: config.serviceName,
       [ATTR_SERVICE_VERSION]: config.serviceVersion ?? '0.0.0',
-      [DEPLOYMENT_ENVIRONMENT]: config.environment ?? 'development',
+      [DEPLOYMENT_ENVIRONMENT_NAME]: config.environment ?? 'development',
     }),
   });
 
