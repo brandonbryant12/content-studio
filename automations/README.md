@@ -6,10 +6,10 @@ Goal:
 - Keep all code changes aligned with repository guardrails in `docs/`, `AGENTS.md`, and `CLAUDE.md`.
 - Continuously inject controlled external research ("chaos") to discover better patterns over time.
 
-Runtime configs are executed from local Codex config:
-- `~/.codex/automations/*/automation.toml`
-
-This repo directory is the version-control mirror and design record.
+Source-of-truth model:
+- Lane behavior lives in repo playbooks: `automations/playbooks/*.md`
+- Runtime TOMLs in `~/.codex/automations/*/automation.toml` are wrappers that load those playbooks
+- This repo stores both the playbooks and the wrapper TOML mirror
 
 ## Operating Model
 
@@ -39,7 +39,8 @@ This creates stability plus adaptation:
 2. `architecture-approval-executor`
 - Human-in-the-loop coding lane.
 - Implements architecture/coding-pattern issues only after explicit human `ready-for-dev` label approval.
-- Branches from latest `origin/main`, runs full validation including `pnpm test:e2e`, and auto-merges on success.
+- Can conservatively bundle multiple small, tightly related `ready-for-dev` issues into one coherent PR when manageable in a single context.
+- Branches from latest `origin/main`, runs core validation gates, and auto-merges on success.
 
 3. `harness-research-radar`
 - Research-only lane for agent harness and self-improvement loop design.
@@ -48,13 +49,28 @@ This creates stability plus adaptation:
 
 4. `self-improvement-judge-executor`
 - Autonomous implementation lane for self-improvement issues.
-- Uses a holistic judge to score all candidate suggestions and executes only the best coherent item.
-- Branches from latest `origin/main`, runs full validation including `pnpm test:e2e`, and auto-merges on success.
+- Uses a holistic judge to score all candidate suggestions and executes one coherent primary item, optionally aggregating closely related issues into a single PR.
+- PR output must include linked aggregated issues plus a detailed improvements/benefits explanation, and include `research/` documentation updates when external research ideas are adopted.
+- Branches from latest `origin/main`, runs core validation gates, and opens PRs for human review/merge (no auto-merge in this lane).
 
 5. `quality-sentinel`
-- Quality scan + issue feeder lane.
-- Runs full checks and converts failures into scoped self-improvement issues.
-- No direct code changes.
+- Quality assurance loop lane.
+- Delegates directly to the `quality-closure-loop` skill for scan, triage, fix execution, recurrence prevention, and closure.
+- Uses workflow-memory evidence and event IDs as part of loop completion output.
+
+## Playbook Contract
+
+Every lane must have a matching playbook file:
+- `automations/playbooks/architecture-radar.md`
+- `automations/playbooks/architecture-approval-executor.md`
+- `automations/playbooks/harness-research-radar.md`
+- `automations/playbooks/self-improvement-judge-executor.md`
+- `automations/playbooks/quality-sentinel.md`
+
+Wrapper TOML prompts should only do this:
+- load the matching playbook
+- execute it
+- defer to playbook on any conflict
 
 ## Required Contract For Any Code-Writing Automation
 
@@ -69,11 +85,11 @@ Any automation that edits code must:
 - `git fetch origin main`
 - create branch from `origin/main`
 
-3. Prepare runtime for reliable e2e execution
+3. Prepare runtime for reliable automation execution
 - ensure supported Node runtime
 - `pnpm install --frozen-lockfile --prefer-offline` (fast-path, fall back to online recovery on failure)
 - `docker info --format '{{.ServerVersion}}'` (fast-path, fall back to context/socket diagnostics on failure)
-- `pnpm test:db:setup` immediately before `pnpm test:e2e` (keeps preflight shorter while preserving e2e readiness)
+- skip `pnpm test:e2e` in automation checklists (too slow/flaky for this lane)
 
 4. Pass full gates before merge
 - `pnpm typecheck`
@@ -81,12 +97,10 @@ Any automation that edits code must:
 - `pnpm test:invariants`
 - `pnpm test`
 - `pnpm build`
-- `pnpm test:db:setup` (deferred gate, immediately before e2e)
-- `pnpm test:e2e`
 
 5. Use safe delivery behavior
 - on failure: no merge, report blocker with evidence
-- on success: open PR with issue linkage, auto-merge, verify issue closure
+- on success: open PR with issue linkage and follow lane-specific merge policy
 
 ## Controlled Chaos Rules
 
@@ -105,7 +119,7 @@ External research is encouraged, but only through filters:
 - reuse existing issues/PRs when possible
 
 5. Bounded execution
-- at most one implementation slice per execution lane run
+- at most one PR per execution lane run; bundling multiple issues is allowed only when the bundle is small and coherent
 
 6. Research traceability
 - when an issue is based on external paper ideas, include paper links and adopted ideas in the issue
@@ -115,9 +129,9 @@ External research is encouraged, but only through filters:
 
 1. `architecture-radar` finds coding-pattern improvements.
 2. Human approves selected issue by adding `ready-for-dev`.
-3. `architecture-approval-executor` implements and merges after gates.
+3. `architecture-approval-executor` implements and merges after gates, usually one issue but optionally a small coherent multi-issue bundle in one PR.
 4. `harness-research-radar` and `quality-sentinel` feed self-improvement ideas/issues.
-5. `self-improvement-judge-executor` selects the best holistic improvement and merges after gates.
+5. `self-improvement-judge-executor` selects the best holistic improvement, implements it, and opens a PR for human review/merge.
 
 ## Research Logging
 
@@ -132,8 +146,9 @@ Use the template in that file to record:
 
 ## Version-Control Mirror
 
-Automation TOMLs are mirrored in:
+Automation playbooks and wrapper TOMLs are versioned in this repo:
+- `automations/playbooks/*.md`
 - `automations/codex-app/*/automation.toml`
 
-Lane-specific details and sync commands live in:
+Runtime sync commands live in:
 - `automations/codex-app/README.md`

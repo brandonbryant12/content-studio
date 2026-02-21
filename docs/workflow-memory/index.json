@@ -63,6 +63,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-added-quality-sentinel-handoff-to-quality-assurance-loop",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added quality-sentinel handoff to quality-assurance-loop",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "quality"
+    ],
+    "importance": 0.66,
+    "recency": 0.95,
+    "confidence": 0.93,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-added-version-controlled-codex-automation-mirror",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -240,6 +259,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-moved-automation-lane-logic-to-repo-playbooks",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Moved automation lane logic to repo playbooks",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "playbooks"
+    ],
+    "importance": 0.78,
+    "recency": 0.96,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-openapi-compatibility-guard-for-contracts",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -270,6 +308,25 @@
       "naming",
       "feature-delivery"
     ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-simplified-quality-sentinel-to-delegate-directly-to-quality-clos",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Simplified quality-sentinel to delegate directly to quality-closure-loop",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "quality"
+    ],
+    "importance": 0.64,
+    "recency": 0.95,
+    "confidence": 0.92,
     "eventFile": "events/2026-02.jsonl"
   },
   {

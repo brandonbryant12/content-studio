@@ -1,59 +1,15 @@
 version = 1
 id = "self-improvement-judge-executor"
 name = "Self-Improvement Judge Executor"
-prompt = '''Use gpt-5.3-codex with reasoning effort xhigh. Role: autonomous self-improvement executor with a built-in holistic judge.
+prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
 
-GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, merges, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
-
-Issue intake and judge stage:
-- Query open issues in brandonbryant12/content-studio labeled self-improvement and codex-automation.
-- Exclude issues labeled architecture-radar (those are human-gated coding-pattern lane).
-- Search open PRs and issue history first to avoid duplicate execution.
-- Evaluate all candidate suggestions with a holistic scorecard:
-  - systemic impact on harness reliability/safety
-  - coherence with AGENTS.md, CLAUDE.md, docs/workflow.md, docs/workflow-memory/*, and .agents/skills
-  - implementation risk and blast radius
-  - evidence quality and recency
-  - overlap/duplication with existing open work
-- Select at most one issue per run with score >= 0.75 and confidence >= 0.75.
-- If no issue meets threshold, make no code changes; record a judge-pass memory entry with top reasons.
-
-Runtime preflight for code tasks:
-1) `gh auth status`
-2) `node -v` must be >= 22.10.0 (same PATH fallback as other automations)
-3) `pnpm install --frozen-lockfile --prefer-offline` with one cleanup retry for dependency-state corruption
-4) `docker info --format '{{.ServerVersion}}'` must pass
-5) Defer `pnpm test:db:setup` until immediately before `pnpm test:e2e`
-
-Branching and implementation contract:
-- Every code change must branch from latest main:
-  - `git fetch origin main`
-  - `git checkout -B codex/self-improvement-<issue-number>-<yyyymmddhhmm> origin/main`
-- Implement the selected issue as one coherent incremental slice.
-- If the selected issue contains a Research Trace or external paper links, append a log entry to `research/implemented-ideas.md` with:
-  - date
-  - issue and PR links
-  - paper link(s)
-  - idea(s) adopted
-  - what was implemented in this repo
-
-Validation gates (required, in order):
-- `pnpm typecheck`
-- `pnpm lint`
-- `pnpm test:invariants`
-- `pnpm test`
-- `pnpm build`
-- `pnpm test:db:setup`
-- `pnpm test:e2e`
-
-Delivery behavior:
-- On gate failure: do not merge; comment failure details on the issue; record blocker in memory and inbox.
-- On success: commit and push, open PR to main with `Fixes #<issue-number>` and a Judge Rationale section, add labels codex and codex-automation when available, include a Research Log Update section when applicable, then auto-merge with squash.
-- Verify issue is closed after merge; if not, create a follow-up issue for closure/linkage failure.
-
-Append run memory with candidate count, selected issue, score summary, PR URL, merge result, closure result, and rejected-candidate rationale.'''
+Execution contract:
+- Repository playbook is the source of truth for this lane.
+- Read and execute `automations/playbooks/self-improvement-judge-executor.md` in /Users/brandon/Development/content-studio.
+- If this wrapper conflicts with the playbook, follow the playbook.
+- Keep run output concise and include the evidence and summaries required by the playbook.'''
 status = "ACTIVE"
 rrule = "RRULE:FREQ=DAILY;BYHOUR=19;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["/Users/brandon/Development/content-studio"]
 created_at = 1771628295978
-updated_at = 1771690438000
+updated_at = 1771694301215

@@ -2,8 +2,12 @@
 
 This directory stores version-controlled copies of Codex App automation configs.
 
-Runtime source of truth remains local:
+Lane source of truth is in repo playbooks:
+- `automations/playbooks/*.md`
+
+Runtime TOMLs are wrappers:
 - `~/.codex/automations/*/automation.toml`
+- each wrapper should only load and execute its matching playbook
 
 Use this folder to track history, review diffs, and discuss changes in PRs.
 
@@ -21,17 +25,7 @@ Paper-derived implementation tracking:
 
 ## Sync Workflow
 
-Pull local runtime config into repo mirror:
-
-```bash
-cp ~/.codex/automations/architecture-radar/automation.toml automations/codex-app/architecture-radar/automation.toml
-cp ~/.codex/automations/architecture-approval-executor/automation.toml automations/codex-app/architecture-approval-executor/automation.toml
-cp ~/.codex/automations/harness-research-radar/automation.toml automations/codex-app/harness-research-radar/automation.toml
-cp ~/.codex/automations/self-improvement-judge-executor/automation.toml automations/codex-app/self-improvement-judge-executor/automation.toml
-cp ~/.codex/automations/quality-sentinel/automation.toml automations/codex-app/quality-sentinel/automation.toml
-```
-
-Push repo mirror updates to local runtime config:
+Push wrapper updates from repo to local runtime:
 
 ```bash
 cp automations/codex-app/architecture-radar/automation.toml ~/.codex/automations/architecture-radar/automation.toml
@@ -39,4 +33,14 @@ cp automations/codex-app/architecture-approval-executor/automation.toml ~/.codex
 cp automations/codex-app/harness-research-radar/automation.toml ~/.codex/automations/harness-research-radar/automation.toml
 cp automations/codex-app/self-improvement-judge-executor/automation.toml ~/.codex/automations/self-improvement-judge-executor/automation.toml
 cp automations/codex-app/quality-sentinel/automation.toml ~/.codex/automations/quality-sentinel/automation.toml
+```
+
+Pull current runtime wrappers back into repo mirror (verification only):
+
+```bash
+cp ~/.codex/automations/architecture-radar/automation.toml automations/codex-app/architecture-radar/automation.toml
+cp ~/.codex/automations/architecture-approval-executor/automation.toml automations/codex-app/architecture-approval-executor/automation.toml
+cp ~/.codex/automations/harness-research-radar/automation.toml automations/codex-app/harness-research-radar/automation.toml
+cp ~/.codex/automations/self-improvement-judge-executor/automation.toml automations/codex-app/self-improvement-judge-executor/automation.toml
+cp ~/.codex/automations/quality-sentinel/automation.toml automations/codex-app/quality-sentinel/automation.toml
 ```

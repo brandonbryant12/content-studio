@@ -10,7 +10,7 @@ import { verifyDbConnection } from '@repo/db/client';
 import { initTelemetry, shutdownTelemetry } from '@repo/db/telemetry';
 import { env } from './env';
 import { shutdownRateLimiters } from './middleware/rate-limit';
-import app, { db } from '.';
+import app, { db, serverRuntime } from '.';
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled Promise Rejection:', {
@@ -99,6 +99,10 @@ Hono
 
       await shutdownRateLimiters();
       console.log('Rate limiter stores stopped');
+
+      console.log('Disposing Effect runtime...');
+      await serverRuntime.dispose();
+      console.log('Effect runtime disposed');
 
       await db.$client.end();
       console.log('Database pool closed');
