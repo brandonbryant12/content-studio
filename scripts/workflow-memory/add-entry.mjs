@@ -42,6 +42,8 @@ const USAGE = `Usage:
     --finding "Decision/finding" \\
     --evidence "File/PR/evidence" \\
     --follow-up "Guardrail/follow-up" \\
+    --reflection "What went well/what to repeat" \\
+    --feedback "What to improve/avoid" \\
     --owner "@team" \\
     --status "open" \\
     [--date YYYY-MM-DD] \\
@@ -207,6 +209,8 @@ function buildEvent(args) {
     finding: args.finding.trim(),
     evidence: args.evidence.trim(),
     followUp: args.follow_up.trim(),
+    reflection: args.reflection ? args.reflection.trim() : "",
+    feedback: args.feedback ? args.feedback.trim() : "",
     owner: args.owner.trim(),
     status,
     severity,
