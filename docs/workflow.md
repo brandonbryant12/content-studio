@@ -183,8 +183,17 @@ Minimum event fields:
 6. `finding`
 7. `evidence`
 8. `followUp`
-9. `owner`
-10. `status`
+9. `reflection`
+10. `feedback`
+11. `owner`
+12. `status`
+
+Optional fields:
+
+- `reflection`: what went well or should be repeated
+- `feedback`: what to improve or avoid
+
+During retrieval and self-improvement, scan `reflection` and `feedback` for repeatable guardrails or missing checks.
 
 If the same pattern appears in 2+ memory entries, escalate immediately to `self-improvement` and land a concrete prevention mechanism (test, lint, docs rule, skill update, or automation script).
 

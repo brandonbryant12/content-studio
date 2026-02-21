@@ -128,6 +128,8 @@ function toEvent(legacyEntry, sourcePath) {
     finding: fields["Decision/Finding"] ?? fields["Decision"] ?? "",
     evidence: fields["Evidence"] ?? "",
     followUp: fields["Guardrail/Follow-up"] ?? fields["Follow-up"] ?? "",
+    reflection: fields["Reflection"] ?? "",
+    feedback: fields["Feedback"] ?? "",
     owner: fields["Owner"] ?? "unknown",
     status: (fields["Status"] ?? "open").toLowerCase(),
     severity: (fields["Severity"] ?? "medium").toLowerCase(),
