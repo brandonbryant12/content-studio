@@ -1,9 +1,7 @@
 # Engineering Standards Docs
 
-This directory is the standards source of record, built from the multi-agent debate outputs in:
-
-- `scripts/standards-debate/workspace/synthesis.md`
-- `scripts/standards-debate/workspace/improved/`
+This directory is the standards source of record.
+Debate outcomes that informed these standards are captured in `docs/debate-decisions.md`.
 
 These standards are part of an experimental technique called **Agent Harnessing**:
 steering AI-authored changes with explicit docs, skills, and automated checks.

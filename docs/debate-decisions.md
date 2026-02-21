@@ -1,6 +1,6 @@
 # Standards Debate Decisions
 
-This file captures the outcomes adopted from `scripts/standards-debate/workspace/synthesis.md`.
+This file captures the outcomes adopted during the standards debate cycle that produced the current docs set.
 
 ## Resolved Decisions (Adopted)
 

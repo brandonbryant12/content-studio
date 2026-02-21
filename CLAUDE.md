@@ -24,6 +24,7 @@
 apps/
   server/          # Hono HTTP server — entry: src/server.ts
   web/             # React SPA (Vite + TanStack Router)
+  worker/          # Background worker — entry: src/worker.ts
 packages/
   ai/              # LLM + TTS providers (Google, OpenAI)
   api/             # oRPC contracts, router, handlers
@@ -67,6 +68,7 @@ packages/
   - `debug-fix`
   - `intake-triage`
   - `feature-delivery`
+  - `frontend-design`
   - `pr-risk-review`
   - `test-surface-steward`
   - `architecture-adr-guard`
@@ -105,6 +107,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 - **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
 - **Query retry policy must be explicit**: disable retries for `*_NOT_FOUND` class errors; retry bounded times for transient failures.
+- **Backend Effect error tests must assert `_tag` + fields**, not `toBeInstanceOf(...)` for domain/app errors (built-in classes like `URL`/`Buffer` are allowed).
 - **Avoid aggressive Vite per-package `manualChunks` strategies** that create many tiny or empty chunks; prefer Router auto code splitting and targeted overrides only.
 - **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
 - **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.
@@ -119,7 +122,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 
 ## DX & Tooling
 
-- **All dependencies use `catalog:`** in package.json for version alignment via pnpm catalog
+- **Prefer `catalog:` for shared dependency versions** in package.json for pnpm catalog alignment; explicit versions are allowed for package-specific dependencies.
 - **Mock repo factories** are in `packages/media/src/test-utils/` — use `createMockPodcastRepo(overrides)` instead of manually stubbing every method with `Effect.die`
 - **Web app tests** are included in the vitest projects config — `pnpm test` runs them
 - **Don't add jest/ts-jest** — this project uses Vitest exclusively

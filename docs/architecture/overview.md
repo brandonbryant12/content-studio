@@ -91,6 +91,7 @@ graph TD
 apps/
   server/          # Hono HTTP server entry: src/server.ts
   web/             # React SPA (Vite + TanStack Router)
+  worker/          # Background worker entry: src/worker.ts
 packages/
   ai/              # LLM + TTS providers (Google, OpenAI)
   api/             # oRPC contracts, router, handlers

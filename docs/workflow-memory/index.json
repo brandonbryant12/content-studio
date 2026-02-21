@@ -15,6 +15,55 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-docs-knowledge-drift-aligned-catalog-policy-wording-with-current-repo-dependency-prac",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Aligned catalog policy wording with current repo dependency practice",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "drift",
+      "catalog"
+    ],
+    "confidence": 0.98,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-docs-knowledge-drift-drift-scan-found-structure-policy-and-source-reference-mismatche",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Drift scan found structure, policy, and source-reference mismatches",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "docs",
+      "drift",
+      "workflow",
+      "guardrails"
+    ],
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-docs-knowledge-drift-patched-high-confidence-docs-drift-for-worker-structure-and-agen",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Patched high-confidence docs drift for worker structure and AGENTS/CLAUDE parity",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "drift",
+      "consistency"
+    ],
+    "confidence": 0.97,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-added-architecture-radar-label-and-updated-issue-label-policy",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -404,6 +453,24 @@
       "typecheck",
       "cli"
     ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-periodic-scans-qa-loop-baseline-gates-clean-on-2026-02-21",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "QA loop baseline gates clean on 2026-02-21",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "periodic-scan",
+      "qa",
+      "quality-loop"
+    ],
+    "importance": 0.62,
+    "recency": 1,
+    "confidence": 0.93,
     "eventFile": "events/2026-02.jsonl"
   },
   {
