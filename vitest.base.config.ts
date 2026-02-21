@@ -14,6 +14,8 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: ['node_modules', 'dist', '**/*.test.ts', '**/__tests__/**'],
     },
+    clearMocks: true,
+    restoreMocks: true,
     testTimeout: 30000,
   },
   resolve: {
