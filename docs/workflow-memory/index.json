@@ -79,6 +79,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-aligned-codex-full-access-config-keys-and-hardened-github-prefli",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Aligned Codex full-access config keys and hardened GitHub preflight",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "github",
+      "config",
+      "feature-delivery"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-converted-workflow-decks-to-one-page-scroll-format",
     "date": "2026-02-21",
     "month": "2026-02",
@@ -156,6 +172,38 @@
       "spec",
       "types",
       "quality-gates"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-hardened-approval-executor-docker-preflight-recovery",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Hardened approval-executor Docker preflight recovery",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "docker",
+      "debug",
+      "feature-delivery"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-hardened-approval-executor-npm-dns-preflight-recovery",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Hardened approval-executor npm DNS preflight recovery",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "network",
+      "dns",
+      "feature-delivery"
     ],
     "eventFile": "events/2026-02.jsonl"
   },

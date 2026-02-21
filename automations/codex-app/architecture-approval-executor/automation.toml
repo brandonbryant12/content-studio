@@ -5,6 +5,7 @@ prompt = '''Use gpt-5.3-codex with reasoning effort xhigh. Role: human-in-the-lo
 
 Scope and approval:
 - Triage open GitHub issues labeled architecture-radar in brandonbryant12/content-studio.
+- Use GitHub REST-style commands for triage (`gh issue list`, `gh issue view --json`, `gh api repos/...`) and do not depend on `gh api graphql` for issue selection.
 - Treat approval signals on issue comments as either:
   1) a +1 reaction, or
   2) a human comment body that is exactly +1, :+1:, or thumbs up.
@@ -14,10 +15,24 @@ Scope and approval:
 - Skip issues already linked to an open PR or recently processed in memory.
 
 Runtime preflight for code tasks:
-1) GitHub access: `gh auth status`.
-2) Node runtime: `node -v` and require >= 22.10.0. If lower, prepend PATH with `$HOME/.nvm/versions/node/v24.13.1/bin:/opt/homebrew/opt/node@22/bin:$PATH` and re-check.
-3) Workspace bootstrap: `pnpm install --frozen-lockfile`; if dependency-state corruption is detected, remove node_modules once and retry.
-4) Container runtime: `docker info` must pass.
+1) GitHub access/connectivity: run `gh auth status`, then `gh api rate_limit`. If GitHub API calls fail due to transient network/DNS/TLS errors, run recovery before stopping:
+  - retry `gh api rate_limit` up to 3 times with short backoff
+  - retry once after clearing proxy env for this process: `unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy`
+  - verify network path: `nslookup api.github.com` and `curl -I https://api.github.com`
+  - if still failing, capture diagnostics and stop: `gh auth status`, `gh api rate_limit` error output, `nslookup api.github.com`, `curl -I https://api.github.com`
+2) Node runtime: `node -v` and require >= 22.10.0. If lower, prepend PATH with `$HOME/.nvm/versions/node/v24.13.1/bin:/opt/homebrew/opt/node@22/bin:$PATH`, re-check, and keep this PATH export for all remaining preflight and gate commands.
+3) Workspace bootstrap: run `pnpm install --frozen-lockfile`. If it fails due to transient network/DNS errors (for example `ENOTFOUND`, `EAI_AGAIN`, `ECONNRESET`, `ETIMEDOUT`), run recovery before stopping:
+  - confirm registry settings: `npm config get registry` and `pnpm config get registry`
+  - retry install with `npm_config_registry=https://registry.npmjs.org pnpm install --frozen-lockfile`
+  - if still failing, retry with `npm_config_registry=https://registry.npmjs.com pnpm install --frozen-lockfile`
+  - if dependency-state corruption is indicated, remove node_modules once and retry install
+  - if still failing, capture diagnostics and stop: `node -v`, `pnpm -v`, `npm -v`, `nslookup registry.npmjs.org`, `curl -I https://registry.npmjs.org/`
+4) Container runtime: run `docker info`. If it fails (especially permission denied on `/var/run/docker.sock`), run this recovery sequence before stopping:
+  - `docker context ls`
+  - if available, `docker context use desktop-linux`, then retry `docker info`
+  - if still failing, `export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`, then retry `docker info`
+  - if still failing, `export DOCKER_HOST=unix:///var/run/docker.sock`, then retry `docker info`
+  - if still failing, capture diagnostics and stop: `whoami`, `id`, `docker context ls`, `ls -l /var/run/docker.sock`, `ls -l $HOME/.docker/run/docker.sock`
 5) Testcontainers DB setup: run `pnpm test:db:setup` and stop if it fails.
 
 Branching and implementation contract:
@@ -42,7 +57,7 @@ Validation gates (required, in order):
 - `pnpm test:e2e`
 
 Delivery behavior:
-- If any gate fails, do not open/merge PR. Post concise failure details and next action on the issue, then record memory.
+- If any gate fails, do not open/merge PR. Post concise failure details and next action on the issue, then record memory. For preflight failures (GitHub API, Docker, or npm/network), include the captured diagnostics in the issue comment.
 - If all gates pass, commit with a conventional message referencing the issue, push, open PR to main with `Fixes #<issue-number>`, add labels codex and codex-automation when available, include a Research Log Update section when applicable, and auto-merge with squash.
 - After merge, verify issue closure. If not closed, post corrective issue comment and open a follow-up issue for linkage failure.
 
@@ -51,4 +66,4 @@ status = "ACTIVE"
 rrule = "RRULE:FREQ=HOURLY;INTERVAL=1;BYMINUTE=11;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["/Users/brandon/Development/content-studio"]
 created_at = 1771680075906
-updated_at = 1771681536000
+updated_at = 1771689046000
