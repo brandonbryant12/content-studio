@@ -372,6 +372,18 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-periodic-scans-quality-sentinel-scan-clean",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Quality sentinel scan clean",
+    "severity": "low",
+    "status": "open",
+    "tags": [],
+    "confidence": 0.62,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-periodic-scans-resolved-node-and-ajv-config-blockers",
     "date": "2026-02-21",
     "month": "2026-02",
