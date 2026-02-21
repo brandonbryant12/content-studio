@@ -8,7 +8,7 @@ import { server } from './server';
 
 // Start MSW server before tests
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' });
+  server.listen({ onUnhandledRequest: 'error' });
 });
 
 // Reset handlers after each test
