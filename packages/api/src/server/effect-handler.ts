@@ -9,8 +9,8 @@ import type { ServerRuntime, SharedServices } from './runtime';
  * Options for handleEffectWithProtocol.
  */
 export interface HandleEffectOptions {
-  /** Optional span name for tracing (e.g., 'api.documents.get') */
-  span?: string;
+  /** Required span name for tracing (e.g., 'api.documents.get') */
+  span: string;
   /** Optional span attributes */
   attributes?: Record<string, string | number | boolean>;
 }
@@ -209,7 +209,7 @@ export const handleTaggedError = <E extends TaggedError>(
  * @param user - The authenticated user (or null for public routes)
  * @param effect - The Effect to run (requirements must be subset of SharedServices)
  * @param errors - The oRPC error factory
- * @param options - Optional configuration (span name, attributes)
+ * @param options - Required configuration (span name, attributes)
  * @param customHandlers - Optional custom handlers for specific error types
  *
  * @example
@@ -245,14 +245,12 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   user: User | null,
   effect: Effect.Effect<A, E, SharedServices>,
   errors: ErrorFactory,
-  options?: HandleEffectOptions,
+  options: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
-  const tracedEffect = options?.span
-    ? effect.pipe(
-        Effect.withSpan(options.span, { attributes: options.attributes }),
-      )
-    : effect;
+  const tracedEffect = effect.pipe(
+    Effect.withSpan(options.span, { attributes: options.attributes }),
+  );
 
   const scopedEffect = user
     ? withCurrentUser(user)(tracedEffect)
