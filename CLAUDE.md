@@ -49,6 +49,8 @@ packages/
 - **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `node scripts/workflow-memory/add-entry.mjs --help`
+- Preferred memory retrieval helper (ranked by scoring fields):
+  - `node scripts/workflow-memory/retrieve.mjs --help`
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.

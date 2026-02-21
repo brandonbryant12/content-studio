@@ -35,6 +35,9 @@ docs/workflow-memory/
 - Optional fields:
   - `reflection` (what went well / what to repeat)
   - `feedback` (what to improve / what to avoid)
+  - `importance` (0-1, higher = more critical or reusable)
+  - `recency` (0-1, higher = more recent; override computed recency if needed)
+  - `confidence` (0-1, higher = more reliable evidence)
 
 ## Index (Fast Retrieval)
 
@@ -50,6 +53,9 @@ Each index row contains:
 - `severity`
 - `status`
 - `tags`
+- `importance` (optional 0-1)
+- `recency` (optional 0-1)
+- `confidence` (optional 0-1)
 - `eventFile`
 
 ## Summaries (Human Compression)
@@ -95,10 +101,68 @@ node scripts/workflow-memory/add-entry.mjs \
   --owner "@team" \
   --status "open" \
   --severity "high" \
-  --tags authz,invariants
+  --tags authz,invariants \
+  --importance 0.8 \
+  --recency 0.9 \
+  --confidence 0.7
 ```
 
 This appends an event to the current month and updates `index.json`.
+
+## Scoring + Retrieval
+
+Scoring uses a lightweight weighted sum:
+
+- `score = 0.4 * importance + 0.3 * recency + 0.2 * tagMatch + 0.1 * confidence`
+- If `recency` is omitted, retrieval computes a 90-day linear decay from `date`.
+
+Retrieval helper:
+
+```bash
+node scripts/workflow-memory/retrieve.mjs \
+  --workflow "Self-Improvement" \
+  --tags guardrail,docs \
+  --limit 5 \
+  --min-score 0.35
+```
+
+Sample output (truncated):
+
+```json
+{
+  "query": {
+    "workflow": "Self-Improvement",
+    "tags": [
+      "guardrail",
+      "docs"
+    ],
+    "month": null,
+    "minScore": 0.35,
+    "limit": 5
+  },
+  "results": [
+    {
+      "id": "2026-02-21-self-improvement-workflow-memory-scoring-retrieval-helper",
+      "date": "2026-02-21",
+      "workflow": "Self-Improvement",
+      "title": "Workflow memory scoring + retrieval helper",
+      "tags": [
+        "guardrail",
+        "docs",
+        "workflow-memory"
+      ],
+      "score": 0.86,
+      "breakdown": {
+        "importance": 0.8,
+        "recency": 0.9,
+        "tagMatch": 1,
+        "confidence": 0.7
+      },
+      "eventFile": "events/2026-02.jsonl"
+    }
+  ]
+}
+```
 
 ## Coverage Audit
 

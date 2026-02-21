@@ -327,6 +327,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-self-improvement-workflow-memory-scoring-retrieval-helper",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Workflow memory scoring + retrieval helper",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "workflow-memory",
+      "guardrail",
+      "docs"
+    ],
+    "importance": 0.8,
+    "recency": 0.9,
+    "confidence": 0.7,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",
