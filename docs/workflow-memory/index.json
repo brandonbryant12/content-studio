@@ -240,6 +240,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-feature-delivery-openapi-compatibility-guard-for-contracts",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "OpenAPI compatibility guard for contracts",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "openapi",
+      "contracts",
+      "guardrail"
+    ],
+    "importance": 0.6,
+    "confidence": 0.7,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-feature-delivery-renamed-codex-automation-lanes-for-clearer-intent",
     "date": "2026-02-21",
     "month": "2026-02",
