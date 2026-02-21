@@ -49,6 +49,9 @@ const USAGE = `Usage:
     [--date YYYY-MM-DD] \\
     [--severity low|medium|high|critical] \\
     [--tags a,b,c] \\
+    [--importance 0-1] \\
+    [--recency 0-1] \\
+    [--confidence 0-1] \\
     [--source manual]
 `;
 
@@ -152,6 +155,17 @@ function validateDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date);
 }
 
+function parseOptionalScore(args, key) {
+  if (args[key] === undefined) {
+    return null;
+  }
+  const value = Number(args[key]);
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new Error(`Invalid ${key} score: ${args[key]}. Expected a number between 0 and 1.`);
+  }
+  return value;
+}
+
 function printCoverageSummary(index, month) {
   const workflowsInMonth = new Set(
     index
@@ -199,6 +213,15 @@ function buildEvent(args) {
 
   const severity = (args.severity ?? "medium").trim().toLowerCase();
   const status = args.status.trim().toLowerCase();
+  const importance = parseOptionalScore(args, "importance");
+  const recency = parseOptionalScore(args, "recency");
+  const confidence = parseOptionalScore(args, "confidence");
+
+  const scoring = {
+    ...(importance === null ? {} : { importance }),
+    ...(recency === null ? {} : { recency }),
+    ...(confidence === null ? {} : { confidence }),
+  };
 
   return {
     id,
@@ -215,6 +238,7 @@ function buildEvent(args) {
     status,
     severity,
     tags,
+    ...scoring,
     source: (args.source ?? "manual").trim(),
     createdAt: new Date().toISOString(),
   };
@@ -254,6 +278,9 @@ async function main() {
     severity: event.severity,
     status: event.status,
     tags: event.tags,
+    ...(typeof event.importance === "number" ? { importance: event.importance } : {}),
+    ...(typeof event.recency === "number" ? { recency: event.recency } : {}),
+    ...(typeof event.confidence === "number" ? { confidence: event.confidence } : {}),
     eventFile: path.join("events", `${month}.jsonl`),
   };
 

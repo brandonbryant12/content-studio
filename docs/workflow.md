@@ -192,6 +192,9 @@ Optional fields:
 
 - `reflection`: what went well or should be repeated
 - `feedback`: what to improve or avoid
+- `importance` (0-1): higher = more critical or reusable
+- `recency` (0-1): higher = more recent; overrides computed recency if needed
+- `confidence` (0-1): higher = more reliable evidence
 
 During retrieval and self-improvement, scan `reflection` and `feedback` for repeatable guardrails or missing checks.
 
@@ -200,6 +203,10 @@ If the same pattern appears in 2+ memory entries, escalate immediately to `self-
 Use the write helper to avoid schema drift:
 
 `node scripts/workflow-memory/add-entry.mjs --help`
+
+Retrieval helper (ranked by importance/recency/tag match/confidence):
+
+`node scripts/workflow-memory/retrieve.mjs --help`
 
 Run coverage audit weekly (and before release readiness reviews):
 
