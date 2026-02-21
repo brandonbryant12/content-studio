@@ -129,6 +129,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-periodic-scans-fix-lint-cli-typecheck",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Fix lint + CLI typecheck",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "lint",
+      "typecheck",
+      "cli"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",

@@ -62,7 +62,7 @@ const tryGenerateContent = (
   apiKey: string,
   hostVoice: string,
   guestVoice: string,
-): Effect.Effect<{ audioContent: Buffer }, Error> =>
+): Effect.Effect<{ audioContent: Uint8Array }, Error> =>
   Effect.tryPromise({
     try: async () => {
       const conversationText = SAMPLE_DIALOGUE.map(
@@ -124,7 +124,10 @@ const tryGenerateContent = (
         throw new Error('No audio data in response');
       }
 
-      return { audioContent: Buffer.from(inlineData.data, 'base64') };
+      const audioContent = Uint8Array.from(
+        Buffer.from(inlineData.data, 'base64'),
+      );
+      return { audioContent };
     },
     catch: (e) => new Error(e instanceof Error ? e.message : 'Unknown error'),
   });
@@ -138,7 +141,7 @@ const tryTextToSpeech = (
   apiKey: string,
   hostVoice: string,
   guestVoice: string,
-): Effect.Effect<{ audioContent: Buffer }, Error> =>
+): Effect.Effect<{ audioContent: Uint8Array }, Error> =>
   Effect.tryPromise({
     try: async () => {
       const response = await fetch(
@@ -179,14 +182,17 @@ const tryTextToSpeech = (
       }
 
       const data = (await response.json()) as { audioContent: string };
-      return { audioContent: Buffer.from(data.audioContent, 'base64') };
+      const audioContent = Uint8Array.from(
+        Buffer.from(data.audioContent, 'base64'),
+      );
+      return { audioContent };
     },
     catch: (e) => new Error(e instanceof Error ? e.message : 'Unknown error'),
   });
 
 const saveAudio = (
   filename: string,
-  audioContent: Buffer,
+  audioContent: Uint8Array,
 ): Effect.Effect<string, Error> =>
   Effect.gen(function* () {
     const filePath = path.join(OUTPUT_DIR, filename);

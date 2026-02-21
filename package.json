@@ -58,5 +58,10 @@
   },
   "engines": {
     "node": ">=22.10.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@eslint/eslintrc>ajv": "6.12.6"
+    }
   }
 }
