@@ -32,6 +32,9 @@ docs/workflow-memory/
   - `followUp`
   - `owner`
   - `status`
+- Optional fields:
+  - `reflection` (what went well / what to repeat)
+  - `feedback` (what to improve / what to avoid)
 
 ## Index (Fast Retrieval)
 
@@ -87,6 +90,8 @@ node scripts/workflow-memory/add-entry.mjs \
   --finding "Missing ownership check on mutation path" \
   --evidence "packages/media/src/...:42" \
   --follow-up "add invariant + docs rule" \
+  --reflection "Captured authz risk early in review" \
+  --feedback "Add checklist item for ownership before merge" \
   --owner "@team" \
   --status "open" \
   --severity "high" \

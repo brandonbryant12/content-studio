@@ -265,6 +265,20 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-self-improvement-add-reflection-feedback-fields-to-workflow-memory",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Add reflection/feedback fields to workflow memory",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "workflow-memory",
+      "self-improvement"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",
