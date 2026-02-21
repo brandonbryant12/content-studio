@@ -1,5 +1,134 @@
 [
   {
+    "id": "2026-02-21-feature-delivery-added-architecture-radar-label-and-updated-issue-label-policy",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added architecture-radar label and updated issue-label policy",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "labels",
+      "feature-delivery",
+      "codex"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-added-detailed-spec-driven-example-to-workflow-presentations",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added detailed spec-driven example to workflow presentations",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "workflow",
+      "presentation",
+      "spec-driven",
+      "examples"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-added-guided-random-walk-architecture-radar-automation",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Added guided random-walk architecture radar automation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture",
+      "feature-delivery",
+      "codex"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-converted-workflow-decks-to-one-page-scroll-format",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Converted workflow decks to one-page scroll format",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "workflow",
+      "presentation",
+      "ux"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-dual-audience-workflow-presentation-deck",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Dual-audience workflow presentation deck",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "workflow",
+      "presentation",
+      "docs",
+      "communication"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-expanded-architecture-radar-for-full-agent-system-awareness",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Expanded architecture-radar for full agent-system awareness",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture",
+      "feature-delivery",
+      "skills",
+      "self-improvement"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-expanded-workflow-presentations-with-spec-type-gate-coverage",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Expanded workflow presentations with spec/type/gate coverage",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "workflow",
+      "presentation",
+      "spec",
+      "types",
+      "quality-gates"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-21-feature-delivery-installed-codex-automations-and-removed-temporary-export-bundle",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Installed Codex automations and removed temporary export bundle",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "quality-closure-loop"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",

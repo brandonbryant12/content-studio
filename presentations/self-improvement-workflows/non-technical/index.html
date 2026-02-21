@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Studio Workflow System - Non-Technical One-Pager</title>
+    <link rel="stylesheet" href="../assets/presentation.css" />
+  </head>
+  <body class="theme-business scroll-mode">
+    <div class="deck-shell">
+      <header class="topbar">
+        <h1>Content Studio | How the Workflow System Keeps AI Delivery Reliable</h1>
+        <span class="badge">Non-Technical Version</span>
+      </header>
+
+      <main class="deck">
+        <section class="slide hero">
+          <p class="kicker">Executive View</p>
+          <h2>The repo runs a closed-loop operating system for AI-assisted engineering</h2>
+          <p>
+            Work does not end at “code shipped.” Each change must follow workflow steps, pass checks, and store
+            learnings so the next cycle is stronger.
+          </p>
+          <div class="hero-grid">
+            <article class="card">
+              <h3>Clear Playbooks</h3>
+              <p>Skills define how each category of work should be handled.</p>
+            </article>
+            <article class="card">
+              <h3>Hard Gates</h3>
+              <p>Type checks, linting, tests, invariants, and spec checks are enforced.</p>
+            </article>
+            <article class="card">
+              <h3>Compounding Memory</h3>
+              <p>Incidents and fixes are recorded in workflow memory and turned into guardrails.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Definition</p>
+          <h2>What a workflow means in this repo</h2>
+          <div class="definition">
+            <strong>Workflow = repeatable route from request to verified outcome</strong>
+            <p>
+              In Content Studio, a workflow is a prescribed sequence: intake, implement, verify, review risk, and
+              persist learning. It is designed for consistency and auditability.
+            </p>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <h3>Start</h3>
+              <p>Pick the right skill path for the request type.</p>
+            </article>
+            <article class="card">
+              <h3>Middle</h3>
+              <p>Build in slices, then run mandatory checks.</p>
+            </article>
+            <article class="card">
+              <h3>Finish</h3>
+              <p>Document evidence and save workflow memory.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Workflow Chart</p>
+          <h2>From request to merge, with risk branches</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node">Request</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Intake + scope</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Feature delivery</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Checks + tests</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">PR risk review</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Merge + memory</span>
+            </div>
+            <div class="chart-row">
+              <span class="chart-node">If web complexity rises</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node"><code>tanstack-vite</code> guardrails</span>
+              <span class="chart-arrow">|</span>
+              <span class="chart-node">If architecture changes</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node"><code>architecture-adr-guard</code></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Spec-Driven Delivery</p>
+          <h2>Behavior is defined in spec before final merge</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>How it works</h3>
+              <ul class="list">
+                <li><code>docs/master-spec.md</code> is the canonical behavior source.</li>
+                <li>Generated spec surfaces are refreshed from code.</li>
+                <li><code>pnpm spec:check</code> fails when behavior and spec drift apart.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Business value</h3>
+              <ul class="list">
+                <li>Fewer surprises during release and QA.</li>
+                <li>Clear requirement traceability in PR discussions.</li>
+                <li>Stronger alignment between product intent and shipped behavior.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Brief Example</p>
+          <h2>How spec-driven development works today in practice</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node">Request: change document retry behavior</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Update requirement text in <code>docs/master-spec.md</code></span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Run <code>pnpm spec:generate</code></span>
+            </div>
+            <div class="chart-row">
+              <span class="chart-node">Implement code + tests</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Run checks (<code>typecheck</code>, <code>lint</code>, <code>test</code>, <code>test:invariants</code>)</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">Pass <code>pnpm spec:check</code> before merge</span>
+            </div>
+          </div>
+          <p>
+            The key idea: requirements and code are verified together. If behavior changes but spec artifacts do not,
+            the merge should fail.
+          </p>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Architecture Choice</p>
+          <h2>Why type-heavy Effect TS patterns are used</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Plain-language summary</h3>
+              <p>
+                The repo favors Effect TS because it makes dependencies and errors explicit in types. That gives
+                clearer feedback and safer AI-authored changes.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Practical impact</h3>
+              <ul class="list">
+                <li>More predictable behavior under change.</li>
+                <li>Smaller, faster tests with explicit runtime setup.</li>
+                <li>Less hidden framework magic during debugging.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Checks and Protections</p>
+          <h2>What quality gates run to prevent regressions</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Example Command</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Type system checks</strong></td>
+                  <td><code>pnpm typecheck</code></td>
+                  <td>Detects contract and compile-time issues across packages.</td>
+                </tr>
+                <tr>
+                  <td><strong>Linting checks</strong></td>
+                  <td><code>pnpm lint</code></td>
+                  <td>Blocks unsafe or off-pattern code constructs.</td>
+                </tr>
+                <tr>
+                  <td><strong>General tests</strong></td>
+                  <td><code>pnpm test</code></td>
+                  <td>Catches behavior regressions.</td>
+                </tr>
+                <tr>
+                  <td><strong>Invariant tests</strong></td>
+                  <td><code>pnpm test:invariants</code></td>
+                  <td>Enforces non-negotiable safety and architecture rules.</td>
+                </tr>
+                <tr>
+                  <td><strong>Spec checks</strong></td>
+                  <td><code>pnpm spec:check</code></td>
+                  <td>Ensures documented behavior matches implementation.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Skills + Automations</p>
+          <h2>How consistency is scaled across contributors and tools</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node"><code>.agents/skills</code> canonical</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">sync mirrors</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">strict skill checks</span>
+            </div>
+            <div class="chart-row">
+              <span class="chart-node">workflow runs</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">memory event appended</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">coverage checks keep loops complete</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Self-Improvement</p>
+          <h2>How the system gets better after every major issue</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node">Capture issue</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Classify root cause</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Add prevention guardrail</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Verify + publish update</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">Persist memory</span>
+            </div>
+          </div>
+          <p>This is why quality compounds instead of resetting after each incident.</p>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Close</p>
+          <h2>Direct answer to your completeness questions</h2>
+          <ul class="list">
+            <li><strong>Typesystem:</strong> now explicitly covered (why it matters and where it enforces safety).</li>
+            <li><strong>Effect TS decision:</strong> now included with rationale and impact.</li>
+            <li><strong>Linting + invariant tests:</strong> now called out as distinct gate classes.</li>
+            <li><strong>Spec-driven design:</strong> now shown as a first-class workflow path.</li>
+            <li><strong>Workflow charts:</strong> now included for both delivery and self-improvement loops.</li>
+            <li><strong>Workflow definition:</strong> now explicitly defined in repo terms.</li>
+          </ul>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

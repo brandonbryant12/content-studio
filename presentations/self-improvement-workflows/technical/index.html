@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Studio Workflow System - Technical One-Pager</title>
+    <link rel="stylesheet" href="../assets/presentation.css" />
+  </head>
+  <body class="theme-tech scroll-mode">
+    <div class="deck-shell">
+      <header class="topbar">
+        <h1>Content Studio | Workflow, Guardrails, and Self-Improvement (Technical)</h1>
+        <span class="badge">Technical Version</span>
+      </header>
+
+      <main class="deck">
+        <section class="slide hero">
+          <p class="kicker">Engineering Intent</p>
+          <h2>AI delivery is controlled by explicit workflows, typed boundaries, and durable memory</h2>
+          <p>
+            In this repo, workflow is not a meeting ritual. It is a defined sequence of skills, quality gates, and
+            memory updates that must close before a change is considered done.
+          </p>
+          <div class="hero-grid">
+            <article class="card">
+              <h3>Control Inputs</h3>
+              <p><code>docs/</code> standards + canonical skills in <code>.agents/skills</code>.</p>
+            </article>
+            <article class="card">
+              <h3>Control Execution</h3>
+              <p>Effect-based implementation paths with typed contracts and explicit runtime layers.</p>
+            </article>
+            <article class="card">
+              <h3>Control Closure</h3>
+              <p>Checks pass, risks reviewed, docs synced, and workflow memory event appended.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Workflow Definition</p>
+          <h2>What “workflow” means in this repository context</h2>
+          <div class="definition">
+            <strong>Workflow = repeatable, enforceable delivery loop</strong>
+            <p>
+              A workflow in Content Studio is a scoped operating protocol: choose the right skills, follow repo
+              patterns, run mandatory checks, and persist evidence in workflow memory.
+            </p>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <h3>Activation</h3>
+              <ul class="list">
+                <li>Triggered by request type, risk profile, and touched surfaces.</li>
+                <li>Examples: Feature Delivery, TanStack + Vite, PR Risk Review.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Execution</h3>
+              <ul class="list">
+                <li>Implement in vertical slices.</li>
+                <li>Enforce architecture/auth/safety primitives and typed error handling.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Completion</h3>
+              <ul class="list">
+                <li>Validation gates pass.</li>
+                <li>Memory event IDs captured in delivery notes.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Primary Chart</p>
+          <h2>Request-to-merge workflow with escalation branches</h2>
+          <div class="chart">
+            <p class="chart-title">Main Delivery Lane</p>
+            <div class="chart-row">
+              <span class="chart-node">Request Intake</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Read applicable docs in <code>docs/</code></span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Feature Delivery slice</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Targeted tests</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">Repo gates + PR review</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Merge + memory event</span>
+            </div>
+            <p class="chart-title">Conditional Lanes</p>
+            <div class="chart-row">
+              <span class="chart-node">Web data/routing/forms changes</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Apply <code>tanstack-vite</code> guardrails</span>
+              <span class="chart-arrow">|</span>
+              <span class="chart-node">Boundary/runtime changes</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">Apply <code>architecture-adr-guard</code></span>
+            </div>
+          </div>
+          <p>
+            Source: <code>docs/workflow.md</code> workflow stack and happy-path lifecycle.
+          </p>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Self-Improvement Chart</p>
+          <h2>Recurrence control loop for escaped defects and repeated review signals</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node">1. Capture signals</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">2. Classify failure mode</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">3. Patch guardrail</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">4. Verify before/after</span>
+            </div>
+            <div class="chart-row">
+              <span class="chart-node">5. Broadcast updates</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">6. Persist memory event</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node critical">Repeat signal?</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good">Loop closes stronger</span>
+            </div>
+          </div>
+          <ul class="list">
+            <li>Guardrail types: test, lint rule, docs rule, skill update, or automation script.</li>
+            <li>Trigger examples: escaped defect, repeated comment class, sparse workflow memory coverage.</li>
+          </ul>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Spec-Driven Design</p>
+          <h2>How requirements govern implementation and prevent spec drift</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Spec workflow</h3>
+              <div class="chart">
+                <div class="chart-row">
+                  <span class="chart-node">Propose behavior in <code>docs/master-spec.md</code></span>
+                  <span class="chart-arrow">-></span>
+                  <span class="chart-node">Run <code>pnpm spec:generate</code></span>
+                  <span class="chart-arrow">-></span>
+                  <span class="chart-node">Reference <code>SPEC-*</code> IDs in PR/tests</span>
+                  <span class="chart-arrow">-></span>
+                  <span class="chart-node good">Gate with <code>pnpm spec:check</code></span>
+                </div>
+              </div>
+              <p class="small">
+                Generated artifacts include API/domain/data/UI surfaces under <code>docs/spec/generated/</code>.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Why this matters</h3>
+              <ul class="list">
+                <li>Behavior changes require explicit design review before merge.</li>
+                <li>Generated snapshots expose contract and route drift quickly.</li>
+                <li>PRs become traceable from requirement ID to code and tests.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Spec-Driven Example (Today)</p>
+          <h2>Illustrative real-flow example using current repo structure</h2>
+          <div class="definition">
+            <strong>Example requirement</strong>
+            <p>
+              Add requirement <code>SPEC-DOCUMENT-###</code> (ID pattern from repo rules): “Document retry is allowed
+              only for failed documents; otherwise return protocol-mapped error.”
+            </p>
+          </div>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Execution steps</h3>
+              <div class="chart">
+                <div class="chart-row">
+                  <span class="chart-node">1. Update non-generated spec text in <code>docs/master-spec.md</code></span>
+                </div>
+                <div class="chart-row">
+                  <span class="chart-node">2. Run <code>pnpm spec:generate</code> and inspect generated artifacts</span>
+                </div>
+                <div class="chart-row">
+                  <span class="chart-node">3. Implement behavior in domain + contract + handler layers</span>
+                </div>
+                <div class="chart-row">
+                  <span class="chart-node">4. Add/adjust tests and invariant coverage if rule is non-negotiable</span>
+                </div>
+                <div class="chart-row">
+                  <span class="chart-node good">5. Run <code>pnpm spec:check</code> + repo gates before merge</span>
+                </div>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Likely files touched</h3>
+              <ul class="list">
+                <li>Spec source: <code>docs/master-spec.md</code></li>
+                <li>Generated spec: <code>docs/spec/generated/*</code></li>
+                <li>Use case: <code>packages/media/src/document/use-cases/retry-processing.ts</code></li>
+                <li>Contract: <code>packages/api/src/contracts/document.ts</code></li>
+                <li>Handler: <code>packages/api/src/server/router/document.ts</code></li>
+                <li>Tests: use-case + integration + invariants where applicable</li>
+              </ul>
+            </article>
+          </div>
+          <pre class="code"># Typical command path
+pnpm spec:generate
+pnpm spec:check
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm test:invariants</pre>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Type System</p>
+          <h2>TypeScript + Effect types are part of the guardrail system</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Type Boundary</th>
+                  <th>Rule</th>
+                  <th>Why It Exists</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Effect control flow</strong></td>
+                  <td><code>Effect&lt;A, E, R&gt;</code> keeps success/errors/dependencies explicit.</td>
+                  <td>Prevents hidden runtime assumptions in agent-authored logic.</td>
+                </tr>
+                <tr>
+                  <td><strong>Error unions</strong></td>
+                  <td>Let Effect infer errors; export derived aliases from use cases.</td>
+                  <td>Keeps handler and tests aligned with real failure surface.</td>
+                </tr>
+                <tr>
+                  <td><strong>Layer environments</strong></td>
+                  <td>Derive env from layers: <code>Layer.Layer.Context&lt;typeof Live&gt;</code>.</td>
+                  <td>Avoids drift between runtime wiring and type declarations.</td>
+                </tr>
+                <tr>
+                  <td><strong>Streaming contracts</strong></td>
+                  <td>Use concrete stream chunk types, not <code>unknown</code>.</td>
+                  <td>Eliminates downstream casting and runtime ambiguity.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Effect Decision</p>
+          <h2>Why this repo standardized on Effect TS over NestJS</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Concern</th>
+                  <th>Effect TS Advantage</th>
+                  <th>Operational Outcome</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Control flow typing</strong></td>
+                  <td>Explicit typed success, typed errors, typed requirements.</td>
+                  <td>More deterministic review and fewer hidden runtime failures.</td>
+                </tr>
+                <tr>
+                  <td><strong>Dependency wiring</strong></td>
+                  <td>Layers/service tags are explicit values.</td>
+                  <td>Easier diffing and targeted runtime test setup.</td>
+                </tr>
+                <tr>
+                  <td><strong>Error contracts</strong></td>
+                  <td>Tagged errors map via centralized protocol handler.</td>
+                  <td>Stable API error behavior across handlers.</td>
+                </tr>
+                <tr>
+                  <td><strong>Testability</strong></td>
+                  <td>Use cases run with lightweight layers/mocks.</td>
+                  <td>Fast iteration with strong safety checks.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Source: <code>docs/architecture/effect-vs-nestjs.md</code>.</p>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Checks & Gates</p>
+          <h2>Linting, invariants, tests, and spec checks in one matrix</h2>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Gate</th>
+                  <th>Command</th>
+                  <th>What It Protects</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Type safety</strong></td>
+                  <td><code>pnpm typecheck</code></td>
+                  <td>Cross-package TS correctness and contract consistency.</td>
+                </tr>
+                <tr>
+                  <td><strong>Linting</strong></td>
+                  <td><code>pnpm lint</code></td>
+                  <td>Pattern enforcement (no unsafe casts/throws/payload ambiguity).</td>
+                </tr>
+                <tr>
+                  <td><strong>Test suite</strong></td>
+                  <td><code>pnpm test</code></td>
+                  <td>Unit/integration/frontend regressions.</td>
+                </tr>
+                <tr>
+                  <td><strong>Invariant tests</strong></td>
+                  <td><code>pnpm test:invariants</code></td>
+                  <td>Safety primitives, error mapping, architecture constraints.</td>
+                </tr>
+                <tr>
+                  <td><strong>Spec drift</strong></td>
+                  <td><code>pnpm spec:check</code></td>
+                  <td>Behavior changes without updated spec artifacts.</td>
+                </tr>
+                <tr>
+                  <td><strong>Build integrity</strong></td>
+                  <td><code>pnpm build</code></td>
+                  <td>Compilation/runtime packaging regressions.</td>
+                </tr>
+                <tr>
+                  <td><strong>Skill quality</strong></td>
+                  <td><code>pnpm skills:check:strict</code></td>
+                  <td>Skill metadata/path/symlink drift.</td>
+                </tr>
+                <tr>
+                  <td><strong>Memory coverage</strong></td>
+                  <td><code>pnpm workflow-memory:coverage:strict</code></td>
+                  <td>Missing workflow classes in monthly memory logs.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="list">
+            <li><strong>If <code>spec:check</code> fails:</strong> either regenerate artifacts or update the intended behavior/spec text.</li>
+            <li><strong>If <code>test:invariants</code> fails:</strong> you changed a non-negotiable pattern and must re-align implementation or invariant rules intentionally.</li>
+            <li><strong>If lint/typecheck fail:</strong> the workflow blocks merge until structural and type-level issues are resolved.</li>
+          </ul>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Invariant Focus</p>
+          <h2>What invariant tests enforce today</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Media safety invariants</h3>
+              <ul class="list">
+                <li>No raw queue access in use cases for restricted operations.</li>
+                <li>Use transaction-safe enqueue/state primitives.</li>
+                <li>Require safe text content replacement helpers.</li>
+              </ul>
+              <p class="small">
+                File: <code>packages/media/src/shared/__tests__/safety-invariants.test.ts</code>
+              </p>
+            </article>
+            <article class="card">
+              <h3>API error mapping invariants</h3>
+              <ul class="list">
+                <li>Required status mapping behavior (for example <code>409</code>, <code>422</code>, <code>502</code> classes).</li>
+                <li>Protocol-based handling remains consistent across endpoints.</li>
+              </ul>
+              <p class="small">
+                File: <code>packages/api/src/server/__tests__/effect-handler.invariants.test.ts</code>
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Skills + Automations</p>
+          <h2>How skill topology and scripts keep workflow execution consistent</h2>
+          <div class="chart">
+            <div class="chart-row">
+              <span class="chart-node"><code>.agents/skills</code> canonical source</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">run <code>scripts/sync-skills.sh</code></span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node">mirror runtimes: <code>.claude</code>, <code>.agent</code>, <code>.github</code></span>
+            </div>
+            <div class="chart-row">
+              <span class="chart-node">run strict checks</span>
+              <span class="chart-arrow">-></span>
+              <span class="chart-node good"><code>pnpm skills:check:strict</code></span>
+              <span class="chart-arrow">+</span>
+              <span class="chart-node good"><code>pnpm workflow-memory:coverage:strict</code></span>
+            </div>
+          </div>
+          <p>
+            This makes workflow rules executable rather than tribal knowledge.
+          </p>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Workflow Memory</p>
+          <h2>Compounding memory turns one incident into future prevention</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Storage and retrieval</h3>
+              <ul class="list">
+                <li>Events: <code>docs/workflow-memory/events/YYYY-MM.jsonl</code></li>
+                <li>Index: <code>docs/workflow-memory/index.json</code></li>
+                <li>Summary: <code>docs/workflow-memory/summaries/</code></li>
+                <li>Durable controls: <code>docs/workflow-memory/guardrails.md</code></li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Required event fields</h3>
+              <ul class="list">
+                <li><code>id</code>, <code>date</code>, <code>workflow</code>, <code>title</code>, <code>trigger</code></li>
+                <li><code>finding</code>, <code>evidence</code>, <code>followUp</code>, <code>owner</code>, <code>status</code></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="slide">
+          <p class="kicker">Runbook</p>
+          <h2>Minimal full-cycle command set for one repo workflow pass</h2>
+          <pre class="code">pnpm typecheck
+pnpm lint
+pnpm test
+pnpm test:invariants
+pnpm spec:check
+pnpm build
+pnpm skills:check:strict
+pnpm workflow-memory:coverage:strict
+node scripts/workflow-memory/add-entry.mjs --help</pre>
+          <p>
+            This is the practical answer to “does the workflow fully represent guides and checks”: yes, when this
+            command and process surface is included as part of the delivery contract.
+          </p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

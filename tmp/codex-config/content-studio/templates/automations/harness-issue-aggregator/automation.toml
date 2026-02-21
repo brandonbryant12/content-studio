@@ -1,9 +1,0 @@
-version = 1
-id = "harness-issue-aggregator"
-name = "Harness Issue Aggregator"
-prompt = "Use gpt-5.3-codex with reasoning effort xhigh. Run a daily aggregation loop for this repository's agent-harness improvement issues on GitHub. Collect open issues related to agent workflows, self-improvement, guardrails, automation, and workflow-memory (prioritize labels like self-improvement and codex-automation when present). Compare overlaps, cluster related issues, and decide per issue: implement now, defer, or close as not worth action. For implement-now work, make the improvements in code/docs, run validation gates for touched areas (at minimum pnpm typecheck and pnpm test, plus pnpm test:invariants or pnpm --filter web build when applicable), and open a draft PR with a detailed human-teaching writeup. The draft PR body must include: objective, grouped issue mapping, change summary, before/after behavior, validation evidence, risk notes, and Mermaid diagrams that explain how the harness is improving. Link implemented issues in the PR using GitHub closing keywords like Closes #123 so merge closes them automatically. For issues closed with no action, leave a concise rationale comment and then close the issue. Search existing open PRs/issues first to avoid duplicates. Keep scope to safe incremental slices and create at most one draft PR per run. Use gh CLI. If GitHub API access blocks PR creation, still push the branch and report the compare URL plus issue decisions in the inbox summary. Append a concise run note with timestamp, issue decisions, and PR/issue links to the automation memory file."
-status = "ACTIVE"
-rrule = "RRULE:FREQ=WEEKLY;BYHOUR=19;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
-cwds = ["__CONTENT_STUDIO_PATH__"]
-created_at = 1771628295978
-updated_at = 1771629850732
