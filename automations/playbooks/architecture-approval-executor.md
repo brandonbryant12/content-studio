@@ -22,6 +22,16 @@ Scope and approval:
   - do not bundle if scope/risk becomes hard to reason about in one context
   - keep to one PR per run
 - Skip issues already linked to an open PR or recently processed in memory.
+- Before selecting the primary issue, run an actionability screen on candidate issues (starting from lowest issue number) and skip any candidate that fails one of these checks:
+  - no longer open, missing `ready-for-dev`, or assigned status changed since list call (re-check with `gh issue view --json state,labels`)
+  - already linked to an open PR
+  - recently processed in automation memory without new human approval signal
+  - already implemented on `main` based on concrete code evidence mapped to issue acceptance criteria
+- For "already implemented on `main`" candidates, do not run implementation preflight/gates; instead:
+  - post a concise evidence comment with file path(s) and line references
+  - close issue as completed when criteria are satisfied
+  - record this as `selection_outcome: skipped_already_implemented` in memory and continue to next candidate in the same run
+- If no actionable issue remains after screening, end run with a concise no-op summary and memory entry (no branch/PR).
 
 Runtime preflight for code tasks:
 1) GitHub fast-path: run `gh auth status`, then proceed directly with required `gh` triage commands. If any required `gh` command fails due to transient network/DNS/TLS errors, run recovery before stopping:
@@ -67,8 +77,14 @@ Delivery behavior:
 - If any gate fails, do not open/merge PR. Post concise failure details and next action on the issue, then record memory. For preflight failures (GitHub API, Docker, or npm/network), include the captured diagnostics in the issue comment.
 - If all gates pass, commit with a conventional message referencing the primary issue, push, and open one PR to main that:
   - uses closing/linking keywords for the issues addressed (`Fixes #...` for fully resolved issues, `Refs #...` for partials)
+  - MUST include `Fixes #<primary-issue-number>` for the primary issue when the run intent is full resolution
   - includes an Aggregated Issues section listing all bundled issues and status
   - includes a Research Log Update section when applicable
+  Then run a pre-merge linkage gate:
+  - fetch PR body via `gh pr view --json body,number,url`
+  - verify primary issue has a closing keyword (`Fixes #<primary-issue-number>` or `Closes #<primary-issue-number>`)
+  - verify each bundled issue line in Aggregated Issues matches intent (`Fixes #...` for fully resolved, `Refs #...` for partial)
+  - if linkage check fails, do not merge; update PR body or post a blocking comment, then record memory
   Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly).
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
