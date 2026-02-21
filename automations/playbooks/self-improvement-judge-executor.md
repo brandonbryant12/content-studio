@@ -27,6 +27,14 @@ Runtime preflight for code tasks:
 2) `node -v` must be >= 22.10.0 (same PATH fallback as other automations)
 3) `pnpm install --frozen-lockfile --prefer-offline` with one cleanup retry for dependency-state corruption
 4) `docker info --format '{{.ServerVersion}}'` must pass
+5) Worktree cleanliness policy before branching:
+  - run `git status --porcelain` and inspect dirty paths
+  - treat dirty workflow-memory paths as expected automation artifacts, not blockers:
+    - `docs/workflow-memory/events/*.jsonl`
+    - `docs/workflow-memory/index.json`
+  - do not stop to ask stash/commit/stop choices when only those paths are dirty; continue the run and carry those changes into the execution branch
+  - if checkout from `origin/main` is blocked by those local changes, temporarily stash only those workflow-memory paths, create/switch branch, then re-apply stash and continue
+  - for any other unexpected dirty paths, stop and report blocker details with file list
 
 Branching and implementation contract:
 - Every code change must branch from latest main:

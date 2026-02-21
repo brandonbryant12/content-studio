@@ -52,6 +52,14 @@ Runtime preflight for code tasks:
   - if still failing, `export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`, then retry `docker info`
   - if still failing, `export DOCKER_HOST=unix:///var/run/docker.sock`, then retry `docker info`
   - if still failing, capture diagnostics and stop: `whoami`, `id`, `docker context ls`, `ls -l /var/run/docker.sock`, `ls -l $HOME/.docker/run/docker.sock`
+5) Worktree cleanliness policy before branching:
+  - run `git status --porcelain` and inspect dirty paths
+  - treat dirty workflow-memory paths as expected automation artifacts, not blockers:
+    - `docs/workflow-memory/events/*.jsonl`
+    - `docs/workflow-memory/index.json`
+  - do not stop to ask stash/commit/stop choices when only those paths are dirty; continue the run and carry those changes into the execution branch
+  - if checkout from `origin/main` is blocked by those local changes, temporarily stash only those workflow-memory paths, create/switch branch, then re-apply stash and continue
+  - for any other unexpected dirty paths, stop and report blocker details with file list
 
 Branching and implementation contract:
 - Branch from latest main every run:

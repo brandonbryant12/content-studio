@@ -84,6 +84,8 @@ Any automation that edits code must:
 2. Branch from latest main
 - `git fetch origin main`
 - create branch from `origin/main`
+- if only `docs/workflow-memory/events/*.jsonl` and/or `docs/workflow-memory/index.json` are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
+- if any other unexpected dirty paths exist, stop and report blocker details
 
 3. Prepare runtime for reliable automation execution
 - ensure supported Node runtime
