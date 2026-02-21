@@ -155,6 +155,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-periodic-scans-resolved-node-and-ajv-config-blockers",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Resolved Node and AJV config blockers",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "quality-loop",
+      "tooling",
+      "lint"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",
