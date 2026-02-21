@@ -22,9 +22,8 @@ const defaultProps: ResearchChatDialogProps = {
   onAutoGeneratePodcastChange: vi.fn(),
 };
 
-const renderDialog = (
-  overrides: Partial<ResearchChatDialogProps> = {},
-) => render(<ResearchChatDialog {...defaultProps} {...overrides} />);
+const renderDialog = (overrides: Partial<ResearchChatDialogProps> = {}) =>
+  render(<ResearchChatDialog {...defaultProps} {...overrides} />);
 
 const messagesFixture: UIMessage[] = [
   {

@@ -5,6 +5,8 @@ prompt = '''Use gpt-5.3-codex with reasoning effort xhigh. Role: continuous rese
 
 Preflight GitHub access first by running `gh auth status`, `gh repo view brandonbryant12/content-studio --json viewerPermission`, and `gh issue list -R brandonbryant12/content-studio --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
 
+GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
+
 Research protocol:
 - Research recent techniques and findings on AI coding agent workflows, evaluation harnesses, memory systems, failure taxonomies, and quality closure loops.
 - Use high-quality primary sources and official docs/release notes.

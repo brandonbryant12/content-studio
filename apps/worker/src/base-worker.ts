@@ -82,7 +82,9 @@ const createWorkerRuntime = (
   }
 
   if (!config.useMockAI && !config.geminiApiKey) {
-    throw new Error(`[${name}] 'geminiApiKey' is required when useMockAI=false`);
+    throw new Error(
+      `[${name}] 'geminiApiKey' is required when useMockAI=false`,
+    );
   }
 
   const db = createDb({ databaseUrl: config.databaseUrl });
@@ -199,7 +201,9 @@ export const createWorker = <
   ) =>
     Effect.forkDaemon(
       processJob(job as Job<TPayload>).pipe(
-        Effect.flatMap(() => queue.updateJobStatus(job.id, JobStatus.COMPLETED)),
+        Effect.flatMap(() =>
+          queue.updateJobStatus(job.id, JobStatus.COMPLETED),
+        ),
         Effect.tap((result) =>
           Effect.logInfo(
             `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,

@@ -51,7 +51,9 @@ type StepDocumentsTab = (typeof STEP_DOCUMENT_TABS)[number]['key'];
 
 function getDocumentSourceBadge(doc: DocumentItem): string {
   if (doc.source in SOURCE_BADGE_BY_TYPE) {
-    return SOURCE_BADGE_BY_TYPE[doc.source as keyof typeof SOURCE_BADGE_BY_TYPE];
+    return SOURCE_BADGE_BY_TYPE[
+      doc.source as keyof typeof SOURCE_BADGE_BY_TYPE
+    ];
   }
 
   const subtype = doc.mimeType.split('/')[1];

@@ -6,6 +6,4 @@ export const isStreamingAssistantMessage = (
   index: number,
   isStreaming: boolean,
 ): boolean =>
-  isStreaming &&
-  message.role === 'assistant' &&
-  index === messages.length - 1;
+  isStreaming && message.role === 'assistant' && index === messages.length - 1;

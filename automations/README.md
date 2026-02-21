@@ -38,7 +38,7 @@ This creates stability plus adaptation:
 
 2. `architecture-approval-executor`
 - Human-in-the-loop coding lane.
-- Implements architecture/coding-pattern issues only after explicit human thumbs-up approval signal.
+- Implements architecture/coding-pattern issues only after explicit human `ready-for-dev` label approval.
 - Branches from latest `origin/main`, runs full validation including `pnpm test:e2e`, and auto-merges on success.
 
 3. `harness-research-radar`
@@ -71,9 +71,9 @@ Any automation that edits code must:
 
 3. Prepare runtime for reliable e2e execution
 - ensure supported Node runtime
-- `pnpm install --frozen-lockfile`
-- `docker info`
-- `pnpm test:db:setup` (Testcontainers/local DB prerequisites)
+- `pnpm install --frozen-lockfile --prefer-offline` (fast-path, fall back to online recovery on failure)
+- `docker info --format '{{.ServerVersion}}'` (fast-path, fall back to context/socket diagnostics on failure)
+- `pnpm test:db:setup` immediately before `pnpm test:e2e` (keeps preflight shorter while preserving e2e readiness)
 
 4. Pass full gates before merge
 - `pnpm typecheck`
@@ -81,6 +81,7 @@ Any automation that edits code must:
 - `pnpm test:invariants`
 - `pnpm test`
 - `pnpm build`
+- `pnpm test:db:setup` (deferred gate, immediately before e2e)
 - `pnpm test:e2e`
 
 5. Use safe delivery behavior
@@ -113,7 +114,7 @@ External research is encouraged, but only through filters:
 ## Flow Across Lanes
 
 1. `architecture-radar` finds coding-pattern improvements.
-2. Human approves selected issue.
+2. Human approves selected issue by adding `ready-for-dev`.
 3. `architecture-approval-executor` implements and merges after gates.
 4. `harness-research-radar` and `quality-sentinel` feed self-improvement ideas/issues.
 5. `self-improvement-judge-executor` selects the best holistic improvement and merges after gates.

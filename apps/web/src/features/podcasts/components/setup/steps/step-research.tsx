@@ -175,10 +175,7 @@ export function StepResearch({
       )}
 
       {/* Input bar */}
-      <form
-        onSubmit={composer.handleSubmit}
-        className="relative"
-      >
+      <form onSubmit={composer.handleSubmit} className="relative">
         <Textarea
           ref={inputRef}
           value={composer.input}

@@ -3,12 +3,14 @@ id = "quality-sentinel"
 name = "Quality Sentinel"
 prompt = '''Use gpt-5.3-codex with reasoning effort xhigh. Role: quality sentinel and issue feeder for self-improvement. Advisory mode only for this run: do not edit repository files, do not commit, do not push, and do not open PRs.
 
+GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
+
 Runtime preflight:
 1) `gh auth status`
 2) `node -v` must be >= 22.10.0 (same PATH fallback as other automations)
-3) `pnpm install --frozen-lockfile` with one cleanup retry for dependency-state corruption
-4) `docker info` must pass
-5) `pnpm test:db:setup` must pass
+3) `pnpm install --frozen-lockfile --prefer-offline` with one cleanup retry for dependency-state corruption
+4) `docker info --format '{{.ServerVersion}}'` must pass
+5) Defer `pnpm test:db:setup` until immediately before `pnpm test:e2e`
 
 Run full quality checks in this order:
 - `pnpm typecheck`
@@ -16,6 +18,7 @@ Run full quality checks in this order:
 - `pnpm test:invariants`
 - `pnpm test`
 - `pnpm build`
+- `pnpm test:db:setup`
 - `pnpm test:e2e`
 
 Outcome policy:
@@ -28,4 +31,4 @@ status = "ACTIVE"
 rrule = "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["/Users/brandon/Development/content-studio"]
 created_at = 1771122206174
-updated_at = 1771681295000
+updated_at = 1771690438000

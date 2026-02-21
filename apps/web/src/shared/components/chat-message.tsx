@@ -31,7 +31,9 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
         )}
       >
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap break-words">{displayText}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">
+            {displayText}
+          </p>
         ) : (
           <Markdown compact className="break-words">
             {displayText}
