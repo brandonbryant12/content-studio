@@ -144,6 +144,17 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-21-periodic-scans-qa-loop-integration-tests-need-local-db",
+    "date": "2026-02-21",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "QA loop: integration tests need local DB",
+    "severity": "medium",
+    "status": "open",
+    "tags": [],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-20-architecture-adr-guard-boundary-and-layer-review-passed-for-web-only-lint-order-patch",
     "date": "2026-02-20",
     "month": "2026-02",
