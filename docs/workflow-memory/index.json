@@ -3,7 +3,7 @@
     "id": "2026-02-22-architecture-approval-executor-set-test-queryclient-gctime-to-infinity",
     "date": "2026-02-22",
     "month": "2026-02",
-    "workflow": "Architecture Approval Executor",
+    "workflow": "Architecture + ADR Guard",
     "title": "Set test QueryClient gcTime to Infinity",
     "severity": "low",
     "status": "closed",
@@ -33,6 +33,24 @@
     ],
     "importance": 0.72,
     "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-docs-knowledge-drift-moved-automation-playbooks-and-wrapper-mirrors-under-agentic-har",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Moved automation playbooks and wrapper mirrors under agentic-harness-framework",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "automations",
+      "framework",
+      "knowledge-drift"
+    ],
+    "importance": 0.74,
+    "confidence": 0.92,
     "eventFile": "events/2026-02.jsonl"
   },
   {
@@ -122,6 +140,28 @@
     ],
     "importance": 0.58,
     "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-periodic-scans-qa-closure-scan-gates-green-workflow-key-drift-flagged",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "QA closure scan: gates green, workflow-key drift flagged",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "periodic-scan",
+      "quality-loop",
+      "memory",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.54,
+    "confidence": 0.9,
     "eventFile": "events/2026-02.jsonl"
   },
   {

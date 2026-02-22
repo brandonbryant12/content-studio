@@ -1,15 +1,15 @@
 version = 1
-id = "architecture-approval-executor"
-name = "Architecture Approval Executor"
+id = "self-improvement-judge-executor"
+name = "Self-Improvement Judge Executor"
 prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
 
 Execution contract:
 - Repository playbook is the source of truth for this lane.
-- Read and execute `automations/playbooks/architecture-approval-executor.md` in /Users/brandon/Development/content-studio.
+- Read and execute `agentic-harness-framework/automations/self-improvement-judge-executor/self-improvement-judge-executor.md` in /Users/brandon/Development/content-studio.
 - If this wrapper conflicts with the playbook, follow the playbook.
 - Keep run output concise and include the evidence and summaries required by the playbook.'''
 status = "ACTIVE"
-rrule = "RRULE:FREQ=HOURLY;INTERVAL=1;BYMINUTE=11;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+rrule = "RRULE:FREQ=DAILY;BYHOUR=19;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["/Users/brandon/Development/content-studio"]
-created_at = 1771680075906
+created_at = 1771628295978
 updated_at = 1771694301215

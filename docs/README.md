@@ -7,13 +7,13 @@ These standards are part of an experimental technique called **Agent Harnessing*
 steering AI-authored changes with explicit docs, skills, and automated checks.
 Treat this operating model as experimental and expected to evolve.
 
-All new code reviews and feature work should reference `docs/` paths.
+All new code reviews and feature work should reference `docs/` standards plus `agentic-harness-framework/` control maps where applicable.
 
 ## Start Here
 
 1. `docs/master-spec.md`
-2. `docs/framework/README.md`
-3. `docs/framework/control-surfaces.md`
+2. `agentic-harness-framework/README.md`
+3. `agentic-harness-framework/control-surfaces.md`
 4. `docs/architecture/overview.md`
 5. `docs/patterns/use-case.md`
 6. `docs/patterns/api-handler.md`
@@ -31,7 +31,7 @@ All new code reviews and feature work should reference `docs/` paths.
 - `docs/patterns/` - backend implementation patterns and constraints
 - `docs/frontend/` - frontend architecture and UI standards
 - `docs/testing/` - testing strategy and required coverage by change type
-- `docs/framework/` - repository operating model and control-surface map
+- `agentic-harness-framework/` - repository operating model and control-surface map
 - `docs/setup.md` - local development and test environment setup
 - `docs/master-spec.md` - canonical, PR-governed master application specification
 - `docs/workflow.md` - AI feature-delivery flow, scan cadence, and self-improvement loop
@@ -50,4 +50,4 @@ All new code reviews and feature work should reference `docs/` paths.
 
 - Handler + serialization guidance is unified in `docs/patterns/api-handler.md`.
 - Suspense guidance is consolidated into `docs/frontend/components.md`.
-- Legacy standards paths have been retired; use only `docs/...` references going forward.
+- Legacy standards paths have been retired; use `docs/...` for standards and `agentic-harness-framework/...` for control maps.

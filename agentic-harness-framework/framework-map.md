@@ -4,7 +4,7 @@ This is the navigation layer for how repository governance works in Content Stud
 It explains how standards docs, specs, skills, lint/invariants/tests, workflow memory,
 and automation lanes fit into one operating system.
 
-Use this page first, then jump to the linked source-of-truth docs for each control surface.
+Start with `agentic-harness-framework/README.md`, then use this page for the detailed control map and linked source-of-truth docs.
 
 ## Why This Exists
 
@@ -14,7 +14,7 @@ The repo already has strong controls, but they are distributed across:
 - `.agents/skills/`
 - `scripts/`
 - invariant tests and lint rules
-- `automations/playbooks/`
+- `agentic-harness-framework/automations/`
 
 This framework reduces orientation time by showing one coherent model.
 
@@ -44,7 +44,7 @@ flowchart TD
 | Skill workflows | `.agents/skills/*/SKILL.md` | `scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
 | Workflow memory | `docs/workflow-memory/*` | `scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
-| Automation lanes | `automations/playbooks/*.md` + `automations/codex-app/*/automation.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
+| Automation lanes | `agentic-harness-framework/automations/*/*.md` + `agentic-harness-framework/automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
 
 ## Execution Model
 
@@ -66,13 +66,13 @@ Keep docs layered to avoid duplication:
 2. Standards docs (`docs/architecture`, `docs/patterns`, `docs/frontend`, `docs/testing`): what rules are.
 3. Workflow/skills docs (`docs/workflow.md`, `.agents/skills/*`): how work is executed.
 4. Enforcement artifacts (`scripts/`, lint rules, invariants, CI): what is automatically checked.
-5. Memory/automation docs (`docs/workflow-memory`, `automations/`): how learnings compound and lanes operate.
+5. Memory/automation docs (`docs/workflow-memory`, `agentic-harness-framework/automations/`): how learnings compound and lanes operate.
 
 When updating policy, prefer editing the deepest true source rather than repeating text in multiple places.
 
 ## Next Read
 
-1. `docs/framework/control-surfaces.md`
+1. `agentic-harness-framework/control-surfaces.md`
 2. `docs/workflow.md`
 3. `docs/workflow-memory/README.md`
-4. `automations/README.md`
+4. `agentic-harness-framework/automations/README.md`

@@ -85,7 +85,7 @@ packages/
 ## Supporting Docs
 
 1. Standards index: `docs/README.md`
-2. Repository operating framework: `docs/framework/README.md`
+2. Repository operating framework: `agentic-harness-framework/README.md`
 3. Architecture: `docs/architecture/overview.md`
 4. Delivery workflow and memory loop: `docs/workflow.md`
 5. Setup details: `docs/setup.md`

@@ -16,7 +16,7 @@ It maps each surface to its canonical location, enforcement path, and output evi
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
 | Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test`, `pnpm build` | Full build and runtime confidence |
 | Workflow memory | `docs/workflow-memory/*`, `scripts/workflow-memory/*.mjs` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
-| Automation lanes | `automations/playbooks/*.md`, `automations/codex-app/*/automation.toml` | Lane preflights + lane-specific gate contracts | Automated issue/PR execution trails |
+| Automation lanes | `agentic-harness-framework/automations/*/*.md`, `agentic-harness-framework/automations/*/*.toml` | Lane preflights + lane-specific gate contracts | Automated issue/PR execution trails |
 | CI/CD pipelines | `Jenkinsfile`, `jenkins/*.groovy` | Jenkins job gates | Branch/main/nightly/weekly quality reports |
 
 ## `enforced-by` Markers In Standards Docs
@@ -59,7 +59,7 @@ Only non-generated sections should be edited directly.
 
 ## Practical Start Sequence For New Contributors
 
-1. Read `docs/framework/README.md`.
+1. Read `agentic-harness-framework/README.md`.
 2. Read `docs/workflow.md`.
 3. Read only the standards docs relevant to the touched surface.
 4. Use the matching skills from `.agents/skills`.

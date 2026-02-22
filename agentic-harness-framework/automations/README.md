@@ -6,10 +6,17 @@ Goal:
 - Keep all code changes aligned with repository guardrails in `docs/`, `AGENTS.md`, and `CLAUDE.md`.
 - Continuously inject controlled external research ("chaos") to discover better patterns over time.
 
-Source-of-truth model:
-- Lane behavior lives in repo playbooks: `automations/playbooks/*.md`
-- Runtime TOMLs in `~/.codex/automations/*/automation.toml` are wrappers that load those playbooks
-- This repo stores both the playbooks and the wrapper TOML mirror
+## Directory Structure
+
+Each automation lane has its own folder:
+
+- `agentic-harness-framework/automations/<lane>/<lane>.md` (playbook)
+- `agentic-harness-framework/automations/<lane>/<lane>.toml` (runtime wrapper mirror)
+
+Example:
+
+- `agentic-harness-framework/automations/architecture-radar/architecture-radar.md`
+- `agentic-harness-framework/automations/architecture-radar/architecture-radar.toml`
 
 ## Operating Model
 
@@ -58,19 +65,13 @@ This creates stability plus adaptation:
 - Delegates directly to the `quality-closure-loop` skill for scan, triage, fix execution, recurrence prevention, and closure.
 - Uses workflow-memory evidence and event IDs as part of loop completion output.
 
-## Playbook Contract
+## Lane Contract
 
-Every lane must have a matching playbook file:
-- `automations/playbooks/architecture-radar.md`
-- `automations/playbooks/architecture-approval-executor.md`
-- `automations/playbooks/harness-research-radar.md`
-- `automations/playbooks/self-improvement-judge-executor.md`
-- `automations/playbooks/quality-sentinel.md`
+For every lane:
 
-Wrapper TOML prompts should only do this:
-- load the matching playbook
-- execute it
-- defer to playbook on any conflict
+- The `.md` playbook is source of truth for lane behavior.
+- The `.toml` wrapper should only load and execute that playbook.
+- If wrapper and playbook conflict, follow the playbook.
 
 ## Required Contract For Any Code-Writing Automation
 
@@ -147,11 +148,24 @@ Use the template in that file to record:
 - issue/PR links
 - concrete implementation summary
 
-## Version-Control Mirror
+## Runtime Sync Commands
 
-Automation playbooks and wrapper TOMLs are versioned in this repo:
-- `automations/playbooks/*.md`
-- `automations/codex-app/*/automation.toml`
+Push wrapper updates from repo mirror to local runtime:
 
-Runtime sync commands live in:
-- `automations/codex-app/README.md`
+```bash
+cp agentic-harness-framework/automations/architecture-radar/architecture-radar.toml ~/.codex/automations/architecture-radar/automation.toml
+cp agentic-harness-framework/automations/architecture-approval-executor/architecture-approval-executor.toml ~/.codex/automations/architecture-approval-executor/automation.toml
+cp agentic-harness-framework/automations/harness-research-radar/harness-research-radar.toml ~/.codex/automations/harness-research-radar/automation.toml
+cp agentic-harness-framework/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml ~/.codex/automations/self-improvement-judge-executor/automation.toml
+cp agentic-harness-framework/automations/quality-sentinel/quality-sentinel.toml ~/.codex/automations/quality-sentinel/automation.toml
+```
+
+Pull runtime wrappers back into repo mirror (verification only):
+
+```bash
+cp ~/.codex/automations/architecture-radar/automation.toml agentic-harness-framework/automations/architecture-radar/architecture-radar.toml
+cp ~/.codex/automations/architecture-approval-executor/automation.toml agentic-harness-framework/automations/architecture-approval-executor/architecture-approval-executor.toml
+cp ~/.codex/automations/harness-research-radar/automation.toml agentic-harness-framework/automations/harness-research-radar/harness-research-radar.toml
+cp ~/.codex/automations/self-improvement-judge-executor/automation.toml agentic-harness-framework/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml
+cp ~/.codex/automations/quality-sentinel/automation.toml agentic-harness-framework/automations/quality-sentinel/quality-sentinel.toml
+```
