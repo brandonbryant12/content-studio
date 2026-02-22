@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import mammoth from 'mammoth';
 import pdfParse from 'pdf-parse';
-import type { DocumentSource } from '@repo/db/schema';
+import type { DocumentSource, JsonValue } from '@repo/db/schema';
 import {
   DocumentParseError,
   DocumentTooLargeError,
@@ -44,7 +44,7 @@ export interface ParsedDocument {
   content: string;
   title: string;
   source: DocumentSource;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 }
 
 /**
@@ -187,7 +187,12 @@ const parseDocx = (
         source: 'upload_docx' as const,
         metadata:
           result.messages.length > 0
-            ? { warnings: result.messages }
+            ? {
+                warnings: result.messages.map(({ type, message }) => ({
+                  type,
+                  message,
+                })),
+              }
             : undefined,
       };
     },

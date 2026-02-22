@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
 import { replaceTextContentSafely } from '../../shared';
 import {
   DocumentRepo,
@@ -14,7 +15,7 @@ export interface UpdateDocumentInput {
   id: string;
   title?: string;
   content?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 }
 
 // =============================================================================

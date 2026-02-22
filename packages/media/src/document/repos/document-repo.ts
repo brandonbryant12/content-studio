@@ -3,6 +3,7 @@ import {
   type Document,
   type DocumentSource,
   type DocumentStatus,
+  type JsonValue,
   type ResearchConfig,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
@@ -29,7 +30,7 @@ export interface InsertDocumentInput {
   source: DocumentSource;
   originalFileName?: string;
   originalFileSize?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
   createdBy: string;
   status?: DocumentStatus;
   sourceUrl?: string;
@@ -48,7 +49,7 @@ export interface UpdateContentInput {
   extractedText?: string;
   contentHash?: string;
   wordCount?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
   title?: string;
 }
 
@@ -62,7 +63,7 @@ export interface UpdateDocumentInput {
   contentKey?: string;
   /** New word count if content changed */
   wordCount?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 }
 
 // =============================================================================

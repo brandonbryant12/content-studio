@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import { JobType } from '@repo/db/schema';
+import { JobType, type JsonValue } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessUrlPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
@@ -14,7 +14,7 @@ import { validateUrl } from '../services/url-validator';
 export interface CreateFromUrlInput {
   url: string;
   title?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 }
 
 export const createFromUrl = (input: CreateFromUrlInput) =>

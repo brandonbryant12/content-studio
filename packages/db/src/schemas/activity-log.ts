@@ -13,6 +13,7 @@ import {
   ActivityLogIdSchema,
   generateActivityLogId,
 } from './brands';
+import { MetadataSchema, type JsonValue } from './json';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
@@ -32,7 +33,7 @@ export const activityLog = pgTable(
     entityType: varchar('entityType', { length: 30 }).notNull(),
     entityId: varchar('entityId', { length: 20 }),
     entityTitle: text('entityTitle'),
-    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    metadata: jsonb('metadata').$type<Record<string, JsonValue>>(),
     createdAt: timestamp('createdAt', { mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -77,9 +78,7 @@ export const ActivityLogOutputSchema = Schema.Struct({
   entityType: Schema.String,
   entityId: Schema.NullOr(Schema.String),
   entityTitle: Schema.NullOr(Schema.String),
-  metadata: Schema.NullOr(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  metadata: Schema.NullOr(MetadataSchema),
   createdAt: Schema.String,
 });
 

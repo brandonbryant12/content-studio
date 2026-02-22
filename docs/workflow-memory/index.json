@@ -18,6 +18,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-feature-delivery-replace-metadata-schema-unknown-with-json-schema",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Replace metadata Schema.Unknown with JSON schema",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "openapi",
+      "metadata",
+      "schemas"
+    ],
+    "importance": 0.6,
+    "confidence": 0.6,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-self-improvement-enforce-workflow-memory-taxonomy-tags-for-memory-and-agent-diagn",
     "date": "2026-02-22",
     "month": "2026-02",

@@ -4,6 +4,7 @@ import {
   UpdateDocumentFields,
   DocumentOutputSchema,
   DocumentIdSchema,
+  MetadataSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
 import { std, PaginationFields } from './shared';
@@ -69,9 +70,7 @@ const UploadDocumentSchema = Schema.Struct({
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
-  metadata: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  metadata: Schema.optional(MetadataSchema),
 });
 
 const documentContract = oc
@@ -192,9 +191,7 @@ const documentContract = oc
             title: Schema.optional(
               Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
             ),
-            metadata: Schema.optional(
-              Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-            ),
+            metadata: Schema.optional(MetadataSchema),
           }),
         ),
       )

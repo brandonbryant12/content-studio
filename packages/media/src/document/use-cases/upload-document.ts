@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
 import { calculateWordCount } from '../../shared';
 import { getMimeType, parseUploadedFile } from '../parsers';
 import { DocumentRepo } from '../repos';
@@ -15,7 +16,7 @@ export interface UploadDocumentInput {
   /** Base64-encoded file data */
   data: string;
   title?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 }
 
 // =============================================================================
