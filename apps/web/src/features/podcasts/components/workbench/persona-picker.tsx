@@ -86,10 +86,9 @@ export function PersonaPicker({
 
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
-            className="persona-picker-dropdown"
+            className="persona-picker-dropdown min-w-[var(--radix-select-trigger-width)]"
             position="popper"
             sideOffset={4}
-            style={{ minWidth: 'var(--radix-select-trigger-width)' }}
           >
             <SelectPrimitive.Viewport>
               <SelectPrimitive.Item

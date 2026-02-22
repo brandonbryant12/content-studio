@@ -58,8 +58,7 @@ function FilterSelect({
         <Select.Portal>
           <Select.Content
             position="popper"
-            className="overflow-hidden rounded-md border border-border bg-popover shadow-md z-50"
-            style={{ minWidth: 'var(--radix-select-trigger-width)' }}
+            className="overflow-hidden rounded-md border border-border bg-popover shadow-md z-50 min-w-[var(--radix-select-trigger-width)]"
           >
             <Select.Viewport className="p-1">
               <SelectItem value="__all__">All</SelectItem>
