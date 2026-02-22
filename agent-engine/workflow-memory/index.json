@@ -604,6 +604,20 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-periodic-scans-sanity-scan-media-use-case-authz",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity scan: media use-case authz",
+    "severity": "low",
+    "status": "closed",
+    "tags": [],
+    "importance": 0.3,
+    "recency": 0.5,
+    "confidence": 0.74,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-self-improvement-consolidated-self-improvement-issue-backlog-and-deduped-roadmap",
     "date": "2026-02-22",
     "month": "2026-02",
