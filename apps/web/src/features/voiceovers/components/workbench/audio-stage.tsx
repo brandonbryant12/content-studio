@@ -3,6 +3,10 @@ import { cn } from '@repo/ui/lib/utils';
 import { useAudioPlayer, formatTime } from '@/shared/hooks/use-audio-player';
 
 const WAVEFORM_INDICES = Array.from({ length: 25 }, (_, i) => i);
+const getProgressClass = (value: number) => {
+  const clamped = Math.min(100, Math.max(0, Math.round(value)));
+  return `stage-progress-${clamped}`;
+};
 
 interface AudioStageProps {
   src: string;
@@ -28,6 +32,8 @@ export function AudioStage({
     handleSliderKeyDown,
   } = useAudioPlayer(src, initialDuration);
 
+  const progressClass = getProgressClass(progress);
+
   return (
     <div className={cn('stage', isPlaying && 'stage-performing')}>
       <audio ref={audioRef} src={src} preload="metadata" />
@@ -36,8 +42,7 @@ export function AudioStage({
         {WAVEFORM_INDICES.map((i) => (
           <div
             key={i}
-            className="stage-waveform-bar"
-            style={{ animationDelay: `${i * 50}ms` }}
+            className={`stage-waveform-bar stage-waveform-delay-${i}`}
           />
         ))}
       </div>
@@ -71,7 +76,7 @@ export function AudioStage({
           tabIndex={0}
         >
           <div className="stage-track" />
-          <div className="stage-spotlight" style={{ width: `${progress}%` }} />
+          <div className={cn('stage-spotlight', progressClass)} />
         </div>
 
         <span className="stage-time">{formatTime(duration)}</span>

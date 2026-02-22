@@ -31,22 +31,10 @@ function Spinner({ className, size, ...props }: SpinnerProps) {
       className={cn(spinnerVariants({ size }), className)}
       {...props}
     >
-      <span
-        className="inline-block w-[12%] rounded-full bg-current animate-[spinner-bar_0.8s_ease-in-out_infinite]"
-        style={{ height: '40%', animationDelay: '0ms' }}
-      />
-      <span
-        className="inline-block w-[12%] rounded-full bg-current animate-[spinner-bar_0.8s_ease-in-out_infinite]"
-        style={{ height: '70%', animationDelay: '150ms' }}
-      />
-      <span
-        className="inline-block w-[12%] rounded-full bg-current animate-[spinner-bar_0.8s_ease-in-out_infinite]"
-        style={{ height: '100%', animationDelay: '300ms' }}
-      />
-      <span
-        className="inline-block w-[12%] rounded-full bg-current animate-[spinner-bar_0.8s_ease-in-out_infinite]"
-        style={{ height: '55%', animationDelay: '450ms' }}
-      />
+      <span className="spinner-bar spinner-bar-1" />
+      <span className="spinner-bar spinner-bar-2" />
+      <span className="spinner-bar spinner-bar-3" />
+      <span className="spinner-bar spinner-bar-4" />
     </div>
   );
 }

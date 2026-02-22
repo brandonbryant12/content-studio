@@ -6,6 +6,10 @@
 2. Semantic color tokens only -- no hardcoded hex/rgb/hsl values <!-- enforced-by: manual-review -->
 3. Tailwind utility classes only -- no inline styles <!-- enforced-by: manual-review -->
 
+When you need animation delays, percentage sizes, or other computed values, add
+small utility classes in `tools/tailwind/style.css` and compose them in
+components instead of reaching for inline `style={{ ... }}`.
+
 ## Design Tokens (Semantic Colors)
 
 All colors use CSS custom properties for automatic dark mode support.
