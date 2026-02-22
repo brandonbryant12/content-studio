@@ -54,6 +54,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-moved-repository-scripts-under-agentic-harness-framework",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Moved repository scripts under agentic-harness-framework",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "tooling",
+      "scripts",
+      "knowledge-drift"
+    ],
+    "importance": 0.78,
+    "confidence": 0.94,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-feature-delivery-replace-metadata-schema-unknown-with-json-schema",
     "date": "2026-02-22",
     "month": "2026-02",

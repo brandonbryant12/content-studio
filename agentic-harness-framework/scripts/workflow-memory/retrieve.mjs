@@ -7,7 +7,7 @@ const MEMORY_DIR = path.join("docs", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/retrieve.mjs \\
+  node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs \\
     --workflow "Self-Improvement" \\
     --tags guardrail,docs \\
     --limit 5 \\

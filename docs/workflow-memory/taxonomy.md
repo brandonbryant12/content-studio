@@ -84,12 +84,12 @@ Use these options to append canonical tags without hand-typing prefixes:
 Example:
 
 ```bash
-node scripts/workflow-memory/add-entry.mjs \
+node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
   --workflow "Self-Improvement" \
   --title "Improve memory tag consistency" \
   --trigger "Repeated memory-tag ambiguity in events" \
   --finding "Added taxonomy tags and validation in add-entry helper" \
-  --evidence "docs/workflow-memory/taxonomy.md, scripts/workflow-memory/add-entry.mjs" \
+  --evidence "docs/workflow-memory/taxonomy.md, agentic-harness-framework/scripts/workflow-memory/add-entry.mjs" \
   --follow-up "Apply taxonomy tags in periodic scan memory entries" \
   --owner "@team" \
   --status "closed" \

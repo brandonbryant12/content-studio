@@ -22,8 +22,8 @@ Use this format:
 - Source workflow: Self-Improvement
 - Problem signature: Single markdown memory file causes retrieval/context bloat.
 - Control type: automation + docs rule
-- Change landed: `scripts/workflow-memory/add-entry.mjs`, `docs/workflow-memory/README.md`, workflow protocol updates.
-- Evidence: `docs/workflow-memory/README.md`, `scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`
+- Change landed: `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, `docs/workflow-memory/README.md`, workflow protocol updates.
+- Evidence: `docs/workflow-memory/README.md`, `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -32,8 +32,8 @@ Use this format:
 - Source workflow: Self-Improvement
 - Problem signature: Workflow memory entries were structurally correct but sparse across active workflows.
 - Control type: automation + docs rule + skill update
-- Change landed: `scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
-- Evidence: `scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`
+- Change landed: `agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
+- Evidence: `agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs`, `docs/workflow-memory/README.md`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -42,8 +42,8 @@ Use this format:
 - Source workflow: Self-Improvement
 - Problem signature: Skill content drift and stale path examples reduce reliability of skill-guided edits.
 - Control type: automation + docs rule
-- Change landed: `scripts/skills/check-quality.mjs`, `skills:check:strict` command, workflow/docs updates requiring quality checks after skill edits.
-- Evidence: `scripts/skills/check-quality.mjs`, `package.json`, `docs/workflow.md`, `AGENTS.md`, `CLAUDE.md`
+- Change landed: `agentic-harness-framework/scripts/skills/check-quality.mjs`, `skills:check:strict` command, workflow/docs updates requiring quality checks after skill edits.
+- Evidence: `agentic-harness-framework/scripts/skills/check-quality.mjs`, `package.json`, `docs/workflow.md`, `AGENTS.md`, `CLAUDE.md`
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -63,6 +63,6 @@ Use this format:
 - Problem signature: Memory and agent-failure events used inconsistent tags, reducing aggregation and retrieval quality.
 - Control type: automation + docs rule + skill update
 - Change landed: Added canonical taxonomy (`docs/workflow-memory/taxonomy.md`), required taxonomy checklist in workflow docs, and add-entry validation/options for memory and capability/failure tags.
-- Evidence: `docs/workflow-memory/taxonomy.md`, `scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`, `.agents/skills/self-improvement/SKILL.md`
+- Evidence: `docs/workflow-memory/taxonomy.md`, `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`, `.agents/skills/self-improvement/SKILL.md`
 - Owner: brandon@codex
 - Status: active

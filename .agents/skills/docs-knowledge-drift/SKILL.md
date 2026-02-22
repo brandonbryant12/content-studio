@@ -34,4 +34,4 @@ Each item includes file evidence and confidence.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Docs + Knowledge Drift` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

@@ -68,7 +68,7 @@ This is the default loop inspired by compound engineering practices.
 
 After each merged change, capture what worked, what failed, and the smallest guardrail/script improvement worth adding.
 
-Record one event with workflow key `Feature Delivery` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`, then include the event `id` in output.
+Record one event with workflow key `Feature Delivery` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`, then include the event `id` in output.
 
 ## Output Contract
 

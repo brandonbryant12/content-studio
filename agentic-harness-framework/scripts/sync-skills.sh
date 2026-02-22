@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SOURCE_DIR="$ROOT_DIR/.agents/skills"
 TARGETS=(
   "$ROOT_DIR/.claude/skills"
@@ -46,4 +46,3 @@ for target in "${TARGETS[@]}"; do
 done
 
 echo "Skill symlinks synced from $SOURCE_DIR"
-

@@ -7,15 +7,15 @@ It maps each surface to its canonical location, enforcement path, and output evi
 
 | Surface | Canonical Location | Enforced By | Produced Evidence |
 |---|---|---|---|
-| Master behavior spec | `docs/master-spec.md`, `docs/spec/generated/*`, `scripts/spec/*` | `pnpm spec:generate`, `pnpm spec:check` | Updated generated snapshots, spec drift pass |
+| Master behavior spec | `docs/master-spec.md`, `docs/spec/generated/*`, `agentic-harness-framework/scripts/spec/*` | `pnpm spec:generate`, `pnpm spec:check` | Updated generated snapshots, spec drift pass |
 | Architecture/pattern standards | `docs/architecture/*`, `docs/patterns/*` | Type checks, lint, invariant tests, PR review | Rule-conformant code and tests |
 | Frontend standards | `docs/frontend/*` | Lint, web tests/build, PR review | Hook/component/route behavior aligned with docs |
 | Testing standards | `docs/testing/*` | Test selection and CI gates | Correct test depth by change type |
-| Skill system | `.agents/skills/*/SKILL.md` | `scripts/sync-skills.sh`, `pnpm skills:check:strict` | Valid canonical skills + symlink mirrors |
+| Skill system | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Valid canonical skills + symlink mirrors |
 | Lint rules | `tools/eslint/base.js`, `tools/eslint/custom-rules.js`, package eslint configs | `pnpm lint` | Static rule pass/fail |
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
 | Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test`, `pnpm build` | Full build and runtime confidence |
-| Workflow memory | `docs/workflow-memory/*`, `scripts/workflow-memory/*.mjs` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
+| Workflow memory | `docs/workflow-memory/*`, `agentic-harness-framework/scripts/workflow-memory/*.mjs` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
 | Automation lanes | `agentic-harness-framework/automations/*/*.md`, `agentic-harness-framework/automations/*/*.toml` | Lane preflights + lane-specific gate contracts | Automated issue/PR execution trails |
 | CI/CD pipelines | `Jenkinsfile`, `jenkins/*.groovy` | Jenkins job gates | Branch/main/nightly/weekly quality reports |
 

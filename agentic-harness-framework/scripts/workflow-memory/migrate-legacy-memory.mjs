@@ -10,7 +10,7 @@ const SUMMARIES_DIR = path.join(MEMORY_DIR, "summaries");
 const DEFAULT_LEGACY_PATH = path.join("docs", "workflow-memory.md");
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/migrate-legacy-memory.mjs [--legacy docs/workflow-memory.md] [--dry-run]
+  node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs [--legacy docs/workflow-memory.md] [--dry-run]
 `;
 
 function slug(value) {

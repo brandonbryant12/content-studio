@@ -110,7 +110,7 @@ Do not load full event history unless explicitly requested.
 Preferred command:
 
 ```bash
-node scripts/workflow-memory/add-entry.mjs \
+node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
   --workflow "Feature Delivery" \
   --title "Example pattern" \
   --trigger "PR #123 review" \
@@ -142,7 +142,7 @@ Scoring uses a lightweight weighted sum:
 Retrieval helper:
 
 ```bash
-node scripts/workflow-memory/retrieve.mjs \
+node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs \
   --workflow "Self-Improvement" \
   --tags guardrail,docs \
   --limit 5 \
@@ -207,14 +207,14 @@ Weekly baseline:
 pnpm workflow-memory:coverage:strict
 ```
 
-If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with `scripts/workflow-memory/add-entry.mjs`.
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`.
 
 ## Migration
 
 Run this once to migrate legacy markdown entries:
 
 ```bash
-node scripts/workflow-memory/migrate-legacy-memory.mjs
+node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs
 ```
 
 Legacy source file: `docs/workflow-memory.md`.
@@ -277,7 +277,7 @@ Additional context about what the skill should do with this input.
 # docs/workflow-memory/scenarios/{id}.md
 
 # 2. Create the event with scenario flags
-node scripts/workflow-memory/add-entry.mjs \
+node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
   --id my-scenario-id \
   --workflow "Self-Improvement" \
   --title "Scenario: description" \
@@ -315,10 +315,10 @@ pnpm scenario:validate -- --json
 
 ```bash
 # All events with scenarios
-node scripts/workflow-memory/retrieve.mjs --has-scenario
+node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --has-scenario
 
 # Filter by target skill
-node scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-review
+node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-review
 ```
 
 ## Compaction Policy
@@ -330,5 +330,5 @@ node scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-review
 Compaction helper:
 
 ```bash
-node scripts/workflow-memory/compact-memory.mjs --archive-closed --days 90
+node agentic-harness-framework/scripts/workflow-memory/compact-memory.mjs --archive-closed --days 90
 ```

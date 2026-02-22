@@ -24,4 +24,4 @@ apps/web/test-results/
 tools/cli/.output/
 
 # Standards debate workspace
-scripts/standards-debate/workspace/
+agentic-harness-framework/scripts/standards-debate/workspace/

@@ -41,7 +41,7 @@ Converts repeated failures into stronger guardrails (docs, tests, scripts, and s
 5. `code-simplifier`
 Applies docs-aligned simplification passes to recently modified code without behavior changes.
 
-Skill source of truth is `.agents/skills`, mirrored via `scripts/sync-skills.sh`.
+Skill source of truth is `.agents/skills`, mirrored via `agentic-harness-framework/scripts/sync-skills.sh`.
 
 ## Delivery Contract
 

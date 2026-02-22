@@ -1,7 +1,6 @@
 # Engineering Standards Docs
 
 This directory is the standards source of record.
-Debate outcomes that informed these standards are captured in `docs/debate-decisions.md`.
 
 These standards are part of an experimental technique called **Agent Harnessing**:
 steering AI-authored changes with explicit docs, skills, and automated checks.
@@ -36,7 +35,6 @@ All new code reviews and feature work should reference `docs/` standards plus `a
 - `docs/master-spec.md` - canonical, PR-governed master application specification
 - `docs/workflow.md` - AI feature-delivery flow, scan cadence, and self-improvement loop
 - `docs/workflow-memory/` - structured workflow memory system (events, index, summaries, guardrails)
-- `docs/debate-decisions.md` - resolved debate decisions and open follow-ups
 
 ## Debate Outcomes Applied
 

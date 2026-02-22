@@ -29,7 +29,7 @@ const PATH_PREFIXES = [
   "apps/",
   "packages/",
   "docs/",
-  "scripts/",
+  "agentic-harness-framework/scripts/",
   "tools/",
   ".agents/",
   ".agent/",
@@ -40,7 +40,7 @@ const MAX_RECOMMENDED_LINES = 120;
 const MIN_CONCRETE_PATH_ANCHORS = 2;
 
 const USAGE = `Usage:
-  node scripts/skills/check-quality.mjs [--strict] [--json]
+  node agentic-harness-framework/scripts/skills/check-quality.mjs [--strict] [--json]
 
 Options:
   --strict  Treat warnings as failures (non-zero exit code)

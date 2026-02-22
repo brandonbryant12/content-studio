@@ -1,4 +1,4 @@
-import { appContract } from '../../packages/api/src/contracts/index.ts';
+import { appContract } from '../../../packages/api/src/contracts/index.ts';
 import path from 'node:path';
 import { generatedRoot, stableSortObject, writeUtf8 } from './utils';
 

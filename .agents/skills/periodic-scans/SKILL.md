@@ -73,6 +73,6 @@ If the same failure pattern appears in 2+ merges, convert it into at least one:
 
 ## Memory + Compounding
 
-After each scan cycle, record one event with workflow key `Periodic Scans` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`.
+After each scan cycle, record one event with workflow key `Periodic Scans` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`.
 If the scan includes memory findings, apply `memory-form:*`, `memory-function:*`, and `memory-dynamics:*` tags from `docs/workflow-memory/taxonomy.md`.
 Include the event `id` in output.

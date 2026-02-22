@@ -49,9 +49,9 @@ packages/
 - **Follow `docs/workflow.md`** for intake, delivery, review, scans, release/incident, and self-improvement loops.
 - **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
-  - `node scripts/workflow-memory/add-entry.mjs --help`
+  - `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
-  - `node scripts/workflow-memory/retrieve.mjs --help`
+  - `node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --help`
 - For memory-related or agent-run diagnostic events, use canonical taxonomy tags from `docs/workflow-memory/taxonomy.md`.
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
@@ -61,7 +61,7 @@ packages/
 - **Canonical skills live in `.agents/skills/`**.
 - **`.claude/skills`, `.agent/skills`, `.github/skills` must stay symlinked mirrors** of `.agents/skills`.
 - After any skill add/update/delete, run:
-  - `scripts/sync-skills.sh`
+  - `agentic-harness-framework/scripts/sync-skills.sh`
 - Preferred project skills:
   - `code-simplifier`
   - `quality-closure-loop`

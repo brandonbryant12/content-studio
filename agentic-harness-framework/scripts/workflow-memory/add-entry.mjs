@@ -60,7 +60,7 @@ const FAILURE_VALUES = new Set([
 ]);
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/add-entry.mjs \\
+  node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \\
     --workflow "Feature Delivery" \\
     --title "Short title" \\
     --trigger "What triggered this" \\
@@ -331,7 +331,7 @@ function printCoverageSummary(index, month) {
   if (missingWorkflows.length > 0) {
     console.log(`Workflows with zero entries in ${month}: ${missingWorkflows.join(", ")}`);
     console.log(
-      `Run coverage audit: node scripts/workflow-memory/check-coverage.mjs --month ${month}`,
+      `Run coverage audit: node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs --month ${month}`,
     );
   }
 }

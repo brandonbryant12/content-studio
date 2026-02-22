@@ -73,7 +73,7 @@ Record one memory event for each workflow actually used:
 - `Feature Delivery` / `PR Risk Review` / `Test Surface Steward` / `Docs + Knowledge Drift`
 - `Self-Improvement` when recurrence prevention is triggered
 
-Use `node scripts/workflow-memory/add-entry.mjs` and include event ids in delivery notes.
+Use `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` and include event ids in delivery notes.
 
 Re-run `pnpm workflow-memory:coverage:strict` before completion (via the same `zsh -lic` command pattern).
 

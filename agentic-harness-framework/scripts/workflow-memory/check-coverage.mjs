@@ -21,11 +21,11 @@ const KNOWN_WORKFLOWS = [
 ];
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/check-coverage.mjs [--month YYYY-MM] [--min 1] [--strict] [--json]
+  node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs [--month YYYY-MM] [--min 1] [--strict] [--json]
 
 Examples:
-  node scripts/workflow-memory/check-coverage.mjs
-  node scripts/workflow-memory/check-coverage.mjs --month 2026-02 --strict
+  node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs
+  node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs --month 2026-02 --strict
 `;
 
 function parseArgs(argv) {
@@ -146,7 +146,7 @@ function printHumanReport(summary) {
     }
     console.log("");
     console.log(
-      'If a listed workflow was actually run, add an event with: node scripts/workflow-memory/add-entry.mjs --workflow "<Workflow>" ...',
+      'If a listed workflow was actually run, add an event with: node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --workflow "<Workflow>" ...',
     );
   }
 }

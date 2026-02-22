@@ -18,7 +18,7 @@ corepack enable
 pnpm install
 
 # 2. Generate env files interactively
-./scripts/setup-env.sh
+./agentic-harness-framework/scripts/setup-env.sh
 
 # 3. Start local infra (Postgres + Redis)
 docker compose up -d

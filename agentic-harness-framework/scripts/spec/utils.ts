@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
-export const repoRoot = path.resolve(scriptDir, '../..');
+export const repoRoot = path.resolve(scriptDir, '../../..');
 export const docsRoot = path.join(repoRoot, 'docs');
 export const generatedRoot = path.join(docsRoot, 'spec/generated');
 

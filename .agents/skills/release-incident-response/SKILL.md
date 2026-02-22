@@ -42,4 +42,4 @@ Use this skill for release trains, hotfixes, and production incidents.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Release + Incident Response` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `Release + Incident Response` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

@@ -51,4 +51,4 @@ Apply this skill when shipping design-heavy frontend changes in `apps/web`.
 ## Memory + Compounding
 
 No standalone memory key.
-Use the parent workflow key (`Feature Delivery` or `TanStack + Vite`) and log outcomes with `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`.
+Use the parent workflow key (`Feature Delivery` or `TanStack + Vite`) and log outcomes with `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`.

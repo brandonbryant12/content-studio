@@ -13,12 +13,12 @@ graph TD
   A[.agents/skills<br/>canonical skill source] --> B[.claude/skills]
   A --> C[.agent/skills]
   A --> D[.github/skills]
-  E[scripts/sync-skills.sh] --> B
+  E[agentic-harness-framework/scripts/sync-skills.sh] --> B
   E --> C
   E --> D
 ```
 
-Run `scripts/sync-skills.sh` after any skill add/update/delete.
+Run `agentic-harness-framework/scripts/sync-skills.sh` after any skill add/update/delete.
 Then run `pnpm skills:check:strict` to catch metadata/path/mirror drift.
 
 ## Workflow Stack
@@ -104,7 +104,7 @@ Composition-first React APIs, explicit UI states, and accessibility baseline.
 6. Run PR risk review and test surface check before merge.
 7. Update docs for behavior/guardrail changes.
 8. Append workflow memory notes for workflows used and include each event `id` in delivery notes.
-9. For skill edits, run `pnpm skills:check:strict` and `scripts/sync-skills.sh`.
+9. For skill edits, run `pnpm skills:check:strict` and `agentic-harness-framework/scripts/sync-skills.sh`.
 10. Merge only with validation evidence and unresolved risk notes.
 
 ## Continuous And Periodic Scans
@@ -209,11 +209,11 @@ If the same pattern appears in 2+ memory entries, escalate immediately to `self-
 
 Use the write helper to avoid schema drift:
 
-`node scripts/workflow-memory/add-entry.mjs --help`
+`node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`
 
 Retrieval helper (ranked by importance/recency/tag match/confidence):
 
-`node scripts/workflow-memory/retrieve.mjs --help`
+`node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --help`
 
 Run coverage audit weekly (and before release readiness reviews):
 
@@ -224,7 +224,7 @@ If `coverage:strict` fails during an active quality closure cycle because workfl
 
 Run weekly compaction to control growth:
 
-`node scripts/workflow-memory/compact-memory.mjs --archive-closed --days 90`
+`node agentic-harness-framework/scripts/workflow-memory/compact-memory.mjs --archive-closed --days 90`
 
 Agent retrieval order:
 
@@ -236,4 +236,4 @@ Agent retrieval order:
 
 Legacy migration helper:
 
-`node scripts/workflow-memory/migrate-legacy-memory.mjs`
+`node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs`

@@ -74,4 +74,4 @@ Apply this whenever `apps/web` changes touch data loading, route behavior, forms
 
 ## Memory + Compounding
 
-After frontend-impacting merges, record one event with workflow key `TanStack + Vite` using `node scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+After frontend-impacting merges, record one event with workflow key `TanStack + Vite` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.

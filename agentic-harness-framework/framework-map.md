@@ -12,7 +12,7 @@ The repo already has strong controls, but they are distributed across:
 
 - `docs/`
 - `.agents/skills/`
-- `scripts/`
+- `agentic-harness-framework/scripts/`
 - invariant tests and lint rules
 - `agentic-harness-framework/automations/`
 
@@ -41,9 +41,9 @@ flowchart TD
 |---|---|---|---|
 | Standards | `docs/README.md` and `docs/{architecture,patterns,frontend,testing}` | Type/lint/tests/manual review | Updated standards docs + passing gates |
 | Product/system spec | `docs/master-spec.md` + `docs/spec/generated/*` | `pnpm spec:generate`, `pnpm spec:check` | Generated snapshots + spec drift gate |
-| Skill workflows | `.agents/skills/*/SKILL.md` | `scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
+| Skill workflows | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
-| Workflow memory | `docs/workflow-memory/*` | `scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
+| Workflow memory | `docs/workflow-memory/*` | `agentic-harness-framework/scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
 | Automation lanes | `agentic-harness-framework/automations/*/*.md` + `agentic-harness-framework/automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
 
 ## Execution Model
@@ -65,7 +65,7 @@ Keep docs layered to avoid duplication:
 1. Framework map (this folder): how controls connect.
 2. Standards docs (`docs/architecture`, `docs/patterns`, `docs/frontend`, `docs/testing`): what rules are.
 3. Workflow/skills docs (`docs/workflow.md`, `.agents/skills/*`): how work is executed.
-4. Enforcement artifacts (`scripts/`, lint rules, invariants, CI): what is automatically checked.
+4. Enforcement artifacts (`agentic-harness-framework/scripts/`, lint rules, invariants, CI): what is automatically checked.
 5. Memory/automation docs (`docs/workflow-memory`, `agentic-harness-framework/automations/`): how learnings compound and lanes operate.
 
 When updating policy, prefer editing the deepest true source rather than repeating text in multiple places.

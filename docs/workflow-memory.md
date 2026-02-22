@@ -14,7 +14,7 @@ New workflow memory lives in `docs/workflow-memory/`:
 Run:
 
 ```bash
-node scripts/workflow-memory/migrate-legacy-memory.mjs
+node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs
 ```
 
 Do not add new entries to this file.

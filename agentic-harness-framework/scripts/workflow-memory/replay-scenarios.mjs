@@ -21,7 +21,7 @@ const SECRET_PATTERNS = [
 ];
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/replay-scenarios.mjs [options]
+  node agentic-harness-framework/scripts/workflow-memory/replay-scenarios.mjs [options]
 
 Options:
   --skill <name>    Filter by target skill

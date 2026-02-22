@@ -9,7 +9,7 @@ set -euo pipefail
 #   docker  — docker compose (MinIO S3 storage, default ports 3036/8086)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Colors
 BOLD='\033[1m'

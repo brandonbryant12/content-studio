@@ -9,7 +9,7 @@ const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const ARCHIVE_DIR = path.join(EVENTS_DIR, "archive");
 
 const USAGE = `Usage:
-  node scripts/workflow-memory/compact-memory.mjs [--archive-closed] [--days 90] [--dry-run]
+  node agentic-harness-framework/scripts/workflow-memory/compact-memory.mjs [--archive-closed] [--days 90] [--dry-run]
 `;
 
 const CLOSED_STATUSES = new Set(["closed", "resolved", "done"]);
