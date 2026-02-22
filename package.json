@@ -23,7 +23,7 @@
     "spec:check": "pnpm spec:generate && test -z \"$(git status --porcelain -- docs/master-spec.md docs/spec/generated)\"",
     "start": "turbo run start",
     "test": "vitest run",
-    "test:invariants": "vitest run packages/media/src/shared/__tests__/safety-invariants.test.ts packages/api/src/server/__tests__/effect-handler.invariants.test.ts packages/api/src/server/__tests__/error-assertions.invariants.test.ts",
+    "test:invariants": "vitest run packages/media/src/shared/__tests__/safety-invariants.test.ts packages/api/src/server/__tests__/effect-handler.invariants.test.ts packages/api/src/server/__tests__/error-assertions.invariants.test.ts packages/api/src/server/__tests__/chat-handler.invariants.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:coverage:api": "pnpm --filter @repo/api test:coverage",
