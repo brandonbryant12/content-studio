@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateFromUrl } from '../hooks/use-create-from-url';
 import {
   useDocumentList,
@@ -8,12 +9,12 @@ import { useOptimisticDeleteDocument } from '../hooks/use-optimistic-delete-docu
 import { AddFromUrlDialog } from './add-from-url-dialog';
 import { DocumentList } from './document-list';
 import { ResearchChatContainer } from './research-chat-container';
-import { rawApiClient } from '@/clients/apiClient';
+import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 
-const deleteFn = (input: { id: string }) =>
-  rawApiClient.documents.delete(input);
+const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
+  apiClient.documents.delete.mutationOptions().mutationFn!(input, context);
 
 export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');

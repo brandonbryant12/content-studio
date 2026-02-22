@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateInfographic } from '../hooks/use-create-infographic';
 import {
   useInfographicList,
@@ -6,12 +7,12 @@ import {
 } from '../hooks/use-infographic-list';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import { InfographicList } from './infographic-list';
-import { rawApiClient } from '@/clients/apiClient';
+import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 
-const deleteFn = (input: { id: string }) =>
-  rawApiClient.infographics.delete(input);
+const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
+  apiClient.infographics.delete.mutationOptions().mutationFn!(input, context);
 
 export function InfographicListContainer() {
   const [searchQuery, setSearchQuery] = useState('');

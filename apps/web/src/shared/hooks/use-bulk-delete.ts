@@ -1,10 +1,17 @@
-import { useQueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  useQueryClient,
+  type QueryKey,
+  type MutationFunctionContext,
+} from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
 interface UseBulkDeleteOptions {
   queryKey: QueryKey;
-  deleteFn: (input: { id: string }) => Promise<unknown>;
+  deleteFn: (
+    input: { id: string },
+    context: MutationFunctionContext,
+  ) => Promise<unknown>;
   entityName: string;
 }
 
@@ -33,6 +40,11 @@ export function useBulkDelete({
       let previous: readonly { id: string }[] | undefined;
 
       try {
+        const mutationContext: MutationFunctionContext = {
+          client: queryClient,
+          meta: undefined,
+        };
+
         // Cancel in-flight queries and snapshot for rollback
         await queryClient.cancelQueries({ queryKey });
         previous =
@@ -50,7 +62,9 @@ export function useBulkDelete({
         // from escaping Promise.allSettled and skipping cleanup.
         const idList = [...ids];
         const results = await Promise.allSettled(
-          idList.map((id) => Promise.resolve().then(() => deleteFn({ id }))),
+          idList.map((id) =>
+            Promise.resolve().then(() => deleteFn({ id }, mutationContext)),
+          ),
         );
 
         const failedIds = new Set(

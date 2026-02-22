@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useOptimisticCreate } from '../hooks/use-optimistic-create';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
@@ -6,11 +7,12 @@ import {
   getPodcastListQueryKey,
 } from '../hooks/use-podcast-list';
 import { PodcastList } from './podcast-list';
-import { rawApiClient } from '@/clients/apiClient';
+import { apiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
 
-const deleteFn = (input: { id: string }) => rawApiClient.podcasts.delete(input);
+const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
+  apiClient.podcasts.delete.mutationOptions().mutationFn!(input, context);
 
 export function PodcastListContainer() {
   const [searchQuery, setSearchQuery] = useState('');

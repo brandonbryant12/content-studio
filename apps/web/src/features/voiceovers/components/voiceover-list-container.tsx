@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateVoiceover } from '../hooks/use-create-voiceover';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
@@ -6,12 +7,12 @@ import {
   getVoiceoverListQueryKey,
 } from '../hooks/use-voiceover-list';
 import { VoiceoverList } from './voiceover-list';
-import { rawApiClient } from '@/clients/apiClient';
+import { apiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
 
-const deleteFn = (input: { id: string }) =>
-  rawApiClient.voiceovers.delete(input);
+const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
+  apiClient.voiceovers.delete.mutationOptions().mutationFn!(input, context);
 
 export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
