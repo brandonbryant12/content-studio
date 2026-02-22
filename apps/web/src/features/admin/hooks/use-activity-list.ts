@@ -8,6 +8,8 @@ import { apiClient, rawApiClient } from '@/clients/apiClient';
 
 type ActivityListPage = RouterOutput['admin']['list'];
 
+export const DEFAULT_ACTIVITY_LIST_LIMIT = 25;
+
 interface UseActivityListOptions {
   userId?: string;
   entityType?: string;
@@ -33,7 +35,8 @@ const normalizeSearch = (search?: string): string | undefined => {
 export function getActivityListQueryKey(
   options: ActivityListQueryKeyOptions = {},
 ): QueryKey {
-  const { userId, entityType, search, limit = 50 } = options;
+  const { userId, entityType, search, limit = DEFAULT_ACTIVITY_LIST_LIMIT } =
+    options;
 
   return apiClient.admin.list.queryOptions({
     input: {
@@ -45,12 +48,51 @@ export function getActivityListQueryKey(
   }).queryKey;
 }
 
+export function getActivityListInfiniteQueryOptions(
+  options: ActivityListQueryKeyOptions = {},
+) {
+  const { userId, entityType, search, limit = DEFAULT_ACTIVITY_LIST_LIMIT } =
+    options;
+  const normalizedSearch = normalizeSearch(search);
+
+  return {
+    queryKey: getActivityListQueryKey({
+      userId,
+      entityType,
+      search: normalizedSearch,
+      limit,
+    }),
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) =>
+      rawApiClient.admin.list({
+        userId,
+        entityType,
+        search: normalizedSearch,
+        limit,
+        afterCursor: pageParam,
+      }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage: ActivityListPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
+  };
+}
+
 /**
  * Fetch paginated activity list with cursor-based pagination.
  */
 export function useActivityList(options: UseActivityListOptions = {}) {
-  const { userId, entityType, search, limit = 50, enabled = true } = options;
-  const normalizedSearch = normalizeSearch(search);
+  const {
+    userId,
+    entityType,
+    search,
+    limit = DEFAULT_ACTIVITY_LIST_LIMIT,
+    enabled = true,
+  } = options;
+  const queryOptions = getActivityListInfiniteQueryOptions({
+    userId,
+    entityType,
+    search,
+    limit,
+  });
 
   return useInfiniteQuery<
     ActivityListPage,
@@ -59,24 +101,7 @@ export function useActivityList(options: UseActivityListOptions = {}) {
     QueryKey,
     string | undefined
   >({
-    queryKey: getActivityListQueryKey({
-      userId,
-      entityType,
-      search: normalizedSearch,
-      limit,
-    }),
-    queryFn: async ({ pageParam }) => {
-      return rawApiClient.admin.list({
-        userId,
-        entityType,
-        search: normalizedSearch,
-        limit,
-        afterCursor: pageParam,
-      });
-    },
-    initialPageParam: undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.nextCursor : undefined,
+    ...queryOptions,
     enabled,
   });
 }

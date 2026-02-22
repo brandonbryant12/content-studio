@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getActivityListQueryKey } from '../use-activity-list';
+import {
+  DEFAULT_ACTIVITY_LIST_LIMIT,
+  getActivityListQueryKey,
+} from '../use-activity-list';
 import { apiClient } from '@/clients/apiClient';
 
 vi.mock('@/env', () => ({
@@ -40,7 +43,7 @@ describe('getActivityListQueryKey', () => {
       apiClient.admin.list.queryOptions({
         input: {
           search: undefined,
-          limit: 50,
+          limit: DEFAULT_ACTIVITY_LIST_LIMIT,
         },
       }).queryKey,
     );
@@ -53,7 +56,7 @@ describe('getActivityListQueryKey', () => {
       apiClient.admin.list.queryOptions({
         input: {
           search: 'hello world',
-          limit: 50,
+          limit: DEFAULT_ACTIVITY_LIST_LIMIT,
         },
       }).queryKey,
     );

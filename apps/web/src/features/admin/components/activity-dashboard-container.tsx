@@ -1,6 +1,9 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import type { Period } from '../types';
-import { useActivityList } from '../hooks/use-activity-list';
+import {
+  DEFAULT_ACTIVITY_LIST_LIMIT,
+  useActivityList,
+} from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
 import { ActivityDashboard } from './activity-dashboard';
 
@@ -34,7 +37,7 @@ export function ActivityDashboardContainer() {
     userId,
     entityType,
     search: debouncedSearch,
-    limit: 50,
+    limit: DEFAULT_ACTIVITY_LIST_LIMIT,
   });
 
   const { data: stats, isLoading: statsLoading } = useActivityStats(period);
