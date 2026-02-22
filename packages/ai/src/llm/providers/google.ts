@@ -58,6 +58,8 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             schema: aiSchema,
             maxOutputTokens: options.maxTokens,
             temperature: options.temperature ?? 0.7,
+            // Keep retries in Effect.retry to avoid double-retry with AI SDK defaults.
+            maxRetries: 0,
             experimental_repairText: async ({ text }) =>
               stripMarkdownCodeFence(text),
           });
