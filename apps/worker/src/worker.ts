@@ -109,6 +109,10 @@ async function startWorker(): Promise<void> {
       await worker.stop();
       console.log('Worker stopped');
 
+      console.log('Disposing Effect runtime...');
+      await serverRuntime.dispose();
+      console.log('Effect runtime disposed');
+
       await db.$client.end();
       console.log('Database pool closed');
 
