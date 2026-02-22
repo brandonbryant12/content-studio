@@ -74,6 +74,7 @@ Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl
 - guardrail change shipped
 - validation evidence
 - what should be automated next
+- taxonomy tags from `docs/workflow-memory/taxonomy.md` when memory or agent-run diagnostics are involved
 
 ## Output Contract
 

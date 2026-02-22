@@ -56,3 +56,13 @@ Use this format:
 - Evidence: `docs/workflow.md`, `docs/workflow-memory/guardrails.md`
 - Owner: brandon@codex
 - Status: active
+
+## 2026-02-22 - Workflow-Memory Taxonomy Enforcement
+
+- Source workflow: Self-Improvement
+- Problem signature: Memory and agent-failure events used inconsistent tags, reducing aggregation and retrieval quality.
+- Control type: automation + docs rule + skill update
+- Change landed: Added canonical taxonomy (`docs/workflow-memory/taxonomy.md`), required taxonomy checklist in workflow docs, and add-entry validation/options for memory and capability/failure tags.
+- Evidence: `docs/workflow-memory/taxonomy.md`, `scripts/workflow-memory/add-entry.mjs`, `docs/workflow.md`, `.agents/skills/periodic-scans/SKILL.md`, `.agents/skills/self-improvement/SKILL.md`
+- Owner: brandon@codex
+- Status: active

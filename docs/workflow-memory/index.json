@@ -18,6 +18,28 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-self-improvement-enforce-workflow-memory-taxonomy-tags-for-memory-and-agent-diagn",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Enforce workflow-memory taxonomy tags for memory and agent diagnostics",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "memory",
+      "workflow-memory",
+      "guardrail",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.82,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-docs-knowledge-drift-added-automation-operating-model-readme",
     "date": "2026-02-21",
     "month": "2026-02",

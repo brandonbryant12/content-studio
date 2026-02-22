@@ -52,6 +52,7 @@ packages/
   - `node scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `node scripts/workflow-memory/retrieve.mjs --help`
+- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from `docs/workflow-memory/taxonomy.md`.
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.

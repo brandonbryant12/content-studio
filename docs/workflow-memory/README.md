@@ -11,6 +11,7 @@ docs/workflow-memory/
   README.md
   index.json
   guardrails.md
+  taxonomy.md
   events/
     YYYY-MM.jsonl
   summaries/
@@ -73,14 +74,34 @@ Each index row contains:
 
 Do not copy every incident here.
 
+## Taxonomy
+
+`taxonomy.md` defines canonical tags for:
+
+- memory form/function/dynamics
+- agent capability axes and failure modes
+
+Use canonical taxonomy tags whenever the event covers memory behavior or agent
+run failures.
+
+Tag standard:
+
+- If tags include `memory` or `workflow-memory`, include at least one of each:
+  - `memory-form:*`
+  - `memory-function:*`
+  - `memory-dynamics:*`
+- If any `capability:*` or `failure:*` tags are present, include at least one
+  from both groups.
+
 ## Retrieval Rule For Agents
 
 Read in this order:
 
 1. `guardrails.md`
-2. `summaries/<current-month>.md` (or latest available)
-3. `index.json` filtered to relevant workflow/tags
-4. Top 3-5 matching events from `events/*.jsonl`
+2. `taxonomy.md`
+3. `summaries/<current-month>.md` (or latest available)
+4. `index.json` filtered to relevant workflow/tags
+5. Top 3-5 matching events from `events/*.jsonl`
 
 Do not load full event history unless explicitly requested.
 
@@ -102,6 +123,8 @@ node scripts/workflow-memory/add-entry.mjs \
   --status "open" \
   --severity "high" \
   --tags authz,invariants \
+  --capability instruction-following \
+  --failure-mode incorrect-patch \
   --importance 0.8 \
   --recency 0.9 \
   --confidence 0.7

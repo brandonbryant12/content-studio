@@ -21,6 +21,24 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-02-22 - Workflow-Memory Taxonomy Tags + Validation
+- Issue: https://github.com/brandonbryant12/content-studio/issues/66
+- PR: (this PR)
+- Paper link(s):
+  - https://arxiv.org/abs/2512.13564
+  - https://arxiv.org/abs/2308.03688
+- Adopted idea(s):
+  - Use explicit memory dimensions (form/function/dynamics) to improve memory analysis consistency.
+  - Use stable capability and failure classes to make agent-run diagnostics aggregatable.
+- Implementation summary:
+  - Added a canonical workflow-memory taxonomy and wired it into workflow docs, skill guidance, and `add-entry.mjs` validation so memory and agent-failure tags are structured instead of free-form.
+- Code references:
+  - `docs/workflow-memory/taxonomy.md`
+  - `scripts/workflow-memory/add-entry.mjs`
+  - `docs/workflow-memory/README.md`
+  - `docs/workflow.md`
+  - `.agents/skills/periodic-scans/SKILL.md`
+
 ### 2026-02-21 - Workflow Memory Scoring + Retrieval Helper
 - Issue: https://github.com/brandonbryant12/content-studio/issues/41
 - PR: https://github.com/brandonbryant12/content-studio/pull/50
