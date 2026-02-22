@@ -12,12 +12,18 @@ const USAGE = `Usage:
     --tags guardrail,docs \\
     --limit 5 \\
     --min-score 0.35 \\
-    [--month YYYY-MM]
+    [--month YYYY-MM] \\
+    [--has-scenario] \\
+    [--scenario-skill <skill-name>]
 
 Scoring (0-1):
   score = 0.4 * importance + 0.3 * recency + 0.2 * tagMatch + 0.1 * confidence
 
 Recency defaults to a 90-day linear decay if the row lacks a recency field.
+
+Scenario filters:
+  --has-scenario       Only return events that have an attached scenario
+  --scenario-skill     Only return events whose scenario targets this skill
 `;
 
 function parseArgs(argv) {
@@ -121,11 +127,16 @@ async function main() {
   const index = await readJsonArray(INDEX_PATH);
   const now = new Date();
 
+  const hasScenario = args.has_scenario === "true";
+  const scenarioSkill = args.scenario_skill ? args.scenario_skill.trim() : "";
+
   const scored = index
     .filter((row) => {
       if (!row || typeof row !== "object") return false;
       if (workflow && row.workflow !== workflow) return false;
       if (month && row.month !== month) return false;
+      if (hasScenario && !row.hasScenario) return false;
+      if (scenarioSkill && row.scenarioSkill !== scenarioSkill) return false;
       return true;
     })
     .map((row) => {

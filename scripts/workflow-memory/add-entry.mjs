@@ -71,6 +71,7 @@ const USAGE = `Usage:
     --feedback "What to improve/avoid" \\
     --owner "@team" \\
     --status "open" \\
+    [--id custom-event-id] \\
     [--date YYYY-MM-DD] \\
     [--severity low|medium|high|critical] \\
     [--tags a,b,c] \\
@@ -82,7 +83,17 @@ const USAGE = `Usage:
     [--importance 0-1] \\
     [--recency 0-1] \\
     [--confidence 0-1] \\
-    [--source manual]
+    [--source manual] \\
+    [--scenario-skill <skill-name>] \\
+    [--scenario-check <check-name>] \\
+    [--scenario-verdict pass|fail] \\
+    [--scenario-pattern <pattern-name>] \\
+    [--scenario-severity low|medium|high|critical]
+
+Scenario flags:
+  When any --scenario-* flag is provided, --scenario-skill and --scenario-verdict
+  are required. Scenarios create replayable test cases linked to fixture files at
+  docs/workflow-memory/scenarios/{id}.md.
 `;
 
 function slug(value) {
@@ -325,6 +336,34 @@ function printCoverageSummary(index, month) {
   }
 }
 
+function buildScenario(args) {
+  const hasScenarioFlags = Object.keys(args).some((k) => k.startsWith("scenario_"));
+  if (!hasScenarioFlags) return undefined;
+
+  if (!args.scenario_skill || !args.scenario_verdict) {
+    throw new Error(
+      "--scenario-skill and --scenario-verdict are required when using any --scenario-* flag",
+    );
+  }
+  if (!["pass", "fail"].includes(args.scenario_verdict)) {
+    throw new Error('--scenario-verdict must be "pass" or "fail"');
+  }
+  if (
+    args.scenario_severity &&
+    !["low", "medium", "high", "critical"].includes(args.scenario_severity)
+  ) {
+    throw new Error('--scenario-severity must be "low", "medium", "high", or "critical"');
+  }
+
+  return {
+    skill: args.scenario_skill,
+    check: args.scenario_check || null,
+    verdict: args.scenario_verdict,
+    pattern: args.scenario_pattern || null,
+    severity: args.scenario_severity || null,
+  };
+}
+
 function buildEvent(args) {
   const date = args.date ?? new Date().toISOString().slice(0, 10);
   if (!validateDate(date)) {
@@ -339,6 +378,10 @@ function buildEvent(args) {
 
   const workflow = args.workflow.trim();
   const title = args.title.trim();
+
+  if (args.id && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(args.id.trim())) {
+    throw new Error("--id must match [a-z0-9][a-z0-9-]*[a-z0-9]");
+  }
   const id = args.id?.trim() || `${date}-${slug(workflow)}-${slug(title)}`;
 
   const baseTags = parseCsvValues(args.tags);
@@ -387,6 +430,8 @@ function buildEvent(args) {
     ...(confidence === null ? {} : { confidence }),
   };
 
+  const scenario = buildScenario(args);
+
   return {
     id,
     date,
@@ -403,6 +448,7 @@ function buildEvent(args) {
     severity,
     tags,
     ...scoring,
+    ...(scenario ? { scenario } : {}),
     source: (args.source ?? "manual").trim(),
     createdAt: new Date().toISOString(),
   };
@@ -445,6 +491,7 @@ async function main() {
     ...(typeof event.importance === "number" ? { importance: event.importance } : {}),
     ...(typeof event.recency === "number" ? { recency: event.recency } : {}),
     ...(typeof event.confidence === "number" ? { confidence: event.confidence } : {}),
+    ...(event.scenario ? { hasScenario: true, scenarioSkill: event.scenario.skill } : {}),
     eventFile: path.join("events", `${month}.jsonl`),
   };
 

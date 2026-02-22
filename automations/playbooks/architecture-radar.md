@@ -35,6 +35,8 @@ Issue policy:
   - Concrete Repo Scenario (current-state snippet + failure/improvement snippet)
   - Acceptance Criteria
   - Human Approval Gate: implementation only after a human adds the `ready-for-dev` label.
+- Prefer adding a `References` section when external docs/research materially strengthen the recommendation.
+- If external docs/release notes/papers are cited, the `References` section is required and must include direct clickable URLs with short per-link relevance notes (no placeholder text without links).
 - For any issue influenced by external papers, include a Research Trace section with:
   - Paper link(s)
   - Key paper idea(s) selected for this repo

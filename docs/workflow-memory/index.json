@@ -35,6 +35,78 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-feature-delivery-required-clickable-external-references-in-architecture-radar-iss",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Required clickable external references in architecture-radar issue policy",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture-radar",
+      "feature-delivery",
+      "playbook"
+    ],
+    "importance": 0.66,
+    "confidence": 0.96,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-feature-delivery-tuned-architecture-radar-references-policy-to-preserve-model-dis",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Tuned architecture-radar references policy to preserve model discretion",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture-radar",
+      "feature-delivery",
+      "playbook"
+    ],
+    "importance": 0.68,
+    "confidence": 0.96,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-intake-triage-adjusted-architecture-radar-references-rule-for-flexible-source-",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Intake + Triage",
+    "title": "Adjusted architecture-radar references rule for flexible source usage",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture-radar",
+      "intake-triage",
+      "playbook"
+    ],
+    "importance": 0.6,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-intake-triage-scoped-architecture-radar-external-reference-link-improvement",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Intake + Triage",
+    "title": "Scoped architecture-radar external reference-link improvement",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "architecture-radar",
+      "intake-triage",
+      "playbook"
+    ],
+    "importance": 0.58,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-self-improvement-enforce-workflow-memory-taxonomy-tags-for-memory-and-agent-diagn",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -54,6 +126,60 @@
     ],
     "importance": 0.82,
     "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "seed-prr-auth-bypass",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Scenario: handler missing requireOwnership",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "scenario",
+      "pr-risk-review"
+    ],
+    "importance": 0.7,
+    "confidence": 0.9,
+    "hasScenario": true,
+    "scenarioSkill": "pr-risk-review",
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "seed-prr-clean-handler",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Scenario: properly authorized handler (clean pass)",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "scenario",
+      "pr-risk-review"
+    ],
+    "importance": 0.6,
+    "confidence": 0.9,
+    "hasScenario": true,
+    "scenarioSkill": "pr-risk-review",
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "seed-prr-sql-inject",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Scenario: raw SQL string interpolation",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "scenario",
+      "pr-risk-review"
+    ],
+    "importance": 0.8,
+    "confidence": 0.9,
+    "hasScenario": true,
+    "scenarioSkill": "pr-risk-review",
     "eventFile": "events/2026-02.jsonl"
   },
   {

@@ -219,6 +219,108 @@ node scripts/workflow-memory/migrate-legacy-memory.mjs
 
 Legacy source file: `docs/workflow-memory.md`.
 
+## Replayable Scenarios
+
+Scenarios are structured test cases that capture exact code input + expected agent findings. They are stored as companion fixtures alongside existing JSONL events. The current tooling validates scenario integrity (structure, fixture existence, secret scanning). LLM-based evaluation is a future follow-up.
+
+### Scenario Schema
+
+Events with scenarios include a `scenario` field (canonical metadata source):
+
+```json
+{
+  "scenario": {
+    "skill": "pr-risk-review",
+    "check": "auth-bypass",
+    "verdict": "fail",
+    "pattern": "missing-ownership-check",
+    "severity": "high"
+  }
+}
+```
+
+- `skill` (required) — target skill to test
+- `verdict` (required) — `"pass"` or `"fail"` expected outcome
+- `check` — specific check within the skill
+- `pattern` — code pattern being tested
+- `severity` — `"low"` | `"medium"` | `"high"` | `"critical"`
+
+Index rows include `hasScenario: true` and `scenarioSkill` for fast filtering.
+
+### Fixture Format
+
+Fixture path is always derived from event ID: `docs/workflow-memory/scenarios/{id}.md`
+
+Fixtures contain only input and expected findings (no duplicated metadata):
+
+```markdown
+## Input
+
+\`\`\`typescript
+// The exact code snippet the agent should analyze
+\`\`\`
+
+## Expected Findings
+
+- Finding 1
+- Finding 2
+
+## Context
+
+Additional context about what the skill should do with this input.
+```
+
+### Creating Scenarios
+
+```bash
+# 1. Write the fixture file
+# docs/workflow-memory/scenarios/{id}.md
+
+# 2. Create the event with scenario flags
+node scripts/workflow-memory/add-entry.mjs \
+  --id my-scenario-id \
+  --workflow "Self-Improvement" \
+  --title "Scenario: description" \
+  --trigger "Seed scenario for regression testing" \
+  --finding "What the scenario tests" \
+  --evidence "docs/workflow-memory/scenarios/my-scenario-id.md" \
+  --follow-up "Verify skill catches this pattern" \
+  --owner "@agent" \
+  --status "open" \
+  --tags scenario,skill-name \
+  --scenario-skill skill-name \
+  --scenario-verdict fail \
+  --scenario-check check-name \
+  --scenario-pattern pattern-name \
+  --scenario-severity high
+```
+
+### Validating Scenarios
+
+```bash
+# Validate all scenarios
+pnpm scenario:validate
+
+# Strict mode (exit 1 on failures)
+pnpm scenario:validate:strict
+
+# Filter by skill
+pnpm scenario:validate -- --skill pr-risk-review
+
+# JSON output
+pnpm scenario:validate -- --json
+```
+
+### Retrieving Scenarios
+
+```bash
+# All events with scenarios
+node scripts/workflow-memory/retrieve.mjs --has-scenario
+
+# Filter by target skill
+node scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-review
+```
+
 ## Compaction Policy
 
 - Weekly: dedupe repeated entries and close resolved items.

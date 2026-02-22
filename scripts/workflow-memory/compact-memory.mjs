@@ -46,6 +46,10 @@ function eventRow(event) {
     severity: event.severity ?? "medium",
     status: event.status ?? "open",
     tags: Array.isArray(event.tags) ? event.tags : [],
+    ...(typeof event.importance === "number" ? { importance: event.importance } : {}),
+    ...(typeof event.recency === "number" ? { recency: event.recency } : {}),
+    ...(typeof event.confidence === "number" ? { confidence: event.confidence } : {}),
+    ...(event.scenario ? { hasScenario: true, scenarioSkill: event.scenario.skill } : {}),
     eventFile: path.join("events", `${month}.jsonl`),
   };
 }

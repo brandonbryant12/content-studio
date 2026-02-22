@@ -45,6 +45,8 @@
     "skills:check:strict": "node scripts/skills/check-quality.mjs --strict",
     "workflow-memory:coverage": "node scripts/workflow-memory/check-coverage.mjs",
     "workflow-memory:coverage:strict": "node scripts/workflow-memory/check-coverage.mjs --strict",
+    "scenario:validate": "node scripts/workflow-memory/replay-scenarios.mjs",
+    "scenario:validate:strict": "node scripts/workflow-memory/replay-scenarios.mjs --strict",
     "typecheck": "turbo run typecheck",
     "cli": "pnpm --filter @repo/cli dev --",
     "ui-add": "turbo run ui-add -F @repo/ui --"

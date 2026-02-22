@@ -55,6 +55,10 @@ Apply the lightest fix that prevents recurrence:
 - Confirm the guardrail fails before the fix and passes after the fix where possible.
 - For memory-system changes, run `pnpm workflow-memory:coverage:strict` after updates.
 - For skill changes, run `pnpm skills:check:strict` and `scripts/sync-skills.sh`.
+- When a failure is captured and a skill is patched, create a replayable scenario:
+  1. Write a fixture file to `docs/workflow-memory/scenarios/{id}.md` with `## Input` (exact code) and `## Expected Findings`.
+  2. Use `add-entry.mjs` with `--scenario-skill`, `--scenario-verdict`, and optional `--scenario-check`, `--scenario-pattern`, `--scenario-severity` flags.
+  3. Run `pnpm scenario:validate:strict` to confirm the scenario is well-formed.
 
 ## 5) Broadcast
 
