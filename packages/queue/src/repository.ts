@@ -1,5 +1,5 @@
 import { eq, and, asc, inArray, sql } from '@repo/db';
-import { Db } from '@repo/db/effect';
+import { Db, withDb } from '@repo/db/effect';
 import { job, JobStatus, JobType as JobTypeConst } from '@repo/db/schema';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType } from './types';
@@ -20,17 +20,18 @@ const makeQueueService = Effect.gen(function* () {
 
   const runQuery = <A>(
     name: string,
-    fn: () => Promise<A>,
+    fn: (db: DatabaseInstance) => Promise<A>,
     errorMessage: string,
   ): Effect.Effect<A, QueueError> =>
-    Effect.tryPromise({
-      try: fn,
-      catch: (cause) =>
-        new QueueError({
-          message: `${errorMessage}: ${cause instanceof Error ? cause.message : String(cause)}`,
-          cause,
-        }),
-    }).pipe(
+    withDb(`queue.${name}`, fn).pipe(
+      Effect.provideService(Db, { db }),
+      Effect.mapError(
+        (cause) =>
+          new QueueError({
+            message: `${errorMessage}: ${cause.message}`,
+            cause,
+          }),
+      ),
       Effect.withSpan(`queue.${name}`, {
         attributes: { 'queue.system': 'database' },
       }),
@@ -70,7 +71,7 @@ const makeQueueService = Effect.gen(function* () {
   ) =>
     runQuery(
       `findActiveJob.${jobType}`,
-      async () => {
+      async (db) => {
         const [row] = await db
           .select()
           .from(job)
@@ -91,7 +92,7 @@ const makeQueueService = Effect.gen(function* () {
   const enqueue: QueueService['enqueue'] = (type, payload, userId) =>
     runQuery(
       'enqueue',
-      async () => {
+      async (db) => {
         const [row] = await db
           .insert(job)
           .values({
@@ -119,7 +120,7 @@ const makeQueueService = Effect.gen(function* () {
   const getJob: QueueService['getJob'] = (jobId) =>
     runQuery(
       'getJob',
-      async () => {
+      async (db) => {
         const [row] = await db
           .select()
           .from(job)
@@ -140,7 +141,7 @@ const makeQueueService = Effect.gen(function* () {
   const getJobsByUser: QueueService['getJobsByUser'] = (userId, type) =>
     runQuery(
       'getJobsByUser',
-      async () => {
+      async (db) => {
         const conditions = [eq(job.createdBy, userId)];
         if (type) conditions.push(eq(job.type, type));
 
@@ -165,7 +166,7 @@ const makeQueueService = Effect.gen(function* () {
   ) =>
     runQuery(
       'updateJobStatus',
-      async () => {
+      async (db) => {
         const updates: Record<string, unknown> = {
           status,
           updatedAt: new Date(),
@@ -210,8 +211,8 @@ const makeQueueService = Effect.gen(function* () {
   const claimNextJob = (type: JobType): Effect.Effect<Job | null, QueueError> =>
     runQuery(
       'claimNextJob',
-      async () => {
-        const result = await (db as DatabaseInstance).execute(sql`
+      async (db) => {
+        const result = await db.execute(sql`
           UPDATE ${job}
           SET "status" = ${JobStatus.PROCESSING},
               "startedAt" = NOW(),
@@ -275,9 +276,9 @@ const makeQueueService = Effect.gen(function* () {
   const failStaleJobs: QueueService['failStaleJobs'] = (maxAgeMs) =>
     runQuery(
       'failStaleJobs',
-      async () => {
+      async (db) => {
         const intervalSeconds = Math.floor(maxAgeMs / 1000);
-        const result = await (db as DatabaseInstance).execute(sql`
+        const result = await db.execute(sql`
           UPDATE ${job}
           SET "status" = ${JobStatus.FAILED},
               "error" = ${'Job timed out: worker did not complete within ' + intervalSeconds + 's'},
@@ -300,7 +301,7 @@ const makeQueueService = Effect.gen(function* () {
   const deleteJob: QueueService['deleteJob'] = (jobId) =>
     runQuery(
       'deleteJob',
-      async () => {
+      async (db) => {
         const result = await db
           .delete(job)
           .where(eq(job.id, jobId))
