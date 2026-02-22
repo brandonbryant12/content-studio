@@ -1,5 +1,6 @@
 import { ORPCError } from '@orpc/client';
 import { ValidationError } from '@orpc/contract';
+import { streamToEventIterator } from '@orpc/server';
 import { withCurrentUser, type User } from '@repo/auth/policy';
 import { hasHttpProtocol, type LogLevel } from '@repo/db/error-protocol';
 import { Effect, Match, pipe } from 'effect';
@@ -273,6 +274,26 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
     ),
   );
 };
+
+export const handleEffectStreamWithProtocol = <
+  Chunk,
+  E extends { _tag: string },
+>(
+  runtime: ServerRuntime,
+  user: User | null,
+  effect: Effect.Effect<ReadableStream<Chunk>, E, SharedServices>,
+  errors: ErrorFactory,
+  options: HandleEffectOptions,
+  customHandlers?: Record<string, CustomErrorHandler>,
+) =>
+  handleEffectWithProtocol(
+    runtime,
+    user,
+    effect,
+    errors,
+    options,
+    customHandlers,
+  ).then((stream) => streamToEventIterator(stream));
 
 /**
  * Helper type to extract error types from an Effect.
