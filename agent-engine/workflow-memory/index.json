@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Scope worker fibers for shutdown",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "worker",
+      "shutdown",
+      "scope",
+      "architecture"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-approval-executor-set-test-queryclient-gctime-to-infinity",
     "date": "2026-02-22",
     "month": "2026-02",
