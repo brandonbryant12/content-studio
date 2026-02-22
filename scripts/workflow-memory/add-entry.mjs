@@ -34,6 +34,31 @@ const KNOWN_WORKFLOWS = [
   "Self-Improvement",
 ];
 
+const MEMORY_TRIGGER_TAGS = new Set(["memory", "workflow-memory", "memory-eval"]);
+const MEMORY_FORM_PREFIX = "memory-form:";
+const MEMORY_FUNCTION_PREFIX = "memory-function:";
+const MEMORY_DYNAMICS_PREFIX = "memory-dynamics:";
+const CAPABILITY_PREFIX = "capability:";
+const FAILURE_PREFIX = "failure:";
+
+const MEMORY_FORM_VALUES = new Set(["parametric", "external"]);
+const MEMORY_FUNCTION_VALUES = new Set(["semantic", "episodic", "working"]);
+const MEMORY_DYNAMICS_VALUES = new Set(["write", "retrieve", "decay", "conflict"]);
+const CAPABILITY_VALUES = new Set([
+  "planning",
+  "tool-use",
+  "long-term-reasoning",
+  "instruction-following",
+  "debugging",
+]);
+const FAILURE_VALUES = new Set([
+  "tool-misuse",
+  "state-loss",
+  "incorrect-patch",
+  "test-evasion",
+  "env-drift",
+]);
+
 const USAGE = `Usage:
   node scripts/workflow-memory/add-entry.mjs \\
     --workflow "Feature Delivery" \\
@@ -49,6 +74,11 @@ const USAGE = `Usage:
     [--date YYYY-MM-DD] \\
     [--severity low|medium|high|critical] \\
     [--tags a,b,c] \\
+    [--memory-form parametric|external[,..]] \\
+    [--memory-function semantic|episodic|working[,..]] \\
+    [--memory-dynamics write|retrieve|decay|conflict[,..]] \\
+    [--capability planning|tool-use|long-term-reasoning|instruction-following|debugging[,..]] \\
+    [--failure-mode tool-misuse|state-loss|incorrect-patch|test-evasion|env-drift[,..]] \\
     [--importance 0-1] \\
     [--recency 0-1] \\
     [--confidence 0-1] \\
@@ -166,6 +196,113 @@ function parseOptionalScore(args, key) {
   return value;
 }
 
+function parseCsvValues(raw) {
+  if (!raw) {
+    return [];
+  }
+
+  return raw
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function parseTaxonomyValues(raw, allowedValues, flagName) {
+  const values = parseCsvValues(raw);
+  const invalid = values.filter((value) => !allowedValues.has(value));
+  if (invalid.length > 0) {
+    throw new Error(`Invalid ${flagName} value(s): ${invalid.join(", ")}.`);
+  }
+  return values;
+}
+
+function prefixed(values, prefix) {
+  return values.map((value) => `${prefix}${value}`);
+}
+
+function collectPrefixedTags(tags, prefix, allowedValues, errors, label) {
+  const matching = tags.filter((tag) => tag.startsWith(prefix));
+  for (const tag of matching) {
+    const value = tag.slice(prefix.length);
+    if (!allowedValues.has(value)) {
+      errors.push(`Unknown ${label} tag '${tag}'.`);
+    }
+  }
+  return matching;
+}
+
+function validateTaxonomyTags(tags) {
+  const errors = [];
+
+  const memoryFormTags = collectPrefixedTags(
+    tags,
+    MEMORY_FORM_PREFIX,
+    MEMORY_FORM_VALUES,
+    errors,
+    "memory-form",
+  );
+  const memoryFunctionTags = collectPrefixedTags(
+    tags,
+    MEMORY_FUNCTION_PREFIX,
+    MEMORY_FUNCTION_VALUES,
+    errors,
+    "memory-function",
+  );
+  const memoryDynamicsTags = collectPrefixedTags(
+    tags,
+    MEMORY_DYNAMICS_PREFIX,
+    MEMORY_DYNAMICS_VALUES,
+    errors,
+    "memory-dynamics",
+  );
+
+  const hasMemoryTaxonomy =
+    memoryFormTags.length > 0 ||
+    memoryFunctionTags.length > 0 ||
+    memoryDynamicsTags.length > 0;
+  const memoryRelated = hasMemoryTaxonomy || tags.some((tag) => MEMORY_TRIGGER_TAGS.has(tag));
+
+  if (memoryRelated) {
+    if (memoryFormTags.length === 0) {
+      errors.push("Memory-related entries must include at least one memory-form:* tag.");
+    }
+    if (memoryFunctionTags.length === 0) {
+      errors.push("Memory-related entries must include at least one memory-function:* tag.");
+    }
+    if (memoryDynamicsTags.length === 0) {
+      errors.push("Memory-related entries must include at least one memory-dynamics:* tag.");
+    }
+  }
+
+  const capabilityTags = collectPrefixedTags(
+    tags,
+    CAPABILITY_PREFIX,
+    CAPABILITY_VALUES,
+    errors,
+    "capability",
+  );
+  const failureTags = collectPrefixedTags(
+    tags,
+    FAILURE_PREFIX,
+    FAILURE_VALUES,
+    errors,
+    "failure",
+  );
+
+  if (capabilityTags.length > 0 && failureTags.length === 0) {
+    errors.push("Entries with capability:* tags must include at least one failure:* tag.");
+  }
+  if (failureTags.length > 0 && capabilityTags.length === 0) {
+    errors.push("Entries with failure:* tags must include at least one capability:* tag.");
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Invalid workflow-memory taxonomy tags:\n- ${errors.join("\n- ")}\nSee docs/workflow-memory/taxonomy.md.`,
+    );
+  }
+}
+
 function printCoverageSummary(index, month) {
   const workflowsInMonth = new Set(
     index
@@ -204,12 +341,39 @@ function buildEvent(args) {
   const title = args.title.trim();
   const id = args.id?.trim() || `${date}-${slug(workflow)}-${slug(title)}`;
 
-  const tags = args.tags
-    ? args.tags
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    : [];
+  const baseTags = parseCsvValues(args.tags);
+  const memoryFormTags = prefixed(
+    parseTaxonomyValues(args.memory_form, MEMORY_FORM_VALUES, "--memory-form"),
+    MEMORY_FORM_PREFIX,
+  );
+  const memoryFunctionTags = prefixed(
+    parseTaxonomyValues(args.memory_function, MEMORY_FUNCTION_VALUES, "--memory-function"),
+    MEMORY_FUNCTION_PREFIX,
+  );
+  const memoryDynamicsTags = prefixed(
+    parseTaxonomyValues(args.memory_dynamics, MEMORY_DYNAMICS_VALUES, "--memory-dynamics"),
+    MEMORY_DYNAMICS_PREFIX,
+  );
+  const capabilityTags = prefixed(
+    parseTaxonomyValues(args.capability, CAPABILITY_VALUES, "--capability"),
+    CAPABILITY_PREFIX,
+  );
+  const failureTags = prefixed(
+    parseTaxonomyValues(args.failure_mode, FAILURE_VALUES, "--failure-mode"),
+    FAILURE_PREFIX,
+  );
+
+  const tags = Array.from(
+    new Set([
+      ...baseTags,
+      ...memoryFormTags,
+      ...memoryFunctionTags,
+      ...memoryDynamicsTags,
+      ...capabilityTags,
+      ...failureTags,
+    ]),
+  );
+  validateTaxonomyTags(tags);
 
   const severity = (args.severity ?? "medium").trim().toLowerCase();
   const status = args.status.trim().toLowerCase();

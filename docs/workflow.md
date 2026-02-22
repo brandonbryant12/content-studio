@@ -183,10 +183,8 @@ Minimum event fields:
 6. `finding`
 7. `evidence`
 8. `followUp`
-9. `reflection`
-10. `feedback`
-11. `owner`
-12. `status`
+9. `owner`
+10. `status`
 
 Optional fields:
 
@@ -195,6 +193,15 @@ Optional fields:
 - `importance` (0-1): higher = more critical or reusable
 - `recency` (0-1): higher = more recent; overrides computed recency if needed
 - `confidence` (0-1): higher = more reliable evidence
+
+Taxonomy tagging checklist (`docs/workflow-memory/taxonomy.md`):
+
+- If tags include `memory` or `workflow-memory`, include all three dimensions:
+  - `memory-form:*`
+  - `memory-function:*`
+  - `memory-dynamics:*`
+- For agent-run diagnostics/evals, include at least one `capability:*` and one
+  `failure:*` tag.
 
 During retrieval and self-improvement, scan `reflection` and `feedback` for repeatable guardrails or missing checks.
 
@@ -222,9 +229,10 @@ Run weekly compaction to control growth:
 Agent retrieval order:
 
 1. `docs/workflow-memory/guardrails.md`
-2. latest `docs/workflow-memory/summaries/YYYY-MM.md`
-3. filtered rows from `docs/workflow-memory/index.json`
-4. top 3-5 relevant records from `docs/workflow-memory/events/*.jsonl`
+2. `docs/workflow-memory/taxonomy.md`
+3. latest `docs/workflow-memory/summaries/YYYY-MM.md`
+4. filtered rows from `docs/workflow-memory/index.json`
+5. top 3-5 relevant records from `docs/workflow-memory/events/*.jsonl`
 
 Legacy migration helper:
 
