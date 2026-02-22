@@ -2,9 +2,11 @@ import { it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
-import { LLM, type LLMService } from '../../llm/service';
-import { streamPersonaChat } from '../use-cases/stream-persona-chat';
+import { LLM, type LLMService } from '../../../llm/service';
+import { streamResearchChat } from '../stream-research-chat';
 
+// We can't actually call streamText with a mock model (it needs a real LanguageModel),
+// so we mock the `ai` module to verify the use case passes correct args.
 const mockStreamText = vi.fn();
 const mockConvertToModelMessages = vi.fn();
 
@@ -29,18 +31,15 @@ const testMessages: UIMessage[] = [
   {
     id: '1',
     role: 'user',
-    parts: [{ type: 'text', text: 'I want a practical AI policy co-host.' }],
+    parts: [{ type: 'text', text: 'AI in healthcare' }],
   },
 ];
 
-describe('streamPersonaChat', () => {
-  it.effect('calls streamText with persona prompt and model', () =>
+describe('streamResearchChat', () => {
+  it.effect('calls streamText with correct system prompt and model', () =>
     Effect.gen(function* () {
       const mockModelMessages = [
-        {
-          role: 'user' as const,
-          content: 'I want a practical AI policy co-host.',
-        },
+        { role: 'user' as const, content: 'AI in healthcare' },
       ];
       const mockStream = new ReadableStream();
 
@@ -49,13 +48,13 @@ describe('streamPersonaChat', () => {
         toUIMessageStream: () => mockStream,
       });
 
-      const result = yield* streamPersonaChat({ messages: testMessages });
+      const result = yield* streamResearchChat({ messages: testMessages });
 
       expect(mockConvertToModelMessages).toHaveBeenCalledWith(testMessages);
       expect(mockStreamText).toHaveBeenCalledWith(
         expect.objectContaining({
           model: mockModel,
-          system: expect.stringContaining('persona creation assistant'),
+          system: expect.stringContaining('research topic refinement'),
           messages: mockModelMessages,
           maxOutputTokens: 1024,
           temperature: 0.7,
@@ -71,7 +70,7 @@ describe('streamPersonaChat', () => {
         new Error('conversion failed'),
       );
 
-      const exit = yield* streamPersonaChat({ messages: testMessages }).pipe(
+      const exit = yield* streamResearchChat({ messages: testMessages }).pipe(
         Effect.exit,
       );
 
