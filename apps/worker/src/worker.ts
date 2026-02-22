@@ -41,8 +41,10 @@ async function startWorker(): Promise<void> {
     serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',
     serviceVersion: env.OTEL_SERVICE_VERSION,
     environment: env.OTEL_ENV,
+    otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
     otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
+    otlpTracesHeaders: env.OTEL_EXPORTER_OTLP_TRACES_HEADERS,
   });
 
   console.log('Verifying database connection...');

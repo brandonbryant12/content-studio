@@ -125,10 +125,10 @@ export const envSchema = Schema.Struct({
   TELEMETRY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
     default: () => process.env.NODE_ENV === 'production',
   }),
-  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: Schema.optionalWith(Schema.String, {
-    default: () => 'http://localhost:4318/v1/traces',
-  }),
+  OTEL_EXPORTER_OTLP_ENDPOINT: Schema.optional(Schema.String),
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: Schema.optional(Schema.String),
   OTEL_EXPORTER_OTLP_HEADERS: Schema.optional(Schema.String),
+  OTEL_EXPORTER_OTLP_TRACES_HEADERS: Schema.optional(Schema.String),
   OTEL_SERVICE_NAME: Schema.optional(Schema.String),
   OTEL_SERVICE_VERSION: Schema.optional(Schema.String),
   OTEL_ENV: Schema.optionalWith(Schema.String, {

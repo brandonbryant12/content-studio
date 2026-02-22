@@ -79,13 +79,16 @@ pnpm test:db:down               # Stop test DB container
 | `S3_BUCKET` | S3 bucket name | -- |
 | `S3_REGION` | S3 region | -- |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |
-| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTLP traces endpoint (Datadog Agent/Collector) | `http://localhost:4318/v1/traces` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP endpoint (appends `/v1/traces`) | -- |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTLP traces endpoint (used as-is) | -- |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers (`KEY=value,KEY2=value2`) | -- |
+| `OTEL_EXPORTER_OTLP_TRACES_HEADERS` | Trace-specific OTLP headers (overrides base headers) | -- |
 | `OTEL_SERVICE_NAME` | Override backend service name (`server` / `worker`) | app default |
 | `OTEL_SERVICE_VERSION` | Override service version | `0.0.0` |
 | `OTEL_ENV` | Deployment environment tag | `NODE_ENV` |
 
 Telemetry settings apply to backend services (`apps/server`, `apps/worker`) only.
+Per-signal OTLP env vars take precedence when both base and per-signal values are set.
 
 ### SSO Variables (Required When `AUTH_MODE=hybrid` Or `AUTH_MODE=sso-only`)
 
@@ -105,7 +108,7 @@ Use a local Datadog Agent or OTLP Collector:
 
 ```bash
 TELEMETRY_ENABLED=true
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 OTEL_SERVICE_NAME=content-studio-server
 OTEL_ENV=production
 ```
