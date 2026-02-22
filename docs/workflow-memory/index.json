@@ -36,6 +36,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-consolidate-root-readme-into-product-first-entrypoint",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Consolidate root README into product-first entrypoint",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "readme",
+      "product-focus",
+      "knowledge-drift"
+    ],
+    "importance": 0.63,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-docs-knowledge-drift-moved-automation-playbooks-and-wrapper-mirrors-under-agentic-har",
     "date": "2026-02-22",
     "month": "2026-02",
