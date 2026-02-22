@@ -14,6 +14,8 @@ export interface HandleEffectOptions {
   span: string;
   /** Optional span attributes */
   attributes?: Record<string, string | number | boolean>;
+  /** Optional request id for handler spans */
+  requestId?: string;
 }
 
 /**
@@ -107,16 +109,20 @@ const throwByStatusFallback = (
 /**
  * Log an error based on its log level.
  */
-const logError = (tag: string, error: unknown, logLevel: LogLevel): void => {
-  const message =
+const logError = (tag: string, error: unknown, logLevel: LogLevel, requestId?: string): void => {
+  const messageBase =
     error && typeof error === 'object' && 'message' in error
       ? String((error as { message: unknown }).message)
       : 'Unknown error';
+
+  const message = requestId ? '[requestId:' + requestId + '] ' + messageBase : messageBase;
 
   const cause =
     error && typeof error === 'object' && 'cause' in error
       ? (error as { cause: unknown }).cause
       : undefined;
+
+  const logContext = requestId ? { requestId } : undefined;
 
   switch (logLevel) {
     case 'error-with-stack': {
@@ -154,6 +160,7 @@ const logError = (tag: string, error: unknown, logLevel: LogLevel): void => {
 export const handleTaggedError = <E extends TaggedError>(
   error: E,
   errors: ErrorFactory,
+  requestId?: string,
 ): never => {
   const ErrorClass = error.constructor as ProtocolErrorClass<E>;
 
@@ -165,7 +172,7 @@ export const handleTaggedError = <E extends TaggedError>(
   }
 
   // Log based on level
-  logError(error._tag, error, ErrorClass.logLevel!);
+  logError(error._tag, error, ErrorClass.logLevel!, requestId);
 
   // Get message
   const httpMessage = ErrorClass.httpMessage!;
@@ -250,7 +257,7 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
   const tracedEffect = effect.pipe(
-    Effect.withSpan(options.span, { attributes: options.attributes }),
+    Effect.withSpan(options.span, { attributes: { ...options.attributes, ...(options.requestId ? { 'request.id': options.requestId } : {}) } }),
   );
 
   const scopedEffect = user
@@ -268,7 +275,7 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
           }
 
           // Use generic protocol-based handler
-          return handleTaggedError(error, errors);
+          return handleTaggedError(error, errors, options.requestId);
         }),
       ),
     ),

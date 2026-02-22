@@ -32,6 +32,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.list',
           attributes: {
             'pagination.limit': input.limit ?? 50,
@@ -52,6 +53,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.get',
           attributes: { 'document.id': input.id },
         },
@@ -67,6 +69,7 @@ const documentRouter = {
         getDocumentContent({ id: input.id }),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.getContent',
           attributes: { 'document.id': input.id },
         },
@@ -85,6 +88,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.create',
           attributes: { 'document.title': input.title },
         },
@@ -103,6 +107,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.upload',
           attributes: {
             'file.name': input.fileName,
@@ -125,6 +130,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.update',
           attributes: { 'document.id': id },
         },
@@ -149,6 +155,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.delete',
           attributes: { 'document.id': input.id },
         },
@@ -167,6 +174,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.fromUrl',
           attributes: { 'document.url': input.url },
         },
@@ -185,6 +193,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.fromResearch',
           attributes: { 'document.researchQuery': input.query.slice(0, 100) },
         },
@@ -202,6 +211,7 @@ const documentRouter = {
         ),
         errors,
         {
+          requestId: context.requestId,
           span: 'api.documents.retry',
           attributes: { 'document.id': input.id },
         },

@@ -79,13 +79,14 @@ export const createApi = ({
     ],
   });
   return {
-    handler: async (request: Request) => {
+    handler: async (request: Request, requestId: string) => {
       return handler.handle(request, {
         prefix: apiPath,
         context: await createORPCContext({
           runtime: serverRuntime,
           auth,
           headers: request.headers,
+          requestId,
         }),
       });
     },

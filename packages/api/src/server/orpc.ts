@@ -31,6 +31,7 @@ export type StorageConfig =
 export interface ORPCContext {
   session: Session | null;
   user: User | null;
+  requestId: string;
   runtime: ServerRuntime;
 }
 
@@ -57,10 +58,12 @@ export const createORPCContext = async ({
   auth,
   runtime,
   headers,
+  requestId,
 }: {
   auth: AuthInstance;
   runtime: ServerRuntime;
   headers: Headers;
+  requestId: string;
 }): Promise<ORPCContext> => {
   const result = await runtime.runPromise(
     getSessionWithRole(auth, headers).pipe(
@@ -79,6 +82,7 @@ export const createORPCContext = async ({
   return {
     session: result?.session ?? null,
     user: result?.user ?? null,
+    requestId,
     runtime,
   };
 };

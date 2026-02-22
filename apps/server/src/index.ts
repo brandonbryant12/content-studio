@@ -3,6 +3,7 @@ import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
+import { requestIdMiddleware } from './middleware/request-id';
 import type { auth } from './services';
 import { env } from './env';
 import {
@@ -20,9 +21,11 @@ const app = new Hono<{
   Variables: {
     user: typeof auth.$Infer.Session.user | null;
     session: typeof auth.$Infer.Session.session | null;
+    requestId: string;
   };
 }>();
 
+app.use(requestIdMiddleware);
 app.use(logger());
 app.use(
   secureHeaders({

@@ -16,7 +16,7 @@ export const apiRoute = new Hono()
   )
   .use(apiRateLimit)
   .all('/*', async (c, next) => {
-    const { matched, response } = await api.handler(c.req.raw);
+    const { matched, response } = await api.handler(c.req.raw, c.get('requestId'));
     if (matched) {
       return c.newResponse(response.body, response);
     }
