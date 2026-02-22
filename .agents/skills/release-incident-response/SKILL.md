@@ -42,4 +42,4 @@ Use this skill for release trains, hotfixes, and production incidents.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Release + Incident Response` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+`Release + Incident Response` is a utility skill. Record memory under the parent core workflow key (`Feature Delivery`, `Periodic Scans`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.

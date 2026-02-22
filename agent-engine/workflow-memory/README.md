@@ -25,9 +25,11 @@ and enforced in [`AGENTS.md`](../../AGENTS.md).
 
 ### 1) During delivery and review (write path)
 
-Every workflow run (for example Intake + Triage, Feature Delivery, PR Risk
-Review, Periodic Scans, and Self-Improvement) writes at least one event using
-[`add-entry.mjs`](../scripts/workflow-memory/add-entry.mjs).
+Every core workflow run (for example Feature Delivery, Architecture + ADR
+Guard, Periodic Scans, Docs + Knowledge Drift, and Self-Improvement) writes at
+least one event using [`add-entry.ts`](../scripts/workflow-memory/add-entry.ts).
+Utility skills do not use standalone workflow keys; they log under the parent
+core workflow key.
 This captures why decisions were made, what failed, and which follow-up actions
 are required.
 
@@ -153,7 +155,7 @@ Do not load full event history unless explicitly requested.
 Preferred command:
 
 ```bash
-node agent-engine/scripts/workflow-memory/add-entry.mjs \
+pnpm workflow-memory:add-entry \
   --workflow "Feature Delivery" \
   --title "Example pattern" \
   --trigger "PR #123 review" \
@@ -185,7 +187,7 @@ Scoring uses a lightweight weighted sum:
 Retrieval helper:
 
 ```bash
-node agent-engine/scripts/workflow-memory/retrieve.mjs \
+pnpm workflow-memory:retrieve \
   --workflow "Self-Improvement" \
   --tags guardrail,docs \
   --limit 5 \
@@ -250,7 +252,7 @@ Weekly baseline:
 pnpm workflow-memory:coverage:strict
 ```
 
-If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agent-engine/scripts/workflow-memory/add-entry.mjs`](../scripts/workflow-memory/add-entry.mjs).
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agent-engine/scripts/workflow-memory/add-entry.ts`](../scripts/workflow-memory/add-entry.ts).
 
 ## Replayable Scenarios
 
@@ -310,7 +312,7 @@ Additional context about what the skill should do with this input.
 # agent-engine/workflow-memory/scenarios/{id}.md
 
 # 2. Create the event with scenario flags
-node agent-engine/scripts/workflow-memory/add-entry.mjs \
+pnpm workflow-memory:add-entry \
   --id my-scenario-id \
   --workflow "Self-Improvement" \
   --title "Scenario: description" \
@@ -338,20 +340,20 @@ pnpm scenario:validate
 pnpm scenario:validate:strict
 
 # Filter by skill
-pnpm scenario:validate -- --skill pr-risk-review
+pnpm scenario:validate --skill pr-risk-review
 
 # JSON output
-pnpm scenario:validate -- --json
+pnpm scenario:validate --json
 ```
 
 ### Retrieving Scenarios
 
 ```bash
 # All events with scenarios
-node agent-engine/scripts/workflow-memory/retrieve.mjs --has-scenario
+pnpm workflow-memory:retrieve --has-scenario
 
 # Filter by target skill
-node agent-engine/scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-review
+pnpm workflow-memory:retrieve --scenario-skill pr-risk-review
 ```
 
 ## Compaction Policy
@@ -363,5 +365,5 @@ node agent-engine/scripts/workflow-memory/retrieve.mjs --scenario-skill pr-risk-
 Compaction helper:
 
 ```bash
-node agent-engine/scripts/workflow-memory/compact-memory.mjs --archive-closed --days 90
+pnpm workflow-memory:compact --archive-closed --days 90
 ```

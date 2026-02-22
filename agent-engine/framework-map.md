@@ -54,7 +54,7 @@ flowchart TD
 | Workflow catalog | `agent-engine/workflows/registry.json`, `agent-engine/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated catalog + per-workflow pages |
 | Skill system | `.agents/skills/*/SKILL.md` | `agent-engine/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
-| Workflow memory | `agent-engine/workflow-memory/*` | `agent-engine/scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
+| Workflow memory | `agent-engine/workflow-memory/*` | `agent-engine/scripts/workflow-memory/*.ts`, coverage checks | JSONL events + index + summaries |
 | Automation lanes | `agent-engine/automations/*/*.md` + `agent-engine/automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
 
 ## Execution Model

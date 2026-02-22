@@ -1,30 +1,23 @@
 # PR Risk Review
 
-- Memory key: `PR Risk Review`
-- Primary skill: [`pr-risk-review`](../../../.agents/skills/pr-risk-review/SKILL.md)
+- Status: utility skill (not a core workflow class)
+- Source skill: [`pr-risk-review`](../../../.agents/skills/pr-risk-review/SKILL.md)
+- Memory key: use the parent core workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`)
 
 ## What It Does
 
 Runs a findings-first pre-merge review focused on regressions, authorization/data safety, contract compatibility, and missing test evidence.
 
-## Trigger Skills
+## Use With Core Workflows
 
-- `pr-risk-review` (primary)
-- Common companion: `test-surface-steward`
+- `Feature Delivery`
+- `Architecture + ADR Guard`
+- `Self-Improvement`
 
 ## Automation Entry Points
 
-- No dedicated automation lane runs this workflow as a standalone stage.
-- It is invoked in manual pre-merge review and can be selected by quality closure triage for high-risk findings.
+- No dedicated automation lane.
 
-## How It Works
+## Note
 
-1. Map changed files to risk categories.
-2. Check must-not-regress rules (auth before writes, sanitization, query keys, stream typing/state, retry policy, telemetry lifecycle).
-3. Validate evidence with targeted tests, then widen when necessary.
-4. Emit findings ordered by severity with minimal fix paths.
-
-## Outputs
-
-- Findings-first risk report and merge recommendation.
-- Memory entry with workflow `PR Risk Review`.
+For active workflow classes and memory-key policy, use [`agent-engine/workflows/README.md`](../README.md).

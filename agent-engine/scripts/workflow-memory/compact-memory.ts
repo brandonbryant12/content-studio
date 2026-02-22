@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("agent-engine", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
@@ -9,7 +10,7 @@ const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const ARCHIVE_DIR = path.join(EVENTS_DIR, "archive");
 
 const USAGE = `Usage:
-  node agent-engine/scripts/workflow-memory/compact-memory.mjs [--archive-closed] [--days 90] [--dry-run]
+  pnpm workflow-memory:compact [--archive-closed] [--days 90] [--dry-run]
 `;
 
 const CLOSED_STATUSES = new Set(["closed", "resolved", "done"]);
@@ -185,7 +186,4 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+runScript(main);

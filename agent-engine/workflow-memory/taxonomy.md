@@ -71,7 +71,7 @@ grouped by capability and failure class.
 If an event uses `capability:*` or `failure:*` tags, include at least one tag
 from both groups.
 
-## `add-entry.mjs` Taxonomy Options
+## `workflow-memory:add-entry` Taxonomy Options
 
 Use these options to append canonical tags without hand-typing prefixes:
 
@@ -84,12 +84,12 @@ Use these options to append canonical tags without hand-typing prefixes:
 Example:
 
 ```bash
-node agent-engine/scripts/workflow-memory/add-entry.mjs \
+pnpm workflow-memory:add-entry \
   --workflow "Self-Improvement" \
   --title "Improve memory tag consistency" \
   --trigger "Repeated memory-tag ambiguity in events" \
   --finding "Added taxonomy tags and validation in add-entry helper" \
-  --evidence "agent-engine/workflow-memory/taxonomy.md, agent-engine/scripts/workflow-memory/add-entry.mjs" \
+  --evidence "agent-engine/workflow-memory/taxonomy.md, agent-engine/scripts/workflow-memory/add-entry.ts" \
   --follow-up "Apply taxonomy tags in periodic scan memory entries" \
   --owner "@team" \
   --status "closed" \

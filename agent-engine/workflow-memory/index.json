@@ -105,6 +105,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-consolidated-workflow-catalog-to-five-core-workflows",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Consolidated workflow catalog to five core workflows",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "workflow",
+      "skills",
+      "consolidation"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-docs-knowledge-drift-convert-readme-file-references-to-deep-links",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -240,6 +256,37 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-feature-delivery-add-script-test-lint-guardrails-for-agent-engine-script-commands",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add script test + lint guardrails for agent-engine script commands",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "tooling",
+      "testing",
+      "lint",
+      "commands"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-feature-delivery-migrate-agent-engine-scripts-from-mjs-to-effect-typescript-comma",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Migrate agent-engine scripts from .mjs to Effect TypeScript commands",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "tooling",
+      "effect",
+      "commands"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-feature-delivery-replace-metadata-schema-unknown-with-json-schema",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -351,6 +398,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-self-improvement-consolidated-self-improvement-issue-backlog-and-deduped-roadmap",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Consolidated self-improvement issue backlog and deduped roadmap",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "self-improvement",
+      "issue-consolidation",
+      "agent-engine"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-self-improvement-enforce-workflow-memory-taxonomy-tags-for-memory-and-agent-diagn",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -370,6 +432,21 @@
     ],
     "importance": 0.82,
     "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-self-improvement-enforced-registry-driven-workflow-memory-coverage-and-key-valida",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Enforced registry-driven workflow-memory coverage and key validation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "workflow",
+      "guardrail",
+      "scripts"
+    ],
     "eventFile": "events/2026-02.jsonl"
   },
   {

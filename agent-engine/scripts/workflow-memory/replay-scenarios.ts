@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("agent-engine", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
@@ -21,7 +22,7 @@ const SECRET_PATTERNS = [
 ];
 
 const USAGE = `Usage:
-  node agent-engine/scripts/workflow-memory/replay-scenarios.mjs [options]
+  pnpm scenario:validate [options]
 
 Options:
   --skill <name>    Filter by target skill
@@ -281,7 +282,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+runScript(main);

@@ -14,7 +14,6 @@ Runs recurring per-PR, daily, weekly, and monthly quality scans to detect system
 
 ## Automation Entry Points
 
-- [`quality-sentinel`](../../automations/quality-sentinel/quality-sentinel.md): executes recurring quality loops and closure.
 - [`architecture-radar`](../../automations/architecture-radar/architecture-radar.md): continuous architecture research scan lane.
 - [`harness-research-radar`](../../automations/harness-research-radar/harness-research-radar.md): continuous harness/self-improvement research scan lane.
 

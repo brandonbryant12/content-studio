@@ -10,7 +10,7 @@ Use gpt-5.3-codex with reasoning effort xhigh. Role: autonomous self-improvement
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, merges, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 
 Issue intake and judge stage:
-- Query open issues in brandonbryant12/content-studio labeled self-improvement and codex-automation.
+- Query open issues in this repository labeled self-improvement and codex-automation.
 - Exclude issues labeled architecture-radar (those are human-gated coding-pattern lane).
 - Search open PRs and issue history first to avoid duplicate execution.
 - Evaluate all candidate suggestions with a holistic scorecard:

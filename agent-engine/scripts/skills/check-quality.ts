@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { runScript } from "../lib/effect-script";
 
 const ROOT = process.cwd();
 const CANONICAL_SKILLS_DIR = path.join(ROOT, ".agents", "skills");
@@ -40,7 +41,7 @@ const MAX_RECOMMENDED_LINES = 120;
 const MIN_CONCRETE_PATH_ANCHORS = 2;
 
 const USAGE = `Usage:
-  node agent-engine/scripts/skills/check-quality.mjs [--strict] [--json]
+  pnpm skills:check [--strict] [--json]
 
 Options:
   --strict  Treat warnings as failures (non-zero exit code)
@@ -172,7 +173,10 @@ async function validateSkillFile(skillName, issues) {
 
   const hasMemoryGuidance =
     MEMORY_MARKERS.some((marker) => content.includes(marker)) ||
-    (content.includes("workflow-memory") && content.includes("add-entry.mjs"));
+    (content.includes("workflow-memory") &&
+      (content.includes("workflow-memory:add-entry") ||
+        content.includes("add-entry.ts") ||
+        content.includes("add-entry.mjs")));
 
   if (!hasMemoryGuidance) {
     addIssue(issues, "warning", "Missing memory guidance section", skillPath);
@@ -335,7 +339,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+runScript(main);

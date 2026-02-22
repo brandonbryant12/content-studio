@@ -1,32 +1,24 @@
 # Intake + Triage
 
-- Memory key: `Intake + Triage`
-- Primary skill: [`intake-triage`](../../../.agents/skills/intake-triage/SKILL.md)
+- Status: utility skill (not a core workflow class)
+- Source skill: [`intake-triage`](../../../.agents/skills/intake-triage/SKILL.md)
+- Memory key: use the parent core workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`)
 
 ## What It Does
 
-Converts a request into scoped vertical slices, explicit acceptance criteria, test intent, and risk flags before implementation starts.
+Converts a request into scoped vertical slices, acceptance criteria, test intent, and risk flags before implementation starts.
 
-## Trigger Skills
+## Use With Core Workflows
 
-- `intake-triage` (primary)
-- `codebase-nav` (optional orientation support)
+- `Feature Delivery`
+- `Architecture + ADR Guard`
+- `Self-Improvement`
 
 ## Automation Entry Points
 
-- [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md): screens and selects actionable `ready-for-dev` issues.
-- [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md): intake and scoring stage for self-improvement issues.
+- [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md)
+- [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md)
 
-## How It Works
+## Note
 
-1. Classify the request type (feature, bug, refactor, operational).
-2. Read only the docs needed for the touched surfaces.
-3. Define 1-3 vertical slices with user-visible outcomes.
-4. Write acceptance criteria per slice, including error semantics and evidence expectations.
-5. Mark out-of-scope items and open questions.
-6. Record risk flags (authz, sanitization, queue/streaming, cache invalidation, architecture boundaries).
-
-## Outputs
-
-- Triage artifact with slices, acceptance criteria, and risk flags.
-- Memory entry via `add-entry.mjs` with workflow `Intake + Triage`.
+For active workflow classes and memory-key policy, use [`agent-engine/workflows/README.md`](../README.md).

@@ -263,6 +263,12 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.8
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       turbo:
         specifier: 'catalog:'
         version: 2.6.1

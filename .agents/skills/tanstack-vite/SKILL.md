@@ -76,4 +76,4 @@ Primary anchors: `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md`,
 
 ## Memory + Compounding
 
-After frontend-impacting merges, record one event with workflow key `TanStack + Vite` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+`TanStack + Vite` is a utility skill. Record memory under the parent core workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.

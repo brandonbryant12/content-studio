@@ -33,7 +33,7 @@ Use this skill to run recurring repo scans and produce a prioritized backlog.
   - frontend loading/error-state regressions (`apps/web/src/features/`, `apps/web/src/routes/_protected/`)
   - performance regressions in route-level bundles and hot paths (`apps/web`, `apps/worker/src`, `packages/media/src`)
   - security/dependency hygiene drift (`package.json`, `pnpm-lock.yaml`, `packages/*/package.json`)
-  - agent-run/eval findings classified with `capability:*` and `failure:*` tags from [`agentic-harness-framework/workflow-memory/taxonomy.md`](../../../agentic-harness-framework/workflow-memory/taxonomy.md)
+  - agent-run/eval findings classified with `capability:*` and `failure:*` tags from [`agent-engine/workflow-memory/taxonomy.md`](../../../agent-engine/workflow-memory/taxonomy.md)
 - Review agent-authored merges for repeat mistakes and guardrail gaps.
 - Run `pnpm workflow-memory:coverage:strict`; if a missing workflow was run, add the missing memory event immediately.
 - Run `pnpm skills:check:strict` if any skill files changed that week.
@@ -73,6 +73,6 @@ If the same failure pattern appears in 2+ merges, convert it into at least one:
 
 ## Memory + Compounding
 
-After each scan cycle, record one event with workflow key `Periodic Scans` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md).
-If the scan includes memory findings, apply `memory-form:*`, `memory-function:*`, and `memory-dynamics:*` tags from [`agentic-harness-framework/workflow-memory/taxonomy.md`](../../../agentic-harness-framework/workflow-memory/taxonomy.md).
+After each scan cycle, record one event with workflow key `Periodic Scans` using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md).
+If the scan includes memory findings, apply `memory-form:*`, `memory-function:*`, and `memory-dynamics:*` tags from [`agent-engine/workflow-memory/taxonomy.md`](../../../agent-engine/workflow-memory/taxonomy.md).
 Include the event `id` in output.

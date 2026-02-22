@@ -2,11 +2,13 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("agent-engine", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
 const SUMMARIES_DIR = path.join(MEMORY_DIR, "summaries");
+const WORKFLOW_REGISTRY_PATH = path.join("agent-engine", "workflows", "registry.json");
 
 const REQUIRED_ARGS = [
   "workflow",
@@ -17,21 +19,6 @@ const REQUIRED_ARGS = [
   "follow_up",
   "owner",
   "status",
-];
-
-const KNOWN_WORKFLOWS = [
-  "Intake + Triage",
-  "Feature Delivery",
-  "TanStack + Vite",
-  "Architecture + ADR Guard",
-  "PR Risk Review",
-  "Test Surface Steward",
-  "Security + Dependency Hygiene",
-  "Performance + Cost Guard",
-  "Docs + Knowledge Drift",
-  "Periodic Scans",
-  "Release + Incident Response",
-  "Self-Improvement",
 ];
 
 const MEMORY_TRIGGER_TAGS = new Set(["memory", "workflow-memory", "memory-eval"]);
@@ -60,7 +47,7 @@ const FAILURE_VALUES = new Set([
 ]);
 
 const USAGE = `Usage:
-  node agent-engine/scripts/workflow-memory/add-entry.mjs \\
+  pnpm workflow-memory:add-entry \\
     --workflow "Feature Delivery" \\
     --title "Short title" \\
     --trigger "What triggered this" \\
@@ -139,6 +126,35 @@ async function readJsonArray(filePath) {
     }
     throw error;
   }
+}
+
+async function readKnownWorkflows() {
+  let raw;
+  try {
+    raw = await fs.readFile(WORKFLOW_REGISTRY_PATH, "utf8");
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      throw new Error(
+        `Workflow registry not found: ${WORKFLOW_REGISTRY_PATH}. Run from repository root.`,
+      );
+    }
+    throw error;
+  }
+
+  const parsed = JSON.parse(raw);
+  const workflows = Array.isArray(parsed?.coreWorkflows)
+    ? parsed.coreWorkflows
+        .map((entry) => (typeof entry?.memoryKey === "string" ? entry.memoryKey.trim() : ""))
+        .filter(Boolean)
+    : [];
+
+  if (workflows.length === 0) {
+    throw new Error(
+      `No core workflows found in ${WORKFLOW_REGISTRY_PATH}. Add coreWorkflows entries before writing memory events.`,
+    );
+  }
+
+  return Array.from(new Set(workflows));
 }
 
 async function readJsonlIds(filePath) {
@@ -314,7 +330,17 @@ function validateTaxonomyTags(tags) {
   }
 }
 
-function printCoverageSummary(index, month) {
+function assertKnownWorkflow(workflow, knownWorkflows) {
+  if (knownWorkflows.includes(workflow)) {
+    return;
+  }
+
+  throw new Error(
+    `Unknown core workflow key "${workflow}". Use one of: ${knownWorkflows.join(", ")}. Utility skills must log using a parent core workflow key.`,
+  );
+}
+
+function printCoverageSummary(index, month, knownWorkflows) {
   const workflowsInMonth = new Set(
     index
       .filter((row) => row && typeof row.month === "string" && row.month === month)
@@ -322,16 +348,16 @@ function printCoverageSummary(index, month) {
       .filter((workflow) => typeof workflow === "string"),
   );
 
-  const missingWorkflows = KNOWN_WORKFLOWS.filter((workflow) => !workflowsInMonth.has(workflow));
+  const missingWorkflows = knownWorkflows.filter((workflow) => !workflowsInMonth.has(workflow));
 
   console.log(
-    `Workflow coverage for ${month}: ${KNOWN_WORKFLOWS.length - missingWorkflows.length}/${KNOWN_WORKFLOWS.length} workflows with events.`,
+    `Workflow coverage for ${month}: ${knownWorkflows.length - missingWorkflows.length}/${knownWorkflows.length} workflows with events.`,
   );
 
   if (missingWorkflows.length > 0) {
     console.log(`Workflows with zero entries in ${month}: ${missingWorkflows.join(", ")}`);
     console.log(
-      `Run coverage audit: node agent-engine/scripts/workflow-memory/check-coverage.mjs --month ${month}`,
+      `Run coverage audit: pnpm workflow-memory:coverage --month ${month}`,
     );
   }
 }
@@ -463,6 +489,8 @@ async function main() {
   }
 
   const event = buildEvent(args);
+  const knownWorkflows = await readKnownWorkflows();
+  assertKnownWorkflow(event.workflow, knownWorkflows);
   const month = event.date.slice(0, 7);
   const eventFile = path.join(EVENTS_DIR, `${month}.jsonl`);
 
@@ -507,10 +535,7 @@ async function main() {
   console.log(`Added workflow memory event: ${event.id}`);
   console.log(`Event file: ${eventFile}`);
   console.log(`Index updated: ${INDEX_PATH}`);
-  printCoverageSummary(deduped, month);
+  printCoverageSummary(deduped, month, knownWorkflows);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+runScript(main);

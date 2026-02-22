@@ -1,31 +1,23 @@
 # Performance + Cost Guard
 
-- Memory key: `Performance + Cost Guard`
-- Primary skill: [`performance-cost-guard`](../../../.agents/skills/performance-cost-guard/SKILL.md)
+- Status: utility skill (not a core workflow class)
+- Source skill: [`performance-cost-guard`](../../../.agents/skills/performance-cost-guard/SKILL.md)
+- Memory key: use the parent core workflow key (`Periodic Scans`, `Feature Delivery`, or `Self-Improvement`)
 
 ## What It Does
 
 Detects and manages performance or cost regressions across frontend bundles, backend hot paths, CI runtime, and AI/provider spend.
 
-## Trigger Skills
+## Use With Core Workflows
 
-- `performance-cost-guard` (primary)
-- Common companions: `periodic-scans`, `release-incident-response`
+- `Periodic Scans`
+- `Feature Delivery`
+- `Self-Improvement`
 
 ## Automation Entry Points
 
-- No dedicated automation lane currently owns this workflow.
-- Typically triggered during weekly scans, release readiness, and perf-sensitive delivery.
+- No dedicated automation lane.
 
-## How It Works
+## Note
 
-1. Establish recent known-good baselines.
-2. Compare changed-surface impact (bundle output, runtime timings, telemetry trend snapshots).
-3. Flag regressions with practical thresholds and user impact.
-4. Prioritize fixes by impact-to-effort and decide block/accept/defer.
-
-## Outputs
-
-- Blocking and non-blocking regressions with confidence.
-- Optimization quick wins and deferred opportunities.
-- Memory entry with workflow `Performance + Cost Guard`.
+For active workflow classes and memory-key policy, use [`agent-engine/workflows/README.md`](../README.md).

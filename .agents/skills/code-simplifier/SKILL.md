@@ -77,6 +77,6 @@ If a simplification conflicts with standards docs, follow docs and keep the orig
 
 No standalone memory key for this support skill.
 
-- Record simplification outcomes in the parent workflow memory event (`Feature Delivery`, `PR Risk Review`, `Self-Improvement`, or `Periodic Scans`) using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`.
+- Record simplification outcomes in the parent core workflow memory event (`Feature Delivery`, `Architecture + ADR Guard`, `Docs + Knowledge Drift`, `Self-Improvement`, or `Periodic Scans`) using `pnpm workflow-memory:add-entry`.
 - Include the parent workflow + event `id` in final delivery notes.
 - If memory logging is intentionally deferred, state the reason and who owns the follow-up.

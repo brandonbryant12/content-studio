@@ -7,7 +7,7 @@ description: Docs/code drift workflow to keep architecture, patterns, testing, a
 
 Use this skill after behavior changes, during weekly scans, and before releases.
 
-Primary anchors: `agentic-harness-framework/workflows/README.md`, `docs/README.md`.
+Primary anchors: `agent-engine/workflows/README.md`, `docs/README.md`, `docs/master-spec.md`.
 
 ## Drift Targets
 
@@ -23,7 +23,7 @@ Primary anchors: `agentic-harness-framework/workflows/README.md`, `docs/README.m
 2. Verify docs still match current code semantics.
 3. Update docs where behavior changed or guidance is ambiguous.
 4. Remove stale guidance and dead links.
-5. Confirm cross-doc consistency ([`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md)).
+5. Confirm cross-doc consistency ([`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md)).
 
 ## Output Contract
 
@@ -36,4 +36,4 @@ Each item includes file evidence and confidence.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+Record one event with workflow key `Docs + Knowledge Drift` using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.

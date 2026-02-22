@@ -49,9 +49,9 @@ packages/
 - **Follow [`agent-engine/workflows/README.md`](./agent-engine/workflows/README.md)** for workflow selection and distinctions.
 - **Persist compounding notes in `agent-engine/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
-  - `node agent-engine/scripts/workflow-memory/add-entry.mjs --help`
+  - `pnpm workflow-memory:add-entry --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
-  - `node agent-engine/scripts/workflow-memory/retrieve.mjs --help`
+  - `pnpm workflow-memory:retrieve --help`
 - For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](./agent-engine/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
@@ -86,9 +86,11 @@ packages/
 ```bash
 pnpm typecheck    # Type check all packages (required before PR)
 pnpm test         # Run all tests (includes web app tests)
+pnpm test:scripts # Script guardrail tests (included in pnpm test)
 pnpm test:invariants # Safety invariants (must pass for agent-authored changes)
 pnpm build        # Build all packages
 pnpm lint         # Lint all packages
+pnpm scripts:lint # Script lint/guardrails for agent-engine scripts
 pnpm dev          # Start all dev servers (Turborepo watch mode)
 pnpm db:push      # Push Drizzle schema to database
 pnpm db:studio    # Open Drizzle Studio GUI

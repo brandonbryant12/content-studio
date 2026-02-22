@@ -66,4 +66,4 @@ For each finding include:
 
 ## Memory + Compounding
 
-Record one event with workflow key `PR Risk Review` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+`PR Risk Review` is a utility skill. Record memory under the parent core workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.

@@ -1,30 +1,23 @@
 # Test Surface Steward
 
-- Memory key: `Test Surface Steward`
-- Primary skill: [`test-surface-steward`](../../../.agents/skills/test-surface-steward/SKILL.md)
+- Status: utility skill (not a core workflow class)
+- Source skill: [`test-surface-steward`](../../../.agents/skills/test-surface-steward/SKILL.md)
+- Memory key: use the parent core workflow key (`Feature Delivery`, `Periodic Scans`, or `Self-Improvement`)
 
 ## What It Does
 
 Keeps test depth balanced across use-case, integration, workflow, invariant, frontend, and e2e layers as behavior changes.
 
-## Trigger Skills
+## Use With Core Workflows
 
-- `test-surface-steward` (primary)
-- Common companions: `feature-delivery`, `pr-risk-review`, `debug-fix`
+- `Feature Delivery`
+- `Periodic Scans`
+- `Self-Improvement`
 
 ## Automation Entry Points
 
-- [`quality-sentinel`](../../automations/quality-sentinel/quality-sentinel.md): may assign findings to this workflow during scan triage.
+- No dedicated automation lane.
 
-## How It Works
+## Note
 
-1. Classify changed behavior by surface (domain/API/worker/frontend).
-2. Map required test types from testing docs.
-3. Detect missing required tests, weak tests, and redundant tests.
-4. Evaluate flake/runtime risk and propose minimal high-signal changes.
-
-## Outputs
-
-- Prioritized test recommendations with evidence and confidence gain.
-- Validation command set for closure.
-- Memory entry with workflow `Test Surface Steward`.
+For active workflow classes and memory-key policy, use [`agent-engine/workflows/README.md`](../README.md).

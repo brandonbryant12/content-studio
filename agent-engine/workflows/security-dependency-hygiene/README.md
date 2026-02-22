@@ -1,32 +1,23 @@
 # Security + Dependency Hygiene
 
-- Memory key: `Security + Dependency Hygiene`
-- Primary skill: [`security-dependency-hygiene`](../../../.agents/skills/security-dependency-hygiene/SKILL.md)
+- Status: utility skill (not a core workflow class)
+- Source skill: [`security-dependency-hygiene`](../../../.agents/skills/security-dependency-hygiene/SKILL.md)
+- Memory key: use the parent core workflow key (`Periodic Scans`, `Feature Delivery`, or `Self-Improvement`)
 
 ## What It Does
 
 Audits auth/data safety, secret handling, and dependency/supply-chain risk for changed code and release readiness.
 
-## Trigger Skills
+## Use With Core Workflows
 
-- `security-dependency-hygiene` (primary)
-- Common companions: `periodic-scans`, `release-incident-response`
+- `Periodic Scans`
+- `Feature Delivery`
+- `Self-Improvement`
 
 ## Automation Entry Points
 
-- No dedicated automation lane currently owns this workflow.
-- Typically triggered during weekly scans, release prep, or dependency update reviews.
+- No dedicated automation lane.
 
-## How It Works
+## Note
 
-1. Validate authn/authz and ownership checks on mutating paths.
-2. Verify concealment/error mapping and sanitization boundaries.
-3. Scan changed/config paths for secret exposure patterns.
-4. Review dependency changes, lockfile integrity, and vulnerability signals.
-5. Produce remediation queue by severity and operational impact.
-
-## Outputs
-
-- Critical/high/medium-low security and hygiene findings.
-- Deferred risks with owner and due date.
-- Memory entry with workflow `Security + Dependency Hygiene`.
+For active workflow classes and memory-key policy, use [`agent-engine/workflows/README.md`](../README.md).

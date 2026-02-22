@@ -16,7 +16,6 @@ Runs the default request-to-merge delivery loop: plan slices, implement safely, 
 
 - [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md): implements approved architecture issues through full validation gates.
 - [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md): implements selected self-improvement issues in bounded slices.
-- [`quality-sentinel`](../../automations/quality-sentinel/quality-sentinel.md): can assign findings to delivery workflows during closure loops.
 
 ## How It Works
 

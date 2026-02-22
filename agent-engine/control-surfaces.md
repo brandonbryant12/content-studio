@@ -16,7 +16,7 @@ It maps each surface to its canonical location, enforcement path, and output evi
 | Lint rules | `tools/eslint/base.js`, `tools/eslint/custom-rules.js`, package eslint configs | `pnpm lint` | Static rule pass/fail |
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
 | Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test`, `pnpm build` | Full build and runtime confidence |
-| Workflow memory | `agent-engine/workflow-memory/*`, `agent-engine/scripts/workflow-memory/*.mjs` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
+| Workflow memory | `agent-engine/workflow-memory/*`, `agent-engine/scripts/workflow-memory/*.ts` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
 | Automation lanes | `agent-engine/automations/*/*.md`, `agent-engine/automations/*/*.toml` | Lane preflights + lane-specific gate contracts | Automated issue/PR execution trails |
 | CI/CD pipelines | `Jenkinsfile`, `jenkins/*.groovy` | Jenkins job gates | Branch/main/nightly/weekly quality reports |
 
@@ -59,8 +59,8 @@ Examples:
 
 3. Automation lanes can execute multiple workflows/skills.
 Examples:
-- Automation lane: `quality-sentinel`
-- Executes: `Periodic Scans` workflow and `quality-closure-loop` utility skill
+- Automation lane: `self-improvement-judge-executor`
+- Executes: `Self-Improvement` workflow and `Feature Delivery` workflow with utility skills such as `debug-fix`
 
 4. Skill source is canonical in `.agents/skills`.
 `.agent/skills`, `.claude/skills`, and `.github/skills` are mirrors.

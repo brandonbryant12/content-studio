@@ -78,4 +78,4 @@ After the focused test passes, widen in order:
 
 ## Memory + Compounding
 
-No standalone memory key for this support skill. Record the failure signature and fix in the parent workflow event (`Feature Delivery`, `PR Risk Review`, `Test Surface Steward`, or `Self-Improvement`).
+No standalone memory key for this support skill. Record the failure signature and fix in the parent core workflow event (`Feature Delivery`, `Architecture + ADR Guard`, `Periodic Scans`, or `Self-Improvement`).

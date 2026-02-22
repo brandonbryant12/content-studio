@@ -84,4 +84,4 @@ rg -n "createFileRoute\\(|queryOptions\\(|handleEffectWithProtocol\\(" apps/web/
 
 ## Memory + Compounding
 
-No standalone memory key for this support skill. Capture navigation findings in the parent workflow event (`Feature Delivery`, `PR Risk Review`, `Periodic Scans`, etc.).
+No standalone memory key for this support skill. Capture navigation findings in the parent core workflow event (`Feature Delivery`, `Architecture + ADR Guard`, `Docs + Knowledge Drift`, or `Periodic Scans`).

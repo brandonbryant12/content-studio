@@ -5,9 +5,9 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh. Role: continuous research on improving the agent harness and self-improvement loop for brandonbryant12/content-studio. Advisory mode only: do not edit repository code/docs, do not open PRs, do not commit, and do not push.
+Use gpt-5.3-codex with reasoning effort xhigh. Role: continuous research on improving the agent harness and self-improvement loop for this repository. Advisory mode only: do not edit repository code/docs, do not open PRs, do not commit, and do not push.
 
-Preflight GitHub access first by running `gh auth status`, `gh repo view brandonbryant12/content-studio --json viewerPermission`, and `gh issue list -R brandonbryant12/content-studio --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
+Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
 
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 

@@ -2,12 +2,13 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("agent-engine", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 
 const USAGE = `Usage:
-  node agent-engine/scripts/workflow-memory/retrieve.mjs \\
+  pnpm workflow-memory:retrieve \\
     --workflow "Self-Improvement" \\
     --tags guardrail,docs \\
     --limit 5 \\
@@ -183,7 +184,4 @@ async function main() {
   console.log(JSON.stringify(response, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+runScript(main);

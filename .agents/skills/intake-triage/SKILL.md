@@ -10,7 +10,7 @@ Use this skill at the start of every feature, refactor, bugfix, or operational c
 ## Objectives
 
 - Convert requests into implementable scope with explicit acceptance criteria.
-- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `agentic-harness-framework/workflows/README.md` and `docs/master-spec.md`).
+- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `agent-engine/workflows/README.md` and `docs/master-spec.md`).
 - Surface risk and uncertainty early so downstream workflows are predictable.
 
 ## Intake Steps
@@ -53,7 +53,12 @@ Produce this before implementation starts:
 
 ## Memory + Compounding
 
-After triage, record one event with workflow key `Intake + Triage` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+`Intake + Triage` is a utility skill. Record memory under the parent core workflow key:
+- `Feature Delivery` for standard product/code delivery intake
+- `Architecture + ADR Guard` for architecture-governed intake
+- `Self-Improvement` for guardrail/process improvement intake
+
+Use `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md) and include the event `id` in output.
 
 ## Definition Of Done
 

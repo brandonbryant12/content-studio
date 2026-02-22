@@ -16,7 +16,6 @@ Converts repeated failures, review feedback, and scan findings into stronger gua
 
 - [`harness-research-radar`](../../automations/harness-research-radar/harness-research-radar.md): produces candidate self-improvement issues.
 - [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md): selects and implements the highest-value self-improvement issue.
-- [`quality-sentinel`](../../automations/quality-sentinel/quality-sentinel.md): feeds recurrence signals from closure loops.
 
 ## How It Works
 

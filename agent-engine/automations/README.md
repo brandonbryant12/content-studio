@@ -68,11 +68,6 @@ This creates stability plus adaptation:
 - PR output must include linked aggregated issues plus a detailed improvements/benefits explanation, and include [`research/`](../../research/) documentation updates when external research ideas are adopted.
 - Branches from latest `origin/main`, runs core validation gates, and opens PRs for human review/merge (no auto-merge in this lane).
 
-5. `quality-sentinel`
-- Quality assurance loop lane.
-- Delegates directly to the `quality-closure-loop` skill for scan, triage, fix execution, recurrence prevention, and closure.
-- Uses workflow-memory evidence and event IDs as part of loop completion output.
-
 ## Lane Contract
 
 For every lane:
@@ -142,7 +137,7 @@ External research is encouraged, but only through filters:
 1. `architecture-radar` finds coding-pattern improvements.
 2. Human approves selected issue by adding `ready-for-dev`.
 3. `architecture-approval-executor` implements and merges after gates, usually one issue but optionally a small coherent multi-issue bundle in one PR.
-4. `harness-research-radar` and `quality-sentinel` feed self-improvement ideas/issues.
+4. `harness-research-radar` feeds self-improvement ideas/issues.
 5. `self-improvement-judge-executor` selects the best holistic improvement, implements it, and opens a PR for human review/merge.
 
 ## Research Logging
@@ -165,7 +160,6 @@ cp agent-engine/automations/architecture-radar/architecture-radar.toml ~/.codex/
 cp agent-engine/automations/architecture-approval-executor/architecture-approval-executor.toml ~/.codex/automations/architecture-approval-executor/automation.toml
 cp agent-engine/automations/harness-research-radar/harness-research-radar.toml ~/.codex/automations/harness-research-radar/automation.toml
 cp agent-engine/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml ~/.codex/automations/self-improvement-judge-executor/automation.toml
-cp agent-engine/automations/quality-sentinel/quality-sentinel.toml ~/.codex/automations/quality-sentinel/automation.toml
 ```
 
 Pull runtime wrappers back into repo mirror (verification only):
@@ -175,5 +169,4 @@ cp ~/.codex/automations/architecture-radar/automation.toml agent-engine/automati
 cp ~/.codex/automations/architecture-approval-executor/automation.toml agent-engine/automations/architecture-approval-executor/architecture-approval-executor.toml
 cp ~/.codex/automations/harness-research-radar/automation.toml agent-engine/automations/harness-research-radar/harness-research-radar.toml
 cp ~/.codex/automations/self-improvement-judge-executor/automation.toml agent-engine/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml
-cp ~/.codex/automations/quality-sentinel/automation.toml agent-engine/automations/quality-sentinel/quality-sentinel.toml
 ```

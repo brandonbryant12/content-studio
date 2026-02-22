@@ -17,7 +17,9 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 
 ## 1) Scan
 
-- Anchor to standards in [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md), [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
+- Anchor to standards in [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md), [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
+- Companion skill references: `.agents/skills/periodic-scans/SKILL.md`, `.agents/skills/test-surface-steward/SKILL.md`.
+- Command anchors: `pnpm workflow-memory:coverage`, `pnpm workflow-memory:add-entry`.
 - Establish shell/toolchain context before running checks:
   - run Node/pnpm commands through interactive login zsh: `zsh -lic 'cd "$PWD" && <command>'`
   - verify toolchain first: `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
@@ -37,7 +39,7 @@ For each finding assign:
 - severity (`critical|high|medium|low`)
 - impact and confidence
 - owner
-- execution workflow (`feature-delivery`, `pr-risk-review`, `test-surface-steward`, or `docs-knowledge-drift`)
+- execution core workflow (`feature-delivery`, `architecture-adr-guard`, `docs-knowledge-drift`, or `self-improvement`) plus any companion utility skills (`pr-risk-review`, `test-surface-steward`, `security-dependency-hygiene`, `performance-cost-guard`) needed for closure
 - closure target (this cycle or deferred with reason)
 
 Rules:
@@ -58,22 +60,22 @@ Rules:
 
 ## 4) Prevent Recurrence
 
-If a pattern appears in 2+ memory events in `agentic-harness-framework/workflow-memory/index.json` or `agentic-harness-framework/workflow-memory/events/YYYY-MM.jsonl`:
+If a pattern appears in 2+ memory events in `agent-engine/workflow-memory/index.json` or `agent-engine/workflow-memory/events/YYYY-MM.jsonl`:
 
 - run `self-improvement`
 - land at least one guardrail (test, lint, docs rule, skill rule, or automation)
 - validate fail-before/pass-after where possible
-- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md) when standards change
+- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md) when standards change
 
 ## 5) Persist + Close
 
-Record one memory event for each workflow actually used:
+Record one memory event for each core workflow actually used:
 
 - `Periodic Scans`
-- `Feature Delivery` / `PR Risk Review` / `Test Surface Steward` / `Docs + Knowledge Drift`
+- `Feature Delivery` / `Architecture + ADR Guard` / `Docs + Knowledge Drift`
 - `Self-Improvement` when recurrence prevention is triggered
 
-Use `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` and include event ids in delivery notes.
+Use `pnpm workflow-memory:add-entry` and include event ids in delivery notes.
 
 Re-run `pnpm workflow-memory:coverage:strict` before completion (via the same `zsh -lic` command pattern).
 

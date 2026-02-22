@@ -36,4 +36,4 @@ Include evidence source, confidence, and expected gain.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Performance + Cost Guard` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
+`Performance + Cost Guard` is a utility skill. Record memory under the parent core workflow key (`Periodic Scans`, `Feature Delivery`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.

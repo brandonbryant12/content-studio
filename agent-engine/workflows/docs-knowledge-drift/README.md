@@ -14,7 +14,8 @@ Keeps standards, workflow guidance, and onboarding docs aligned with real reposi
 
 ## Automation Entry Points
 
-- [`quality-sentinel`](../../automations/quality-sentinel/quality-sentinel.md): can route closure findings to docs updates.
+- No dedicated automation lane currently owns this workflow.
+- Typically run during feature delivery, periodic scans, and self-improvement loops.
 
 ## How It Works
 
