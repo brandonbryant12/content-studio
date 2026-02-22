@@ -2,8 +2,8 @@ import { it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
-import { LLM, type LLMService } from '../../llm/service';
-import { streamWritingAssistantChat } from '../use-cases/stream-writing-assistant-chat';
+import { LLM, type LLMService } from '../../../llm/service';
+import { streamWritingAssistantChat } from '../stream-writing-assistant-chat';
 
 const mockStreamText = vi.fn();
 const mockConvertToModelMessages = vi.fn();

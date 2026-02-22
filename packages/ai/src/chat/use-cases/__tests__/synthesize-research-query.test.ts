@@ -2,9 +2,9 @@ import { it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
-import { LLMError } from '../../errors';
-import { LLM, type LLMService } from '../../llm/service';
-import { synthesizeResearchQuery } from '../use-cases/synthesize-research-query';
+import { LLMError } from '../../../errors';
+import { LLM, type LLMService } from '../../../llm/service';
+import { synthesizeResearchQuery } from '../synthesize-research-query';
 
 const mockModel = { modelId: 'mock-model' };
 
