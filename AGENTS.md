@@ -46,7 +46,7 @@ packages/
 
 ## AI Workflow + Skills
 
-- **Follow [`docs/workflow.md`](./docs/workflow.md)** for intake, delivery, review, scans, release/incident, and self-improvement loops.
+- **Follow [`agentic-harness-framework/workflows/README.md`](./agentic-harness-framework/workflows/README.md)** for workflow selection and distinctions.
 - **Persist compounding notes in `agentic-harness-framework/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`

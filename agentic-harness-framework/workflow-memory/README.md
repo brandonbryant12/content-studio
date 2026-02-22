@@ -19,7 +19,8 @@ agentic-harness-framework/workflow-memory/
 ## How This Fits The Repository Workflow
 
 Workflow memory is not just a historical log. It is the persistence layer for
-the agent-harness operating model described in [`docs/workflow.md`](../../docs/workflow.md)
+the agent-harness operating model described in
+[`agentic-harness-framework/workflows/README.md`](../workflows/README.md)
 and enforced in [`AGENTS.md`](../../AGENTS.md).
 
 ### 1) During delivery and review (write path)

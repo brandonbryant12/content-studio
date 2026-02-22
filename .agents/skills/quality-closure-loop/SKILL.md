@@ -17,7 +17,7 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 
 ## 1) Scan
 
-- Anchor to standards in [`docs/workflow.md`](../../../docs/workflow.md), [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
+- Anchor to standards in [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md), [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
 - Establish shell/toolchain context before running checks:
   - run Node/pnpm commands through interactive login zsh: `zsh -lic 'cd "$PWD" && <command>'`
   - verify toolchain first: `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
@@ -63,7 +63,7 @@ If a pattern appears in 2+ memory events in `agentic-harness-framework/workflow-
 - run `self-improvement`
 - land at least one guardrail (test, lint, docs rule, skill rule, or automation)
 - validate fail-before/pass-after where possible
-- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`docs/workflow.md`](../../../docs/workflow.md) when standards change
+- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md) when standards change
 
 ## 5) Persist + Close
 

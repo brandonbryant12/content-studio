@@ -15,7 +15,7 @@ Issue intake and judge stage:
 - Search open PRs and issue history first to avoid duplicate execution.
 - Evaluate all candidate suggestions with a holistic scorecard:
   - systemic impact on harness reliability/safety
-  - coherence with [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), agentic-harness-framework/workflow-memory/*, and .agents/skills
+  - coherence with [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md), agentic-harness-framework/workflow-memory/*, and .agents/skills
   - implementation risk and blast radius
   - evidence quality and recency
   - overlap/duplication with existing open work

@@ -20,7 +20,7 @@ This is the default loop inspired by compound engineering practices.
 
 ## 1) Plan
 
-- Read only the docs needed for the change ([`docs/**/*.md`](../../../docs/)); include concrete anchors like `docs/master-spec.md` and `docs/workflow.md`.
+- Read only the docs needed for the change ([`docs/**/*.md`](../../../docs/)); include concrete anchors like `docs/master-spec.md` and `agentic-harness-framework/workflows/README.md`.
 - Convert the request into 1-3 vertical slices with user-visible outcomes.
 - For frontend slices, define a short design brief before coding:
   - visual direction (typography, palette, spacing, motion)

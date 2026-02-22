@@ -36,7 +36,7 @@ Record each shipped change that adopts an idea from an external paper.
   - [`agentic-harness-framework/workflow-memory/taxonomy.md`](../agentic-harness-framework/workflow-memory/taxonomy.md)
   - `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`
   - [`agentic-harness-framework/workflow-memory/README.md`](../agentic-harness-framework/workflow-memory/README.md)
-  - [`docs/workflow.md`](../docs/workflow.md)
+  - [`agentic-harness-framework/workflows/README.md`](../agentic-harness-framework/workflows/README.md)
   - [`.agents/skills/periodic-scans/SKILL.md`](../.agents/skills/periodic-scans/SKILL.md)
 
 ### 2026-02-21 - Workflow Memory Scoring + Retrieval Helper

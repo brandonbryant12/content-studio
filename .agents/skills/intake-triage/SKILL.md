@@ -10,7 +10,7 @@ Use this skill at the start of every feature, refactor, bugfix, or operational c
 ## Objectives
 
 - Convert requests into implementable scope with explicit acceptance criteria.
-- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `docs/workflow.md` and `docs/master-spec.md`).
+- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `agentic-harness-framework/workflows/README.md` and `docs/master-spec.md`).
 - Surface risk and uncertainty early so downstream workflows are predictable.
 
 ## Intake Steps

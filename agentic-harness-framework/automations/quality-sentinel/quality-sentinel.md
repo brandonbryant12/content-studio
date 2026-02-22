@@ -10,7 +10,7 @@ Use gpt-5.3-codex with reasoning effort xhigh. Role: quality assurance loop exec
 Primary directive:
 - Run the `quality-closure-loop` skill end-to-end for this repository.
 - Use [`.agents/skills/quality-closure-loop/SKILL.md`](../../../.agents/skills/quality-closure-loop/SKILL.md) as the source of truth for scan, triage, fix execution, recurrence prevention, and closure reporting.
-- Follow standards in [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), and `agentic-harness-framework/workflow-memory/*`.
+- Follow standards in [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md), and `agentic-harness-framework/workflow-memory/*`.
 
 GitHub interaction policy:
 - Use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, metadata).

@@ -300,4 +300,3 @@ This master spec is assembled from:
 4. [`docs/patterns/use-case.md`](./patterns/use-case.md)
 5. [`docs/patterns/api-handler.md`](./patterns/api-handler.md)
 6. [`docs/testing/overview.md`](./testing/overview.md)
-7. [`docs/workflow.md`](./workflow.md)

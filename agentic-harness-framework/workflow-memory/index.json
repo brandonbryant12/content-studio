@@ -18,6 +18,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-add-per-workflow-catalog-with-skill-and-automation-mappings",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Add per-workflow catalog with skill and automation mappings",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "workflow",
+      "discoverability"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-docs-knowledge-drift-add-repository-operating-framework-docs-hub",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -52,6 +67,23 @@
     "importance": 0.63,
     "recency": 1,
     "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-docs-knowledge-drift-consolidate-workflow-model-around-core-workflows-and-generated-c",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Consolidate workflow model around core workflows and generated catalog",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "workflow",
+      "automation",
+      "skills",
+      "knowledge-drift"
+    ],
     "eventFile": "events/2026-02.jsonl"
   },
   {
@@ -152,6 +184,22 @@
     ],
     "importance": 0.62,
     "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-docs-knowledge-drift-remove-docs-workflow-file-and-confine-process-docs-to-framework",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Remove docs workflow file and confine process docs to framework",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "knowledge-drift",
+      "workflow",
+      "scope-boundary"
+    ],
     "eventFile": "events/2026-02.jsonl"
   },
   {

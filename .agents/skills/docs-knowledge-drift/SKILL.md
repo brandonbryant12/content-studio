@@ -7,7 +7,7 @@ description: Docs/code drift workflow to keep architecture, patterns, testing, a
 
 Use this skill after behavior changes, during weekly scans, and before releases.
 
-Primary anchors: `docs/workflow.md`, `docs/README.md`.
+Primary anchors: `agentic-harness-framework/workflows/README.md`, `docs/README.md`.
 
 ## Drift Targets
 
@@ -23,7 +23,7 @@ Primary anchors: `docs/workflow.md`, `docs/README.md`.
 2. Verify docs still match current code semantics.
 3. Update docs where behavior changed or guidance is ambiguous.
 4. Remove stale guidance and dead links.
-5. Confirm cross-doc consistency ([`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md)).
+5. Confirm cross-doc consistency ([`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md)).
 
 ## Output Contract
 

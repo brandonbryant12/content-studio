@@ -6,6 +6,14 @@ Goal:
 - Keep all code changes aligned with repository guardrails in [`docs/`](../../docs/), [`AGENTS.md`](../../AGENTS.md), and [`CLAUDE.md`](../../CLAUDE.md).
 - Continuously inject controlled external research ("chaos") to discover better patterns over time.
 
+## Terminology
+
+- `Workflow`: process contract and memory-key class (see [`agentic-harness-framework/workflows/README.md`](../workflows/README.md)).
+- `Skill`: reusable execution method (see [`.agents/skills/`](../../.agents/skills/)).
+- `Automation lane`: runtime orchestration policy that can trigger one or more workflows and skills.
+
+Automations are not duplicates of workflows. They define runtime policy (triggering, approvals, branch/merge behavior, gate ordering) around workflow execution.
+
 ## Directory Structure
 
 Each automation lane has its own folder:
@@ -78,7 +86,7 @@ For every lane:
 Any automation that edits code must:
 
 1. Read relevant repo standards before editing
-- [`docs/workflow.md`](../../docs/workflow.md)
+- [`agentic-harness-framework/workflows/README.md`](../workflows/README.md)
 - relevant files in [`docs/patterns/`](../../docs/patterns/)
 - relevant files in [`docs/frontend/`](../../docs/frontend/) and [`docs/testing/`](../../docs/testing/) as needed
 

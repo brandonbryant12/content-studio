@@ -43,6 +43,7 @@
     "e2e:seed": "pnpm --filter web e2e:seed",
     "skills:check": "node agentic-harness-framework/scripts/skills/check-quality.mjs",
     "skills:check:strict": "node agentic-harness-framework/scripts/skills/check-quality.mjs --strict",
+    "workflows:generate": "node agentic-harness-framework/scripts/workflows/generate-readme.mjs",
     "workflow-memory:coverage": "node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs",
     "workflow-memory:coverage:strict": "node agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs --strict",
     "scenario:validate": "node agentic-harness-framework/scripts/workflow-memory/replay-scenarios.mjs",

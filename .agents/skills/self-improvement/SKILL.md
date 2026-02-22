@@ -66,7 +66,7 @@ Update:
 
 - [`AGENTS.md`](../../../AGENTS.md)
 - [`CLAUDE.md`](../../../CLAUDE.md)
-- [`docs/workflow.md`](../../../docs/workflow.md)
+- [`agentic-harness-framework/workflows/README.md`](../../../agentic-harness-framework/workflows/README.md)
 
 Also resync skill symlinks with `agentic-harness-framework/scripts/sync-skills.sh`.
 

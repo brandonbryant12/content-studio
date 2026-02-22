@@ -23,7 +23,7 @@ Use this format:
 - Problem signature: Single markdown memory file causes retrieval/context bloat.
 - Control type: automation + docs rule
 - Change landed: `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, [`agentic-harness-framework/workflow-memory/README.md`](./README.md), workflow protocol updates.
-- Evidence: [`agentic-harness-framework/workflow-memory/README.md`](./README.md), `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, [`docs/workflow.md`](../../docs/workflow.md)
+- Evidence: [`agentic-harness-framework/workflow-memory/README.md`](./README.md), `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, [`agentic-harness-framework/workflows/README.md`](../workflows/README.md)
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -33,7 +33,7 @@ Use this format:
 - Problem signature: Workflow memory entries were structurally correct but sparse across active workflows.
 - Control type: automation + docs rule + skill update
 - Change landed: `agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs`, `package.json` workflow-memory scripts, skill/doc requirements for event id evidence and weekly coverage checks.
-- Evidence: `agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs`, [`agentic-harness-framework/workflow-memory/README.md`](./README.md), [`docs/workflow.md`](../../docs/workflow.md), [`.agents/skills/periodic-scans/SKILL.md`](../../.agents/skills/periodic-scans/SKILL.md)
+- Evidence: `agentic-harness-framework/scripts/workflow-memory/check-coverage.mjs`, [`agentic-harness-framework/workflow-memory/README.md`](./README.md), [`agentic-harness-framework/workflows/README.md`](../workflows/README.md), [`.agents/skills/periodic-scans/SKILL.md`](../../.agents/skills/periodic-scans/SKILL.md)
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -43,7 +43,7 @@ Use this format:
 - Problem signature: Skill content drift and stale path examples reduce reliability of skill-guided edits.
 - Control type: automation + docs rule
 - Change landed: `agentic-harness-framework/scripts/skills/check-quality.mjs`, `skills:check:strict` command, workflow/docs updates requiring quality checks after skill edits.
-- Evidence: `agentic-harness-framework/scripts/skills/check-quality.mjs`, `package.json`, [`docs/workflow.md`](../workflow.md), [`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md)
+- Evidence: `agentic-harness-framework/scripts/skills/check-quality.mjs`, `package.json`, [`agentic-harness-framework/workflows/README.md`](../workflows/README.md), [`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md)
 - Owner: brandon@ai-workflow
 - Status: active
 
@@ -53,7 +53,7 @@ Use this format:
 - Problem signature: Quality closure loops can finish with `workflow-memory:coverage:strict` failures when monthly workflow classes have zero entries.
 - Control type: docs rule
 - Change landed: Require the active quality loop cycle to run lightweight passes for workflows reported missing by `pnpm workflow-memory:coverage:strict` and append those workflow events before final closure.
-- Evidence: [`docs/workflow.md`](../../docs/workflow.md), [`agentic-harness-framework/workflow-memory/guardrails.md`](./guardrails.md)
+- Evidence: [`agentic-harness-framework/workflows/README.md`](../workflows/README.md), [`agentic-harness-framework/workflow-memory/guardrails.md`](./guardrails.md)
 - Owner: brandon@codex
 - Status: active
 
@@ -63,6 +63,6 @@ Use this format:
 - Problem signature: Memory and agent-failure events used inconsistent tags, reducing aggregation and retrieval quality.
 - Control type: automation + docs rule + skill update
 - Change landed: Added canonical taxonomy ([`agentic-harness-framework/workflow-memory/taxonomy.md`](./taxonomy.md)), required taxonomy checklist in workflow docs, and add-entry validation/options for memory and capability/failure tags.
-- Evidence: [`agentic-harness-framework/workflow-memory/taxonomy.md`](./taxonomy.md), `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, [`docs/workflow.md`](../../docs/workflow.md), [`.agents/skills/periodic-scans/SKILL.md`](../../.agents/skills/periodic-scans/SKILL.md), [`.agents/skills/self-improvement/SKILL.md`](../../.agents/skills/self-improvement/SKILL.md)
+- Evidence: [`agentic-harness-framework/workflow-memory/taxonomy.md`](./taxonomy.md), `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`, [`agentic-harness-framework/workflows/README.md`](../workflows/README.md), [`.agents/skills/periodic-scans/SKILL.md`](../../.agents/skills/periodic-scans/SKILL.md), [`.agents/skills/self-improvement/SKILL.md`](../../.agents/skills/self-improvement/SKILL.md)
 - Owner: brandon@codex
 - Status: active

@@ -6,6 +6,16 @@ and automation lanes fit into one operating system.
 
 Start with [`agentic-harness-framework/README.md`](./README.md), then use this page for the detailed control map and linked source-of-truth docs.
 
+## Terminology Contract
+
+- `Workflow`: process contract + memory key (cataloged under `agentic-harness-framework/workflows/`).
+- `Skill`: reusable execution method (canonical in `.agents/skills/*/SKILL.md`).
+- `Automation`: runtime lane with trigger/policy/orchestration (`agentic-harness-framework/automations/*`).
+
+Relationship rule:
+- automation lanes may execute one or more workflows via one or more skills.
+- they are not 1:1 aliases and should stay independently versioned.
+
 ## Why This Exists
 
 The repo already has strong controls, but they are distributed across:
@@ -41,7 +51,8 @@ flowchart TD
 |---|---|---|---|
 | Standards | [`docs/README.md`](../docs/README.md) and `docs/{architecture,patterns,frontend,testing}` | Type/lint/tests/manual review | Updated standards docs + passing gates |
 | Product/system spec | [`docs/master-spec.md`](../docs/master-spec.md) + `docs/spec/generated/*` | `pnpm spec:generate`, `pnpm spec:check` | Generated snapshots + spec drift gate |
-| Skill workflows | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
+| Workflow catalog | `agentic-harness-framework/workflows/registry.json`, `agentic-harness-framework/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated catalog + per-workflow pages |
+| Skill system | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
 | Workflow memory | `agentic-harness-framework/workflow-memory/*` | `agentic-harness-framework/scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
 | Automation lanes | `agentic-harness-framework/automations/*/*.md` + `agentic-harness-framework/automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
@@ -64,7 +75,7 @@ Keep docs layered to avoid duplication:
 
 1. Framework map (this folder): how controls connect.
 2. Standards docs (`docs/architecture`, `docs/patterns`, `docs/frontend`, `docs/testing`): what rules are.
-3. Workflow/skills docs ([`docs/workflow.md`](../docs/workflow.md), `.agents/skills/*`): how work is executed.
+3. Workflow/skills docs ([`agentic-harness-framework/workflows/`](./workflows/), `.agents/skills/*`): how work is executed.
 4. Enforcement artifacts (`agentic-harness-framework/scripts/`, lint rules, invariants, CI): what is automatically checked.
 5. Memory/automation docs (`agentic-harness-framework/workflow-memory`, `agentic-harness-framework/automations/`): how learnings compound and lanes operate.
 
@@ -73,6 +84,6 @@ When updating policy, prefer editing the deepest true source rather than repeati
 ## Next Read
 
 1. [`agentic-harness-framework/control-surfaces.md`](./control-surfaces.md)
-2. [`docs/workflow.md`](../docs/workflow.md)
+2. [`agentic-harness-framework/workflows/README.md`](./workflows/README.md)
 3. [`agentic-harness-framework/workflow-memory/README.md`](./workflow-memory/README.md)
 4. [`agentic-harness-framework/automations/README.md`](./automations/README.md)

@@ -11,6 +11,7 @@ It maps each surface to its canonical location, enforcement path, and output evi
 | Architecture/pattern standards | `docs/architecture/*`, `docs/patterns/*` | Type checks, lint, invariant tests, PR review | Rule-conformant code and tests |
 | Frontend standards | `docs/frontend/*` | Lint, web tests/build, PR review | Hook/component/route behavior aligned with docs |
 | Testing standards | `docs/testing/*` | Test selection and CI gates | Correct test depth by change type |
+| Workflow catalog | `agentic-harness-framework/workflows/registry.json`, `agentic-harness-framework/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated workflow catalog + per-workflow playbooks |
 | Skill system | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Valid canonical skills + symlink mirrors |
 | Lint rules | `tools/eslint/base.js`, `tools/eslint/custom-rules.js`, package eslint configs | `pnpm lint` | Static rule pass/fail |
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
@@ -51,16 +52,26 @@ Examples:
 - Memory key: `Feature Delivery`
 - Automation lane: `architecture-approval-executor`
 
-2. Skill source is canonical in `.agents/skills`.
+2. Workflows are process contracts; skills are execution methods.
+Examples:
+- Workflow: `Feature Delivery`
+- Skill: `feature-delivery`
+
+3. Automation lanes can execute multiple workflows/skills.
+Examples:
+- Automation lane: `quality-sentinel`
+- Executes: `Periodic Scans` workflow and `quality-closure-loop` utility skill
+
+4. Skill source is canonical in `.agents/skills`.
 `.agent/skills`, `.claude/skills`, and `.github/skills` are mirrors.
 
-3. [`docs/master-spec.md`](../docs/master-spec.md) has generated and non-generated sections.
+5. [`docs/master-spec.md`](../docs/master-spec.md) has generated and non-generated sections.
 Only non-generated sections should be edited directly.
 
 ## Practical Start Sequence For New Contributors
 
 1. Read [`agentic-harness-framework/README.md`](./README.md).
-2. Read [`docs/workflow.md`](../docs/workflow.md).
+2. Read [`agentic-harness-framework/workflows/README.md`](./workflows/README.md) and the selected workflow page.
 3. Read only the standards docs relevant to the touched surface.
 4. Use the matching skills from `.agents/skills`.
 5. Run required gates.

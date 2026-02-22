@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "coreWorkflows": [
+    {
+      "id": "intake-triage",
+      "name": "Intake + Triage",
+      "memoryKey": "Intake + Triage",
+      "summary": "Scopes requests into slices, acceptance criteria, and risk flags before implementation.",
+      "primarySkills": ["intake-triage"],
+      "automationLanes": ["architecture-approval-executor", "self-improvement-judge-executor"]
+    },
+    {
+      "id": "feature-delivery",
+      "name": "Feature Delivery",
+      "memoryKey": "Feature Delivery",
+      "summary": "Executes plan -> implement -> validate -> compound for vertical delivery slices.",
+      "primarySkills": ["feature-delivery"],
+      "automationLanes": ["architecture-approval-executor", "self-improvement-judge-executor", "quality-sentinel"]
+    },
+    {
+      "id": "tanstack-vite",
+      "name": "TanStack + Vite Guardrails",
+      "memoryKey": "TanStack + Vite",
+      "summary": "Applies frontend data/routing/forms/build guardrails for apps/web.",
+      "primarySkills": ["tanstack-vite"],
+      "automationLanes": []
+    },
+    {
+      "id": "architecture-adr-guard",
+      "name": "Architecture + ADR Guard",
+      "memoryKey": "Architecture + ADR Guard",
+      "summary": "Checks boundary/layer/runtime correctness and documents approved deviations.",
+      "primarySkills": ["architecture-adr-guard"],
+      "automationLanes": ["architecture-radar", "architecture-approval-executor"]
+    },
+    {
+      "id": "pr-risk-review",
+      "name": "PR Risk Review",
+      "memoryKey": "PR Risk Review",
+      "summary": "Findings-first pre-merge risk review for regressions, safety, and contract drift.",
+      "primarySkills": ["pr-risk-review"],
+      "automationLanes": []
+    },
+    {
+      "id": "test-surface-steward",
+      "name": "Test Surface Steward",
+      "memoryKey": "Test Surface Steward",
+      "summary": "Balances required test depth and reliability across backend, API, worker, and web.",
+      "primarySkills": ["test-surface-steward"],
+      "automationLanes": ["quality-sentinel"]
+    },
+    {
+      "id": "security-dependency-hygiene",
+      "name": "Security + Dependency Hygiene",
+      "memoryKey": "Security + Dependency Hygiene",
+      "summary": "Audits auth/data safety, secret handling, and dependency risk.",
+      "primarySkills": ["security-dependency-hygiene"],
+      "automationLanes": []
+    },
+    {
+      "id": "performance-cost-guard",
+      "name": "Performance + Cost Guard",
+      "memoryKey": "Performance + Cost Guard",
+      "summary": "Detects and prioritizes performance and cost regressions.",
+      "primarySkills": ["performance-cost-guard"],
+      "automationLanes": []
+    },
+    {
+      "id": "docs-knowledge-drift",
+      "name": "Docs + Knowledge Drift",
+      "memoryKey": "Docs + Knowledge Drift",
+      "summary": "Keeps workflow/standards docs aligned with actual repository behavior.",
+      "primarySkills": ["docs-knowledge-drift"],
+      "automationLanes": ["quality-sentinel"]
+    },
+    {
+      "id": "periodic-scans",
+      "name": "Periodic Scans",
+      "memoryKey": "Periodic Scans",
+      "summary": "Runs recurring quality scans and routes findings into closure workflows.",
+      "primarySkills": ["periodic-scans"],
+      "automationLanes": ["quality-sentinel", "architecture-radar", "harness-research-radar"]
+    },
+    {
+      "id": "release-incident-response",
+      "name": "Release + Incident Response",
+      "memoryKey": "Release + Incident Response",
+      "summary": "Defines release go/no-go, canary/rollback thresholds, and incident handling loops.",
+      "primarySkills": ["release-incident-response"],
+      "automationLanes": []
+    },
+    {
+      "id": "self-improvement",
+      "name": "Self-Improvement",
+      "memoryKey": "Self-Improvement",
+      "summary": "Converts repeated failures into stronger guardrails, tests, docs, and automation rules.",
+      "primarySkills": ["self-improvement"],
+      "automationLanes": ["harness-research-radar", "self-improvement-judge-executor", "quality-sentinel"]
+    }
+  ],
+  "utilitySkills": [
+    {
+      "id": "quality-closure-loop",
+      "name": "Quality Closure Loop",
+      "memoryKey": "Uses workflow keys executed in-loop",
+      "summary": "Orchestrates scan -> triage -> fixes -> recurrence prevention -> closure.",
+      "skills": ["quality-closure-loop"],
+      "usedWithWorkflows": [
+        "periodic-scans",
+        "feature-delivery",
+        "pr-risk-review",
+        "test-surface-steward",
+        "docs-knowledge-drift",
+        "self-improvement"
+      ],
+      "automationLanes": ["quality-sentinel"]
+    },
+    {
+      "id": "code-simplifier",
+      "name": "Code Simplifier",
+      "memoryKey": "Use parent workflow key",
+      "summary": "Improves readability while preserving behavior and guardrail compliance.",
+      "skills": ["code-simplifier"],
+      "usedWithWorkflows": ["feature-delivery", "pr-risk-review", "self-improvement", "periodic-scans"],
+      "automationLanes": []
+    },
+    {
+      "id": "codebase-nav",
+      "name": "Codebase Navigation",
+      "memoryKey": "Use parent workflow key",
+      "summary": "Locates canonical files and test targets quickly before implementation/review.",
+      "skills": ["codebase-nav"],
+      "usedWithWorkflows": ["intake-triage", "feature-delivery", "pr-risk-review"],
+      "automationLanes": []
+    },
+    {
+      "id": "debug-fix",
+      "name": "Debug + Fix",
+      "memoryKey": "Use parent workflow key",
+      "summary": "Runs a test-driven reproduce -> isolate -> fix -> validate loop.",
+      "skills": ["debug-fix"],
+      "usedWithWorkflows": ["feature-delivery", "test-surface-steward", "self-improvement", "periodic-scans"],
+      "automationLanes": ["quality-sentinel", "architecture-approval-executor", "self-improvement-judge-executor"]
+    }
+  ]
+}

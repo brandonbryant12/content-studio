@@ -3,13 +3,22 @@
 This folder is a high-level map of the controls used to keep Content Studio changes predictable and safe.
 It sits above detailed standards docs and explains how specs, skills, gates, and learning loops work together.
 
+## Terminology
+
+- `Workflow`: process contract and outcome class (scope, intent, workflow-memory key).
+- `Skill`: reusable execution method used to implement workflow steps or utility tasks.
+- `Automation`: runtime lane that triggers one or more workflows/skills under lane-specific policy.
+
+Not every workflow has an automation lane, and automation lanes are not 1:1 aliases for workflows.
+
 ## Core Controls
 
 | Control | Purpose | Source Of Truth |
 |---|---|---|
 | Behavior specs | Define expected product behavior before implementation | [`docs/master-spec.md`](../docs/master-spec.md), [`docs/spec/generated/`](../docs/spec/generated/) |
 | Engineering standards | Constrain architecture, backend, frontend, and tests | [`docs/architecture/`](../docs/architecture/), [`docs/patterns/`](../docs/patterns/), [`docs/frontend/`](../docs/frontend/), [`docs/testing/`](../docs/testing/) |
-| Skill workflows | Standardize how work is scoped, delivered, reviewed, and improved | [`.agents/skills/`](../.agents/skills/), [`docs/workflow.md`](../docs/workflow.md) |
+| Workflow catalog | Define core workflow classes, memory keys, and utility-skill mapping | [`agentic-harness-framework/workflows/README.md`](./workflows/README.md), [`agentic-harness-framework/workflows/registry.json`](./workflows/registry.json) |
+| Skill system | Standardize reusable execution methods used by workflows | [`.agents/skills/`](../.agents/skills/) |
 | Automation lanes | Capture scheduled lane playbooks and runtime wrappers | [`agentic-harness-framework/automations/`](./automations/) |
 | Automated quality gates | Catch drift and regressions before merge | `pnpm spec:check`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:invariants`, `pnpm build` |
 | Human review controls | Cover risks that automation cannot fully judge | PR review + `pr-risk-review`, `architecture-adr-guard` |
@@ -28,6 +37,6 @@ It sits above detailed standards docs and explains how specs, skills, gates, and
 
 1. [`agentic-harness-framework/framework-map.md`](./framework-map.md)
 2. [`agentic-harness-framework/control-surfaces.md`](./control-surfaces.md)
-3. [`agentic-harness-framework/automations/README.md`](./automations/README.md)
-4. [`docs/workflow.md`](../docs/workflow.md)
+3. [`agentic-harness-framework/workflows/README.md`](./workflows/README.md)
+4. [`agentic-harness-framework/automations/README.md`](./automations/README.md)
 5. [`agentic-harness-framework/workflow-memory/README.md`](./workflow-memory/README.md)
