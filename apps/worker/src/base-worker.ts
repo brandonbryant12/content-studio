@@ -15,7 +15,8 @@ import {
   type Job,
   type JobType,
 } from '@repo/queue';
-import { Deferred, Effect, Fiber, Ref, Schedule } from 'effect';
+import { Deferred, Effect, Exit, Fiber, Ref, Schedule, Scope } from 'effect';
+import type { CloseableScope, Scope as ScopeType } from 'effect/Scope';
 import { WORKER_DEFAULTS, MAX_CONCURRENT_JOBS } from './constants';
 
 export interface BaseWorkerConfig {
@@ -182,6 +183,7 @@ export const createWorker = <
   let shutdownDeferred: Deferred.Deferred<void> | null = null;
   let loopFiber: Fiber.RuntimeFiber<void, unknown> | null = null;
   let activeJobsRef: Ref.Ref<number> | null = null;
+  let jobScopeRef: CloseableScope | null = null;
 
   const claimNextJobSafely = (queue: QueueService, jobType: JobType) =>
     queue.claimNextJob(jobType).pipe(
@@ -194,12 +196,24 @@ export const createWorker = <
   const notifyJobComplete = (job: Job) =>
     Effect.sync(() => onJobComplete?.(job as Job<TPayload>));
 
+  const closeJobScope = (scope: CloseableScope) =>
+    Effect.sync(() => {
+      if (jobScopeRef !== scope) return false;
+      jobScopeRef = null;
+      return true;
+    }).pipe(
+      Effect.flatMap((shouldClose) =>
+        shouldClose ? Scope.close(scope, Exit.succeed(undefined)) : Effect.void,
+      ),
+    );
+
   const forkJobProcessing = (
     queue: QueueService,
     job: Job,
     activeJobs: Ref.Ref<number>,
+    jobScope: ScopeType,
   ) =>
-    Effect.forkDaemon(
+    Effect.forkIn(jobScope)(
       processJob(job as Job<TPayload>).pipe(
         Effect.flatMap(() =>
           queue.updateJobStatus(job.id, JobStatus.COMPLETED),
@@ -228,7 +242,11 @@ export const createWorker = <
       ),
     );
 
-  const pollOnce = (idleCount: Ref.Ref<number>, activeJobs: Ref.Ref<number>) =>
+  const pollOnce = (
+    idleCount: Ref.Ref<number>,
+    activeJobs: Ref.Ref<number>,
+    jobScope: ScopeType,
+  ) =>
     Effect.gen(function* () {
       const queue = yield* Queue;
       const activeCount = yield* Ref.get(activeJobs);
@@ -254,7 +272,7 @@ export const createWorker = <
         yield* Ref.update(activeJobs, (n) => n + 1);
         yield* Ref.set(idleCount, 0);
 
-        yield* forkJobProcessing(queue, job, activeJobs);
+        yield* forkJobProcessing(queue, job, activeJobs, jobScope);
 
         yield* Effect.logInfo(
           `Forked ${job.type} job ${job.id} (active: ${activeCount + claimed}/${maxConcurrent})`,
@@ -281,56 +299,61 @@ export const createWorker = <
       maxConsecutiveErrors,
     );
 
-    const loop = Effect.gen(function* () {
-      const idleCount = yield* Ref.make(0);
-      const pollCount = yield* Ref.make(0);
-      const activeJobs = yield* Ref.make(0);
-      activeJobsRef = activeJobs;
-      const stopSignal = yield* Deferred.make<void>();
-      shutdownDeferred = stopSignal;
+    const loop = Effect.scoped(
+      Effect.gen(function* () {
+        const idleCount = yield* Ref.make(0);
+        const pollCount = yield* Ref.make(0);
+        const activeJobs = yield* Ref.make(0);
+        activeJobsRef = activeJobs;
+        const jobScope = yield* Scope.make();
+        jobScopeRef = jobScope;
+        yield* Effect.addFinalizer(() => closeJobScope(jobScope));
+        const stopSignal = yield* Deferred.make<void>();
+        shutdownDeferred = stopSignal;
 
-      yield* Effect.logInfo(
-        `Starting ${name}, polling every ${pollInterval}ms`,
-      );
-
-      if (onStart) {
-        yield* onStart();
-      }
-
-      yield* Effect.gen(function* () {
-        yield* pollOnce(idleCount, activeJobs).pipe(
-          Effect.catchAllDefect((defect) =>
-            Effect.logError(
-              `${name} caught defect during poll: ${formatError(defect)}`,
-            ),
-          ),
+        yield* Effect.logInfo(
+          `Starting ${name}, polling every ${pollInterval}ms`,
         );
 
-        const count = yield* Ref.updateAndGet(pollCount, (n) => n + 1);
-        if (onPollCycle) {
-          yield* onPollCycle(count);
+        if (onStart) {
+          yield* onStart();
         }
-      }).pipe(
-        Effect.tap(() =>
-          Effect.raceFirst(
-            Effect.sleep(pollInterval),
-            Deferred.await(stopSignal),
-          ),
-        ),
-        Effect.tap(() =>
-          Deferred.isDone(stopSignal).pipe(
-            Effect.flatMap((done) =>
-              done
-                ? Effect.logInfo(`${name} received stop signal, exiting`).pipe(
-                    Effect.flatMap(() => Effect.interrupt),
-                  )
-                : Effect.void,
+
+        yield* Effect.gen(function* () {
+          yield* pollOnce(idleCount, activeJobs, jobScope).pipe(
+            Effect.catchAllDefect((defect) =>
+              Effect.logError(
+                `${name} caught defect during poll: ${formatError(defect)}`,
+              ),
+            ),
+          );
+
+          const count = yield* Ref.updateAndGet(pollCount, (n) => n + 1);
+          if (onPollCycle) {
+            yield* onPollCycle(count);
+          }
+        }).pipe(
+          Effect.tap(() =>
+            Effect.raceFirst(
+              Effect.sleep(pollInterval),
+              Deferred.await(stopSignal),
             ),
           ),
-        ),
-        Effect.forever,
-      );
-    }).pipe(
+          Effect.tap(() =>
+            Deferred.isDone(stopSignal).pipe(
+              Effect.flatMap((done) =>
+                done
+                  ? Effect.logInfo(`${name} received stop signal, exiting`).pipe(
+                      Effect.flatMap(() => Effect.interrupt),
+                    )
+                  : Effect.void,
+              ),
+            ),
+          ),
+          Effect.forever,
+        );
+      }),
+    ).pipe(
       Effect.annotateLogs('worker', name),
       Effect.retry({
         schedule: retrySchedule,
@@ -352,7 +375,7 @@ export const createWorker = <
 
     const fiber = await runtime
       .runPromise(
-        Effect.forkDaemon(loop).pipe(
+        Effect.fork(loop).pipe(
           Effect.tap((f) =>
             Effect.sync(() => {
               loopFiber = f;
@@ -405,7 +428,13 @@ export const createWorker = <
       });
     }
 
-    // Drain active jobs — daemon fibers outlive the poll loop
+    if (jobScopeRef) {
+      await runtime.runPromise(closeJobScope(jobScopeRef)).catch(() => {
+        // Best-effort: scope closure interrupts in-flight job fibers
+      });
+    }
+
+    // Drain active jobs after interrupting job scope
     if (activeJobsRef) {
       await runtime.runPromise(drainActiveJobs(activeJobsRef)).catch(() => {
         // Best-effort drain — force timer in worker.ts is the backstop
