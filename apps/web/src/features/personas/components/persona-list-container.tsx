@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react';
+import type { MutationFunctionContext } from '@tanstack/react-query';
 import {
   usePersonaList,
   getPersonaListQueryKey,
 } from '../hooks/use-persona-list';
 import { PersonaChatContainer } from './persona-chat-container';
 import { PersonaList } from './persona-list';
-import { rawApiClient } from '@/clients/apiClient';
+import { apiClient } from '@/clients/apiClient';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 
-const deleteFn = (input: { id: string }) => rawApiClient.personas.delete(input);
+const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
+  apiClient.personas.delete.mutationOptions().mutationFn!(input, context);
 
 export function PersonaListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
