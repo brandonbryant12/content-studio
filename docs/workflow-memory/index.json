@@ -1,5 +1,23 @@
 [
   {
+    "id": "2026-02-22-architecture-approval-executor-set-test-queryclient-gctime-to-infinity",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Architecture Approval Executor",
+    "title": "Set test QueryClient gcTime to Infinity",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "testing",
+      "tanstack-query",
+      "architecture-radar"
+    ],
+    "importance": 0.4,
+    "confidence": 0.6,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-21-docs-knowledge-drift-added-automation-operating-model-readme",
     "date": "2026-02-21",
     "month": "2026-02",
