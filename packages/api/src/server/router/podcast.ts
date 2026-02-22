@@ -154,7 +154,11 @@ const podcastRouter = {
         context.user,
         getJob({ jobId: input.jobId }).pipe(Effect.flatMap(serializeJobEffect)),
         errors,
-        { requestId: context.requestId, span: 'api.podcasts.getJob', attributes: { 'job.id': input.jobId } },
+        {
+          requestId: context.requestId,
+          span: 'api.podcasts.getJob',
+          attributes: { 'job.id': input.jobId },
+        },
       );
     },
   ),

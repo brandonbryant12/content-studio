@@ -57,11 +57,13 @@ const openApiCompatibilityExceptions: CompatibilityException[] = [
   },
   {
     key: 'podcasts.get::output::Unknown',
-    reason: 'Podcast output includes document metadata as free-form key/value data.',
+    reason:
+      'Podcast output includes document metadata as free-form key/value data.',
   },
   {
     key: 'podcasts.create::output::Unknown',
-    reason: 'Podcast output includes document metadata as free-form key/value data.',
+    reason:
+      'Podcast output includes document metadata as free-form key/value data.',
   },
 ];
 
@@ -90,7 +92,12 @@ const collectSchemaIssues = (
     schema as unknown as StandardSchemaV1<unknown, unknown>,
   );
   if (eventIterator) {
-    collectSchemaIssues(eventIterator.yields, path, `${location}.yields`, issues);
+    collectSchemaIssues(
+      eventIterator.yields,
+      path,
+      `${location}.yields`,
+      issues,
+    );
     collectSchemaIssues(
       eventIterator.returns,
       path,
@@ -175,26 +182,26 @@ describe('OpenAPI compatibility guard', () => {
   it('rejects incompatible output/error schemas', async () => {
     const issues: CompatibilityIssue[] = [];
 
-    await resolveContractProcedures({ path: [], router: appContract }, ({
-      contract,
-      path,
-    }) => {
-      const def = contract['~orpc'];
-      const pathLabel = path.join('.');
+    await resolveContractProcedures(
+      { path: [], router: appContract },
+      ({ contract, path }) => {
+        const def = contract['~orpc'];
+        const pathLabel = path.join('.');
 
-      collectSchemaIssues(def.outputSchema, pathLabel, 'output', issues);
+        collectSchemaIssues(def.outputSchema, pathLabel, 'output', issues);
 
-      for (const [code, config] of Object.entries(def.errorMap)) {
-        const errorConfig = config as { data?: unknown } | undefined;
-        if (!errorConfig?.data) continue;
-        collectSchemaIssues(
-          errorConfig.data,
-          pathLabel,
-          `error.${code}.data`,
-          issues,
-        );
-      }
-    });
+        for (const [code, config] of Object.entries(def.errorMap)) {
+          const errorConfig = config as { data?: unknown } | undefined;
+          if (!errorConfig?.data) continue;
+          collectSchemaIssues(
+            errorConfig.data,
+            pathLabel,
+            `error.${code}.data`,
+            issues,
+          );
+        }
+      },
+    );
 
     const actionable = issues.filter((issue) => {
       const key = buildExceptionKey(issue.path, issue.location, issue.kind);

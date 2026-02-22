@@ -240,7 +240,10 @@ const infographicRouter = {
             ),
           ),
           errors,
-          { requestId: context.requestId, span: 'api.infographics.stylePresets.list' },
+          {
+            requestId: context.requestId,
+            span: 'api.infographics.stylePresets.list',
+          },
         );
       },
     ),
@@ -254,7 +257,10 @@ const infographicRouter = {
             Effect.flatMap(serializeStylePresetEffect),
           ),
           errors,
-          { requestId: context.requestId, span: 'api.infographics.stylePresets.create' },
+          {
+            requestId: context.requestId,
+            span: 'api.infographics.stylePresets.create',
+          },
         );
       },
     ),

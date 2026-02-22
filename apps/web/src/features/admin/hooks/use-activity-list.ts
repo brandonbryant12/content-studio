@@ -35,8 +35,12 @@ const normalizeSearch = (search?: string): string | undefined => {
 export function getActivityListQueryKey(
   options: ActivityListQueryKeyOptions = {},
 ): QueryKey {
-  const { userId, entityType, search, limit = DEFAULT_ACTIVITY_LIST_LIMIT } =
-    options;
+  const {
+    userId,
+    entityType,
+    search,
+    limit = DEFAULT_ACTIVITY_LIST_LIMIT,
+  } = options;
 
   return apiClient.admin.list.queryOptions({
     input: {
@@ -51,8 +55,12 @@ export function getActivityListQueryKey(
 export function getActivityListInfiniteQueryOptions(
   options: ActivityListQueryKeyOptions = {},
 ) {
-  const { userId, entityType, search, limit = DEFAULT_ACTIVITY_LIST_LIMIT } =
-    options;
+  const {
+    userId,
+    entityType,
+    search,
+    limit = DEFAULT_ACTIVITY_LIST_LIMIT,
+  } = options;
   const normalizedSearch = normalizeSearch(search);
 
   return {

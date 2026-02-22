@@ -16,7 +16,10 @@ export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
   )
   .use(apiRateLimit)
   .all('/*', async (c, next) => {
-    const { matched, response } = await api.handler(c.req.raw, c.get('requestId'));
+    const { matched, response } = await api.handler(
+      c.req.raw,
+      c.get('requestId'),
+    );
     if (matched) {
       return c.newResponse(response.body, response);
     }

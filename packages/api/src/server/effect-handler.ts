@@ -109,20 +109,25 @@ const throwByStatusFallback = (
 /**
  * Log an error based on its log level.
  */
-const logError = (tag: string, error: unknown, logLevel: LogLevel, requestId?: string): void => {
+const logError = (
+  tag: string,
+  error: unknown,
+  logLevel: LogLevel,
+  requestId?: string,
+): void => {
   const messageBase =
     error && typeof error === 'object' && 'message' in error
       ? String((error as { message: unknown }).message)
       : 'Unknown error';
 
-  const message = requestId ? '[requestId:' + requestId + '] ' + messageBase : messageBase;
+  const message = requestId
+    ? '[requestId:' + requestId + '] ' + messageBase
+    : messageBase;
 
   const cause =
     error && typeof error === 'object' && 'cause' in error
       ? (error as { cause: unknown }).cause
       : undefined;
-
-  const logContext = requestId ? { requestId } : undefined;
 
   switch (logLevel) {
     case 'error-with-stack': {
@@ -257,7 +262,12 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
   const tracedEffect = effect.pipe(
-    Effect.withSpan(options.span, { attributes: { ...options.attributes, ...(options.requestId ? { 'request.id': options.requestId } : {}) } }),
+    Effect.withSpan(options.span, {
+      attributes: {
+        ...options.attributes,
+        ...(options.requestId ? { 'request.id': options.requestId } : {}),
+      },
+    }),
   );
 
   const scopedEffect = user

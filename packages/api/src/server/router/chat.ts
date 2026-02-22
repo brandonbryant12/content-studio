@@ -31,7 +31,10 @@ const chatRouter = {
           context.user,
           synthesizeResearchQuery({ messages: input.messages }),
           errors,
-          { requestId: context.requestId, span: 'api.chat.synthesizeResearchQuery' },
+          {
+            requestId: context.requestId,
+            span: 'api.chat.synthesizeResearchQuery',
+          },
         ),
     ),
 

@@ -20,7 +20,10 @@ function CodeBlock({
       language={language}
       PreTag="div"
       useInlineStyles={false}
-      className={cn('code-block', compact ? 'code-block-compact' : 'code-block-regular')}
+      className={cn(
+        'code-block',
+        compact ? 'code-block-compact' : 'code-block-regular',
+      )}
     >
       {children}
     </SyntaxHighlighter>
