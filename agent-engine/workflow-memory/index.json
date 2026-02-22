@@ -566,6 +566,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-periodic-scans-ai-provider-retry-tts-option-drift",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "AI provider retry + TTS option drift",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "best-practice-researcher",
+      "periodic-scan",
+      "ai-sdk"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-periodic-scans-qa-closure-scan-gates-green-workflow-key-drift-flagged",
     "date": "2026-02-22",
     "month": "2026-02",
