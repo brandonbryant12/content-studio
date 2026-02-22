@@ -31,9 +31,9 @@ This master spec is assembled from:
 <!-- BEGIN GENERATED:snapshot-metadata -->
 # Snapshot Metadata (Generated)
 
-- Generated at: 2026-02-18T17:53:26.160Z
+- Generated at: 2026-02-22T19:08:56.357Z
 - Git branch: main
-- Git commit: 2b2d4ea
+- Git commit: 704547b
 
 ## Inventory
 
@@ -269,17 +269,17 @@ This master spec is assembled from:
 | / | public |
 | /admin/activity | protected |
 | /dashboard | protected |
-| /documents | protected |
+| /documents/ | protected |
 | /documents/$documentId | protected |
-| /infographics | protected |
+| /infographics/ | protected |
 | /infographics/$infographicId | protected |
 | /login | public |
-| /personas | protected |
+| /personas/ | protected |
 | /personas/$personaId | protected |
-| /podcasts | protected |
+| /podcasts/ | protected |
 | /podcasts/$podcastId | protected |
 | /register | public |
-| /voiceovers | protected |
+| /voiceovers/ | protected |
 | /voiceovers/$voiceoverId | protected |
 
 ## Feature Modules

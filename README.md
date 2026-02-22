@@ -85,7 +85,8 @@ packages/
 ## Supporting Docs
 
 1. Standards index: `docs/README.md`
-2. Architecture: `docs/architecture/overview.md`
-3. Delivery workflow and memory loop: `docs/workflow.md`
-4. Setup details: `docs/setup.md`
-5. Framework rationale (Effect TS vs NestJS): `docs/architecture/effect-vs-nestjs.md`
+2. Repository operating framework: `docs/framework/README.md`
+3. Architecture: `docs/architecture/overview.md`
+4. Delivery workflow and memory loop: `docs/workflow.md`
+5. Setup details: `docs/setup.md`
+6. Framework rationale (Effect TS vs NestJS): `docs/architecture/effect-vs-nestjs.md`

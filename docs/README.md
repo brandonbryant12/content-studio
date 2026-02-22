@@ -12,16 +12,18 @@ All new code reviews and feature work should reference `docs/` paths.
 ## Start Here
 
 1. `docs/master-spec.md`
-2. `docs/architecture/overview.md`
-3. `docs/patterns/use-case.md`
-4. `docs/patterns/api-handler.md`
-5. `docs/patterns/safety-primitives.md`
-6. `docs/testing/overview.md`
-7. `docs/frontend/project-structure.md`
-8. `docs/architecture/observability.md`
-9. `docs/workflow.md`
-10. `docs/workflow-memory/README.md`
-11. `docs/architecture/effect-vs-nestjs.md`
+2. `docs/framework/README.md`
+3. `docs/framework/control-surfaces.md`
+4. `docs/architecture/overview.md`
+5. `docs/patterns/use-case.md`
+6. `docs/patterns/api-handler.md`
+7. `docs/patterns/safety-primitives.md`
+8. `docs/testing/overview.md`
+9. `docs/frontend/project-structure.md`
+10. `docs/architecture/observability.md`
+11. `docs/workflow.md`
+12. `docs/workflow-memory/README.md`
+13. `docs/architecture/effect-vs-nestjs.md`
 
 ## Directory Layout
 
@@ -29,6 +31,7 @@ All new code reviews and feature work should reference `docs/` paths.
 - `docs/patterns/` - backend implementation patterns and constraints
 - `docs/frontend/` - frontend architecture and UI standards
 - `docs/testing/` - testing strategy and required coverage by change type
+- `docs/framework/` - repository operating model and control-surface map
 - `docs/setup.md` - local development and test environment setup
 - `docs/master-spec.md` - canonical, PR-governed master application specification
 - `docs/workflow.md` - AI feature-delivery flow, scan cadence, and self-improvement loop

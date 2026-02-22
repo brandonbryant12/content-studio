@@ -18,6 +18,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-add-repository-operating-framework-docs-hub",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Add repository operating framework docs hub",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "framework",
+      "workflow",
+      "governance"
+    ],
+    "importance": 0.72,
+    "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-feature-delivery-replace-metadata-schema-unknown-with-json-schema",
     "date": "2026-02-22",
     "month": "2026-02",

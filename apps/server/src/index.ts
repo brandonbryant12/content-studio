@@ -5,6 +5,7 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import type { auth } from './services';
 import { env } from './env';
+import { globalErrorHandler } from './error-handler';
 import { requestIdMiddleware } from './middleware/request-id';
 import {
   authRoute,
@@ -33,10 +34,7 @@ app.use(
   }),
 );
 
-app.onError((err, c) => {
-  console.error('\t[ERROR]', err.stack || err.message || err);
-  return c.json({ error: 'Internal Server Error' }, 500);
-});
+app.onError(globalErrorHandler);
 
 app.get('/healthcheck', (c) => c.text('OK'));
 
