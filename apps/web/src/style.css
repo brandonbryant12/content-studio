@@ -14,6 +14,90 @@
 @source '../../../packages/ui';
 
 /**
+ * Syntax highlighting uses Prism token classes with semantic color utilities.
+ * Scoped to `.code-block` to avoid global style bleed.
+ */
+@layer components {
+  .code-block {
+    @apply font-mono text-foreground bg-muted rounded-b-lg rounded-tr-lg;
+  }
+
+  .code-block-compact {
+    @apply text-xs px-3 py-3;
+  }
+
+  .code-block-regular {
+    @apply text-sm px-4 py-4;
+  }
+
+  .code-block pre,
+  .code-block code {
+    @apply font-mono leading-relaxed;
+  }
+
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    @apply text-muted-foreground;
+  }
+
+  .code-block .token.punctuation {
+    @apply text-muted-foreground;
+  }
+
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.boolean,
+  .code-block .token.number,
+  .code-block .token.constant,
+  .code-block .token.symbol,
+  .code-block .token.deleted {
+    @apply text-accent-foreground;
+  }
+
+  .code-block .token.selector,
+  .code-block .token.attr-name,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.builtin,
+  .code-block .token.inserted {
+    @apply text-secondary-foreground;
+  }
+
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.variable {
+    @apply text-foreground;
+  }
+
+  .code-block .token.atrule,
+  .code-block .token.attr-value,
+  .code-block .token.function,
+  .code-block .token.class-name {
+    @apply text-primary;
+  }
+
+  .code-block .token.keyword {
+    @apply text-primary;
+  }
+
+  .code-block .token.regex,
+  .code-block .token.important {
+    @apply text-destructive;
+  }
+
+  .code-block .token.bold {
+    @apply font-semibold;
+  }
+
+  .code-block .token.italic {
+    @apply italic;
+  }
+}
+
+/**
  * Respect user preference for reduced motion.
  * Disables animations for users who prefer reduced motion.
  */

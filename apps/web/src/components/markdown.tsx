@@ -5,7 +5,6 @@ import { cn } from '@repo/ui/lib/utils';
 import { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
 
 function CodeBlock({
   language,
@@ -18,15 +17,10 @@ function CodeBlock({
 }) {
   return (
     <SyntaxHighlighter
-      style={oneDark}
       language={language}
       PreTag="div"
-      customStyle={{
-        margin: 0,
-        padding: compact ? '0.75rem' : '1rem',
-        background: '#1e1e1e',
-        fontSize: 'inherit',
-      }}
+      useInlineStyles={false}
+      className={cn('code-block', compact ? 'code-block-compact' : 'code-block-regular')}
     >
       {children}
     </SyntaxHighlighter>
@@ -188,7 +182,7 @@ export const Markdown = memo(function Markdown({
           )}
         >
           {language && (
-            <div className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono border-b border-zinc-700">
+            <div className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-mono border-b border-border">
               {language}
             </div>
           )}
