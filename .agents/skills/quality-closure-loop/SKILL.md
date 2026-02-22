@@ -17,7 +17,7 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 
 ## 1) Scan
 
-- Anchor to standards in [`docs/workflow.md`](../../../docs/workflow.md), [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
+- Anchor to standards in [`docs/workflow.md`](../../../docs/workflow.md), [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
 - Establish shell/toolchain context before running checks:
   - run Node/pnpm commands through interactive login zsh: `zsh -lic 'cd "$PWD" && <command>'`
   - verify toolchain first: `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
@@ -58,7 +58,7 @@ Rules:
 
 ## 4) Prevent Recurrence
 
-If a pattern appears in 2+ memory events in `docs/workflow-memory/index.json` or `docs/workflow-memory/events/YYYY-MM.jsonl`:
+If a pattern appears in 2+ memory events in `agentic-harness-framework/workflow-memory/index.json` or `agentic-harness-framework/workflow-memory/events/YYYY-MM.jsonl`:
 
 - run `self-improvement`
 - land at least one guardrail (test, lint, docs rule, skill rule, or automation)

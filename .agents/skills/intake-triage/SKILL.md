@@ -10,7 +10,7 @@ Use this skill at the start of every feature, refactor, bugfix, or operational c
 ## Objectives
 
 - Convert requests into implementable scope with explicit acceptance criteria.
-- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding.
+- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `docs/workflow.md` and `docs/master-spec.md`).
 - Surface risk and uncertainty early so downstream workflows are predictable.
 
 ## Intake Steps
@@ -53,7 +53,7 @@ Produce this before implementation starts:
 
 ## Memory + Compounding
 
-After triage, record one event with workflow key `Intake + Triage` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.
+After triage, record one event with workflow key `Intake + Triage` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
 
 ## Definition Of Done
 

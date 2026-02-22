@@ -7,6 +7,8 @@ description: TanStack Query/Router/Form + Vite guardrails for apps/web. Use when
 
 Apply this whenever `apps/web` changes touch data loading, route behavior, forms, or build output.
 
+Primary anchors: `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md`, `docs/frontend/forms.md`.
+
 ## Query + Router Standards
 
 - Use route loaders + `queryClient.ensureQueryData(...)` for required route data.
@@ -74,4 +76,4 @@ Apply this whenever `apps/web` changes touch data loading, route behavior, forms
 
 ## Memory + Compounding
 
-After frontend-impacting merges, record one event with workflow key `TanStack + Vite` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.
+After frontend-impacting merges, record one event with workflow key `TanStack + Vite` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.

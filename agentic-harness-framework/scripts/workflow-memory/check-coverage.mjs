@@ -3,7 +3,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const INDEX_PATH = path.join("docs", "workflow-memory", "index.json");
+const INDEX_PATH = path.join(
+  "agentic-harness-framework",
+  "workflow-memory",
+  "index.json",
+);
 
 const KNOWN_WORKFLOWS = [
   "Intake + Triage",

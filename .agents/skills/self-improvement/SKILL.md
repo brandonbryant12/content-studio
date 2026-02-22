@@ -56,7 +56,7 @@ Apply the lightest fix that prevents recurrence:
 - For memory-system changes, run `pnpm workflow-memory:coverage:strict` after updates.
 - For skill changes, run `pnpm skills:check:strict` and `agentic-harness-framework/scripts/sync-skills.sh`.
 - When a failure is captured and a skill is patched, create a replayable scenario:
-  1. Write a fixture file to `docs/workflow-memory/scenarios/{id}.md` with `## Input` (exact code) and `## Expected Findings`.
+  1. Write a fixture file to `agentic-harness-framework/workflow-memory/scenarios/{id}.md` with `## Input` (exact code) and `## Expected Findings`.
   2. Use `add-entry.mjs` with `--scenario-skill`, `--scenario-verdict`, and optional `--scenario-check`, `--scenario-pattern`, `--scenario-severity` flags.
   3. Run `pnpm scenario:validate:strict` to confirm the scenario is well-formed.
 
@@ -72,13 +72,13 @@ Also resync skill symlinks with `agentic-harness-framework/scripts/sync-skills.s
 
 ## 6) Persist Memory
 
-Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Self-Improvement"` (prefer `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`):
+Record one structured memory event in `agentic-harness-framework/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Self-Improvement"` (prefer `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`):
 
 - root cause class
 - guardrail change shipped
 - validation evidence
 - what should be automated next
-- taxonomy tags from [`docs/workflow-memory/taxonomy.md`](../../../docs/workflow-memory/taxonomy.md) when memory or agent-run diagnostics are involved
+- taxonomy tags from [`agentic-harness-framework/workflow-memory/taxonomy.md`](../../../agentic-harness-framework/workflow-memory/taxonomy.md) when memory or agent-run diagnostics are involved
 
 ## Output Contract
 

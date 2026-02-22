@@ -3,7 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const MEMORY_DIR = path.join("docs", "workflow-memory");
+const MEMORY_DIR = path.join("agentic-harness-framework", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
 const SUMMARIES_DIR = path.join(MEMORY_DIR, "summaries");
@@ -93,7 +93,7 @@ const USAGE = `Usage:
 Scenario flags:
   When any --scenario-* flag is provided, --scenario-skill and --scenario-verdict
   are required. Scenarios create replayable test cases linked to fixture files at
-  docs/workflow-memory/scenarios/{id}.md.
+  agentic-harness-framework/workflow-memory/scenarios/{id}.md.
 `;
 
 function slug(value) {
@@ -309,7 +309,7 @@ function validateTaxonomyTags(tags) {
 
   if (errors.length > 0) {
     throw new Error(
-      `Invalid workflow-memory taxonomy tags:\n- ${errors.join("\n- ")}\nSee docs/workflow-memory/taxonomy.md.`,
+      `Invalid workflow-memory taxonomy tags:\n- ${errors.join("\n- ")}\nSee agentic-harness-framework/workflow-memory/taxonomy.md.`,
     );
   }
 }

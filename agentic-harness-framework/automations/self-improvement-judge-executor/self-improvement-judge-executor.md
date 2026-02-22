@@ -15,7 +15,7 @@ Issue intake and judge stage:
 - Search open PRs and issue history first to avoid duplicate execution.
 - Evaluate all candidate suggestions with a holistic scorecard:
   - systemic impact on harness reliability/safety
-  - coherence with [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), docs/workflow-memory/*, and .agents/skills
+  - coherence with [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), agentic-harness-framework/workflow-memory/*, and .agents/skills
   - implementation risk and blast radius
   - evidence quality and recency
   - overlap/duplication with existing open work
@@ -32,8 +32,8 @@ Runtime preflight for code tasks:
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
   - treat dirty workflow-memory paths as expected automation artifacts, not blockers:
-    - `docs/workflow-memory/events/*.jsonl`
-    - `docs/workflow-memory/index.json`
+    - `agentic-harness-framework/workflow-memory/events/*.jsonl`
+    - `agentic-harness-framework/workflow-memory/index.json`
   - do not stop to ask stash/commit/stop choices when only those paths are dirty; continue the run and carry those changes into the execution branch
   - if checkout from `origin/main` is blocked by those local changes, temporarily stash only those workflow-memory paths, create/switch branch, then re-apply stash and continue
   - for any other unexpected dirty paths, stop and report blocker details with file list

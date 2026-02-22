@@ -2,12 +2,10 @@
 
 This directory is the durable workflow memory system for the repository.
 
-It replaces the single-file memory log in [`docs/workflow-memory.md`](../workflow-memory.md) to avoid context bloat.
-
 ## Layout
 
 ```text
-docs/workflow-memory/
+agentic-harness-framework/workflow-memory/
   README.md
   index.json
   guardrails.md
@@ -21,14 +19,14 @@ docs/workflow-memory/
 ## How This Fits The Repository Workflow
 
 Workflow memory is not just a historical log. It is the persistence layer for
-the agent-harness operating model described in [`docs/workflow.md`](../workflow.md)
+the agent-harness operating model described in [`docs/workflow.md`](../../docs/workflow.md)
 and enforced in [`AGENTS.md`](../../AGENTS.md).
 
 ### 1) During delivery and review (write path)
 
 Every workflow run (for example Intake + Triage, Feature Delivery, PR Risk
 Review, Periodic Scans, and Self-Improvement) writes at least one event using
-[`add-entry.mjs`](../../agentic-harness-framework/scripts/workflow-memory/add-entry.mjs).
+[`add-entry.mjs`](../scripts/workflow-memory/add-entry.mjs).
 This captures why decisions were made, what failed, and which follow-up actions
 are required.
 
@@ -251,7 +249,7 @@ Weekly baseline:
 pnpm workflow-memory:coverage:strict
 ```
 
-If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`](../../agentic-harness-framework/scripts/workflow-memory/add-entry.mjs).
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`](../scripts/workflow-memory/add-entry.mjs).
 
 ## Replayable Scenarios
 
@@ -283,7 +281,7 @@ Index rows include `hasScenario: true` and `scenarioSkill` for fast filtering.
 
 ### Fixture Format
 
-Fixture path is always derived from event ID under [`docs/workflow-memory/scenarios/`](./scenarios/).
+Fixture path is always derived from event ID under [`agentic-harness-framework/workflow-memory/scenarios/`](./scenarios/).
 
 Fixtures contain only input and expected findings (no duplicated metadata):
 
@@ -308,7 +306,7 @@ Additional context about what the skill should do with this input.
 
 ```bash
 # 1. Write the fixture file
-# docs/workflow-memory/scenarios/{id}.md
+# agentic-harness-framework/workflow-memory/scenarios/{id}.md
 
 # 2. Create the event with scenario flags
 node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
@@ -317,7 +315,7 @@ node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
   --title "Scenario: description" \
   --trigger "Seed scenario for regression testing" \
   --finding "What the scenario tests" \
-  --evidence "docs/workflow-memory/scenarios/my-scenario-id.md" \
+  --evidence "agentic-harness-framework/workflow-memory/scenarios/my-scenario-id.md" \
   --follow-up "Verify skill catches this pattern" \
   --owner "@agent" \
   --status "open" \

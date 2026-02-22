@@ -39,7 +39,7 @@ Use this skill when a change may cross package boundaries, layer rules, or core 
 
 If a change intentionally deviates from current standards:
 
-1. Document the deviation in [`docs/workflow-memory/guardrails.md`](../../../docs/workflow-memory/guardrails.md).
+1. Document the deviation in [`agentic-harness-framework/workflow-memory/guardrails.md`](../../../agentic-harness-framework/workflow-memory/guardrails.md).
 2. Include:
    - context
    - decision
@@ -61,4 +61,4 @@ Each finding must include severity, file evidence, and suggested fix.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Architecture + ADR Guard` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.
+Record one event with workflow key `Architecture + ADR Guard` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.

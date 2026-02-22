@@ -85,7 +85,7 @@ Any automation that edits code must:
 2. Branch from latest main
 - `git fetch origin main`
 - create branch from `origin/main`
-- if only files in [`docs/workflow-memory/events/`](../../docs/workflow-memory/events/) and/or [`docs/workflow-memory/index.json`](../../docs/workflow-memory/index.json) are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
+- if only files in [`agentic-harness-framework/workflow-memory/events/`](../workflow-memory/events/) and/or [`agentic-harness-framework/workflow-memory/index.json`](../workflow-memory/index.json) are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
 - if any other unexpected dirty paths exist, stop and report blocker details
 
 3. Prepare runtime for reliable automation execution

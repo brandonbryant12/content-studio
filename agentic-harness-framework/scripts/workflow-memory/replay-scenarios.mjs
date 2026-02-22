@@ -3,7 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const MEMORY_DIR = path.join("docs", "workflow-memory");
+const MEMORY_DIR = path.join("agentic-harness-framework", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const SCENARIOS_DIR = path.join(MEMORY_DIR, "scenarios");
@@ -33,7 +33,7 @@ Options:
   --help            Show this help message
 
 Validates scenario integrity:
-  - Fixture file exists at docs/workflow-memory/scenarios/{id}.md
+  - Fixture file exists at agentic-harness-framework/workflow-memory/scenarios/{id}.md
   - Fixture has ## Input and ## Expected Findings sections
   - No secrets detected in fixture content
   - Event ID matches safe regex [a-z0-9][a-z0-9-]*[a-z0-9]

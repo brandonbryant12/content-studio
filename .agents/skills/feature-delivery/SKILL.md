@@ -20,7 +20,7 @@ This is the default loop inspired by compound engineering practices.
 
 ## 1) Plan
 
-- Read only the docs needed for the change ([`docs/**/*.md`](../../../docs/)).
+- Read only the docs needed for the change ([`docs/**/*.md`](../../../docs/)); include concrete anchors like `docs/master-spec.md` and `docs/workflow.md`.
 - Convert the request into 1-3 vertical slices with user-visible outcomes.
 - For frontend slices, define a short design brief before coding:
   - visual direction (typography, palette, spacing, motion)
@@ -68,7 +68,7 @@ This is the default loop inspired by compound engineering practices.
 
 After each merged change, capture what worked, what failed, and the smallest guardrail/script improvement worth adding.
 
-Record one event with workflow key `Feature Delivery` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md), then include the event `id` in output.
+Record one event with workflow key `Feature Delivery` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md), then include the event `id` in output.
 
 ## Output Contract
 
@@ -78,4 +78,4 @@ When this skill is used, produce:
 2. Code + tests + docs updates
 3. Validation summary
 4. Compound notes (2-6 bullets)
-5. Memory note entry summary with event `id` and `workflow` (what was appended to `docs/workflow-memory/events/YYYY-MM.jsonl`)
+5. Memory note entry summary with event `id` and `workflow` (what was appended to `agentic-harness-framework/workflow-memory/events/YYYY-MM.jsonl`)

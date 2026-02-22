@@ -21,7 +21,7 @@ All new code reviews and feature work should reference [`docs/`](./) standards p
 9. [`docs/frontend/project-structure.md`](./frontend/project-structure.md)
 10. [`docs/architecture/observability.md`](./architecture/observability.md)
 11. [`docs/workflow.md`](./workflow.md)
-12. [`docs/workflow-memory/README.md`](./workflow-memory/README.md)
+12. [`agentic-harness-framework/workflow-memory/README.md`](../agentic-harness-framework/workflow-memory/README.md)
 13. [`docs/architecture/effect-vs-nestjs.md`](./architecture/effect-vs-nestjs.md)
 
 ## Directory Layout
@@ -34,4 +34,4 @@ All new code reviews and feature work should reference [`docs/`](./) standards p
 - [`docs/setup.md`](./setup.md) - local development and test environment setup
 - [`docs/master-spec.md`](./master-spec.md) - canonical, PR-governed master application specification
 - [`docs/workflow.md`](./workflow.md) - AI feature-delivery flow, scan cadence, and self-improvement loop
-- [`docs/workflow-memory/`](./workflow-memory/) - structured workflow memory system (events, index, summaries, guardrails)
+- [`agentic-harness-framework/workflow-memory/`](../agentic-harness-framework/workflow-memory/) - structured workflow memory system (events, index, summaries, guardrails)

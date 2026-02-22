@@ -20,7 +20,7 @@ Guided random-walk protocol:
 Research protocol:
 - Prioritize official and primary sources plus recent release notes.
 - Prioritize this stack: Effect TS, Hono, oRPC, Drizzle/Postgres, React 19, TanStack Query/Router/Form, Vite, Turborepo, pnpm, Vitest, Playwright.
-- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), [`docs/workflow-memory/guardrails.md`](../../../docs/workflow-memory/guardrails.md), docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, and relevant code.
+- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), [`agentic-harness-framework/workflow-memory/guardrails.md`](../../../agentic-harness-framework/workflow-memory/guardrails.md), docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, and relevant code.
 - Produce 3-6 ranked recommendations with impact, effort, confidence, and concrete repo evidence.
 - Apply anti-bloat materiality checks: "Do we need this now?" and "What measurable/system-level difference does this make?" Drop low-materiality ideas.
 

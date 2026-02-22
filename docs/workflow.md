@@ -44,7 +44,7 @@ Use the smallest set of workflows needed for a change, but keep memory updates m
 | Codebase Navigation (support) | `codebase-nav` | Fast orientation for file paths and test locations | Use parent workflow memory key |
 | Debug + Fix (support) | `debug-fix` | Failing tests, regressions, or uncertain root cause | Use parent workflow memory key |
 
-Persistent memory system: `docs/workflow-memory/` (`events`, `index`, `summaries`, `guardrails`).
+Persistent memory system: `agentic-harness-framework/workflow-memory/` (`events`, `index`, `summaries`, `guardrails`).
 
 ## Happy Path: Request To Merge
 
@@ -171,7 +171,7 @@ When triggered, run `self-improvement` and update shared instructions and skills
 
 ## Workflow Memory Protocol
 
-All workflows persist learnings to `docs/workflow-memory/events/YYYY-MM.jsonl` and update `docs/workflow-memory/index.json`.
+All workflows persist learnings to `agentic-harness-framework/workflow-memory/events/YYYY-MM.jsonl` and update `agentic-harness-framework/workflow-memory/index.json`.
 
 Minimum event fields:
 
@@ -194,7 +194,7 @@ Optional fields:
 - `recency` (0-1): higher = more recent; overrides computed recency if needed
 - `confidence` (0-1): higher = more reliable evidence
 
-Taxonomy tagging checklist ([`docs/workflow-memory/taxonomy.md`](./workflow-memory/taxonomy.md)):
+Taxonomy tagging checklist ([`agentic-harness-framework/workflow-memory/taxonomy.md`](../agentic-harness-framework/workflow-memory/taxonomy.md)):
 
 - If tags include `memory` or `workflow-memory`, include all three dimensions:
   - `memory-form:*`
@@ -228,12 +228,8 @@ Run weekly compaction to control growth:
 
 Agent retrieval order:
 
-1. [`docs/workflow-memory/guardrails.md`](./workflow-memory/guardrails.md)
-2. [`docs/workflow-memory/taxonomy.md`](./workflow-memory/taxonomy.md)
-3. latest [`docs/workflow-memory/summaries/YYYY-MM.md`](docs/workflow-memory/summaries/YYYY-MM.md)
-4. filtered rows from `docs/workflow-memory/index.json`
-5. top 3-5 relevant records from `docs/workflow-memory/events/*.jsonl`
-
-Legacy migration helper:
-
-`node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs`
+1. [`agentic-harness-framework/workflow-memory/guardrails.md`](../agentic-harness-framework/workflow-memory/guardrails.md)
+2. [`agentic-harness-framework/workflow-memory/taxonomy.md`](../agentic-harness-framework/workflow-memory/taxonomy.md)
+3. latest [`agentic-harness-framework/workflow-memory/summaries/YYYY-MM.md`](../agentic-harness-framework/workflow-memory/summaries/)
+4. filtered rows from `agentic-harness-framework/workflow-memory/index.json`
+5. top 3-5 relevant records from `agentic-harness-framework/workflow-memory/events/*.jsonl`

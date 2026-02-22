@@ -3,7 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const MEMORY_DIR = path.join("docs", "workflow-memory");
+const MEMORY_DIR = path.join("agentic-harness-framework", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 
 const USAGE = `Usage:

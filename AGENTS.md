@@ -47,12 +47,12 @@ packages/
 ## AI Workflow + Skills
 
 - **Follow [`docs/workflow.md`](./docs/workflow.md)** for intake, delivery, review, scans, release/incident, and self-improvement loops.
-- **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
+- **Persist compounding notes in `agentic-harness-framework/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --help`
-- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`docs/workflow-memory/taxonomy.md`](./docs/workflow-memory/taxonomy.md).
+- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agentic-harness-framework/workflow-memory/taxonomy.md`](./agentic-harness-framework/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.

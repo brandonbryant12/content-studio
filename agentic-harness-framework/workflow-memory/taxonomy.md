@@ -89,7 +89,7 @@ node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs \
   --title "Improve memory tag consistency" \
   --trigger "Repeated memory-tag ambiguity in events" \
   --finding "Added taxonomy tags and validation in add-entry helper" \
-  --evidence "docs/workflow-memory/taxonomy.md, agentic-harness-framework/scripts/workflow-memory/add-entry.mjs" \
+  --evidence "agentic-harness-framework/workflow-memory/taxonomy.md, agentic-harness-framework/scripts/workflow-memory/add-entry.mjs" \
   --follow-up "Apply taxonomy tags in periodic scan memory entries" \
   --owner "@team" \
   --status "closed" \

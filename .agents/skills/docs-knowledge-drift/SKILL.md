@@ -7,6 +7,8 @@ description: Docs/code drift workflow to keep architecture, patterns, testing, a
 
 Use this skill after behavior changes, during weekly scans, and before releases.
 
+Primary anchors: `docs/workflow.md`, `docs/README.md`.
+
 ## Drift Targets
 
 - architecture and boundary docs
@@ -34,4 +36,4 @@ Each item includes file evidence and confidence.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.
+Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.

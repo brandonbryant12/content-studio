@@ -42,4 +42,4 @@ Include file evidence and expected confidence gain for each recommendation.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Test Surface Steward` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.
+Record one event with workflow key `Test Surface Steward` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`agentic-harness-framework/workflow-memory/README.md`](../../../agentic-harness-framework/workflow-memory/README.md). Include the event `id` in output.
