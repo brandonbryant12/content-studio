@@ -23,7 +23,7 @@ Record each shipped change that adopts an idea from an external paper.
 <!-- Add new entries at the top of this section -->
 ### 2026-02-22 - Workflow-Memory Taxonomy Tags + Validation
 - Issue: https://github.com/brandonbryant12/content-studio/issues/66
-- PR: (this PR)
+- PR: https://github.com/brandonbryant12/content-studio/pull/83
 - Paper link(s):
   - https://arxiv.org/abs/2512.13564
   - https://arxiv.org/abs/2308.03688
