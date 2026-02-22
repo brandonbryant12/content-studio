@@ -588,6 +588,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-self-improvement-agent-engine-researcher-registry-hygiene-follow-ups",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Agent-engine researcher: registry hygiene follow-ups",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "agent-engine-researcher",
+      "workflow-registry",
+      "registry-validation"
+    ],
+    "confidence": 0.82,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-self-improvement-consolidated-self-improvement-issue-backlog-and-deduped-roadmap",
     "date": "2026-02-22",
     "month": "2026-02",
