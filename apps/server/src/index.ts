@@ -3,9 +3,9 @@ import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
-import { requestIdMiddleware } from './middleware/request-id';
 import type { auth } from './services';
 import { env } from './env';
+import { requestIdMiddleware } from './middleware/request-id';
 import {
   authRoute,
   authPath,

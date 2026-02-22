@@ -1,5 +1,5 @@
-import type { MiddlewareHandler } from 'hono';
 import { randomUUID } from 'crypto';
+import type { MiddlewareHandler } from 'hono';
 
 const HEADER_NAME = 'x-request-id';
 
