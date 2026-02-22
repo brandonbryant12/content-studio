@@ -225,6 +225,24 @@
     --chart-3: 330 65% 55%;
     --chart-4: 38 92% 50%;
     --chart-5: 0 72% 55%;
+
+    --thumb-podcast-1: 260 25% 95%;
+    --thumb-podcast-2: 260 20% 92%;
+    --thumb-podcast-line: 260 70% 50%;
+
+    --thumb-voiceover-1: 160 20% 95%;
+    --thumb-voiceover-2: 160 15% 92%;
+    --thumb-voiceover-line: 160 60% 45%;
+
+    --thumb-document-1: 210 20% 96%;
+    --thumb-document-2: 210 15% 93%;
+    --thumb-document-line: 210 50% 50%;
+
+    --thumb-infographic-1: 38 25% 96%;
+    --thumb-infographic-2: 38 20% 93%;
+    --thumb-infographic-line: 38 70% 50%;
+
+    --manuscript-shadow: 28 20% 92% / 0.4;
     --radius: 0.625rem;
 
     --toast-error: 0 60% 95%;
@@ -292,6 +310,24 @@
     --chart-3: 330 70% 60%;
     --chart-4: 38 92% 55%;
     --chart-5: 0 72% 60%;
+
+    --thumb-podcast-1: 260 20% 12%;
+    --thumb-podcast-2: 260 15% 9%;
+    --thumb-podcast-line: 260 70% 50%;
+
+    --thumb-voiceover-1: 160 15% 12%;
+    --thumb-voiceover-2: 160 10% 9%;
+    --thumb-voiceover-line: 160 60% 45%;
+
+    --thumb-document-1: 210 15% 12%;
+    --thumb-document-2: 210 10% 9%;
+    --thumb-document-line: 210 50% 50%;
+
+    --thumb-infographic-1: 38 15% 12%;
+    --thumb-infographic-2: 38 10% 9%;
+    --thumb-infographic-line: 38 70% 50%;
+
+    --manuscript-shadow: 28 20% 10% / 0.5;
 
     --toast-error: 0 55% 10%;
     --toast-info: 210 55% 10%;
@@ -609,6 +645,13 @@
     @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.08];
   }
 
+  .hero-title {
+    font-variation-settings:
+      'SOFT' 50,
+      'WONK' 1;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
   .section-title {
     font-family: 'Fraunces', Georgia, serif;
     font-variation-settings: 'SOFT' 20;
@@ -769,16 +812,16 @@
   .thumb-podcast {
     background: linear-gradient(
       135deg,
-      hsl(260 25% 95%) 0%,
-      hsl(260 20% 92%) 100%
+      hsl(var(--thumb-podcast-1)) 0%,
+      hsl(var(--thumb-podcast-2)) 100%
     );
   }
 
   .dark .thumb-podcast {
     background: linear-gradient(
       135deg,
-      hsl(260 20% 12%) 0%,
-      hsl(260 15% 9%) 100%
+      hsl(var(--thumb-podcast-1)) 0%,
+      hsl(var(--thumb-podcast-2)) 100%
     );
   }
 
@@ -788,8 +831,8 @@
     opacity: 0.06;
     background-image: repeating-linear-gradient(
       90deg,
-      hsl(260 70% 50%) 0px,
-      hsl(260 70% 50%) 2px,
+      hsl(var(--thumb-podcast-line)) 0px,
+      hsl(var(--thumb-podcast-line)) 2px,
       transparent 2px,
       transparent 8px
     );
@@ -806,16 +849,16 @@
   .thumb-voiceover {
     background: linear-gradient(
       135deg,
-      hsl(160 20% 95%) 0%,
-      hsl(160 15% 92%) 100%
+      hsl(var(--thumb-voiceover-1)) 0%,
+      hsl(var(--thumb-voiceover-2)) 100%
     );
   }
 
   .dark .thumb-voiceover {
     background: linear-gradient(
       135deg,
-      hsl(160 15% 12%) 0%,
-      hsl(160 10% 9%) 100%
+      hsl(var(--thumb-voiceover-1)) 0%,
+      hsl(var(--thumb-voiceover-2)) 100%
     );
   }
 
@@ -825,8 +868,8 @@
     opacity: 0.05;
     background-image: repeating-linear-gradient(
       0deg,
-      hsl(160 60% 45%) 0px,
-      hsl(160 60% 45%) 1px,
+      hsl(var(--thumb-voiceover-line)) 0px,
+      hsl(var(--thumb-voiceover-line)) 1px,
       transparent 1px,
       transparent 6px
     );
@@ -841,16 +884,16 @@
   .thumb-document {
     background: linear-gradient(
       135deg,
-      hsl(210 20% 96%) 0%,
-      hsl(210 15% 93%) 100%
+      hsl(var(--thumb-document-1)) 0%,
+      hsl(var(--thumb-document-2)) 100%
     );
   }
 
   .dark .thumb-document {
     background: linear-gradient(
       135deg,
-      hsl(210 15% 12%) 0%,
-      hsl(210 10% 9%) 100%
+      hsl(var(--thumb-document-1)) 0%,
+      hsl(var(--thumb-document-2)) 100%
     );
   }
 
@@ -862,8 +905,8 @@
       0deg,
       transparent 0px,
       transparent 23px,
-      hsl(210 50% 50%) 23px,
-      hsl(210 50% 50%) 24px
+      hsl(var(--thumb-document-line)) 23px,
+      hsl(var(--thumb-document-line)) 24px
     );
     mask-image: linear-gradient(
       to right,
@@ -878,16 +921,16 @@
   .thumb-infographic {
     background: linear-gradient(
       135deg,
-      hsl(38 25% 96%) 0%,
-      hsl(38 20% 93%) 100%
+      hsl(var(--thumb-infographic-1)) 0%,
+      hsl(var(--thumb-infographic-2)) 100%
     );
   }
 
   .dark .thumb-infographic {
     background: linear-gradient(
       135deg,
-      hsl(38 15% 12%) 0%,
-      hsl(38 10% 9%) 100%
+      hsl(var(--thumb-infographic-1)) 0%,
+      hsl(var(--thumb-infographic-2)) 100%
     );
   }
 
@@ -896,8 +939,12 @@
     @apply absolute inset-0 pointer-events-none;
     opacity: 0.04;
     background-image:
-      linear-gradient(hsl(38 70% 50%) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(38 70% 50%) 1px, transparent 1px);
+      linear-gradient(hsl(var(--thumb-infographic-line)) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        hsl(var(--thumb-infographic-line)) 1px,
+        transparent 1px
+      );
     background-size: 20px 20px;
     mask-image: radial-gradient(
       ellipse 70% 70% at center,
@@ -4479,7 +4526,7 @@
     background: linear-gradient(
       135deg,
       hsl(var(--card)) 0%,
-      hsl(28 20% 10% / 0.5) 100%
+      hsl(var(--manuscript-shadow)) 100%
     );
   }
 
@@ -4601,5 +4648,496 @@
     box-shadow:
       0 0 8px 2px hsl(var(--primary) / 0.6),
       0 0 16px 4px hsl(var(--primary) / 0.3);
+  }
+}
+@layer utilities {
+  .hero-wave-bar {
+    @apply w-[3px] rounded-full bg-primary/60;
+    animation: waveform 1.8s ease-in-out infinite alternate;
+  }
+  .hero-wave-h-35 {
+    height: 35%;
+  }
+  .hero-wave-h-40 {
+    height: 40%;
+  }
+  .hero-wave-h-45 {
+    height: 45%;
+  }
+  .hero-wave-h-50 {
+    height: 50%;
+  }
+  .hero-wave-h-55 {
+    height: 55%;
+  }
+  .hero-wave-h-60 {
+    height: 60%;
+  }
+  .hero-wave-h-65 {
+    height: 65%;
+  }
+  .hero-wave-h-70 {
+    height: 70%;
+  }
+  .hero-wave-h-75 {
+    height: 75%;
+  }
+  .hero-wave-h-80 {
+    height: 80%;
+  }
+  .hero-wave-h-85 {
+    height: 85%;
+  }
+  .hero-wave-h-90 {
+    height: 90%;
+  }
+  .hero-wave-h-95 {
+    height: 95%;
+  }
+  .hero-wave-h-100 {
+    height: 100%;
+  }
+  .hero-wave-delay-0 {
+    animation-delay: 0s;
+  }
+  .hero-wave-delay-1 {
+    animation-delay: 0.12s;
+  }
+  .hero-wave-delay-2 {
+    animation-delay: 0.24s;
+  }
+  .hero-wave-delay-3 {
+    animation-delay: 0.36s;
+  }
+  .hero-wave-delay-4 {
+    animation-delay: 0.48s;
+  }
+  .hero-wave-delay-5 {
+    animation-delay: 0.60s;
+  }
+  .hero-wave-delay-6 {
+    animation-delay: 0.72s;
+  }
+  .hero-wave-delay-7 {
+    animation-delay: 0.84s;
+  }
+  .hero-wave-delay-8 {
+    animation-delay: 0.96s;
+  }
+  .hero-wave-delay-9 {
+    animation-delay: 1.08s;
+  }
+  .hero-wave-delay-10 {
+    animation-delay: 1.20s;
+  }
+  .hero-wave-delay-11 {
+    animation-delay: 1.32s;
+  }
+  .hero-wave-delay-12 {
+    animation-delay: 1.44s;
+  }
+  .hero-wave-delay-13 {
+    animation-delay: 1.56s;
+  }
+  .hero-wave-delay-14 {
+    animation-delay: 1.68s;
+  }
+  .spinner-bar {
+    @apply inline-block w-[12%] rounded-full bg-current;
+    animation: spinner-bar 0.8s ease-in-out infinite;
+  }
+  .spinner-bar-1 {
+    height: 40%;
+    animation-delay: 0ms;
+  }
+  .spinner-bar-2 {
+    height: 70%;
+    animation-delay: 150ms;
+  }
+  .spinner-bar-3 {
+    height: 100%;
+    animation-delay: 300ms;
+  }
+  .spinner-bar-4 {
+    height: 55%;
+    animation-delay: 450ms;
+  }
+  .stage-waveform-delay-0 {
+    animation-delay: 0ms;
+  }
+  .stage-waveform-delay-1 {
+    animation-delay: 50ms;
+  }
+  .stage-waveform-delay-2 {
+    animation-delay: 100ms;
+  }
+  .stage-waveform-delay-3 {
+    animation-delay: 150ms;
+  }
+  .stage-waveform-delay-4 {
+    animation-delay: 200ms;
+  }
+  .stage-waveform-delay-5 {
+    animation-delay: 250ms;
+  }
+  .stage-waveform-delay-6 {
+    animation-delay: 300ms;
+  }
+  .stage-waveform-delay-7 {
+    animation-delay: 350ms;
+  }
+  .stage-waveform-delay-8 {
+    animation-delay: 400ms;
+  }
+  .stage-waveform-delay-9 {
+    animation-delay: 450ms;
+  }
+  .stage-waveform-delay-10 {
+    animation-delay: 500ms;
+  }
+  .stage-waveform-delay-11 {
+    animation-delay: 550ms;
+  }
+  .stage-waveform-delay-12 {
+    animation-delay: 600ms;
+  }
+  .stage-waveform-delay-13 {
+    animation-delay: 650ms;
+  }
+  .stage-waveform-delay-14 {
+    animation-delay: 700ms;
+  }
+  .stage-waveform-delay-15 {
+    animation-delay: 750ms;
+  }
+  .stage-waveform-delay-16 {
+    animation-delay: 800ms;
+  }
+  .stage-waveform-delay-17 {
+    animation-delay: 850ms;
+  }
+  .stage-waveform-delay-18 {
+    animation-delay: 900ms;
+  }
+  .stage-waveform-delay-19 {
+    animation-delay: 950ms;
+  }
+  .stage-waveform-delay-20 {
+    animation-delay: 1000ms;
+  }
+  .stage-waveform-delay-21 {
+    animation-delay: 1050ms;
+  }
+  .stage-waveform-delay-22 {
+    animation-delay: 1100ms;
+  }
+  .stage-waveform-delay-23 {
+    animation-delay: 1150ms;
+  }
+  .stage-waveform-delay-24 {
+    animation-delay: 1200ms;
+  }
+  .stage-progress-0 {
+    width: 0%;
+  }
+  .stage-progress-1 {
+    width: 1%;
+  }
+  .stage-progress-2 {
+    width: 2%;
+  }
+  .stage-progress-3 {
+    width: 3%;
+  }
+  .stage-progress-4 {
+    width: 4%;
+  }
+  .stage-progress-5 {
+    width: 5%;
+  }
+  .stage-progress-6 {
+    width: 6%;
+  }
+  .stage-progress-7 {
+    width: 7%;
+  }
+  .stage-progress-8 {
+    width: 8%;
+  }
+  .stage-progress-9 {
+    width: 9%;
+  }
+  .stage-progress-10 {
+    width: 10%;
+  }
+  .stage-progress-11 {
+    width: 11%;
+  }
+  .stage-progress-12 {
+    width: 12%;
+  }
+  .stage-progress-13 {
+    width: 13%;
+  }
+  .stage-progress-14 {
+    width: 14%;
+  }
+  .stage-progress-15 {
+    width: 15%;
+  }
+  .stage-progress-16 {
+    width: 16%;
+  }
+  .stage-progress-17 {
+    width: 17%;
+  }
+  .stage-progress-18 {
+    width: 18%;
+  }
+  .stage-progress-19 {
+    width: 19%;
+  }
+  .stage-progress-20 {
+    width: 20%;
+  }
+  .stage-progress-21 {
+    width: 21%;
+  }
+  .stage-progress-22 {
+    width: 22%;
+  }
+  .stage-progress-23 {
+    width: 23%;
+  }
+  .stage-progress-24 {
+    width: 24%;
+  }
+  .stage-progress-25 {
+    width: 25%;
+  }
+  .stage-progress-26 {
+    width: 26%;
+  }
+  .stage-progress-27 {
+    width: 27%;
+  }
+  .stage-progress-28 {
+    width: 28%;
+  }
+  .stage-progress-29 {
+    width: 29%;
+  }
+  .stage-progress-30 {
+    width: 30%;
+  }
+  .stage-progress-31 {
+    width: 31%;
+  }
+  .stage-progress-32 {
+    width: 32%;
+  }
+  .stage-progress-33 {
+    width: 33%;
+  }
+  .stage-progress-34 {
+    width: 34%;
+  }
+  .stage-progress-35 {
+    width: 35%;
+  }
+  .stage-progress-36 {
+    width: 36%;
+  }
+  .stage-progress-37 {
+    width: 37%;
+  }
+  .stage-progress-38 {
+    width: 38%;
+  }
+  .stage-progress-39 {
+    width: 39%;
+  }
+  .stage-progress-40 {
+    width: 40%;
+  }
+  .stage-progress-41 {
+    width: 41%;
+  }
+  .stage-progress-42 {
+    width: 42%;
+  }
+  .stage-progress-43 {
+    width: 43%;
+  }
+  .stage-progress-44 {
+    width: 44%;
+  }
+  .stage-progress-45 {
+    width: 45%;
+  }
+  .stage-progress-46 {
+    width: 46%;
+  }
+  .stage-progress-47 {
+    width: 47%;
+  }
+  .stage-progress-48 {
+    width: 48%;
+  }
+  .stage-progress-49 {
+    width: 49%;
+  }
+  .stage-progress-50 {
+    width: 50%;
+  }
+  .stage-progress-51 {
+    width: 51%;
+  }
+  .stage-progress-52 {
+    width: 52%;
+  }
+  .stage-progress-53 {
+    width: 53%;
+  }
+  .stage-progress-54 {
+    width: 54%;
+  }
+  .stage-progress-55 {
+    width: 55%;
+  }
+  .stage-progress-56 {
+    width: 56%;
+  }
+  .stage-progress-57 {
+    width: 57%;
+  }
+  .stage-progress-58 {
+    width: 58%;
+  }
+  .stage-progress-59 {
+    width: 59%;
+  }
+  .stage-progress-60 {
+    width: 60%;
+  }
+  .stage-progress-61 {
+    width: 61%;
+  }
+  .stage-progress-62 {
+    width: 62%;
+  }
+  .stage-progress-63 {
+    width: 63%;
+  }
+  .stage-progress-64 {
+    width: 64%;
+  }
+  .stage-progress-65 {
+    width: 65%;
+  }
+  .stage-progress-66 {
+    width: 66%;
+  }
+  .stage-progress-67 {
+    width: 67%;
+  }
+  .stage-progress-68 {
+    width: 68%;
+  }
+  .stage-progress-69 {
+    width: 69%;
+  }
+  .stage-progress-70 {
+    width: 70%;
+  }
+  .stage-progress-71 {
+    width: 71%;
+  }
+  .stage-progress-72 {
+    width: 72%;
+  }
+  .stage-progress-73 {
+    width: 73%;
+  }
+  .stage-progress-74 {
+    width: 74%;
+  }
+  .stage-progress-75 {
+    width: 75%;
+  }
+  .stage-progress-76 {
+    width: 76%;
+  }
+  .stage-progress-77 {
+    width: 77%;
+  }
+  .stage-progress-78 {
+    width: 78%;
+  }
+  .stage-progress-79 {
+    width: 79%;
+  }
+  .stage-progress-80 {
+    width: 80%;
+  }
+  .stage-progress-81 {
+    width: 81%;
+  }
+  .stage-progress-82 {
+    width: 82%;
+  }
+  .stage-progress-83 {
+    width: 83%;
+  }
+  .stage-progress-84 {
+    width: 84%;
+  }
+  .stage-progress-85 {
+    width: 85%;
+  }
+  .stage-progress-86 {
+    width: 86%;
+  }
+  .stage-progress-87 {
+    width: 87%;
+  }
+  .stage-progress-88 {
+    width: 88%;
+  }
+  .stage-progress-89 {
+    width: 89%;
+  }
+  .stage-progress-90 {
+    width: 90%;
+  }
+  .stage-progress-91 {
+    width: 91%;
+  }
+  .stage-progress-92 {
+    width: 92%;
+  }
+  .stage-progress-93 {
+    width: 93%;
+  }
+  .stage-progress-94 {
+    width: 94%;
+  }
+  .stage-progress-95 {
+    width: 95%;
+  }
+  .stage-progress-96 {
+    width: 96%;
+  }
+  .stage-progress-97 {
+    width: 97%;
+  }
+  .stage-progress-98 {
+    width: 98%;
+  }
+  .stage-progress-99 {
+    width: 99%;
+  }
+  .stage-progress-100 {
+    width: 100%;
   }
 }

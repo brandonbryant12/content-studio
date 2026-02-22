@@ -15,20 +15,31 @@ export const Route = createFileRoute('/')({
   component: RouteComponent,
 });
 
+const HERO_WAVEFORM_BARS = [
+  { height: 'hero-wave-h-40', delay: 'hero-wave-delay-0' },
+  { height: 'hero-wave-h-70', delay: 'hero-wave-delay-1' },
+  { height: 'hero-wave-h-100', delay: 'hero-wave-delay-2' },
+  { height: 'hero-wave-h-60', delay: 'hero-wave-delay-3' },
+  { height: 'hero-wave-h-85', delay: 'hero-wave-delay-4' },
+  { height: 'hero-wave-h-45', delay: 'hero-wave-delay-5' },
+  { height: 'hero-wave-h-95', delay: 'hero-wave-delay-6' },
+  { height: 'hero-wave-h-50', delay: 'hero-wave-delay-7' },
+  { height: 'hero-wave-h-75', delay: 'hero-wave-delay-8' },
+  { height: 'hero-wave-h-35', delay: 'hero-wave-delay-9' },
+  { height: 'hero-wave-h-90', delay: 'hero-wave-delay-10' },
+  { height: 'hero-wave-h-55', delay: 'hero-wave-delay-11' },
+  { height: 'hero-wave-h-80', delay: 'hero-wave-delay-12' },
+  { height: 'hero-wave-h-40', delay: 'hero-wave-delay-13' },
+  { height: 'hero-wave-h-65', delay: 'hero-wave-delay-14' },
+] as const;
+
 function WaveformBars() {
   return (
     <div className="flex items-end gap-[3px] h-16" aria-hidden="true">
-      {[
-        0.4, 0.7, 1, 0.6, 0.85, 0.45, 0.95, 0.5, 0.75, 0.35, 0.9, 0.55, 0.8,
-        0.4, 0.65,
-      ].map((height, i) => (
+      {HERO_WAVEFORM_BARS.map((bar, i) => (
         <div
           key={i}
-          className="w-[3px] rounded-full bg-primary/60 animate-[waveform_1.8s_ease-in-out_infinite_alternate]"
-          style={{
-            height: `${height * 100}%`,
-            animationDelay: `${i * 0.12}s`,
-          }}
+          className={`hero-wave-bar ${bar.height} ${bar.delay}`}
         />
       ))}
     </div>
@@ -52,18 +63,15 @@ function RouteComponent() {
       <section className="relative flex-1 flex items-center justify-center px-6 py-20 md:py-28">
         {/* Background orbs */}
         <div
-          className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[100px] pointer-events-none"
-          style={{ background: 'hsl(238 70% 58%)' }}
+          className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[100px] pointer-events-none bg-[hsl(var(--chart-1))]"
           aria-hidden="true"
         />
         <div
-          className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.05] blur-[80px] pointer-events-none"
-          style={{ background: 'hsl(330 65% 55%)' }}
+          className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.05] blur-[80px] pointer-events-none bg-[hsl(var(--chart-3))]"
           aria-hidden="true"
         />
         <div
-          className="absolute top-[30%] right-[15%] w-[300px] h-[300px] rounded-full opacity-[0.04] blur-[60px] pointer-events-none"
-          style={{ background: 'hsl(160 60% 45%)' }}
+          className="absolute top-[30%] right-[15%] w-[300px] h-[300px] rounded-full opacity-[0.04] blur-[60px] pointer-events-none bg-[hsl(var(--chart-2))]"
           aria-hidden="true"
         />
 
@@ -80,11 +88,7 @@ function RouteComponent() {
 
           {/* Headline */}
           <h1
-            className="font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1"
-            style={{
-              fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-              fontVariationSettings: "'SOFT' 50, 'WONK' 1",
-            }}
+            className="hero-title font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1"
           >
             Where ideas become <span className="text-primary">content</span>
           </h1>
