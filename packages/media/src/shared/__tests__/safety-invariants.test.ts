@@ -25,6 +25,22 @@ const collectUseCaseFiles = (dir: string): string[] => {
   return files;
 };
 
+
+const shouldSkipUseCaseTest = (filePath: string): boolean => {
+  const name = path.basename(filePath);
+  if (name === 'index.ts') return true;
+  if (name === 'types.ts') return true;
+  if (name === 'errors.ts') return true;
+  if (name.endsWith('utils.ts')) return true;
+  return false;
+};
+
+const getExpectedTestPath = (filePath: string): string => {
+  const dir = path.dirname(filePath);
+  const base = path.basename(filePath, '.ts');
+  return path.join(dir, '__tests__', `${base}.test.ts`);
+};
+
 const read = (relativePath: string): string =>
   fs.readFileSync(path.join(srcRoot, relativePath), 'utf-8');
 
@@ -38,6 +54,21 @@ describe('safety invariants', () => {
     expect(
       offenders.map((file) => path.relative(srcRoot, file)),
       'Use getOwnedJobOrNotFound() from shared safety primitives.',
+    ).toEqual([]);
+  });
+
+
+  it('requires a unit test file for each media use-case', () => {
+    const files = collectUseCaseFiles(srcRoot).filter(
+      (file) => !shouldSkipUseCaseTest(file),
+    );
+    const missing = files.filter(
+      (file) => !fs.existsSync(getExpectedTestPath(file)),
+    );
+
+    expect(
+      missing.map((file) => path.relative(srcRoot, file)),
+      'Add matching __tests__/{name}.test.ts files or document exceptions.',
     ).toEqual([]);
   });
 
