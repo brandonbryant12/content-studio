@@ -50,6 +50,8 @@ packages/
 - **Persist compounding notes in `agent-engine/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `pnpm workflow-memory:add-entry --help`
+- Preferred memory git persistence helper:
+  - `pnpm workflow-memory:sync --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `pnpm workflow-memory:retrieve --help`
 - For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](./agent-engine/workflow-memory/taxonomy.md).

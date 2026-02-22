@@ -177,6 +177,18 @@ pnpm workflow-memory:add-entry \
 
 This appends an event to the current month and updates `index.json`.
 
+For automation runs, persist the append to git immediately:
+
+```bash
+pnpm workflow-memory:sync \
+  --message "chore(workflow-memory): <automation-id> run memory"
+```
+
+`workflow-memory:sync` stages only append artifacts under `events/`, `index.json`,
+and `summaries/`, creates a commit, and pushes with retry on non-fast-forward.
+When concurrent memory writes collide, it auto-rebases and resolves
+append-only conflicts for memory files.
+
 ## Scoring + Retrieval
 
 Scoring uses a lightweight weighted sum:

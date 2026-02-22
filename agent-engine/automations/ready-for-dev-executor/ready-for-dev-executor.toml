@@ -12,6 +12,7 @@ Execution contract:
 - Use this as the single implementation lane for approved issues from both `best-practice-researcher` and `agent-engine-researcher`.
 - Select and implement 1..N `ready-for-dev` issues using bounded aggregation.
 - Route each selected issue to the correct workflow/skills per the playbook.
+- For every run path (success/failure/no-op), append workflow memory and run `pnpm workflow-memory:sync` to commit/push memory artifacts.
 - When a run adds code, complete commit -> PR -> merge -> branch/worktree cleanup in the same run.
 - If this wrapper conflicts with the playbook, follow the playbook.
 - Keep run output concise and include issue selection rationale, workflow routing, validation evidence, delivery outcome, and memory append summary.'''

@@ -117,3 +117,10 @@ Append concise run memory including:
 - issue/PR URLs
 - merge result
 - follow-up delta
+- append at least one structured event:
+  - `pnpm workflow-memory:add-entry --workflow "<Core Workflow>" ...`
+- commit and push memory append artifacts after each run:
+  - `pnpm workflow-memory:sync --message "chore(workflow-memory): sanity-check run memory"`
+- if `workflow-memory:sync` reports non-fast-forward, allow it to auto-rebase
+  append-only memory files and retry; only stop when conflicts include
+  non-memory paths.

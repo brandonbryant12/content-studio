@@ -13,6 +13,7 @@ Execution contract:
 - For high-confidence bounded findings, route to the correct workflow and execute fix -> PR -> merge in the same run.
 - For non-actionable or oversized findings, create/update an issue and stop without coding.
 - Enforce recurrence handling: if the finding class appears in 2+ recent memory events, require a prevention artifact in the same PR before auto-merge.
+- For every run path (direct fix, issue-only, no-op), append workflow memory and run `pnpm workflow-memory:sync` to commit/push memory artifacts.
 - When a run adds code, complete commit -> PR -> merge -> branch/worktree cleanup in the same run.
 - If this wrapper conflicts with the playbook, follow the playbook.
 - Keep run output concise and include scan focus, decision path, recurrence classification, prevention artifact evidence, workflow routing, validation evidence, PR/merge outcome, and memory append summary.'''

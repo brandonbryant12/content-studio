@@ -120,4 +120,14 @@ Delivery behavior:
   Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly). After merge, clean up the git worktree with `git worktree remove "$WORKTREE_DIR"` and delete any remaining local branch pointer for `"$WORKTREE_BRANCH"`.
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
-Append run details to [`memory.md`](memory.md) and inbox summary including selected issue set, bundled issue count, workflow routing summary, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.
+Persist run memory in git-tracked workflow memory and include an inbox summary
+with selected issue set, bundled issue count, workflow routing summary, branch,
+PR URL, merge result, branch cleanup result, and closure verification. Hard
+limit: one PR per run.
+- append at least one structured event:
+  - `pnpm workflow-memory:add-entry --workflow "<Core Workflow>" ...`
+- commit and push memory append artifacts after each run:
+  - `pnpm workflow-memory:sync --message "chore(workflow-memory): ready-for-dev-executor run memory"`
+- if `workflow-memory:sync` reports non-fast-forward, allow it to auto-rebase
+  append-only memory files and retry; only stop when conflicts include
+  non-memory paths.

@@ -108,6 +108,21 @@ Any automation that edits code must:
 - on failure: no merge, report blocker with evidence
 - on success: open PR with issue linkage, follow lane-specific merge policy, and clean up branch/worktree after merge
 
+## Required Memory Persistence For Every Lane
+
+Every automation run (including no-op and failure paths) must persist structured
+workflow memory in git:
+
+1. Append an event with [`pnpm workflow-memory:add-entry`](../../package.json).
+2. Commit and push memory artifacts with [`pnpm workflow-memory:sync`](../../package.json).
+3. Treat append-only memory conflicts as recoverable:
+  - allow `workflow-memory:sync` to rebase and retry on non-fast-forward
+  - allow auto-resolution for:
+    - `agent-engine/workflow-memory/events/*.jsonl`
+    - `agent-engine/workflow-memory/index.json`
+    - `agent-engine/workflow-memory/summaries/*.md`
+  - only block when non-memory conflicts appear
+
 ## Controlled Chaos Rules
 
 External research is encouraged, but only through filters:
