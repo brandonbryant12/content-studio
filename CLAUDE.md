@@ -46,13 +46,13 @@ packages/
 
 ## AI Workflow + Skills
 
-- **Follow [`agentic-harness-framework/workflows/README.md`](./agentic-harness-framework/workflows/README.md)** for workflow selection and distinctions.
-- **Persist compounding notes in `agentic-harness-framework/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
+- **Follow [`agent-engine/workflows/README.md`](./agent-engine/workflows/README.md)** for workflow selection and distinctions.
+- **Persist compounding notes in `agent-engine/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
-  - `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`
+  - `node agent-engine/scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
-  - `node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --help`
-- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agentic-harness-framework/workflow-memory/taxonomy.md`](./agentic-harness-framework/workflow-memory/taxonomy.md).
+  - `node agent-engine/scripts/workflow-memory/retrieve.mjs --help`
+- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](./agent-engine/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.
@@ -61,7 +61,7 @@ packages/
 - **Canonical skills live in `.agents/skills/`**.
 - **`.claude/skills`, `.agent/skills`, `.github/skills` must stay symlinked mirrors** of `.agents/skills`.
 - After any skill add/update/delete, run:
-  - `agentic-harness-framework/scripts/sync-skills.sh`
+  - `agent-engine/scripts/sync-skills.sh`
 - Preferred project skills:
   - `code-simplifier`
   - `quality-closure-loop`

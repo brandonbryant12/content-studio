@@ -33,10 +33,10 @@ Record each shipped change that adopts an idea from an external paper.
 - Implementation summary:
   - Added a canonical workflow-memory taxonomy and wired it into workflow docs, skill guidance, and `add-entry.mjs` validation so memory and agent-failure tags are structured instead of free-form.
 - Code references:
-  - [`agentic-harness-framework/workflow-memory/taxonomy.md`](../agentic-harness-framework/workflow-memory/taxonomy.md)
-  - `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`
-  - [`agentic-harness-framework/workflow-memory/README.md`](../agentic-harness-framework/workflow-memory/README.md)
-  - [`agentic-harness-framework/workflows/README.md`](../agentic-harness-framework/workflows/README.md)
+  - [`agent-engine/workflow-memory/taxonomy.md`](../agent-engine/workflow-memory/taxonomy.md)
+  - `agent-engine/scripts/workflow-memory/add-entry.mjs`
+  - [`agent-engine/workflow-memory/README.md`](../agent-engine/workflow-memory/README.md)
+  - [`agent-engine/workflows/README.md`](../agent-engine/workflows/README.md)
   - [`.agents/skills/periodic-scans/SKILL.md`](../.agents/skills/periodic-scans/SKILL.md)
 
 ### 2026-02-21 - Workflow Memory Scoring + Retrieval Helper
@@ -49,6 +49,6 @@ Record each shipped change that adopts an idea from an external paper.
 - Implementation summary:
   - Added optional scoring fields to workflow memory events/index and a retrieval helper that ranks by weighted score.
 - Code references:
-  - [`agentic-harness-framework/workflow-memory/README.md`](../agentic-harness-framework/workflow-memory/README.md)
-  - `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`
-  - `agentic-harness-framework/scripts/workflow-memory/retrieve.mjs`
+  - [`agent-engine/workflow-memory/README.md`](../agent-engine/workflow-memory/README.md)
+  - `agent-engine/scripts/workflow-memory/add-entry.mjs`
+  - `agent-engine/scripts/workflow-memory/retrieve.mjs`

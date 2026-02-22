@@ -22,5 +22,5 @@ All new code reviews and feature work should reference [`docs/`](./) standards.
 - [`docs/patterns/`](./patterns/) - backend implementation patterns and constraints
 - [`docs/frontend/`](./frontend/) - frontend architecture and UI standards
 - [`docs/testing/`](./testing/) - testing strategy and required coverage by change type
-- [`docs/setup.md`](./setup.md) - local development and test environment setup
+- [`README.md`](../README.md) - local development and test environment setup
 - [`docs/master-spec.md`](./master-spec.md) - canonical, PR-governed master application specification
