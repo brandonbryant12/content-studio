@@ -372,6 +372,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-feature-delivery-normalize-google-llm-retry-layer",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Normalize Google LLM retry layer",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ai",
+      "llm",
+      "retry"
+    ],
+    "importance": 0.4,
+    "confidence": 0.62,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-feature-delivery-refined-agent-engine-researcher-for-registry-optimization-and-co",
     "date": "2026-02-22",
     "month": "2026-02",
