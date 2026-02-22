@@ -99,16 +99,20 @@ This ensures spans are exported reliably and flush on termination.
 | Variable | Purpose | Notes |
 |---|---|---|
 | `TELEMETRY_ENABLED` | Enable export | Defaults to `true` in production, else `false` |
-| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace exporter endpoint | Normalized to include `/v1/traces` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP endpoint | Appends `/v1/traces` for traces |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace exporter endpoint | Used as-is; path defaults to `/` when missing |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers | Comma-separated `KEY=value,KEY2=value2` |
+| `OTEL_EXPORTER_OTLP_TRACES_HEADERS` | Trace-specific OTLP headers | Overrides `OTEL_EXPORTER_OTLP_HEADERS` |
 | `OTEL_SERVICE_NAME` | Service identifier | Set distinct values for server and worker |
 | `OTEL_SERVICE_VERSION` | Service version tag | Optional override |
 | `OTEL_ENV` | Deployment environment tag | Defaults to `NODE_ENV` |
 
 ### Exporter Behavior
 
-- If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use OTLP HTTP exporter + `BatchSpanProcessor`.
-- If endpoint is not configured, fall back to `ConsoleSpanExporter` for local debugging.
+- If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use it as-is with OTLP HTTP export + `BatchSpanProcessor`.
+- Else if `OTEL_EXPORTER_OTLP_ENDPOINT` is present, append `/v1/traces` and use OTLP HTTP export + `BatchSpanProcessor`.
+- If neither endpoint is configured, fall back to `ConsoleSpanExporter` for local debugging.
+- `OTEL_EXPORTER_OTLP_TRACES_HEADERS` takes precedence over `OTEL_EXPORTER_OTLP_HEADERS`.
 
 ## Error Observability
 <!-- enforced-by: architecture -->

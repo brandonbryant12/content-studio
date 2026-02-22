@@ -1,5 +1,5 @@
-import type { ErrorHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import type { ErrorHandler } from 'hono';
 
 export const globalErrorHandler: ErrorHandler = (err, c) => {
   if (err instanceof HTTPException) {

@@ -4,6 +4,7 @@ import {
   type Document,
   type DocumentSource,
   type DocumentStatus,
+  type JsonValue,
   type ResearchConfig,
 } from '@repo/db/schema';
 
@@ -16,7 +17,7 @@ export interface CreateTestDocumentOptions {
   source?: DocumentSource;
   originalFileName?: string | null;
   originalFileSize?: number | null;
-  metadata?: Record<string, unknown> | null;
+  metadata?: Record<string, JsonValue> | null;
   status?: DocumentStatus;
   errorMessage?: string | null;
   sourceUrl?: string | null;
