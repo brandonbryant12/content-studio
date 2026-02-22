@@ -135,5 +135,5 @@ const isStreaming = status === "submitted" || status === "streaming";
 
 - Extract `mutationFn` from oRPC: `apiClient.{route}.{method}.mutationOptions().mutationFn!` <!-- enforced-by: manual-review -->
 - Never call `queryClient.invalidateQueries` in `onSettled` -- SSE handles it <!-- enforced-by: manual-review -->
-- Use `getErrorMessage()` for all error toasts (see `error-handling.md`) <!-- enforced-by: manual-review -->
+- Use `getErrorMessage()` for all error toasts (see [`error-handling.md`](./error-handling.md)) <!-- enforced-by: manual-review -->
 - Container calls mutation; presenter calls callback prop <!-- enforced-by: manual-review -->

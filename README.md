@@ -43,6 +43,6 @@ pnpm dev
 
 ## Key References
 
-1. Behavior specification: `docs/master-spec.md`
-2. Setup and environment details: `docs/setup.md`
-3. Architecture overview: `docs/architecture/overview.md`
+1. Behavior specification: [`docs/master-spec.md`](./docs/master-spec.md)
+2. Setup and environment details: [`docs/setup.md`](./docs/setup.md)
+3. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)

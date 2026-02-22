@@ -6,8 +6,8 @@ New workflow memory lives in `docs/workflow-memory/`:
 
 - `docs/workflow-memory/events/YYYY-MM.jsonl` (event source of truth)
 - `docs/workflow-memory/index.json` (retrieval index)
-- `docs/workflow-memory/summaries/YYYY-MM.md` (monthly compression)
-- `docs/workflow-memory/guardrails.md` (durable controls)
+- [`docs/workflow-memory/summaries/YYYY-MM.md`](docs/workflow-memory/summaries/YYYY-MM.md) (monthly compression)
+- [`docs/workflow-memory/guardrails.md`](./workflow-memory/guardrails.md) (durable controls)
 
 ## Migration
 

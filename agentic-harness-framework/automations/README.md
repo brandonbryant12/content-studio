@@ -3,20 +3,20 @@
 This directory documents how Codex automations are designed for this repo.
 
 Goal:
-- Keep all code changes aligned with repository guardrails in `docs/`, `AGENTS.md`, and `CLAUDE.md`.
+- Keep all code changes aligned with repository guardrails in [`docs/`](../../docs/), [`AGENTS.md`](../../AGENTS.md), and [`CLAUDE.md`](../../CLAUDE.md).
 - Continuously inject controlled external research ("chaos") to discover better patterns over time.
 
 ## Directory Structure
 
 Each automation lane has its own folder:
 
-- `agentic-harness-framework/automations/<lane>/<lane>.md` (playbook)
-- `agentic-harness-framework/automations/<lane>/<lane>.toml` (runtime wrapper mirror)
+- In [`agentic-harness-framework/automations/`](./), each lane folder contains a `<lane>.md` playbook.
+- In [`agentic-harness-framework/automations/`](./), each lane folder contains a matching `<lane>.toml` runtime wrapper.
 
 Example:
 
-- `agentic-harness-framework/automations/architecture-radar/architecture-radar.md`
-- `agentic-harness-framework/automations/architecture-radar/architecture-radar.toml`
+- [`agentic-harness-framework/automations/architecture-radar/architecture-radar.md`](./architecture-radar/architecture-radar.md)
+- [`agentic-harness-framework/automations/architecture-radar/architecture-radar.toml`](./architecture-radar/architecture-radar.toml)
 
 ## Operating Model
 
@@ -57,7 +57,7 @@ This creates stability plus adaptation:
 4. `self-improvement-judge-executor`
 - Autonomous implementation lane for self-improvement issues.
 - Uses a holistic judge to score all candidate suggestions and executes one coherent primary item, optionally aggregating closely related issues into a single PR.
-- PR output must include linked aggregated issues plus a detailed improvements/benefits explanation, and include `research/` documentation updates when external research ideas are adopted.
+- PR output must include linked aggregated issues plus a detailed improvements/benefits explanation, and include [`research/`](../../research/) documentation updates when external research ideas are adopted.
 - Branches from latest `origin/main`, runs core validation gates, and opens PRs for human review/merge (no auto-merge in this lane).
 
 5. `quality-sentinel`
@@ -78,14 +78,14 @@ For every lane:
 Any automation that edits code must:
 
 1. Read relevant repo standards before editing
-- `docs/workflow.md`
-- relevant `docs/patterns/*.md`
-- relevant `docs/frontend/*.md` and `docs/testing/*.md` as needed
+- [`docs/workflow.md`](../../docs/workflow.md)
+- relevant files in [`docs/patterns/`](../../docs/patterns/)
+- relevant files in [`docs/frontend/`](../../docs/frontend/) and [`docs/testing/`](../../docs/testing/) as needed
 
 2. Branch from latest main
 - `git fetch origin main`
 - create branch from `origin/main`
-- if only `docs/workflow-memory/events/*.jsonl` and/or `docs/workflow-memory/index.json` are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
+- if only files in [`docs/workflow-memory/events/`](../../docs/workflow-memory/events/) and/or [`docs/workflow-memory/index.json`](../../docs/workflow-memory/index.json) are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
 - if any other unexpected dirty paths exist, stop and report blocker details
 
 3. Prepare runtime for reliable automation execution
@@ -127,7 +127,7 @@ External research is encouraged, but only through filters:
 
 6. Research traceability
 - when an issue is based on external paper ideas, include paper links and adopted ideas in the issue
-- when those ideas are implemented, append a shipped-entry log in `research/implemented-ideas.md`
+- when those ideas are implemented, append a shipped-entry log in [`research/implemented-ideas.md`](../../research/implemented-ideas.md)
 
 ## Flow Across Lanes
 
@@ -140,7 +140,7 @@ External research is encouraged, but only through filters:
 ## Research Logging
 
 When paper-derived ideas are adopted, log shipped changes in:
-- `research/implemented-ideas.md`
+- [`research/implemented-ideas.md`](../../research/implemented-ideas.md)
 
 Use the template in that file to record:
 - paper link(s)

@@ -96,7 +96,7 @@ expect(afterAudio.status).toBe('ready');
 
 ## Setup
 
-Workflow tests share the same runtime setup as integration tests. See `docs/testing/integration-tests.md` for `createTestRuntime`, `createTestContext`, and mock layer configuration. The runtime must include the job queue layer.
+Workflow tests share the same runtime setup as integration tests. See [`docs/testing/integration-tests.md`](./integration-tests.md) for `createTestRuntime`, `createTestContext`, and mock layer configuration. The runtime must include the job queue layer.
 
 ## Coverage Requirements
 <!-- enforced-by: manual-review -->

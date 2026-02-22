@@ -21,7 +21,7 @@ Use this skill after behavior changes, during weekly scans, and before releases.
 2. Verify docs still match current code semantics.
 3. Update docs where behavior changed or guidance is ambiguous.
 4. Remove stale guidance and dead links.
-5. Confirm cross-doc consistency (`AGENTS.md`, `CLAUDE.md`, `docs/workflow.md`).
+5. Confirm cross-doc consistency ([`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md)).
 
 ## Output Contract
 
@@ -34,4 +34,4 @@ Each item includes file evidence and confidence.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `Docs + Knowledge Drift` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.

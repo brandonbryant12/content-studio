@@ -17,7 +17,7 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 
 ## 1) Scan
 
-- Anchor to standards in `docs/workflow.md`, `docs/workflow-memory/README.md`, and `AGENTS.md`.
+- Anchor to standards in [`docs/workflow.md`](../../../docs/workflow.md), [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
 - Establish shell/toolchain context before running checks:
   - run Node/pnpm commands through interactive login zsh: `zsh -lic 'cd "$PWD" && <command>'`
   - verify toolchain first: `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
@@ -28,7 +28,7 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
   - `pnpm test:invariants` for backend-touching scope
   - `pnpm --filter web build` for frontend-touching scope
   - `pnpm workflow-memory:coverage:strict`
-- Capture findings in the required `periodic-scans` format from `.agents/skills/periodic-scans/SKILL.md`.
+- Capture findings in the required `periodic-scans` format from [`.agents/skills/periodic-scans/SKILL.md`](../periodic-scans/SKILL.md).
 
 ## 2) Triage Into Action Queue
 
@@ -63,7 +63,7 @@ If a pattern appears in 2+ memory events in `docs/workflow-memory/index.json` or
 - run `self-improvement`
 - land at least one guardrail (test, lint, docs rule, skill rule, or automation)
 - validate fail-before/pass-after where possible
-- update `AGENTS.md`, `CLAUDE.md`, and `docs/workflow.md` when standards change
+- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`docs/workflow.md`](../../../docs/workflow.md) when standards change
 
 ## 5) Persist + Close
 

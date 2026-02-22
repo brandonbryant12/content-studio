@@ -15,7 +15,7 @@ Issue intake and judge stage:
 - Search open PRs and issue history first to avoid duplicate execution.
 - Evaluate all candidate suggestions with a holistic scorecard:
   - systemic impact on harness reliability/safety
-  - coherence with AGENTS.md, CLAUDE.md, docs/workflow.md, docs/workflow-memory/*, and .agents/skills
+  - coherence with [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), docs/workflow-memory/*, and .agents/skills
   - implementation risk and blast radius
   - evidence quality and recency
   - overlap/duplication with existing open work
@@ -44,13 +44,13 @@ Branching and implementation contract:
   - `git checkout -B codex/self-improvement-<issue-number>-<yyyymmddhhmm> origin/main`
 - Implement the selected issue as one coherent incremental slice.
 - If related issues were aggregated, implement the bundle as one coherent slice and keep scope bounded to one PR.
-- If the selected issue contains a Research Trace or external paper links, append a log entry to `research/implemented-ideas.md` with:
+- If the selected issue contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) with:
   - date
   - issue and PR links
   - paper link(s)
   - idea(s) adopted
   - what was implemented in this repo
-- If external research/paper ideas are adopted in the implementation, add/update documentation in `research/` in the same PR (at minimum `research/implemented-ideas.md`; add a detailed markdown note file when useful).
+- If external research/paper ideas are adopted in the implementation, add/update documentation in `research/` in the same PR (at minimum [`research/implemented-ideas.md`](../../../research/implemented-ideas.md); add a detailed markdown note file when useful).
 
 Validation gates (required, in order):
 Run each gate via `zsh -lic 'cd "$PWD" && <gate-command>'`.

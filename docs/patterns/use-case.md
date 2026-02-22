@@ -96,7 +96,7 @@ yield* Effect.all(ids.map(id => processDocument(id)), { concurrency: 10 });
 | State + enqueue | `withTransactionalStateAndEnqueue(effect, compensate)` |
 | Content replacement | `replaceTextContentSafely(...)` |
 
-See `docs/patterns/safety-primitives.md`.
+See [`docs/patterns/safety-primitives.md`](./safety-primitives.md).
 
 ### 7. No Direct Repo Bypass <!-- enforced-by: manual-review -->
 

@@ -2,21 +2,21 @@
 
 ## Before Making Changes
 
-**Always search `docs/` before implementing.** Use `Glob` with `docs/**/*.md` to find relevant docs.
+**Always search `docs/` before implementing.** Use `Glob` with [`docs/**/*.md`](./docs/) to find relevant docs.
 
 | Area | Docs |
 |------|------|
-| Backend logic | `docs/patterns/use-case.md`, `docs/patterns/repository.md`, `docs/patterns/safety-primitives.md`, `docs/patterns/job-queue.md` |
-| API endpoints | `docs/patterns/api-handler.md` |
-| Error handling | `docs/patterns/error-handling.md`, `docs/patterns/enum-constants.md` |
-| Effect runtime | `docs/patterns/effect-runtime.md` |
-| Observability | `docs/architecture/observability.md`, `docs/setup.md` |
-| Frontend components | `docs/frontend/components.md`, `docs/frontend/styling.md` |
-| Data fetching | `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md` |
-| Forms | `docs/frontend/forms.md` |
-| Frontend architecture | `docs/frontend/project-structure.md`, `docs/frontend/error-handling.md`, `docs/frontend/components.md` |
-| Real-time | `docs/frontend/real-time.md` |
-| Testing | `docs/testing/use-case-tests.md`, `docs/testing/integration-tests.md`, `docs/testing/job-workflow-tests.md`, `docs/testing/invariants.md`, `docs/testing/live-tests.md`, `docs/frontend/testing.md` |
+| Backend logic | [`docs/patterns/use-case.md`](./docs/patterns/use-case.md), [`docs/patterns/repository.md`](./docs/patterns/repository.md), [`docs/patterns/safety-primitives.md`](./docs/patterns/safety-primitives.md), [`docs/patterns/job-queue.md`](./docs/patterns/job-queue.md) |
+| API endpoints | [`docs/patterns/api-handler.md`](./docs/patterns/api-handler.md) |
+| Error handling | [`docs/patterns/error-handling.md`](./docs/patterns/error-handling.md), [`docs/patterns/enum-constants.md`](./docs/patterns/enum-constants.md) |
+| Effect runtime | [`docs/patterns/effect-runtime.md`](./docs/patterns/effect-runtime.md) |
+| Observability | [`docs/architecture/observability.md`](./docs/architecture/observability.md), [`docs/setup.md`](./docs/setup.md) |
+| Frontend components | [`docs/frontend/components.md`](./docs/frontend/components.md), [`docs/frontend/styling.md`](./docs/frontend/styling.md) |
+| Data fetching | [`docs/frontend/data-fetching.md`](./docs/frontend/data-fetching.md), [`docs/frontend/mutations.md`](./docs/frontend/mutations.md) |
+| Forms | [`docs/frontend/forms.md`](./docs/frontend/forms.md) |
+| Frontend architecture | [`docs/frontend/project-structure.md`](./docs/frontend/project-structure.md), [`docs/frontend/error-handling.md`](./docs/frontend/error-handling.md), [`docs/frontend/components.md`](./docs/frontend/components.md) |
+| Real-time | [`docs/frontend/real-time.md`](./docs/frontend/real-time.md) |
+| Testing | [`docs/testing/use-case-tests.md`](./docs/testing/use-case-tests.md), [`docs/testing/integration-tests.md`](./docs/testing/integration-tests.md), [`docs/testing/job-workflow-tests.md`](./docs/testing/job-workflow-tests.md), [`docs/testing/invariants.md`](./docs/testing/invariants.md), [`docs/testing/live-tests.md`](./docs/testing/live-tests.md), [`docs/frontend/testing.md`](./docs/frontend/testing.md) |
 
 ## Project Structure
 
@@ -46,13 +46,13 @@ packages/
 
 ## AI Workflow + Skills
 
-- **Follow `docs/workflow.md`** for intake, delivery, review, scans, release/incident, and self-improvement loops.
+- **Follow [`docs/workflow.md`](./docs/workflow.md)** for intake, delivery, review, scans, release/incident, and self-improvement loops.
 - **Persist compounding notes in `docs/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `node agentic-harness-framework/scripts/workflow-memory/retrieve.mjs --help`
-- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from `docs/workflow-memory/taxonomy.md`.
+- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`docs/workflow-memory/taxonomy.md`](./docs/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.
@@ -119,7 +119,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 - **`Layer.succeed`** — only for pure object literals (repos, plain config). No `new` or factory calls.
 - **`Layer.sync`** — when `make*` instantiates classes (`new GoogleGenAI(...)`) or calls factory functions
 - **`Layer.effect`** — when construction needs to `yield*` other Effect services
-- See `docs/patterns/effect-runtime.md` § "Layer Construction" for full guide
+- See [`docs/patterns/effect-runtime.md`](./docs/patterns/effect-runtime.md) § "Layer Construction" for full guide
 
 ## DX & Tooling
 

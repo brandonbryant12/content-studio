@@ -4,7 +4,7 @@ Interactive developer CLI for testing integrations against real services. Built 
 
 ## Setup
 
-The CLI reads environment variables from the root `.env` file. Make sure `GEMINI_API_KEY` is set:
+The CLI reads environment variables from the root `.env` file (see [`docs/setup.md`](../../docs/setup.md)). Make sure `GEMINI_API_KEY` is set:
 
 ```bash
 # From the repo root
@@ -30,7 +30,7 @@ Gemini playground for terminal experiments. Prompts for API key + model ID, then
 
 ### `pnpm cli test tts`
 
-Tests text-to-speech voice preview. Prompts you to filter by gender and select a voice, generates an audio preview, and saves the `.mp3` file to `tools/cli/.output/`.
+Tests text-to-speech voice preview. Prompts you to filter by gender and select a voice, generates an audio preview, and saves the `.mp3` file to [`tools/cli/.output/`](./.output/).
 
 ### `pnpm cli test storage`
 
@@ -42,7 +42,7 @@ Generates TTS audio previews for the 8 frontend voices (Aoede, Kore, Leda, Zephy
 
 ### `pnpm cli admin set-role <email>`
 
-Promotes a user to admin role by email address. Connects to the database using `SERVER_POSTGRES_URL` from `apps/server/.env` and updates the user's role via Drizzle ORM.
+Promotes a user to admin role by email address. Connects to the database using `SERVER_POSTGRES_URL` from [`apps/server/.env`](../../apps/server/.env) and updates the user's role via Drizzle ORM.
 
 ```bash
 pnpm cli -- admin set-role user@example.com

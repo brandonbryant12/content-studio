@@ -21,4 +21,4 @@ export async function deleteUser(id: string) {
 
 PR modifying `packages/api/src/server/router/users.ts`.
 The skill's "Must-Check Risks" includes authorization enforcement.
-CLAUDE.md guardrail: "All mutating use cases on existing resources must enforce authorization (requireOwnership / role policy) before write/delete."
+[`CLAUDE.md`](../../../CLAUDE.md) guardrail: "All mutating use cases on existing resources must enforce authorization (requireOwnership / role policy) before write/delete."

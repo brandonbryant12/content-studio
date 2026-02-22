@@ -1,6 +1,6 @@
 # API Handler Pattern
 
-> Merged from `router-handler.md` and `serialization.md`.
+> Merged from [`router-handler.md`](router-handler.md) and [`serialization.md`](serialization.md).
 
 ```mermaid
 sequenceDiagram

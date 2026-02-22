@@ -7,13 +7,13 @@ It sits above detailed standards docs and explains how specs, skills, gates, and
 
 | Control | Purpose | Source Of Truth |
 |---|---|---|
-| Behavior specs | Define expected product behavior before implementation | `docs/master-spec.md`, `docs/spec/generated/*` |
-| Engineering standards | Constrain architecture, backend, frontend, and tests | `docs/architecture/*`, `docs/patterns/*`, `docs/frontend/*`, `docs/testing/*` |
-| Skill workflows | Standardize how work is scoped, delivered, reviewed, and improved | `.agents/skills/*/SKILL.md`, `docs/workflow.md` |
-| Automation lanes | Capture scheduled lane playbooks and runtime wrappers | `agentic-harness-framework/automations/*/*.md`, `agentic-harness-framework/automations/*/*.toml` |
+| Behavior specs | Define expected product behavior before implementation | [`docs/master-spec.md`](../docs/master-spec.md), [`docs/spec/generated/`](../docs/spec/generated/) |
+| Engineering standards | Constrain architecture, backend, frontend, and tests | [`docs/architecture/`](../docs/architecture/), [`docs/patterns/`](../docs/patterns/), [`docs/frontend/`](../docs/frontend/), [`docs/testing/`](../docs/testing/) |
+| Skill workflows | Standardize how work is scoped, delivered, reviewed, and improved | [`.agents/skills/`](../.agents/skills/), [`docs/workflow.md`](../docs/workflow.md) |
+| Automation lanes | Capture scheduled lane playbooks and runtime wrappers | [`agentic-harness-framework/automations/`](./automations/) |
 | Automated quality gates | Catch drift and regressions before merge | `pnpm spec:check`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:invariants`, `pnpm build` |
 | Human review controls | Cover risks that automation cannot fully judge | PR review + `pr-risk-review`, `architecture-adr-guard` |
-| Workflow memory | Persist findings and improve guardrails over time | `docs/workflow-memory/*` |
+| Workflow memory | Persist findings and improve guardrails over time | [`docs/workflow-memory/`](../docs/workflow-memory/) |
 
 ## Delivery Loop
 
@@ -26,8 +26,8 @@ It sits above detailed standards docs and explains how specs, skills, gates, and
 
 ## Next Read
 
-1. `agentic-harness-framework/framework-map.md`
-2. `agentic-harness-framework/control-surfaces.md`
-3. `agentic-harness-framework/automations/README.md`
-4. `docs/workflow.md`
-5. `docs/workflow-memory/README.md`
+1. [`agentic-harness-framework/framework-map.md`](./framework-map.md)
+2. [`agentic-harness-framework/control-surfaces.md`](./control-surfaces.md)
+3. [`agentic-harness-framework/automations/README.md`](./automations/README.md)
+4. [`docs/workflow.md`](../docs/workflow.md)
+5. [`docs/workflow-memory/README.md`](../docs/workflow-memory/README.md)

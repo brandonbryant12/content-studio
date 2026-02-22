@@ -14,7 +14,7 @@ GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run 
 Research protocol:
 - Research recent techniques and findings on AI coding agent workflows, evaluation harnesses, memory systems, failure taxonomies, and quality closure loops.
 - Use high-quality primary sources and official docs/release notes.
-- Compare findings against AGENTS.md, CLAUDE.md, docs/workflow.md, docs/workflow-memory/*, and .agents/skills plus mirrored skill expectations.
+- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), docs/workflow-memory/*, and .agents/skills plus mirrored skill expectations.
 - Rank recommendations by impact, effort, confidence, and implementation risk.
 - Apply a systems-fit filter: only keep recommendations that improve whole-system coherence, enforceability, or safety.
 
@@ -33,6 +33,6 @@ Issue policy:
   - Paper link(s)
   - Memory-system or harness idea(s) adopted from the paper
   - Proposed repo-specific adaptation
-  - Requirement that implementers append `research/implemented-ideas.md` when shipped
+  - Requirement that implementers append [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) when shipped
 
 Append concise run memory and inbox summary with top recommendations, evidence links, and created/updated issue URLs.

@@ -36,4 +36,4 @@ Include evidence source, confidence, and expected gain.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Performance + Cost Guard` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `Performance + Cost Guard` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.

@@ -9,18 +9,18 @@ Use this skill when adding/refactoring behavior or when test health drifts.
 
 ## Standards To Anchor
 
-- `docs/testing/overview.md`
-- `docs/testing/use-case-tests.md`
-- `docs/testing/integration-tests.md`
-- `docs/testing/job-workflow-tests.md`
-- `docs/testing/invariants.md`
-- `docs/testing/live-tests.md`
-- `docs/frontend/testing.md`
+- [`docs/testing/overview.md`](../../../docs/testing/overview.md)
+- [`docs/testing/use-case-tests.md`](../../../docs/testing/use-case-tests.md)
+- [`docs/testing/integration-tests.md`](../../../docs/testing/integration-tests.md)
+- [`docs/testing/job-workflow-tests.md`](../../../docs/testing/job-workflow-tests.md)
+- [`docs/testing/invariants.md`](../../../docs/testing/invariants.md)
+- [`docs/testing/live-tests.md`](../../../docs/testing/live-tests.md)
+- [`docs/frontend/testing.md`](../../../docs/frontend/testing.md)
 
 ## Stewardship Flow
 
 1. Classify changed behavior by surface (domain/API/worker/frontend).
-2. Map required test types from `docs/testing/overview.md`.
+2. Map required test types from [`docs/testing/overview.md`](../../../docs/testing/overview.md).
 3. Verify test depth is appropriate:
    - no missing required layer
    - no redundant tests for compile-time guarantees
@@ -42,4 +42,4 @@ Include file evidence and expected confidence gain for each recommendation.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Test Surface Steward` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `Test Surface Steward` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.

@@ -6,6 +6,6 @@ Use this log to preserve traceability from:
 - external paper -> issue proposal -> implementation in code
 
 Primary file:
-- `research/implemented-ideas.md`
+- [`research/implemented-ideas.md`](./implemented-ideas.md)
 
 Only log ideas that were shipped (merged), not just discussed.

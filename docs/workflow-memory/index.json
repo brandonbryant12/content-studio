@@ -55,6 +55,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-docs-knowledge-drift-convert-readme-file-references-to-deep-links",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Convert README file references to deep links",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "readme",
+      "links",
+      "knowledge-drift"
+    ],
+    "importance": 0.54,
+    "recency": 1,
+    "confidence": 0.96,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-docs-knowledge-drift-moved-automation-playbooks-and-wrapper-mirrors-under-agentic-har",
     "date": "2026-02-22",
     "month": "2026-02",
@@ -88,6 +107,47 @@
     ],
     "importance": 0.78,
     "confidence": 0.94,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-docs-knowledge-drift-refocus-workflow-memory-readme-on-ongoing-operations",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Refocus workflow-memory README on ongoing operations",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "workflow-memory",
+      "readme",
+      "knowledge-drift",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.62,
+    "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-22-docs-knowledge-drift-remove-temporary-history-sections-from-docs-index",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Remove temporary history sections from docs index",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "readme",
+      "knowledge-drift",
+      "cleanup"
+    ],
+    "importance": 0.5,
+    "recency": 1,
+    "confidence": 0.98,
     "eventFile": "events/2026-02.jsonl"
   },
   {

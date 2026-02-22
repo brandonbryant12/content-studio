@@ -20,7 +20,7 @@ This is the default loop inspired by compound engineering practices.
 
 ## 1) Plan
 
-- Read only the docs needed for the change (`docs/**/*.md`).
+- Read only the docs needed for the change ([`docs/**/*.md`](../../../docs/)).
 - Convert the request into 1-3 vertical slices with user-visible outcomes.
 - For frontend slices, define a short design brief before coding:
   - visual direction (typography, palette, spacing, motion)
@@ -34,7 +34,7 @@ This is the default loop inspired by compound engineering practices.
 ## 2) Work
 
 - Implement one vertical slice at a time.
-- Apply regression guardrails from `AGENTS.md`/`CLAUDE.md` for:
+- Apply regression guardrails from [`AGENTS.md`](../../../AGENTS.md)/[`CLAUDE.md`](../../../CLAUDE.md) for:
   - boundary typing and unsafe casts
   - auth before mutating existing resources
   - structured-field sanitization
@@ -68,7 +68,7 @@ This is the default loop inspired by compound engineering practices.
 
 After each merged change, capture what worked, what failed, and the smallest guardrail/script improvement worth adding.
 
-Record one event with workflow key `Feature Delivery` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`, then include the event `id` in output.
+Record one event with workflow key `Feature Delivery` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md), then include the event `id` in output.
 
 ## Output Contract
 

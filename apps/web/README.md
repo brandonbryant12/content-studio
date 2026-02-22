@@ -20,7 +20,7 @@ pnpm test:e2e  # Run Playwright e2e tests
 | `PUBLIC_BASE_PATH`       | No       | `/`                     | App base path for sub-path deployments                  |
 | `PUBLIC_WEB_URL`         | No       | `http://localhost:8085` | Vite dev server URL (dev only)                          |
 
-In development, these are read from `.env` files via Vite's `import.meta.env`.
+In development, these are read from [`.env` files](./.env) via Vite's `import.meta.env`.
 
 In production, `PUBLIC_*` vars are injected at **container startup** (not build time) so a single Docker image works across all environments.
 
@@ -45,10 +45,10 @@ docker run -p 8080:8080 \
 ### How Runtime Config Works
 
 1. The Vite build produces a static SPA with no baked-in environment values
-2. `index.html` includes `<script src="/env.js">` before the app bundle
-3. At container startup, `entrypoint.sh` reads all `PUBLIC_*` env vars and writes them to `dist/env.js` as `globalThis.__ENV__`
-4. The app's `env.ts` merges `globalThis.__ENV__` (runtime) over `import.meta.env` (dev), then validates with Effect Schema
-5. A lightweight Node.js static file server (`serve.js`) serves the SPA with proper MIME types, SPA fallback routing, and a `/healthcheck` endpoint
+2. [`index.html`](./index.html) includes `<script src="/env.js">` before the app bundle
+3. At container startup, [`entrypoint.sh`](./entrypoint.sh) reads all `PUBLIC_*` env vars and writes them to `dist/env.js` as `globalThis.__ENV__`
+4. The app's [`src/env.ts`](./src/env.ts) merges `globalThis.__ENV__` (runtime) over `import.meta.env` (dev), then validates with Effect Schema
+5. A lightweight Node.js static file server ([`serve.js`](./serve.js)) serves the SPA with proper MIME types, SPA fallback routing, and a `/healthcheck` endpoint
 
 ### Kubernetes / EKS
 

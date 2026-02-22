@@ -194,7 +194,7 @@ Optional fields:
 - `recency` (0-1): higher = more recent; overrides computed recency if needed
 - `confidence` (0-1): higher = more reliable evidence
 
-Taxonomy tagging checklist (`docs/workflow-memory/taxonomy.md`):
+Taxonomy tagging checklist ([`docs/workflow-memory/taxonomy.md`](./workflow-memory/taxonomy.md)):
 
 - If tags include `memory` or `workflow-memory`, include all three dimensions:
   - `memory-form:*`
@@ -228,9 +228,9 @@ Run weekly compaction to control growth:
 
 Agent retrieval order:
 
-1. `docs/workflow-memory/guardrails.md`
-2. `docs/workflow-memory/taxonomy.md`
-3. latest `docs/workflow-memory/summaries/YYYY-MM.md`
+1. [`docs/workflow-memory/guardrails.md`](./workflow-memory/guardrails.md)
+2. [`docs/workflow-memory/taxonomy.md`](./workflow-memory/taxonomy.md)
+3. latest [`docs/workflow-memory/summaries/YYYY-MM.md`](docs/workflow-memory/summaries/YYYY-MM.md)
 4. filtered rows from `docs/workflow-memory/index.json`
 5. top 3-5 relevant records from `docs/workflow-memory/events/*.jsonl`
 

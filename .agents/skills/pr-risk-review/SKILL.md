@@ -66,4 +66,4 @@ For each finding include:
 
 ## Memory + Compounding
 
-Record one event with workflow key `PR Risk Review` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`. Include the event `id` in output.
+Record one event with workflow key `PR Risk Review` using `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md). Include the event `id` in output.

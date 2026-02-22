@@ -7,7 +7,7 @@ It maps each surface to its canonical location, enforcement path, and output evi
 
 | Surface | Canonical Location | Enforced By | Produced Evidence |
 |---|---|---|---|
-| Master behavior spec | `docs/master-spec.md`, `docs/spec/generated/*`, `agentic-harness-framework/scripts/spec/*` | `pnpm spec:generate`, `pnpm spec:check` | Updated generated snapshots, spec drift pass |
+| Master behavior spec | [`docs/master-spec.md`](../docs/master-spec.md), `docs/spec/generated/*`, `agentic-harness-framework/scripts/spec/*` | `pnpm spec:generate`, `pnpm spec:check` | Updated generated snapshots, spec drift pass |
 | Architecture/pattern standards | `docs/architecture/*`, `docs/patterns/*` | Type checks, lint, invariant tests, PR review | Rule-conformant code and tests |
 | Frontend standards | `docs/frontend/*` | Lint, web tests/build, PR review | Hook/component/route behavior aligned with docs |
 | Testing standards | `docs/testing/*` | Test selection and CI gates | Correct test depth by change type |
@@ -54,13 +54,13 @@ Examples:
 2. Skill source is canonical in `.agents/skills`.
 `.agent/skills`, `.claude/skills`, and `.github/skills` are mirrors.
 
-3. `docs/master-spec.md` has generated and non-generated sections.
+3. [`docs/master-spec.md`](../docs/master-spec.md) has generated and non-generated sections.
 Only non-generated sections should be edited directly.
 
 ## Practical Start Sequence For New Contributors
 
-1. Read `agentic-harness-framework/README.md`.
-2. Read `docs/workflow.md`.
+1. Read [`agentic-harness-framework/README.md`](./README.md).
+2. Read [`docs/workflow.md`](../docs/workflow.md).
 3. Read only the standards docs relevant to the touched surface.
 4. Use the matching skills from `.agents/skills`.
 5. Run required gates.

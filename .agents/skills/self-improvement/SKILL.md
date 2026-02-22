@@ -64,9 +64,9 @@ Apply the lightest fix that prevents recurrence:
 
 Update:
 
-- `AGENTS.md`
-- `CLAUDE.md`
-- `docs/workflow.md`
+- [`AGENTS.md`](../../../AGENTS.md)
+- [`CLAUDE.md`](../../../CLAUDE.md)
+- [`docs/workflow.md`](../../../docs/workflow.md)
 
 Also resync skill symlinks with `agentic-harness-framework/scripts/sync-skills.sh`.
 
@@ -78,7 +78,7 @@ Record one structured memory event in `docs/workflow-memory/events/YYYY-MM.jsonl
 - guardrail change shipped
 - validation evidence
 - what should be automated next
-- taxonomy tags from `docs/workflow-memory/taxonomy.md` when memory or agent-run diagnostics are involved
+- taxonomy tags from [`docs/workflow-memory/taxonomy.md`](../../../docs/workflow-memory/taxonomy.md) when memory or agent-run diagnostics are involved
 
 ## Output Contract
 

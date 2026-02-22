@@ -69,8 +69,8 @@ Branching and implementation contract:
   - `git fetch origin main`
   - `git checkout -B codex/architecture-issue-<primary-issue-number>-<yyyymmddhhmm> origin/main`
 - Implement the selected primary issue and any conservatively bundled related issues in the current repository workspace.
-- Read relevant docs in docs/ before edits and follow AGENTS.md guardrails.
-- If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to `research/implemented-ideas.md` with:
+- Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
+- If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) with:
   - date
   - issue and PR links
   - paper link(s)
@@ -100,4 +100,4 @@ Delivery behavior:
   Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly).
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
-Append run details to memory.md and inbox summary including selected primary issue, bundled issue list, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.
+Append run details to [`memory.md`](memory.md) and inbox summary including selected primary issue, bundled issue list, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.

@@ -2,7 +2,7 @@
 
 This directory is the durable workflow memory system for the repository.
 
-It replaces the single-file memory log in `docs/workflow-memory.md` to avoid context bloat.
+It replaces the single-file memory log in [`docs/workflow-memory.md`](../workflow-memory.md) to avoid context bloat.
 
 ## Layout
 
@@ -18,9 +18,53 @@ docs/workflow-memory/
     YYYY-MM.md
 ```
 
+## How This Fits The Repository Workflow
+
+Workflow memory is not just a historical log. It is the persistence layer for
+the agent-harness operating model described in [`docs/workflow.md`](../workflow.md)
+and enforced in [`AGENTS.md`](../../AGENTS.md).
+
+### 1) During delivery and review (write path)
+
+Every workflow run (for example Intake + Triage, Feature Delivery, PR Risk
+Review, Periodic Scans, and Self-Improvement) writes at least one event using
+[`add-entry.mjs`](../../agentic-harness-framework/scripts/workflow-memory/add-entry.mjs).
+This captures why decisions were made, what failed, and which follow-up actions
+are required.
+
+### 2) Before implementation (read path)
+
+Agents retrieve workflow memory before coding and review to reuse prior signal
+without loading excessive context:
+
+- durable controls from [`guardrails.md`](./guardrails.md)
+- canonical tagging rules from [`taxonomy.md`](./taxonomy.md)
+- monthly compression from [`summaries/`](./summaries/)
+- top-ranked matches from [`index.json`](./index.json) and [`events/`](./events/)
+
+### 3) As a quality gate (coverage path)
+
+[`pnpm workflow-memory:coverage:strict`](../../package.json) is used in periodic
+quality loops to verify that workflows actually being run are represented in
+memory. This catches process drift (missing workflow records) early.
+
+### 4) As compounding input (improvement path)
+
+Repeated patterns found in events and summaries are promoted into durable
+controls across the repo:
+
+- tests and invariants
+- lint or script guardrails
+- skill/playbook updates
+- docs and architecture guidance
+
+In short: `events` capture incidents, `index` makes them queryable,
+`summaries` compress recurring signal, and `guardrails` preserve long-term
+standards.
+
 ## Event Record (Source Of Truth)
 
-- Store one JSON object per line in `events/YYYY-MM.jsonl`.
+- Store one JSON object per line in files under [`events/`](./events/) (for example, `events/YYYY-MM.jsonl`).
 - Keep entries small and factual.
 - Required fields:
   - `id`
@@ -42,7 +86,7 @@ docs/workflow-memory/
 
 ## Index (Fast Retrieval)
 
-`index.json` is a compact lookup table for retrieval and ranking.
+[`index.json`](./index.json) is a compact lookup table for retrieval and ranking.
 
 Each index row contains:
 
@@ -61,7 +105,7 @@ Each index row contains:
 
 ## Summaries (Human Compression)
 
-`summaries/YYYY-MM.md` is the monthly rollup:
+[`summaries/YYYY-MM.md`](./summaries/) is the monthly rollup:
 
 - top repeated patterns
 - guardrails added
@@ -70,13 +114,13 @@ Each index row contains:
 
 ## Guardrail Ledger
 
-`guardrails.md` stores only durable controls that became standards (test, lint, docs rule, skill rule, automation).
+[`guardrails.md`](./guardrails.md) stores only durable controls that became standards (test, lint, docs rule, skill rule, automation).
 
 Do not copy every incident here.
 
 ## Taxonomy
 
-`taxonomy.md` defines canonical tags for:
+[`taxonomy.md`](./taxonomy.md) defines canonical tags for:
 
 - memory form/function/dynamics
 - agent capability axes and failure modes
@@ -97,11 +141,11 @@ Tag standard:
 
 Read in this order:
 
-1. `guardrails.md`
-2. `taxonomy.md`
-3. `summaries/<current-month>.md` (or latest available)
-4. `index.json` filtered to relevant workflow/tags
-5. Top 3-5 matching events from `events/*.jsonl`
+1. [`guardrails.md`](./guardrails.md)
+2. [`taxonomy.md`](./taxonomy.md)
+3. [`summaries/<current-month>.md`](./summaries/) (or latest available)
+4. [`index.json`](./index.json) filtered to relevant workflow/tags
+5. Top 3-5 matching events from [`events/`](./events/)
 
 Do not load full event history unless explicitly requested.
 
@@ -207,17 +251,7 @@ Weekly baseline:
 pnpm workflow-memory:coverage:strict
 ```
 
-If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with `agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`.
-
-## Migration
-
-Run this once to migrate legacy markdown entries:
-
-```bash
-node agentic-harness-framework/scripts/workflow-memory/migrate-legacy-memory.mjs
-```
-
-Legacy source file: `docs/workflow-memory.md`.
+If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agentic-harness-framework/scripts/workflow-memory/add-entry.mjs`](../../agentic-harness-framework/scripts/workflow-memory/add-entry.mjs).
 
 ## Replayable Scenarios
 
@@ -249,7 +283,7 @@ Index rows include `hasScenario: true` and `scenarioSkill` for fast filtering.
 
 ### Fixture Format
 
-Fixture path is always derived from event ID: `docs/workflow-memory/scenarios/{id}.md`
+Fixture path is always derived from event ID under [`docs/workflow-memory/scenarios/`](./scenarios/).
 
 Fixtures contain only input and expected findings (no duplicated metadata):
 

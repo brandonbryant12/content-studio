@@ -14,9 +14,9 @@ Apply this skill when shipping design-heavy frontend changes in `apps/web`.
    - hierarchy plan (hero, sections, density, emphasis)
    - state plan (loading, empty, error, success)
 2. Anchor implementation to repo standards:
-   - follow typography, spacing, token, and animation scales in `docs/frontend/styling.md`
-   - preserve container/presenter responsibilities from `docs/frontend/components.md`
-   - keep data/routing concerns aligned with `.agents/skills/tanstack-vite/SKILL.md`
+   - follow typography, spacing, token, and animation scales in [`docs/frontend/styling.md`](../../../docs/frontend/styling.md)
+   - preserve container/presenter responsibilities from [`docs/frontend/components.md`](../../../docs/frontend/components.md)
+   - keep data/routing concerns aligned with [`.agents/skills/tanstack-vite/SKILL.md`](../tanstack-vite/SKILL.md)
 3. Implement with project primitives:
    - use `@repo/ui` components first
    - use Tailwind utilities and semantic tokens only (no hardcoded color literals, no inline styles)
@@ -32,9 +32,9 @@ Apply this skill when shipping design-heavy frontend changes in `apps/web`.
 
 ## Repo Anchors
 
-- `docs/frontend/styling.md`
-- `docs/frontend/components.md`
-- `.agents/skills/tanstack-vite/SKILL.md`
+- [`docs/frontend/styling.md`](../../../docs/frontend/styling.md)
+- [`docs/frontend/components.md`](../../../docs/frontend/components.md)
+- [`.agents/skills/tanstack-vite/SKILL.md`](../tanstack-vite/SKILL.md)
 - `apps/web/src`
 - `packages/ui/src`
 
@@ -51,4 +51,4 @@ Apply this skill when shipping design-heavy frontend changes in `apps/web`.
 ## Memory + Compounding
 
 No standalone memory key.
-Use the parent workflow key (`Feature Delivery` or `TanStack + Vite`) and log outcomes with `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per `docs/workflow-memory/README.md`.
+Use the parent workflow key (`Feature Delivery` or `TanStack + Vite`) and log outcomes with `node agentic-harness-framework/scripts/workflow-memory/add-entry.mjs` per [`docs/workflow-memory/README.md`](../../../docs/workflow-memory/README.md).

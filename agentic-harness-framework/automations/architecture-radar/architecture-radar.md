@@ -20,7 +20,7 @@ Guided random-walk protocol:
 Research protocol:
 - Prioritize official and primary sources plus recent release notes.
 - Prioritize this stack: Effect TS, Hono, oRPC, Drizzle/Postgres, React 19, TanStack Query/Router/Form, Vite, Turborepo, pnpm, Vitest, Playwright.
-- Compare findings against AGENTS.md, CLAUDE.md, docs/workflow.md, docs/workflow-memory/guardrails.md, docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, and relevant code.
+- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`docs/workflow.md`](../../../docs/workflow.md), [`docs/workflow-memory/guardrails.md`](../../../docs/workflow-memory/guardrails.md), docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, and relevant code.
 - Produce 3-6 ranked recommendations with impact, effort, confidence, and concrete repo evidence.
 - Apply anti-bloat materiality checks: "Do we need this now?" and "What measurable/system-level difference does this make?" Drop low-materiality ideas.
 
@@ -41,7 +41,7 @@ Issue policy:
   - Paper link(s)
   - Key paper idea(s) selected for this repo
   - Planned adaptation in this codebase (not generic advice)
-  - Requirement that implementers append `research/implemented-ideas.md` when shipped
+  - Requirement that implementers append [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) when shipped
 - Add labels architecture-radar and codex-automation when available.
 - Do not add ready-for-dev label from this automation; only humans apply that label when an issue is approved for implementation.
 - Do not add self-improvement label from this automation.

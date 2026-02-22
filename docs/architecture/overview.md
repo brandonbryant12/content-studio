@@ -112,25 +112,25 @@ The application uses a `ManagedRuntime` that provides all services as Effect lay
 Key files:
 - Runtime construction: `packages/api/src/server/runtime.ts`
 - Effect handler: `packages/api/src/server/effect-handler.ts`
-- Layer construction rules: `docs/patterns/effect-runtime.md`
+- Layer construction rules: [`docs/patterns/effect-runtime.md`](../patterns/effect-runtime.md)
 
 ## Cross-Cutting Concerns
 
 | Concern | Mechanism | Standard |
 |---|---|---|
-| Authentication | `better-auth` middleware on Hono (`AUTH_MODE`: dev-password/hybrid/sso-only) | `docs/architecture/access-control.md` |
-| Authorization | `getCurrentUser` FiberRef in use cases | `docs/architecture/access-control.md` |
-| Error handling | Typed Effect errors mapped to oRPC codes | `docs/patterns/error-handling.md` |
-| Observability | `withSpan` on every use case | `docs/architecture/observability.md` |
-| Real-time updates | oRPC event iterators (SSE) | `docs/frontend/real-time.md` |
-| Background jobs | Postgres-backed queue + worker | `docs/patterns/job-queue.md` |
-| Safety primitives | Invariant-tested wrappers | `docs/patterns/safety-primitives.md` |
+| Authentication | `better-auth` middleware on Hono (`AUTH_MODE`: dev-password/hybrid/sso-only) | [`docs/architecture/access-control.md`](./access-control.md) |
+| Authorization | `getCurrentUser` FiberRef in use cases | [`docs/architecture/access-control.md`](./access-control.md) |
+| Error handling | Typed Effect errors mapped to oRPC codes | [`docs/patterns/error-handling.md`](../patterns/error-handling.md) |
+| Observability | `withSpan` on every use case | [`docs/architecture/observability.md`](./observability.md) |
+| Real-time updates | oRPC event iterators (SSE) | [`docs/frontend/real-time.md`](../frontend/real-time.md) |
+| Background jobs | Postgres-backed queue + worker | [`docs/patterns/job-queue.md`](../patterns/job-queue.md) |
+| Safety primitives | Invariant-tested wrappers | [`docs/patterns/safety-primitives.md`](../patterns/safety-primitives.md) |
 
 ## Related Standards
 
-- `docs/patterns/use-case.md` -- Use case structure
-- `docs/patterns/repository.md` -- Repository pattern
-- `docs/patterns/api-handler.md` -- Handler + serialization pipeline
-- `docs/patterns/effect-runtime.md` -- Layer construction rules
-- `docs/patterns/error-handling.md` -- Error class definitions
-- `docs/architecture/effect-vs-nestjs.md` -- Framework choice rationale for AI-driven development
+- [`docs/patterns/use-case.md`](../patterns/use-case.md) -- Use case structure
+- [`docs/patterns/repository.md`](../patterns/repository.md) -- Repository pattern
+- [`docs/patterns/api-handler.md`](../patterns/api-handler.md) -- Handler + serialization pipeline
+- [`docs/patterns/effect-runtime.md`](../patterns/effect-runtime.md) -- Layer construction rules
+- [`docs/patterns/error-handling.md`](../patterns/error-handling.md) -- Error class definitions
+- [`docs/architecture/effect-vs-nestjs.md`](./effect-vs-nestjs.md) -- Framework choice rationale for AI-driven development

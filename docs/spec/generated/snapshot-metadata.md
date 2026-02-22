@@ -18,7 +18,7 @@
 ## Generated Files
 
 - `docs/spec/generated/openapi.json`
-- `docs/spec/generated/api-surface.md`
-- `docs/spec/generated/domain-surface.md`
-- `docs/spec/generated/data-model.md`
-- `docs/spec/generated/ui-surface.md`
+- [`docs/spec/generated/api-surface.md`](./api-surface.md)
+- [`docs/spec/generated/domain-surface.md`](./domain-surface.md)
+- [`docs/spec/generated/data-model.md`](./data-model.md)
+- [`docs/spec/generated/ui-surface.md`](./ui-surface.md)

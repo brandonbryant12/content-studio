@@ -9,13 +9,13 @@ Use this skill after implementing or refactoring code when the goal is to improv
 
 ## Standards To Anchor First
 
-Before edits, load only docs relevant to the touched surface from `docs/**/*.md`.
+Before edits, load only docs relevant to the touched surface from [`docs/**/*.md`](../../../docs/).
 
-- Backend/use cases/repos/runtime: `docs/patterns/use-case.md`, `docs/patterns/repository.md`, `docs/patterns/safety-primitives.md`, `docs/patterns/effect-runtime.md`, `docs/patterns/error-handling.md`, `docs/patterns/enum-constants.md`
-- API handlers/contracts: `docs/patterns/api-handler.md`
-- Frontend architecture/data/forms/styling/realtime: `docs/frontend/project-structure.md`, `docs/frontend/components.md`, `docs/frontend/data-fetching.md`, `docs/frontend/mutations.md`, `docs/frontend/forms.md`, `docs/frontend/error-handling.md`, `docs/frontend/styling.md`, `docs/frontend/real-time.md`
-- Testing expectations: `docs/testing/overview.md`, `docs/testing/use-case-tests.md`, `docs/testing/integration-tests.md`, `docs/testing/job-workflow-tests.md`, `docs/testing/invariants.md`, `docs/testing/live-tests.md`, `docs/frontend/testing.md`
-- Repo guardrails: `AGENTS.md` and `CLAUDE.md`
+- Backend/use cases/repos/runtime: [`docs/patterns/use-case.md`](../../../docs/patterns/use-case.md), [`docs/patterns/repository.md`](../../../docs/patterns/repository.md), [`docs/patterns/safety-primitives.md`](../../../docs/patterns/safety-primitives.md), [`docs/patterns/effect-runtime.md`](../../../docs/patterns/effect-runtime.md), [`docs/patterns/error-handling.md`](../../../docs/patterns/error-handling.md), [`docs/patterns/enum-constants.md`](../../../docs/patterns/enum-constants.md)
+- API handlers/contracts: [`docs/patterns/api-handler.md`](../../../docs/patterns/api-handler.md)
+- Frontend architecture/data/forms/styling/realtime: [`docs/frontend/project-structure.md`](../../../docs/frontend/project-structure.md), [`docs/frontend/components.md`](../../../docs/frontend/components.md), [`docs/frontend/data-fetching.md`](../../../docs/frontend/data-fetching.md), [`docs/frontend/mutations.md`](../../../docs/frontend/mutations.md), [`docs/frontend/forms.md`](../../../docs/frontend/forms.md), [`docs/frontend/error-handling.md`](../../../docs/frontend/error-handling.md), [`docs/frontend/styling.md`](../../../docs/frontend/styling.md), [`docs/frontend/real-time.md`](../../../docs/frontend/real-time.md)
+- Testing expectations: [`docs/testing/overview.md`](../../../docs/testing/overview.md), [`docs/testing/use-case-tests.md`](../../../docs/testing/use-case-tests.md), [`docs/testing/integration-tests.md`](../../../docs/testing/integration-tests.md), [`docs/testing/job-workflow-tests.md`](../../../docs/testing/job-workflow-tests.md), [`docs/testing/invariants.md`](../../../docs/testing/invariants.md), [`docs/testing/live-tests.md`](../../../docs/testing/live-tests.md), [`docs/frontend/testing.md`](../../../docs/frontend/testing.md)
+- Repo guardrails: [`AGENTS.md`](../../../AGENTS.md) and [`CLAUDE.md`](../../../CLAUDE.md)
 
 If a simplification conflicts with standards docs, follow docs and keep the original code unchanged until the standard is clarified.
 
@@ -47,7 +47,7 @@ If a simplification conflicts with standards docs, follow docs and keep the orig
 ## Coverage Gap Rules
 
 - Add tests only when they protect behavior that could regress and is not already covered.
-- Prefer the smallest useful test layer per `docs/testing/overview.md` (use-case, integration, invariant, frontend, e2e).
+- Prefer the smallest useful test layer per [`docs/testing/overview.md`](../../../docs/testing/overview.md) (use-case, integration, invariant, frontend, e2e).
 - Avoid snapshot churn tests, implementation-detail assertions, duplicate compile-time guarantees, or broad boilerplate cases.
 - If a gap exists but a safe test cannot be added in scope, call it out explicitly in output.
 

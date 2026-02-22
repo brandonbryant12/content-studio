@@ -5,7 +5,7 @@ Product-level behavior changes must be proposed through a pull request that upda
 
 ## Governance
 
-1. `docs/master-spec.md` is the canonical product and system behavior specification.
+1. [`docs/master-spec.md`](./master-spec.md) is the canonical product and system behavior specification.
 2. Generated sections are read-only and are refreshed from source code via `pnpm spec:generate`.
 3. If code changes alter behavior but do not update the spec artifacts, `pnpm spec:check` must fail.
 4. Product owners and engineers approve changes against this document before implementation merges.
@@ -49,10 +49,10 @@ This master spec is assembled from:
 ## Generated Files
 
 - `docs/spec/generated/openapi.json`
-- `docs/spec/generated/api-surface.md`
-- `docs/spec/generated/domain-surface.md`
-- `docs/spec/generated/data-model.md`
-- `docs/spec/generated/ui-surface.md`
+- [`docs/spec/generated/api-surface.md`](./spec/generated/api-surface.md)
+- [`docs/spec/generated/domain-surface.md`](./spec/generated/domain-surface.md)
+- [`docs/spec/generated/data-model.md`](./spec/generated/data-model.md)
+- [`docs/spec/generated/ui-surface.md`](./spec/generated/ui-surface.md)
 <!-- END GENERATED:snapshot-metadata -->
 
 ## API Contract Surface
@@ -294,10 +294,10 @@ This master spec is assembled from:
 
 ## Related Standards
 
-1. `docs/architecture/overview.md`
-2. `docs/architecture/access-control.md`
-3. `docs/architecture/observability.md`
-4. `docs/patterns/use-case.md`
-5. `docs/patterns/api-handler.md`
-6. `docs/testing/overview.md`
-7. `docs/workflow.md`
+1. [`docs/architecture/overview.md`](./architecture/overview.md)
+2. [`docs/architecture/access-control.md`](./architecture/access-control.md)
+3. [`docs/architecture/observability.md`](./architecture/observability.md)
+4. [`docs/patterns/use-case.md`](./patterns/use-case.md)
+5. [`docs/patterns/api-handler.md`](./patterns/api-handler.md)
+6. [`docs/testing/overview.md`](./testing/overview.md)
+7. [`docs/workflow.md`](./workflow.md)

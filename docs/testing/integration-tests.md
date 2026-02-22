@@ -136,7 +136,7 @@ Missing service dependencies only fail at **runtime**, not compile time. A handl
 
 When a new Effect service is added to the production runtime:
 
-1. Add it to the bundled layer (see `docs/patterns/effect-runtime.md`)
+1. Add it to the bundled layer (see [`docs/patterns/effect-runtime.md`](../patterns/effect-runtime.md))
 2. Add the corresponding layer to `createTestRuntime` in **all affected** integration test files
 3. Run `pnpm --filter @repo/api test` to verify
 

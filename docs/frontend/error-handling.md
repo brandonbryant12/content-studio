@@ -57,7 +57,7 @@ onError: (error) => {
 
 ## Error Boundary Integration
 
-Error boundaries wrap containers via `<SuspenseBoundary>`. See `components.md` for placement.
+Error boundaries wrap containers via `<SuspenseBoundary>`. See [`components.md`](./components.md) for placement.
 
 **Reference:** `apps/web/src/shared/components/suspense-boundary.tsx`
 

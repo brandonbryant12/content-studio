@@ -29,10 +29,10 @@ For backend domain logic and runtime composition, this project standardizes on *
 
 This decision aligns with existing standards in this repo:
 
-1. `docs/patterns/effect-runtime.md` (layer construction and runtime wiring)
-2. `docs/patterns/error-handling.md` (typed error protocol mapping)
-3. `docs/testing/use-case-tests.md` (typed error assertions and direct use case tests)
-4. `docs/testing/integration-tests.md` (runtime dependency validation via executed handlers)
+1. [`docs/patterns/effect-runtime.md`](../patterns/effect-runtime.md) (layer construction and runtime wiring)
+2. [`docs/patterns/error-handling.md`](../patterns/error-handling.md) (typed error protocol mapping)
+3. [`docs/testing/use-case-tests.md`](../testing/use-case-tests.md) (typed error assertions and direct use case tests)
+4. [`docs/testing/integration-tests.md`](../testing/integration-tests.md) (runtime dependency validation via executed handlers)
 
 ## Tradeoffs
 

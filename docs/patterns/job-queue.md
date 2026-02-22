@@ -91,7 +91,7 @@ Failed jobs can be retried manually via user action (e.g., "Retry" button in UI)
 
 Use `getOwnedJobOrNotFound(jobId)` for any job polling endpoint. Non-owners receive `JobNotFoundError` (no existence leak).
 
-See `docs/patterns/safety-primitives.md` for full primitives reference.
+See [`docs/patterns/safety-primitives.md`](./safety-primitives.md) for full primitives reference.
 
 ## Validation <!-- enforced-by: invariant-test -->
 

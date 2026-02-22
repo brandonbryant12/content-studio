@@ -4,7 +4,7 @@ This is the navigation layer for how repository governance works in Content Stud
 It explains how standards docs, specs, skills, lint/invariants/tests, workflow memory,
 and automation lanes fit into one operating system.
 
-Start with `agentic-harness-framework/README.md`, then use this page for the detailed control map and linked source-of-truth docs.
+Start with [`agentic-harness-framework/README.md`](./README.md), then use this page for the detailed control map and linked source-of-truth docs.
 
 ## Why This Exists
 
@@ -39,8 +39,8 @@ flowchart TD
 
 | Plane | Source Of Truth | Primary Enforcement | Evidence Artifact |
 |---|---|---|---|
-| Standards | `docs/README.md` and `docs/{architecture,patterns,frontend,testing}` | Type/lint/tests/manual review | Updated standards docs + passing gates |
-| Product/system spec | `docs/master-spec.md` + `docs/spec/generated/*` | `pnpm spec:generate`, `pnpm spec:check` | Generated snapshots + spec drift gate |
+| Standards | [`docs/README.md`](../docs/README.md) and `docs/{architecture,patterns,frontend,testing}` | Type/lint/tests/manual review | Updated standards docs + passing gates |
+| Product/system spec | [`docs/master-spec.md`](../docs/master-spec.md) + `docs/spec/generated/*` | `pnpm spec:generate`, `pnpm spec:check` | Generated snapshots + spec drift gate |
 | Skill workflows | `.agents/skills/*/SKILL.md` | `agentic-harness-framework/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
 | Workflow memory | `docs/workflow-memory/*` | `agentic-harness-framework/scripts/workflow-memory/*.mjs`, coverage checks | JSONL events + index + summaries |
@@ -49,7 +49,7 @@ flowchart TD
 ## Execution Model
 
 1. Scope the work with `intake-triage`.
-2. Align behavior with `docs/master-spec.md` and standards docs.
+2. Align behavior with [`docs/master-spec.md`](../docs/master-spec.md) and standards docs.
 3. Implement with the smallest relevant workflow skills.
 4. Run gate ladder:
 `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:invariants`, `pnpm build`
@@ -64,7 +64,7 @@ Keep docs layered to avoid duplication:
 
 1. Framework map (this folder): how controls connect.
 2. Standards docs (`docs/architecture`, `docs/patterns`, `docs/frontend`, `docs/testing`): what rules are.
-3. Workflow/skills docs (`docs/workflow.md`, `.agents/skills/*`): how work is executed.
+3. Workflow/skills docs ([`docs/workflow.md`](../docs/workflow.md), `.agents/skills/*`): how work is executed.
 4. Enforcement artifacts (`agentic-harness-framework/scripts/`, lint rules, invariants, CI): what is automatically checked.
 5. Memory/automation docs (`docs/workflow-memory`, `agentic-harness-framework/automations/`): how learnings compound and lanes operate.
 
@@ -72,7 +72,7 @@ When updating policy, prefer editing the deepest true source rather than repeati
 
 ## Next Read
 
-1. `agentic-harness-framework/control-surfaces.md`
-2. `docs/workflow.md`
-3. `docs/workflow-memory/README.md`
-4. `agentic-harness-framework/automations/README.md`
+1. [`agentic-harness-framework/control-surfaces.md`](./control-surfaces.md)
+2. [`docs/workflow.md`](../docs/workflow.md)
+3. [`docs/workflow-memory/README.md`](../docs/workflow-memory/README.md)
+4. [`agentic-harness-framework/automations/README.md`](./automations/README.md)
