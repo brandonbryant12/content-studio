@@ -14,8 +14,8 @@ Runs the default request-to-merge delivery loop: plan slices, implement safely, 
 
 ## Automation Entry Points
 
-- [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md): implements approved architecture issues through full validation gates.
-- [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md): implements selected self-improvement issues in bounded slices.
+- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved `ready-for-dev` issues through full validation gates.
+- [`sanity-check`](../../automations/sanity-check/sanity-check.md): periodically scans and directly ships bounded high-confidence fixes through full validation gates.
 
 ## How It Works
 

@@ -16,8 +16,8 @@ Converts a request into scoped vertical slices, acceptance criteria, test intent
 
 ## Automation Entry Points
 
-- [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md)
-- [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md)
+- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md)
+- [`sanity-check`](../../automations/sanity-check/sanity-check.md)
 
 ## Note
 

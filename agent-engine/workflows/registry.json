@@ -7,7 +7,7 @@
       "memoryKey": "Feature Delivery",
       "summary": "Executes plan -> implement -> validate -> compound for vertical delivery slices.",
       "primarySkills": ["feature-delivery"],
-      "automationLanes": ["architecture-approval-executor", "self-improvement-judge-executor"]
+      "automationLanes": ["ready-for-dev-executor", "sanity-check"]
     },
     {
       "id": "architecture-adr-guard",
@@ -15,7 +15,7 @@
       "memoryKey": "Architecture + ADR Guard",
       "summary": "Checks boundary/layer/runtime correctness and documents approved deviations.",
       "primarySkills": ["architecture-adr-guard"],
-      "automationLanes": ["architecture-radar", "architecture-approval-executor"]
+      "automationLanes": ["best-practice-researcher", "ready-for-dev-executor", "sanity-check"]
     },
     {
       "id": "docs-knowledge-drift",
@@ -31,7 +31,7 @@
       "memoryKey": "Periodic Scans",
       "summary": "Runs recurring quality scans and routes findings into closure workflows.",
       "primarySkills": ["periodic-scans"],
-      "automationLanes": ["architecture-radar", "harness-research-radar"]
+      "automationLanes": ["best-practice-researcher", "agent-engine-researcher", "sanity-check"]
     },
     {
       "id": "self-improvement",
@@ -39,7 +39,7 @@
       "memoryKey": "Self-Improvement",
       "summary": "Converts repeated failures into stronger guardrails, tests, docs, and automation rules.",
       "primarySkills": ["self-improvement"],
-      "automationLanes": ["harness-research-radar", "self-improvement-judge-executor"]
+      "automationLanes": ["agent-engine-researcher", "ready-for-dev-executor", "sanity-check"]
     }
   ],
   "utilitySkills": [
@@ -50,7 +50,7 @@
       "summary": "Scopes requests into slices, acceptance criteria, and risk flags before implementation.",
       "skills": ["intake-triage"],
       "usedWithWorkflows": ["feature-delivery", "architecture-adr-guard", "self-improvement"],
-      "automationLanes": ["architecture-approval-executor", "self-improvement-judge-executor"]
+      "automationLanes": ["ready-for-dev-executor", "sanity-check"]
     },
     {
       "id": "tanstack-vite",
@@ -146,7 +146,7 @@
       "summary": "Runs a test-driven reproduce -> isolate -> fix -> validate loop.",
       "skills": ["debug-fix"],
       "usedWithWorkflows": ["feature-delivery", "periodic-scans", "self-improvement", "architecture-adr-guard"],
-      "automationLanes": ["architecture-approval-executor", "self-improvement-judge-executor"]
+      "automationLanes": ["ready-for-dev-executor", "sanity-check"]
     }
   ]
 }

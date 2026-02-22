@@ -23,8 +23,8 @@ Each automation lane has its own folder:
 
 Example:
 
-- [`agent-engine/automations/architecture-radar/architecture-radar.md`](./architecture-radar/architecture-radar.md)
-- [`agent-engine/automations/architecture-radar/architecture-radar.toml`](./architecture-radar/architecture-radar.toml)
+- [`agent-engine/automations/best-practice-researcher/best-practice-researcher.md`](./best-practice-researcher/best-practice-researcher.md)
+- [`agent-engine/automations/best-practice-researcher/best-practice-researcher.toml`](./best-practice-researcher/best-practice-researcher.toml)
 
 ## Operating Model
 
@@ -46,27 +46,26 @@ This creates stability plus adaptation:
 
 ## Active Lanes
 
-1. `architecture-radar`
-- Research-only lane for coding patterns, architecture, and engineering practices.
-- Creates/updates architecture issues with evidence and acceptance criteria.
+1. `best-practice-researcher`
+- Research-only random-walk lane spanning architecture, coding patterns, docs, and repository configuration practices.
+- Creates/updates best-practice issues with evidence and acceptance criteria.
 - No direct code changes.
 
-2. `architecture-approval-executor`
+2. `ready-for-dev-executor`
 - Human-in-the-loop coding lane.
-- Implements architecture/coding-pattern issues only after explicit human `ready-for-dev` label approval.
+- Implements human-approved `ready-for-dev` issues with bounded per-run aggregation.
 - Can conservatively bundle multiple small, tightly related `ready-for-dev` issues into one coherent PR when manageable in a single context.
 - Branches from latest `origin/main`, runs core validation gates, and auto-merges on success.
 
-3. `harness-research-radar`
-- Research-only lane for agent harness and self-improvement loop design.
+3. `agent-engine-researcher`
+- Research-only lane for agent-engine system improvements and self-improvement loop design.
 - Pulls outside research and compares against repo workflow/skills.
-- Produces judge-ready self-improvement issues.
+- Produces ready-for-dev candidate issues for implementation.
 
-4. `self-improvement-judge-executor`
-- Autonomous implementation lane for self-improvement issues.
-- Uses a holistic judge to score all candidate suggestions and executes one coherent primary item, optionally aggregating closely related issues into a single PR.
-- PR output must include linked aggregated issues plus a detailed improvements/benefits explanation, and include [`research/`](../../research/) documentation updates when external research ideas are adopted.
-- Branches from latest `origin/main`, runs core validation gates, and opens PRs for human review/merge (no auto-merge in this lane).
+4. `sanity-check`
+- Hourly memory-driven periodic scan lane spanning macro-to-micro sanity checks.
+- Can move directly from high-confidence bounded findings to implementation, PR, and auto-merge in one run.
+- Uses workflow routing to pick the correct execution contract for each fix.
 
 ## Lane Contract
 
@@ -134,11 +133,11 @@ External research is encouraged, but only through filters:
 
 ## Flow Across Lanes
 
-1. `architecture-radar` finds coding-pattern improvements.
-2. Human approves selected issue by adding `ready-for-dev`.
-3. `architecture-approval-executor` implements and merges after gates, usually one issue but optionally a small coherent multi-issue bundle in one PR.
-4. `harness-research-radar` feeds self-improvement ideas/issues.
-5. `self-improvement-judge-executor` selects the best holistic improvement, implements it, and opens a PR for human review/merge.
+1. `best-practice-researcher` finds best-practice and coding-pattern improvements.
+2. `agent-engine-researcher` finds agent-engine improvement opportunities.
+3. `sanity-check` performs hourly memory-driven scans and directly ships bounded high-confidence fixes.
+4. Human approves selected researcher issues by adding `ready-for-dev`.
+5. `ready-for-dev-executor` implements and merges approved issues after gates, selecting 1..N with conservative bundling in one PR.
 
 ## Research Logging
 
@@ -156,17 +155,17 @@ Use the template in that file to record:
 Push wrapper updates from repo mirror to local runtime:
 
 ```bash
-cp agent-engine/automations/architecture-radar/architecture-radar.toml ~/.codex/automations/architecture-radar/automation.toml
-cp agent-engine/automations/architecture-approval-executor/architecture-approval-executor.toml ~/.codex/automations/architecture-approval-executor/automation.toml
-cp agent-engine/automations/harness-research-radar/harness-research-radar.toml ~/.codex/automations/harness-research-radar/automation.toml
-cp agent-engine/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml ~/.codex/automations/self-improvement-judge-executor/automation.toml
+cp agent-engine/automations/best-practice-researcher/best-practice-researcher.toml ~/.codex/automations/best-practice-researcher/automation.toml
+cp agent-engine/automations/ready-for-dev-executor/ready-for-dev-executor.toml ~/.codex/automations/ready-for-dev-executor/automation.toml
+cp agent-engine/automations/agent-engine-researcher/agent-engine-researcher.toml ~/.codex/automations/agent-engine-researcher/automation.toml
+cp agent-engine/automations/sanity-check/sanity-check.toml ~/.codex/automations/sanity-check/automation.toml
 ```
 
 Pull runtime wrappers back into repo mirror (verification only):
 
 ```bash
-cp ~/.codex/automations/architecture-radar/automation.toml agent-engine/automations/architecture-radar/architecture-radar.toml
-cp ~/.codex/automations/architecture-approval-executor/automation.toml agent-engine/automations/architecture-approval-executor/architecture-approval-executor.toml
-cp ~/.codex/automations/harness-research-radar/automation.toml agent-engine/automations/harness-research-radar/harness-research-radar.toml
-cp ~/.codex/automations/self-improvement-judge-executor/automation.toml agent-engine/automations/self-improvement-judge-executor/self-improvement-judge-executor.toml
+cp ~/.codex/automations/best-practice-researcher/automation.toml agent-engine/automations/best-practice-researcher/best-practice-researcher.toml
+cp ~/.codex/automations/ready-for-dev-executor/automation.toml agent-engine/automations/ready-for-dev-executor/ready-for-dev-executor.toml
+cp ~/.codex/automations/agent-engine-researcher/automation.toml agent-engine/automations/agent-engine-researcher/agent-engine-researcher.toml
+cp ~/.codex/automations/sanity-check/automation.toml agent-engine/automations/sanity-check/sanity-check.toml
 ```

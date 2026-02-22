@@ -14,8 +14,9 @@ Converts repeated failures, review feedback, and scan findings into stronger gua
 
 ## Automation Entry Points
 
-- [`harness-research-radar`](../../automations/harness-research-radar/harness-research-radar.md): produces candidate self-improvement issues.
-- [`self-improvement-judge-executor`](../../automations/self-improvement-judge-executor/self-improvement-judge-executor.md): selects and implements the highest-value self-improvement issue.
+- [`agent-engine-researcher`](../../automations/agent-engine-researcher/agent-engine-researcher.md): produces candidate self-improvement issues.
+- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved self-improvement issues after a human adds `ready-for-dev`.
+- [`sanity-check`](../../automations/sanity-check/sanity-check.md): periodically identifies and directly fixes bounded self-improvement guardrail issues.
 
 ## How It Works
 

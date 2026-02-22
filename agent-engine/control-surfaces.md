@@ -50,7 +50,7 @@ Many docs rules include `<!-- enforced-by: ... -->` markers. They indicate expec
 1. Workflow memory keys are not automation lane IDs.
 Examples:
 - Memory key: `Feature Delivery`
-- Automation lane: `architecture-approval-executor`
+- Automation lane: `ready-for-dev-executor`
 
 2. Workflows are process contracts; skills are execution methods.
 Examples:
@@ -59,7 +59,7 @@ Examples:
 
 3. Automation lanes can execute multiple workflows/skills.
 Examples:
-- Automation lane: `self-improvement-judge-executor`
+- Automation lane: `ready-for-dev-executor`
 - Executes: `Self-Improvement` workflow and `Feature Delivery` workflow with utility skills such as `debug-fix`
 
 4. Skill source is canonical in `.agents/skills`.

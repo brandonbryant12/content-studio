@@ -14,8 +14,9 @@ Runs recurring per-PR, daily, weekly, and monthly quality scans to detect system
 
 ## Automation Entry Points
 
-- [`architecture-radar`](../../automations/architecture-radar/architecture-radar.md): continuous architecture research scan lane.
-- [`harness-research-radar`](../../automations/harness-research-radar/harness-research-radar.md): continuous harness/self-improvement research scan lane.
+- [`best-practice-researcher`](../../automations/best-practice-researcher/best-practice-researcher.md): continuous best-practice random-walk research scan lane.
+- [`agent-engine-researcher`](../../automations/agent-engine-researcher/agent-engine-researcher.md): continuous agent-engine/self-improvement research scan lane.
+- [`sanity-check`](../../automations/sanity-check/sanity-check.md): hourly memory-driven scan lane that can directly implement and merge bounded high-confidence fixes.
 
 ## How It Works
 

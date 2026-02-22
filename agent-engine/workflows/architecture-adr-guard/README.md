@@ -14,8 +14,9 @@ Validates package boundaries, layer direction, runtime composition, authz placem
 
 ## Automation Entry Points
 
-- [`architecture-radar`](../../automations/architecture-radar/architecture-radar.md): discovers architecture improvements and opens approval-gated issues.
-- [`architecture-approval-executor`](../../automations/architecture-approval-executor/architecture-approval-executor.md): executes approved architecture issues and enforces boundary-safe delivery.
+- [`best-practice-researcher`](../../automations/best-practice-researcher/best-practice-researcher.md): discovers architecture and best-practice improvements and opens approval-gated issues.
+- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md): executes approved architecture-impacting issues and enforces boundary-safe delivery.
+- [`sanity-check`](../../automations/sanity-check/sanity-check.md): detects architecture/runtime guardrail drift and can directly apply bounded fixes.
 
 ## How It Works
 

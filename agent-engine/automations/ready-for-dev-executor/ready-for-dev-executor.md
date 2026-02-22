@@ -1,28 +1,32 @@
-# Architecture Approval Executor Playbook
+# Ready-for-Dev Executor Playbook
 
-Automation ID: `architecture-approval-executor`
+Automation ID: `ready-for-dev-executor`
 Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh. Role: human-in-the-loop implementation lane for coding-pattern issues.
+Use gpt-5.3-codex with reasoning effort xhigh. Role: human-in-the-loop implementation lane for any repository issue explicitly approved with `ready-for-dev`.
 
 Scope and approval:
 - GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR queries, comments, labels, reactions, merges, metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
-- Ensure the label `ready-for-dev` exists in this repository using `gh label create ready-for-dev --color 0E8A16 --description "Human-approved and ready for architecture implementation automation" --force`.
-- Triage open GitHub issues labeled ready-for-dev in this repository.
+- Ensure the label `ready-for-dev` exists in this repository using `gh label create ready-for-dev --color 0E8A16 --description "Human-approved and ready for implementation automation" --force`.
+- Triage open GitHub issues labeled `ready-for-dev` in this repository.
+- This lane is the single implementation executor for issues originating from both research lanes (`best-practice-researcher` and `agent-engine-researcher`) once humans approve with `ready-for-dev`.
 - Use GitHub REST-style commands for triage (`gh issue list`, `gh issue view --json`, `gh api repos/...`) and do not depend on `gh api graphql` for issue selection.
 - Human approval gate is label-based only: implement only issues explicitly marked with the `ready-for-dev` label.
 - Optional guidance comments on issues not yet labeled `ready-for-dev` are allowed and do not consume execution capacity.
-- Select one primary actionable `ready-for-dev` issue per run using deterministic priority: lowest open issue number.
-- Conservative bundling allowed: after selecting the primary issue, you may add additional ready-for-dev issues in the same run only when they are small, tightly related, and can be delivered safely in one coherent PR/context.
+
+Selection and bounded aggregation (`1..N` issues per run):
+- Build candidate set from actionable open issues labeled `ready-for-dev`, ordered by issue number ascending.
+- Select at least 1 issue when actionable candidates exist.
+- N is dynamic and must stay bounded by coherent scope: default target is 1-3 issues; allow up to 5 only when issues are small, tightly related, and safely deliverable together in one PR.
 - Bundling rules:
-  - bias conservative: if uncertain, implement only the primary issue
+  - bias conservative: if uncertain, reduce scope and implement fewer issues
   - maintain one coherent implementation narrative (same subsystem/root-cause class)
   - do not bundle if scope/risk becomes hard to reason about in one context
   - keep to one PR per run
-- Skip issues already linked to an open PR or recently processed in memory.
-- Before selecting the primary issue, run an actionability screen on candidate issues (starting from lowest issue number) and skip any candidate that fails one of these checks:
+- Skip issues already linked to an open PR or recently processed in memory without new human approval signal.
+- Before final selection, run an actionability screen on candidates and skip any candidate that fails one of these checks:
   - no longer open, missing `ready-for-dev`, or assigned status changed since list call (re-check with `gh issue view --json state,labels`)
   - already linked to an open PR
   - recently processed in automation memory without new human approval signal
@@ -30,8 +34,17 @@ Scope and approval:
 - For "already implemented on `main`" candidates, do not run implementation preflight/gates; instead:
   - post a concise evidence comment with file path(s) and line references
   - close issue as completed when criteria are satisfied
-  - record this as `selection_outcome: skipped_already_implemented` in memory and continue to next candidate in the same run
+  - record this as `selection_outcome: skipped_already_implemented` in memory and continue candidate screening in the same run
 - If no actionable issue remains after screening, end run with a concise no-op summary and memory entry (no branch/PR).
+
+Workflow routing contract (must use correct workflow per selected issue):
+- For each selected issue, assign a primary workflow and companion skills before coding using [`agent-engine/workflows/README.md`](../../workflows/README.md):
+  - `Feature Delivery` for product/backend/frontend implementation work
+  - `Architecture + ADR Guard` for boundary/runtime/layer/authz/observability architecture-impacting work
+  - `Self-Improvement` for harness/workflow-memory/skills/automation-loop improvements
+- For each selected issue, document route rationale in PR output under a `Workflow Routing` section.
+- For bundled issues, ensure workflow routes are compatible in one coherent PR; if not compatible, reduce bundle size and carry overflow to later runs.
+- Execute using the selected workflow contracts and required docs/guardrails for each routed task.
 
 Runtime preflight for code tasks:
 1) GitHub fast-path: run `gh auth status`, then proceed directly with required `gh` triage commands. If any required `gh` command fails due to transient network/DNS/TLS errors, run recovery before stopping:
@@ -67,8 +80,8 @@ Runtime preflight for code tasks:
 Branching and implementation contract:
 - Branch from latest main every run:
   - `git fetch origin main`
-  - `git checkout -B codex/architecture-issue-<primary-issue-number>-<yyyymmddhhmm> origin/main`
-- Implement the selected primary issue and any conservatively bundled related issues in the current repository workspace.
+  - `git checkout -B codex/ready-for-dev-<primary-issue-number>-<yyyymmddhhmm> origin/main`
+- Implement the selected issue set and any conservatively bundled related issues in the current repository workspace.
 - Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
 - If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) with:
   - date
@@ -86,12 +99,13 @@ Run each gate via `zsh -lic 'cd "$PWD" && <gate-command>'`.
 - `pnpm build`
 
 Delivery behavior:
-- If any gate fails, do not open/merge PR. Post concise failure details and next action on the issue, then record memory. For preflight failures (GitHub API, Docker, or npm/network), include the captured diagnostics in the issue comment.
+- If any gate fails, do not open/merge PR. Post concise failure details and next action on the primary issue, then record memory. For preflight failures (GitHub API, Docker, or npm/network), include the captured diagnostics in issue comments.
 - If all gates pass, commit with a conventional message referencing the primary issue, push, and open one PR to main that:
   - uses closing/linking keywords for the issues addressed (`Fixes #...` for fully resolved issues, `Refs #...` for partials)
   - MUST include `Fixes #<primary-issue-number>` for the primary issue when the run intent is full resolution
-  - includes an Aggregated Issues section listing all bundled issues and status
-  - includes a Research Log Update section when applicable
+  - includes an `Aggregated Issues` section listing all bundled issues and status
+  - includes a `Workflow Routing` section mapping each issue to workflow + skills used
+  - includes a `Research Log Update` section when applicable
   Then run a pre-merge linkage gate:
   - fetch PR body via `gh pr view --json body,number,url`
   - verify primary issue has a closing keyword (`Fixes #<primary-issue-number>` or `Closes #<primary-issue-number>`)
@@ -100,4 +114,4 @@ Delivery behavior:
   Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly).
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
-Append run details to [`memory.md`](memory.md) and inbox summary including selected primary issue, bundled issue list, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.
+Append run details to [`memory.md`](memory.md) and inbox summary including selected issue set, bundled issue count, workflow routing summary, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.
