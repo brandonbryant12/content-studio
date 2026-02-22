@@ -393,6 +393,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-22-feature-delivery-replace-inline-styles-with-semantic-utilities",
+    "date": "2026-02-22",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Replace inline styles with semantic utilities",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "styling",
+      "utilities",
+      "semantic-tokens"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-feature-delivery-replace-metadata-schema-unknown-with-json-schema",
     "date": "2026-02-22",
     "month": "2026-02",
