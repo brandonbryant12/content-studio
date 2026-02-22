@@ -1,5 +1,9 @@
 import { type Db, type DatabaseError } from '@repo/db/effect';
-import { type ActivityLog, type ActivityLogWithUser } from '@repo/db/schema';
+import {
+  type ActivityLog,
+  type ActivityLogWithUser,
+  type JsonValue,
+} from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { Effect } from 'effect';
 import { activityLogReadMethods } from './activity-log-repo.reads';
@@ -15,7 +19,7 @@ export interface InsertActivityLogInput {
   entityType: string;
   entityId?: string | null;
   entityTitle?: string | null;
-  metadata?: Record<string, unknown> | null;
+  metadata?: Record<string, JsonValue> | null;
 }
 
 export interface ListActivityLogOptions {

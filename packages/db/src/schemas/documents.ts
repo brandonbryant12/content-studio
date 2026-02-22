@@ -15,6 +15,7 @@ import {
   DocumentIdSchema,
   generateDocumentId,
 } from './brands';
+import { MetadataSchema, type JsonValue } from './json';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
@@ -64,7 +65,7 @@ export const document = pgTable(
     source: documentSourceEnum('source').notNull().default('manual'),
     originalFileName: text('originalFileName'),
     originalFileSize: integer('originalFileSize'),
-    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    metadata: jsonb('metadata').$type<Record<string, JsonValue>>(),
     status: documentStatusEnum('status').notNull().default('ready'),
     errorMessage: text('errorMessage'),
     sourceUrl: text('sourceUrl'),
@@ -109,9 +110,7 @@ export const DocumentStatus = {
 export const CreateDocumentSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   content: Schema.String.pipe(Schema.minLength(1)),
-  metadata: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  metadata: Schema.optional(MetadataSchema),
 });
 
 export const UpdateDocumentFields = {
@@ -119,9 +118,7 @@ export const UpdateDocumentFields = {
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
   content: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
-  metadata: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  metadata: Schema.optional(MetadataSchema),
 };
 
 export const UpdateDocumentSchema = Schema.Struct(UpdateDocumentFields);
@@ -157,9 +154,7 @@ export const DocumentOutputSchema = Schema.Struct({
   source: DocumentSourceSchema,
   originalFileName: Schema.NullOr(Schema.String),
   originalFileSize: Schema.NullOr(Schema.Number),
-  metadata: Schema.NullOr(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  metadata: Schema.NullOr(MetadataSchema),
   status: DocumentStatusSchema,
   errorMessage: Schema.NullOr(Schema.String),
   sourceUrl: Schema.NullOr(Schema.String),

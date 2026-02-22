@@ -18,54 +18,7 @@ type CompatibilityException = {
   reason: string;
 };
 
-const openApiCompatibilityExceptions: CompatibilityException[] = [
-  {
-    key: 'admin.list::output::Unknown',
-    reason: 'Activity log metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.list::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.get::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.create::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.upload::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.update::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.fromUrl::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.fromResearch::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'documents.retry::output::Unknown',
-    reason: 'Document metadata is free-form key/value data.',
-  },
-  {
-    key: 'podcasts.get::output::Unknown',
-    reason:
-      'Podcast output includes document metadata as free-form key/value data.',
-  },
-  {
-    key: 'podcasts.create::output::Unknown',
-    reason:
-      'Podcast output includes document metadata as free-form key/value data.',
-  },
-];
+const openApiCompatibilityExceptions: CompatibilityException[] = [];
 
 const exceptionReasons = new Map(
   openApiCompatibilityExceptions.map((exception) => [

@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
 import { ActivityLogRepo } from './repos/activity-log-repo';
 import { logActivity } from './use-cases/log-activity';
 
@@ -12,7 +13,7 @@ export const logEntityActivity = (
   entityType: string,
   entityId?: string | null,
   entityTitle?: string | null,
-  metadata?: Record<string, unknown> | null,
+  metadata?: Record<string, JsonValue> | null,
 ) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
