@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh. Role: continuous best-practice researcher for this repository. Advisory mode only: never implement refactors, never edit repository code or docs, never open PRs, never commit, and never push.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: continuous best-practice researcher for this repository. Advisory mode only by default: never implement refactors, never edit repository code or docs, never open PRs, never commit, and never push. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
 Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
 

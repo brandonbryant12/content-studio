@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh. Role: periodic autonomous sanity scan + fix lane for this repository.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: periodic autonomous sanity scan + fix lane for this repository. Execute any code-writing fix path from a dedicated git worktree, never from the primary checkout.
 
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR queries, comments, labels, reactions, merges, metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 
@@ -81,18 +81,24 @@ Runtime preflight for code tasks:
   - for any other unexpected dirty paths, stop and report blocker details with file list
 
 Branching, validation, and delivery:
-- Branch from latest main every coding run:
+- Branch from latest main every coding run using a dedicated git worktree:
   - `git fetch origin main`
-  - `git checkout -B codex/sanity-check-<focus>-<yyyymmddhhmm> origin/main`
+  - `REPO_ROOT="$(git rev-parse --show-toplevel)"`
+  - `RUN_TS="$(date +%Y%m%d%H%M)"`
+  - `WORKTREE_BRANCH="codex/sanity-check-<focus>-$RUN_TS"`
+  - `WORKTREE_DIR="$REPO_ROOT/.codex-worktrees/sanity-check-<focus>-$RUN_TS"`
+  - `mkdir -p "$REPO_ROOT/.codex-worktrees"`
+  - `git worktree add -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" origin/main`
+  - `cd "$WORKTREE_DIR"`
 - Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
-- Required validation gates, in order (run via `zsh -lic 'cd "$PWD" && <gate-command>'`):
+- Required validation gates, in order (run via `zsh -lic 'cd "$WORKTREE_DIR" && <gate-command>'`):
   - `pnpm typecheck`
   - `pnpm lint`
   - `pnpm test:invariants`
   - `pnpm test`
   - `pnpm build`
 - On gate failure: do not merge; open/update issue with blocker evidence and append memory.
-- On gate success: commit, push, open one PR, and auto-merge with squash when linkage checks pass and recurrence-prevention requirements are met. Delete merged branch.
+- On gate success: commit, push, open one PR, and auto-merge with squash when linkage checks pass and recurrence-prevention requirements are met. Delete merged branch, then clean up the git worktree with `git worktree remove "$WORKTREE_DIR"` and delete any remaining local branch pointer for `"$WORKTREE_BRANCH"`.
 - Keep to one PR per run.
 
 PR requirements:

@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh. Role: human-in-the-loop implementation lane for any repository issue explicitly approved with `ready-for-dev`.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: human-in-the-loop implementation lane for any repository issue explicitly approved with `ready-for-dev`. Execute all code-writing work from a dedicated git worktree, never from the primary checkout.
 
 Scope and approval:
 - GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR queries, comments, labels, reactions, merges, metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
@@ -78,10 +78,16 @@ Runtime preflight for code tasks:
   - for any other unexpected dirty paths, stop and report blocker details with file list
 
 Branching and implementation contract:
-- Branch from latest main every run:
+- Branch from latest main every run using a dedicated git worktree:
   - `git fetch origin main`
-  - `git checkout -B codex/ready-for-dev-<primary-issue-number>-<yyyymmddhhmm> origin/main`
-- Implement the selected issue set and any conservatively bundled related issues in the current repository workspace.
+  - `REPO_ROOT="$(git rev-parse --show-toplevel)"`
+  - `RUN_TS="$(date +%Y%m%d%H%M)"`
+  - `WORKTREE_BRANCH="codex/ready-for-dev-<primary-issue-number>-$RUN_TS"`
+  - `WORKTREE_DIR="$REPO_ROOT/.codex-worktrees/ready-for-dev-<primary-issue-number>-$RUN_TS"`
+  - `mkdir -p "$REPO_ROOT/.codex-worktrees"`
+  - `git worktree add -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" origin/main`
+  - `cd "$WORKTREE_DIR"`
+- Implement the selected issue set and any conservatively bundled related issues only in `"$WORKTREE_DIR"`.
 - Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
 - If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) with:
   - date
@@ -91,7 +97,7 @@ Branching and implementation contract:
   - what was implemented in this repo
 
 Validation gates (required, in order):
-Run each gate via `zsh -lic 'cd "$PWD" && <gate-command>'`.
+Run each gate via `zsh -lic 'cd "$WORKTREE_DIR" && <gate-command>'`.
 - `pnpm typecheck`
 - `pnpm lint`
 - `pnpm test:invariants`
@@ -111,7 +117,7 @@ Delivery behavior:
   - verify primary issue has a closing keyword (`Fixes #<primary-issue-number>` or `Closes #<primary-issue-number>`)
   - verify each bundled issue line in Aggregated Issues matches intent (`Fixes #...` for fully resolved, `Refs #...` for partial)
   - if linkage check fails, do not merge; update PR body or post a blocking comment, then record memory
-  Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly).
+  Then add labels codex and codex-automation when available and auto-merge with squash, deleting the merged branch from remote and local (prefer `gh pr merge --delete-branch`; if local branch still exists, delete it explicitly). After merge, clean up the git worktree with `git worktree remove "$WORKTREE_DIR"` and delete any remaining local branch pointer for `"$WORKTREE_BRANCH"`.
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
 Append run details to [`memory.md`](memory.md) and inbox summary including selected issue set, bundled issue count, workflow routing summary, branch, PR URL, merge result, branch cleanup result, and closure verification. Hard limit: one PR per run.

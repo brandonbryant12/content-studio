@@ -86,7 +86,7 @@ Any automation that edits code must:
 
 2. Branch from latest main
 - `git fetch origin main`
-- create branch from `origin/main`
+- create a dedicated git worktree and branch from `origin/main` (do not code on the primary checkout)
 - if only files in [`agent-engine/workflow-memory/events/`](../workflow-memory/events/) and/or [`agent-engine/workflow-memory/index.json`](../workflow-memory/index.json) are dirty, treat them as expected automation artifacts and continue (carry them into the branch; stash/re-apply only if checkout requires it)
 - if any other unexpected dirty paths exist, stop and report blocker details
 
@@ -106,7 +106,7 @@ Any automation that edits code must:
 
 5. Use safe delivery behavior
 - on failure: no merge, report blocker with evidence
-- on success: open PR with issue linkage and follow lane-specific merge policy
+- on success: open PR with issue linkage, follow lane-specific merge policy, and clean up branch/worktree after merge
 
 ## Controlled Chaos Rules
 
