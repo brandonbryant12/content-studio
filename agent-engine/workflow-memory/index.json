@@ -79,6 +79,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-query-retry-policy-update-blocked-by-lint",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Query retry policy update blocked by lint",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "ready-for-dev",
+      "lane",
+      "lint"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-removed-svg-creator-feature-end-to-end",
     "date": "2026-02-23",
     "month": "2026-02",
