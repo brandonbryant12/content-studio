@@ -121,6 +121,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-ai-provider-resilience-gaps-tts-imagegen",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "AI provider resilience gaps (TTS/ImageGen)",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "ai",
+      "provider",
+      "retry",
+      "error-handling"
+    ],
+    "importance": 0.76,
+    "recency": 0.9,
+    "confidence": 0.74,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
