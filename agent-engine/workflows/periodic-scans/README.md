@@ -16,6 +16,8 @@ Runs recurring per-PR, daily, weekly, and monthly quality scans to detect system
 
 - [`best-practice-researcher`](../../automations/best-practice-researcher/best-practice-researcher.md): continuous best-practice random-walk research scan lane.
 - [`agent-engine-researcher`](../../automations/agent-engine-researcher/agent-engine-researcher.md): continuous agent-engine/self-improvement research scan lane.
+- [`product-vision-researcher`](../../automations/product-vision-researcher/product-vision-researcher.md): strategic product-direction lane that turns roadmap opportunities into `product-vision` issues.
+- [`product-owner-reviewer`](../../automations/product-owner-reviewer/product-owner-reviewer.md): day-to-day UX/journey coherence lane that opens tactical product-owner improvements.
 - [`sanity-check`](../../automations/sanity-check/sanity-check.md): hourly memory-driven scan lane that can directly implement and merge bounded high-confidence fixes.
 
 ## How It Works

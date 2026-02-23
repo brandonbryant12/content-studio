@@ -31,7 +31,13 @@
       "memoryKey": "Periodic Scans",
       "summary": "Runs recurring quality scans and routes findings into closure workflows.",
       "primarySkills": ["periodic-scans"],
-      "automationLanes": ["best-practice-researcher", "agent-engine-researcher", "sanity-check"]
+      "automationLanes": [
+        "best-practice-researcher",
+        "agent-engine-researcher",
+        "product-vision-researcher",
+        "product-owner-reviewer",
+        "sanity-check"
+      ]
     },
     {
       "id": "self-improvement",

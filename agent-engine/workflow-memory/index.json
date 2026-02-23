@@ -1,5 +1,50 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-add-product-vision-and-product-owner-automation-lanes",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add product vision and product owner automation lanes",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "product",
+      "periodic-scans",
+      "workflow-routing"
+    ],
+    "importance": 0.72,
+    "recency": 0.95,
+    "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-feature-delivery-enforce-trajectory-and-tool-tagged-memory-writes-for-product-lan",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Enforce trajectory and tool-tagged memory writes for product lanes",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "workflow-memory",
+      "memory",
+      "periodic-scans",
+      "product-vision",
+      "product-owner",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.78,
+    "recency": 0.96,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
     "date": "2026-02-23",
     "month": "2026-02",
