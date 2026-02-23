@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-23-self-improvement-catalog-gap-frontend-design-missing-from-workflow-registry",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Catalog gap: frontend-design missing from workflow registry",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "agent-engine-researcher",
+      "workflow-registry",
+      "catalog",
+      "frontend-design"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
