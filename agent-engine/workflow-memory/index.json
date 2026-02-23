@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-23-docs-knowledge-drift-documented-invariant-suites-missing-from-docs",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Documented invariant suites missing from docs",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "drift",
+      "testing",
+      "invariants"
+    ],
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-add-product-vision-and-product-owner-automation-lanes",
     "date": "2026-02-23",
     "month": "2026-02",
@@ -101,6 +118,24 @@
     ],
     "importance": 0.73,
     "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-self-improvement-prevent-invariant-doc-drift-with-guardrail-test",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Prevent invariant-doc drift with guardrail test",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "testing",
+      "invariants",
+      "guardrail",
+      "self-improvement"
+    ],
+    "confidence": 0.9,
     "eventFile": "events/2026-02.jsonl"
   },
   {
