@@ -104,6 +104,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-sanity-check-api-contract-coherence-scan",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: API contract coherence scan",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "scan",
+      "api-contract"
+    ],
+    "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
