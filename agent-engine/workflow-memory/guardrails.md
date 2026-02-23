@@ -66,3 +66,13 @@ Use this format:
 - Evidence: [`agent-engine/workflow-memory/taxonomy.md`](./taxonomy.md), `agent-engine/scripts/workflow-memory/add-entry.mjs`, [`agent-engine/workflows/README.md`](../workflows/README.md), [`.agents/skills/periodic-scans/SKILL.md`](../../.agents/skills/periodic-scans/SKILL.md), [`.agents/skills/self-improvement/SKILL.md`](../../.agents/skills/self-improvement/SKILL.md)
 - Owner: automation
 - Status: active
+
+## 2026-02-23 - Core Workflow Keys + Memory Taxonomy Audits
+
+- Source workflow: Self-Improvement
+- Problem signature: Workflow-memory coverage allowed utility skill keys and legacy memory events without taxonomy tags.
+- Control type: automation + docs rule
+- Change landed: `workflow-memory:coverage` now fails on unknown workflow keys in strict mode and can audit memory taxonomy tags; memory entries migrated to core workflow keys with `skill:*` tags.
+- Evidence: `agent-engine/scripts/workflow-memory/check-coverage.ts`, [`agent-engine/workflow-memory/README.md`](./README.md), `agent-engine/workflow-memory/events/2026-02.jsonl`, [`agent-engine/workflow-memory/index.json`](./index.json)
+- Owner: automation
+- Status: active

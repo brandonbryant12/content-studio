@@ -54,6 +54,7 @@ packages/
   - `pnpm workflow-memory:sync --help`
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `pnpm workflow-memory:retrieve --help`
+- Use only core workflow keys for workflow-memory entries; record utility skills as tags (for example, `skill:intake-triage`).
 - For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](./agent-engine/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
