@@ -121,6 +121,26 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-self-improvement-audit-memory-taxonomy-gaps-in-existing-events",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Audit memory taxonomy gaps in existing events",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "workflow-memory",
+      "guardrail",
+      "taxonomy",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "confidence": 0.82,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
