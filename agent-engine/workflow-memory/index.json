@@ -62,6 +62,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-fix-duplicate-safety-primitives-declarations",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Fix duplicate safety primitives declarations",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "feature-delivery",
+      "safety-primitives",
+      "typecheck"
+    ],
+    "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
     "date": "2026-02-23",
     "month": "2026-02",
@@ -118,6 +135,23 @@
     ],
     "importance": 0.73,
     "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-periodic-scans-sanity-check-error-assertion-scan",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: error assertion scan",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "periodic-scans",
+      "testing",
+      "error-handling"
+    ],
+    "confidence": 0.9,
     "eventFile": "events/2026-02.jsonl"
   },
   {

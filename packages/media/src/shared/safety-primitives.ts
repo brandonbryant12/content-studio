@@ -8,22 +8,7 @@ import type { JobId } from '@repo/db/schema';
 import type { JobType } from '@repo/queue';
 import { calculateWordCount } from './text-utils';
 
-type SpanAttributeValue = string | number | boolean;
-
-export interface UseCaseSpanInput {
-  userId: string;
-  resourceId: string;
-  attributes?: Record<string, SpanAttributeValue>;
-}
-
 export const withUseCaseSpan = (name: string) => Effect.withSpan(name);
-
-export const annotateUseCaseSpan = (input: UseCaseSpanInput) =>
-  Effect.annotateCurrentSpan({
-    'user.id': input.userId,
-    'resource.id': input.resourceId,
-    ...input.attributes,
-  });
 
 /**
  * Run an effect with a compensating action if it fails.
