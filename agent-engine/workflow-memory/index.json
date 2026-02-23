@@ -65,6 +65,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-skipped-92-already-on-main",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Skipped #92 (already on main)",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "duplicate"
+    ],
+    "importance": 0.3,
+    "recency": 0.9,
+    "confidence": 0.76,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-svg-backend-foundation-slice-implemented",
     "date": "2026-02-23",
     "month": "2026-02",
