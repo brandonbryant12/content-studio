@@ -1,35 +1,30 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { writeFile } from "node:fs/promises";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkflowRegistry } from "./registry";
 import { runScript } from "../lib/effect-script";
 
 async function main() {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
   const workflowsDir = resolve(scriptDir, "../../workflows");
-  const registryPath = resolve(workflowsDir, "registry.json");
   const readmePath = resolve(workflowsDir, "README.md");
+  const repoRoot = resolve(workflowsDir, "../..");
 
-  const registry = JSON.parse(await readFile(registryPath, "utf8"));
+  const registry = await readWorkflowRegistry();
 
   const core = registry.coreWorkflows ?? [];
   const utility = registry.utilitySkills ?? [];
-
-  const ids = new Set();
-  for (const entry of [...core, ...utility]) {
-    if (!entry?.id) {
-      throw new Error("Registry entry missing id");
-    }
-    if (ids.has(entry.id)) {
-      throw new Error(`Duplicate registry id: ${entry.id}`);
-    }
-    ids.add(entry.id);
-  }
 
   const coreNameById = new Map(core.map((entry) => [entry.id, entry.name]));
 
   const laneLink = (lane) => `[\`${lane}\`](../automations/${lane}/${lane}.md)`;
   const skillLink = (skill) => `[\`${skill}\`](../../.agents/skills/${skill}/SKILL.md)`;
-  const workflowDocLink = (id) => `[\`${id}\`](./${id}/README.md)`;
+  const workflowDocLink = (entry) => {
+    const absolutePath = resolve(repoRoot, entry.docsPath);
+    const relativePath = relative(workflowsDir, absolutePath).split("\\").join("/");
+    const href = relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
+    return `[\`${entry.id}\`](${href})`;
+  };
 
   const renderLanes = (lanes) => {
     if (!lanes || lanes.length === 0) {
@@ -86,7 +81,7 @@ async function main() {
 
   for (const entry of core) {
     lines.push(
-      `| ${entry.name} | ${workflowDocLink(entry.id)} | \`${entry.memoryKey}\` | ${renderSkills(entry.primarySkills)} | ${renderLanes(entry.automationLanes)} | ${entry.summary} |`,
+      `| ${entry.name} | ${workflowDocLink(entry)} | \`${entry.memoryKey}\` | ${renderSkills(entry.primarySkills)} | ${renderLanes(entry.automationLanes)} | ${entry.summary} |`,
     );
   }
 

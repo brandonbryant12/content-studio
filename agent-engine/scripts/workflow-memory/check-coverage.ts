@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { readWorkflowRegistry } from "../workflows/registry";
 import { runScript } from "../lib/effect-script";
 
 const INDEX_PATH = path.join(
@@ -10,11 +11,6 @@ const INDEX_PATH = path.join(
   "index.json",
 );
 
-const WORKFLOW_REGISTRY_PATH = path.join(
-  "agent-engine",
-  "workflows",
-  "registry.json",
-);
 
 const USAGE = `Usage:
   pnpm workflow-memory:coverage [--month YYYY-MM] [--min 1] [--strict] [--json]
@@ -70,28 +66,12 @@ async function readIndex() {
 }
 
 async function readKnownWorkflows() {
-  let raw;
-  try {
-    raw = await fs.readFile(WORKFLOW_REGISTRY_PATH, "utf8");
-  } catch (error) {
-    if (error && error.code === "ENOENT") {
-      throw new Error(
-        `Workflow registry not found: ${WORKFLOW_REGISTRY_PATH}. Run from repository root.`,
-      );
-    }
-    throw error;
-  }
-
-  const parsed = JSON.parse(raw);
-  const workflows = Array.isArray(parsed?.coreWorkflows)
-    ? parsed.coreWorkflows
-        .map((entry) => (typeof entry?.memoryKey === "string" ? entry.memoryKey.trim() : ""))
-        .filter(Boolean)
-    : [];
+  const registry = await readWorkflowRegistry();
+  const workflows = registry.coreWorkflows.map((entry) => entry.memoryKey.trim());
 
   if (workflows.length === 0) {
     throw new Error(
-      `No core workflows found in ${WORKFLOW_REGISTRY_PATH}. Add coreWorkflows entries before running coverage.`,
+      "No core workflows found in workflow registry. Add coreWorkflows entries before running coverage.",
     );
   }
 
