@@ -2,6 +2,7 @@ import { ForbiddenError } from '@repo/auth';
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { StylePresetNotFound } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import { StylePresetRepo } from '../repos';
 
 // =============================================================================
@@ -19,6 +20,10 @@ export interface DeleteStylePresetInput {
 export const deleteStylePreset = (input: DeleteStylePresetInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const repo = yield* StylePresetRepo;
 
     const preset = yield* repo.findById(input.id);

@@ -1,6 +1,8 @@
+import { getCurrentUser } from '@repo/auth/policy';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 import { UrlScraper } from '../services/url-scraper';
@@ -13,6 +15,11 @@ export interface ProcessUrlInput {
 export const processUrl = (input: ProcessUrlInput) =>
   Effect.gen(function* () {
     const { documentId, url } = input;
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: documentId,
+    });
     const documentRepo = yield* DocumentRepo;
     const urlScraper = yield* UrlScraper;
     const storage = yield* Storage;

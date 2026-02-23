@@ -1,5 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos/infographic-repo';
 
 // =============================================================================
@@ -24,6 +25,11 @@ export const revokeInfographicApproval = (
 ) =>
   Effect.gen(function* () {
     yield* requireRole(Role.ADMIN);
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.infographicId,
+    });
     const infographicRepo = yield* InfographicRepo;
 
     // Verify infographic exists

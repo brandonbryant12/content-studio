@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -22,6 +23,10 @@ export interface ApproveVoiceoverInput {
 export const approveVoiceover = (input: ApproveVoiceoverInput) =>
   Effect.gen(function* () {
     const user = yield* requireRole(Role.ADMIN);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+    });
     const voiceoverRepo = yield* VoiceoverRepo;
 
     // Verify voiceover exists

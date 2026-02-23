@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -22,6 +23,10 @@ export interface ApprovePodcastInput {
 export const approvePodcast = (input: ApprovePodcastInput) =>
   Effect.gen(function* () {
     const user = yield* requireRole(Role.ADMIN);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const podcastRepo = yield* PodcastRepo;
 
     // Verify podcast exists

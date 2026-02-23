@@ -1,6 +1,8 @@
 import { ImageGen } from '@repo/ai';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos';
 
 // =============================================================================
@@ -17,6 +19,11 @@ export interface GenerateCoverImageInput {
 
 export const generateCoverImage = (input: GenerateCoverImageInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const imageGen = yield* ImageGen;
     const storage = yield* Storage;
     const podcastRepo = yield* PodcastRepo;

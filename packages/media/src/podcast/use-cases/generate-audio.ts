@@ -4,6 +4,7 @@ import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment } from '@repo/db/schema';
 import { PersonaRepo } from '../../persona';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -48,6 +49,10 @@ export class InvalidAudioGenerationError extends Schema.TaggedError<InvalidAudio
 export const generateAudio = (input: GenerateAudioInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const podcastRepo = yield* PodcastRepo;
     const tts = yield* TTS;
     const storage = yield* Storage;

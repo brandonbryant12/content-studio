@@ -2,6 +2,7 @@ import { ImageGen } from '@repo/ai';
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface GenerateAvatarInput {
@@ -11,6 +12,10 @@ export interface GenerateAvatarInput {
 export const generateAvatar = (input: GenerateAvatarInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.personaId,
+    });
     const imageGen = yield* ImageGen;
     const storage = yield* Storage;
     const personaRepo = yield* PersonaRepo;

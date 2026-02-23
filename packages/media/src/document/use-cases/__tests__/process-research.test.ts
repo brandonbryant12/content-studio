@@ -68,10 +68,12 @@ describe('processResearch', () => {
     it('skips startResearch when document has existing operationId with in_progress status', async () => {
       const startResearchSpy = vi.fn();
       const getResultSpy = vi.fn();
+      const user = createTestUser();
 
       const existingDoc = createTestDocument({
         source: 'research',
         status: 'processing',
+        createdBy: user.id,
         researchConfig: {
           query: 'test query',
           operationId: 'existing-op-123',
@@ -106,10 +108,12 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({
-          documentId: existingDoc.id,
-          query: 'test query',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          processResearch({
+            documentId: existingDoc.id,
+            query: 'test query',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // startResearch should NOT be called — we resume
@@ -120,10 +124,12 @@ describe('processResearch', () => {
 
     it('starts fresh research when document has no operationId', async () => {
       const startResearchSpy = vi.fn();
+      const user = createTestUser();
 
       const doc = createTestDocument({
         source: 'research',
         status: 'processing',
+        createdBy: user.id,
         researchConfig: { query: 'test query' },
       });
 
@@ -152,8 +158,10 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({ documentId: doc.id, query: 'test query' }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
@@ -162,10 +170,12 @@ describe('processResearch', () => {
 
     it('starts fresh research when researchStatus is not in_progress', async () => {
       const startResearchSpy = vi.fn();
+      const user = createTestUser();
 
       const doc = createTestDocument({
         source: 'research',
         status: 'processing',
+        createdBy: user.id,
         researchConfig: {
           query: 'test query',
           operationId: 'old-op-111',
@@ -198,8 +208,10 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({ documentId: doc.id, query: 'test query' }).pipe(
-          Effect.provide(layers),
+        withTestUser(user)(
+          processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
@@ -209,10 +221,12 @@ describe('processResearch', () => {
 
     it('does not set researchConfig to in_progress when resuming', async () => {
       const configUpdates: Array<{ id: string; config: unknown }> = [];
+      const user = createTestUser();
 
       const existingDoc = createTestDocument({
         source: 'research',
         status: 'processing',
+        createdBy: user.id,
         researchConfig: {
           query: 'test query',
           operationId: 'existing-op-123',
@@ -245,10 +259,12 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({
-          documentId: existingDoc.id,
-          query: 'test query',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          processResearch({
+            documentId: existingDoc.id,
+            query: 'test query',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // updateResearchConfig should only be called for completion, not for the initial in_progress

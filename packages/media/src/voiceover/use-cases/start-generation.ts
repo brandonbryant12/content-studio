@@ -4,7 +4,11 @@ import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
-import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withTransactionalStateAndEnqueue,
+} from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -29,6 +33,10 @@ export const startVoiceoverGeneration = (
 ) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+    });
     const voiceoverRepo = yield* VoiceoverRepo;
     const queue = yield* Queue;
 

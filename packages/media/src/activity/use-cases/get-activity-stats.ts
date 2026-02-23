@@ -1,5 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -44,6 +45,11 @@ const periodToDate = (period: '24h' | '7d' | '30d'): Date => {
 export const getActivityStats = (input: GetActivityStatsInput) =>
   Effect.gen(function* () {
     yield* requireRole(Role.ADMIN);
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const repo = yield* ActivityLogRepo;
 
     const since = periodToDate(input.period);

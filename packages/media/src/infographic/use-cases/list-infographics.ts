@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -18,6 +19,10 @@ export interface ListInfographicsInput {
 export const listInfographics = (input: ListInfographicsInput = {}) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const repo = yield* InfographicRepo;
 
     return yield* repo.list({

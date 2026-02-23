@@ -3,6 +3,7 @@ import { JobType } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessResearchPayload } from '@repo/queue';
 import {
+  annotateUseCaseSpan,
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
@@ -42,6 +43,11 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
           createdBy: user.id,
         });
         insertedDocumentId = doc.id;
+
+        yield* annotateUseCaseSpan({
+          userId: user.id,
+          resourceId: doc.id,
+        });
 
         yield* enqueueJob({
           type: JobType.PROCESS_RESEARCH,

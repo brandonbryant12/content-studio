@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 import type { ProcessUrlPayload, ProcessResearchPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
 import {
+  annotateUseCaseSpan,
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
@@ -17,6 +18,10 @@ export interface RetryProcessingInput {
 export const retryProcessing = (input: RetryProcessingInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const documentRepo = yield* DocumentRepo;
 
     const doc = yield* documentRepo.findByIdForUser(input.id, user.id);

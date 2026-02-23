@@ -1,8 +1,10 @@
 import { ImageGen, LLM } from '@repo/ai';
+import { getCurrentUser } from '@repo/auth/policy';
 import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { syncEntityTitle } from '../../activity';
+import { annotateUseCaseSpan } from '../../shared';
 import { buildInfographicPrompt } from '../prompts';
 import { InfographicRepo } from '../repos';
 import {
@@ -60,6 +62,11 @@ const generateTitle = (sourcePrompt: string) =>
 export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
   Effect.gen(function* () {
     const { infographicId } = input;
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: infographicId,
+    });
 
     const repo = yield* InfographicRepo;
     const imageGen = yield* ImageGen;

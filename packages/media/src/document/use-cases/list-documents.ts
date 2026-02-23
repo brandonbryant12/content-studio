@@ -1,6 +1,7 @@
 import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Document } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -28,6 +29,10 @@ export interface ListDocumentsResult {
 export const listDocuments = (input: ListDocumentsInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const documentRepo = yield* DocumentRepo;
 
     const createdBy = user.role === Role.ADMIN ? input.userId : user.id;

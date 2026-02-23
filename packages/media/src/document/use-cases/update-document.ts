@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { replaceTextContentSafely } from '../../shared';
+import { annotateUseCaseSpan, replaceTextContentSafely } from '../../shared';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
@@ -25,6 +25,10 @@ export interface UpdateDocumentInput {
 export const updateDocument = (input: UpdateDocumentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const documentRepo = yield* DocumentRepo;
 
     const existing = yield* documentRepo.findByIdForUser(input.id, user.id);

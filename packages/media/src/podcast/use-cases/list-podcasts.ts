@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Podcast } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -26,6 +27,10 @@ export interface ListPodcastsResult {
 export const listPodcasts = (input: ListPodcastsInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const podcastRepo = yield* PodcastRepo;
 
     const limit = input.limit ?? 50;

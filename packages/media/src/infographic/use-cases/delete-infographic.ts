@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -18,6 +19,10 @@ export interface DeleteInfographicInput {
 export const deleteInfographic = (input: DeleteInfographicInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const repo = yield* InfographicRepo;
     const storage = yield* Storage;
 

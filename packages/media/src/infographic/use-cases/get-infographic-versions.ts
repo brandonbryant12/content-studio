@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -17,6 +18,10 @@ export interface GetInfographicVersionsInput {
 export const getInfographicVersions = (input: GetInfographicVersionsInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.infographicId,
+    });
     const repo = yield* InfographicRepo;
 
     // Verify infographic exists and user owns it

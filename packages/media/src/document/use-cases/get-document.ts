@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -17,6 +18,10 @@ export interface GetDocumentInput {
 export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const documentRepo = yield* DocumentRepo;
 
     const doc = yield* documentRepo.findByIdForUser(input.id, user.id);

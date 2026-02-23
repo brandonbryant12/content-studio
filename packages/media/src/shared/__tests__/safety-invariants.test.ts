@@ -72,6 +72,21 @@ describe('safety invariants', () => {
     ).toEqual([]);
   });
 
+  it('requires use-case spans to include user.id and resource.id', () => {
+    const files = collectUseCaseFiles(srcRoot).filter(
+      (file) => !shouldSkipUseCaseTest(file),
+    );
+    const offenders = files.filter(
+      (file) =>
+        !/annotateUseCaseSpan\s*\(/m.test(fs.readFileSync(file, 'utf-8')),
+    );
+
+    expect(
+      offenders.map((file) => path.relative(srcRoot, file)),
+      'Add annotateUseCaseSpan() for required use-case span attributes.',
+    ).toEqual([]);
+  });
+
   it('forbids direct queue.enqueue usage in media use-cases', () => {
     const files = collectUseCaseFiles(srcRoot);
     const offenders = files.filter((file) =>

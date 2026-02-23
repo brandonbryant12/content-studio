@@ -95,6 +95,22 @@ export interface EnqueueJobInput {
   userId: string;
 }
 
+export interface UseCaseSpanInput {
+  userId: string;
+  resourceId: string;
+  attributes?: Record<string, string | number | boolean>;
+}
+
+/**
+ * Annotate the current use-case span with required attributes.
+ */
+export const annotateUseCaseSpan = (input: UseCaseSpanInput) =>
+  Effect.annotateCurrentSpan({
+    'user.id': input.userId,
+    'resource.id': input.resourceId,
+    ...(input.attributes ?? {}),
+  });
+
 /**
  * Enqueue through a single primitive so use-cases don't call queue.enqueue directly.
  */

@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 import type { ProcessUrlPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
 import {
+  annotateUseCaseSpan,
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
@@ -56,6 +57,11 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
           createdBy: user.id,
         });
         insertedDocumentId = doc.id;
+
+        yield* annotateUseCaseSpan({
+          userId: user.id,
+          resourceId: doc.id,
+        });
 
         yield* enqueueJob({
           type: JobType.PROCESS_URL,

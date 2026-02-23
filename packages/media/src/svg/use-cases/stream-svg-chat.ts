@@ -3,6 +3,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Db } from '@repo/db/effect';
 import type { SvgMessage } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { SvgMessageRepo, SvgRepo } from '../repos';
 import { extractSvgBlock, sanitizeSvg } from '../sanitize-svg';
 
@@ -20,6 +21,10 @@ const toUiMessage = (message: SvgMessage) => ({
 export const streamSvgChat = (input: StreamSvgChatInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.svgId,
+    });
     const repo = yield* SvgRepo;
     const messageRepo = yield* SvgMessageRepo;
     const dbContext = yield* Effect.context<Db>();

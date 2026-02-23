@@ -2,7 +2,12 @@ import { createMockImageGen, createMockLLM } from '@repo/ai/testing';
 import { Db } from '@repo/db/effect';
 import { generateInfographicVersionId } from '@repo/db/schema';
 import { createMockStorage } from '@repo/storage/testing';
-import { createTestInfographic, resetAllFactories } from '@repo/testing';
+import {
+  createTestInfographic,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Infographic, InfographicVersion } from '@repo/db/schema';
@@ -20,6 +25,7 @@ describe('executeInfographicGeneration', () => {
       title: 'Existing Title',
       status: 'generating',
     });
+    const user = createTestUser();
 
     const insertVersionSpy = vi.fn();
     const updateSpy = vi.fn();
@@ -71,8 +77,10 @@ describe('executeInfographicGeneration', () => {
     );
 
     const result = await Effect.runPromise(
-      executeInfographicGeneration({ infographicId: infographic.id }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        executeInfographicGeneration({ infographicId: infographic.id }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 

@@ -1,10 +1,11 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
 import {
   createPaginatedResponse,
   type PaginatedResponse,
   type ActivityLogWithUser,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -33,6 +34,11 @@ export type ListActivityResult = PaginatedResponse<ActivityLogWithUser>;
 export const listActivity = (input: ListActivityInput) =>
   Effect.gen(function* () {
     yield* requireRole(Role.ADMIN);
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const repo = yield* ActivityLogRepo;
 
     const limit = input.limit ?? 25;

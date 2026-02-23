@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@repo/auth/policy';
 import { Queue } from '@repo/queue';
 import { Effect, Schema } from 'effect';
 import type {
@@ -7,7 +8,11 @@ import type {
   ScriptSegment,
 } from '@repo/db/schema';
 import type { GenerateAudioPayload } from '@repo/queue';
-import { enqueueJob, withCompensatingAction } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withCompensatingAction,
+} from '../../shared';
 import { saveChanges } from './save-changes';
 
 // =============================================================================
@@ -55,6 +60,11 @@ export class NoChangesToSaveError extends Schema.TaggedError<NoChangesToSaveErro
 
 export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const queue = yield* Queue;
 
     const result = yield* saveChanges({

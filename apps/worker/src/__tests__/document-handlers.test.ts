@@ -11,7 +11,12 @@ import {
   type StorageService,
   StorageUploadError,
 } from '@repo/storage';
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { DocumentId, JobId, JobStatus } from '@repo/db/schema';
@@ -104,6 +109,21 @@ const createMockStorage = (
   return Layer.succeed(Storage, service);
 };
 
+const withJobUser = (job: Job<ProcessUrlPayload>) => {
+  const user = createTestUser({ id: job.payload.userId });
+  return withTestUser(user);
+};
+
+const runWithJobUser = <A, E, R>(
+  job: Job<ProcessUrlPayload>,
+  effect: Effect.Effect<A, E, R>,
+) => Effect.runPromise(withJobUser(job)(effect));
+
+const runExitWithJobUser = <A, E, R>(
+  job: Job<ProcessUrlPayload>,
+  effect: Effect.Effect<A, E, R>,
+) => Effect.runPromiseExit(withJobUser(job)(effect));
+
 describe('handleProcessUrl', () => {
   beforeEach(() => {
     resetAllFactories();
@@ -125,7 +145,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      const result = await Effect.runPromise(
+      const result = await runWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -171,7 +192,8 @@ describe('handleProcessUrl', () => {
         createMockStorage({ upload: uploadSpy }),
       );
 
-      await Effect.runPromise(
+      await runWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -202,7 +224,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      await Effect.runPromise(
+      await runWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -233,7 +256,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      await Effect.runPromise(
+      await runWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -261,7 +285,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      const result = await Effect.runPromise(
+      const result = await runWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -291,13 +316,15 @@ describe('handleProcessUrl', () => {
 
       // Run twice with same content
       const job1 = createTestJob();
-      await Effect.runPromise(
+      await runWithJobUser(
+        job1,
         handleProcessUrl(job1).pipe(Effect.provide(layers)),
       );
       const hash1 = updateContentSpy.mock.calls[0]![1].contentHash;
 
       const job2 = createTestJob();
-      await Effect.runPromise(
+      await runWithJobUser(
+        job2,
         handleProcessUrl(job2).pipe(Effect.provide(layers)),
       );
       const hash2 = updateContentSpy.mock.calls[1]![1].contentHash;
@@ -326,7 +353,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      const exit = await Effect.runPromiseExit(
+      const exit = await runExitWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -367,7 +395,8 @@ describe('handleProcessUrl', () => {
         }),
       );
 
-      const exit = await Effect.runPromiseExit(
+      const exit = await runExitWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 
@@ -420,7 +449,8 @@ describe('handleProcessUrl', () => {
         createMockStorage(),
       );
 
-      const exit = await Effect.runPromiseExit(
+      const exit = await runExitWithJobUser(
+        job,
         handleProcessUrl(job).pipe(Effect.provide(layers)),
       );
 

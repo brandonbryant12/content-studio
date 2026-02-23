@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { UpdateVoiceover } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -19,6 +20,10 @@ export interface UpdateVoiceoverInput {
 export const updateVoiceover = (input: UpdateVoiceoverInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+    });
     const voiceoverRepo = yield* VoiceoverRepo;
 
     yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);

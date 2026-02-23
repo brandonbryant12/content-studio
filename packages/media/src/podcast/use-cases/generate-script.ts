@@ -4,6 +4,7 @@ import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import { getDocumentContent } from '../../document';
 import { PersonaRepo } from '../../persona';
+import { annotateUseCaseSpan } from '../../shared';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -50,6 +51,10 @@ const ScriptOutputSchema = Schema.Struct({
 export const generateScript = (input: GenerateScriptInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const podcastRepo = yield* PodcastRepo;
     const llm = yield* LLM;
 

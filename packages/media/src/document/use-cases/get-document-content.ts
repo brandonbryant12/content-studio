@@ -2,6 +2,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { DocumentContentNotFound } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import { parseDocumentContent } from '../parsers';
 import { DocumentRepo } from '../repos';
 
@@ -16,6 +17,10 @@ export interface GetDocumentContentResult {
 export const getDocumentContent = (input: GetDocumentContentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 

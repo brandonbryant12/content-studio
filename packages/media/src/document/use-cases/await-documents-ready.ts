@@ -1,4 +1,6 @@
+import { getCurrentUser } from '@repo/auth/policy';
 import { Data, Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 export class DocumentsNotReadyTimeout extends Data.TaggedError(
@@ -21,6 +23,13 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
   Effect.gen(function* () {
     const { documentIds } = input;
     if (documentIds.length === 0) return;
+
+    const user = yield* getCurrentUser;
+    const resourceId = documentIds[0] ?? 'batch';
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId,
+    });
 
     const documentRepo = yield* DocumentRepo;
 

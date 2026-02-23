@@ -1,10 +1,11 @@
 import { DeepResearch } from '@repo/ai';
+import { getCurrentUser } from '@repo/auth/policy';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Data, Effect } from 'effect';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
-import { formatUnknownError } from '../../shared';
+import { annotateUseCaseSpan, formatUnknownError } from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 
@@ -37,6 +38,11 @@ const STEADY_POLL_MS = 60_000;
 export const processResearch = (input: ProcessResearchInput) =>
   Effect.gen(function* () {
     const { documentId, query } = input;
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: documentId,
+    });
     const research = yield* DeepResearch;
     const documentRepo = yield* DocumentRepo;
     const storage = yield* Storage;

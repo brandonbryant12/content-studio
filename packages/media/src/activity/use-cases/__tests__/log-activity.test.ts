@@ -1,6 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ActivityLog, ActivityLogId } from '@repo/db/schema';
+import { createTestUser, withTestUser } from '@repo/testing';
 import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils';
 import { logActivity } from '../log-activity';
 
@@ -26,6 +27,7 @@ describe('logActivity', () => {
   describe('success cases', () => {
     it('inserts an activity record with all fields', async () => {
       const insertSpy = vi.fn();
+      const user = createTestUser({ id: 'user-1' });
       const mockLog = createMockActivityLog({
         action: 'created',
         entityType: 'document',
@@ -44,14 +46,16 @@ describe('logActivity', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
-        logActivity({
-          userId: 'user-1',
-          action: 'created',
-          entityType: 'document',
-          entityId: 'doc_0000000000000001',
-          entityTitle: 'My Document',
-          metadata: { status: 'draft' },
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          logActivity({
+            userId: 'user-1',
+            action: 'created',
+            entityType: 'document',
+            entityId: 'doc_0000000000000001',
+            entityTitle: 'My Document',
+            metadata: { status: 'draft' },
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(result.id).toBe(mockLog.id);
@@ -69,6 +73,7 @@ describe('logActivity', () => {
 
     it('inserts with minimal fields (no entityId, entityTitle, metadata)', async () => {
       const insertSpy = vi.fn();
+      const user = createTestUser({ id: 'user-1' });
       const mockLog = createMockActivityLog();
 
       const mockRepo = createMockActivityLogRepo({
@@ -81,11 +86,13 @@ describe('logActivity', () => {
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(
-        logActivity({
-          userId: 'user-1',
-          action: 'deleted',
-          entityType: 'podcast',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(user)(
+          logActivity({
+            userId: 'user-1',
+            action: 'deleted',
+            entityType: 'podcast',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       expect(insertSpy).toHaveBeenCalledWith(
@@ -102,6 +109,7 @@ describe('logActivity', () => {
 
       for (const entityType of entityTypes) {
         const insertSpy = vi.fn();
+        const user = createTestUser({ id: 'user-1' });
         const mockLog = createMockActivityLog({ entityType });
 
         const mockRepo = createMockActivityLogRepo({
@@ -114,11 +122,13 @@ describe('logActivity', () => {
         const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
         await Effect.runPromise(
-          logActivity({
-            userId: 'user-1',
-            action: 'created',
-            entityType,
-          }).pipe(Effect.provide(layers)),
+          withTestUser(user)(
+            logActivity({
+              userId: 'user-1',
+              action: 'created',
+              entityType,
+            }).pipe(Effect.provide(layers)),
+          ),
         );
 
         expect(insertSpy).toHaveBeenCalledWith(

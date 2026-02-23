@@ -6,6 +6,7 @@ import {
   type ScriptSegment,
 } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -56,6 +57,10 @@ export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const podcastRepo = yield* PodcastRepo;
 
     const podcast = yield* podcastRepo.findByIdForUser(

@@ -1,5 +1,6 @@
 import { DocumentStatus, type Document } from '@repo/db/schema';
 import { createMockStorage } from '@repo/storage/testing';
+import { createTestUser, withTestUser } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UrlFetchError } from '../../../errors';
@@ -49,6 +50,7 @@ describe('processUrl', () => {
     const documentId = 'doc_123';
     const updateContentSpy = vi.fn();
     const updateStatusSpy = vi.fn();
+    const user = createTestUser();
 
     const repo = createMockDocumentRepo({
       updateContent: (id, data) =>
@@ -91,8 +93,10 @@ describe('processUrl', () => {
     );
 
     const result = await Effect.runPromise(
-      processUrl({ documentId, url: 'https://example.com' }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        processUrl({ documentId, url: 'https://example.com' }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 
@@ -120,6 +124,7 @@ describe('processUrl', () => {
   it('marks document as failed when scraping fails', async () => {
     const documentId = 'doc_456';
     const updateStatusSpy = vi.fn();
+    const user = createTestUser();
 
     const repo = createMockDocumentRepo({
       updateStatus: (id, status, errorMessage) =>
@@ -140,8 +145,10 @@ describe('processUrl', () => {
     );
 
     const result = await Effect.runPromiseExit(
-      processUrl({ documentId, url: 'https://example.com' }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        processUrl({ documentId, url: 'https://example.com' }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 

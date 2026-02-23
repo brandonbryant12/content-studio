@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -23,6 +24,10 @@ export interface UpdateInfographicInput {
 export const updateInfographic = (input: UpdateInfographicInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const repo = yield* InfographicRepo;
 
     yield* repo.findByIdForUser(input.id, user.id);

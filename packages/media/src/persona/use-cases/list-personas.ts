@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Persona } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { PersonaRepo, type PersonaListOptions } from '../repos';
 
 export interface ListPersonasInput {
@@ -17,6 +18,10 @@ export interface ListPersonasResult {
 export const listPersonas = (input: ListPersonasInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const personaRepo = yield* PersonaRepo;
 
     const limit = input.limit ?? 50;

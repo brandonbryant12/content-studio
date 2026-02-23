@@ -2,6 +2,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { DocumentNotFound } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -19,6 +20,10 @@ export interface DeleteDocumentInput {
 export const deleteDocument = (input: DeleteDocumentInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+    });
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 

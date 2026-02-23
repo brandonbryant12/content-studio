@@ -3,7 +3,11 @@ import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
-import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withTransactionalStateAndEnqueue,
+} from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -27,6 +31,10 @@ export interface StartGenerationResult {
 export const startGeneration = (input: StartGenerationInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+    });
     const podcastRepo = yield* PodcastRepo;
     const queue = yield* Queue;
 

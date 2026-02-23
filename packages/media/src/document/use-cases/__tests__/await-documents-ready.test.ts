@@ -1,4 +1,9 @@
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
@@ -14,6 +19,7 @@ describe('awaitDocumentsReady', () => {
 
   it('returns immediately when all documents are ready', async () => {
     const doc = createTestDocument({ status: 'ready' });
+    const user = createTestUser();
 
     const layers = Layer.mergeAll(
       MockDbLive,
@@ -23,8 +29,10 @@ describe('awaitDocumentsReady', () => {
     );
 
     const result = await Effect.runPromise(
-      awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 
@@ -33,6 +41,7 @@ describe('awaitDocumentsReady', () => {
 
   it('fails when any document is already failed', async () => {
     const doc = createTestDocument({ status: 'failed' });
+    const user = createTestUser();
 
     const layers = Layer.mergeAll(
       MockDbLive,
@@ -42,8 +51,10 @@ describe('awaitDocumentsReady', () => {
     );
 
     const result = await Effect.runPromiseExit(
-      awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 

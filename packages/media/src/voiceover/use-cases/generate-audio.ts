@@ -5,6 +5,7 @@ import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import {
   PreprocessResultSchema,
   buildVoiceoverSystemPrompt,
@@ -68,6 +69,10 @@ export interface GenerateVoiceoverAudioResult {
 export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+    });
     const voiceoverRepo = yield* VoiceoverRepo;
     const tts = yield* TTS;
     const storage = yield* Storage;

@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Voiceover } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo, type ListOptions } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -25,6 +26,10 @@ export interface ListVoiceoversResult {
 export const listVoiceovers = (input: ListVoiceoversInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const voiceoverRepo = yield* VoiceoverRepo;
 
     const limit = input.limit ?? 50;

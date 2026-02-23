@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { SvgRepo } from '../repos';
 
 export interface ListSvgsInput {
@@ -10,6 +11,10 @@ export interface ListSvgsInput {
 export const listSvgs = (input: ListSvgsInput = {}) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const repo = yield* SvgRepo;
 
     return yield* repo.list(user.id, {
