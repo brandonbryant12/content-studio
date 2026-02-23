@@ -1,8 +1,8 @@
 import { Effect } from 'effect';
 import {
   TTS,
-  type GeminiVoiceId,
   type AudioEncoding,
+  type GeminiVoiceId,
   isValidVoiceId,
 } from '../index';
 import { VoiceNotFoundError } from './errors';
@@ -14,7 +14,6 @@ import { VoiceNotFoundError } from './errors';
 export interface PreviewVoiceInput {
   readonly voiceId: string;
   readonly text?: string;
-  readonly audioEncoding?: AudioEncoding;
 }
 
 export interface PreviewVoiceUseCaseResult {
@@ -38,13 +37,11 @@ export const previewVoice = (input: PreviewVoiceInput) =>
     return yield* tts.previewVoice({
       voiceId: input.voiceId as GeminiVoiceId,
       text: input.text,
-      audioEncoding: input.audioEncoding,
     });
   }).pipe(
     Effect.withSpan('useCase.previewVoice', {
       attributes: {
         'voice.id': input.voiceId,
-        'audio.encoding': input.audioEncoding,
       },
     }),
   );

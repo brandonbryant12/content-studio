@@ -38,7 +38,7 @@ const createMockTTSService = (config: MockConfig = {}): TTSService => ({
     return Effect.succeed(
       config.previewResult ?? {
         audioContent: Buffer.from('test audio content'),
-        audioEncoding: 'MP3' as const,
+        audioEncoding: 'LINEAR16' as const,
         voiceId: options.voiceId,
       },
     );
@@ -60,7 +60,7 @@ describe('previewVoice', () => {
       Effect.gen(function* () {
         const result = yield* previewVoice({ voiceId: 'Charon' });
         expect(result.voiceId).toBe('Charon');
-        expect(result.audioEncoding).toBe('MP3');
+        expect(result.audioEncoding).toBe('LINEAR16');
         expect(Buffer.isBuffer(result.audioContent)).toBe(true);
       }),
     );
@@ -79,19 +79,18 @@ describe('previewVoice', () => {
   it.layer(
     createMockTTSLayer({
       previewResult: {
-        audioContent: Buffer.from('ogg audio'),
-        audioEncoding: 'OGG_OPUS',
+        audioContent: Buffer.from('wav audio'),
+        audioEncoding: 'LINEAR16',
         voiceId: 'Charon' as GeminiVoiceId,
       },
     }),
   )('audio encoding', (it) => {
-    it.effect('passes audio encoding option to TTS service', () =>
+    it.effect('returns LINEAR16 encoding from the TTS service', () =>
       Effect.gen(function* () {
         const result = yield* previewVoice({
           voiceId: 'Charon',
-          audioEncoding: 'OGG_OPUS',
         });
-        expect(result.audioEncoding).toBe('OGG_OPUS');
+        expect(result.audioEncoding).toBe('LINEAR16');
       }),
     );
   });

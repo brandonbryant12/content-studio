@@ -42,7 +42,8 @@ const voicesContract = oc
         method: 'POST',
         path: '/{voiceId}/preview',
         summary: 'Preview voice',
-        description: 'Generate a short audio preview of a voice',
+        description:
+          'Generate a short audio preview of a voice (LINEAR16 WAV)',
       })
       .errors({
         VOICE_NOT_FOUND: {
@@ -59,7 +60,6 @@ const voicesContract = oc
           Schema.Struct({
             voiceId: Schema.String,
             text: Schema.optional(Schema.String.pipe(Schema.maxLength(500))),
-            audioEncoding: Schema.optional(AudioEncodingSchema),
           }),
         ),
       )
