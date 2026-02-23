@@ -2,6 +2,9 @@ import { QueryClient } from '@tanstack/react-query';
 
 interface ApiLikeError {
   code: string;
+  data?: {
+    retryAfter?: number;
+  };
 }
 
 const isApiLikeError = (error: unknown): error is ApiLikeError => {
@@ -13,11 +16,26 @@ const isNotFoundErrorCode = (code: string): boolean =>
   code === 'NOT_FOUND' || code.endsWith('_NOT_FOUND');
 
 const shouldRetryQuery = (failureCount: number, error: unknown): boolean => {
-  if (isApiLikeError(error) && isNotFoundErrorCode(error.code)) {
-    return false;
+  if (isApiLikeError(error)) {
+    if (isNotFoundErrorCode(error.code)) return false;
+    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') return false;
   }
 
   return failureCount < 3;
+};
+
+const defaultRetryDelay = (attempt: number): number =>
+  Math.min(1000 * 2 ** attempt, 30_000);
+
+const retryDelay = (attempt: number, error: unknown): number => {
+  if (isApiLikeError(error) && error.code === 'RATE_LIMITED') {
+    const retryAfterMs = error.data?.retryAfter;
+    if (typeof retryAfterMs === 'number' && retryAfterMs > 0) {
+      return retryAfterMs;
+    }
+  }
+
+  return defaultRetryDelay(attempt);
 };
 
 export const queryClient = new QueryClient({
@@ -27,8 +45,9 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60,
       // Keep unused data in cache for 5 minutes
       gcTime: 1000 * 60 * 5,
-      // Don't retry known not-found responses.
+      // Don't retry known not-found or auth responses.
       retry: shouldRetryQuery,
+      retryDelay,
     },
   },
 });
