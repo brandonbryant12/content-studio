@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -30,4 +30,4 @@ export const createVoiceover = (input: CreateVoiceoverInput) =>
       attributes: { 'voiceover.id': voiceover.id },
     });
     return voiceover;
-  }).pipe(Effect.withSpan('useCase.createVoiceover'));
+  }).pipe(withUseCaseSpan('useCase.createVoiceover'));

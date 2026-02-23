@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Voiceover } from '@repo/db/schema';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { VoiceoverRepo, type ListOptions } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -30,19 +30,19 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+      attributes: {
+        'pagination.limit': limit,
+        'pagination.offset': offset,
+      },
+    });
     const options: ListOptions = {
       userId: user.id,
       limit,
       offset,
     };
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: user.id,
-      attributes: {
-        'pagination.limit': input.limit,
-        'pagination.offset': input.offset,
-      },
-    });
 
     const [voiceovers, total] = yield* Effect.all(
       [voiceoverRepo.list(options), voiceoverRepo.count(options)],
@@ -54,4 +54,4 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
       total,
       hasMore: offset + voiceovers.length < total,
     };
-  }).pipe(Effect.withSpan('useCase.listVoiceovers'));
+  }).pipe(withUseCaseSpan('useCase.listVoiceovers'));

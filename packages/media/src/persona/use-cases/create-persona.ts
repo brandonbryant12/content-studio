@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface CreatePersonaInput {
@@ -34,4 +34,4 @@ export const createPersona = (input: CreatePersonaInput) =>
       attributes: { 'persona.id': persona.id },
     });
     return persona;
-  }).pipe(Effect.withSpan('useCase.createPersona'));
+  }).pipe(withUseCaseSpan('useCase.createPersona'));

@@ -1,6 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -25,13 +25,13 @@ export const approvePodcast = (input: ApprovePodcastInput) =>
     const user = yield* requireRole(Role.ADMIN);
     const podcastRepo = yield* PodcastRepo;
 
-    // Verify podcast exists
-    yield* podcastRepo.findById(input.podcastId);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
+    // Verify podcast exists
+    yield* podcastRepo.findById(input.podcastId);
 
     // Set approval
     const updatedPodcast = yield* podcastRepo.setApproval(
@@ -40,4 +40,4 @@ export const approvePodcast = (input: ApprovePodcastInput) =>
     );
 
     return { podcast: updatedPodcast };
-  }).pipe(Effect.withSpan('useCase.approvePodcast'));
+  }).pipe(withUseCaseSpan('useCase.approvePodcast'));

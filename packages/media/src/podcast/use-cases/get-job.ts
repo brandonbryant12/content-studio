@@ -1,7 +1,11 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
-import { annotateUseCaseSpan, getOwnedJobOrNotFound } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  getOwnedJobOrNotFound,
+  withUseCaseSpan,
+} from '../../shared';
 
 // =============================================================================
 // Types
@@ -37,4 +41,4 @@ export const getJob = (input: GetJobInput) =>
       attributes: { 'job.id': input.jobId },
     });
     return yield* getOwnedJobOrNotFound(input.jobId);
-  }).pipe(Effect.withSpan('useCase.getJob'));
+  }).pipe(withUseCaseSpan('useCase.getJob'));

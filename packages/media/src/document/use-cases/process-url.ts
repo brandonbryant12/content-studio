@@ -1,8 +1,7 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 import { UrlScraper } from '../services/url-scraper';
@@ -15,19 +14,19 @@ export interface ProcessUrlInput {
 export const processUrl = (input: ProcessUrlInput) =>
   Effect.gen(function* () {
     const { documentId, url } = input;
-    const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
     const urlScraper = yield* UrlScraper;
     const storage = yield* Storage;
+
+    const doc = yield* documentRepo.findById(documentId);
     yield* annotateUseCaseSpan({
-      userId: user.id,
+      userId: doc.createdBy,
       resourceId: documentId,
       attributes: {
         'document.id': documentId,
-        'document.url': url,
+        'document.url': input.url,
       },
     });
-
     const scraped = yield* urlScraper.fetchAndExtract(url);
 
     const contentKey = `documents/${documentId}/content.txt`;
@@ -65,5 +64,5 @@ export const processUrl = (input: ProcessUrlInput) =>
         return yield* Effect.fail(error);
       }),
     ),
-    Effect.withSpan('useCase.processUrl'),
+    withUseCaseSpan('useCase.processUrl'),
   );

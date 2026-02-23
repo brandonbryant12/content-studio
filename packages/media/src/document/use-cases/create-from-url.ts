@@ -8,6 +8,7 @@ import {
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { DocumentRepo } from '../repos';
 import { validateUrl } from '../services/url-validator';
@@ -30,26 +31,18 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
     // 2. Check for duplicate URL for this user
     const existing = yield* documentRepo.findBySourceUrl(url, user.id);
     if (existing) {
+      yield* annotateUseCaseSpan({
+        userId: user.id,
+        resourceId: existing.id,
+        attributes: {
+          'document.id': existing.id,
+          'document.url': input.url,
+        },
+      });
       if (existing.status === 'ready') {
-        yield* annotateUseCaseSpan({
-          userId: user.id,
-          resourceId: existing.id,
-          attributes: {
-            'document.id': existing.id,
-            'document.url': input.url,
-          },
-        });
         return existing;
       }
       if (existing.status === 'processing') {
-        yield* annotateUseCaseSpan({
-          userId: user.id,
-          resourceId: existing.id,
-          attributes: {
-            'document.id': existing.id,
-            'document.url': input.url,
-          },
-        });
         return yield* new DocumentAlreadyProcessing({ id: existing.id });
       }
       // If failed, allow creating a new one (delete the old one)
@@ -103,4 +96,4 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
             )
           : Effect.void,
     );
-  }).pipe(Effect.withSpan('useCase.createFromUrl'));
+  }).pipe(withUseCaseSpan('useCase.createFromUrl'));

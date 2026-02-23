@@ -1,6 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos/infographic-repo';
 
 // =============================================================================
@@ -27,16 +27,16 @@ export const revokeInfographicApproval = (
     const user = yield* requireRole(Role.ADMIN);
     const infographicRepo = yield* InfographicRepo;
 
-    // Verify infographic exists
-    yield* infographicRepo.findById(input.infographicId);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.infographicId,
       attributes: { 'infographic.id': input.infographicId },
     });
+    // Verify infographic exists
+    yield* infographicRepo.findById(input.infographicId);
 
     // Clear approval
     const updated = yield* infographicRepo.clearApproval(input.infographicId);
 
     return { infographic: updated };
-  }).pipe(Effect.withSpan('useCase.revokeInfographicApproval'));
+  }).pipe(withUseCaseSpan('useCase.revokeInfographicApproval'));

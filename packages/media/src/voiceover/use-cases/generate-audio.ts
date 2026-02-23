@@ -5,7 +5,7 @@ import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import {
   PreprocessResultSchema,
   buildVoiceoverSystemPrompt,
@@ -26,10 +26,19 @@ const ALLOWED_GENERATION_STATUSES = [
  * Add TTS annotations via LLM and optionally generate a title.
  * Falls back to raw text + current title on any error.
  */
-const preprocessText = (text: string, currentTitle: string) =>
+const preprocessText = (
+  text: string,
+  currentTitle: string,
+  spanContext: { userId: string; voiceoverId: string },
+) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
     const needsTitle = currentTitle === DEFAULT_TITLE;
+    yield* annotateUseCaseSpan({
+      userId: spanContext.userId,
+      resourceId: spanContext.voiceoverId,
+      attributes: { 'voiceover.id': spanContext.voiceoverId },
+    });
     const { object } = yield* llm.generate({
       system: buildVoiceoverSystemPrompt(),
       prompt: buildVoiceoverUserPrompt({ text, needsTitle }),
@@ -45,7 +54,7 @@ const preprocessText = (text: string, currentTitle: string) =>
     Effect.catchAll(() =>
       Effect.succeed({ annotatedText: text, title: currentTitle }),
     ),
-    Effect.withSpan('useCase.preprocessVoiceoverText'),
+    withUseCaseSpan('useCase.preprocessVoiceoverText'),
   );
 
 // =============================================================================
@@ -73,15 +82,15 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
     const tts = yield* TTS;
     const storage = yield* Storage;
 
-    const voiceover = yield* voiceoverRepo.findByIdForUser(
-      input.voiceoverId,
-      user.id,
-    );
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.voiceoverId,
       attributes: { 'voiceover.id': input.voiceoverId },
     });
+    const voiceover = yield* voiceoverRepo.findByIdForUser(
+      input.voiceoverId,
+      user.id,
+    );
 
     if (!ALLOWED_GENERATION_STATUSES.includes(voiceover.status)) {
       return yield* Effect.fail(
@@ -108,6 +117,7 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
     const { annotatedText, title: generatedTitle } = yield* preprocessText(
       text,
       voiceover.title,
+      { userId: user.id, voiceoverId: input.voiceoverId },
     );
 
     const ttsResult = yield* tts.synthesize({
@@ -151,5 +161,5 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
         return yield* Effect.fail(error);
       }),
     ),
-    Effect.withSpan('useCase.generateVoiceoverAudio'),
+    withUseCaseSpan('useCase.generateVoiceoverAudio'),
   );

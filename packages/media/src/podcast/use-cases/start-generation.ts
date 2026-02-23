@@ -7,6 +7,7 @@ import {
   annotateUseCaseSpan,
   enqueueJob,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -34,15 +35,15 @@ export const startGeneration = (input: StartGenerationInput) =>
     const podcastRepo = yield* PodcastRepo;
     const queue = yield* Queue;
 
-    const podcast = yield* podcastRepo.findByIdForUser(
-      input.podcastId,
-      user.id,
-    );
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
+    const podcast = yield* podcastRepo.findByIdForUser(
+      input.podcastId,
+      user.id,
+    );
 
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {
@@ -71,4 +72,4 @@ export const startGeneration = (input: StartGenerationInput) =>
     );
 
     return { jobId: job.id, status: job.status };
-  }).pipe(Effect.withSpan('useCase.startGeneration'));
+  }).pipe(withUseCaseSpan('useCase.startGeneration'));

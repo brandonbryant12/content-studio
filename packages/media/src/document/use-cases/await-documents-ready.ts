@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Data, Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 export class DocumentsNotReadyTimeout extends Data.TaggedError(
@@ -24,14 +23,6 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     const { documentIds } = input;
     if (documentIds.length === 0) return;
 
-    const user = yield* getCurrentUser;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: documentIds[0] ?? 'multiple',
-      attributes: {
-        'document.ids': documentIds.join(','),
-      },
-    });
     const documentRepo = yield* DocumentRepo;
 
     // Check initial status
@@ -40,6 +31,15 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
       documentRepo.findById(id),
     );
 
+    const primaryId = documentIds[0] ?? 'unknown';
+    const ownerId = docs[0]?.createdBy ?? 'unknown';
+    yield* annotateUseCaseSpan({
+      userId: ownerId,
+      resourceId: primaryId,
+      attributes: {
+        'document.ids': documentIds.join(','),
+      },
+    });
     yield* Effect.logInfo(
       `Poll attempt ${attempt}: ${docs.map((d) => `${d.title}=${d.status}`).join(', ')}`,
     );
@@ -85,4 +85,4 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     }
 
     return yield* new DocumentsNotReadyTimeout({ documentIds });
-  }).pipe(Effect.withSpan('useCase.awaitDocumentsReady'));
+  }).pipe(withUseCaseSpan('useCase.awaitDocumentsReady'));

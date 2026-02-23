@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -25,14 +25,14 @@ export const getVoiceover = (input: GetVoiceoverInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
-    const voiceover = yield* voiceoverRepo.findByIdForUser(
-      input.voiceoverId,
-      user.id,
-    );
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.voiceoverId,
       attributes: { 'voiceover.id': input.voiceoverId },
     });
+    const voiceover = yield* voiceoverRepo.findByIdForUser(
+      input.voiceoverId,
+      user.id,
+    );
     return voiceover;
-  }).pipe(Effect.withSpan('useCase.getVoiceover'));
+  }).pipe(withUseCaseSpan('useCase.getVoiceover'));

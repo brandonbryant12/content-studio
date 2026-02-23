@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { StyleProperty } from '@repo/db/schema';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { StylePresetRepo } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -35,4 +35,4 @@ export const createStylePreset = (input: CreateStylePresetInput) =>
       attributes: { 'stylePreset.id': preset.id },
     });
     return preset;
-  }).pipe(Effect.withSpan('useCase.createStylePreset'));
+  }).pipe(withUseCaseSpan('useCase.createStylePreset'));

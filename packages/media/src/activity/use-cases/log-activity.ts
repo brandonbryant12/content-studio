@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -32,4 +32,4 @@ export const logActivity = (input: LogActivityInput) =>
       },
     });
     return yield* repo.insert(input);
-  }).pipe(Effect.withSpan('useCase.logActivity'));
+  }).pipe(withUseCaseSpan('useCase.logActivity'));

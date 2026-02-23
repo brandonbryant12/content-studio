@@ -8,6 +8,7 @@ import {
   annotateUseCaseSpan,
   enqueueJob,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
@@ -36,15 +37,15 @@ export const startVoiceoverGeneration = (
     const voiceoverRepo = yield* VoiceoverRepo;
     const queue = yield* Queue;
 
-    const voiceover = yield* voiceoverRepo.findByIdForUser(
-      input.voiceoverId,
-      user.id,
-    );
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.voiceoverId,
       attributes: { 'voiceover.id': input.voiceoverId },
     });
+    const voiceover = yield* voiceoverRepo.findByIdForUser(
+      input.voiceoverId,
+      user.id,
+    );
 
     const text = voiceover.text.trim();
     if (!text) {
@@ -82,4 +83,4 @@ export const startVoiceoverGeneration = (
     );
 
     return { jobId: job.id, status: job.status };
-  }).pipe(Effect.withSpan('useCase.startVoiceoverGeneration'));
+  }).pipe(withUseCaseSpan('useCase.startVoiceoverGeneration'));

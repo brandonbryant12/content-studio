@@ -5,7 +5,7 @@ import {
   type StyleProperty,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -44,4 +44,4 @@ export const createInfographic = (input: CreateInfographicInput) =>
       attributes: { 'infographic.id': infographic.id },
     });
     return infographic;
-  }).pipe(Effect.withSpan('useCase.createInfographic'));
+  }).pipe(withUseCaseSpan('useCase.createInfographic'));
