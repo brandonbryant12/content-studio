@@ -60,8 +60,11 @@ const createMockQueue = (overrides: Partial<QueueService> = {}) =>
 // =============================================================================
 
 describe('processResearch', () => {
+  let testUser: ReturnType<typeof createTestUser>;
+
   beforeEach(() => {
     resetAllFactories();
+    testUser = createTestUser();
   });
 
   describe('resume branch', () => {
@@ -106,10 +109,12 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({
-          documentId: existingDoc.id,
-          query: 'test query',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(testUser)(
+          processResearch({
+            documentId: existingDoc.id,
+            query: 'test query',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // startResearch should NOT be called — we resume
@@ -152,8 +157,10 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({ documentId: doc.id, query: 'test query' }).pipe(
-          Effect.provide(layers),
+        withTestUser(testUser)(
+          processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
@@ -198,8 +205,10 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({ documentId: doc.id, query: 'test query' }).pipe(
-          Effect.provide(layers),
+        withTestUser(testUser)(
+          processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 
@@ -245,10 +254,12 @@ describe('processResearch', () => {
       );
 
       await Effect.runPromise(
-        processResearch({
-          documentId: existingDoc.id,
-          query: 'test query',
-        }).pipe(Effect.provide(layers)),
+        withTestUser(testUser)(
+          processResearch({
+            documentId: existingDoc.id,
+            query: 'test query',
+          }).pipe(Effect.provide(layers)),
+        ),
       );
 
       // updateResearchConfig should only be called for completion, not for the initial in_progress

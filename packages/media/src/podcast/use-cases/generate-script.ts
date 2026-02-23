@@ -4,6 +4,7 @@ import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
 import { getDocumentContent } from '../../document';
 import { PersonaRepo } from '../../persona';
+import { annotateUseCaseSpan } from '../../shared';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -57,6 +58,11 @@ export const generateScript = (input: GenerateScriptInput) =>
       input.podcastId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+      attributes: { 'podcast.id': input.podcastId },
+    });
 
     yield* podcastRepo.updateStatus(input.podcastId, 'generating_script');
 
@@ -145,8 +151,4 @@ export const generateScript = (input: GenerateScriptInput) =>
     });
 
     return { podcast: updatedPodcast, segmentCount: segments.length };
-  }).pipe(
-    Effect.withSpan('useCase.generateScript', {
-      attributes: { 'podcast.id': input.podcastId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.generateScript'));

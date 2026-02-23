@@ -25,7 +25,7 @@
 Use camelCase for multi-word names within a segment: `useCase.startPodcastGeneration`.
 
 ## Required Span Attributes
-<!-- enforced-by: manual-review -->
+<!-- enforced-by: invariant-test -->
 
 | Attribute | Required In | Value |
 |---|---|---|

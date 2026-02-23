@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos/infographic-repo';
 
 // =============================================================================
@@ -26,6 +27,11 @@ export const approveInfographic = (input: ApproveInfographicInput) =>
 
     // Verify infographic exists
     yield* infographicRepo.findById(input.infographicId);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.infographicId,
+      attributes: { 'infographic.id': input.infographicId },
+    });
 
     // Set approval
     const updated = yield* infographicRepo.setApproval(
@@ -34,8 +40,4 @@ export const approveInfographic = (input: ApproveInfographicInput) =>
     );
 
     return { infographic: updated };
-  }).pipe(
-    Effect.withSpan('useCase.approveInfographic', {
-      attributes: { 'infographic.id': input.infographicId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.approveInfographic'));

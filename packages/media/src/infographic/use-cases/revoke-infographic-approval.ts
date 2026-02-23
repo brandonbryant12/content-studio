@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos/infographic-repo';
 
 // =============================================================================
@@ -23,18 +24,19 @@ export const revokeInfographicApproval = (
   input: RevokeInfographicApprovalInput,
 ) =>
   Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
+    const user = yield* requireRole(Role.ADMIN);
     const infographicRepo = yield* InfographicRepo;
 
     // Verify infographic exists
     yield* infographicRepo.findById(input.infographicId);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.infographicId,
+      attributes: { 'infographic.id': input.infographicId },
+    });
 
     // Clear approval
     const updated = yield* infographicRepo.clearApproval(input.infographicId);
 
     return { infographic: updated };
-  }).pipe(
-    Effect.withSpan('useCase.revokeInfographicApproval', {
-      attributes: { 'infographic.id': input.infographicId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.revokeInfographicApproval'));

@@ -5,6 +5,7 @@ import { VoiceoverStatus, type Voiceover } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import {
   PreprocessResultSchema,
   buildVoiceoverSystemPrompt,
@@ -76,6 +77,11 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
       input.voiceoverId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+      attributes: { 'voiceover.id': input.voiceoverId },
+    });
 
     if (!ALLOWED_GENERATION_STATUSES.includes(voiceover.status)) {
       return yield* Effect.fail(
@@ -145,7 +151,5 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
         return yield* Effect.fail(error);
       }),
     ),
-    Effect.withSpan('useCase.generateVoiceoverAudio', {
-      attributes: { 'voiceover.id': input.voiceoverId },
-    }),
+    Effect.withSpan('useCase.generateVoiceoverAudio'),
   );

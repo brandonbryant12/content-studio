@@ -11,7 +11,12 @@ import {
   type StorageService,
   StorageUploadError,
 } from '@repo/storage';
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { DocumentId, JobId, JobStatus } from '@repo/db/schema';
@@ -104,6 +109,9 @@ const createMockStorage = (
   return Layer.succeed(Storage, service);
 };
 
+const withJobUser = (job: Job<ProcessUrlPayload>) =>
+  withTestUser(createTestUser({ id: job.payload.userId }));
+
 describe('handleProcessUrl', () => {
   beforeEach(() => {
     resetAllFactories();
@@ -126,7 +134,7 @@ describe('handleProcessUrl', () => {
       );
 
       const result = await Effect.runPromise(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       expect(result.documentId).toBe('doc_test1');
@@ -172,7 +180,7 @@ describe('handleProcessUrl', () => {
       );
 
       await Effect.runPromise(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       expect(uploadSpy).toHaveBeenCalledTimes(1);
@@ -203,7 +211,7 @@ describe('handleProcessUrl', () => {
       );
 
       await Effect.runPromise(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       const [_, contentData] = updateContentSpy.mock.calls[0]!;
@@ -234,7 +242,7 @@ describe('handleProcessUrl', () => {
       );
 
       await Effect.runPromise(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       const [_, contentData] = updateContentSpy.mock.calls[0]!;
@@ -262,7 +270,7 @@ describe('handleProcessUrl', () => {
       );
 
       const result = await Effect.runPromise(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       expect(result.wordCount).toBe(0);
@@ -292,13 +300,13 @@ describe('handleProcessUrl', () => {
       // Run twice with same content
       const job1 = createTestJob();
       await Effect.runPromise(
-        handleProcessUrl(job1).pipe(Effect.provide(layers)),
+        withJobUser(job1)(handleProcessUrl(job1).pipe(Effect.provide(layers))),
       );
       const hash1 = updateContentSpy.mock.calls[0]![1].contentHash;
 
       const job2 = createTestJob();
       await Effect.runPromise(
-        handleProcessUrl(job2).pipe(Effect.provide(layers)),
+        withJobUser(job2)(handleProcessUrl(job2).pipe(Effect.provide(layers))),
       );
       const hash2 = updateContentSpy.mock.calls[1]![1].contentHash;
 
@@ -327,7 +335,7 @@ describe('handleProcessUrl', () => {
       );
 
       const exit = await Effect.runPromiseExit(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       // Handler should fail with JobProcessingError
@@ -368,7 +376,7 @@ describe('handleProcessUrl', () => {
       );
 
       const exit = await Effect.runPromiseExit(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       expect(exit._tag).toBe('Failure');
@@ -421,7 +429,7 @@ describe('handleProcessUrl', () => {
       );
 
       const exit = await Effect.runPromiseExit(
-        handleProcessUrl(job).pipe(Effect.provide(layers)),
+        withJobUser(job)(handleProcessUrl(job).pipe(Effect.provide(layers))),
       );
 
       // Should still fail gracefully even if updateStatus also fails

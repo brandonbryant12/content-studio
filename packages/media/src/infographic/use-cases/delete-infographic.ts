@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -22,6 +23,11 @@ export const deleteInfographic = (input: DeleteInfographicInput) =>
     const storage = yield* Storage;
 
     const existing = yield* repo.findByIdForUser(input.id, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'infographic.id': input.id },
+    });
 
     // Clean up storage for all versions
     const versions = yield* repo.listVersions(input.id);
@@ -50,8 +56,4 @@ export const deleteInfographic = (input: DeleteInfographicInput) =>
     }
 
     yield* repo.delete(input.id);
-  }).pipe(
-    Effect.withSpan('useCase.deleteInfographic', {
-      attributes: { 'infographic.id': input.id },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.deleteInfographic'));

@@ -2,7 +2,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import type { CreateDocument } from '@repo/db/schema';
-import { calculateWordCount } from '../../shared';
+import { annotateUseCaseSpan, calculateWordCount } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -32,7 +32,7 @@ export const createDocument = (input: CreateDocumentInput) =>
 
     yield* storage.upload(contentKey, contentBuffer, 'text/plain');
 
-    return yield* documentRepo
+    const document = yield* documentRepo
       .insert({
         title: data.title,
         contentKey,
@@ -46,8 +46,14 @@ export const createDocument = (input: CreateDocumentInput) =>
       .pipe(
         Effect.tapError(() => storage.delete(contentKey).pipe(Effect.ignore)),
       );
-  }).pipe(
-    Effect.withSpan('useCase.createDocument', {
-      attributes: { 'document.title': input.title },
-    }),
-  );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: document.id,
+      attributes: {
+        'document.id': document.id,
+        'document.title': input.title,
+      },
+    });
+
+    return document;
+  }).pipe(Effect.withSpan('useCase.createDocument'));

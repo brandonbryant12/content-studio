@@ -5,6 +5,7 @@ import {
   type ActivityLogWithUser,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -32,10 +33,20 @@ export type ListActivityResult = PaginatedResponse<ActivityLogWithUser>;
  */
 export const listActivity = (input: ListActivityInput) =>
   Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
+    const user = yield* requireRole(Role.ADMIN);
     const repo = yield* ActivityLogRepo;
 
     const limit = input.limit ?? 25;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.userId ?? 'list',
+      attributes: {
+        'activity.limit': input.limit ?? 25,
+        ...(input.entityType
+          ? { 'activity.entityType': input.entityType }
+          : {}),
+      },
+    });
 
     const rows = yield* repo.list({
       userId: input.userId,
@@ -49,13 +60,4 @@ export const listActivity = (input: ListActivityInput) =>
     return createPaginatedResponse([...rows], limit, (item) =>
       item.createdAt.toISOString(),
     );
-  }).pipe(
-    Effect.withSpan('useCase.listActivity', {
-      attributes: {
-        'activity.limit': input.limit ?? 25,
-        ...(input.entityType
-          ? { 'activity.entityType': input.entityType }
-          : {}),
-      },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.listActivity'));

@@ -72,6 +72,34 @@ export const formatUnknownError = (error: unknown): string => {
   return String(error);
 };
 
+export interface UseCaseSpanInput {
+  resourceId: string;
+  userId?: string;
+  attributes?: Record<string, string | number | boolean | null | undefined>;
+}
+
+const normalizeSpanAttributes = (
+  attributes: Record<string, string | number | boolean | null | undefined>,
+): Record<string, string | number | boolean | null> =>
+  Object.fromEntries(
+    Object.entries(attributes).filter(([, value]) => value !== undefined),
+  ) as Record<string, string | number | boolean | null>;
+
+/**
+ * Attach required attributes to use-case spans.
+ */
+export const annotateUseCaseSpan = (input: UseCaseSpanInput) =>
+  Effect.gen(function* () {
+    const userId = input.userId ?? (yield* getCurrentUser).id;
+    const attributes = normalizeSpanAttributes({
+      'user.id': userId,
+      'resource.id': input.resourceId,
+      ...input.attributes,
+    });
+
+    yield* Effect.annotateCurrentSpan(attributes);
+  });
+
 /**
  * Fetch a job while enforcing owner-or-admin access.
  * Non-owner access is returned as "not found" to avoid existence leaks.
