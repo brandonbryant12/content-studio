@@ -104,6 +104,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Harden workflow registry validation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "workflow-registry",
+      "guardrail",
+      "docs"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
