@@ -62,6 +62,17 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-no-ready-for-dev-issues",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No ready-for-dev issues",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
     "date": "2026-02-23",
     "month": "2026-02",
