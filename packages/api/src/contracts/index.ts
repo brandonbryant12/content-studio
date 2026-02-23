@@ -6,6 +6,7 @@ import eventsContract from './events';
 import infographicContract from './infographics';
 import personaContract from './personas';
 import podcastContract from './podcasts';
+import svgsContract from './svgs';
 import voiceoverContract from './voiceovers';
 import voicesContract from './voices';
 
@@ -72,6 +73,7 @@ export const appContract = oc
     infographics: infographicContract,
     personas: personaContract,
     podcasts: podcastContract,
+    svgs: svgsContract,
     voiceovers: voiceoverContract,
     voices: voicesContract,
   });

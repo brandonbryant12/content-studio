@@ -5,6 +5,7 @@ import eventsRouter from './events';
 import infographicRouter from './infographic';
 import personaRouter from './persona';
 import podcastRouter from './podcast';
+import svgRouter from './svg';
 import voiceoverRouter from './voiceover';
 import voicesRouter from './voices';
 
@@ -16,6 +17,7 @@ export const appRouter = {
   infographics: infographicRouter,
   personas: personaRouter,
   podcasts: podcastRouter,
+  svgs: svgRouter,
   voiceovers: voiceoverRouter,
   voices: voicesRouter,
 };
