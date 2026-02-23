@@ -2,13 +2,13 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { readWorkflowRegistry } from "../workflows/registry";
 import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("agent-engine", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
 const SUMMARIES_DIR = path.join(MEMORY_DIR, "summaries");
-const WORKFLOW_REGISTRY_PATH = path.join("agent-engine", "workflows", "registry.json");
 
 const REQUIRED_ARGS = [
   "workflow",
@@ -129,28 +129,12 @@ async function readJsonArray(filePath) {
 }
 
 async function readKnownWorkflows() {
-  let raw;
-  try {
-    raw = await fs.readFile(WORKFLOW_REGISTRY_PATH, "utf8");
-  } catch (error) {
-    if (error && error.code === "ENOENT") {
-      throw new Error(
-        `Workflow registry not found: ${WORKFLOW_REGISTRY_PATH}. Run from repository root.`,
-      );
-    }
-    throw error;
-  }
-
-  const parsed = JSON.parse(raw);
-  const workflows = Array.isArray(parsed?.coreWorkflows)
-    ? parsed.coreWorkflows
-        .map((entry) => (typeof entry?.memoryKey === "string" ? entry.memoryKey.trim() : ""))
-        .filter(Boolean)
-    : [];
+  const registry = await readWorkflowRegistry();
+  const workflows = registry.coreWorkflows.map((entry) => entry.memoryKey.trim());
 
   if (workflows.length === 0) {
     throw new Error(
-      `No core workflows found in ${WORKFLOW_REGISTRY_PATH}. Add coreWorkflows entries before writing memory events.`,
+      "No core workflows found in workflow registry. Add coreWorkflows entries before writing memory events.",
     );
   }
 
