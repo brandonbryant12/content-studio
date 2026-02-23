@@ -1,12 +1,21 @@
-import { Data, Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
-export class DocumentsNotReadyTimeout extends Data.TaggedError(
+export class DocumentsNotReadyTimeout extends Schema.TaggedError<DocumentsNotReadyTimeout>()(
   'DocumentsNotReadyTimeout',
-)<{
-  readonly documentIds: readonly string[];
-}> {}
+  {
+    documentIds: Schema.Array(Schema.String),
+  },
+) {
+  static readonly httpStatus = 504 as const;
+  static readonly httpCode = 'DOCUMENTS_NOT_READY_TIMEOUT' as const;
+  static readonly httpMessage = 'Documents did not reach ready state in time';
+  static readonly logLevel = 'warn' as const;
+  static getData(e: DocumentsNotReadyTimeout) {
+    return { documentIds: [...e.documentIds] };
+  }
+}
 
 export interface AwaitDocumentsReadyInput {
   documentIds: readonly string[];
