@@ -46,6 +46,11 @@ const ENTITY_ICON: Record<
     bgColor: 'bg-amber-500/10',
     textColor: 'text-amber-600 dark:text-amber-400',
   },
+  slide_deck: {
+    icon: FileTextIcon,
+    bgColor: 'bg-indigo-500/10',
+    textColor: 'text-indigo-600 dark:text-indigo-400',
+  },
 };
 
 const ENTITY_LABEL: Record<string, string> = {
@@ -53,6 +58,7 @@ const ENTITY_LABEL: Record<string, string> = {
   podcast: 'Podcast',
   voiceover: 'Voiceover',
   infographic: 'Infographic',
+  slide_deck: 'Slide Deck',
 };
 
 function formatRelativeTime(dateStr: string): string {
@@ -78,6 +84,10 @@ const ENTITY_ROUTE: Record<string, { path: string; paramKey: string }> = {
   infographic: {
     path: '/infographics/$infographicId',
     paramKey: 'infographicId',
+  },
+  slide_deck: {
+    path: '/slides/$slideDeckId',
+    paramKey: 'slideDeckId',
   },
 };
 

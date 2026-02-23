@@ -128,6 +128,7 @@ describe('safety invariants', () => {
       'podcast/use-cases/get-job.ts',
       'voiceover/use-cases/get-job.ts',
       'infographic/use-cases/get-job.ts',
+      'slide-deck/use-cases/get-job.ts',
     ];
 
     for (const file of files) {
@@ -146,6 +147,7 @@ describe('safety invariants', () => {
       'podcast/use-cases/start-generation.ts',
       'voiceover/use-cases/start-generation.ts',
       'infographic/use-cases/generate-infographic.ts',
+      'slide-deck/use-cases/generate-slide-deck.ts',
       'document/use-cases/create-from-url.ts',
       'document/use-cases/create-from-research.ts',
       'document/use-cases/retry-processing.ts',

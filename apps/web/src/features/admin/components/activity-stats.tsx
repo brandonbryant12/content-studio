@@ -50,6 +50,12 @@ const ENTITY_CONFIG: Record<
     textColor: 'text-amber-600 dark:text-amber-400',
     label: 'Infographics',
   },
+  slide_deck: {
+    icon: FileTextIcon,
+    bgColor: 'bg-indigo-500/10',
+    textColor: 'text-indigo-600 dark:text-indigo-400',
+    label: 'Slide Decks',
+  },
 };
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -118,6 +124,8 @@ export function ActivityStats({
         {renderEntityCard('document', entityCounts, isLoading)}
         {renderEntityCard('podcast', entityCounts, isLoading)}
         {renderEntityCard('voiceover', entityCounts, isLoading)}
+        {renderEntityCard('infographic', entityCounts, isLoading)}
+        {renderEntityCard('slide_deck', entityCounts, isLoading)}
       </div>
     </div>
   );

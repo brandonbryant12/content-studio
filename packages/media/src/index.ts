@@ -20,6 +20,8 @@ export {
   InfographicNotFound,
   NotInfographicOwner,
   InfographicError,
+  SlideDeckNotFound,
+  SlideDeckError,
   PersonaNotFound,
   NotPersonaOwner,
   type MediaError,
@@ -190,6 +192,46 @@ export type {
 } from './infographic';
 
 export {
+  SlideDeckRepo,
+  SlideDeckRepoLive,
+  type SlideDeckRepoService,
+  type SlideDeckListOptions,
+} from './slide-deck';
+
+export {
+  createSlideDeck,
+  getSlideDeck,
+  listSlideDecks,
+  updateSlideDeck,
+  deleteSlideDeck,
+  generateSlideDeck,
+  getSlideDeckJob,
+  getSlideDeckVersions,
+  executeSlideDeckGeneration,
+  type CreateSlideDeckInput,
+  type GetSlideDeckInput,
+  type ListSlideDecksInput,
+  type UpdateSlideDeckInput,
+  type DeleteSlideDeckInput,
+  type GenerateSlideDeckInput,
+  type GenerateSlideDeckResult,
+  type GetSlideDeckJobInput,
+  type GetSlideDeckVersionsInput,
+  type ExecuteSlideDeckGenerationInput,
+  type ExecuteSlideDeckGenerationResult,
+} from './slide-deck';
+
+export type {
+  SlideDeck,
+  SlideDeckTheme,
+  SlideDeckStatusType,
+  SlideDeckOutput,
+  SlideDeckVersion,
+  SlideDeckVersionOutput,
+  SlideContent,
+} from './slide-deck';
+
+export {
   PersonaRepo,
   PersonaRepoLive,
   type PersonaRepoService,
@@ -218,6 +260,7 @@ import type { InfographicRepo } from './infographic';
 import type { StylePresetRepo } from './infographic';
 import type { PersonaRepo } from './persona';
 import type { PodcastRepo } from './podcast';
+import type { SlideDeckRepo } from './slide-deck';
 import type { VoiceoverRepo } from './voiceover';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
@@ -226,6 +269,7 @@ import { DocumentRepoLive } from './document';
 import { InfographicRepoLive, StylePresetRepoLive } from './infographic';
 import { PersonaRepoLive } from './persona';
 import { PodcastRepoLive } from './podcast';
+import { SlideDeckRepoLive } from './slide-deck';
 import { VoiceoverRepoLive } from './voiceover';
 
 // When adding a new repo, add it to both Media and MediaLive.
@@ -234,6 +278,7 @@ export type Media =
   | PodcastRepo
   | VoiceoverRepo
   | InfographicRepo
+  | SlideDeckRepo
   | StylePresetRepo
   | ActivityLogRepo
   | PersonaRepo;
@@ -244,6 +289,7 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     PodcastRepoLive,
     VoiceoverRepoLive,
     InfographicRepoLive,
+    SlideDeckRepoLive,
     StylePresetRepoLive,
     ActivityLogRepoLive,
     PersonaRepoLive,

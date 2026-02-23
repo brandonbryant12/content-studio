@@ -18,3 +18,7 @@ export {
   streamWritingAssistantChat,
   type StreamWritingAssistantChatInput,
 } from './stream-writing-assistant-chat';
+export {
+  streamSlidesAssistantChat,
+  type StreamSlidesAssistantChatInput,
+} from './stream-slides-assistant-chat';

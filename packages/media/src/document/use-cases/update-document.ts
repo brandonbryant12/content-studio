@@ -6,11 +6,11 @@ import {
   replaceTextContentSafely,
   withUseCaseSpan,
 } from '../../shared';
-import { sanitizeMetadata } from '../sanitize-metadata';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
 } from '../repos';
+import { sanitizeMetadata } from '../sanitize-metadata';
 
 // =============================================================================
 // Types

@@ -14,6 +14,12 @@ import {
   PodcastFormatSchema,
   VersionStatusSchema,
 } from '../schemas/podcasts';
+import {
+  SlideDeckStatus,
+  SlideDeckStatusSchema,
+  SlideDeckThemeSchema,
+  SlideLayoutSchema,
+} from '../schemas/slide-decks';
 import { VoiceoverStatus, VoiceoverStatusSchema } from '../schemas/voiceovers';
 
 describe('enum companion objects', () => {
@@ -62,6 +68,16 @@ describe('enum companion objects', () => {
       expect(JobType.GENERATE_AUDIO).toBe('generate-audio');
       expect(JobType.GENERATE_VOICEOVER).toBe('generate-voiceover');
       expect(JobType.GENERATE_INFOGRAPHIC).toBe('generate-infographic');
+      expect(JobType.GENERATE_SLIDE_DECK).toBe('generate-slide-deck');
+    });
+  });
+
+  describe('SlideDeckStatus', () => {
+    it('has all expected values', () => {
+      expect(SlideDeckStatus.DRAFT).toBe('draft');
+      expect(SlideDeckStatus.GENERATING).toBe('generating');
+      expect(SlideDeckStatus.READY).toBe('ready');
+      expect(SlideDeckStatus.FAILED).toBe('failed');
     });
   });
 });
@@ -207,6 +223,57 @@ describe('enum schemas', () => {
 
     it('rejects invalid statuses', () => {
       expect(() => decode('queued')).toThrow();
+    });
+  });
+
+  describe('SlideDeckThemeSchema', () => {
+    const decode = Schema.decodeUnknownSync(SlideDeckThemeSchema);
+
+    it('accepts valid themes', () => {
+      expect(decode('executive')).toBe('executive');
+      expect(decode('academic')).toBe('academic');
+      expect(decode('minimal')).toBe('minimal');
+      expect(decode('contrast')).toBe('contrast');
+      expect(decode('blueprint')).toBe('blueprint');
+      expect(decode('sunrise')).toBe('sunrise');
+      expect(decode('graphite')).toBe('graphite');
+      expect(decode('editorial')).toBe('editorial');
+    });
+
+    it('rejects invalid theme values', () => {
+      expect(() => decode('neon')).toThrow();
+    });
+  });
+
+  describe('SlideDeckStatusSchema', () => {
+    const decode = Schema.decodeUnknownSync(SlideDeckStatusSchema);
+
+    it('accepts valid statuses', () => {
+      expect(decode('draft')).toBe('draft');
+      expect(decode('generating')).toBe('generating');
+      expect(decode('ready')).toBe('ready');
+      expect(decode('failed')).toBe('failed');
+    });
+
+    it('rejects invalid statuses', () => {
+      expect(() => decode('queued')).toThrow();
+    });
+  });
+
+  describe('SlideLayoutSchema', () => {
+    const decode = Schema.decodeUnknownSync(SlideLayoutSchema);
+
+    it('accepts valid layouts', () => {
+      expect(decode('title')).toBe('title');
+      expect(decode('title_bullets')).toBe('title_bullets');
+      expect(decode('two_column')).toBe('two_column');
+      expect(decode('image_left')).toBe('image_left');
+      expect(decode('image_right')).toBe('image_right');
+      expect(decode('quote')).toBe('quote');
+    });
+
+    it('rejects invalid layouts', () => {
+      expect(() => decode('timeline')).toThrow();
     });
   });
 });

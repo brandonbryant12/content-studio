@@ -32,4 +32,6 @@ export {
   StylePresetNotFound,
 } from './infographic-errors';
 
+export { SlideDeckNotFound, SlideDeckError } from './slide-deck-errors';
+
 export { PersonaNotFound, NotPersonaOwner } from './persona-errors';

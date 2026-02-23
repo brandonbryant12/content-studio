@@ -60,6 +60,7 @@ export const ActivityLogActionSchema = Schema.Union(
   Schema.Literal('generated_audio'),
   Schema.Literal('generated_voiceover'),
   Schema.Literal('generated_infographic'),
+  Schema.Literal('generated_slide_deck'),
   Schema.Literal('generated_cover_image'),
 );
 
@@ -68,6 +69,7 @@ export const ActivityLogEntityTypeSchema = Schema.Union(
   Schema.Literal('podcast'),
   Schema.Literal('voiceover'),
   Schema.Literal('infographic'),
+  Schema.Literal('slide_deck'),
 );
 
 export const ActivityLogOutputSchema = Schema.Struct({

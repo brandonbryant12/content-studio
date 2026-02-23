@@ -69,6 +69,7 @@ export const JobType = {
   GENERATE_AUDIO: 'generate-audio',
   GENERATE_VOICEOVER: 'generate-voiceover',
   GENERATE_INFOGRAPHIC: 'generate-infographic',
+  GENERATE_SLIDE_DECK: 'generate-slide-deck',
   PROCESS_URL: 'process-url',
   PROCESS_RESEARCH: 'process-research',
 } as const;
@@ -94,10 +95,31 @@ export const GenerateAudioResultSchema = Schema.Struct({
   duration: Schema.Number,
 });
 
+export const GenerateVoiceoverResultSchema = Schema.Struct({
+  voiceoverId: Schema.String,
+  audioUrl: Schema.String,
+  duration: Schema.Number,
+});
+
+export const GenerateInfographicResultSchema = Schema.Struct({
+  infographicId: Schema.String,
+  imageUrl: Schema.String,
+  versionNumber: Schema.Number,
+});
+
+export const GenerateSlideDeckResultSchema = Schema.Struct({
+  slideDeckId: Schema.String,
+  versionNumber: Schema.Number,
+  slideCount: Schema.Number,
+});
+
 export const JobResultSchema = Schema.Union(
   GeneratePodcastResultSchema,
   GenerateScriptResultSchema,
   GenerateAudioResultSchema,
+  GenerateVoiceoverResultSchema,
+  GenerateInfographicResultSchema,
+  GenerateSlideDeckResultSchema,
 );
 
 export const JobOutputSchema = Schema.Struct({

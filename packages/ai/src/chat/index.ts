@@ -9,3 +9,7 @@ export {
   streamWritingAssistantChat,
   type StreamWritingAssistantChatInput,
 } from './use-cases';
+export {
+  streamSlidesAssistantChat,
+  type StreamSlidesAssistantChatInput,
+} from './use-cases';
