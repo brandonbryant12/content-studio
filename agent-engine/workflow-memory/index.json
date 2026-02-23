@@ -121,6 +121,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-self-improvement-enforce-core-workflow-keys-in-workflow-memory",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Enforce core workflow keys in workflow-memory",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "workflow-memory",
+      "registry",
+      "docs-drift",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
