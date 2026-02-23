@@ -6,7 +6,12 @@ import { oc, eventIterator } from '@orpc/contract';
 import { Schema } from 'effect';
 import { std } from './shared';
 
-export type EntityType = 'podcast' | 'document' | 'voiceover' | 'infographic';
+export type EntityType =
+  | 'podcast'
+  | 'document'
+  | 'voiceover'
+  | 'infographic'
+  | 'slide_deck';
 export type ChangeType = 'insert' | 'update' | 'delete';
 
 export interface EntityChangeEvent {
@@ -45,6 +50,15 @@ export interface InfographicJobCompletionEvent {
   error?: string;
 }
 
+export interface SlideDeckJobCompletionEvent {
+  type: 'slide_deck_job_completion';
+  jobId: string;
+  jobType: 'generate-slide-deck';
+  status: 'completed' | 'failed';
+  slideDeckId: string;
+  error?: string;
+}
+
 export interface ActivityLoggedEvent {
   type: 'activity_logged';
   activityId: string;
@@ -75,13 +89,20 @@ export type SSEEvent =
   | JobCompletionEvent
   | VoiceoverJobCompletionEvent
   | InfographicJobCompletionEvent
+  | SlideDeckJobCompletionEvent
   | DocumentJobCompletionEvent
   | ActivityLoggedEvent
   | ConnectionEvent;
 
 const EntityChangeEventSchema = Schema.Struct({
   type: Schema.Literal('entity_change'),
-  entityType: Schema.Literal('podcast', 'document', 'voiceover', 'infographic'),
+  entityType: Schema.Literal(
+    'podcast',
+    'document',
+    'voiceover',
+    'infographic',
+    'slide_deck',
+  ),
   changeType: Schema.Literal('insert', 'update', 'delete'),
   entityId: Schema.String,
   userId: Schema.String,
@@ -119,6 +140,15 @@ const InfographicJobCompletionEventSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
 });
 
+const SlideDeckJobCompletionEventSchema = Schema.Struct({
+  type: Schema.Literal('slide_deck_job_completion'),
+  jobId: Schema.String,
+  jobType: Schema.Literal('generate-slide-deck'),
+  status: Schema.Literal('completed', 'failed'),
+  slideDeckId: Schema.String,
+  error: Schema.optional(Schema.String),
+});
+
 const ActivityLoggedEventSchema = Schema.Struct({
   type: Schema.Literal('activity_logged'),
   activityId: Schema.String,
@@ -149,6 +179,7 @@ const SSEEventSchema = Schema.Union(
   JobCompletionEventSchema,
   VoiceoverJobCompletionEventSchema,
   InfographicJobCompletionEventSchema,
+  SlideDeckJobCompletionEventSchema,
   DocumentJobCompletionEventSchema,
   ActivityLoggedEventSchema,
   ConnectionEventSchema,

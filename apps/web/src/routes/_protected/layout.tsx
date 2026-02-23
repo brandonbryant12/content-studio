@@ -210,6 +210,14 @@ function Sidebar({
             collapsed={collapsed}
           />
 
+          <NavItem
+            to="/slides"
+            icon={FileTextIcon}
+            label="Slide Decks"
+            colorScheme="primary"
+            collapsed={collapsed}
+          />
+
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border/50 mx-1" />

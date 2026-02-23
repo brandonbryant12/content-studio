@@ -22,6 +22,7 @@ const ENTITY_TYPES = [
   { value: 'podcast', label: 'Podcasts' },
   { value: 'voiceover', label: 'Voiceovers' },
   { value: 'infographic', label: 'Infographics' },
+  { value: 'slide_deck', label: 'Slide Decks' },
 ];
 
 function FilterSelect({

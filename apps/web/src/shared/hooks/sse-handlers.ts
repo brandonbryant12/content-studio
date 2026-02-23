@@ -2,6 +2,7 @@ import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
   InfographicJobCompletionEvent,
+  SlideDeckJobCompletionEvent,
   DocumentJobCompletionEvent,
   EntityChangeEvent,
   ActivityLoggedEvent,
@@ -38,6 +39,18 @@ const getInfographicsListQueryKey = () =>
 const getInfographicVersionsQueryKey = (infographicId: string) =>
   apiClient.infographics.listVersions.queryOptions({
     input: { id: infographicId },
+  }).queryKey;
+
+const getSlideDeckQueryKey = (slideDeckId: string) =>
+  apiClient.slideDecks.get.queryOptions({ input: { id: slideDeckId } })
+    .queryKey;
+
+const getSlideDecksListQueryKey = () =>
+  apiClient.slideDecks.list.queryOptions({ input: {} }).queryKey;
+
+const getSlideDeckVersionsQueryKey = (slideDeckId: string) =>
+  apiClient.slideDecks.listVersions.queryOptions({
+    input: { id: slideDeckId },
   }).queryKey;
 
 export function handleJobCompletion(
@@ -104,6 +117,25 @@ export function handleInfographicJobCompletion(
   });
 }
 
+export function handleSlideDeckJobCompletion(
+  event: SlideDeckJobCompletionEvent,
+  queryClient: QueryClient,
+): void {
+  const { slideDeckId } = event;
+
+  queryClient.invalidateQueries({
+    queryKey: getSlideDeckQueryKey(slideDeckId),
+  });
+
+  queryClient.invalidateQueries({
+    queryKey: getSlideDecksListQueryKey(),
+  });
+
+  queryClient.invalidateQueries({
+    queryKey: getSlideDeckVersionsQueryKey(slideDeckId),
+  });
+}
+
 export function handleDocumentJobCompletion(
   event: DocumentJobCompletionEvent,
   queryClient: QueryClient,
@@ -143,6 +175,10 @@ const entityQueryKeys = {
     get: getInfographicQueryKey,
     list: getInfographicsListQueryKey,
   },
+  slide_deck: {
+    get: getSlideDeckQueryKey,
+    list: getSlideDecksListQueryKey,
+  },
 } as const;
 
 export function handleEntityChange(
@@ -158,6 +194,12 @@ export function handleEntityChange(
   if (entityType === 'infographic') {
     queryClient.invalidateQueries({
       queryKey: getInfographicVersionsQueryKey(entityId),
+    });
+  }
+
+  if (entityType === 'slide_deck') {
+    queryClient.invalidateQueries({
+      queryKey: getSlideDeckVersionsQueryKey(entityId),
     });
   }
 

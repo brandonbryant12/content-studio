@@ -4,6 +4,7 @@ import {
   handleJobCompletion,
   handleVoiceoverJobCompletion,
   handleInfographicJobCompletion,
+  handleSlideDeckJobCompletion,
   handleDocumentJobCompletion,
   handleEntityChange,
   handleActivityLogged,
@@ -65,6 +66,9 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 break;
               case 'infographic_job_completion':
                 handleInfographicJobCompletion(event, qc);
+                break;
+              case 'slide_deck_job_completion':
+                handleSlideDeckJobCompletion(event, qc);
                 break;
               case 'document_job_completion':
                 handleDocumentJobCompletion(event, qc);

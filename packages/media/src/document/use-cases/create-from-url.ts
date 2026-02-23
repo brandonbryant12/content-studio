@@ -10,8 +10,8 @@ import {
   withTransactionalStateAndEnqueue,
   withUseCaseSpan,
 } from '../../shared';
-import { sanitizeMetadata } from '../sanitize-metadata';
 import { DocumentRepo } from '../repos';
+import { sanitizeMetadata } from '../sanitize-metadata';
 import { validateUrl } from '../services/url-validator';
 
 export interface CreateFromUrlInput {

@@ -4,6 +4,7 @@ import {
   streamPersonaChat,
   synthesizePersona,
   streamWritingAssistantChat,
+  streamSlidesAssistantChat,
 } from '@repo/ai/chat';
 import {
   handleEffectWithProtocol,
@@ -57,6 +58,17 @@ const chatRouter = {
         streamWritingAssistantChat({ messages: input.messages }),
         errors,
         { requestId: context.requestId, span: 'api.chat.writingAssistant' },
+      ),
+  ),
+
+  slidesAssistant: protectedProcedure.chat.slidesAssistant.handler(
+    async ({ context, input, errors }) =>
+      handleEffectStreamWithProtocol(
+        context.runtime,
+        context.user,
+        streamSlidesAssistantChat({ messages: input.messages }),
+        errors,
+        { requestId: context.requestId, span: 'api.chat.slidesAssistant' },
       ),
   ),
 

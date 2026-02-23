@@ -6,6 +6,7 @@ import type { VoiceoverId } from '../schemas/brands';
 import type { InfographicId, InfographicVersionId } from '../schemas/brands';
 import type { JobId } from '../schemas/brands';
 import type { ActivityLogId } from '../schemas/brands';
+import type { SlideDeckId, SlideDeckVersionId } from '../schemas/brands';
 import {
   serializeActivityLog,
   serializeActivityLogEffect,
@@ -32,6 +33,14 @@ import {
   serializePodcastListItem,
   type Podcast,
 } from '../schemas/podcasts';
+import {
+  serializeSlideDeck,
+  serializeSlideDeckEffect,
+  serializeSlideDeckVersion,
+  serializeSlideDeckVersionsEffect,
+  type SlideDeck,
+  type SlideDeckVersion,
+} from '../schemas/slide-decks';
 import {
   serializeVoiceover,
   serializeVoiceoverEffect,
@@ -148,6 +157,52 @@ const makeInfographicVersion = (
   format: 'portrait',
   imageStorageKey: 'infographics/v1.png',
   thumbnailStorageKey: null,
+  createdAt: now,
+  ...overrides,
+});
+
+const makeSlideDeck = (overrides?: Partial<SlideDeck>): SlideDeck => ({
+  id: 'sld_0123456789abcdef' as SlideDeckId,
+  title: 'Test Slide Deck',
+  prompt: null,
+  sourceDocumentIds: ['doc_0123456789abcdef' as DocumentId],
+  theme: 'executive',
+  slides: [
+    {
+      id: 'slide-1',
+      title: 'Overview',
+      body: 'Summary',
+      bullets: ['Point A', 'Point B'],
+      layout: 'title_bullets',
+    },
+  ],
+  generatedHtml: '<html></html>',
+  status: 'ready',
+  errorMessage: null,
+  createdBy: 'user-1',
+  createdAt: now,
+  updatedAt: later,
+  ...overrides,
+});
+
+const makeSlideDeckVersion = (
+  overrides?: Partial<SlideDeckVersion>,
+): SlideDeckVersion => ({
+  id: 'sldv_0123456789abcdef' as SlideDeckVersionId,
+  slideDeckId: 'sld_0123456789abcdef' as SlideDeckId,
+  versionNumber: 1,
+  prompt: null,
+  sourceDocumentIds: ['doc_0123456789abcdef' as DocumentId],
+  theme: 'executive',
+  slides: [
+    {
+      id: 'slide-1',
+      title: 'Overview',
+      bullets: ['Point A'],
+      layout: 'title_bullets',
+    },
+  ],
+  generatedHtml: '<html>v1</html>',
   createdAt: now,
   ...overrides,
 });
@@ -413,6 +468,78 @@ describe('infographic serializers', () => {
       expect(result.versionNumber).toBe(1);
       expect(result.imageStorageKey).toBe('infographics/v1.png');
       expect(result.thumbnailStorageKey).toBeNull();
+    });
+  });
+});
+
+// =============================================================================
+// Slide Deck Serializers
+// =============================================================================
+
+describe('slide deck serializers', () => {
+  describe('serializeSlideDeck (sync)', () => {
+    it('converts dates to ISO strings', () => {
+      const result = serializeSlideDeck(makeSlideDeck());
+      expect(result.createdAt).toBe('2024-06-15T12:00:00.000Z');
+      expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
+    });
+
+    it('preserves structured slide fields', () => {
+      const result = serializeSlideDeck(makeSlideDeck());
+      expect(result.id).toBe('sld_0123456789abcdef');
+      expect(result.theme).toBe('executive');
+      expect(result.status).toBe('ready');
+      expect(result.slides[0]).toEqual({
+        id: 'slide-1',
+        title: 'Overview',
+        body: 'Summary',
+        bullets: ['Point A', 'Point B'],
+        layout: 'title_bullets',
+      });
+      expect(result.generatedHtml).toBe('<html></html>');
+    });
+  });
+
+  describe('serializeSlideDeckEffect', () => {
+    it('serializes slide deck via Effect', async () => {
+      const result = await Effect.runPromise(
+        serializeSlideDeckEffect(makeSlideDeck()),
+      );
+      expect(result.id).toBe('sld_0123456789abcdef');
+      expect(result.createdAt).toBe(now.toISOString());
+    });
+  });
+
+  describe('serializeSlideDeckVersion (sync)', () => {
+    it('converts date to ISO string', () => {
+      const result = serializeSlideDeckVersion(makeSlideDeckVersion());
+      expect(result.createdAt).toBe('2024-06-15T12:00:00.000Z');
+    });
+
+    it('preserves version fields', () => {
+      const result = serializeSlideDeckVersion(makeSlideDeckVersion());
+      expect(result.id).toBe('sldv_0123456789abcdef');
+      expect(result.slideDeckId).toBe('sld_0123456789abcdef');
+      expect(result.versionNumber).toBe(1);
+      expect(result.theme).toBe('executive');
+      expect(result.generatedHtml).toBe('<html>v1</html>');
+    });
+  });
+
+  describe('serializeSlideDeckVersionsEffect (batch)', () => {
+    it('serializes multiple versions', async () => {
+      const versions = [
+        makeSlideDeckVersion({ versionNumber: 1 }),
+        makeSlideDeckVersion({ versionNumber: 2 }),
+      ];
+
+      const result = await Effect.runPromise(
+        serializeSlideDeckVersionsEffect(versions),
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0]?.versionNumber).toBe(1);
+      expect(result[1]?.versionNumber).toBe(2);
     });
   });
 });

@@ -19,6 +19,7 @@ import { useInfographicList } from '@/features/infographics/hooks';
 import { useCreateInfographic } from '@/features/infographics/hooks/use-create-infographic';
 import { useOptimisticCreate as useCreatePodcast } from '@/features/podcasts/hooks/use-optimistic-create';
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
+import { useCreateSlideDeck, useSlideDecks } from '@/features/slides/hooks';
 import { useVoiceoversOrdered } from '@/features/voiceovers/hooks';
 import { useCreateVoiceover } from '@/features/voiceovers/hooks/use-create-voiceover';
 import { formatDuration } from '@/shared/lib/formatters';
@@ -37,6 +38,9 @@ export const Route = createFileRoute('/_protected/dashboard')({
       ),
       queryClient.ensureQueryData(
         apiClient.infographics.list.queryOptions({ input: {} }),
+      ),
+      queryClient.ensureQueryData(
+        apiClient.slideDecks.list.queryOptions({ input: {} }),
       ),
     ]),
   component: Dashboard,
@@ -136,6 +140,146 @@ function StatCard({
   );
 }
 
+interface DashboardStatsRowProps {
+  docCount: number;
+  podcastCount: number;
+  voiceoverCount: number;
+  infographicCount: number;
+  slideDeckCount: number;
+  docsLoading: boolean;
+  podcastsLoading: boolean;
+  voiceoversLoading: boolean;
+  infographicsLoading: boolean;
+  slideDecksLoading: boolean;
+}
+
+function DashboardStatsRow({
+  docCount,
+  podcastCount,
+  voiceoverCount,
+  infographicCount,
+  slideDeckCount,
+  docsLoading,
+  podcastsLoading,
+  voiceoversLoading,
+  infographicsLoading,
+  slideDecksLoading,
+}: DashboardStatsRowProps) {
+  return (
+    <div className="content-grid-4 mb-8 animate-fade-in-up stagger-1">
+      <StatCard
+        label="Documents"
+        linkTo="/documents"
+        icon={FileTextIcon}
+        iconBg="bg-sky-500/10"
+        iconColor="text-sky-600 dark:text-sky-400"
+        count={docCount}
+        isLoading={docsLoading}
+      />
+      <StatCard
+        label="Podcasts"
+        linkTo="/podcasts"
+        icon={MixerHorizontalIcon}
+        iconBg="bg-violet-500/10"
+        iconColor="text-violet-600 dark:text-violet-400"
+        count={podcastCount}
+        isLoading={podcastsLoading}
+      />
+      <StatCard
+        label="Voiceovers"
+        linkTo="/voiceovers"
+        icon={SpeakerLoudIcon}
+        iconBg="bg-emerald-500/10"
+        iconColor="text-emerald-600 dark:text-emerald-400"
+        count={voiceoverCount}
+        isLoading={voiceoversLoading}
+      />
+      <StatCard
+        label="Infographics"
+        linkTo="/infographics"
+        icon={ImageIcon}
+        iconBg="bg-amber-500/10"
+        iconColor="text-amber-600 dark:text-amber-400"
+        count={infographicCount}
+        isLoading={infographicsLoading}
+      />
+      <StatCard
+        label="Slide Decks"
+        linkTo="/slides"
+        icon={FileTextIcon}
+        iconBg="bg-indigo-500/10"
+        iconColor="text-indigo-600 dark:text-indigo-400"
+        count={slideDeckCount}
+        isLoading={slideDecksLoading}
+      />
+    </div>
+  );
+}
+
+interface SlideDeckRecentSectionProps {
+  count: number;
+  items: Array<{ id: string; title: string; slides: readonly unknown[] }>;
+  isLoading: boolean;
+  isCreating: boolean;
+  onCreate: () => void;
+}
+
+function SlideDeckRecentSection({
+  count,
+  items,
+  isLoading,
+  isCreating,
+  onCreate,
+}: SlideDeckRecentSectionProps) {
+  return (
+    <RecentSection
+      title="Slide Decks"
+      icon={FileTextIcon}
+      iconColor="text-indigo-600 dark:text-indigo-400"
+      count={count}
+      items={items}
+      isLoading={isLoading}
+      emptyMessage="No slide decks yet"
+      linkTo="/slides"
+      action={
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCreate}
+          disabled={isCreating}
+          className="gap-1.5 text-xs"
+          aria-label="Create slide deck"
+        >
+          {isCreating ? (
+            <Spinner className="w-3.5 h-3.5" />
+          ) : (
+            <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+          )}
+          New
+        </Button>
+      }
+      renderItem={(deck) => (
+        <Link
+          key={deck.id}
+          to="/slides/$slideDeckId"
+          params={{ slideDeckId: deck.id }}
+          className="recent-item"
+        >
+          <div className="recent-item-icon bg-indigo-500/10">
+            <FileTextIcon className="text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div className="recent-item-info">
+            <div className="recent-item-title">{deck.title}</div>
+            <div className="recent-item-meta">
+              {deck.slides.length} slide{deck.slides.length === 1 ? '' : 's'}
+            </div>
+          </div>
+        </Link>
+      )}
+    />
+  );
+}
+
 function Dashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -153,64 +297,48 @@ function Dashboard() {
     useVoiceoversOrdered({ orderBy: 'desc' });
   const { data: infographics, isLoading: infographicsLoading } =
     useInfographicList();
+  const { data: slideDecks, isLoading: slideDecksLoading } = useSlideDecks();
 
   const createPodcast = useCreatePodcast();
   const createVoiceover = useCreateVoiceover();
   const createInfographic = useCreateInfographic();
+  const createSlideDeck = useCreateSlideDeck();
+  const createSlideDeckFromDashboard = () => {
+    createSlideDeck.mutate({
+      title: 'Untitled Slide Deck',
+      theme: 'executive',
+      slides: [],
+    });
+  };
 
   const docCount = documents?.length ?? 0;
   const podcastCount = podcasts?.length ?? 0;
   const voiceoverCount = voiceovers?.length ?? 0;
   const infographicCount = infographics?.length ?? 0;
+  const slideDeckCount = slideDecks?.length ?? 0;
 
   const recentDocs = documents?.slice(0, 5) ?? [];
   const recentPodcasts = podcasts?.slice(0, 5) ?? [];
   const recentVoiceovers = voiceovers?.slice(0, 4) ?? [];
   const recentInfographics = infographics?.slice(0, 4) ?? [];
+  const recentSlideDecks = slideDecks?.slice(0, 4) ?? [];
 
   return (
     <div className="page-container">
       <h1 className="sr-only">Dashboard</h1>
 
-      {/* Stats Row */}
-      <div className="content-grid-4 mb-8 animate-fade-in-up stagger-1">
-        <StatCard
-          label="Documents"
-          linkTo="/documents"
-          icon={FileTextIcon}
-          iconBg="bg-sky-500/10"
-          iconColor="text-sky-600 dark:text-sky-400"
-          count={docCount}
-          isLoading={docsLoading}
-        />
-        <StatCard
-          label="Podcasts"
-          linkTo="/podcasts"
-          icon={MixerHorizontalIcon}
-          iconBg="bg-violet-500/10"
-          iconColor="text-violet-600 dark:text-violet-400"
-          count={podcastCount}
-          isLoading={podcastsLoading}
-        />
-        <StatCard
-          label="Voiceovers"
-          linkTo="/voiceovers"
-          icon={SpeakerLoudIcon}
-          iconBg="bg-emerald-500/10"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          count={voiceoverCount}
-          isLoading={voiceoversLoading}
-        />
-        <StatCard
-          label="Infographics"
-          linkTo="/infographics"
-          icon={ImageIcon}
-          iconBg="bg-amber-500/10"
-          iconColor="text-amber-600 dark:text-amber-400"
-          count={infographicCount}
-          isLoading={infographicsLoading}
-        />
-      </div>
+      <DashboardStatsRow
+        docCount={docCount}
+        podcastCount={podcastCount}
+        voiceoverCount={voiceoverCount}
+        infographicCount={infographicCount}
+        slideDeckCount={slideDeckCount}
+        docsLoading={docsLoading}
+        podcastsLoading={podcastsLoading}
+        voiceoversLoading={voiceoversLoading}
+        infographicsLoading={infographicsLoading}
+        slideDecksLoading={slideDecksLoading}
+      />
 
       {/* Content Grid - 2 columns on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
@@ -414,6 +542,14 @@ function Dashboard() {
               </div>
             </Link>
           )}
+        />
+
+        <SlideDeckRecentSection
+          count={slideDeckCount}
+          items={recentSlideDecks}
+          isLoading={slideDecksLoading}
+          isCreating={createSlideDeck.isPending}
+          onCreate={createSlideDeckFromDashboard}
         />
       </div>
 

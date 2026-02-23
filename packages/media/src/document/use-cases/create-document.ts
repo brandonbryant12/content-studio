@@ -7,8 +7,8 @@ import {
   calculateWordCount,
   withUseCaseSpan,
 } from '../../shared';
-import { sanitizeMetadata } from '../sanitize-metadata';
 import { DocumentRepo } from '../repos';
+import { sanitizeMetadata } from '../sanitize-metadata';
 
 // =============================================================================
 // Types

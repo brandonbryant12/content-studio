@@ -32,6 +32,6 @@ describe('chat handler invariants', () => {
     const source = readChatRouter();
     const matches = source.match(/span:\s*'api\.chat\.[^']+'/g) ?? [];
 
-    expect(matches).toHaveLength(5);
+    expect(matches).toHaveLength(6);
   });
 });

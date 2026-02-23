@@ -5,7 +5,12 @@ export type PublishEvent = (userId: string, event: SSEEvent) => void;
 export function emitEntityChange(
   publishEvent: PublishEvent,
   userId: string,
-  entityType: 'podcast' | 'voiceover' | 'infographic' | 'document',
+  entityType:
+    | 'podcast'
+    | 'voiceover'
+    | 'infographic'
+    | 'slide_deck'
+    | 'document',
   entityId: string,
 ): void {
   const event: EntityChangeEvent = {

@@ -78,6 +78,17 @@ export interface GenerateInfographicResult {
   readonly versionNumber: number;
 }
 
+export interface GenerateSlideDeckPayload {
+  readonly slideDeckId: string;
+  readonly userId: string;
+}
+
+export interface GenerateSlideDeckResult {
+  readonly slideDeckId: string;
+  readonly versionNumber: number;
+  readonly slideCount: number;
+}
+
 export interface ProcessUrlPayload {
   readonly documentId: string;
   readonly url: string;

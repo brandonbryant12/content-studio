@@ -171,3 +171,31 @@ export type InfographicVersionId = typeof InfographicVersionIdSchema.Type;
 
 export const generateInfographicVersionId = (): InfographicVersionId =>
   `inv_${generateRandomBase32()}` as InfographicVersionId;
+
+// Slide Deck ID
+
+export const SlideDeckIdSchema = Schema.String.pipe(
+  Schema.pattern(/^sld_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid slide deck ID format',
+  }),
+  Schema.brand('SlideDeckId'),
+);
+
+export type SlideDeckId = typeof SlideDeckIdSchema.Type;
+
+export const generateSlideDeckId = (): SlideDeckId =>
+  `sld_${generateRandomBase32()}` as SlideDeckId;
+
+// Slide Deck Version ID
+
+export const SlideDeckVersionIdSchema = Schema.String.pipe(
+  Schema.pattern(/^sldv_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid slide deck version ID format',
+  }),
+  Schema.brand('SlideDeckVersionId'),
+);
+
+export type SlideDeckVersionId = typeof SlideDeckVersionIdSchema.Type;
+
+export const generateSlideDeckVersionId = (): SlideDeckVersionId =>
+  `sldv_${generateRandomBase32()}` as SlideDeckVersionId;

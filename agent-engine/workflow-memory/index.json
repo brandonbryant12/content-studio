@@ -1,5 +1,30 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-implemented-slide-deck-generation-surface",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Implemented slide deck generation surface",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "slide-deck",
+      "db",
+      "media",
+      "api",
+      "worker",
+      "web",
+      "sse",
+      "queue",
+      "chat-stream"
+    ],
+    "importance": 0.86,
+    "recency": 1,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",

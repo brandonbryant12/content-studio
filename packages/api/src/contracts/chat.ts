@@ -28,6 +28,11 @@ const chatContract = oc
       .input(ChatMessagesInput)
       .output(ChatStreamOutput),
 
+    slidesAssistant: oc
+      .route({ method: 'POST', path: '/slides-assistant' })
+      .input(ChatMessagesInput)
+      .output(ChatStreamOutput),
+
     synthesizePersona: oc
       .route({ method: 'POST', path: '/synthesize-persona' })
       .input(ChatMessagesInput)

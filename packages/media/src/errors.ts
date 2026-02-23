@@ -21,6 +21,8 @@ export {
   NotInfographicOwner,
   InfographicError,
   StylePresetNotFound,
+  SlideDeckNotFound,
+  SlideDeckError,
   PersonaNotFound,
   NotPersonaOwner,
 } from './errors/index';
@@ -48,6 +50,8 @@ import type {
   NotInfographicOwner,
   InfographicError,
   StylePresetNotFound,
+  SlideDeckNotFound,
+  SlideDeckError,
   PersonaNotFound,
   NotPersonaOwner,
 } from './errors/index';
@@ -75,5 +79,7 @@ export type MediaError =
   | NotInfographicOwner
   | InfographicError
   | StylePresetNotFound
+  | SlideDeckNotFound
+  | SlideDeckError
   | PersonaNotFound
   | NotPersonaOwner;

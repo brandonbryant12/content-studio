@@ -5,6 +5,7 @@ import {
   type GenerateAudioPayload,
   type GenerateInfographicPayload,
   type GeneratePodcastPayload,
+  type GenerateSlideDeckPayload,
   type GenerateScriptPayload,
   type GenerateVoiceoverPayload,
   type Job,
@@ -17,6 +18,7 @@ import type {
   DocumentJobCompletionEvent,
   InfographicJobCompletionEvent,
   JobCompletionEvent,
+  SlideDeckJobCompletionEvent,
   VoiceoverJobCompletionEvent,
 } from '@repo/api/contracts';
 import {
@@ -36,6 +38,7 @@ import {
 } from './handlers/handlers';
 import { handleGenerateInfographic } from './handlers/infographic-handlers';
 import { handleProcessResearch } from './handlers/research-handlers';
+import { handleGenerateSlideDeck } from './handlers/slide-deck-handlers';
 import { handleGenerateVoiceover } from './handlers/voiceover-handlers';
 import { recoverOrphanedResearch } from './research-recovery';
 import { reapStaleJobs } from './stale-job-reaper';
@@ -50,6 +53,7 @@ type WorkerPayload =
   | GenerateAudioPayload
   | GenerateVoiceoverPayload
   | GenerateInfographicPayload
+  | GenerateSlideDeckPayload
   | ProcessUrlPayload
   | ProcessResearchPayload;
 
@@ -59,6 +63,7 @@ const JOB_TYPES: JobType[] = [
   'generate-audio',
   'generate-voiceover',
   'generate-infographic',
+  'generate-slide-deck',
   'process-url',
   'process-research',
 ];
@@ -99,6 +104,11 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
         case 'generate-infographic':
           yield* run(
             handleGenerateInfographic(job as Job<GenerateInfographicPayload>),
+          );
+          break;
+        case 'generate-slide-deck':
+          yield* run(
+            handleGenerateSlideDeck(job as Job<GenerateSlideDeckPayload>),
           );
           break;
         case 'generate-voiceover':
@@ -155,6 +165,18 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       };
       publishEvent(userId, event);
       emitEntityChange(publishEvent, userId, 'infographic', infographicId);
+    } else if ('slideDeckId' in job.payload) {
+      const { slideDeckId } = job.payload as GenerateSlideDeckPayload;
+      const event: SlideDeckJobCompletionEvent = {
+        type: 'slide_deck_job_completion',
+        jobId: job.id,
+        jobType: 'generate-slide-deck',
+        status,
+        slideDeckId,
+        error,
+      };
+      publishEvent(userId, event);
+      emitEntityChange(publishEvent, userId, 'slide_deck', slideDeckId);
     } else if ('voiceoverId' in job.payload) {
       const { voiceoverId } = job.payload as GenerateVoiceoverPayload;
       const event: VoiceoverJobCompletionEvent = {
