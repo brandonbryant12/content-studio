@@ -121,6 +121,22 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-automation-wrapper-drift-persists",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Automation wrapper drift persists",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "sanity-check",
+      "automation-drift",
+      "wrapper-sync"
+    ],
+    "confidence": 0.78,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
