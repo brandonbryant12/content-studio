@@ -173,7 +173,7 @@ function Sidebar({
           <NavItem
             to="/documents"
             icon={FileTextIcon}
-            label="Knowledge Base"
+            label="Documents"
             colorScheme="sky"
             collapsed={collapsed}
           />

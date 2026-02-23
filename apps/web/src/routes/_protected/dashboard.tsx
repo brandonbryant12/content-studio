@@ -4,16 +4,20 @@ import {
   MixerHorizontalIcon,
   PlusIcon,
   SpeakerLoudIcon,
-  UploadIcon,
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { DocumentListItem } from '@/features/documents/components/document-item';
 import type { ComponentType, ReactNode } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { AddFromUrlDialog } from '@/features/documents/components/add-from-url-dialog';
+import { DocumentEntryMenu } from '@/features/documents/components/document-entry-menu';
+import { ResearchChatContainer } from '@/features/documents/components/research-chat-container';
 import { UploadDocumentDialog } from '@/features/documents/components/upload-document-dialog';
+import { useCreateFromUrl } from '@/features/documents/hooks/use-create-from-url';
 import { useDocumentsOrdered } from '@/features/documents/hooks/use-document-list';
 import { useInfographicList } from '@/features/infographics/hooks';
 import { useCreateInfographic } from '@/features/infographics/hooks/use-create-infographic';
@@ -102,6 +106,72 @@ function RecentSection<T>({
   );
 }
 
+interface DocumentsRecentSectionProps {
+  count: number;
+  items: DocumentListItem[];
+  isLoading: boolean;
+  onUpload: () => void;
+  onUrl: () => void;
+  onResearch: () => void;
+}
+
+function DocumentsRecentSection({
+  count,
+  items,
+  isLoading,
+  onUpload,
+  onUrl,
+  onResearch,
+}: DocumentsRecentSectionProps) {
+  return (
+    <RecentSection
+      title="Documents"
+      icon={FileTextIcon}
+      iconColor="text-sky-600 dark:text-sky-400"
+      count={count}
+      items={items}
+      isLoading={isLoading}
+      emptyMessage="No documents yet"
+      linkTo="/documents"
+      action={
+        <DocumentEntryMenu
+          variant="ghost"
+          size="sm"
+          className="text-xs"
+          onResearch={onResearch}
+          onUrl={onUrl}
+          onUpload={onUpload}
+        />
+      }
+      emptyAction={
+        <DocumentEntryMenu
+          onResearch={onResearch}
+          onUrl={onUrl}
+          onUpload={onUpload}
+        />
+      }
+      renderItem={(doc) => (
+        <Link
+          key={doc.id}
+          to="/documents/$documentId"
+          params={{ documentId: doc.id }}
+          className="recent-item"
+        >
+          <div className="recent-item-icon bg-sky-500/10">
+            <FileTextIcon className="text-sky-600 dark:text-sky-400" />
+          </div>
+          <div className="recent-item-info">
+            <div className="recent-item-title">{doc.title}</div>
+            <div className="recent-item-meta">
+              {doc.wordCount.toLocaleString()} words
+            </div>
+          </div>
+        </Link>
+      )}
+    />
+  );
+}
+
 interface StatCardProps {
   label: string;
   linkTo: string;
@@ -138,6 +208,8 @@ function StatCard({
 
 function Dashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [urlDialogOpen, setUrlDialogOpen] = useState(false);
+  const [researchDialogOpen, setResearchDialogOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Dashboard - Content Studio';
@@ -157,6 +229,21 @@ function Dashboard() {
   const createPodcast = useCreatePodcast();
   const createVoiceover = useCreateVoiceover();
   const createInfographic = useCreateInfographic();
+  const createFromUrlMutation = useCreateFromUrl();
+
+  const handleCreateFromUrl = useCallback(
+    (url: string, title?: string) => {
+      createFromUrlMutation.mutate(
+        { url, title },
+        {
+          onSuccess: () => {
+            setUrlDialogOpen(false);
+          },
+        },
+      );
+    },
+    [createFromUrlMutation],
+  );
 
   const docCount = documents?.length ?? 0;
   const podcastCount = podcasts?.length ?? 0;
@@ -214,54 +301,13 @@ function Dashboard() {
 
       {/* Content Grid - 2 columns on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
-        <RecentSection
-          title="Documents"
-          icon={FileTextIcon}
-          iconColor="text-sky-600 dark:text-sky-400"
+        <DocumentsRecentSection
           count={docCount}
           items={recentDocs}
           isLoading={docsLoading}
-          emptyMessage="No documents yet"
-          linkTo="/documents"
-          action={
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setUploadOpen(true)}
-              className="gap-1.5 text-xs"
-              aria-label="Upload document"
-            >
-              <UploadIcon className="w-3.5 h-3.5" aria-hidden="true" />
-              Upload
-            </Button>
-          }
-          emptyAction={
-            <button
-              onClick={() => setUploadOpen(true)}
-              className="text-link mt-2"
-              type="button"
-            >
-              Upload your first document
-            </button>
-          }
-          renderItem={(doc) => (
-            <Link
-              key={doc.id}
-              to="/documents/$documentId"
-              params={{ documentId: doc.id }}
-              className="recent-item"
-            >
-              <div className="recent-item-icon bg-sky-500/10">
-                <FileTextIcon className="text-sky-600 dark:text-sky-400" />
-              </div>
-              <div className="recent-item-info">
-                <div className="recent-item-title">{doc.title}</div>
-                <div className="recent-item-meta">
-                  {doc.wordCount.toLocaleString()} words
-                </div>
-              </div>
-            </Link>
-          )}
+          onResearch={() => setResearchDialogOpen(true)}
+          onUrl={() => setUrlDialogOpen(true)}
+          onUpload={() => setUploadOpen(true)}
         />
 
         <RecentSection
@@ -418,6 +464,16 @@ function Dashboard() {
       </div>
 
       <UploadDocumentDialog open={uploadOpen} onOpenChange={setUploadOpen} />
+      <AddFromUrlDialog
+        open={urlDialogOpen}
+        onOpenChange={setUrlDialogOpen}
+        onSubmit={handleCreateFromUrl}
+        isSubmitting={createFromUrlMutation.isPending}
+      />
+      <ResearchChatContainer
+        open={researchDialogOpen}
+        onOpenChange={setResearchDialogOpen}
+      />
     </div>
   );
 }

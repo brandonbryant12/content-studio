@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_protected/documents/')({
 
 function DocumentsPage() {
   useEffect(() => {
-    document.title = 'Knowledge Base - Content Studio';
+    document.title = 'Documents - Content Studio';
   }, []);
 
   return <DocumentListContainer />;
