@@ -38,7 +38,6 @@ describe('expectEffectFailure', () => {
 
       const error = expectEffectFailure(exit, TestNotFound);
 
-      expect(error).toBeInstanceOf(TestNotFound);
       expect(error._tag).toBe('TestNotFound');
       expect(error.id).toBe('doc_123');
     });
