@@ -121,6 +121,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-frontend-query-retry-policy-gaps",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Frontend query retry policy gaps",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "frontend",
+      "react-query"
+    ],
+    "importance": 0.6,
+    "confidence": 0.82,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
