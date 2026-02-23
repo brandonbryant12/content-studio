@@ -21,7 +21,6 @@ export interface ListVoicesOptions {
 export interface PreviewVoiceOptions {
   readonly voiceId: GeminiVoiceId;
   readonly text?: string; // Uses default sample text if not provided
-  readonly audioEncoding?: AudioEncoding;
 }
 
 /**
@@ -29,6 +28,7 @@ export interface PreviewVoiceOptions {
  */
 export interface PreviewVoiceResult {
   readonly audioContent: Buffer;
+  // Google Gemini currently returns LINEAR16 WAV; keep encoding explicit for future providers.
   readonly audioEncoding: AudioEncoding;
   readonly voiceId: GeminiVoiceId;
 }
@@ -55,8 +55,6 @@ export interface SpeakerVoiceConfig {
 export interface SynthesizeOptions {
   readonly turns: readonly SpeakerTurn[];
   readonly voiceConfigs: readonly SpeakerVoiceConfig[];
-  readonly audioEncoding?: AudioEncoding; // Default: 'MP3'
-  readonly languageCode?: string; // Default: 'en-US'
 }
 
 /**
@@ -64,6 +62,7 @@ export interface SynthesizeOptions {
  */
 export interface SynthesizeResult {
   readonly audioContent: Buffer; // Raw audio bytes
+  // Google Gemini currently returns LINEAR16 WAV; keep encoding explicit for future providers.
   readonly audioEncoding: AudioEncoding;
   readonly mimeType: string; // Actual mime type from API response (e.g., 'audio/wav', 'audio/mpeg')
 }

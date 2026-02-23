@@ -69,13 +69,12 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
       }).pipe(Effect.provide(layer)),
     );
 
-    it.effect('returns valid audio format (WAV/LINEAR16)', () =>
+    it.effect('returns LINEAR16 WAV audio', () =>
       Effect.gen(function* () {
         const tts = yield* TTS;
         const result = yield* tts.previewVoice({
           voiceId: 'Kore',
           text: 'Testing audio format.',
-          audioEncoding: 'LINEAR16',
         });
 
         expect(result.audioEncoding).toBe('LINEAR16');
@@ -84,30 +83,6 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
         // WAV files should start with RIFF header
         const header = result.audioContent.slice(0, 4).toString('ascii');
         expect(header).toBe('RIFF');
-      }).pipe(Effect.provide(layer)),
-    );
-
-    it.effect('returns valid audio format (MP3)', () =>
-      Effect.gen(function* () {
-        const tts = yield* TTS;
-        const result = yield* tts.previewVoice({
-          voiceId: 'Puck',
-          text: 'Testing MP3 format.',
-          audioEncoding: 'MP3',
-        });
-
-        expect(result.audioEncoding).toBe('MP3');
-        expect(result.audioContent.length).toBeGreaterThan(0);
-
-        const firstByte = result.audioContent[0] ?? 0;
-        const secondByte = result.audioContent[1] ?? 0;
-        const thirdByte = result.audioContent[2] ?? 0;
-
-        const hasId3Tag =
-          firstByte === 0x49 && secondByte === 0x44 && thirdByte === 0x33;
-        const hasFrameSync = firstByte === 0xff && (secondByte & 0xe0) === 0xe0;
-
-        expect(hasId3Tag || hasFrameSync).toBe(true);
       }).pipe(Effect.provide(layer)),
     );
 
@@ -157,16 +132,17 @@ describe.skipIf(!GEMINI_API_KEY)('TTS Live Integration', () => {
       }).pipe(Effect.provide(layer)),
     );
 
-    it.effect('supports different audio encodings for synthesis', () =>
+    it.effect('returns LINEAR16 WAV for synthesis', () =>
       Effect.gen(function* () {
         const tts = yield* TTS;
         const result = yield* tts.synthesize({
           turns: [{ speaker: 'narrator', text: 'Testing audio format.' }],
           voiceConfigs: [{ speakerAlias: 'narrator', voiceId: 'Alnilam' }],
-          audioEncoding: 'LINEAR16',
         });
 
         expect(result.audioContent.length).toBeGreaterThan(0);
+        expect(result.audioEncoding).toBe('LINEAR16');
+        expect(result.mimeType).toBe('audio/wav');
         const header = result.audioContent.slice(0, 4).toString('ascii');
         expect(header).toBe('RIFF');
       }).pipe(Effect.provide(layer)),
