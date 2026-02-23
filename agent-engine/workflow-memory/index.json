@@ -79,6 +79,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-refined-react-query-retry-behavior",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Refined React Query retry behavior",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "react-query",
+      "retry-policy"
+    ],
+    "importance": 0.3,
+    "confidence": 0.6,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-removed-svg-creator-feature-end-to-end",
     "date": "2026-02-23",
     "month": "2026-02",
