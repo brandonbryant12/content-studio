@@ -3,7 +3,11 @@ import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
-import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withTransactionalStateAndEnqueue,
+} from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -34,6 +38,11 @@ export const startGeneration = (input: StartGenerationInput) =>
       input.podcastId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+      attributes: { 'podcast.id': input.podcastId },
+    });
 
     const existingJob = yield* queue.findPendingJobForPodcast(podcast.id);
     if (existingJob) {
@@ -62,8 +71,4 @@ export const startGeneration = (input: StartGenerationInput) =>
     );
 
     return { jobId: job.id, status: job.status };
-  }).pipe(
-    Effect.withSpan('useCase.startGeneration', {
-      attributes: { 'podcast.id': input.podcastId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.startGeneration'));

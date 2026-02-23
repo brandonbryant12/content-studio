@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface GetPersonaInput {
@@ -12,10 +13,11 @@ export const getPersona = (input: GetPersonaInput) =>
     const personaRepo = yield* PersonaRepo;
 
     const p = yield* personaRepo.findByIdForUser(input.personaId, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.personaId,
+      attributes: { 'persona.id': input.personaId },
+    });
 
     return p;
-  }).pipe(
-    Effect.withSpan('useCase.getPersona', {
-      attributes: { 'persona.id': input.personaId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.getPersona'));

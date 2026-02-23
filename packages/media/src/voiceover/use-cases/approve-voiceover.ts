@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -26,6 +27,11 @@ export const approveVoiceover = (input: ApproveVoiceoverInput) =>
 
     // Verify voiceover exists
     yield* voiceoverRepo.findById(input.voiceoverId);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+      attributes: { 'voiceover.id': input.voiceoverId },
+    });
 
     // Set approval
     const updatedVoiceover = yield* voiceoverRepo.setApproval(
@@ -34,8 +40,4 @@ export const approveVoiceover = (input: ApproveVoiceoverInput) =>
     );
 
     return { voiceover: updatedVoiceover };
-  }).pipe(
-    Effect.withSpan('useCase.approveVoiceover', {
-      attributes: { 'voiceover.id': input.voiceoverId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.approveVoiceover'));

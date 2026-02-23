@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Require use-case span attributes",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "observability",
+      "invariants",
+      "use-cases"
+    ],
+    "importance": 0.6,
+    "confidence": 0.6,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-add-product-vision-and-product-owner-automation-lanes",
     "date": "2026-02-23",
     "month": "2026-02",

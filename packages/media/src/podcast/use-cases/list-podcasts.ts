@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Podcast } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -36,6 +37,13 @@ export const listPodcasts = (input: ListPodcastsInput) =>
       limit,
       offset,
     };
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+      attributes: {
+        'filter.projectId': input.projectId,
+      },
+    });
 
     const [podcasts, total] = yield* Effect.all(
       [podcastRepo.list(options), podcastRepo.count(options)],
@@ -47,10 +55,4 @@ export const listPodcasts = (input: ListPodcastsInput) =>
       total,
       hasMore: offset + podcasts.length < total,
     };
-  }).pipe(
-    Effect.withSpan('useCase.listPodcasts', {
-      attributes: {
-        'filter.projectId': input.projectId,
-      },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.listPodcasts'));

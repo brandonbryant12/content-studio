@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -21,11 +22,16 @@ export interface RevokeVoiceoverApprovalInput {
  */
 export const revokeVoiceoverApproval = (input: RevokeVoiceoverApprovalInput) =>
   Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
+    const user = yield* requireRole(Role.ADMIN);
     const voiceoverRepo = yield* VoiceoverRepo;
 
     // Verify voiceover exists
     yield* voiceoverRepo.findById(input.voiceoverId);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+      attributes: { 'voiceover.id': input.voiceoverId },
+    });
 
     // Clear approval
     const updatedVoiceover = yield* voiceoverRepo.clearApproval(
@@ -33,8 +39,4 @@ export const revokeVoiceoverApproval = (input: RevokeVoiceoverApprovalInput) =>
     );
 
     return { voiceover: updatedVoiceover };
-  }).pipe(
-    Effect.withSpan('useCase.revokeVoiceoverApproval', {
-      attributes: { 'voiceover.id': input.voiceoverId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.revokeVoiceoverApproval'));

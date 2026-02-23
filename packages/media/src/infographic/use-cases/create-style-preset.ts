@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { StyleProperty } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { StylePresetRepo } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -22,10 +23,16 @@ export const createStylePreset = (input: CreateStylePresetInput) =>
     const user = yield* getCurrentUser;
     const repo = yield* StylePresetRepo;
 
-    return yield* repo.insert({
+    const preset = yield* repo.insert({
       name: input.name,
       properties: sanitizeStyleProperties(input.properties),
       isBuiltIn: false,
       createdBy: user.id,
     });
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: preset.id,
+      attributes: { 'stylePreset.id': preset.id },
+    });
+    return preset;
   }).pipe(Effect.withSpan('useCase.createStylePreset'));

@@ -1,5 +1,6 @@
 import { requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -21,18 +22,19 @@ export interface RevokeApprovalInput {
  */
 export const revokeApproval = (input: RevokeApprovalInput) =>
   Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
+    const user = yield* requireRole(Role.ADMIN);
     const podcastRepo = yield* PodcastRepo;
 
     // Verify podcast exists
     yield* podcastRepo.findById(input.podcastId);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+      attributes: { 'podcast.id': input.podcastId },
+    });
 
     // Clear approval
     const updatedPodcast = yield* podcastRepo.clearApproval(input.podcastId);
 
     return { podcast: updatedPodcast };
-  }).pipe(
-    Effect.withSpan('useCase.revokeApproval', {
-      attributes: { 'podcast.id': input.podcastId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.revokeApproval'));

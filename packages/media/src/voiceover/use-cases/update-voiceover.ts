@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { UpdateVoiceover } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -22,10 +23,11 @@ export const updateVoiceover = (input: UpdateVoiceoverInput) =>
     const voiceoverRepo = yield* VoiceoverRepo;
 
     yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+      attributes: { 'voiceover.id': input.voiceoverId },
+    });
 
     return yield* voiceoverRepo.update(input.voiceoverId, input.data);
-  }).pipe(
-    Effect.withSpan('useCase.updateVoiceover', {
-      attributes: { 'voiceover.id': input.voiceoverId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.updateVoiceover'));

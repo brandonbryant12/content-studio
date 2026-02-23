@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 import type { ProcessUrlPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
 import {
+  annotateUseCaseSpan,
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
@@ -30,9 +31,25 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
     const existing = yield* documentRepo.findBySourceUrl(url, user.id);
     if (existing) {
       if (existing.status === 'ready') {
+        yield* annotateUseCaseSpan({
+          userId: user.id,
+          resourceId: existing.id,
+          attributes: {
+            'document.id': existing.id,
+            'document.url': input.url,
+          },
+        });
         return existing;
       }
       if (existing.status === 'processing') {
+        yield* annotateUseCaseSpan({
+          userId: user.id,
+          resourceId: existing.id,
+          attributes: {
+            'document.id': existing.id,
+            'document.url': input.url,
+          },
+        });
         return yield* new DocumentAlreadyProcessing({ id: existing.id });
       }
       // If failed, allow creating a new one (delete the old one)
@@ -56,6 +73,14 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
           createdBy: user.id,
         });
         insertedDocumentId = doc.id;
+        yield* annotateUseCaseSpan({
+          userId: user.id,
+          resourceId: doc.id,
+          attributes: {
+            'document.id': doc.id,
+            'document.url': input.url,
+          },
+        });
 
         yield* enqueueJob({
           type: JobType.PROCESS_URL,
@@ -78,8 +103,4 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
             )
           : Effect.void,
     );
-  }).pipe(
-    Effect.withSpan('useCase.createFromUrl', {
-      attributes: { 'document.url': input.url },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.createFromUrl'));

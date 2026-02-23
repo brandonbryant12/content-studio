@@ -1,6 +1,7 @@
 import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Document } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -34,6 +35,15 @@ export const listDocuments = (input: ListDocumentsInput) =>
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: createdBy ?? 'list',
+      attributes: {
+        'filter.userId': input.userId,
+        'pagination.limit': input.limit,
+        'pagination.offset': input.offset,
+      },
+    });
 
     const [documents, total] = yield* Effect.all(
       [
@@ -54,12 +64,4 @@ export const listDocuments = (input: ListDocumentsInput) =>
       total,
       hasMore: offset + documents.length < total,
     };
-  }).pipe(
-    Effect.withSpan('useCase.listDocuments', {
-      attributes: {
-        'filter.userId': input.userId,
-        'pagination.limit': input.limit,
-        'pagination.offset': input.offset,
-      },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.listDocuments'));

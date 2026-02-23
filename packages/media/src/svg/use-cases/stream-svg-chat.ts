@@ -3,6 +3,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Db } from '@repo/db/effect';
 import type { SvgMessage } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { SvgMessageRepo, SvgRepo } from '../repos';
 import { extractSvgBlock, sanitizeSvg } from '../sanitize-svg';
 
@@ -23,6 +24,11 @@ export const streamSvgChat = (input: StreamSvgChatInput) =>
     const repo = yield* SvgRepo;
     const messageRepo = yield* SvgMessageRepo;
     const dbContext = yield* Effect.context<Db>();
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.svgId,
+      attributes: { 'svg.id': input.svgId },
+    });
 
     const runDb = <A, E>(effect: Effect.Effect<A, E, Db>) =>
       Effect.runPromise(effect.pipe(Effect.provide(dbContext)));
@@ -72,8 +78,4 @@ export const streamSvgChat = (input: StreamSvgChatInput) =>
     return yield* streamEffect.pipe(
       Effect.tapError(() => repo.failGeneration(input.svgId)),
     );
-  }).pipe(
-    Effect.withSpan('useCase.streamSvgChat', {
-      attributes: { 'svg.id': input.svgId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.streamSvgChat'));

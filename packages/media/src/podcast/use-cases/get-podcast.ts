@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 export interface GetPodcastInput {
@@ -14,9 +15,10 @@ export const getPodcast = (input: GetPodcastInput) =>
       input.podcastId,
       user.id,
     );
-    return podcast;
-  }).pipe(
-    Effect.withSpan('useCase.getPodcast', {
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
-    }),
-  );
+    });
+    return podcast;
+  }).pipe(Effect.withSpan('useCase.getPodcast'));

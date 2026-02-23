@@ -1,5 +1,6 @@
 import { DocumentStatus, type Document } from '@repo/db/schema';
 import { createMockStorage } from '@repo/storage/testing';
+import { createTestUser, withTestUser } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UrlFetchError } from '../../../errors';
@@ -89,10 +90,13 @@ describe('processUrl', () => {
       }),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );
+    const user = createTestUser({ id: 'user_123' });
 
     const result = await Effect.runPromise(
-      processUrl({ documentId, url: 'https://example.com' }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        processUrl({ documentId, url: 'https://example.com' }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 
@@ -138,10 +142,13 @@ describe('processUrl', () => {
       createMockUrlScraper({ shouldFail: true }),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );
+    const user = createTestUser({ id: 'user_456' });
 
     const result = await Effect.runPromiseExit(
-      processUrl({ documentId, url: 'https://example.com' }).pipe(
-        Effect.provide(layers),
+      withTestUser(user)(
+        processUrl({ documentId, url: 'https://example.com' }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 

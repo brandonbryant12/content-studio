@@ -2,7 +2,11 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateInfographicPayload } from '@repo/queue';
-import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withTransactionalStateAndEnqueue,
+} from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -28,6 +32,11 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
     const repo = yield* InfographicRepo;
 
     const existing = yield* repo.findByIdForUser(input.id, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'infographic.id': input.id },
+    });
 
     // Enqueue job
     const payload: GenerateInfographicPayload = {
@@ -58,8 +67,4 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
       jobId: job.id,
       status: job.status,
     };
-  }).pipe(
-    Effect.withSpan('useCase.generateInfographic', {
-      attributes: { 'infographic.id': input.id },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.generateInfographic'));

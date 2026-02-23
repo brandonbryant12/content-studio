@@ -1,4 +1,9 @@
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
@@ -8,8 +13,11 @@ import {
 import { awaitDocumentsReady } from '../await-documents-ready';
 
 describe('awaitDocumentsReady', () => {
+  let testUser: ReturnType<typeof createTestUser>;
+
   beforeEach(() => {
     resetAllFactories();
+    testUser = createTestUser();
   });
 
   it('returns immediately when all documents are ready', async () => {
@@ -23,8 +31,10 @@ describe('awaitDocumentsReady', () => {
     );
 
     const result = await Effect.runPromise(
-      awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
-        Effect.provide(layers),
+      withTestUser(testUser)(
+        awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 
@@ -42,8 +52,10 @@ describe('awaitDocumentsReady', () => {
     );
 
     const result = await Effect.runPromiseExit(
-      awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
-        Effect.provide(layers),
+      withTestUser(testUser)(
+        awaitDocumentsReady({ documentIds: [doc.id] }).pipe(
+          Effect.provide(layers),
+        ),
       ),
     );
 
@@ -61,7 +73,9 @@ describe('awaitDocumentsReady', () => {
     );
 
     const result = await Effect.runPromise(
-      awaitDocumentsReady({ documentIds: [] }).pipe(Effect.provide(layers)),
+      withTestUser(testUser)(
+        awaitDocumentsReady({ documentIds: [] }).pipe(Effect.provide(layers)),
+      ),
     );
 
     expect(result).toBeUndefined();

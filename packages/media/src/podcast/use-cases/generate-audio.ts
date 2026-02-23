@@ -4,6 +4,7 @@ import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import type { Podcast, ScriptSegment } from '@repo/db/schema';
 import { PersonaRepo } from '../../persona';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -56,6 +57,11 @@ export const generateAudio = (input: GenerateAudioInput) =>
       input.podcastId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+      attributes: { 'podcast.id': input.podcastId },
+    });
 
     if (podcast.status !== 'script_ready') {
       return yield* Effect.fail(
@@ -158,7 +164,5 @@ export const generateAudio = (input: GenerateAudioInput) =>
         return yield* Effect.fail(error);
       }),
     ),
-    Effect.withSpan('useCase.generateAudio', {
-      attributes: { 'podcast.id': input.podcastId },
-    }),
+    Effect.withSpan('useCase.generateAudio'),
   );

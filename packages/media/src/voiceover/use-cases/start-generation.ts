@@ -4,7 +4,11 @@ import { Effect } from 'effect';
 import type { JobId, JobStatus } from '@repo/db/schema';
 import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
-import { enqueueJob, withTransactionalStateAndEnqueue } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  enqueueJob,
+  withTransactionalStateAndEnqueue,
+} from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -36,6 +40,11 @@ export const startVoiceoverGeneration = (
       input.voiceoverId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.voiceoverId,
+      attributes: { 'voiceover.id': input.voiceoverId },
+    });
 
     const text = voiceover.text.trim();
     if (!text) {
@@ -73,8 +82,4 @@ export const startVoiceoverGeneration = (
     );
 
     return { jobId: job.id, status: job.status };
-  }).pipe(
-    Effect.withSpan('useCase.startVoiceoverGeneration', {
-      attributes: { 'voiceover.id': input.voiceoverId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.startVoiceoverGeneration'));
