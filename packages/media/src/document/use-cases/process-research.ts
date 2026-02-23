@@ -1,11 +1,14 @@
 import { DeepResearch } from '@repo/ai';
-import { getCurrentUser } from '@repo/auth/policy';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Data, Effect } from 'effect';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
-import { annotateUseCaseSpan, formatUnknownError } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  formatUnknownError,
+  withUseCaseSpan,
+} from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 
@@ -38,21 +41,20 @@ const STEADY_POLL_MS = 60_000;
 export const processResearch = (input: ProcessResearchInput) =>
   Effect.gen(function* () {
     const { documentId, query } = input;
-    const user = yield* getCurrentUser;
     const research = yield* DeepResearch;
     const documentRepo = yield* DocumentRepo;
     const storage = yield* Storage;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: documentId,
-      attributes: {
-        'document.id': documentId,
-        'document.query': query,
-      },
-    });
 
     // 1. Check if we can resume an existing research operation
     const doc = yield* documentRepo.findById(documentId);
+    yield* annotateUseCaseSpan({
+      userId: doc.createdBy,
+      resourceId: documentId,
+      attributes: {
+        'document.id': documentId,
+        'document.query': input.query,
+      },
+    });
     const canResume =
       doc.researchConfig?.operationId &&
       doc.researchConfig?.researchStatus === 'in_progress';
@@ -217,5 +219,5 @@ export const processResearch = (input: ProcessResearchInput) =>
           return yield* Effect.fail(error);
         }),
     ),
-    Effect.withSpan('useCase.processResearch'),
+    withUseCaseSpan('useCase.processResearch'),
   );

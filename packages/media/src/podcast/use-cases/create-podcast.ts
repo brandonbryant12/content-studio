@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -35,4 +35,4 @@ export const createPodcast = (input: CreatePodcastInput) =>
       attributes: { 'podcast.id': podcast.id },
     });
     return podcast;
-  }).pipe(Effect.withSpan('useCase.createPodcast'));
+  }).pipe(withUseCaseSpan('useCase.createPodcast'));

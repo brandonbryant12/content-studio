@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -20,12 +20,12 @@ export const getDocument = (input: GetDocumentInput) =>
     const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.id,
       attributes: { 'document.id': input.id },
     });
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     return doc;
-  }).pipe(Effect.withSpan('useCase.getDocument'));
+  }).pipe(withUseCaseSpan('useCase.getDocument'));

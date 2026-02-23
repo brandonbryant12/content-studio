@@ -1,7 +1,11 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { annotateUseCaseSpan, replaceTextContentSafely } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  replaceTextContentSafely,
+  withUseCaseSpan,
+} from '../../shared';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
@@ -27,12 +31,12 @@ export const updateDocument = (input: UpdateDocumentInput) =>
     const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const existing = yield* documentRepo.findByIdForUser(input.id, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.id,
       attributes: { 'document.id': input.id },
     });
+    const existing = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     const updateInput: RepoUpdateInput = {};
 
@@ -58,4 +62,4 @@ export const updateDocument = (input: UpdateDocumentInput) =>
           wordCount,
         }),
     });
-  }).pipe(Effect.withSpan('useCase.updateDocument'));
+  }).pipe(withUseCaseSpan('useCase.updateDocument'));

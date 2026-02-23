@@ -50,10 +50,13 @@ const createTestJob = (
 const createMockDocumentRepo = (options?: {
   onUpdateContent?: (id: string, data: unknown) => void;
   onUpdateStatus?: (id: string, status: string, errorMessage?: string) => void;
+  ownerId?: string;
 }): Layer.Layer<DocumentRepo> => {
+  const ownerId = options?.ownerId ?? 'user-123';
   const service: DocumentRepoService = {
     insert: () => Effect.die('not implemented'),
-    findById: () => Effect.die('not implemented'),
+    findById: (id) =>
+      Effect.succeed(createTestDocument({ id: id as DocumentId, createdBy: ownerId })),
     findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
@@ -399,7 +402,10 @@ describe('handleProcessUrl', () => {
       // Use Effect.fail (not die) so the handler's catchAll can catch it
       const failingDocRepoLayer = Layer.succeed(DocumentRepo, {
         insert: () => Effect.die('not implemented'),
-        findById: () => Effect.die('not implemented'),
+        findById: (id) =>
+          Effect.succeed(
+            createTestDocument({ id: id as DocumentId, createdBy: 'user-123' }),
+          ),
         findByIdForUser: () => Effect.die('not implemented'),
         list: () => Effect.die('not implemented'),
         update: () => Effect.die('not implemented'),

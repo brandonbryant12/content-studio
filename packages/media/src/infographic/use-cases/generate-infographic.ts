@@ -6,6 +6,7 @@ import {
   annotateUseCaseSpan,
   enqueueJob,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { InfographicRepo } from '../repos';
 
@@ -31,12 +32,12 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
     const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
 
-    const existing = yield* repo.findByIdForUser(input.id, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.id,
       attributes: { 'infographic.id': input.id },
     });
+    const existing = yield* repo.findByIdForUser(input.id, user.id);
 
     // Enqueue job
     const payload: GenerateInfographicPayload = {
@@ -67,4 +68,4 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
       jobId: job.id,
       status: job.status,
     };
-  }).pipe(Effect.withSpan('useCase.generateInfographic'));
+  }).pipe(withUseCaseSpan('useCase.generateInfographic'));

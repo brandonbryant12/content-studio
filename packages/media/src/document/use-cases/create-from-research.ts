@@ -7,6 +7,7 @@ import {
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { DocumentRepo } from '../repos';
 
@@ -73,4 +74,4 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
             )
           : Effect.void,
     );
-  }).pipe(Effect.withSpan('useCase.createFromResearch'));
+  }).pipe(withUseCaseSpan('useCase.createFromResearch'));

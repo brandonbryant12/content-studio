@@ -12,6 +12,7 @@ import {
   annotateUseCaseSpan,
   enqueueJob,
   withCompensatingAction,
+  withUseCaseSpan,
 } from '../../shared';
 import { saveChanges } from './save-changes';
 
@@ -62,12 +63,12 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const queue = yield* Queue;
+
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
-
     const result = yield* saveChanges({
       podcastId: input.podcastId,
       segments: input.segments,
@@ -107,4 +108,4 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
     );
 
     return { jobId: job.id, status: job.status };
-  }).pipe(Effect.withSpan('useCase.saveAndQueueAudio'));
+  }).pipe(withUseCaseSpan('useCase.saveAndQueueAudio'));

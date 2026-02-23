@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -20,12 +20,12 @@ export const deleteVoiceover = (input: DeleteVoiceoverInput) =>
     const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
 
-    yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.voiceoverId,
       attributes: { 'voiceover.id': input.voiceoverId },
     });
+    yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
 
     yield* voiceoverRepo.delete(input.voiceoverId);
-  }).pipe(Effect.withSpan('useCase.deleteVoiceover'));
+  }).pipe(withUseCaseSpan('useCase.deleteVoiceover'));

@@ -8,6 +8,7 @@ import {
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
+  withUseCaseSpan,
 } from '../../shared';
 import { DocumentRepo } from '../repos';
 
@@ -20,12 +21,12 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
 
-    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.id,
       attributes: { 'document.id': input.id },
     });
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     // Only allow retry on failed documents
     if (doc.status === 'processing') {
@@ -86,4 +87,4 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     }
 
     return yield* documentRepo.findByIdForUser(doc.id, user.id);
-  }).pipe(Effect.withSpan('useCase.retryProcessing'));
+  }).pipe(withUseCaseSpan('useCase.retryProcessing'));

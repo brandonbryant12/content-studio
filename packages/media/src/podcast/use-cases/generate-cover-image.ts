@@ -1,8 +1,7 @@
 import { ImageGen } from '@repo/ai';
-import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos';
 
 // =============================================================================
@@ -19,14 +18,13 @@ export interface GenerateCoverImageInput {
 
 export const generateCoverImage = (input: GenerateCoverImageInput) =>
   Effect.gen(function* () {
-    const user = yield* getCurrentUser;
     const imageGen = yield* ImageGen;
     const storage = yield* Storage;
     const podcastRepo = yield* PodcastRepo;
 
     const podcast = yield* podcastRepo.findById(input.podcastId);
     yield* annotateUseCaseSpan({
-      userId: user.id,
+      userId: podcast.createdBy,
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
@@ -46,5 +44,5 @@ export const generateCoverImage = (input: GenerateCoverImageInput) =>
     yield* podcastRepo.update(podcast.id, { coverImageStorageKey: storageKey });
   }).pipe(
     Effect.catchAll(() => Effect.void),
-    Effect.withSpan('useCase.generateCoverImage'),
+    withUseCaseSpan('useCase.generateCoverImage'),
   );

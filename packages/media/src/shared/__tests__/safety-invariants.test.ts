@@ -57,6 +57,30 @@ describe('safety invariants', () => {
     ).toEqual([]);
   });
 
+  it('requires use-case spans to annotate user and resource ids', () => {
+    const files = collectUseCaseFiles(srcRoot).filter(
+      (file) => !shouldSkipUseCaseTest(file),
+    );
+    const offenders = files.filter((file) => {
+      const source = fs.readFileSync(file, 'utf-8');
+      if (!/useCase\./.test(source)) return false;
+      return (
+        !source.includes('withUseCaseSpan(') ||
+        !source.includes('annotateUseCaseSpan(')
+      );
+    });
+
+    expect(
+      offenders.map((file) => path.relative(srcRoot, file)),
+      'Use withUseCaseSpan + annotateUseCaseSpan to include user.id and resource.id.',
+    ).toEqual([]);
+  });
+
+  it('enforces required span attributes on the use-case helper', () => {
+    const source = read('shared/safety-primitives.ts');
+    expect(source).toContain("'user.id'");
+    expect(source).toContain("'resource.id'");
+  });
 
   it('requires a unit test file for each media use-case', () => {
     const files = collectUseCaseFiles(srcRoot).filter(

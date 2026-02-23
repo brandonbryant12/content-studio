@@ -1,7 +1,11 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JobId } from '@repo/db/schema';
-import { annotateUseCaseSpan, getOwnedJobOrNotFound } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  getOwnedJobOrNotFound,
+  withUseCaseSpan,
+} from '../../shared';
 
 // =============================================================================
 // Types
@@ -24,4 +28,4 @@ export const getInfographicJob = (input: GetInfographicJobInput) =>
       attributes: { 'job.id': input.jobId },
     });
     return yield* getOwnedJobOrNotFound(input.jobId as JobId);
-  }).pipe(Effect.withSpan('useCase.getInfographicJob'));
+  }).pipe(withUseCaseSpan('useCase.getInfographicJob'));

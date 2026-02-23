@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -20,13 +20,13 @@ export const getInfographicVersions = (input: GetInfographicVersionsInput) =>
     const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
 
-    // Verify infographic exists and user owns it
-    yield* repo.findByIdForUser(input.infographicId, user.id);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.infographicId,
       attributes: { 'infographic.id': input.infographicId },
     });
+    // Verify infographic exists and user owns it
+    yield* repo.findByIdForUser(input.infographicId, user.id);
 
     return yield* repo.listVersions(input.infographicId);
-  }).pipe(Effect.withSpan('useCase.getInfographicVersions'));
+  }).pipe(withUseCaseSpan('useCase.getInfographicVersions'));

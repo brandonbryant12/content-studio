@@ -1,6 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -44,15 +44,16 @@ const periodToDate = (period: '24h' | '7d' | '30d'): Date => {
  */
 export const getActivityStats = (input: GetActivityStatsInput) =>
   Effect.gen(function* () {
-    const user = yield* requireRole(Role.ADMIN);
+    yield* requireRole(Role.ADMIN);
+    const user = yield* getCurrentUser;
     const repo = yield* ActivityLogRepo;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.period,
-      attributes: { 'activity.period': input.period },
-    });
 
     const since = periodToDate(input.period);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+      attributes: { 'activity.period': input.period },
+    });
 
     const [total, byEntityType, byAction, topUsers] = yield* Effect.all(
       [
@@ -65,4 +66,4 @@ export const getActivityStats = (input: GetActivityStatsInput) =>
     );
 
     return { total, byEntityType, byAction, topUsers } satisfies ActivityStats;
-  }).pipe(Effect.withSpan('useCase.getActivityStats'));
+  }).pipe(withUseCaseSpan('useCase.getActivityStats'));

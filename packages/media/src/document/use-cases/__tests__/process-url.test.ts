@@ -1,6 +1,6 @@
-import { DocumentStatus, type Document } from '@repo/db/schema';
+import { DocumentStatus, generateDocumentId, type Document } from '@repo/db/schema';
 import { createMockStorage } from '@repo/storage/testing';
-import { createTestUser, withTestUser } from '@repo/testing';
+import { createTestDocument } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UrlFetchError } from '../../../errors';
@@ -47,11 +47,13 @@ describe('processUrl', () => {
   });
 
   it('updates document content and marks it ready', async () => {
-    const documentId = 'doc_123';
+    const documentId = generateDocumentId();
     const updateContentSpy = vi.fn();
     const updateStatusSpy = vi.fn();
+    const document = createTestDocument({ id: documentId });
 
     const repo = createMockDocumentRepo({
+      findById: () => Effect.succeed(document),
       updateContent: (id, data) =>
         Effect.sync(() => {
           updateContentSpy(id, data);
@@ -90,13 +92,10 @@ describe('processUrl', () => {
       }),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );
-    const user = createTestUser({ id: 'user_123' });
 
     const result = await Effect.runPromise(
-      withTestUser(user)(
-        processUrl({ documentId, url: 'https://example.com' }).pipe(
-          Effect.provide(layers),
-        ),
+      processUrl({ documentId, url: 'https://example.com' }).pipe(
+        Effect.provide(layers),
       ),
     );
 
@@ -122,10 +121,12 @@ describe('processUrl', () => {
   });
 
   it('marks document as failed when scraping fails', async () => {
-    const documentId = 'doc_456';
+    const documentId = generateDocumentId();
     const updateStatusSpy = vi.fn();
+    const document = createTestDocument({ id: documentId });
 
     const repo = createMockDocumentRepo({
+      findById: () => Effect.succeed(document),
       updateStatus: (id, status, errorMessage) =>
         Effect.sync(() => {
           updateStatusSpy(id, status, errorMessage);
@@ -142,13 +143,10 @@ describe('processUrl', () => {
       createMockUrlScraper({ shouldFail: true }),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );
-    const user = createTestUser({ id: 'user_456' });
 
     const result = await Effect.runPromiseExit(
-      withTestUser(user)(
-        processUrl({ documentId, url: 'https://example.com' }).pipe(
-          Effect.provide(layers),
-        ),
+      processUrl({ documentId, url: 'https://example.com' }).pipe(
+        Effect.provide(layers),
       ),
     );
 

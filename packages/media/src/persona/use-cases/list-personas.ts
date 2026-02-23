@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Persona } from '@repo/db/schema';
-import { annotateUseCaseSpan } from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PersonaRepo, type PersonaListOptions } from '../repos';
 
 export interface ListPersonasInput {
@@ -20,6 +20,10 @@ export const listPersonas = (input: ListPersonasInput) =>
     const user = yield* getCurrentUser;
     const personaRepo = yield* PersonaRepo;
 
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: user.id,
+    });
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
     const options: PersonaListOptions = {
@@ -27,14 +31,6 @@ export const listPersonas = (input: ListPersonasInput) =>
       limit,
       offset,
     };
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: user.id,
-      attributes: {
-        'pagination.limit': input.limit,
-        'pagination.offset': input.offset,
-      },
-    });
 
     const [personas, total] = yield* Effect.all(
       [personaRepo.list(options), personaRepo.count(options)],
@@ -46,4 +42,4 @@ export const listPersonas = (input: ListPersonasInput) =>
       total,
       hasMore: offset + personas.length < total,
     };
-  }).pipe(Effect.withSpan('useCase.listPersonas'));
+  }).pipe(withUseCaseSpan('useCase.listPersonas'));
