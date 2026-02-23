@@ -91,12 +91,7 @@ export {
 } from './research';
 
 // Chat
-export {
-  streamResearchChat,
-  type StreamResearchChatInput,
-  streamSvgChat,
-  type StreamSvgChatInput,
-} from './chat';
+export { streamResearchChat, type StreamResearchChatInput } from './chat';
 
 // Import for combined layer
 import type { ImageGen } from './image-gen';

@@ -11,6 +11,9 @@ Execution contract:
 - Read and execute `agent-engine/automations/product-vision-researcher/product-vision-researcher.md` in the repository root before making decisions.
 - Follow the playbook's memory-driven focus, external research, and issue policies exactly.
 - Prioritize enterprise product-direction opportunities and Gemini/Google-aligned AI capability opportunities.
+- Keep recommendations strictly scoped to making Content Studio better (not generic market commentary).
+- Debate prior product-vision ideas before issue actions and record keep/amend/reject outcomes with evidence.
+- Reuse the same issue when the topic is materially the same; create a new issue only when unrelated.
 - Advisory-only lane: do not implement repository code/docs changes and do not open PRs.
 - Exception: every run must append workflow memory and run `pnpm workflow-memory:sync` to commit/push memory artifacts.
 - Memory entries must include finding tags, trajectory tags, tool-trace tags, and canonical memory taxonomy fields as defined in the playbook.

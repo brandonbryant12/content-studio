@@ -16,13 +16,11 @@ import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedVoiceoversIndexRouteImport } from './routes/_protected/voiceovers/index'
-import { Route as ProtectedSvgsIndexRouteImport } from './routes/_protected/svgs/index'
 import { Route as ProtectedPodcastsIndexRouteImport } from './routes/_protected/podcasts/index'
 import { Route as ProtectedPersonasIndexRouteImport } from './routes/_protected/personas/index'
 import { Route as ProtectedInfographicsIndexRouteImport } from './routes/_protected/infographics/index'
 import { Route as ProtectedDocumentsIndexRouteImport } from './routes/_protected/documents/index'
 import { Route as ProtectedVoiceoversVoiceoverIdRouteImport } from './routes/_protected/voiceovers/$voiceoverId'
-import { Route as ProtectedSvgsSvgIdRouteImport } from './routes/_protected/svgs/$svgId'
 import { Route as ProtectedPodcastsPodcastIdRouteImport } from './routes/_protected/podcasts/$podcastId'
 import { Route as ProtectedPersonasPersonaIdRouteImport } from './routes/_protected/personas/$personaId'
 import { Route as ProtectedInfographicsInfographicIdRouteImport } from './routes/_protected/infographics/$infographicId'
@@ -63,11 +61,6 @@ const ProtectedVoiceoversIndexRoute =
     path: '/voiceovers/',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
-const ProtectedSvgsIndexRoute = ProtectedSvgsIndexRouteImport.update({
-  id: '/svgs/',
-  path: '/svgs/',
-  getParentRoute: () => ProtectedLayoutRoute,
-} as any)
 const ProtectedPodcastsIndexRoute = ProtectedPodcastsIndexRouteImport.update({
   id: '/podcasts/',
   path: '/podcasts/',
@@ -95,11 +88,6 @@ const ProtectedVoiceoversVoiceoverIdRoute =
     path: '/voiceovers/$voiceoverId',
     getParentRoute: () => ProtectedLayoutRoute,
   } as any)
-const ProtectedSvgsSvgIdRoute = ProtectedSvgsSvgIdRouteImport.update({
-  id: '/svgs/$svgId',
-  path: '/svgs/$svgId',
-  getParentRoute: () => ProtectedLayoutRoute,
-} as any)
 const ProtectedPodcastsPodcastIdRoute =
   ProtectedPodcastsPodcastIdRouteImport.update({
     id: '/podcasts/$podcastId',
@@ -140,13 +128,11 @@ export interface FileRoutesByFullPath {
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
-  '/svgs/$svgId': typeof ProtectedSvgsSvgIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/documents/': typeof ProtectedDocumentsIndexRoute
   '/infographics/': typeof ProtectedInfographicsIndexRoute
   '/personas/': typeof ProtectedPersonasIndexRoute
   '/podcasts/': typeof ProtectedPodcastsIndexRoute
-  '/svgs/': typeof ProtectedSvgsIndexRoute
   '/voiceovers/': typeof ProtectedVoiceoversIndexRoute
 }
 export interface FileRoutesByTo {
@@ -159,13 +145,11 @@ export interface FileRoutesByTo {
   '/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
-  '/svgs/$svgId': typeof ProtectedSvgsSvgIdRoute
   '/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/documents': typeof ProtectedDocumentsIndexRoute
   '/infographics': typeof ProtectedInfographicsIndexRoute
   '/personas': typeof ProtectedPersonasIndexRoute
   '/podcasts': typeof ProtectedPodcastsIndexRoute
-  '/svgs': typeof ProtectedSvgsIndexRoute
   '/voiceovers': typeof ProtectedVoiceoversIndexRoute
 }
 export interface FileRoutesById {
@@ -181,13 +165,11 @@ export interface FileRoutesById {
   '/_protected/infographics/$infographicId': typeof ProtectedInfographicsInfographicIdRoute
   '/_protected/personas/$personaId': typeof ProtectedPersonasPersonaIdRoute
   '/_protected/podcasts/$podcastId': typeof ProtectedPodcastsPodcastIdRoute
-  '/_protected/svgs/$svgId': typeof ProtectedSvgsSvgIdRoute
   '/_protected/voiceovers/$voiceoverId': typeof ProtectedVoiceoversVoiceoverIdRoute
   '/_protected/documents/': typeof ProtectedDocumentsIndexRoute
   '/_protected/infographics/': typeof ProtectedInfographicsIndexRoute
   '/_protected/personas/': typeof ProtectedPersonasIndexRoute
   '/_protected/podcasts/': typeof ProtectedPodcastsIndexRoute
-  '/_protected/svgs/': typeof ProtectedSvgsIndexRoute
   '/_protected/voiceovers/': typeof ProtectedVoiceoversIndexRoute
 }
 export interface FileRouteTypes {
@@ -202,13 +184,11 @@ export interface FileRouteTypes {
     | '/infographics/$infographicId'
     | '/personas/$personaId'
     | '/podcasts/$podcastId'
-    | '/svgs/$svgId'
     | '/voiceovers/$voiceoverId'
     | '/documents/'
     | '/infographics/'
     | '/personas/'
     | '/podcasts/'
-    | '/svgs/'
     | '/voiceovers/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -221,13 +201,11 @@ export interface FileRouteTypes {
     | '/infographics/$infographicId'
     | '/personas/$personaId'
     | '/podcasts/$podcastId'
-    | '/svgs/$svgId'
     | '/voiceovers/$voiceoverId'
     | '/documents'
     | '/infographics'
     | '/personas'
     | '/podcasts'
-    | '/svgs'
     | '/voiceovers'
   id:
     | '__root__'
@@ -242,13 +220,11 @@ export interface FileRouteTypes {
     | '/_protected/infographics/$infographicId'
     | '/_protected/personas/$personaId'
     | '/_protected/podcasts/$podcastId'
-    | '/_protected/svgs/$svgId'
     | '/_protected/voiceovers/$voiceoverId'
     | '/_protected/documents/'
     | '/_protected/infographics/'
     | '/_protected/personas/'
     | '/_protected/podcasts/'
-    | '/_protected/svgs/'
     | '/_protected/voiceovers/'
   fileRoutesById: FileRoutesById
 }
@@ -309,13 +285,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedVoiceoversIndexRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
-    '/_protected/svgs/': {
-      id: '/_protected/svgs/'
-      path: '/svgs'
-      fullPath: '/svgs/'
-      preLoaderRoute: typeof ProtectedSvgsIndexRouteImport
-      parentRoute: typeof ProtectedLayoutRoute
-    }
     '/_protected/podcasts/': {
       id: '/_protected/podcasts/'
       path: '/podcasts'
@@ -349,13 +318,6 @@ declare module '@tanstack/react-router' {
       path: '/voiceovers/$voiceoverId'
       fullPath: '/voiceovers/$voiceoverId'
       preLoaderRoute: typeof ProtectedVoiceoversVoiceoverIdRouteImport
-      parentRoute: typeof ProtectedLayoutRoute
-    }
-    '/_protected/svgs/$svgId': {
-      id: '/_protected/svgs/$svgId'
-      path: '/svgs/$svgId'
-      fullPath: '/svgs/$svgId'
-      preLoaderRoute: typeof ProtectedSvgsSvgIdRouteImport
       parentRoute: typeof ProtectedLayoutRoute
     }
     '/_protected/podcasts/$podcastId': {
@@ -403,13 +365,11 @@ interface ProtectedLayoutRouteChildren {
   ProtectedInfographicsInfographicIdRoute: typeof ProtectedInfographicsInfographicIdRoute
   ProtectedPersonasPersonaIdRoute: typeof ProtectedPersonasPersonaIdRoute
   ProtectedPodcastsPodcastIdRoute: typeof ProtectedPodcastsPodcastIdRoute
-  ProtectedSvgsSvgIdRoute: typeof ProtectedSvgsSvgIdRoute
   ProtectedVoiceoversVoiceoverIdRoute: typeof ProtectedVoiceoversVoiceoverIdRoute
   ProtectedDocumentsIndexRoute: typeof ProtectedDocumentsIndexRoute
   ProtectedInfographicsIndexRoute: typeof ProtectedInfographicsIndexRoute
   ProtectedPersonasIndexRoute: typeof ProtectedPersonasIndexRoute
   ProtectedPodcastsIndexRoute: typeof ProtectedPodcastsIndexRoute
-  ProtectedSvgsIndexRoute: typeof ProtectedSvgsIndexRoute
   ProtectedVoiceoversIndexRoute: typeof ProtectedVoiceoversIndexRoute
 }
 
@@ -421,13 +381,11 @@ const ProtectedLayoutRouteChildren: ProtectedLayoutRouteChildren = {
     ProtectedInfographicsInfographicIdRoute,
   ProtectedPersonasPersonaIdRoute: ProtectedPersonasPersonaIdRoute,
   ProtectedPodcastsPodcastIdRoute: ProtectedPodcastsPodcastIdRoute,
-  ProtectedSvgsSvgIdRoute: ProtectedSvgsSvgIdRoute,
   ProtectedVoiceoversVoiceoverIdRoute: ProtectedVoiceoversVoiceoverIdRoute,
   ProtectedDocumentsIndexRoute: ProtectedDocumentsIndexRoute,
   ProtectedInfographicsIndexRoute: ProtectedInfographicsIndexRoute,
   ProtectedPersonasIndexRoute: ProtectedPersonasIndexRoute,
   ProtectedPodcastsIndexRoute: ProtectedPodcastsIndexRoute,
-  ProtectedSvgsIndexRoute: ProtectedSvgsIndexRoute,
   ProtectedVoiceoversIndexRoute: ProtectedVoiceoversIndexRoute,
 }
 

@@ -33,8 +33,3 @@ export {
 } from './infographic-errors';
 
 export { PersonaNotFound, NotPersonaOwner } from './persona-errors';
-
-export {
-  SvgNotFoundError,
-  SvgGenerationInProgressError,
-} from './svg-errors';

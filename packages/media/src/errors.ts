@@ -23,8 +23,6 @@ export {
   StylePresetNotFound,
   PersonaNotFound,
   NotPersonaOwner,
-  SvgNotFoundError,
-  SvgGenerationInProgressError,
 } from './errors/index';
 
 import type {
@@ -52,8 +50,6 @@ import type {
   StylePresetNotFound,
   PersonaNotFound,
   NotPersonaOwner,
-  SvgNotFoundError,
-  SvgGenerationInProgressError,
 } from './errors/index';
 
 export type MediaError =
@@ -80,6 +76,4 @@ export type MediaError =
   | InfographicError
   | StylePresetNotFound
   | PersonaNotFound
-  | NotPersonaOwner
-  | SvgNotFoundError
-  | SvgGenerationInProgressError;
+  | NotPersonaOwner;

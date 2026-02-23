@@ -115,34 +115,6 @@ export type InfographicId = typeof InfographicIdSchema.Type;
 export const generateInfographicId = (): InfographicId =>
   `inf_${generateRandomBase32()}` as InfographicId;
 
-// SVG ID
-
-export const SvgIdSchema = Schema.String.pipe(
-  Schema.pattern(/^svg_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid SVG ID format',
-  }),
-  Schema.brand('SvgId'),
-);
-
-export type SvgId = typeof SvgIdSchema.Type;
-
-export const generateSvgId = (): SvgId =>
-  `svg_${generateRandomBase32()}` as SvgId;
-
-// SVG Message ID
-
-export const SvgMessageIdSchema = Schema.String.pipe(
-  Schema.pattern(/^svm_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid SVG message ID format',
-  }),
-  Schema.brand('SvgMessageId'),
-);
-
-export type SvgMessageId = typeof SvgMessageIdSchema.Type;
-
-export const generateSvgMessageId = (): SvgMessageId =>
-  `svm_${generateRandomBase32()}` as SvgMessageId;
-
 // Activity Log ID
 
 export const ActivityLogIdSchema = Schema.String.pipe(

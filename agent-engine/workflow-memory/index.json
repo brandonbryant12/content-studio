@@ -79,6 +79,27 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-removed-svg-creator-feature-end-to-end",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Removed SVG Creator feature end-to-end",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "svg",
+      "rollback",
+      "api",
+      "media",
+      "web",
+      "db"
+    ],
+    "importance": 0.78,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
     "date": "2026-02-23",
     "month": "2026-02",
@@ -135,6 +156,26 @@
     ],
     "importance": 0.73,
     "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-feature-delivery-synced-product-automations-into-codex-runtime-and-tightened-prod",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Synced product automations into Codex runtime and tightened product lane contracts",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "codex",
+      "feature-delivery",
+      "product-vision",
+      "product-owner",
+      "agent-engine"
+    ],
+    "importance": 0.68,
+    "confidence": 0.95,
     "eventFile": "events/2026-02.jsonl"
   },
   {
