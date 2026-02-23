@@ -1,5 +1,24 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-use-case-span-attributes-enforced",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Use-case span attributes enforced",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "observability",
+      "use-case",
+      "spans",
+      "ready-for-dev"
+    ],
+    "importance": 0.6,
+    "recency": 0.7,
+    "confidence": 0.72,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
