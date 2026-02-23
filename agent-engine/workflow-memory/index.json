@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-23-periodic-scans-ci-toolchain-sanity-scan-no-findings",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "CI/toolchain sanity scan (no findings)",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "ci",
+      "toolchain"
+    ],
+    "confidence": 0.84,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
