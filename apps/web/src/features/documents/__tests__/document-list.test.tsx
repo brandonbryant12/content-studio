@@ -99,7 +99,7 @@ describe('DocumentList', () => {
 
     // Check header
     expect(
-      screen.getByRole('heading', { name: 'Knowledge Base' }),
+      screen.getByRole('heading', { name: 'Documents' }),
     ).toBeInTheDocument();
 
     // Check all documents are rendered
@@ -119,9 +119,12 @@ describe('DocumentList', () => {
     expect(screen.getByText('No documents yet')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Upload your first document to start creating podcasts and voice overs.',
+        'Upload your first document to start creating podcasts and voiceovers.',
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('button', { name: /add source/i }),
+    ).toHaveLength(2);
   });
 
   it('filters documents by search query', () => {
@@ -159,13 +162,18 @@ describe('DocumentList', () => {
     expect(onSearch).toHaveBeenCalled();
   });
 
-  it('calls onUploadOpen(true) when upload button clicked', async () => {
+  it('calls onUploadOpen(true) when upload option selected', async () => {
     const user = userEvent.setup();
     const onUploadOpen = vi.fn();
     render(<DocumentList {...defaultProps} onUploadOpen={onUploadOpen} />);
 
-    const uploadButton = screen.getByRole('button', { name: /upload/i });
-    await user.click(uploadButton);
+    const addSourceButton = screen.getByRole('button', { name: /add source/i });
+    await user.click(addSourceButton);
+
+    const uploadOption = await screen.findByRole('menuitem', {
+      name: /upload/i,
+    });
+    await user.click(uploadOption);
 
     expect(onUploadOpen).toHaveBeenCalledWith(true);
   });
@@ -195,11 +203,13 @@ describe('DocumentList', () => {
     }
   });
 
-  it('renders upload button in header', () => {
+  it('renders add source button in header', () => {
     render(<DocumentList {...defaultProps} />);
 
-    const uploadButton = screen.getByRole('button', { name: /upload/i });
-    expect(uploadButton).toBeInTheDocument();
+    const addSourceButton = screen.getByRole('button', {
+      name: /add source/i,
+    });
+    expect(addSourceButton).toBeInTheDocument();
   });
 
   it('shows search input with correct placeholder', () => {

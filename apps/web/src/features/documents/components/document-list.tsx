@@ -1,11 +1,6 @@
 // Presenter: Pure UI component with no data fetching or state management
 
-import {
-  GlobeIcon,
-  MagnifyingGlassIcon,
-  TrashIcon,
-  UploadIcon,
-} from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
@@ -15,6 +10,7 @@ import { memo, useCallback, useMemo, useTransition } from 'react';
 import type { DocumentListItem } from './document-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
+import { DocumentEntryMenu } from './document-entry-menu';
 import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
@@ -40,7 +36,13 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
-function EmptyState({ hasSearch }: { hasSearch: boolean }) {
+function EmptyState({
+  hasSearch,
+  action,
+}: {
+  hasSearch: boolean;
+  action?: React.ReactNode;
+}) {
   return (
     <div className="empty-state-lg">
       <div className="empty-state-icon">
@@ -65,8 +67,9 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Upload your first document to start creating podcasts and voice overs.'}
+          : 'Upload your first document to start creating podcasts and voiceovers.'}
       </p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }
@@ -227,22 +230,15 @@ export function DocumentList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Source Content</p>
-          <h1 className="page-title">Knowledge Base</h1>
+          <p className="page-eyebrow">Documents</p>
+          <h1 className="page-title">Documents</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => onResearchDialogOpen(true)}>
-            <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
-            Research
-          </Button>
-          <Button variant="outline" onClick={() => onUrlDialogOpen(true)}>
-            <GlobeIcon className="w-4 h-4 mr-2" />
-            From URL
-          </Button>
-          <Button onClick={() => onUploadOpen(true)}>
-            <UploadIcon className="w-4 h-4 mr-2" />
-            Upload
-          </Button>
+          <DocumentEntryMenu
+            onResearch={() => onResearchDialogOpen(true)}
+            onUrl={() => onUrlDialogOpen(true)}
+            onUpload={() => onUploadOpen(true)}
+          />
         </div>
       </div>
 
@@ -261,7 +257,16 @@ export function DocumentList({
 
       {/* Content */}
       {isEmpty ? (
-        <EmptyState hasSearch={false} />
+        <EmptyState
+          hasSearch={false}
+          action={
+            <DocumentEntryMenu
+              onResearch={() => onResearchDialogOpen(true)}
+              onUrl={() => onUrlDialogOpen(true)}
+              onUpload={() => onUploadOpen(true)}
+            />
+          }
+        />
       ) : hasNoResults ? (
         <EmptyState hasSearch={true} />
       ) : (

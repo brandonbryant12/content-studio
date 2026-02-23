@@ -73,8 +73,8 @@ export function DocumentListContainer() {
       <div className="page-container-narrow">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="page-eyebrow">Source Content</p>
-            <h1 className="page-title">Knowledge Base</h1>
+            <p className="page-eyebrow">Documents</p>
+            <h1 className="page-title">Documents</h1>
           </div>
         </div>
         <div className="loading-center-lg">
