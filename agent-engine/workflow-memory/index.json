@@ -196,6 +196,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-self-improvement-enforce-core-workflow-keys-and-memory-taxonomy-audit",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Enforce core workflow keys and audit memory taxonomy tags",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "workflow-memory",
+      "guardrail",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
@@ -776,7 +795,7 @@
     "id": "2026-02-22-intake-triage-adjusted-architecture-radar-references-rule-for-flexible-source-",
     "date": "2026-02-22",
     "month": "2026-02",
-    "workflow": "Intake + Triage",
+    "workflow": "Self-Improvement",
     "title": "Adjusted architecture-radar references rule for flexible source usage",
     "severity": "low",
     "status": "closed",
@@ -784,7 +803,8 @@
       "automation",
       "architecture-radar",
       "intake-triage",
-      "playbook"
+      "playbook",
+      "skill:intake-triage"
     ],
     "importance": 0.6,
     "confidence": 0.95,
@@ -794,7 +814,7 @@
     "id": "2026-02-22-intake-triage-scoped-architecture-radar-external-reference-link-improvement",
     "date": "2026-02-22",
     "month": "2026-02",
-    "workflow": "Intake + Triage",
+    "workflow": "Self-Improvement",
     "title": "Scoped architecture-radar external reference-link improvement",
     "severity": "low",
     "status": "closed",
@@ -802,7 +822,8 @@
       "automation",
       "architecture-radar",
       "intake-triage",
-      "playbook"
+      "playbook",
+      "skill:intake-triage"
     ],
     "importance": 0.58,
     "confidence": 0.95,
@@ -1373,7 +1394,10 @@
     "tags": [
       "automation",
       "workflow-memory",
-      "feature-delivery"
+      "feature-delivery",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1381,7 +1405,7 @@
     "id": "2026-02-21-intake-triage-codex-app-automation-lanes-normalized-for-coherent-orchestration",
     "date": "2026-02-21",
     "month": "2026-02",
-    "workflow": "Intake + Triage",
+    "workflow": "Self-Improvement",
     "title": "Codex App automation lanes normalized for coherent orchestration",
     "severity": "medium",
     "status": "closed",
@@ -1389,7 +1413,8 @@
       "automation",
       "codex",
       "intake-triage",
-      "self-improvement"
+      "self-improvement",
+      "skill:intake-triage"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1474,7 +1499,10 @@
     "status": "closed",
     "tags": [
       "workflow-memory",
-      "self-improvement"
+      "self-improvement",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1489,7 +1517,10 @@
     "tags": [
       "workflow-memory",
       "guardrail",
-      "docs"
+      "docs",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve"
     ],
     "importance": 0.8,
     "recency": 0.9,
@@ -1838,14 +1869,18 @@
     "id": "2026-02-20-intake-triage-scope-memory-coverage-hardening-and-remove-react-doctor",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "Intake + Triage",
+    "workflow": "Self-Improvement",
     "title": "Scope memory coverage hardening and remove react-doctor",
     "severity": "medium",
     "status": "open",
     "tags": [
       "workflow-memory",
       "intake",
-      "guardrails"
+      "guardrails",
+      "skill:intake-triage",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1853,7 +1888,7 @@
     "id": "2026-02-20-performance-cost-guard-no-blocking-perf-or-cost-regressions-for-web-import-order-mainte",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "Performance + Cost Guard",
+    "workflow": "Periodic Scans",
     "title": "No blocking perf or cost regressions for web import-order maintenance",
     "severity": "low",
     "status": "closed",
@@ -1861,7 +1896,8 @@
       "performance",
       "bundle",
       "cost",
-      "quality-closure-loop"
+      "quality-closure-loop",
+      "skill:performance-cost-guard"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1876,7 +1912,10 @@
     "tags": [
       "periodic-scans",
       "workflow-memory",
-      "coverage"
+      "coverage",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1946,14 +1985,15 @@
     "id": "2026-02-20-pr-risk-review-risk-review-found-no-correctness-auth-contract-regressions-in-im",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "PR Risk Review",
+    "workflow": "Periodic Scans",
     "title": "Risk review found no correctness/auth/contract regressions in import-only changes",
     "severity": "low",
     "status": "closed",
     "tags": [
       "pr-risk-review",
       "regression",
-      "quality-closure-loop"
+      "quality-closure-loop",
+      "skill:pr-risk-review"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1961,14 +2001,15 @@
     "id": "2026-02-20-release-incident-response-release-readiness-go-for-non-functional-lint-order-patch-with-si",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "Release + Incident Response",
+    "workflow": "Periodic Scans",
     "title": "Release readiness go for non-functional lint-order patch with simple rollback",
     "severity": "low",
     "status": "closed",
     "tags": [
       "release-readiness",
       "rollback",
-      "quality-closure-loop"
+      "quality-closure-loop",
+      "skill:release-incident-response"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -1976,7 +2017,7 @@
     "id": "2026-02-20-security-dependency-hygiene-resolved-ajv-redos-advisory-via-override-cleanup",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "Security + Dependency Hygiene",
+    "workflow": "Periodic Scans",
     "title": "Resolved ajv ReDoS advisory via override cleanup",
     "severity": "medium",
     "status": "closed",
@@ -1984,7 +2025,8 @@
       "security",
       "dependencies",
       "eslint",
-      "ajv"
+      "ajv",
+      "skill:security-dependency-hygiene"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2048,7 +2090,10 @@
       "memory",
       "workflow",
       "self-improvement",
-      "skills"
+      "skills",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2064,7 +2109,10 @@
       "self-improvement",
       "workflow-memory",
       "guardrail",
-      "quality-closure-loop"
+      "quality-closure-loop",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2095,7 +2143,10 @@
     "tags": [
       "skills",
       "quality",
-      "workflow-memory"
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2103,7 +2154,7 @@
     "id": "2026-02-20-tanstack-vite-aligned-web-export-flows-on-shared-smart-download-naming-helper",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "TanStack + Vite",
+    "workflow": "Feature Delivery",
     "title": "Aligned web export flows on shared smart download naming helper",
     "severity": "low",
     "status": "open",
@@ -2111,7 +2162,8 @@
       "tanstack",
       "frontend",
       "tests",
-      "dx"
+      "dx",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2119,7 +2171,7 @@
     "id": "2026-02-20-tanstack-vite-covered-new-podcast-url-document-paths-with-focused-component-te",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "TanStack + Vite",
+    "workflow": "Feature Delivery",
     "title": "Covered new podcast URL document paths with focused component tests",
     "severity": "low",
     "status": "open",
@@ -2127,7 +2179,8 @@
       "tanstack-query",
       "tests",
       "podcasts",
-      "documents"
+      "documents",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2135,7 +2188,7 @@
     "id": "2026-02-20-tanstack-vite-guardrail-auto-trigger-chat-ux-for-research-persona-dialogs",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "TanStack + Vite",
+    "workflow": "Feature Delivery",
     "title": "Guardrail auto-trigger chat UX for research/persona dialogs",
     "severity": "high",
     "status": "open",
@@ -2143,7 +2196,8 @@
       "tanstack",
       "react-query",
       "chat",
-      "ux"
+      "ux",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2151,7 +2205,7 @@
     "id": "2026-02-20-tanstack-vite-standardized-ai-chat-composer-wrapping-and-submission-behavior",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "TanStack + Vite",
+    "workflow": "Feature Delivery",
     "title": "Standardized AI chat composer wrapping and submission behavior",
     "severity": "low",
     "status": "open",
@@ -2159,7 +2213,8 @@
       "tanstack",
       "frontend",
       "chat",
-      "ux"
+      "ux",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2167,7 +2222,7 @@
     "id": "2026-02-20-tanstack-vite-tested-research-auto-podcast-payload-in-manual-and-auto-start-fl",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "TanStack + Vite",
+    "workflow": "Feature Delivery",
     "title": "Tested research auto-podcast payload in manual and auto-start flows",
     "severity": "low",
     "status": "open",
@@ -2176,7 +2231,8 @@
       "frontend",
       "tests",
       "documents",
-      "research"
+      "research",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2184,14 +2240,15 @@
     "id": "2026-02-20-test-surface-steward-existing-test-surface-sufficient-for-non-behavioral-import-order",
     "date": "2026-02-20",
     "month": "2026-02",
-    "workflow": "Test Surface Steward",
+    "workflow": "Periodic Scans",
     "title": "Existing test surface sufficient for non-behavioral import-order edits",
     "severity": "low",
     "status": "closed",
     "tags": [
       "test-surface",
       "coverage",
-      "quality-closure-loop"
+      "quality-closure-loop",
+      "skill:test-surface-steward"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
@@ -2222,7 +2279,10 @@
     "tags": [
       "memory",
       "workflow",
-      "tooling"
+      "tooling",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
   }
