@@ -18,3 +18,4 @@ export {
   streamWritingAssistantChat,
   type StreamWritingAssistantChatInput,
 } from './stream-writing-assistant-chat';
+export { streamSvgChat, type StreamSvgChatInput } from './stream-svg-chat';

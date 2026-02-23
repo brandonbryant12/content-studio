@@ -1,5 +1,64 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ship SVG Creator frontend slice",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "frontend",
+      "svgs",
+      "tanstack-query",
+      "chat-streaming"
+    ],
+    "importance": 0.78,
+    "recency": 1,
+    "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-feature-delivery-svg-backend-foundation-slice-implemented",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "SVG backend foundation slice implemented",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "svg",
+      "backend",
+      "chat-stream"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-feature-delivery-svg-orpc-contract-and-router-wiring",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "SVG oRPC contract and router wiring",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "api",
+      "svg",
+      "orpc",
+      "contracts",
+      "router",
+      "capability:tool-use",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
+    "importance": 0.73,
+    "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
