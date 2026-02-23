@@ -179,6 +179,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-unify-documents-entry-cta-and-labels",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Unify documents entry CTA and labels",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ui",
+      "documents",
+      "consistency"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-periodic-scans-sanity-check-error-assertion-scan",
     "date": "2026-02-23",
     "month": "2026-02",
