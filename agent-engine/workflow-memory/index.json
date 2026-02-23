@@ -121,6 +121,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-detected-error-assertion-lint-opt-out-in-packages-testing",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Detected error-assertion lint opt-out in packages/testing",
+    "severity": "medium",
+    "status": "blocked",
+    "tags": [
+      "effect",
+      "testing",
+      "eslint",
+      "guardrail",
+      "sanity-check"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
@@ -132,6 +149,23 @@
       "workflow-registry",
       "guardrail",
       "docs"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-23-self-improvement-re-enabled-error-assertion-lint-rules-in-packages-testing",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Re-enabled error-assertion lint rules in packages/testing",
+    "severity": "medium",
+    "status": "blocked",
+    "tags": [
+      "effect",
+      "testing",
+      "lint",
+      "guardrail",
+      "recurrence"
     ],
     "eventFile": "events/2026-02.jsonl"
   },
