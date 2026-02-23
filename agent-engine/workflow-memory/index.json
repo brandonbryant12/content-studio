@@ -179,6 +179,35 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-product-vision-research-workspace-prompt-governance",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Product vision: research workspace + prompt governance",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-vision",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:enterprise-adoption-governance",
+      "tool:gh",
+      "tool:web.run",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "confidence": 0.78,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-periodic-scans-sanity-check-error-assertion-scan",
     "date": "2026-02-23",
     "month": "2026-02",
