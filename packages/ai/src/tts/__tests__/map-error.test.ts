@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { TTSError } from '../../errors';
+import { GoogleApiError } from '../../google/error-parser';
 import { mapError } from '../map-error';
 
 describe('TTS mapError', () => {
@@ -13,6 +14,20 @@ describe('TTS mapError', () => {
     const result = mapError(new Error('HTTP 429 Too Many Requests'));
     expect(result?._tag).toBe('TTSQuotaExceededError');
     expect(result.message).toBe('HTTP 429 Too Many Requests');
+  });
+
+  it('maps structured Google error to TTSQuotaExceededError', () => {
+    const result = mapError(
+      new GoogleApiError('Google TTS API error', {
+        statusCode: 429,
+        details: {
+          status: 'RESOURCE_EXHAUSTED',
+          message: 'Quota exceeded',
+        },
+      }),
+    );
+    expect(result?._tag).toBe('TTSQuotaExceededError');
+    expect(result.message).toBe('Quota exceeded');
   });
 
   it('maps generic Error to TTSError with cause', () => {

@@ -1,11 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
-import {
-  ImageGenError,
-  ImageGenRateLimitError,
-  ImageGenContentFilteredError,
-} from '../../errors';
 import { IMAGE_GEN_MODEL } from '../../models';
+import { retryTransientProvider } from '../../provider-retry';
+import { mapError } from '../map-error';
 import {
   ImageGen,
   type ImageGenService,
@@ -30,44 +27,6 @@ const FORMAT_HINTS: Record<GenerateImageOptions['format'], string> = {
   square: '1080x1080 square aspect ratio (1:1)',
   landscape: '1920x1080 landscape aspect ratio (16:9)',
   og_card: '1200x630 wide landscape aspect ratio (approximately 1.9:1)',
-};
-
-/**
- * Map API errors to domain errors.
- */
-const mapError = (
-  error: unknown,
-): ImageGenError | ImageGenRateLimitError | ImageGenContentFilteredError => {
-  if (error instanceof Error) {
-    const msg = error.message.toLowerCase();
-
-    if (msg.includes('rate limit') || msg.includes('429')) {
-      return new ImageGenRateLimitError({
-        message: error.message,
-      });
-    }
-
-    if (
-      msg.includes('safety') ||
-      msg.includes('blocked') ||
-      msg.includes('content filter') ||
-      msg.includes('prohibited')
-    ) {
-      return new ImageGenContentFilteredError({
-        message: error.message,
-      });
-    }
-
-    return new ImageGenError({
-      message: error.message,
-      cause: error,
-    });
-  }
-
-  return new ImageGenError({
-    message: 'Unknown image generation error',
-    cause: error,
-  });
 };
 
 /**
@@ -132,6 +91,7 @@ const makeGoogleImageGenService = (
         },
         catch: mapError,
       }).pipe(
+        retryTransientProvider,
         Effect.withSpan('imageGen.generate', {
           attributes: {
             'imageGen.provider': 'google',

@@ -1,5 +1,7 @@
 import { Effect, Layer } from 'effect';
+import { GoogleApiError, parseGoogleApiErrorBody } from '../../google/error-parser';
 import { TTS_MODEL } from '../../models';
+import { retryTransientProvider } from '../../provider-retry';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
 import {
@@ -52,7 +54,17 @@ async function callGeminiTTS(
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Google TTS API error: ${response.status} - ${errorBody}`);
+    const retryAfterHeader = response.headers.get('retry-after');
+    const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : undefined;
+    const details = parseGoogleApiErrorBody(errorBody);
+
+    throw new GoogleApiError('Google TTS API error', {
+      statusCode: response.status,
+      statusText: response.statusText,
+      retryAfter: Number.isFinite(retryAfter) ? retryAfter : undefined,
+      body: errorBody,
+      details: details ?? undefined,
+    });
   }
 
   return (await response.json()) as GeminiTTSResponse;
@@ -115,6 +127,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
         },
         catch: mapError,
       }).pipe(
+        retryTransientProvider,
         Effect.withSpan('tts.previewVoice', {
           attributes: {
             'tts.provider': 'google',
@@ -167,6 +180,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
         },
         catch: mapError,
       }).pipe(
+        retryTransientProvider,
         Effect.withSpan('tts.synthesize', {
           attributes: {
             'tts.provider': 'google',
