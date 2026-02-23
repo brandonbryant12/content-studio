@@ -22,6 +22,8 @@ export {
   InfographicError,
   PersonaNotFound,
   NotPersonaOwner,
+  SvgNotFoundError,
+  SvgGenerationInProgressError,
   type MediaError,
 } from './errors';
 
@@ -212,12 +214,54 @@ export {
   type GenerateAvatarInput,
 } from './persona';
 
+export {
+  SvgRepo,
+  SvgRepoLive,
+  type SvgRepoService,
+  type SvgListOptions,
+  SvgMessageRepo,
+  SvgMessageRepoLive,
+  type SvgMessageRepoService,
+  type InsertSvg,
+  type RepoUpdateSvg,
+  type InsertSvgMessage,
+  createSvg,
+  getSvg,
+  listSvgs,
+  updateSvg,
+  deleteSvg,
+  listMessages,
+  streamSvgChat,
+  sanitizeSvg,
+  extractSvgBlock,
+  type CreateSvgInput,
+  type GetSvgInput,
+  type ListSvgsInput,
+  type UpdateSvgInput,
+  type DeleteSvgInput,
+  type ListMessagesInput,
+  type StreamSvgChatInput,
+} from './svg';
+
+export type {
+  Svg,
+  SvgStatus,
+  SvgOutput,
+  SvgMessage,
+  SvgMessageRole,
+  SvgMessageOutput,
+  CreateSvg,
+  UpdateSvg,
+} from './svg';
+
 import type { ActivityLogRepo } from './activity';
 import type { DocumentRepo } from './document';
 import type { InfographicRepo } from './infographic';
 import type { StylePresetRepo } from './infographic';
 import type { PersonaRepo } from './persona';
 import type { PodcastRepo } from './podcast';
+import type { SvgMessageRepo } from './svg';
+import type { SvgRepo } from './svg';
 import type { VoiceoverRepo } from './voiceover';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
@@ -226,6 +270,7 @@ import { DocumentRepoLive } from './document';
 import { InfographicRepoLive, StylePresetRepoLive } from './infographic';
 import { PersonaRepoLive } from './persona';
 import { PodcastRepoLive } from './podcast';
+import { SvgMessageRepoLive, SvgRepoLive } from './svg';
 import { VoiceoverRepoLive } from './voiceover';
 
 // When adding a new repo, add it to both Media and MediaLive.
@@ -236,7 +281,9 @@ export type Media =
   | InfographicRepo
   | StylePresetRepo
   | ActivityLogRepo
-  | PersonaRepo;
+  | PersonaRepo
+  | SvgRepo
+  | SvgMessageRepo;
 
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
@@ -247,6 +294,8 @@ export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
     StylePresetRepoLive,
     ActivityLogRepoLive,
     PersonaRepoLive,
+    SvgRepoLive,
+    SvgMessageRepoLive,
   );
 
 export {
