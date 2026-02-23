@@ -204,6 +204,34 @@ describe('createFromUrl', () => {
       expect(insertData.title).toBe('example.com/blog/post');
     });
 
+    it('sanitizes metadata before insert', async () => {
+      const user = createTestUser();
+      const insertSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockDocumentRepo({}, { onInsert: insertSpy }),
+        createMockQueue(),
+      );
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          createFromUrl({
+            url: 'https://example.com/article',
+            metadata: {
+              ' source ': ' api ',
+              empty: '   ',
+              version: 2,
+              '': 'ignored',
+            },
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      const insertData = insertSpy.mock.calls[0]![0];
+      expect(insertData.metadata).toEqual({ source: 'api', version: 2 });
+    });
+
     it('enqueues process-url job with correct payload', async () => {
       const user = createTestUser();
       const enqueueSpy = vi.fn();

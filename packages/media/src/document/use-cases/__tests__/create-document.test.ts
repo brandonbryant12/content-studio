@@ -302,7 +302,7 @@ describe('createDocument', () => {
   });
 
   describe('metadata handling', () => {
-    it('passes metadata to document repo', async () => {
+    it('sanitizes metadata before insert', async () => {
       // Arrange
       const insertSpy = vi.fn();
       const mockRepo = createMockDocumentRepo((data) => {
@@ -312,7 +312,13 @@ describe('createDocument', () => {
 
       const layers = Layer.mergeAll(mockRepo, createMockStorage(), MockDbLive);
 
-      const testMetadata = { source: 'api', version: 1 };
+      const testMetadata = {
+        ' source ': ' api ',
+        empty: '   ',
+        '': 'ignored',
+        version: 1,
+      };
+      const expectedMetadata = { source: 'api', version: 1 };
 
       // Act
       const result = await Effect.runPromise(
@@ -324,9 +330,9 @@ describe('createDocument', () => {
       );
 
       // Assert
-      expect(result.metadata).toEqual(testMetadata);
+      expect(result.metadata).toEqual(expectedMetadata);
       const insertedData = insertSpy.mock.calls[0]?.[0];
-      expect(insertedData?.metadata).toEqual(testMetadata);
+      expect(insertedData?.metadata).toEqual(expectedMetadata);
     });
   });
 });
