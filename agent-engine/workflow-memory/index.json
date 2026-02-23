@@ -121,6 +121,23 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-sanity-check-error-assertion-scan",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: error assertion scan",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "periodic-scans",
+      "testing",
+      "error-handling"
+    ],
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
