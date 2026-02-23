@@ -452,7 +452,13 @@ describe('uploadDocument', () => {
       // Arrange
       const insertSpy = vi.fn();
       const textContent = Buffer.from('Test content');
-      const customMetadata = { source: 'api', version: 2 };
+      const customMetadata = {
+        ' source ': ' api ',
+        empty: '   ',
+        version: 2,
+        '': 'ignored',
+      };
+      const expectedMetadata = { source: 'api', version: 2 };
 
       const mockRepo = createMockDocumentRepo((data) => {
         insertSpy(data);
@@ -474,7 +480,7 @@ describe('uploadDocument', () => {
       // Assert
       const insertedData = insertSpy.mock.calls[0]?.[0];
       expect(insertedData?.metadata).toEqual(
-        expect.objectContaining(customMetadata),
+        expect.objectContaining(expectedMetadata),
       );
     });
   });
