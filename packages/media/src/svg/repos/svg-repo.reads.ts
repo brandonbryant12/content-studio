@@ -2,8 +2,8 @@ import { withDb } from '@repo/db/effect';
 import { svg, type Svg, type SvgId } from '@repo/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 import { Effect } from 'effect';
-import { SvgNotFoundError } from '../../errors';
 import type { SvgRepoService } from './svg-repo';
+import { SvgNotFoundError } from '../../errors';
 
 const requireSvg = (svgId: string) =>
   Effect.flatMap((row: Svg | null | undefined) =>

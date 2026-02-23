@@ -1,5 +1,4 @@
 import { oc, eventIterator, type } from '@orpc/contract';
-import type { UIMessageChunk } from 'ai';
 import {
   SvgIdSchema,
   SvgOutputSchema,
@@ -8,6 +7,7 @@ import {
   SvgMessageOutputSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
+import type { UIMessageChunk } from 'ai';
 import { std, PaginationFields } from './shared';
 
 const svgErrors = {

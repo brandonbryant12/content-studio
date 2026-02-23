@@ -2,10 +2,10 @@ import { useChat } from '@ai-sdk/react';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
 import { useCallback, useMemo } from 'react';
 import type { UIMessage } from 'ai';
-import { rawApiClient } from '@/clients/apiClient';
-import { queryClient } from '@/clients/queryClient';
 import { getSvgQueryKey } from './use-svg';
 import { getSvgMessagesQueryKey } from './use-svg-messages';
+import { rawApiClient } from '@/clients/apiClient';
+import { queryClient } from '@/clients/queryClient';
 
 function getMessageText(message: UIMessage): string {
   return message.parts

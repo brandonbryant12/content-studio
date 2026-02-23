@@ -2,11 +2,11 @@ import { withDb } from '@repo/db/effect';
 import { SvgStatus, svg, svgMessage, type Svg, type SvgId } from '@repo/db/schema';
 import { and, eq, ne } from 'drizzle-orm';
 import { Effect } from 'effect';
+import type { InsertSvg, SvgRepoService, UpdateSvg } from './svg-repo';
 import {
   SvgGenerationInProgressError,
   SvgNotFoundError,
 } from '../../errors';
-import type { InsertSvg, SvgRepoService, UpdateSvg } from './svg-repo';
 
 const requireSvg = (svgId: string) =>
   Effect.flatMap((row: Svg | null | undefined) =>

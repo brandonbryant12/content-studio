@@ -4,8 +4,8 @@ import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { UIMessage } from 'ai';
 import type { RouterOutput } from '@repo/api/client';
+import type { UIMessage } from 'ai';
 import { useSvg } from '../hooks/use-svg';
 import { useUpdateSvg } from '../hooks/use-svg-actions';
 import { useSvgChat } from '../hooks/use-svg-chat';
@@ -46,22 +46,22 @@ export function SvgCreatorContainer({ svgId }: SvgCreatorContainerProps) {
   const chat = useSvgChat(svgId);
   const updateMutation = useUpdateSvg(svgId);
 
+  // SuspenseBoundary resetKeys={[svgId]} remounts on navigation,
+  // so useState initializer is sufficient for per-SVG title state.
   const [title, setTitle] = useState(svg.title ?? '');
-
-  useEffect(() => {
-    setTitle(svg.title ?? '');
-  }, [svg.id, svg.title]);
 
   const initialMessages = useMemo(
     () => persistedMessages.map(toUiMessage),
     [persistedMessages],
   );
 
+  const { messages: chatMessages, setMessages } = chat;
+
   useEffect(() => {
-    if (chat.messages.length > 0) return;
+    if (chatMessages.length > 0) return;
     if (initialMessages.length === 0) return;
-    chat.setMessages(initialMessages);
-  }, [chat.messages.length, chat.setMessages, initialMessages]);
+    setMessages(initialMessages);
+  }, [chatMessages.length, setMessages, initialMessages]);
 
   const handleSaveTitle = useCallback(() => {
     const nextTitle = title.trim();
@@ -75,17 +75,18 @@ export function SvgCreatorContainer({ svgId }: SvgCreatorContainerProps) {
     });
   }, [title, svg.id, svg.title, updateMutation]);
 
+  const { sendMessage } = chat;
   const handleSendMessage = useCallback(
     (text: string) => {
-      chat.sendMessage({ text });
+      sendMessage({ text });
     },
-    [chat],
+    [sendMessage],
   );
 
   const isTitleDirty = title.trim() !== (svg.title ?? '');
   const statusConfig = STATUS_CONFIG[svg.status];
   const displayTitle = svg.title?.trim() || 'Untitled SVG';
-  const chatMessages = chat.messages.length > 0 ? chat.messages : initialMessages;
+  const displayMessages = chatMessages.length > 0 ? chatMessages : initialMessages;
 
   return (
     <div className="workbench">
@@ -147,7 +148,7 @@ export function SvgCreatorContainer({ svgId }: SvgCreatorContainerProps) {
 
         <aside className="workbench-panel-right">
           <SvgChatPanel
-            messages={chatMessages}
+            messages={displayMessages}
             status={chat.status}
             error={chat.error}
             onSendMessage={handleSendMessage}

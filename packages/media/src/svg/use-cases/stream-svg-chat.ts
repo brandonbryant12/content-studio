@@ -1,8 +1,8 @@
 import { streamSvgChat as streamSvgChatModel } from '@repo/ai/chat';
 import { getCurrentUser } from '@repo/auth/policy';
+import { Effect } from 'effect';
 import type { Db } from '@repo/db/effect';
 import type { SvgMessage } from '@repo/db/schema';
-import { Effect } from 'effect';
 import { SvgMessageRepo, SvgRepo } from '../repos';
 import { extractSvgBlock, sanitizeSvg } from '../sanitize-svg';
 
