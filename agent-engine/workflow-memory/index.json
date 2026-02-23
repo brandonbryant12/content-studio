@@ -1,5 +1,25 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ship SVG Creator frontend slice",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "frontend",
+      "svgs",
+      "tanstack-query",
+      "chat-streaming"
+    ],
+    "importance": 0.78,
+    "recency": 1,
+    "confidence": 0.87,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-svg-backend-foundation-slice-implemented",
     "date": "2026-02-23",
     "month": "2026-02",
