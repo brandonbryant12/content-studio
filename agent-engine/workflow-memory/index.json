@@ -79,6 +79,29 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-google-tts-image-gen-retry-error-parsing",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Google TTS/Image Gen retry + error parsing",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ai",
+      "tts",
+      "image-gen",
+      "retry",
+      "error-parsing",
+      "memory-form:parametric",
+      "memory-function:semantic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.55,
+    "recency": 0.6,
+    "confidence": 0.56,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-removed-svg-creator-feature-end-to-end",
     "date": "2026-02-23",
     "month": "2026-02",
