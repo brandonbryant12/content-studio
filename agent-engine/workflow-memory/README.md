@@ -29,7 +29,9 @@ Every core workflow run (for example Feature Delivery, Architecture + ADR
 Guard, Periodic Scans, Docs + Knowledge Drift, and Self-Improvement) writes at
 least one event using [`add-entry.ts`](../scripts/workflow-memory/add-entry.ts).
 Utility skills do not use standalone workflow keys; they log under the parent
-core workflow key.
+core workflow key. Capture the utility skill as tags instead (for example,
+`skill:intake-triage`, `skill:pr-risk-review`) so the event still records the
+skills used without fragmenting workflow coverage.
 This captures why decisions were made, what failed, and which follow-up actions
 are required.
 
@@ -257,11 +259,19 @@ Optional flags:
 - `--month YYYY-MM` checks a specific month
 - `--min N` requires at least `N` entries per workflow
 - `--strict` exits non-zero when any workflow is below threshold
+- `--audit-taxonomy` reports memory-tagged entries missing required taxonomy tags
 
 Weekly baseline:
 
 ```bash
 pnpm workflow-memory:coverage:strict
+```
+
+Combine taxonomy audit with strict mode to fail when memory-tagged entries are
+missing `memory-form:*`, `memory-function:*`, or `memory-dynamics:*` tags:
+
+```bash
+pnpm workflow-memory:coverage --audit-taxonomy --strict
 ```
 
 If coverage reports a workflow as missing and that workflow was run, add the missing event immediately with [`agent-engine/scripts/workflow-memory/add-entry.ts`](../scripts/workflow-memory/add-entry.ts).

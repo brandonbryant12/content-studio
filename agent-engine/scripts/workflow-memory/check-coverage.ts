@@ -13,12 +13,18 @@ const INDEX_PATH = path.join(
 
 
 const USAGE = `Usage:
-  pnpm workflow-memory:coverage [--month YYYY-MM] [--min 1] [--strict] [--json]
+  pnpm workflow-memory:coverage [--month YYYY-MM] [--min 1] [--strict] [--json] [--audit-taxonomy]
 
 Examples:
   pnpm workflow-memory:coverage
   pnpm workflow-memory:coverage --month 2026-02 --strict
+  pnpm workflow-memory:coverage --month 2026-02 --audit-taxonomy
 `;
+
+const MEMORY_TRIGGER_TAGS = new Set(["memory", "workflow-memory", "memory-eval"]);
+const MEMORY_FORM_PREFIX = "memory-form:";
+const MEMORY_FUNCTION_PREFIX = "memory-function:";
+const MEMORY_DYNAMICS_PREFIX = "memory-dynamics:";
 
 function parseArgs(argv) {
   const args = {};
@@ -87,6 +93,10 @@ function parsePositiveInt(raw, fallback) {
   return value;
 }
 
+function hasTagPrefix(tags, prefix) {
+  return tags.some((tag) => tag.startsWith(prefix));
+}
+
 function summarizeCoverage(indexRows, month, minPerWorkflow, knownWorkflows) {
   const rowsForMonth = indexRows.filter(
     (row) => row && typeof row.month === "string" && row.month === month,
@@ -119,7 +129,41 @@ function summarizeCoverage(indexRows, month, minPerWorkflow, knownWorkflows) {
     coveredWorkflowCount: knownWorkflows.length - missing.length,
     workflowCount: knownWorkflows.length,
     missingWorkflows: missing,
+    rowsForMonth,
   };
+}
+
+function findMissingMemoryTaxonomy(rows) {
+  const missing = [];
+
+  for (const row of rows) {
+    if (!row || !Array.isArray(row.tags)) continue;
+    const tags = row.tags.filter((tag) => typeof tag === "string");
+    if (tags.length === 0) continue;
+
+    const hasMemoryTags =
+      tags.some((tag) => MEMORY_TRIGGER_TAGS.has(tag)) ||
+      hasTagPrefix(tags, MEMORY_FORM_PREFIX) ||
+      hasTagPrefix(tags, MEMORY_FUNCTION_PREFIX) ||
+      hasTagPrefix(tags, MEMORY_DYNAMICS_PREFIX);
+
+    if (!hasMemoryTags) continue;
+
+    if (
+      !hasTagPrefix(tags, MEMORY_FORM_PREFIX) ||
+      !hasTagPrefix(tags, MEMORY_FUNCTION_PREFIX) ||
+      !hasTagPrefix(tags, MEMORY_DYNAMICS_PREFIX)
+    ) {
+      missing.push({
+        id: row.id,
+        workflow: row.workflow,
+        tags,
+        eventFile: row.eventFile,
+      });
+    }
+  }
+
+  return missing;
 }
 
 function printHumanReport(summary) {
@@ -155,6 +199,14 @@ function printHumanReport(summary) {
       'If a listed workflow was actually run, add an event with: pnpm workflow-memory:add-entry --workflow "<Workflow>" ...',
     );
   }
+
+  if (summary.missingMemoryTaxonomy?.length > 0) {
+    console.log("");
+    console.log("Memory-tagged entries missing taxonomy tags:");
+    for (const row of summary.missingMemoryTaxonomy) {
+      console.log(`- ${row.id} (${row.workflow})`);
+    }
+  }
 }
 
 async function main() {
@@ -172,18 +224,39 @@ async function main() {
   const minPerWorkflow = parsePositiveInt(args.min, 1);
   const strict = args.strict === "true";
   const json = args.json === "true";
+  const auditTaxonomy = args.audit_taxonomy === "true";
 
   const indexRows = await readIndex();
   const knownWorkflows = await readKnownWorkflows();
   const summary = summarizeCoverage(indexRows, month, minPerWorkflow, knownWorkflows);
+  const missingMemoryTaxonomy = auditTaxonomy
+    ? findMissingMemoryTaxonomy(summary.rowsForMonth)
+    : [];
+  const unknownWorkflowKeys = Object.keys(summary.unknownWorkflows);
 
   if (json) {
-    console.log(JSON.stringify(summary, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          ...summary,
+          missingMemoryTaxonomy,
+        },
+        null,
+        2,
+      ),
+    );
   } else {
-    printHumanReport(summary);
+    printHumanReport({
+      ...summary,
+      missingMemoryTaxonomy,
+    });
   }
 
-  if (strict && summary.missingWorkflows.length > 0) {
+  if (strict && (summary.missingWorkflows.length > 0 || unknownWorkflowKeys.length > 0)) {
+    process.exitCode = 1;
+  }
+
+  if (strict && auditTaxonomy && missingMemoryTaxonomy.length > 0) {
     process.exitCode = 1;
   }
 }
