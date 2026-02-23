@@ -3,8 +3,8 @@ import { withTestUser } from '@repo/testing/setup';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { Svg, SvgId } from '@repo/db/schema';
-import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';
+import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
 import { listSvgs } from '../list-svgs';
 
 const makeSvg = (overrides: Partial<Svg> = {}): Svg => ({

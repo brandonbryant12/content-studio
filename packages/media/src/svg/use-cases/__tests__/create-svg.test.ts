@@ -4,8 +4,8 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { InsertSvg } from '../../repos/svg-repo';
 import type { Svg } from '@repo/db/schema';
-import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';
+import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
 import { createSvg } from '../create-svg';
 
 const mockInsertFn = (data: InsertSvg) =>

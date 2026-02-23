@@ -1,3 +1,4 @@
+import { MockLLMLive } from '@repo/ai/testing';
 import { createTestUser, resetAllFactories } from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
 import { Effect, Layer } from 'effect';
@@ -7,9 +8,9 @@ import {
   SvgNotFoundError,
   SvgGenerationInProgressError,
 } from '../../../errors';
-import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
-import { createMockSvgMessageRepo } from '../../../test-utils/mock-svg-message-repo';
 import { MockDbLive } from '../../../test-utils/mock-repos';
+import { createMockSvgMessageRepo } from '../../../test-utils/mock-svg-message-repo';
+import { createMockSvgRepo } from '../../../test-utils/mock-svg-repo';
 import { streamSvgChat } from '../stream-svg-chat';
 
 const makeSvg = (overrides: Partial<Svg> = {}): Svg => ({
@@ -32,7 +33,7 @@ describe('streamSvgChat', () => {
   it('fails when user is not authenticated', async () => {
     const svgRepo = createMockSvgRepo();
     const messageRepo = createMockSvgMessageRepo();
-    const layers = Layer.mergeAll(MockDbLive, svgRepo, messageRepo);
+    const layers = Layer.mergeAll(MockDbLive, MockLLMLive, svgRepo, messageRepo);
 
     const result = await Effect.runPromiseExit(
       streamSvgChat({
@@ -53,7 +54,7 @@ describe('streamSvgChat', () => {
       failGeneration: () => Effect.succeed(undefined),
     });
     const messageRepo = createMockSvgMessageRepo();
-    const layers = Layer.mergeAll(MockDbLive, svgRepo, messageRepo);
+    const layers = Layer.mergeAll(MockDbLive, MockLLMLive, svgRepo, messageRepo);
 
     const result = await Effect.runPromiseExit(
       withTestUser(user)(
@@ -81,7 +82,7 @@ describe('streamSvgChat', () => {
       failGeneration: () => Effect.succeed(undefined),
     });
     const messageRepo = createMockSvgMessageRepo();
-    const layers = Layer.mergeAll(MockDbLive, svgRepo, messageRepo);
+    const layers = Layer.mergeAll(MockDbLive, MockLLMLive, svgRepo, messageRepo);
 
     const result = await Effect.runPromiseExit(
       withTestUser(user)(
@@ -114,7 +115,7 @@ describe('streamSvgChat', () => {
       failGeneration: () => Effect.succeed(undefined),
     });
     const messageRepo = createMockSvgMessageRepo();
-    const layers = Layer.mergeAll(MockDbLive, svgRepo, messageRepo);
+    const layers = Layer.mergeAll(MockDbLive, MockLLMLive, svgRepo, messageRepo);
 
     const result = await Effect.runPromiseExit(
       withTestUser(user)(

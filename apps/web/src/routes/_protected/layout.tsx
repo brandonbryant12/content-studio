@@ -6,6 +6,7 @@ import {
   FileTextIcon,
   HomeIcon,
   ImageIcon,
+  MagicWandIcon,
   MixerHorizontalIcon,
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
@@ -212,7 +213,7 @@ function Sidebar({
 
           <NavItem
             to="/svgs"
-            icon={ImageIcon}
+            icon={MagicWandIcon}
             label="SVG Creator"
             colorScheme="primary"
             collapsed={collapsed}
