@@ -104,6 +104,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-sanity-check-api-handler-pattern-scan",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: API handler pattern scan",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "pattern-scan",
+      "api-handler"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
