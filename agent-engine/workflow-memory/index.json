@@ -121,6 +121,18 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-align-media-research-errors-with-protocol-metadata",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Align media research errors with protocol metadata",
+    "severity": "low",
+    "status": "closed",
+    "tags": [],
+    "confidence": 0.86,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
