@@ -1,7 +1,7 @@
 import { DeepResearch } from '@repo/ai';
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
-import { Data, Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
 import {
@@ -12,19 +12,41 @@ import {
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 
-export class ResearchTimeoutError extends Data.TaggedError(
+export class ResearchTimeoutError extends Schema.TaggedError<ResearchTimeoutError>()(
   'ResearchTimeoutError',
-)<{
-  readonly documentId: string;
-  readonly interactionId: string;
-}> {}
+  {
+    documentId: Schema.String,
+    interactionId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 504 as const;
+  static readonly httpCode = 'DOCUMENT_RESEARCH_TIMEOUT' as const;
+  static readonly httpMessage = (e: ResearchTimeoutError) =>
+    e.message ?? 'Document research timed out';
+  static readonly logLevel = 'warn' as const;
+  static getData(e: ResearchTimeoutError) {
+    return { documentId: e.documentId, interactionId: e.interactionId };
+  }
+}
 
-export class ResearchEmptyContentError extends Data.TaggedError(
+export class ResearchEmptyContentError extends Schema.TaggedError<ResearchEmptyContentError>()(
   'ResearchEmptyContentError',
-)<{
-  readonly documentId: string;
-  readonly interactionId: string;
-}> {}
+  {
+    documentId: Schema.String,
+    interactionId: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 422 as const;
+  static readonly httpCode = 'DOCUMENT_RESEARCH_EMPTY_CONTENT' as const;
+  static readonly httpMessage = (e: ResearchEmptyContentError) =>
+    e.message ?? 'Document research completed with no content';
+  static readonly logLevel = 'warn' as const;
+  static getData(e: ResearchEmptyContentError) {
+    return { documentId: e.documentId, interactionId: e.interactionId };
+  }
+}
 
 export interface ProcessResearchInput {
   documentId: string;
