@@ -6,6 +6,7 @@ import {
   type ScriptSegment,
 } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -62,6 +63,11 @@ export const saveChanges = (input: SaveChangesInput) =>
       input.podcastId,
       user.id,
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.podcastId,
+      attributes: { 'podcast.id': input.podcastId },
+    });
 
     if (podcast.status !== VersionStatus.READY) {
       return yield* Effect.fail(
@@ -121,8 +127,4 @@ export const saveChanges = (input: SaveChangesInput) =>
     yield* podcastRepo.clearApproval(input.podcastId);
 
     return { podcast: updatedPodcast, hasChanges: true };
-  }).pipe(
-    Effect.withSpan('useCase.saveChanges', {
-      attributes: { 'podcast.id': input.podcastId },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.saveChanges'));

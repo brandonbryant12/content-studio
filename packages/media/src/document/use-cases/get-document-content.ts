@@ -2,6 +2,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { DocumentContentNotFound } from '../../errors';
+import { annotateUseCaseSpan } from '../../shared';
 import { parseDocumentContent } from '../parsers';
 import { DocumentRepo } from '../repos';
 
@@ -20,6 +21,11 @@ export const getDocumentContent = (input: GetDocumentContentInput) =>
     const documentRepo = yield* DocumentRepo;
 
     const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'document.id': input.id },
+    });
 
     // Fast path: return denormalized extracted text if available
     if (doc.extractedText) {
@@ -49,8 +55,4 @@ export const getDocumentContent = (input: GetDocumentContentInput) =>
     });
 
     return { content };
-  }).pipe(
-    Effect.withSpan('useCase.getDocumentContent', {
-      attributes: { 'document.id': input.id },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.getDocumentContent'));

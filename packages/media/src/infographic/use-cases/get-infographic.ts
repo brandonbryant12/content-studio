@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -20,10 +21,11 @@ export const getInfographic = (input: GetInfographicInput) =>
     const repo = yield* InfographicRepo;
 
     const infographic = yield* repo.findByIdForUser(input.id, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'infographic.id': input.id },
+    });
 
     return infographic;
-  }).pipe(
-    Effect.withSpan('useCase.getInfographic', {
-      attributes: { 'infographic.id': input.id },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.getInfographic'));

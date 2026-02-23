@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 import type { ProcessUrlPayload, ProcessResearchPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
 import {
+  annotateUseCaseSpan,
   enqueueJob,
   formatUnknownError,
   withTransactionalStateAndEnqueue,
@@ -20,6 +21,11 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     const documentRepo = yield* DocumentRepo;
 
     const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'document.id': input.id },
+    });
 
     // Only allow retry on failed documents
     if (doc.status === 'processing') {
@@ -80,8 +86,4 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     }
 
     return yield* documentRepo.findByIdForUser(doc.id, user.id);
-  }).pipe(
-    Effect.withSpan('useCase.retryProcessing', {
-      attributes: { 'document.id': input.id },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.retryProcessing'));

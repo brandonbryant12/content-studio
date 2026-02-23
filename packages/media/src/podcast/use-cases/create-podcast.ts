@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
+import { annotateUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -24,8 +25,14 @@ export const createPodcast = (input: CreatePodcastInput) =>
       yield* podcastRepo.verifyDocumentsExist(documentIds, user.id);
     }
 
-    return yield* podcastRepo.insert(
+    const podcast = yield* podcastRepo.insert(
       { ...data, createdBy: user.id },
       documentIds ?? [],
     );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: podcast.id,
+      attributes: { 'podcast.id': podcast.id },
+    });
+    return podcast;
   }).pipe(Effect.withSpan('useCase.createPodcast'));

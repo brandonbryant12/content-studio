@@ -2,7 +2,7 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { calculateWordCount } from '../../shared';
+import { annotateUseCaseSpan, calculateWordCount } from '../../shared';
 import { getMimeType, parseUploadedFile } from '../parsers';
 import { DocumentRepo } from '../repos';
 
@@ -47,7 +47,7 @@ export const uploadDocument = (input: UploadDocumentInput) =>
 
     const wordCount = calculateWordCount(parsed.content);
 
-    return yield* documentRepo
+    const document = yield* documentRepo
       .insert({
         title: input.title ?? parsed.title,
         contentKey,
@@ -62,10 +62,14 @@ export const uploadDocument = (input: UploadDocumentInput) =>
       .pipe(
         Effect.tapError(() => storage.delete(contentKey).pipe(Effect.ignore)),
       );
-  }).pipe(
-    Effect.withSpan('useCase.uploadDocument', {
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: document.id,
       attributes: {
+        'document.id': document.id,
         'file.name': input.fileName,
       },
-    }),
-  );
+    });
+
+    return document;
+  }).pipe(Effect.withSpan('useCase.uploadDocument'));

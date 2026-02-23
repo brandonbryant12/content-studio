@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { SvgRepo } from '../repos';
 
 export interface DeleteSvgInput {
@@ -12,9 +13,10 @@ export const deleteSvg = (input: DeleteSvgInput) =>
     const repo = yield* SvgRepo;
 
     yield* repo.findByIdForUser(input.svgId, user.id);
-    yield* repo.delete(input.svgId);
-  }).pipe(
-    Effect.withSpan('useCase.deleteSvg', {
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.svgId,
       attributes: { 'svg.id': input.svgId },
-    }),
-  );
+    });
+    yield* repo.delete(input.svgId);
+  }).pipe(Effect.withSpan('useCase.deleteSvg'));

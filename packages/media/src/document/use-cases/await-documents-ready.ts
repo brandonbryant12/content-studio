@@ -1,4 +1,6 @@
+import { getCurrentUser } from '@repo/auth/policy';
 import { Data, Effect } from 'effect';
+import { annotateUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 export class DocumentsNotReadyTimeout extends Data.TaggedError(
@@ -22,6 +24,14 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     const { documentIds } = input;
     if (documentIds.length === 0) return;
 
+    const user = yield* getCurrentUser;
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: documentIds[0] ?? 'multiple',
+      attributes: {
+        'document.ids': documentIds.join(','),
+      },
+    });
     const documentRepo = yield* DocumentRepo;
 
     // Check initial status
@@ -75,10 +85,4 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     }
 
     return yield* new DocumentsNotReadyTimeout({ documentIds });
-  }).pipe(
-    Effect.withSpan('useCase.awaitDocumentsReady', {
-      attributes: {
-        'document.ids': input.documentIds.join(','),
-      },
-    }),
-  );
+  }).pipe(Effect.withSpan('useCase.awaitDocumentsReady'));

@@ -1,6 +1,11 @@
 import { createMockImageGen } from '@repo/ai/testing';
 import { createMockStorage } from '@repo/storage/testing';
-import { createTestPodcast, resetAllFactories } from '@repo/testing';
+import {
+  createTestPodcast,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { PodcastWithDocuments } from '../../repos/podcast-repo';
@@ -12,8 +17,11 @@ import {
 import { generateCoverImage } from '../generate-cover-image';
 
 describe('generateCoverImage', () => {
+  let testUser: ReturnType<typeof createTestUser>;
+
   beforeEach(() => {
     resetAllFactories();
+    testUser = createTestUser();
   });
 
   it('uploads and stores a cover image for the podcast', async () => {
@@ -40,7 +48,11 @@ describe('generateCoverImage', () => {
     );
 
     await Effect.runPromise(
-      generateCoverImage({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+      withTestUser(testUser)(
+        generateCoverImage({ podcastId: podcast.id }).pipe(
+          Effect.provide(layers),
+        ),
+      ),
     );
 
     expect(updateSpy).toHaveBeenCalledTimes(1);
