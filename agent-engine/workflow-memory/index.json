@@ -1,5 +1,20 @@
 [
   {
+    "id": "2026-02-23-feature-delivery-align-tts-options-with-google-behavior",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Align TTS options with Google behavior",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "tts",
+      "api-contract",
+      "tests"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
