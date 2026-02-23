@@ -121,6 +121,21 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-worker-job-handler-scan-clean",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Worker job handler scan clean",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scan",
+      "apps/worker",
+      "job-queue"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-harden-workflow-registry-validation",
     "date": "2026-02-23",
     "month": "2026-02",
