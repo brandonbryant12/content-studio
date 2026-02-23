@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-23-periodic-scans-docs-guardrail-drift-scan-logging-data-fetching",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Docs/guardrail drift scan: logging + data-fetching",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "best-practice-researcher",
+      "docs-drift",
+      "frontend",
+      "observability"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
