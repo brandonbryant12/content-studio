@@ -111,6 +111,22 @@
       "docsPath": "agent-engine/workflows/tanstack-vite/README.md"
     },
     {
+      "id": "frontend-design",
+      "name": "Frontend Design",
+      "memoryKey": "Use parent workflow key",
+      "summary": "Intentional UI design workflow for apps/web.",
+      "skills": [
+        "frontend-design"
+      ],
+      "usedWithWorkflows": [
+        "feature-delivery",
+        "architecture-adr-guard",
+        "self-improvement"
+      ],
+      "automationLanes": [],
+      "docsPath": "agent-engine/workflows/frontend-design/README.md"
+    },
+    {
       "id": "pr-risk-review",
       "name": "PR Risk Review",
       "memoryKey": "Use parent workflow key",

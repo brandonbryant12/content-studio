@@ -8,7 +8,7 @@
 2. Every handler call to `handleEffectWithProtocol` includes a span name.
 <!-- enforced-by: types -->
 
-3. No `console.log` in `packages/` directories.
+3. Avoid `console.log` in `packages/` directories; exceptions require an explicit `eslint-disable no-console` comment (for test infra or bootstrap output).
 <!-- enforced-by: eslint -->
 
 ## Span Naming Convention
@@ -71,10 +71,13 @@ The invariant test at `packages/media/src/shared/__tests__/safety-invariants.tes
 
 | Context | Allowed | Mechanism |
 |---|---|---|
-| `packages/` | Structured Effect logging only | `Effect.log`, `Effect.logWarning`, `Effect.logError` |
+| `packages/` | Structured Effect logging only; `console.log` requires explicit `eslint-disable no-console` in test infra | `Effect.log`, `Effect.logWarning`, `Effect.logError` |
 | `apps/server/` | Structured logging | Hono logger middleware + Effect logging |
 | `apps/web/` | `console.*` permitted in dev | No restriction |
-| Test files | `console.*` permitted | No restriction |
+| Test files | `console.*` permitted (prefer explicit disables when lint applies) | No restriction |
+
+Notes:
+- Test infrastructure in `packages/testing/` uses `console.log` with explicit `eslint-disable` comments to surface setup/teardown output.
 
 ## Telemetry Export (Datadog OTLP)
 <!-- enforced-by: manual-review -->
