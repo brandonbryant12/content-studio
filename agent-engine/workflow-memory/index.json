@@ -79,6 +79,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-feature-delivery-sanitize-document-metadata-inputs-in-use-cases",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Sanitize document metadata inputs in use cases",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "sanity-check",
+      "metadata",
+      "documents",
+      "sanitization"
+    ],
+    "importance": 0.4,
+    "confidence": 0.83,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-feature-delivery-ship-svg-creator-frontend-slice",
     "date": "2026-02-23",
     "month": "2026-02",
