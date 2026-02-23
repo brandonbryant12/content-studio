@@ -196,6 +196,17 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-self-improvement-catalog-frontend-design-clarify-console-log-policy",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Catalog frontend-design + clarify console.log policy",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-self-improvement-enforce-core-workflow-keys-and-memory-taxonomy-audit",
     "date": "2026-02-23",
     "month": "2026-02",
