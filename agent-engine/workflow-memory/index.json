@@ -104,6 +104,27 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-23-periodic-scans-sanity-check-automation-wrapper-drift",
+    "date": "2026-02-23",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: automation wrapper drift",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "drift",
+      "periodic-scans",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.63,
+    "recency": 0.77,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-22-architecture-adr-guard-scope-worker-fibers",
     "date": "2026-02-22",
     "month": "2026-02",
