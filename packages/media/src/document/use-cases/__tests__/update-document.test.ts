@@ -454,7 +454,12 @@ describe('updateDocument', () => {
 
       const input: UpdateDocumentInput = {
         id: doc.id,
-        metadata: { version: 2, newField: 'value' },
+        metadata: {
+          version: 2,
+          newField: ' value ',
+          empty: '   ',
+          '': 'ignored',
+        },
       };
 
       await runTest(withTestUser(owner)(updateDocument(input)), {

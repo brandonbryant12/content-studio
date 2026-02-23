@@ -7,6 +7,7 @@ import {
   calculateWordCount,
   withUseCaseSpan,
 } from '../../shared';
+import { sanitizeMetadata } from '../sanitize-metadata';
 import { getMimeType, parseUploadedFile } from '../parsers';
 import { DocumentRepo } from '../repos';
 
@@ -51,6 +52,11 @@ export const uploadDocument = (input: UploadDocumentInput) =>
 
     const wordCount = calculateWordCount(parsed.content);
 
+    const mergedMetadata =
+      input.metadata !== undefined
+        ? { ...(parsed.metadata ?? {}), ...input.metadata }
+        : parsed.metadata;
+
     const doc = yield* documentRepo
       .insert({
         title: input.title ?? parsed.title,
@@ -60,7 +66,7 @@ export const uploadDocument = (input: UploadDocumentInput) =>
         source: parsed.source,
         originalFileName: input.fileName,
         originalFileSize: data.length,
-        metadata: { ...parsed.metadata, ...input.metadata },
+        metadata: sanitizeMetadata(mergedMetadata),
         createdBy: user.id,
       })
       .pipe(

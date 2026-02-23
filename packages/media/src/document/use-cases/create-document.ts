@@ -7,6 +7,7 @@ import {
   calculateWordCount,
   withUseCaseSpan,
 } from '../../shared';
+import { sanitizeMetadata } from '../sanitize-metadata';
 import { DocumentRepo } from '../repos';
 
 // =============================================================================
@@ -44,7 +45,7 @@ export const createDocument = (input: CreateDocumentInput) =>
         wordCount,
         source: 'manual',
         originalFileSize: contentBuffer.length,
-        metadata: data.metadata,
+        metadata: sanitizeMetadata(data.metadata),
         createdBy: ownerId,
       })
       .pipe(

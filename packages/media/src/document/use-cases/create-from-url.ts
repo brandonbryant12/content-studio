@@ -10,6 +10,7 @@ import {
   withTransactionalStateAndEnqueue,
   withUseCaseSpan,
 } from '../../shared';
+import { sanitizeMetadata } from '../sanitize-metadata';
 import { DocumentRepo } from '../repos';
 import { validateUrl } from '../services/url-validator';
 
@@ -62,7 +63,7 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
           source: 'url',
           sourceUrl: url,
           status: 'processing',
-          metadata: input.metadata,
+          metadata: sanitizeMetadata(input.metadata),
           createdBy: user.id,
         });
         insertedDocumentId = doc.id;

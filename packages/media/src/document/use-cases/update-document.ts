@@ -6,6 +6,7 @@ import {
   replaceTextContentSafely,
   withUseCaseSpan,
 } from '../../shared';
+import { sanitizeMetadata } from '../sanitize-metadata';
 import {
   DocumentRepo,
   type UpdateDocumentInput as RepoUpdateInput,
@@ -45,7 +46,7 @@ export const updateDocument = (input: UpdateDocumentInput) =>
     }
 
     if (input.metadata !== undefined) {
-      updateInput.metadata = input.metadata;
+      updateInput.metadata = sanitizeMetadata(input.metadata);
     }
 
     if (input.content === undefined) {
