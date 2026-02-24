@@ -1,5 +1,19 @@
 [
   {
+    "id": "2026-02-24-feature-delivery-ready-for-dev-triage-no-op",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev triage no-op",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "triage"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
