@@ -18,6 +18,31 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-periodic-scans-sanity-check-macro-contract-coherence-no-op",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: macro contract coherence no-op",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "periodic-scans",
+      "architecture",
+      "contracts",
+      "selection:macro",
+      "decision:no-op",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.34,
+    "recency": 1,
+    "confidence": 0.93,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
