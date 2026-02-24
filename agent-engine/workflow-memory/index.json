@@ -18,6 +18,19 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-self-improvement-ready-for-dev-triage",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "ready-for-dev triage",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "skill:intake-triage"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
