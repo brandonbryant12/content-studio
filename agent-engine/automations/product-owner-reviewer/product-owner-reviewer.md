@@ -18,14 +18,14 @@ Memory-driven review protocol:
 - Walk mix target: about 40 percent meso, 60 percent micro over time.
 - Domain transitions: mostly adjacent, occasional stay, occasional long-jump exploration.
 3. Domain graph:
-- onboarding and first-value flow for enterprise users (meso)
+- onboarding and first-value flow for normal users (meso)
 - create/edit/generate flow for each content surface (document/podcast/voiceover/infographic/persona) (meso)
 - chat and AI-assistant interaction clarity (meso)
 - approval/review/retry loops and state communication (micro)
 - empty/loading/error/success UX consistency (micro)
 - terminology consistency and narrative cohesion across routes/components (micro)
 - accessibility and keyboard/focus/usability basics in high-traffic screens (micro)
-- then loop back to onboarding and first-value flow for enterprise users.
+- then loop back to onboarding and first-value flow for normal users.
 4. Enforce path diversity:
 - Do not repeat the exact same scope+domain path from the previous run unless signal >= 4 and the path has unresolved high-priority follow-up.
 - If repeating, explicitly justify the revisit in run memory with the unresolved follow-up reference.
@@ -33,9 +33,12 @@ Memory-driven review protocol:
 
 Review protocol:
 - Compare current UX and interaction patterns against [`docs/frontend/project-structure.md`](../../../docs/frontend/project-structure.md), [`docs/frontend/components.md`](../../../docs/frontend/components.md), [`docs/frontend/error-handling.md`](../../../docs/frontend/error-handling.md), [`docs/master-spec.md`](../../../docs/master-spec.md), and current route/component evidence.
-- Evaluate whether flows tell a coherent product story for enterprise users creating content with AI.
+- Evaluate whether flows tell a coherent product story for normal users creating content with AI.
 - Produce 3-6 ranked UX/product-owner recommendations with impact, effort, confidence, and concrete repository evidence.
 - Apply materiality checks: "Does this reduce user friction on a real journey?" and "Does this improve cohesion across adjacent features?"
+- Apply complexity checks:
+  - Default to bounded UX changes on existing screens/components.
+  - De-prioritize proposals that require new product surfaces, new role systems, or broad redesigns unless explicitly requested by humans.
 - Drop low-signal polish requests that do not materially improve usability or outcome clarity.
 - Drop recommendations that are not specific to improving Content Studio journeys.
 
@@ -44,7 +47,7 @@ Issue policy:
   - `gh label create product-owner --color 1D76DB --description "Product owner UX and journey improvements" --force`
 - Search open and closed issues plus open PRs before creating anything.
 - Reuse/extend existing issues when possible.
-- Open up to 4 high-signal non-duplicate issues when confidence >= 0.75.
+- Open up to 3 high-signal non-duplicate issues when confidence >= 0.8.
 - Every new issue title must start with `[Product Owner]`.
 - Every new issue must include:
   - Why This Improves Daily UX For Humans

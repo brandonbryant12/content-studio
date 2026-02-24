@@ -11,7 +11,7 @@ Scope and approval:
 - GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR queries, comments, labels, reactions, merges, metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 - Ensure the label `ready-for-dev` exists in this repository using `gh label create ready-for-dev --color 0E8A16 --description "Human-approved and ready for implementation automation" --force`.
 - Triage open GitHub issues labeled `ready-for-dev` in this repository.
-- This lane is the single implementation executor for issues originating from both research lanes (`best-practice-researcher` and `agent-engine-researcher`) once humans approve with `ready-for-dev`.
+- This lane is the single implementation executor for issues labeled `ready-for-dev`, whether approved directly by humans or by the `issue-evaluator` lane using the repository readiness rubric.
 - Use GitHub REST-style commands for triage (`gh issue list`, `gh issue view --json`, `gh api repos/...`) and do not depend on `gh api graphql` for issue selection.
 - Human approval gate is label-based only: implement only issues explicitly marked with the `ready-for-dev` label.
 - Optional guidance comments on issues not yet labeled `ready-for-dev` are allowed and do not consume execution capacity.

@@ -66,13 +66,18 @@ This creates stability plus adaptation:
 - Reviews onboarding, creation, generation, approval, and recovery flows for clarity and friction.
 - Creates/updates UX/product-owner improvement issues for human prioritization.
 
-5. `ready-for-dev-executor`
+5. `issue-evaluator`
+- Research-only triage lane that evaluates open issues and assigns one decision label: `ready-for-dev`, `human-eval-needed`, or `rejected`.
+- Uses a strict normal-user + bounded-complexity rubric so large enterprise/platform ideas are deferred for human scoping.
+- Leaves `require-human` issues untouched.
+
+6. `ready-for-dev-executor`
 - Human-in-the-loop coding lane.
 - Implements human-approved `ready-for-dev` issues with bounded per-run aggregation.
 - Can conservatively bundle multiple small, tightly related `ready-for-dev` issues into one coherent PR when manageable in a single context.
 - Branches from latest `origin/main`, runs core validation gates, and auto-merges on success.
 
-6. `sanity-check`
+7. `sanity-check`
 - Hourly memory-driven periodic scan lane spanning macro-to-micro sanity checks.
 - Can move directly from high-confidence bounded findings to implementation, PR, and auto-merge in one run.
 - Uses workflow routing to pick the correct execution contract for each fix.
@@ -163,8 +168,9 @@ External research is encouraged, but only through filters:
 3. `product-vision-researcher` finds strategic product-direction and roadmap opportunities.
 4. `product-owner-reviewer` finds tactical UX/journey and story-cohesion opportunities.
 5. `sanity-check` performs hourly memory-driven scans and directly ships bounded high-confidence fixes.
-6. Human approves selected researcher issues by adding `ready-for-dev`.
-7. `ready-for-dev-executor` implements and merges approved issues after gates, selecting 1..N with conservative bundling in one PR.
+6. `issue-evaluator` applies decision labels (`ready-for-dev`, `human-eval-needed`, `rejected`) using strict readiness criteria.
+7. Human reviews deferred issues and can override/adjust decisions as needed.
+8. `ready-for-dev-executor` implements and merges approved issues after gates, selecting 1..N with conservative bundling in one PR.
 
 ## Research Logging
 
@@ -187,6 +193,7 @@ cp agent-engine/automations/ready-for-dev-executor/ready-for-dev-executor.toml ~
 cp agent-engine/automations/agent-engine-researcher/agent-engine-researcher.toml ~/.codex/automations/agent-engine-researcher/automation.toml
 cp agent-engine/automations/product-vision-researcher/product-vision-researcher.toml ~/.codex/automations/product-vision-researcher/automation.toml
 cp agent-engine/automations/product-owner-reviewer/product-owner-reviewer.toml ~/.codex/automations/product-owner-reviewer/automation.toml
+cp agent-engine/automations/issue-evaluator/issue-evaluator.toml ~/.codex/automations/issue-evaluator/automation.toml
 cp agent-engine/automations/sanity-check/sanity-check.toml ~/.codex/automations/sanity-check/automation.toml
 ```
 
@@ -198,5 +205,6 @@ cp ~/.codex/automations/ready-for-dev-executor/automation.toml agent-engine/auto
 cp ~/.codex/automations/agent-engine-researcher/automation.toml agent-engine/automations/agent-engine-researcher/agent-engine-researcher.toml
 cp ~/.codex/automations/product-vision-researcher/automation.toml agent-engine/automations/product-vision-researcher/product-vision-researcher.toml
 cp ~/.codex/automations/product-owner-reviewer/automation.toml agent-engine/automations/product-owner-reviewer/product-owner-reviewer.toml
+cp ~/.codex/automations/issue-evaluator/automation.toml agent-engine/automations/issue-evaluator/issue-evaluator.toml
 cp ~/.codex/automations/sanity-check/automation.toml agent-engine/automations/sanity-check/sanity-check.toml
 ```

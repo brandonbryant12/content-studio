@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: strategic product-vision lane for Content Studio as an internal enterprise content platform powered primarily by Gemini and Google APIs. Keep this lane strictly focused on making Content Studio better for real users and enterprise outcomes; reject generic product or AI ideas that do not materially improve this repository's product direction. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: strategic product-vision lane for Content Studio as a practical AI content tool for normal users and small teams. Keep this lane strictly focused on making Content Studio better for real users in current product flows; reject generic product or AI ideas that do not materially improve this repository's product direction. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
 Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
 
@@ -19,7 +19,7 @@ Memory-driven focus protocol:
 - Domain transitions: mostly adjacent, occasional stay, occasional long-jump exploration.
 3. Domain graph:
 - north-star product narrative and business outcomes (macro)
-- enterprise adoption, governance, and safety constraints (macro)
+- everyday user value, adoption friction, and reliability constraints (macro)
 - generative-ai capability radar with Gemini + Google API focus (macro)
 - external market and competitor product movement scan (meso)
 - cross-surface product portfolio gaps (document/podcast/voiceover/infographic/persona/chat) (meso)
@@ -32,7 +32,7 @@ Memory-driven focus protocol:
 
 Research protocol:
 - Prioritize official and primary sources plus recent release notes.
-- Prioritize this stack for external research: Gemini, Google AI Studio, Vertex AI, Google Cloud AI platform updates, and enterprise governance guidance relevant to AI content generation.
+- Prioritize this stack for external research: Gemini, Google AI Studio, Vertex AI, and Google Cloud AI platform updates relevant to practical product improvements.
 - Compare findings against [`docs/master-spec.md`](../../../docs/master-spec.md), generated product surfaces in [`docs/spec/generated/`](../../../docs/spec/generated/), [`AGENTS.md`](../../../AGENTS.md), [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md), and recent workflow memory.
 - Produce 3-6 ranked product opportunities with impact, effort, confidence, and concrete repository evidence.
 - For each candidate opportunity, run a prior-idea debate against related previous product-vision issues:
@@ -40,7 +40,10 @@ Research protocol:
   - Amend: the prior thesis is directionally right but needs scope/timing changes.
   - Reject: new evidence invalidates the prior thesis.
 - Record the debate outcome and rationale in run output and issue body/comments.
-- Apply materiality checks: "Does this strengthen product direction for enterprise users now?" and "What measurable product outcome improves?"
+- Apply materiality checks: "Does this help normal users complete existing flows with less friction?" and "Can a first increment ship as a bounded implementation slice?"
+- Apply complexity checks:
+  - Default to ideas that can be implemented as one coherent PR on current surfaces.
+  - De-prioritize ideas that require new platform subsystems (policy engines, multi-surface governance frameworks, net-new workspace products) unless explicitly requested by humans.
 - Drop low-signal ideas that do not change product clarity, adoption, or differentiated capability.
 - Drop recommendations that are not specific to improving Content Studio.
 
@@ -51,14 +54,15 @@ Issue policy:
 - Reuse/extend existing issues when possible.
 - If a recommendation is materially the same topic as a prior issue (same user outcome + same core intervention), reuse that issue instead of creating a new one. Update the issue body/comment with the latest debate result (keep/amend/reject), new evidence, and revised priority.
 - Create a new issue only when the recommendation is materially unrelated to prior issues.
-- Open up to 3 high-signal non-duplicate issues when confidence >= 0.75.
+- Open up to 2 high-signal non-duplicate issues when confidence >= 0.8.
 - Every new issue title must start with `[Product Vision]`.
 - Every new issue must include:
   - Why This Change Makes Sense Now For Humans
   - Recommendation Metadata (rank, impact, effort, confidence)
-  - Enterprise User Narrative (persona + business/user outcome)
+  - User Narrative (persona + concrete user outcome)
   - Concrete Product Evidence (current-state repo references + target-state behavior)
-  - Gemini/Google API Alignment (how the idea uses or benefits from Google-first AI strategy)
+  - Simplicity + Scope Check (why this is a bounded slice vs a platform rewrite)
+  - Gemini/Google API Alignment (only when it materially improves this bounded slice)
   - Prior Idea Debate (prior issue linkage + keep/amend/reject decision + rationale)
   - Acceptance Criteria
   - Human Approval Gate: implementation only after a human adds the `ready-for-dev` label.

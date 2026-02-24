@@ -49,6 +49,32 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-self-improvement-refocused-issue-generation-and-evaluation-toward-normal-user-sco",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Refocused issue generation and evaluation toward normal-user scope",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "automation",
+      "issue-evaluator",
+      "product-vision",
+      "product-owner",
+      "guardrail",
+      "skill:self-improvement",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.82,
+    "confidence": 0.93,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
