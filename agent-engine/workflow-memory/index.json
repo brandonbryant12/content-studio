@@ -1,5 +1,23 @@
 [
   {
+    "id": "2026-02-24-feature-delivery-no-ready-for-dev-issues",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No ready-for-dev issues",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:intake-triage",
+      "automation:ready-for-dev-executor",
+      "selection:none"
+    ],
+    "importance": 0.3,
+    "recency": 0.9,
+    "confidence": 0.88,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
