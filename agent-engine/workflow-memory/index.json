@@ -1,5 +1,34 @@
 [
   {
+    "id": "2026-02-24-periodic-scans-product-vision-knowledge-vault-schema-outputs",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Product vision: knowledge vault + schema outputs",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-vision",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:product-to-platform-fit",
+      "tool:gh",
+      "tool:web.run",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "confidence": 0.77,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
