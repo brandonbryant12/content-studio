@@ -18,6 +18,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-periodic-scans-issue-evaluator-labeled-open-backlog-with-one-decision-per-issue",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Issue evaluator labeled open backlog with one decision per issue",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scan",
+      "issue-evaluator",
+      "github-issues",
+      "triage",
+      "skill:intake-triage"
+    ],
+    "importance": 0.72,
+    "confidence": 0.89,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
