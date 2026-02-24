@@ -72,9 +72,26 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60_000,
       gcTime: 300_000,
-      retry: (count, error) => {
-        if (hasCode(error) && error.code.endsWith('_NOT_FOUND')) return false;
-        return count < 3;
+      retry: (failureCount, error) => {
+        if (isApiLikeError(error)) {
+          if (error.code === 'NOT_FOUND' || error.code.endsWith('_NOT_FOUND')) {
+            return false;
+          }
+          if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
+            return false;
+          }
+        }
+        return failureCount < 3;
+      },
+      retryDelay: (attempt, error) => {
+        if (isApiLikeError(error) && error.code === 'RATE_LIMITED') {
+          const retryAfterMs = error.data?.retryAfter;
+          if (typeof retryAfterMs === 'number' && retryAfterMs > 0) {
+            return retryAfterMs;
+          }
+        }
+        // Exponential backoff up to 30s for other transient failures.
+        return Math.min(1000 * 2 ** attempt, 30_000);
       },
     },
   },
@@ -110,4 +127,5 @@ const router = createRouter({
 - Index files re-export hooks for public API <!-- enforced-by: manual-review -->
 - For invalidation, prefer `getXQueryKey()` helpers rather than inline arrays <!-- enforced-by: lint -->
 - Never use `queryClient.fetchQuery` in components -- use hooks <!-- enforced-by: manual-review -->
-- Error retry: disable for 404s, retry 3x for transient errors <!-- enforced-by: manual-review -->
+- Error retry: disable for `*_NOT_FOUND` and auth (`UNAUTHORIZED`/`FORBIDDEN`), retry transient failures up to 3 times <!-- enforced-by: manual-review -->
+- Rate limits: honor `RATE_LIMITED.data.retryAfter` when provided, otherwise use exponential backoff <!-- enforced-by: manual-review -->
