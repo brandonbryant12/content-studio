@@ -18,6 +18,19 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-self-improvement-no-ready-for-dev-issues",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "No ready-for-dev issues",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
