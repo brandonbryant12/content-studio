@@ -58,6 +58,36 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-periodic-scans-product-owner-journey-review-dashboard-to-generation-cohesion-ga",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Product-owner journey review: dashboard-to-generation cohesion gaps",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:onboarding-first-value-flow",
+      "tool:gh",
+      "tool:rg",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.79,
+    "confidence": 0.83,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
