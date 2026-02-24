@@ -1,5 +1,18 @@
 [
   {
+    "id": "2026-02-24-periodic-scans-no-ready-for-dev-issues",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "No ready-for-dev issues",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
