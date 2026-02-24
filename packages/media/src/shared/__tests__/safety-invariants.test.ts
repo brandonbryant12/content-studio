@@ -25,7 +25,6 @@ const collectUseCaseFiles = (dir: string): string[] => {
   return files;
 };
 
-
 const shouldSkipUseCaseTest = (filePath: string): boolean => {
   const name = path.basename(filePath);
   if (name === 'index.ts') return true;

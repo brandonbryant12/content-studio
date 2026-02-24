@@ -1,4 +1,8 @@
-import { DocumentStatus, generateDocumentId, type Document } from '@repo/db/schema';
+import {
+  DocumentStatus,
+  generateDocumentId,
+  type Document,
+} from '@repo/db/schema';
 import { createMockStorage } from '@repo/storage/testing';
 import { createTestDocument } from '@repo/testing';
 import { Effect, Layer } from 'effect';
@@ -25,7 +29,12 @@ const createMockUrlScraper = (options: {
   const service = {
     fetchAndExtract: () =>
       options.shouldFail
-        ? Effect.fail(new UrlFetchError({ url: 'https://example.com', message: 'scrape failed' }))
+        ? Effect.fail(
+            new UrlFetchError({
+              url: 'https://example.com',
+              message: 'scrape failed',
+            }),
+          )
         : Effect.succeed(
             options.fetchResult ?? {
               title: 'Example Title',
@@ -108,7 +117,9 @@ describe('processUrl', () => {
     );
 
     const [, updatePayload] = updateContentSpy.mock.calls[0]!;
-    expect(updatePayload.contentKey).toBe(`documents/${documentId}/content.txt`);
+    expect(updatePayload.contentKey).toBe(
+      `documents/${documentId}/content.txt`,
+    );
     expect(updatePayload.extractedText).toBe('Hello world');
     expect(updatePayload.wordCount).toBe(2);
     expect(updatePayload.title).toBe('Sample Article');

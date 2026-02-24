@@ -32,9 +32,7 @@ export function DocumentEntryMenu({
   size,
   className,
 }: DocumentEntryMenuProps) {
-  const triggerClassName = ['gap-1.5', className]
-    .filter(Boolean)
-    .join(' ');
+  const triggerClassName = ['gap-1.5', className].filter(Boolean).join(' ');
 
   return (
     <DropdownMenu>

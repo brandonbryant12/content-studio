@@ -1,4 +1,4 @@
-import { ImageGen } from '@repo/ai';
+import { ImageGen, podcastCoverImageUserPrompt, renderPrompt } from '@repo/ai';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
@@ -29,8 +29,11 @@ export const generateCoverImage = (input: GenerateCoverImageInput) =>
       attributes: { 'podcast.id': input.podcastId },
     });
 
-    const prompt =
-      `Create a podcast cover image for "${podcast.title}". ${podcast.description ?? ''}. ${podcast.summary ?? ''}`.trim();
+    const prompt = renderPrompt(podcastCoverImageUserPrompt, {
+      title: podcast.title,
+      description: podcast.description,
+      summary: podcast.summary,
+    });
 
     const { imageData, mimeType } = yield* imageGen.generateImage({
       prompt,

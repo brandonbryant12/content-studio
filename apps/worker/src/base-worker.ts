@@ -343,9 +343,9 @@ export const createWorker = <
             Deferred.isDone(stopSignal).pipe(
               Effect.flatMap((done) =>
                 done
-                  ? Effect.logInfo(`${name} received stop signal, exiting`).pipe(
-                      Effect.flatMap(() => Effect.interrupt),
-                    )
+                  ? Effect.logInfo(
+                      `${name} received stop signal, exiting`,
+                    ).pipe(Effect.flatMap(() => Effect.interrupt))
                   : Effect.void,
               ),
             ),

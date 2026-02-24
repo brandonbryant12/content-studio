@@ -1,4 +1,9 @@
-import { ImageGen, LLM } from '@repo/ai';
+import {
+  ImageGen,
+  LLM,
+  infographicTitleUserPrompt,
+  renderPrompt,
+} from '@repo/ai';
 import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
@@ -41,7 +46,7 @@ const generateTitle = (sourcePrompt: string) =>
 
     // Keep title generation cheap: short, low-temperature structured call.
     const { object } = yield* llm.generate({
-      prompt: `Generate a short infographic title (3-6 words) from this source query: "${sourcePrompt}"`,
+      prompt: renderPrompt(infographicTitleUserPrompt, { sourcePrompt }),
       schema: TitleSchema,
       maxTokens: 20,
       temperature: 0.2,

@@ -93,6 +93,43 @@ export {
 // Chat
 export { streamResearchChat, type StreamResearchChatInput } from './chat';
 
+// Prompt registry
+export {
+  renderPrompt,
+  PROMPT_REGISTRY,
+  getPromptDefinition,
+  chatResearchSystemPrompt,
+  chatPersonaSystemPrompt,
+  chatWritingAssistantSystemPrompt,
+  chatSynthesizePersonaSystemPrompt,
+  chatSynthesizeResearchQuerySystemPrompt,
+  voiceoverPreprocessSystemPrompt,
+  voiceoverPreprocessUserPrompt,
+  podcastScriptSystemPrompt,
+  podcastScriptUserPrompt,
+  infographicGenerationUserPrompt,
+  infographicTitleUserPrompt,
+  INFOGRAPHIC_FORMAT_DIMENSIONS,
+  podcastCoverImageUserPrompt,
+  personaAvatarImageUserPrompt,
+  type PromptModelType,
+  type PromptRole,
+  type PromptRiskTier,
+  type PromptLifecycleStatus,
+  type PromptComplianceMetadata,
+  type PromptDefinition,
+  type AnyPromptDefinition,
+  type VoiceoverPreprocessUserPromptInput,
+  type PersonaPromptContext,
+  type SegmentPromptContext,
+  type PodcastScriptSystemPromptInput,
+  type PodcastScriptUserPromptInput,
+  type InfographicGenerationPromptInput,
+  type InfographicTitleUserPromptInput,
+  type PodcastCoverImageUserPromptInput,
+  type PersonaAvatarImageUserPromptInput,
+} from './prompt-registry';
+
 // Import for combined layer
 import type { ImageGen } from './image-gen';
 import type { LLM } from './llm';

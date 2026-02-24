@@ -83,7 +83,9 @@ export function getGoogleApiErrorDetails(
   error: unknown,
 ): GoogleApiErrorDetails | null {
   if (error instanceof GoogleApiError) {
-    return error.details ?? (error.body ? parseGoogleApiErrorBody(error.body) : null);
+    return (
+      error.details ?? (error.body ? parseGoogleApiErrorBody(error.body) : null)
+    );
   }
 
   if (error instanceof Error) {

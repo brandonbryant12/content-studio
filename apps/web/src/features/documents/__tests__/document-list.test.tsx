@@ -122,9 +122,9 @@ describe('DocumentList', () => {
         'Upload your first document to start creating podcasts and voiceovers.',
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('button', { name: /add source/i }),
-    ).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /add source/i })).toHaveLength(
+      2,
+    );
   });
 
   it('filters documents by search query', () => {

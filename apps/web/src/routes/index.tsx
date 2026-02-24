@@ -37,10 +37,7 @@ function WaveformBars() {
   return (
     <div className="flex items-end gap-[3px] h-16" aria-hidden="true">
       {HERO_WAVEFORM_BARS.map((bar, i) => (
-        <div
-          key={i}
-          className={`hero-wave-bar ${bar.height} ${bar.delay}`}
-        />
+        <div key={i} className={`hero-wave-bar ${bar.height} ${bar.delay}`} />
       ))}
     </div>
   );
@@ -87,9 +84,7 @@ function RouteComponent() {
           </p>
 
           {/* Headline */}
-          <h1
-            className="hero-title font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1"
-          >
+          <h1 className="hero-title font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1">
             Where ideas become <span className="text-primary">content</span>
           </h1>
 

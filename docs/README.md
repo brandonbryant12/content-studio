@@ -11,10 +11,11 @@ All new code reviews and feature work should reference [`docs/`](./) standards.
 3. [`docs/patterns/use-case.md`](./patterns/use-case.md)
 4. [`docs/patterns/api-handler.md`](./patterns/api-handler.md)
 5. [`docs/patterns/safety-primitives.md`](./patterns/safety-primitives.md)
-6. [`docs/testing/overview.md`](./testing/overview.md)
-7. [`docs/frontend/project-structure.md`](./frontend/project-structure.md)
-8. [`docs/architecture/observability.md`](./architecture/observability.md)
-9. [`docs/architecture/effect-vs-nestjs.md`](./architecture/effect-vs-nestjs.md)
+6. [`docs/patterns/prompt-registry.md`](./patterns/prompt-registry.md)
+7. [`docs/testing/overview.md`](./testing/overview.md)
+8. [`docs/frontend/project-structure.md`](./frontend/project-structure.md)
+9. [`docs/architecture/observability.md`](./architecture/observability.md)
+10. [`docs/architecture/effect-vs-nestjs.md`](./architecture/effect-vs-nestjs.md)
 
 ## Directory Layout
 

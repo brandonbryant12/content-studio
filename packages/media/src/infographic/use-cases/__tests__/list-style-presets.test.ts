@@ -8,7 +8,6 @@ import { MockDbLive } from '../../../test-utils/mock-repos';
 import { createMockStylePresetRepo } from '../../../test-utils/mock-style-preset-repo';
 import { listStylePresets } from '../list-style-presets';
 
-
 const createStylePresetRecord = (userId: string): InfographicStylePreset => {
   const now = new Date();
   return {

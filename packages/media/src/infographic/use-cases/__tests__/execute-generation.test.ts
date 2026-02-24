@@ -12,7 +12,10 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Infographic, InfographicVersion } from '@repo/db/schema';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
-import { createMockActivityLogRepo, MockDbLive } from '../../../test-utils/mock-repos';
+import {
+  createMockActivityLogRepo,
+  MockDbLive,
+} from '../../../test-utils/mock-repos';
 import { executeInfographicGeneration } from '../execute-generation';
 
 describe('executeInfographicGeneration', () => {
@@ -93,7 +96,9 @@ describe('executeInfographicGeneration', () => {
     expect(updateSpy).toHaveBeenCalledWith(infographic.id, {
       title: infographic.title,
       status: 'ready',
-      imageStorageKey: expect.stringContaining(`infographics/${infographic.id}/`),
+      imageStorageKey: expect.stringContaining(
+        `infographics/${infographic.id}/`,
+      ),
       errorMessage: null,
     });
     expect(deleteOldVersionsSpy).toHaveBeenCalledWith(infographic.id, 10);

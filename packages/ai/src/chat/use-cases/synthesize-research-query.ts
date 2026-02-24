@@ -2,6 +2,10 @@ import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
 import {
+  chatSynthesizeResearchQuerySystemPrompt,
+  renderPrompt,
+} from '../../prompt-registry';
+import {
   formatMessagesForSynthesis,
   getMessageText,
 } from './chat-message-utils';
@@ -10,14 +14,6 @@ const SynthesisResult = Schema.Struct({
   query: Schema.String,
   title: Schema.String,
 });
-
-const SYSTEM_PROMPT = `You are a research query synthesizer for Content Studio.
-
-Given a conversation between a user and a research assistant, synthesize the discussion into:
-1. A focused research query (2-4 sentences max) that captures the user's intent and any refinements from the conversation.
-2. A concise title (5-10 words) suitable for labeling the research document.
-
-Keep the query brief and specific. Do not elaborate beyond what was discussed.`;
 
 const PRIMARY_FORMAT_OPTIONS = {
   maxMessages: 24,
@@ -66,7 +62,7 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
     const llm = yield* LLM;
     const generate = (prompt: string, temperature: number, maxTokens: number) =>
       llm.generate({
-        system: SYSTEM_PROMPT,
+        system: renderPrompt(chatSynthesizeResearchQuerySystemPrompt),
         prompt,
         schema: SynthesisResult,
         temperature,

@@ -1,6 +1,10 @@
 import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
+import {
+  chatSynthesizePersonaSystemPrompt,
+  renderPrompt,
+} from '../../prompt-registry';
 import { formatMessagesForSynthesis } from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
@@ -12,34 +16,6 @@ const SynthesisResult = Schema.Struct({
   voiceId: Schema.String,
   voiceName: Schema.String,
 });
-
-const SYSTEM_PROMPT = `You are a persona synthesizer for Content Studio.
-
-Given a conversation between a user and a persona creation assistant, synthesize the discussion into a structured persona definition:
-1. A name for the persona (can be a real-sounding name or a character name)
-2. A brief role description (e.g., "Tech Industry Analyst", "Science Communicator")
-3. A personality description capturing their traits and background
-4. A speaking style description (tone, patterns, verbal habits)
-5. 2-3 example quotes that capture how this persona would speak
-6. A voice that best matches the persona's character from the available voices
-
-## Available Voices
-Female:
-- Aoede — Melodic and engaging
-- Kore — Youthful and energetic
-- Leda — Friendly and approachable
-- Zephyr — Light and airy
-
-Male:
-- Charon — Clear and professional
-- Fenrir — Bold and dynamic
-- Puck — Lively and engaging
-- Orus — Friendly and conversational
-
-Set voiceId and voiceName to the voice name (e.g. voiceId: "Puck", voiceName: "Puck").
-Pick the voice that best matches the persona's personality, energy level, and speaking style.
-
-Focus on creating a vivid, distinctive character based on the conversation.`;
 
 const PRIMARY_FORMAT_OPTIONS = {
   maxMessages: 24,
@@ -101,7 +77,7 @@ export const synthesizePersona = (input: SynthesizePersonaInput) =>
     const llm = yield* LLM;
     const generate = (prompt: string, temperature: number, maxTokens: number) =>
       llm.generate({
-        system: SYSTEM_PROMPT,
+        system: renderPrompt(chatSynthesizePersonaSystemPrompt),
         prompt,
         schema: SynthesisResult,
         temperature,

@@ -18,7 +18,8 @@ const isNotFoundErrorCode = (code: string): boolean =>
 const shouldRetryQuery = (failureCount: number, error: unknown): boolean => {
   if (isApiLikeError(error)) {
     if (isNotFoundErrorCode(error.code)) return false;
-    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') return false;
+    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN')
+      return false;
   }
 
   return failureCount < 3;

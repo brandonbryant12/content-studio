@@ -1,4 +1,4 @@
-import { ImageGen } from '@repo/ai';
+import { ImageGen, personaAvatarImageUserPrompt, renderPrompt } from '@repo/ai';
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
@@ -23,8 +23,11 @@ export const generateAvatar = (input: GenerateAvatarInput) =>
     });
     const p = yield* personaRepo.findByIdForUser(input.personaId, user.id);
 
-    const prompt =
-      `Create a professional avatar portrait for a podcast character named "${p.name}". ${p.role ?? ''}. ${p.personalityDescription ?? ''}. Style: clean, modern, digital art portrait suitable for a podcast profile picture.`.trim();
+    const prompt = renderPrompt(personaAvatarImageUserPrompt, {
+      name: p.name,
+      role: p.role,
+      personalityDescription: p.personalityDescription,
+    });
 
     const { imageData, mimeType } = yield* imageGen.generateImage({
       prompt,

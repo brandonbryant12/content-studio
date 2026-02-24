@@ -67,7 +67,11 @@ describe('generateAudio', () => {
       'generating_audio',
       undefined,
     );
-    expect(updateStatusSpy).toHaveBeenCalledWith(podcast.id, 'ready', undefined);
+    expect(updateStatusSpy).toHaveBeenCalledWith(
+      podcast.id,
+      'ready',
+      undefined,
+    );
     expect(updateAudioSpy).toHaveBeenCalledWith(podcast.id, {
       audioUrl: expect.any(String),
       duration: expect.any(Number),

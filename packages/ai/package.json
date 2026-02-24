@@ -23,6 +23,10 @@
       "types": "./dist/src/chat/index.d.ts",
       "default": "./src/chat/index.ts"
     },
+    "./prompt-registry": {
+      "types": "./dist/src/prompt-registry/index.d.ts",
+      "default": "./src/prompt-registry/index.ts"
+    },
     "./testing": {
       "types": "./dist/src/testing/index.d.ts",
       "default": "./src/testing/index.ts"

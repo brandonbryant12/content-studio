@@ -1,6 +1,6 @@
 // shared/__tests__/error-boundary.test.tsx
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { ErrorBoundary } from '../components/error-boundary/error-boundary';
 import { renderWithQuery, screen, fireEvent } from '@/test-utils';
 
@@ -10,16 +10,18 @@ function ThrowingComponent({ error }: { error: Error }): never {
 }
 
 // Suppress React's error boundary console logs during tests
-const consoleErrorSpy = vi.spyOn(console, 'error');
+let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+});
 
 afterEach(() => {
-  consoleErrorSpy.mockReset();
+  consoleErrorSpy.mockRestore();
 });
 
 describe('ErrorBoundary', () => {
   it('renders children when no error occurs', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     renderWithQuery(
       <ErrorBoundary>
         <div>Test Content</div>
@@ -30,8 +32,6 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows error fallback when child throws error', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     const testError = new Error('Test error message');
 
     renderWithQuery(
@@ -48,8 +48,6 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows custom fallback component when provided', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     const testError = new Error('Custom error');
 
     function CustomFallback({
@@ -80,8 +78,6 @@ describe('ErrorBoundary', () => {
   });
 
   it('calls onError callback when error is caught', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     const testError = new Error('Callback test error');
     const onError = vi.fn();
 
@@ -101,8 +97,6 @@ describe('ErrorBoundary', () => {
   });
 
   it('reset button clears error state and calls onReset', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     const testError = new Error('Reset test error');
     const onReset = vi.fn();
     let shouldThrow = true;
@@ -137,8 +131,6 @@ describe('ErrorBoundary', () => {
   });
 
   it('changes in resetKeys triggers reset', () => {
-    consoleErrorSpy.mockImplementation(() => {});
-
     const testError = new Error('Reset keys test error');
     const onReset = vi.fn();
     let shouldThrow = true;

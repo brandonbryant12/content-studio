@@ -81,6 +81,4 @@ export const uploadDocument = (input: UploadDocumentInput) =>
       },
     });
     return doc;
-  }).pipe(
-    withUseCaseSpan('useCase.uploadDocument'),
-  );
+  }).pipe(withUseCaseSpan('useCase.uploadDocument'));

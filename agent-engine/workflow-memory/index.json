@@ -1,5 +1,36 @@
 [
   {
+    "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Adopt typed prompt registry with compliance metadata",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "prompt-registry",
+      "compliance"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-24-feature-delivery-errorboundary-tests-stable-console-suppression",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "ErrorBoundary tests: stable console suppression",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "web",
+      "tests",
+      "error-boundary"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-no-ready-for-dev-issues",
     "date": "2026-02-24",
     "month": "2026-02",

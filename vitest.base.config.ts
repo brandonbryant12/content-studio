@@ -43,6 +43,7 @@ export default defineConfig({
       '@repo/ai/testing': `${packagesRoot}/ai/src/testing/index.ts`,
       '@repo/ai/llm': `${packagesRoot}/ai/src/llm/index.ts`,
       '@repo/ai/tts': `${packagesRoot}/ai/src/tts/index.ts`,
+      '@repo/ai/prompt-registry': `${packagesRoot}/ai/src/prompt-registry/index.ts`,
       '@repo/ai': `${packagesRoot}/ai/src/index.ts`,
       '@repo/media/test-utils': `${packagesRoot}/media/src/test-utils/index.ts`,
       '@repo/media': `${packagesRoot}/media/src/index.ts`,

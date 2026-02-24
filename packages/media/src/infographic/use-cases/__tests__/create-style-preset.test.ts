@@ -9,15 +9,12 @@ import { createMockStylePresetRepo } from '../../../test-utils/mock-style-preset
 import { sanitizeStyleProperties } from '../../style-properties';
 import { createStylePreset } from '../create-style-preset';
 
-
-const createStylePresetRecord = (
-  data: {
-    name: string;
-    properties: StyleProperty[];
-    isBuiltIn?: boolean;
-    createdBy?: string;
-  },
-): InfographicStylePreset => {
+const createStylePresetRecord = (data: {
+  name: string;
+  properties: StyleProperty[];
+  isBuiltIn?: boolean;
+  createdBy?: string;
+}): InfographicStylePreset => {
   const now = new Date();
   return {
     id: generateInfographicStylePresetId(),

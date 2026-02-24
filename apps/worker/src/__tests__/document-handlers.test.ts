@@ -56,7 +56,9 @@ const createMockDocumentRepo = (options?: {
   const service: DocumentRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: (id) =>
-      Effect.succeed(createTestDocument({ id: id as DocumentId, createdBy: ownerId })),
+      Effect.succeed(
+        createTestDocument({ id: id as DocumentId, createdBy: ownerId }),
+      ),
     findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),

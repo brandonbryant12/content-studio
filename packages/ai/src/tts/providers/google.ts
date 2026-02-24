@@ -1,5 +1,8 @@
 import { Effect, Layer } from 'effect';
-import { GoogleApiError, parseGoogleApiErrorBody } from '../../google/error-parser';
+import {
+  GoogleApiError,
+  parseGoogleApiErrorBody,
+} from '../../google/error-parser';
 import { TTS_MODEL } from '../../models';
 import { retryTransientProvider } from '../../provider-retry';
 import { wrapPcmAsWav } from '../audio-utils';

@@ -60,6 +60,4 @@ export const createDocument = (input: CreateDocumentInput) =>
       },
     });
     return doc;
-  }).pipe(
-    withUseCaseSpan('useCase.createDocument'),
-  );
+  }).pipe(withUseCaseSpan('useCase.createDocument'));

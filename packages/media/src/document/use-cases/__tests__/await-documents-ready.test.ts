@@ -67,10 +67,7 @@ describe('awaitDocumentsReady', () => {
   });
 
   it('no-ops when given an empty document list', async () => {
-    const layers = Layer.mergeAll(
-      MockDbLive,
-      createMockDocumentRepo({}),
-    );
+    const layers = Layer.mergeAll(MockDbLive, createMockDocumentRepo({}));
 
     const result = await Effect.runPromise(
       withTestUser(testUser)(

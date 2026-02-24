@@ -42,8 +42,7 @@ const voicesContract = oc
         method: 'POST',
         path: '/{voiceId}/preview',
         summary: 'Preview voice',
-        description:
-          'Generate a short audio preview of a voice (LINEAR16 WAV)',
+        description: 'Generate a short audio preview of a voice (LINEAR16 WAV)',
       })
       .errors({
         VOICE_NOT_FOUND: {
