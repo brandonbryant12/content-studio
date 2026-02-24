@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-24-docs-knowledge-drift-control-surfaces-ci-cd-row-references-missing-jenkinsfile",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Control-surfaces CI/CD row references missing Jenkinsfile",
+    "severity": "low",
+    "status": "open",
+    "tags": [
+      "docs",
+      "knowledge-drift",
+      "agent-engine",
+      "ci",
+      "jenkins"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-no-ready-for-dev-issues",
     "date": "2026-02-24",
     "month": "2026-02",
