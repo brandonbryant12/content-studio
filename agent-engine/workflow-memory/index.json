@@ -18,6 +18,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-periodic-scans-no-op-sanity-scan-web-chat-hooks",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "No-op sanity scan: web chat hooks",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "scan",
+      "no-op",
+      "scope:meso",
+      "domain:package-level",
+      "apps/web"
+    ],
+    "confidence": 0.66,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
