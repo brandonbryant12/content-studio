@@ -49,6 +49,35 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-feature-delivery-ready-for-dev-executor-resolved-138-docs-retry-policy-drift",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev executor resolved #138 docs retry policy drift",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:138",
+      "pr:150",
+      "selection_outcome:selected_actionable",
+      "bundle:1",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:working",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:planning",
+      "capability:tool-use",
+      "capability:instruction-following",
+      "failure:tool-misuse"
+    ],
+    "importance": 0.77,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
