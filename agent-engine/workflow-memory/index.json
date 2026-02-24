@@ -18,6 +18,20 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-feature-delivery-no-ready-for-dev-issues-2",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No ready-for-dev issues",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "no-op"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
