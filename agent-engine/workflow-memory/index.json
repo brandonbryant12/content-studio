@@ -1,5 +1,29 @@
 [
   {
+    "id": "2026-02-24-self-improvement-validate-automation-toml-wrappers-in-registry-checks",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "Validate automation TOML wrappers in registry checks",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "workflow-registry",
+      "guardrail",
+      "agent-engine-researcher",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "confidence": 0.83,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
