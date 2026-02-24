@@ -76,17 +76,35 @@ Error boundaries wrap containers via `<SuspenseBoundary>`. See [`components.md`]
 |-----------|--------|-----------|
 | 404 Not Found | No | Entity deleted, won't recover |
 | 401/403 Auth | No | Redirect to login |
-| 429 Rate Limited | Yes (with backoff) | Transient |
+| 429 Rate Limited | Yes (respect `retryAfter` when present) | Server-specified cooldown for transient throttling |
 | 500 Server Error | Yes (3x) | Transient |
 | Network Error | Yes (3x) | Transient |
 
 Configure in QueryClient:
 
 ```tsx
-retry: (count, error) => {
-  if (isNotFoundError(error)) return false;
-  return count < 3;
-}
+retry: (failureCount, error) => {
+  if (isApiLikeError(error)) {
+    if (error.code === 'NOT_FOUND' || error.code.endsWith('_NOT_FOUND')) {
+      return false;
+    }
+    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
+      return false;
+    }
+  }
+
+  return failureCount < 3;
+},
+retryDelay: (attempt, error) => {
+  if (isApiLikeError(error) && error.code === 'RATE_LIMITED') {
+    const retryAfterMs = error.data?.retryAfter;
+    if (typeof retryAfterMs === 'number' && retryAfterMs > 0) {
+      return retryAfterMs;
+    }
+  }
+
+  return Math.min(1000 * 2 ** attempt, 30_000);
+},
 ```
 
 ## Navigation Errors
