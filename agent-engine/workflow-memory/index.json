@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-24-periodic-scans-docs-guardrail-drift-in-retry-error-handling",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Docs/guardrail drift in retry + error handling",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "best-practice-researcher",
+      "docs-guardrail-drift",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
