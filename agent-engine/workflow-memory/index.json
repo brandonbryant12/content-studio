@@ -18,6 +18,36 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-24-periodic-scans-infographic-create-generate-journey-review",
+    "date": "2026-02-24",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Infographic create/generate journey review",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:infographic-create-edit-generate",
+      "tool:gh",
+      "tool:rg",
+      "tool:pnpm",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "confidence": 0.77,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-23-architecture-adr-guard-require-use-case-span-attributes",
     "date": "2026-02-23",
     "month": "2026-02",
