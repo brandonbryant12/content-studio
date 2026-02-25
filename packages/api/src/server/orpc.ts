@@ -1,6 +1,7 @@
+import { ORPCError } from '@orpc/client';
 import { implement } from '@orpc/server';
 import { type AuthInstance, getSessionWithRole } from '@repo/auth/server';
-import { Effect } from 'effect';
+import { Cause, Option } from 'effect';
 import type { ServerRuntime } from './runtime';
 import type { User } from '@repo/auth/policy';
 import { appContract } from '../contracts';
@@ -65,19 +66,33 @@ export const createORPCContext = async ({
   headers: Headers;
   requestId: string;
 }): Promise<ORPCContext> => {
-  const result = await runtime.runPromise(
-    getSessionWithRole(auth, headers).pipe(
-      Effect.catchAll((error) =>
-        Effect.sync(() => {
-          console.warn(
-            '[AUTH_CONTEXT] Session lookup failed:',
-            error instanceof Error ? error.message : String(error),
-          );
-          return null;
-        }),
-      ),
-    ),
-  );
+  const exit = await runtime.runPromiseExit(getSessionWithRole(auth, headers));
+
+  if (exit._tag === 'Failure') {
+    const failure = Option.getOrUndefined(Cause.failureOption(exit.cause));
+    const errorTag =
+      failure && typeof failure === 'object' && '_tag' in failure
+        ? String((failure as { _tag: unknown })._tag)
+        : 'UnknownError';
+    const message =
+      failure && typeof failure === 'object' && 'message' in failure
+        ? String((failure as { message: unknown }).message)
+        : 'Auth context creation failed';
+
+    console.error(
+      '[AUTH_CONTEXT_FAILURE]',
+      '[requestId:' + requestId + ']',
+      '[errorTag:' + errorTag + ']',
+      message,
+    );
+
+    throw new ORPCError('SERVICE_UNAVAILABLE', {
+      message: 'Authentication service is temporarily unavailable.',
+      data: { requestId, errorTag },
+    });
+  }
+
+  const result = exit.value;
 
   return {
     session: result?.session ?? null,

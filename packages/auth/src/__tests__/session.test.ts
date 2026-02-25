@@ -51,7 +51,7 @@ describe('getSession', () => {
     expect(result).toBeNull();
   });
 
-  it('should return null when auth throws an error', async () => {
+  it('should fail with AuthSessionLookupError when auth throws', async () => {
     const auth = {
       api: {
         getSession: vi.fn().mockRejectedValue(new Error('Auth error')),
@@ -59,9 +59,13 @@ describe('getSession', () => {
     } as unknown as AuthInstance;
     const headers = new Headers();
 
-    const result = await Effect.runPromise(getSession(auth, headers));
+    const exit = await Effect.runPromiseExit(getSession(auth, headers));
 
-    expect(result).toBeNull();
+    expect(exit._tag).toBe('Failure');
+    if (exit._tag === 'Failure' && exit.cause._tag === 'Fail') {
+      expect(exit.cause.error._tag).toBe('AuthSessionLookupError');
+      expect(exit.cause.error.message).toBe('Session lookup failed');
+    }
   });
 });
 
