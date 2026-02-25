@@ -88,6 +88,7 @@ export function VoiceoverDetail({
       actionBar={
         <ActionBar
           status={voiceover.status}
+          errorMessage={voiceover.errorMessage}
           isGenerating={isGenerating}
           hasChanges={hasChanges}
           hasText={hasText}

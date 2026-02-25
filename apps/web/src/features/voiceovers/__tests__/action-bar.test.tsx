@@ -42,6 +42,7 @@ vi.mock('@repo/ui/components/button', () => ({
 
 interface ActionBarProps {
   status: (typeof VoiceoverStatus)[keyof typeof VoiceoverStatus] | undefined;
+  errorMessage?: string | null;
   isGenerating: boolean;
   hasChanges: boolean;
   hasText: boolean;
@@ -367,6 +368,52 @@ describe('ActionBar', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /retry/i }));
       expect(onGenerate).toHaveBeenCalled();
+    });
+
+    it('shows failure details when error message exists', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: false,
+            status: VoiceoverStatus.FAILED,
+            errorMessage: 'TTS provider timeout',
+          })}
+        />,
+      );
+
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'TTS provider timeout',
+      );
+    });
+
+    it('does not show failure details when message is missing', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: false,
+            status: VoiceoverStatus.FAILED,
+            errorMessage: null,
+          })}
+        />,
+      );
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('error panel visibility guardrails', () => {
+    it('hides failure details during active generation', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            isGenerating: true,
+            status: VoiceoverStatus.FAILED,
+            errorMessage: 'Previous generation failed',
+          })}
+        />,
+      );
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
 });
