@@ -1,7 +1,8 @@
-import { DeepResearch } from '@repo/ai';
-import { DocumentStatus } from '@repo/db/schema';
+import { DeepResearch, LLM } from '@repo/ai';
+import { DocumentStatus, ResearchOutlineSchema } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
-import { Effect, Schema } from 'effect';
+import { Effect, Option, Schema, Schedule } from 'effect';
+import { ActivityLogRepo } from '../../activity/repos/activity-log-repo';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
 import {
@@ -59,6 +60,73 @@ const MAX_POLL_DURATION_MS = 60 * 60 * 1000;
 /** Backoff: 30s for first poll, then 60s thereafter */
 const INITIAL_POLL_MS = 30_000;
 const STEADY_POLL_MS = 60_000;
+
+const buildOutlinePrompt = (query: string, content: string): string => {
+  const boundedContent = content.slice(0, 24_000);
+  return [
+    `Research query: ${query}`,
+    'Create a structured document outline from the research content.',
+    'Use source URLs only from the provided content references when possible.',
+    '',
+    boundedContent,
+  ].join('\n');
+};
+
+const generateDocumentOutline = (input: { query: string; content: string }) =>
+  Effect.gen(function* () {
+    const llmOption = yield* Effect.serviceOption(LLM);
+    if (Option.isNone(llmOption)) {
+      return undefined;
+    }
+
+    const llm = llmOption.value;
+    const { object } = yield* llm
+      .generate({
+        system:
+          'Return a concise, source-aware document outline as structured JSON.',
+        prompt: buildOutlinePrompt(input.query, input.content),
+        schema: ResearchOutlineSchema,
+        maxTokens: 1200,
+        temperature: 0.2,
+      })
+      .pipe(
+        Effect.retry({
+          times: 2,
+          schedule: Schedule.exponential('400 millis'),
+          while: (error) => error._tag === 'LLMError',
+        }),
+      );
+
+    return object;
+  }).pipe(Effect.withSpan('document.generateResearchOutline'));
+
+const logSchemaValidationFailure = (input: {
+  userId: string;
+  documentId: string;
+  title: string;
+  errorTag: string;
+  message: string;
+}) =>
+  Effect.gen(function* () {
+    const repoOption = yield* Effect.serviceOption(ActivityLogRepo);
+    if (Option.isNone(repoOption)) {
+      return;
+    }
+
+    yield* repoOption.value.insert({
+      userId: input.userId,
+      action: 'schema_validation_failed',
+      entityType: 'document',
+      entityId: input.documentId,
+      entityTitle: input.title,
+      metadata: {
+        step: 'document_outline',
+        retries: 2,
+        errorTag: input.errorTag,
+        message: input.message,
+      },
+    });
+  }).pipe(Effect.catchAll(() => Effect.void));
 
 export const processResearch = (input: ProcessResearchInput) =>
   Effect.gen(function* () {
@@ -179,12 +247,55 @@ export const processResearch = (input: ProcessResearchInput) =>
     });
 
     // 7. Update research config with completion status + structured sources
+    const outline = yield* generateDocumentOutline({
+      query,
+      content: result.content,
+    }).pipe(
+      Effect.catchTags({
+        LLMError: (error) =>
+          Effect.gen(function* () {
+            yield* documentRepo.updateResearchConfig(documentId, {
+              query,
+              operationId: interactionId,
+              researchStatus: 'failed',
+              autoGeneratePodcast,
+            });
+            yield* logSchemaValidationFailure({
+              userId: doc.createdBy,
+              documentId: doc.id,
+              title: doc.title,
+              errorTag: error._tag,
+              message: error.message,
+            });
+            return yield* Effect.fail(error);
+          }),
+        LLMRateLimitError: (error) =>
+          Effect.gen(function* () {
+            yield* documentRepo.updateResearchConfig(documentId, {
+              query,
+              operationId: interactionId,
+              researchStatus: 'failed',
+              autoGeneratePodcast,
+            });
+            yield* logSchemaValidationFailure({
+              userId: doc.createdBy,
+              documentId: doc.id,
+              title: doc.title,
+              errorTag: error._tag,
+              message: error.message,
+            });
+            return yield* Effect.fail(error);
+          }),
+      }),
+    );
+
     yield* documentRepo.updateResearchConfig(documentId, {
       query,
       operationId: interactionId,
       researchStatus: 'completed',
       sourceCount: result.sources.length,
       sources: result.sources.map((s) => ({ title: s.title, url: s.url })),
+      outline,
       autoGeneratePodcast,
     });
 

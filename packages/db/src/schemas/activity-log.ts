@@ -61,6 +61,8 @@ export const ActivityLogActionSchema = Schema.Union(
   Schema.Literal('generated_voiceover'),
   Schema.Literal('generated_infographic'),
   Schema.Literal('generated_cover_image'),
+  Schema.Literal('schema_validation_failed'),
+  Schema.Literal('retry_processing'),
 );
 
 export const ActivityLogEntityTypeSchema = Schema.Union(

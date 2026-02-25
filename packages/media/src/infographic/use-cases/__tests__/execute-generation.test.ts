@@ -76,7 +76,29 @@ describe('executeInfographicGeneration', () => {
       MockDbLive,
       repo,
       createMockActivityLogRepo(),
-      createMockLLM(),
+      createMockLLM({
+        response: {
+          title: 'Layout Blueprint',
+          objective: 'Explain the key points clearly',
+          sections: [
+            {
+              heading: 'Overview',
+              keyPoints: ['Context', 'Scope'],
+              visualType: 'callout',
+            },
+            {
+              heading: 'Key Metrics',
+              keyPoints: ['Metric A', 'Metric B'],
+              visualType: 'stats',
+            },
+            {
+              heading: 'Recommendation',
+              keyPoints: ['Action 1', 'Action 2'],
+              visualType: 'process',
+            },
+          ],
+        },
+      }),
       createMockImageGen(),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );

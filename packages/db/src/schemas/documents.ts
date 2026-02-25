@@ -42,12 +42,26 @@ export interface ResearchSource {
   url: string;
 }
 
+export interface ResearchOutlineSection {
+  heading: string;
+  summary: string;
+  keyPoints: readonly string[];
+  sourceUrls: readonly string[];
+}
+
+export interface ResearchOutline {
+  title: string;
+  summary: string;
+  sections: readonly ResearchOutlineSection[];
+}
+
 export interface ResearchConfig {
   query: string;
   operationId?: string;
   researchStatus?: string;
   sourceCount?: number;
   sources?: ResearchSource[];
+  outline?: ResearchOutline;
   autoGeneratePodcast?: boolean;
 }
 
@@ -136,12 +150,26 @@ export const ResearchSourceSchema = Schema.Struct({
   url: Schema.String,
 });
 
+export const ResearchOutlineSectionSchema = Schema.Struct({
+  heading: Schema.String,
+  summary: Schema.String,
+  keyPoints: Schema.Array(Schema.String),
+  sourceUrls: Schema.Array(Schema.String),
+});
+
+export const ResearchOutlineSchema = Schema.Struct({
+  title: Schema.String,
+  summary: Schema.String,
+  sections: Schema.Array(ResearchOutlineSectionSchema),
+});
+
 export const ResearchConfigSchema = Schema.Struct({
   query: Schema.String,
   operationId: Schema.optional(Schema.String),
   researchStatus: Schema.optional(Schema.String),
   sourceCount: Schema.optional(Schema.Number),
   sources: Schema.optional(Schema.Array(ResearchSourceSchema)),
+  outline: Schema.optional(ResearchOutlineSchema),
   autoGeneratePodcast: Schema.optional(Schema.Boolean),
 });
 

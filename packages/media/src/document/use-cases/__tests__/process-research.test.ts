@@ -1,4 +1,5 @@
 import { DeepResearch, type DeepResearchService } from '@repo/ai';
+import { createMockLLM } from '@repo/ai/testing';
 import { generateJobId } from '@repo/db/schema';
 import { Queue, type QueueService } from '@repo/queue';
 import { createMockStorage } from '@repo/storage/testing';
@@ -55,6 +56,31 @@ const createMockQueue = (overrides: Partial<QueueService> = {}) =>
     ...overrides,
   } satisfies QueueService);
 
+const OUTLINE_RESPONSE = {
+  title: 'Research Outline',
+  summary: 'Key takeaways organized for review',
+  sections: [
+    {
+      heading: 'Background',
+      summary: 'Problem framing and baseline context.',
+      keyPoints: ['Current state', 'Core constraint'],
+      sourceUrls: ['https://example.com'],
+    },
+    {
+      heading: 'Findings',
+      summary: 'Main evidence from the research run.',
+      keyPoints: ['Signal one', 'Signal two'],
+      sourceUrls: ['https://example.com'],
+    },
+    {
+      heading: 'Recommendations',
+      summary: 'Actionable next steps from findings.',
+      keyPoints: ['Step one', 'Step two'],
+      sourceUrls: ['https://example.com'],
+    },
+  ],
+};
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -105,6 +131,7 @@ describe('processResearch', () => {
             });
           },
         }),
+        createMockLLM({ response: OUTLINE_RESPONSE }),
         createMockStorage(),
       );
 
@@ -153,6 +180,7 @@ describe('processResearch', () => {
               wordCount: 3,
             }),
         }),
+        createMockLLM({ response: OUTLINE_RESPONSE }),
         createMockStorage(),
       );
 
@@ -201,6 +229,7 @@ describe('processResearch', () => {
               wordCount: 3,
             }),
         }),
+        createMockLLM({ response: OUTLINE_RESPONSE }),
         createMockStorage(),
       );
 
@@ -250,6 +279,7 @@ describe('processResearch', () => {
               wordCount: 1,
             }),
         }),
+        createMockLLM({ response: OUTLINE_RESPONSE }),
         createMockStorage(),
       );
 
@@ -357,6 +387,7 @@ describe('processResearch', () => {
               wordCount: 3,
             }),
         }),
+        createMockLLM({ response: OUTLINE_RESPONSE }),
         createMockStorage(),
       );
 

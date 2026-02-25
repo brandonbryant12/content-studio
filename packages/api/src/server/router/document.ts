@@ -208,6 +208,13 @@ const documentRouter = {
         context.user,
         retryProcessing({ id: input.id }).pipe(
           Effect.flatMap(serializeDocumentEffect),
+          tapLogActivity(
+            context.runtime,
+            context.user,
+            'retry_processing',
+            'document',
+            input.id,
+          ),
         ),
         errors,
         {
