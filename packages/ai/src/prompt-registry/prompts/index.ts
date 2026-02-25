@@ -30,6 +30,14 @@ export {
   infographicTitleUserPrompt,
   type InfographicTitleUserPromptInput,
 } from './infographic-title-user';
+export {
+  infographicLayoutUserPrompt,
+  type InfographicLayoutUserPromptInput,
+} from './infographic-layout-user';
+export {
+  documentOutlineUserPrompt,
+  type DocumentOutlineUserPromptInput,
+} from './document-outline-user';
 
 export {
   podcastCoverImageUserPrompt,

@@ -33,6 +33,22 @@ export interface StyleProperty {
   type?: 'text' | 'color' | 'number';
 }
 
+export interface InfographicLayoutChartDatum {
+  label: string;
+  value: number;
+}
+
+export interface InfographicLayoutSection {
+  heading: string;
+  body: string;
+  chartData?: readonly InfographicLayoutChartDatum[];
+}
+
+export interface InfographicLayout {
+  title: string;
+  sections: readonly InfographicLayoutSection[];
+}
+
 export const StylePropertySchema = Schema.Struct({
   key: Schema.String,
   value: Schema.String,
@@ -40,6 +56,22 @@ export const StylePropertySchema = Schema.Struct({
 });
 
 export const StylePropertiesSchema = Schema.Array(StylePropertySchema);
+
+export const InfographicLayoutChartDatumSchema = Schema.Struct({
+  label: Schema.String,
+  value: Schema.Number,
+});
+
+export const InfographicLayoutSectionSchema = Schema.Struct({
+  heading: Schema.String,
+  body: Schema.String,
+  chartData: Schema.optional(Schema.Array(InfographicLayoutChartDatumSchema)),
+});
+
+export const InfographicLayoutSchema = Schema.Struct({
+  title: Schema.String,
+  sections: Schema.Array(InfographicLayoutSectionSchema),
+});
 
 export type StylePropertyType = typeof StylePropertySchema.Type;
 
@@ -85,6 +117,7 @@ export const infographic = pgTable(
       .$type<StyleProperty[]>()
       .notNull()
       .default([]),
+    layout: jsonb('layout').$type<InfographicLayout>(),
     format: infographicFormatEnum('format').notNull(),
     imageStorageKey: text('image_storage_key'),
     thumbnailStorageKey: text('thumbnail_storage_key'),
@@ -125,6 +158,7 @@ export const infographicVersion = pgTable(
       .$type<StyleProperty[]>()
       .notNull()
       .default([]),
+    layout: jsonb('layout_v').$type<InfographicLayout>(),
     format: infographicFormatEnum('format_v').notNull(),
     imageStorageKey: text('image_storage_key').notNull(),
     thumbnailStorageKey: text('thumbnail_storage_key'),
@@ -172,6 +206,7 @@ export const InfographicOutputSchema = Schema.Struct({
   title: Schema.String,
   prompt: Schema.NullOr(Schema.String),
   styleProperties: StylePropertiesSchema,
+  layout: Schema.NullOr(InfographicLayoutSchema),
   format: InfographicFormatSchema,
   imageStorageKey: Schema.NullOr(Schema.String),
   thumbnailStorageKey: Schema.NullOr(Schema.String),
@@ -190,6 +225,7 @@ export const InfographicVersionOutputSchema = Schema.Struct({
   versionNumber: Schema.Number,
   prompt: Schema.NullOr(Schema.String),
   styleProperties: StylePropertiesSchema,
+  layout: Schema.NullOr(InfographicLayoutSchema),
   format: InfographicFormatSchema,
   imageStorageKey: Schema.String,
   thumbnailStorageKey: Schema.NullOr(Schema.String),
@@ -220,6 +256,7 @@ const infographicTransform = (row: Infographic): InfographicOutput => ({
   title: row.title,
   prompt: row.prompt ?? null,
   styleProperties: row.styleProperties ?? [],
+  layout: row.layout ?? null,
   format: row.format,
   imageStorageKey: row.imageStorageKey ?? null,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
@@ -240,6 +277,7 @@ const infographicVersionTransform = (
   versionNumber: row.versionNumber,
   prompt: row.prompt ?? null,
   styleProperties: row.styleProperties ?? [],
+  layout: row.layout ?? null,
   format: row.format,
   imageStorageKey: row.imageStorageKey,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,

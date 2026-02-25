@@ -1,4 +1,5 @@
 import { DeepResearch, type DeepResearchService } from '@repo/ai';
+import { createMockLLM } from '@repo/ai/testing';
 import { generateJobId } from '@repo/db/schema';
 import { Queue, type QueueService } from '@repo/queue';
 import { createMockStorage } from '@repo/storage/testing';
@@ -12,6 +13,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  createMockActivityLogRepo,
   createMockDocumentRepo,
   createMockPodcastRepo,
   MockDbLive,
@@ -37,6 +39,20 @@ const mockDocRepo = (overrides: Partial<DocumentRepoService>) =>
   createMockDocumentRepo({
     updateResearchConfig: () => Effect.succeed({} as never),
     ...overrides,
+  });
+
+const mockOutlineLLM = () =>
+  createMockLLM({
+    response: {
+      title: 'Research Outline',
+      sections: [
+        {
+          heading: 'Key Findings',
+          summary: 'Summary of the most relevant findings.',
+          citations: ['https://example.com/reference'],
+        },
+      ],
+    },
   });
 
 const createMockQueue = (overrides: Partial<QueueService> = {}) =>
@@ -91,6 +107,7 @@ describe('processResearch', () => {
           updateContent: () => Effect.succeed(existingDoc),
           updateStatus: () => Effect.succeed(existingDoc),
         }),
+        createMockActivityLogRepo(),
         createMockDeepResearch({
           startResearch: (query) => {
             startResearchSpy(query);
@@ -106,6 +123,7 @@ describe('processResearch', () => {
           },
         }),
         createMockStorage(),
+        mockOutlineLLM(),
       );
 
       await Effect.runPromise(
@@ -141,6 +159,7 @@ describe('processResearch', () => {
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),
         }),
+        createMockActivityLogRepo(),
         createMockDeepResearch({
           startResearch: (query) => {
             startResearchSpy(query);
@@ -154,6 +173,7 @@ describe('processResearch', () => {
             }),
         }),
         createMockStorage(),
+        mockOutlineLLM(),
       );
 
       await Effect.runPromise(
@@ -189,6 +209,7 @@ describe('processResearch', () => {
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),
         }),
+        createMockActivityLogRepo(),
         createMockDeepResearch({
           startResearch: (query) => {
             startResearchSpy(query);
@@ -202,6 +223,7 @@ describe('processResearch', () => {
             }),
         }),
         createMockStorage(),
+        mockOutlineLLM(),
       );
 
       await Effect.runPromise(
@@ -242,6 +264,7 @@ describe('processResearch', () => {
             return Effect.succeed(existingDoc);
           },
         }),
+        createMockActivityLogRepo(),
         createMockDeepResearch({
           getResult: () =>
             Effect.succeed({
@@ -251,6 +274,7 @@ describe('processResearch', () => {
             }),
         }),
         createMockStorage(),
+        mockOutlineLLM(),
       );
 
       await Effect.runPromise(
@@ -299,6 +323,7 @@ describe('processResearch', () => {
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),
         }),
+        createMockActivityLogRepo(),
         createMockPodcastRepo({
           verifyDocumentsExist: () => Effect.succeed([doc]),
           insert: (data, documentIds) =>
@@ -358,6 +383,7 @@ describe('processResearch', () => {
             }),
         }),
         createMockStorage(),
+        mockOutlineLLM(),
       );
 
       await Effect.runPromise(
