@@ -116,6 +116,9 @@ export const envSchema = Schema.Struct({
   SERVER_REDIS_URL: Schema.optionalWith(Schema.String, {
     default: () => 'redis://localhost:6379',
   }),
+  TRUST_PROXY: Schema.optionalWith(BooleanStringSchema, {
+    default: () => false,
+  }),
   SSE_REDIS_CHANNEL_PREFIX: Schema.optionalWith(Schema.String, {
     default: () => 'cs:sse:user',
   }),
