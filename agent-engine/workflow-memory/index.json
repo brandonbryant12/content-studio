@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-ready-for-dev-executor-no-op-no-labeled-issues",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev executor no-op: no labeled issues",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "feature-delivery",
+      "no-op",
+      "triage"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
