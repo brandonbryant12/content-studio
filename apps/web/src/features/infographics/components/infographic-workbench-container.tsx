@@ -132,7 +132,9 @@ interface ControlsSidebarProps {
   hasExistingImage: boolean;
   isViewingHistoricalVersion: boolean;
   selectedVersion: InfographicVersion | null;
+  viewingVersionNumber: number | null;
   latestVersionNumber: number | null;
+  onUseLatestBase: () => void;
   settings: UseInfographicSettingsReturn;
   actions: { isGenerating: boolean; isDeleting: boolean };
   infographic: InfographicFull;
@@ -146,7 +148,9 @@ function ControlsSidebar({
   hasExistingImage,
   isViewingHistoricalVersion,
   selectedVersion,
+  viewingVersionNumber,
   latestVersionNumber,
+  onUseLatestBase,
   settings,
   actions,
   infographic,
@@ -166,13 +170,23 @@ function ControlsSidebar({
                 Editing an existing image. Generating creates a new version from
                 the latest result.
               </p>
-              {isViewingHistoricalVersion && selectedVersion && (
-                <p className="text-[11px] text-muted-foreground mt-1.5">
-                  Viewing v{selectedVersion.versionNumber}. New changes will
-                  build on v
-                  {latestVersionNumber ?? selectedVersion.versionNumber}.
-                </p>
-              )}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span className="rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 text-muted-foreground">
+                  Viewing v{viewingVersionNumber ?? '—'}
+                </span>
+                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">
+                  Base v{latestVersionNumber ?? '—'}
+                </span>
+                {isViewingHistoricalVersion && selectedVersion ? (
+                  <button
+                    type="button"
+                    onClick={onUseLatestBase}
+                    className="rounded-full border border-border px-2 py-0.5 text-muted-foreground transition-colors hover:bg-muted/50"
+                  >
+                    Use latest as base
+                  </button>
+                ) : null}
+              </div>
             </div>
           )}
 
@@ -220,12 +234,20 @@ function ControlsSidebar({
               <Spinner className="w-4 h-4 mr-2" />
               {hasExistingImage ? 'Generating New Version...' : 'Generating...'}
             </>
+          ) : hasExistingImage && isViewingHistoricalVersion ? (
+            `Generate From Base v${latestVersionNumber ?? '—'}`
           ) : hasExistingImage ? (
             'Generate New Version'
           ) : (
             'Generate'
           )}
         </Button>
+        {hasExistingImage && isViewingHistoricalVersion && selectedVersion ? (
+          <p className="rounded-md border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Viewing v{selectedVersion.versionNumber}. New generations will use
+            latest base v{latestVersionNumber ?? selectedVersion.versionNumber}.
+          </p>
+        ) : null}
       </div>
     </aside>
   );
@@ -233,6 +255,36 @@ function ControlsSidebar({
 
 interface InfographicWorkbenchContainerProps {
   infographicId: string;
+}
+
+function resolveVersionViewState(
+  versions: readonly InfographicVersion[],
+  selectedVersionId: string | null,
+  infographic: InfographicFull,
+) {
+  const selectedVersion = selectedVersionId
+    ? (versions.find((version) => version.id === selectedVersionId) ?? null)
+    : null;
+  const latestVersion =
+    versions.length > 0 ? (versions[versions.length - 1] ?? null) : null;
+  const latestVersionNumber = latestVersion?.versionNumber ?? null;
+  const isViewingHistoricalVersion =
+    selectedVersion !== null && selectedVersion.id !== latestVersion?.id;
+  const viewingVersionNumber =
+    selectedVersion?.versionNumber ?? latestVersionNumber;
+  const storageKey =
+    selectedVersion?.imageStorageKey ?? infographic.imageStorageKey;
+
+  return {
+    selectedVersion,
+    latestVersionNumber,
+    isViewingHistoricalVersion,
+    viewingVersionNumber,
+    storageKey,
+    exportFormat: selectedVersion?.format ?? infographic.format,
+    exportVersionNumber: selectedVersion?.versionNumber ?? latestVersionNumber,
+    exportUpdatedAt: selectedVersion?.createdAt ?? infographic.updatedAt,
+  };
 }
 
 export function InfographicWorkbenchContainer({
@@ -268,27 +320,15 @@ export function InfographicWorkbenchContainer({
     null,
   );
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-
-  // Determine which image to show: selected version or current
-  const selectedVersion = selectedVersionId
-    ? (versions.find((v) => v.id === selectedVersionId) ?? null)
+  const versionViewState = resolveVersionViewState(
+    versions,
+    selectedVersionId,
+    infographic,
+  );
+  const displayImageUrl = versionViewState.storageKey
+    ? getStorageUrl(versionViewState.storageKey)
     : null;
-
-  const storageKey =
-    selectedVersion?.imageStorageKey ?? infographic.imageStorageKey;
-  const displayImageUrl = storageKey ? getStorageUrl(storageKey) : null;
-
-  // Edit mode: once at least one version has been generated
   const hasExistingImage = infographic.imageStorageKey !== null;
-  const latestVersion =
-    versions.length > 0 ? (versions[versions.length - 1] ?? null) : null;
-  const latestVersionNumber = latestVersion?.versionNumber ?? null;
-  const isViewingHistoricalVersion =
-    selectedVersion !== null && selectedVersion.id !== latestVersion?.id;
-  const exportFormat = selectedVersion?.format ?? infographic.format;
-  const exportVersionNumber =
-    selectedVersion?.versionNumber ?? latestVersionNumber;
-  const exportUpdatedAt = selectedVersion?.createdAt ?? infographic.updatedAt;
 
   const iterationPrompt = iterationPromptById[infographic.id] ?? '';
 
@@ -379,6 +419,9 @@ export function InfographicWorkbenchContainer({
   const handleSelectVersion = useCallback((versionId: string) => {
     setSelectedVersionId((prev) => (prev === versionId ? null : versionId));
   }, []);
+  const handleUseLatestBase = useCallback(() => {
+    setSelectedVersionId(null);
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     setDeleteConfirmOpen(false);
@@ -396,9 +439,9 @@ export function InfographicWorkbenchContainer({
           onApprove={() => approve.mutate({ id: infographicId })}
           onRevoke={() => revoke.mutate({ id: infographicId })}
           displayImageUrl={displayImageUrl}
-          exportFormat={exportFormat}
-          exportVersionNumber={exportVersionNumber}
-          exportUpdatedAt={exportUpdatedAt}
+          exportFormat={versionViewState.exportFormat}
+          exportVersionNumber={versionViewState.exportVersionNumber}
+          exportUpdatedAt={versionViewState.exportUpdatedAt}
           hasUnsavedChanges={hasUnsavedChanges}
           onSave={handleSave}
           onDeleteRequest={() => setDeleteConfirmOpen(true)}
@@ -410,9 +453,13 @@ export function InfographicWorkbenchContainer({
             prompt={prompt}
             onPromptChange={handlePromptChange}
             hasExistingImage={hasExistingImage}
-            isViewingHistoricalVersion={isViewingHistoricalVersion}
-            selectedVersion={selectedVersion}
-            latestVersionNumber={latestVersionNumber}
+            isViewingHistoricalVersion={
+              versionViewState.isViewingHistoricalVersion
+            }
+            selectedVersion={versionViewState.selectedVersion}
+            viewingVersionNumber={versionViewState.viewingVersionNumber}
+            latestVersionNumber={versionViewState.latestVersionNumber}
+            onUseLatestBase={handleUseLatestBase}
             settings={settings}
             actions={actions}
             infographic={infographic}
@@ -432,6 +479,8 @@ export function InfographicWorkbenchContainer({
               versions={versions}
               selectedVersionId={selectedVersionId}
               onSelectVersion={handleSelectVersion}
+              latestVersionNumber={versionViewState.latestVersionNumber}
+              onUseLatestBase={handleUseLatestBase}
               isLoading={versionsLoading}
             />
           </div>

@@ -32,12 +32,17 @@ export function InfographicListContainer() {
     entityName: 'infographic',
   });
 
-  const handleCreate = useCallback(() => {
-    createMutation.mutate({
-      title: 'Untitled Infographic',
-      format: 'portrait',
-    });
-  }, [createMutation]);
+  const handleCreate = useCallback(
+    (input: {
+      title: string;
+      format: 'portrait' | 'square' | 'landscape' | 'og_card';
+      prompt?: string;
+      autoGenerate?: boolean;
+    }) => {
+      createMutation.mutate(input);
+    },
+    [createMutation],
+  );
 
   const handleDeleteConfirm = useCallback(() => {
     if (!pendingDeleteId) return;
