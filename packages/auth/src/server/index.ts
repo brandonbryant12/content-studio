@@ -17,3 +17,6 @@ export {
 
 // Effect-based session wrappers
 export { getSession, getSessionWithRole, requireSession } from './session';
+
+// Auth domain errors
+export { AuthSessionLookupError } from '../errors';

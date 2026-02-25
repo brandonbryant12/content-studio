@@ -89,6 +89,10 @@ Do not define domain error classes inline inside repository files.
 | 500 | Internal | `DatabaseError` |
 | 503 | Service unavailable | `ExternalServiceError` |
 
+Auth context boundary rule:
+- `no session` stays an expected unauthenticated state (`UNAUTHORIZED` only when a protected handler is reached)
+- auth/session lookup infrastructure failures at context creation must map to `SERVICE_UNAVAILABLE` and include `requestId` + stable auth-context error tag in logs
+
 ## Error Type Inference <!-- enforced-by: types -->
 
 Use cases must NOT manually annotate error types. Let Effect infer, then export a derived alias:

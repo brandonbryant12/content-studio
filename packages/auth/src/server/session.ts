@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import type { AuthInstance } from './auth';
-import type { PolicyError } from '../errors';
 import type { User } from '../policy/types';
+import { AuthSessionLookupError, type PolicyError } from '../errors';
 import { UnauthorizedError } from '../errors';
 import { Policy } from '../policy/service';
 
@@ -14,13 +14,16 @@ type Session = AuthInstance['$Infer']['Session'];
 export const getSession = (
   auth: AuthInstance,
   headers: Headers,
-): Effect.Effect<Session | null> =>
+): Effect.Effect<Session | null, AuthSessionLookupError> =>
   Effect.tryPromise({
     try: () => auth.api.getSession({ headers }),
-    catch: (error) => error,
+    catch: (error) =>
+      new AuthSessionLookupError({
+        message: 'Session lookup failed',
+        cause: error,
+      }),
   }).pipe(
     Effect.map((s) => s ?? null),
-    Effect.catchAll(() => Effect.succeed(null)),
     Effect.withSpan('auth.getSession'),
   );
 
@@ -33,7 +36,7 @@ export const getSessionWithRole = (
   headers: Headers,
 ): Effect.Effect<
   { session: Session; user: User } | null,
-  PolicyError,
+  PolicyError | AuthSessionLookupError,
   Policy
 > =>
   Effect.gen(function* () {
@@ -62,7 +65,7 @@ export const requireSession = (
   headers: Headers,
 ): Effect.Effect<
   { session: Session; user: User },
-  UnauthorizedError | PolicyError,
+  UnauthorizedError | PolicyError | AuthSessionLookupError,
   Policy
 > =>
   getSessionWithRole(auth, headers).pipe(

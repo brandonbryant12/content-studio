@@ -38,6 +38,10 @@ graph LR
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
 | Handler | Receives `AuthenticatedORPCContext` with typed `user` field |
 
+Auth-context failure semantics:
+- Expected no-session resolves to `{ session: null, user: null }` and can later produce `UNAUTHORIZED` on protected routes.
+- Unexpected auth/session lookup failures during context creation map to `SERVICE_UNAVAILABLE` with request-scoped logging (`requestId` + stable auth-context error tag).
+
 The `protectedProcedure` type guarantees that handlers receive a non-null user. Handlers that use `baseProcedure` receive `user: User | null` and must handle the null case explicitly.
 
 Role mapping intentionally uses Graph API lookup (instead of token `groups` claim) to avoid group-claim overage behavior for users in many groups.
