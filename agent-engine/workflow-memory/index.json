@@ -1,5 +1,23 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-ready-for-dev-141-merged-with-schema-first-contracts",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #141 merged with schema-first contracts",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "issue-141",
+      "schema-contracts",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
