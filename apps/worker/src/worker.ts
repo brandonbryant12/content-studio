@@ -17,6 +17,28 @@ import { MAX_CONCURRENT_JOBS, QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
 import { createUnifiedWorker } from './unified-worker';
 
+let isFatalExiting = false;
+const fatalExit = async (context: string, error?: unknown): Promise<void> => {
+  if (isFatalExiting) return;
+  isFatalExiting = true;
+
+  console.error(context, error instanceof Error ? error.message : error);
+
+  try {
+    await shutdownTelemetry();
+    console.log('Telemetry exporter stopped (fatal exit)');
+  } catch (shutdownError) {
+    console.error('Failed to stop telemetry exporter during fatal exit:', {
+      message:
+        shutdownError instanceof Error
+          ? shutdownError.message
+          : String(shutdownError),
+    });
+  } finally {
+    process.exit(1);
+  }
+};
+
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled Promise Rejection:', {
     reason:
@@ -28,11 +50,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('[FATAL] Uncaught Exception:', {
-    message: error.message,
-    stack: error.stack,
-  });
-  process.exit(1);
+  void fatalExit('[FATAL] Uncaught Exception:', error);
 });
 
 async function startWorker(): Promise<void> {
@@ -41,10 +59,8 @@ async function startWorker(): Promise<void> {
     serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',
     serviceVersion: env.OTEL_SERVICE_VERSION,
     environment: env.OTEL_ENV,
-    otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
     otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
-    otlpTracesHeaders: env.OTEL_EXPORTER_OTLP_TRACES_HEADERS,
   });
 
   console.log('Verifying database connection...');
@@ -61,11 +77,8 @@ async function startWorker(): Promise<void> {
     await verifyDbConnection(db);
     console.log('Database connection verified');
   } catch (error) {
-    console.error(
-      'Failed to start worker:',
-      error instanceof Error ? error.message : error,
-    );
-    process.exit(1);
+    await fatalExit('Failed to start worker:', error);
+    return;
   }
 
   const serverRuntime = createServerRuntime({
@@ -82,8 +95,7 @@ async function startWorker(): Promise<void> {
   });
 
   worker.start().catch((error) => {
-    console.error('Worker error:', error);
-    process.exit(1);
+    void fatalExit('Worker error:', error);
   });
 
   console.log(
@@ -102,8 +114,7 @@ async function startWorker(): Promise<void> {
     console.log('\nShutting down gracefully...');
 
     const forceTimer = setTimeout(() => {
-      console.error('Graceful shutdown timed out, forcing exit');
-      process.exit(1);
+      void fatalExit('Graceful shutdown timed out, forcing exit');
     }, SHUTDOWN_TIMEOUT_MS);
     forceTimer.unref();
 
