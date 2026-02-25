@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Hardened server CORS and rate-limit proxy trust",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "security-hardening",
+      "skill:feature-delivery",
+      "skill:codebase-nav",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
