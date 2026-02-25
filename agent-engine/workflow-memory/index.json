@@ -1,5 +1,20 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-no-actionable-ready-for-dev-issues",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No actionable ready-for-dev issues",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "selection_outcome:no_actionable_candidates",
+      "skill:feature-delivery"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
