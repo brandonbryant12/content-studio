@@ -15,6 +15,7 @@ import {
   createMockPodcastRepo,
   createMockPersonaRepo,
   createMockDocumentRepo,
+  createMockActivityLogRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { generateScript } from '../generate-script';
@@ -76,6 +77,7 @@ describe('generateScript', () => {
       repo,
       createMockPersonaRepo(),
       createMockDocumentRepo(),
+      createMockActivityLogRepo(),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
       createMockLLM({ response: llmResponse }),
     );

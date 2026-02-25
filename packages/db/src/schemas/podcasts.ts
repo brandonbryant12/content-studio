@@ -75,6 +75,8 @@ export interface ScriptSegment {
   speaker: string;
   line: string;
   index: number;
+  startTimeMs?: number;
+  endTimeMs?: number;
 }
 
 export const podcast = pgTable(
@@ -196,6 +198,8 @@ export const ScriptSegmentSchema = Schema.Struct({
   speaker: Schema.String,
   line: Schema.String,
   index: Schema.Number,
+  startTimeMs: Schema.optional(Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))),
+  endTimeMs: Schema.optional(Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))),
 });
 
 export const UpdateScriptSchema = Schema.Struct({

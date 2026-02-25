@@ -49,6 +49,7 @@ describe('executeInfographicGeneration', () => {
             versionNumber: input.versionNumber,
             prompt: input.prompt ?? null,
             styleProperties: input.styleProperties ?? [],
+            layout: input.layout ?? null,
             format: input.format,
             imageStorageKey: input.imageStorageKey,
             thumbnailStorageKey: null,
@@ -76,7 +77,21 @@ describe('executeInfographicGeneration', () => {
       MockDbLive,
       repo,
       createMockActivityLogRepo(),
-      createMockLLM(),
+      createMockLLM({
+        response: {
+          title: 'Structured Layout Title',
+          sections: [
+            {
+              heading: 'Problem',
+              body: 'A clear statement of the current challenge.',
+              chartData: [
+                { label: 'Before', value: 42 },
+                { label: 'After', value: 75 },
+              ],
+            },
+          ],
+        },
+      }),
       createMockImageGen(),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
     );
@@ -93,8 +108,16 @@ describe('executeInfographicGeneration', () => {
     expect(result.imageUrl).toContain('infographics/');
     expect(result.versionNumber).toBe(1);
     expect(insertVersionSpy).toHaveBeenCalledTimes(1);
+    expect(insertVersionSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        layout: expect.objectContaining({
+          title: 'Structured Layout Title',
+        }),
+      }),
+    );
     expect(updateSpy).toHaveBeenCalledWith(infographic.id, {
       title: infographic.title,
+      layout: expect.objectContaining({ title: 'Structured Layout Title' }),
       status: 'ready',
       imageStorageKey: expect.stringContaining(
         `infographics/${infographic.id}/`,

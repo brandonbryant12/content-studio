@@ -1,12 +1,19 @@
-import { DeepResearch } from '@repo/ai';
-import { DocumentStatus } from '@repo/db/schema';
+import {
+  DeepResearch,
+  LLM,
+  documentOutlineUserPrompt,
+  renderPrompt,
+} from '@repo/ai';
+import { DocumentOutlineSchema, DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
+import { logActivity } from '../../activity';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
 import {
   annotateUseCaseSpan,
   formatUnknownError,
+  runSchemaContractWithRetries,
   withUseCaseSpan,
 } from '../../shared';
 import { DocumentRepo } from '../repos';
@@ -159,6 +166,43 @@ export const processResearch = (input: ProcessResearchInput) =>
       `Research produced ${result.wordCount} words from ${result.sources.length} sources`,
     );
 
+    const llm = yield* LLM;
+    const outline = yield* runSchemaContractWithRetries({
+      maxAttempts: 3,
+      run: () =>
+        llm.generate({
+          prompt: renderPrompt(documentOutlineUserPrompt, {
+            query,
+            content: result.content,
+            sourceHints: result.sources.map((source) => source.url),
+          }),
+          schema: DocumentOutlineSchema,
+          temperature: 0.2,
+        }),
+      onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
+        logActivity({
+          userId: doc.createdBy,
+          action: willRetry
+            ? 'schema-validation-retry'
+            : 'schema-validation-failed',
+          entityType: 'document',
+          entityId: doc.id,
+          entityTitle: doc.title,
+          metadata: {
+            contract: 'document.outline',
+            attempt,
+            maxAttempts,
+            errorTag:
+              typeof error === 'object' &&
+              error !== null &&
+              '_tag' in error &&
+              typeof error._tag === 'string'
+                ? error._tag
+                : 'UnknownError',
+          },
+        }).pipe(Effect.catchAll(() => Effect.void)),
+    });
+
     // 4. Upload content to storage
     const contentKey = `documents/${documentId}/content.txt`;
     yield* storage.upload(
@@ -185,6 +229,7 @@ export const processResearch = (input: ProcessResearchInput) =>
       researchStatus: 'completed',
       sourceCount: result.sources.length,
       sources: result.sources.map((s) => ({ title: s.title, url: s.url })),
+      outline: outline.object,
       autoGeneratePodcast,
     });
 

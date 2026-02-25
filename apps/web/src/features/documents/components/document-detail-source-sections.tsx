@@ -56,8 +56,10 @@ function ResearchCallout({
   config: NonNullable<DocumentDetailDocument['researchConfig']>;
 }) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [outlineOpen, setOutlineOpen] = useState(true);
   const sources = config.sources ?? [];
   const sourceCount = sources.length || config.sourceCount || 0;
+  const outlineSections = config.outline?.sections ?? [];
 
   return (
     <div className="research-callout mb-8">
@@ -130,6 +132,59 @@ function ResearchCallout({
                       />
                     </svg>
                   </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {outlineSections.length > 0 && (
+        <div className="research-sources-section border-t border-border/40 mt-4 pt-3">
+          <button
+            type="button"
+            onClick={() => setOutlineOpen(!outlineOpen)}
+            className="research-sources-toggle"
+            aria-expanded={outlineOpen}
+          >
+            <span className="research-sources-count">
+              {outlineSections.length}{' '}
+              {outlineSections.length === 1 ? 'outline section' : 'outline sections'}
+            </span>
+            <ChevronDownIcon
+              className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${outlineOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {outlineOpen && (
+            <ul className="research-sources-list" role="list">
+              {outlineSections.map((section, index) => (
+                <li
+                  key={`${section.heading}-${index}`}
+                  className="research-source-item"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
+                  <div className="flex flex-col gap-1.5 text-sm">
+                    <p className="font-medium text-foreground">
+                      {section.heading}
+                    </p>
+                    <p className="text-muted-foreground">{section.summary}</p>
+                    {section.citations.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {section.citations.map((citation) => (
+                          <a
+                            key={`${section.heading}-${citation}`}
+                            href={citation}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/50"
+                          >
+                            {extractDomain(citation)}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

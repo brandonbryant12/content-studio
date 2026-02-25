@@ -157,6 +157,8 @@ function ControlsSidebar({
   hasPrompt,
   onGenerate,
 }: ControlsSidebarProps) {
+  const layoutSections = infographic.layout?.sections ?? [];
+
   return (
     <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto overscroll-y-contain">
@@ -196,6 +198,27 @@ function ControlsSidebar({
             disabled={actions.isGenerating}
             isEditMode={hasExistingImage}
           />
+
+          {layoutSections.length > 0 && (
+            <div className="mt-4 rounded-lg border border-border/70 bg-muted/30 p-3 text-xs">
+              <p className="font-semibold text-foreground">Structured Layout</p>
+              <p className="mt-0.5 text-muted-foreground">
+                {infographic.layout?.title}
+              </p>
+              <ul className="mt-2 space-y-2">
+                {layoutSections.slice(0, 4).map((section, index) => (
+                  <li key={`${section.heading}-${index}`} className="space-y-1">
+                    <p className="font-medium text-foreground/90">
+                      {section.heading}
+                    </p>
+                    <p className="text-muted-foreground line-clamp-2">
+                      {section.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-border/40 p-5 pb-4">

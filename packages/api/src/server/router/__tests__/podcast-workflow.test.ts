@@ -26,6 +26,7 @@ import {
 import {
   PodcastRepoLive,
   DocumentRepoLive,
+  ActivityLogRepoLive,
   PersonaRepoLive,
   startGeneration,
   saveAndQueueAudio,
@@ -72,6 +73,7 @@ const createWorkflowRuntime = (ctx: TestContext) => {
     mockAILayers,
     PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer)),
+    ActivityLogRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     PersonaRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     QueueLive.pipe(Layer.provide(ctx.dbLayer)),
   );

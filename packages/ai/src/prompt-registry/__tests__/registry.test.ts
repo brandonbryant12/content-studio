@@ -49,6 +49,20 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
     sourcePrompt:
       'Create an infographic about quarter-over-quarter SaaS growth',
   },
+  'infographic.layout.user': {
+    prompt: 'Show how teams improve release velocity after CI hardening.',
+    format: 'landscape',
+    styleProperties: [
+      { key: 'Tone', value: 'technical and clean', type: 'text' },
+      { key: 'Primary', value: '#0ea5e9', type: 'color' },
+    ],
+  },
+  'document.outline.user': {
+    query: 'How should engineering teams adopt schema-first AI workflows?',
+    sourceHints: ['https://example.com/reference'],
+    content:
+      'Schema-first workflows reduce parsing errors and improve review speed.',
+  },
   'podcast.cover-image.user': {
     title: 'Future of AI Workflows',
     description: 'A practical engineering discussion',

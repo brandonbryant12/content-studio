@@ -2,9 +2,14 @@ import { LLM } from '@repo/ai/llm';
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect, Schema } from 'effect';
 import type { Podcast } from '@repo/db/schema';
+import { logActivity } from '../../activity';
 import { getDocumentContent } from '../../document';
 import { PersonaRepo } from '../../persona';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  runSchemaContractWithRetries,
+  withUseCaseSpan,
+} from '../../shared';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -40,6 +45,12 @@ const ScriptOutputSchema = Schema.Struct({
     Schema.Struct({
       speaker: Schema.String,
       line: Schema.String,
+      startTimeMs: Schema.optional(
+        Schema.Number.pipe(Schema.greaterThanOrEqualTo(0)),
+      ),
+      endTimeMs: Schema.optional(
+        Schema.Number.pipe(Schema.greaterThanOrEqualTo(0)),
+      ),
     }),
   ),
 });
@@ -124,17 +135,45 @@ export const generateScript = (input: GenerateScriptInput) =>
       combinedContent,
     );
 
-    const llmResult = yield* llm.generate({
-      system: systemPrompt,
-      prompt: userPrompt,
-      schema: ScriptOutputSchema,
-      temperature: 0.7,
+    const llmResult = yield* runSchemaContractWithRetries({
+      maxAttempts: 3,
+      run: () =>
+        llm.generate({
+          system: systemPrompt,
+          prompt: userPrompt,
+          schema: ScriptOutputSchema,
+          temperature: 0.7,
+        }),
+      onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
+        logActivity({
+          userId: user.id,
+          action: willRetry
+            ? 'schema-validation-retry'
+            : 'schema-validation-failed',
+          entityType: 'podcast',
+          entityId: podcast.id,
+          entityTitle: podcast.title,
+          metadata: {
+            contract: 'podcast.script',
+            attempt,
+            maxAttempts,
+            errorTag:
+              typeof error === 'object' &&
+              error !== null &&
+              '_tag' in error &&
+              typeof error._tag === 'string'
+                ? error._tag
+                : 'UnknownError',
+          },
+        }).pipe(Effect.catchAll(() => Effect.void)),
     });
 
     const segments = llmResult.object.segments.map((s, i) => ({
       speaker: s.speaker,
       line: s.line,
       index: i,
+      startTimeMs: s.startTimeMs,
+      endTimeMs: s.endTimeMs,
     }));
 
     yield* podcastRepo.updateScript(input.podcastId, {

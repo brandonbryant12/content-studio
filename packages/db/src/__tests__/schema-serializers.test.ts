@@ -124,6 +124,7 @@ const makeInfographic = (overrides?: Partial<Infographic>): Infographic => ({
   title: 'Test Infographic',
   prompt: null,
   styleProperties: [],
+  layout: null,
   format: 'portrait',
   imageStorageKey: null,
   thumbnailStorageKey: null,
@@ -145,6 +146,7 @@ const makeInfographicVersion = (
   versionNumber: 1,
   prompt: null,
   styleProperties: [],
+  layout: null,
   format: 'portrait',
   imageStorageKey: 'infographics/v1.png',
   thumbnailStorageKey: null,
@@ -371,6 +373,7 @@ describe('infographic serializers', () => {
       expect(result.prompt).toBeNull();
       expect(result.imageStorageKey).toBeNull();
       expect(result.thumbnailStorageKey).toBeNull();
+      expect(result.layout).toBeNull();
       expect(result.errorMessage).toBeNull();
       expect(result.approvedAt).toBeNull();
     });

@@ -21,6 +21,26 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-02-25 - Schema-First Contracts for Podcast, Infographic, and Document Generation
+- Issue: https://github.com/brandonbryant12/content-studio/issues/141
+- PR: https://github.com/brandonbryant12/content-studio/pull/157
+- Paper link(s):
+  - https://ai.google.dev/gemini-api/docs/structured-output
+- Adopted idea(s):
+  - Enforce schema-constrained model outputs before persistence/rendering.
+  - Treat schema-validation failures as explicit retryable events with bounded retries.
+- Implementation summary:
+  - Added structured contracts for podcast segments, infographic layout plans, and document research outlines; persisted typed fields to DB-facing schemas and rendered them directly in web surfaces without prompt-text parsing.
+  - Added bounded schema retry orchestration and activity-log entries for validation retry/failure outcomes in generation paths.
+- Code references:
+  - [`packages/media/src/podcast/use-cases/generate-script.ts`](../packages/media/src/podcast/use-cases/generate-script.ts)
+  - [`packages/media/src/infographic/use-cases/execute-generation.ts`](../packages/media/src/infographic/use-cases/execute-generation.ts)
+  - [`packages/media/src/document/use-cases/process-research.ts`](../packages/media/src/document/use-cases/process-research.ts)
+  - [`packages/db/src/schemas/infographics.ts`](../packages/db/src/schemas/infographics.ts)
+  - [`packages/db/src/schemas/documents.ts`](../packages/db/src/schemas/documents.ts)
+  - [`apps/web/src/features/infographics/components/infographic-workbench-container.tsx`](../apps/web/src/features/infographics/components/infographic-workbench-container.tsx)
+  - [`apps/web/src/features/documents/components/document-detail-source-sections.tsx`](../apps/web/src/features/documents/components/document-detail-source-sections.tsx)
+
 ### 2026-02-22 - Workflow-Memory Taxonomy Tags + Validation
 - Issue: https://github.com/content-studio/issues/66
 - PR: https://github.com/content-studio/pull/83
