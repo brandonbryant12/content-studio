@@ -1,5 +1,31 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-no-op-run-after-issue-closure-and-duplicate-pr-cleanup",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No-op run after issue closure and duplicate PR cleanup",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "workflow-memory",
+      "no-op",
+      "superseded",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:instruction-following",
+      "capability:tool-use",
+      "failure:state-loss"
+    ],
+    "importance": 0.73,
+    "recency": 0.99,
+    "confidence": 0.98,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
