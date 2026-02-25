@@ -127,6 +127,8 @@ pnpm test:db:down               # Stop test DB container
 | `USE_MOCK_AI` | Use mock AI providers instead of live Gemini providers | `true` |
 | `STORAGE_PROVIDER` | Storage backend (`filesystem` / `s3`) | `filesystem` |
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
+| `TRUST_PROXY` | Trust `x-forwarded-for` / `x-real-ip` for rate-limit identity | `false` |
+| `CORS_ORIGINS` | Comma-separated credentialed CORS origin allowlist (`*` only for local-dev) | `PUBLIC_WEB_URL` |
 | `S3_BUCKET` | S3 bucket name | -- |
 | `S3_REGION` | S3 region | -- |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |

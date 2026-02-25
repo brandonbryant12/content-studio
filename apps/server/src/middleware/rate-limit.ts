@@ -5,6 +5,7 @@ interface RateLimitOptions {
   limit: number;
   windowMs: number;
   keyGenerator?: (c: Context) => string;
+  trustProxyHeaders?: boolean;
   cleanupIntervalMs?: number;
   redisUrl?: string;
   keyPrefix?: string;
@@ -177,7 +178,8 @@ export const rateLimiter = (opts: RateLimitOptions): MiddlewareHandler => {
   const {
     limit,
     windowMs,
-    keyGenerator = defaultKeyGenerator,
+    keyGenerator,
+    trustProxyHeaders = false,
     cleanupIntervalMs = 60_000,
     redisUrl,
     keyPrefix = DEFAULT_KEY_PREFIX,
@@ -211,8 +213,11 @@ export const rateLimiter = (opts: RateLimitOptions): MiddlewareHandler => {
     redisBackedStores.add(activeStore);
   }
 
+  const activeKeyGenerator =
+    keyGenerator ?? createDefaultKeyGenerator({ trustProxyHeaders });
+
   return async (c, next) => {
-    const key = keyGenerator(c);
+    const key = activeKeyGenerator(c);
     const now = Date.now();
     const snapshot = await activeStore.consume(key, windowMs, now);
 
@@ -233,16 +238,53 @@ export const rateLimiter = (opts: RateLimitOptions): MiddlewareHandler => {
   };
 };
 
-function defaultKeyGenerator(c: Context): string {
-  const forwarded = c.req.header('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0]!.trim();
+interface KeyGeneratorOptions {
+  trustProxyHeaders: boolean;
+}
+
+function getFirstForwardedIp(value: string): string | null {
+  const first = value.split(',')[0]?.trim();
+  if (!first) return null;
+  return first;
+}
+
+function getConnectionRemoteAddress(c: Context): string | null {
+  const incoming = (
+    c as Context & {
+      env?: { incoming?: { socket?: { remoteAddress?: unknown } } };
+    }
+  ).env?.incoming;
+  const remoteAddress = incoming?.socket?.remoteAddress;
+
+  if (typeof remoteAddress === 'string' && remoteAddress.trim().length > 0) {
+    return remoteAddress.trim();
   }
-  const realIp = c.req.header('x-real-ip');
-  if (realIp) {
-    return realIp;
-  }
-  return 'unknown';
+
+  return null;
+}
+
+export function createDefaultKeyGenerator(opts: KeyGeneratorOptions) {
+  return (c: Context): string => {
+    if (opts.trustProxyHeaders) {
+      const forwarded = c.req.header('x-forwarded-for');
+      if (forwarded) {
+        const forwardedIp = getFirstForwardedIp(forwarded);
+        if (forwardedIp) return forwardedIp;
+      }
+
+      const realIp = c.req.header('x-real-ip');
+      if (realIp?.trim()) {
+        return realIp.trim();
+      }
+    }
+
+    const connectionRemoteAddress = getConnectionRemoteAddress(c);
+    if (connectionRemoteAddress) {
+      return connectionRemoteAddress;
+    }
+
+    return 'unknown';
+  };
 }
 
 export async function shutdownRateLimiters(): Promise<void> {
@@ -253,21 +295,23 @@ export async function shutdownRateLimiters(): Promise<void> {
 }
 
 export const createAuthRateLimit = (
-  opts: Pick<RateLimitOptions, 'redisUrl'> = {},
+  opts: Pick<RateLimitOptions, 'redisUrl' | 'trustProxyHeaders'> = {},
 ) =>
   rateLimiter({
     limit: 20,
     windowMs: 15 * 60 * 1000,
+    trustProxyHeaders: opts.trustProxyHeaders,
     redisUrl: opts.redisUrl,
     keyPrefix: `${DEFAULT_KEY_PREFIX}:auth`,
   });
 
 export const createApiRateLimit = (
-  opts: Pick<RateLimitOptions, 'redisUrl'> = {},
+  opts: Pick<RateLimitOptions, 'redisUrl' | 'trustProxyHeaders'> = {},
 ) =>
   rateLimiter({
     limit: 200,
     windowMs: 60 * 1000,
+    trustProxyHeaders: opts.trustProxyHeaders,
     redisUrl: opts.redisUrl,
     keyPrefix: `${DEFAULT_KEY_PREFIX}:api`,
   });

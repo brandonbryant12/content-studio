@@ -1,5 +1,6 @@
 import type { StorageConfig } from '@repo/api/server';
 import { env } from './env';
+import { createCredentialedCorsPolicy } from './middleware/cors-policy';
 
 export const buildStorageConfig = (): StorageConfig => {
   if (env.STORAGE_PROVIDER === 'filesystem') {
@@ -42,21 +43,8 @@ export const buildStorageConfig = (): StorageConfig => {
   };
 };
 
-/**
- * CORS origins. Set CORS_ORIGINS=* for fully permissive mode (reflects
- * any requesting origin). Otherwise falls back to PUBLIC_WEB_URL.
- */
-export const corsOriginConfig: string[] | '*' = (() => {
-  if (env.CORS_ORIGINS === '*') return '*';
-  const origins = [env.PUBLIC_WEB_URL];
-  if (env.CORS_ORIGINS) {
-    origins.push(...env.CORS_ORIGINS.split(',').map((s) => s.trim()));
-  }
-  return origins.map((url) => {
-    try {
-      return new URL(url).origin;
-    } catch {
-      return url;
-    }
-  });
-})();
+export const credentialedCorsPolicy = createCredentialedCorsPolicy({
+  publicWebUrl: env.PUBLIC_WEB_URL,
+  corsOrigins: env.CORS_ORIGINS,
+  nodeEnv: process.env.NODE_ENV,
+});
