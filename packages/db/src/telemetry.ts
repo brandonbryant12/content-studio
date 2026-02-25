@@ -18,10 +18,8 @@ export interface TelemetryConfig {
   readonly serviceVersion?: string;
   readonly environment?: string;
   readonly enabled?: boolean;
-  readonly otlpEndpoint?: string;
   readonly otlpTracesEndpoint?: string;
   readonly otlpHeaders?: string;
-  readonly otlpTracesHeaders?: string;
 }
 
 let initialized = false;
@@ -47,22 +45,6 @@ const normalizeOtlpTracesEndpoint = (endpoint: string): string => {
     url.pathname = '/';
   }
   return url.toString();
-};
-
-const resolveOtlpBaseTracesEndpoint = (endpoint: string): string => {
-  const trimmed = endpoint.trim();
-  const url = parseOtlpEndpointUrl(trimmed);
-  if (!url) {
-    const normalized = trimmed.replace(/\/+$/, '');
-    return `${normalized}/v1/traces`;
-  }
-  if (!url.pathname || url.pathname === '') {
-    url.pathname = '/';
-  }
-  if (!url.pathname.endsWith('/')) {
-    url.pathname = `${url.pathname}/`;
-  }
-  return new URL('v1/traces', url).toString();
 };
 
 const parseOtlpHeaders = (
@@ -97,24 +79,19 @@ const parseOtlpHeaders = (
   return Object.fromEntries(entries);
 };
 
-const resolveTracesEndpoint = (config: TelemetryConfig): string | undefined => {
+export const resolveTracesEndpoint = (
+  config: TelemetryConfig,
+): string | undefined => {
   if (config.otlpTracesEndpoint) {
     return normalizeOtlpTracesEndpoint(config.otlpTracesEndpoint);
-  }
-  if (config.otlpEndpoint) {
-    return resolveOtlpBaseTracesEndpoint(config.otlpEndpoint);
   }
   return undefined;
 };
 
-const resolveTracesHeaders = (
+export const resolveTracesHeaders = (
   config: TelemetryConfig,
 ): Record<string, string> | undefined => {
-  const rawHeaders =
-    config.otlpTracesHeaders !== undefined
-      ? config.otlpTracesHeaders
-      : config.otlpHeaders;
-  return parseOtlpHeaders(rawHeaders);
+  return parseOtlpHeaders(config.otlpHeaders);
 };
 
 const createSpanExporter = (
