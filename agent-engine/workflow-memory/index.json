@@ -1,5 +1,25 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-implemented-infographic-base-clarity-and-quick-start-create",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Implemented infographic base clarity and quick-start create",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "workflow:feature-delivery",
+      "automation:ready-for-dev-executor",
+      "issue:142",
+      "issue:144",
+      "pr:156",
+      "skill:intake-triage",
+      "skill:tanstack-vite",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
