@@ -115,8 +115,8 @@ describe('PodcastList', () => {
     // Check header
     expect(screen.getByText('Podcasts')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /create new/i }),
-    ).toBeInTheDocument();
+      screen.getAllByRole('button', { name: /create podcast/i }).length,
+    ).toBeGreaterThan(0);
 
     // Check all podcast titles are rendered
     expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
@@ -132,8 +132,8 @@ describe('PodcastList', () => {
       screen.getByText('Create your first podcast to get started.'),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /create podcast/i }),
-    ).toBeInTheDocument();
+      screen.getAllByRole('button', { name: /create podcast/i }).length,
+    ).toBeGreaterThan(0);
   });
 
   it('filters podcasts by search query', () => {
@@ -168,7 +168,7 @@ describe('PodcastList', () => {
     const onCreate = vi.fn();
     render(<PodcastList {...createDefaultProps()} onCreate={onCreate} />);
 
-    const createButton = screen.getByRole('button', { name: /create new/i });
+    const createButton = screen.getByRole('button', { name: /create podcast/i });
     fireEvent.click(createButton);
 
     expect(onCreate).toHaveBeenCalledTimes(1);
@@ -245,9 +245,14 @@ describe('PodcastList', () => {
       />,
     );
 
-    const createButton = screen.getByRole('button', {
+    const createButtons = screen.getAllByRole('button', {
       name: /create podcast/i,
     });
+    const createButton = createButtons[createButtons.length - 1];
+    expect(createButton).toBeDefined();
+    if (!createButton) {
+      throw new Error('Expected at least one create button');
+    }
     fireEvent.click(createButton);
 
     expect(onCreate).toHaveBeenCalledTimes(1);

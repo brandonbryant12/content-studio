@@ -25,6 +25,7 @@ import { useOptimisticCreate as useCreatePodcast } from '@/features/podcasts/hoo
 import { usePodcastsOrdered } from '@/features/podcasts/hooks/use-podcast-list';
 import { useVoiceoversOrdered } from '@/features/voiceovers/hooks';
 import { useCreateVoiceover } from '@/features/voiceovers/hooks/use-create-voiceover';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import { formatDuration } from '@/shared/lib/formatters';
 
 export const Route = createFileRoute('/_protected/dashboard')({
@@ -338,7 +339,7 @@ function Dashboard() {
               ) : (
                 <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
               )}
-              New
+              {CREATE_ACTION_LABELS.podcast}
             </Button>
           }
           renderItem={(podcast) => (
@@ -389,7 +390,7 @@ function Dashboard() {
               ) : (
                 <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
               )}
-              New
+              {CREATE_ACTION_LABELS.voiceover}
             </Button>
           }
           renderItem={(vo) => (
@@ -441,7 +442,7 @@ function Dashboard() {
               ) : (
                 <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
               )}
-              New
+              {CREATE_ACTION_LABELS.infographic}
             </Button>
           }
           renderItem={(ig) => (

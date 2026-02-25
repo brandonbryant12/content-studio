@@ -7,6 +7,7 @@ import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { RouterOutput } from '@repo/api/client';
 import { PersonaCard } from './persona-card';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 
@@ -48,7 +49,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
         ) : (
           <>
             <PlusIcon className="w-4 h-4 mr-2" />
-            Create Persona
+            {CREATE_ACTION_LABELS.persona}
           </>
         )}
       </Button>
@@ -143,7 +144,7 @@ export function PersonaList({
           ) : (
             <>
               <PlusIcon className="w-4 h-4 mr-2" />
-              Create New
+              {CREATE_ACTION_LABELS.persona}
             </>
           )}
         </Button>

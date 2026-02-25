@@ -9,6 +9,7 @@ import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import { PodcastItem, type PodcastListItem } from './podcast-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -47,7 +48,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
         ) : (
           <>
             <PlusIcon className="w-4 h-4 mr-2" />
-            Create Podcast
+            {CREATE_ACTION_LABELS.podcast}
           </>
         )}
       </Button>
@@ -148,7 +149,7 @@ export function PodcastList({
           ) : (
             <>
               <PlusIcon className="w-4 h-4 mr-2" />
-              Create New
+              {CREATE_ACTION_LABELS.podcast}
             </>
           )}
         </Button>

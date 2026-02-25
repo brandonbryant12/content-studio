@@ -24,6 +24,7 @@ import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import { StatusBadge } from './status-badge';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import { formatDuration, formatDate } from '@/shared/lib/formatters';
 
 interface EmptyStateProps {
@@ -63,7 +64,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
         ) : (
           <>
             <PlusIcon className="w-4 h-4 mr-2" />
-            Create Voiceover
+            {CREATE_ACTION_LABELS.voiceover}
           </>
         )}
       </Button>
@@ -323,7 +324,7 @@ export function VoiceoverList({
           ) : (
             <>
               <PlusIcon className="w-4 h-4 mr-2" />
-              Create New
+              {CREATE_ACTION_LABELS.voiceover}
             </>
           )}
         </Button>

@@ -43,7 +43,10 @@ describe('InfographicList quick start', () => {
     const onCreate = vi.fn();
     render(<InfographicList {...createDefaultProps()} onCreate={onCreate} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /create new/i }));
+    const createButtons = screen.getAllByRole('button', {
+      name: /create infographic/i,
+    });
+    fireEvent.click(createButtons[createButtons.length - 1]!);
     fireEvent.click(screen.getByRole('button', { name: /create draft/i }));
 
     expect(onCreate).toHaveBeenCalledWith({
@@ -59,7 +62,10 @@ describe('InfographicList quick start', () => {
     const onCreate = vi.fn();
     render(<InfographicList {...createDefaultProps()} onCreate={onCreate} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /create new/i }));
+    const createButtons = screen.getAllByRole('button', {
+      name: /create infographic/i,
+    });
+    fireEvent.click(createButtons[createButtons.length - 1]!);
 
     const createAndGenerateButton = screen.getByRole('button', {
       name: /create & generate/i,
