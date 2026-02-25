@@ -14,7 +14,7 @@ graph TD
 
 ## Golden Principles
 
-1. Use `getErrorMessage(error, fallback)` for all user-facing error messages <!-- enforced-by: manual-review -->
+1. Use `getErrorMessage(error, fallback)` or a dedicated safe error mapper for all user-facing error messages <!-- enforced-by: manual-review -->
 2. Check `isDefinedError()` for typed oRPC error handling <!-- enforced-by: types -->
 3. Error boundaries for render crashes, toasts for mutation failures <!-- enforced-by: manual-review -->
 
@@ -26,6 +26,13 @@ graph TD
 | **Action failure** | `toast.error()` | Mutation errors, API failures |
 | **Field validation** | `<FormFieldInfo>` inline | Form field validation errors |
 | **Background** | Silent (console only) | Background refresh failures, SSE reconnect |
+
+### Upload Validation Exception
+
+For pre-submit file checks in upload surfaces (unsupported type, size limits),
+toast-only validation is allowed because the field input is transient and
+drag-drop based. Keep messages static and user-safe (no raw backend/provider
+details), and reserve inline `<FormFieldInfo>` for persistent form fields.
 
 ## `getErrorMessage` Utility
 
@@ -124,6 +131,6 @@ onError: (error) => {
 
 ## Rules
 
-- Never show raw error messages to users -- always use `getErrorMessage()` <!-- enforced-by: manual-review -->
+- Never show raw error messages to users -- always use `getErrorMessage()` or a dedicated safe mapper <!-- enforced-by: manual-review -->
 - Never catch and swallow errors silently in user-facing flows <!-- enforced-by: manual-review -->
 - Add new error codes to `getErrorMessage` switch when adding API error types <!-- enforced-by: manual-review -->

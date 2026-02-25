@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
 import { isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
 import LoginCredentialsForm from '@/routes/_public/-components/login-form';
+import { getAuthErrorMessage } from '@/shared/lib/auth-errors';
 
 export const Route = createFileRoute('/_public/login')({
   component: RouteComponent,
@@ -58,7 +59,9 @@ function MicrosoftSSOButton() {
 
     if (error) {
       setIsSubmitting(false);
-      toast.error(error.message ?? 'Unable to sign in with Microsoft');
+      toast.error(
+        getAuthErrorMessage(error, 'Unable to sign in with Microsoft.'),
+      );
     }
   };
 

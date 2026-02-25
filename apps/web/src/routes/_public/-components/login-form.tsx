@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
 import FormFieldInfo from '@/routes/-components/common/form-field-info';
+import { getAuthErrorMessage } from '@/shared/lib/auth-errors';
 
 const FormSchema = Schema.standardSchemaV1(
   Schema.Struct({
@@ -50,7 +51,7 @@ export default function LoginCredentialsForm() {
         },
       );
       if (error) {
-        toast.error(error.message ?? 'An unexpected error occurred');
+        toast.error(getAuthErrorMessage(error, 'Unable to sign in.'));
       }
     },
   });
