@@ -1,5 +1,26 @@
 [
   {
+    "id": "2026-02-25-feature-delivery-align-data-fetching-docs-with-bulk-delete-adapter-pattern",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Align data-fetching docs with bulk delete adapter pattern",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "issue-104",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
