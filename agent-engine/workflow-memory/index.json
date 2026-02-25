@@ -17,6 +17,28 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-25-periodic-scans-bpr-run-docs-guardrail-drift-on-automation-preflight-web-chunkin",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "BPR run: docs/guardrail drift on automation preflight + web chunking",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "workflow-memory",
+      "skill:periodic-scans",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.84,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
