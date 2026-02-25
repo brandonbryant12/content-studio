@@ -22,6 +22,7 @@ import {
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { InfographicItem, type InfographicListItem } from './infographic-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 
 const QUICK_START_FORMATS = [
   { value: 'portrait', label: 'Portrait' },
@@ -76,7 +77,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
         ) : (
           <>
             <PlusIcon className="w-4 h-4 mr-2" />
-            Create Infographic
+            {CREATE_ACTION_LABELS.infographic}
           </>
         )}
       </Button>
@@ -210,7 +211,7 @@ export function InfographicList({
           ) : (
             <>
               <PlusIcon className="w-4 h-4 mr-2" />
-              Create New
+              {CREATE_ACTION_LABELS.infographic}
             </>
           )}
         </Button>
