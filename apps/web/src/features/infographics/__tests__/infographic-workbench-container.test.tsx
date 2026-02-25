@@ -10,8 +10,9 @@ import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { act, fireEvent, render, screen, waitFor } from '@/test-utils';
 
-const { promptPanelSpy } = vi.hoisted(() => ({
+const { promptPanelSpy, versionHistoryStripSpy } = vi.hoisted(() => ({
   promptPanelSpy: vi.fn(),
+  versionHistoryStripSpy: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', () => ({
@@ -80,7 +81,25 @@ vi.mock('../components/style-section', () => ({
 }));
 
 vi.mock('../components/version-history-strip', () => ({
-  VersionHistoryStrip: () => <div data-testid="version-history-strip" />,
+  VersionHistoryStrip: (props: Record<string, unknown>) => {
+    versionHistoryStripSpy(props);
+
+    return (
+      <div data-testid="version-history-strip">
+        <button
+          type="button"
+          onClick={() => {
+            const onSelectVersion = props.onSelectVersion as
+              | ((id: string) => void)
+              | undefined;
+            onSelectVersion?.('version-1');
+          }}
+        >
+          Select version 1
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock('@/shared/components/approval/approve-button', () => ({
@@ -249,5 +268,52 @@ describe('InfographicWorkbenchContainer', () => {
       }>();
       expect(latestPromptPanelProps?.prompt).toBe('');
     });
+  });
+
+  it('shows explicit viewing/base messaging when a historical version is selected', () => {
+    vi.mocked(useInfographic).mockReturnValue({
+      data: {
+        id: 'infographic-1',
+        title: 'Test Infographic',
+        approvedBy: null,
+        imageStorageKey: 'infographics/latest.png',
+        errorMessage: null,
+      },
+    } as never);
+    vi.mocked(useInfographicVersions).mockReturnValue({
+      data: [
+        {
+          id: 'version-1',
+          versionNumber: 1,
+          imageStorageKey: 'infographics/v1.png',
+          thumbnailStorageKey: null,
+          format: 'portrait',
+          createdAt: '2025-01-01T00:00:00Z',
+        },
+        {
+          id: 'version-2',
+          versionNumber: 2,
+          imageStorageKey: 'infographics/v2.png',
+          thumbnailStorageKey: null,
+          format: 'portrait',
+          createdAt: '2025-01-02T00:00:00Z',
+        },
+      ],
+      isLoading: false,
+    } as never);
+    vi.mocked(useInfographicActions).mockReturnValue(
+      createMockActions() as never,
+    );
+
+    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /select version 1/i }));
+
+    expect(
+      screen.getByRole('button', { name: /generate from base v2/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Viewing v1\. New generations will use latest base v2/i),
+    ).toBeInTheDocument();
   });
 });
