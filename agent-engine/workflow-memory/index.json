@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-02-25-periodic-scans-best-practice-run-observability-lifecycle-and-otlp-contract-drif",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best-practice run: observability lifecycle and OTLP contract drift",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "best-practice-researcher",
+      "periodic-scans",
+      "observability",
+      "telemetry",
+      "otlp",
+      "skill:periodic-scans",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "confidence": 0.89,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
