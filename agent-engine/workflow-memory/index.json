@@ -1,5 +1,29 @@
 [
   {
+    "id": "2026-02-25-periodic-scans-api-contract-security-drift-scan-yielded-three-actionable-issues",
+    "date": "2026-02-25",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "API contract/security drift scan yielded three actionable issues",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "best-practice-researcher",
+      "workflow-memory",
+      "memory",
+      "skill:periodic-scans",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.88,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-24-feature-delivery-adopt-typed-prompt-registry-with-compliance-metadata",
     "date": "2026-02-24",
     "month": "2026-02",
