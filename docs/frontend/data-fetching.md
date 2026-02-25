@@ -34,7 +34,12 @@ export const Route = createFileRoute("/_protected/podcasts/$podcastId")({
 
 ## Custom Query Hooks
 
-Features expose custom hooks that wrap oRPC query options. Components never call `apiClient` directly.
+Features expose custom hooks that wrap oRPC query options. Components should
+prefer domain hooks instead of calling `apiClient` directly.
+
+Exception for shared bulk helpers: container components may pass
+`apiClient.<domain>.delete.mutationOptions().mutationFn!` into shared utilities
+like `useBulkDelete` when the utility needs a raw mutation function.
 
 ```tsx
 // features/podcasts/hooks/use-podcast.ts
@@ -125,6 +130,7 @@ const router = createRouter({
 - One query hook per feature entity (e.g., `usePodcast`, `useDocumentList`) <!-- enforced-by: manual-review -->
 - Hooks live in `features/{domain}/hooks/` <!-- enforced-by: manual-review -->
 - Index files re-export hooks for public API <!-- enforced-by: manual-review -->
+- For shared bulk helpers (for example `useBulkDelete`), container-level `mutationFn` extraction from `apiClient.<domain>.delete.mutationOptions().mutationFn!` is allowed; keep direct `apiClient` usage scoped to these adapter points only <!-- enforced-by: manual-review -->
 - For invalidation, prefer `getXQueryKey()` helpers rather than inline arrays <!-- enforced-by: lint -->
 - Never use `queryClient.fetchQuery` in components -- use hooks <!-- enforced-by: manual-review -->
 - Error retry: disable for `*_NOT_FOUND` and auth (`UNAUTHORIZED`/`FORBIDDEN`), retry transient failures up to 3 times <!-- enforced-by: manual-review -->
