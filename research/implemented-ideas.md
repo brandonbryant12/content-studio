@@ -21,6 +21,23 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-02-25 - Schema-First Generation Contracts
+- Issue: https://github.com/brandonbryant12/content-studio/issues/141
+- PR: https://github.com/brandonbryant12/content-studio/pull/158
+- Paper link(s):
+  - https://ai.google.dev/gemini-api/docs/structured-output
+- Adopted idea(s):
+  - Use model-side schema enforcement for generation outputs before persistence.
+  - Apply bounded retries for structured generation failures and record actionable failure metadata.
+- Implementation summary:
+  - Added structured infographic layout planning and document outline generation through typed LLM schemas, persisted document outline payloads, and activity-log signals for schema validation failures/retries.
+- Code references:
+  - `packages/media/src/infographic/use-cases/execute-generation.ts`
+  - `packages/media/src/document/use-cases/process-research.ts`
+  - `packages/db/src/schemas/documents.ts`
+  - `packages/db/src/schemas/activity-log.ts`
+  - `packages/api/src/server/router/document.ts`
+
 ### 2026-02-22 - Workflow-Memory Taxonomy Tags + Validation
 - Issue: https://github.com/content-studio/issues/66
 - PR: https://github.com/content-studio/pull/83
