@@ -1,9 +1,9 @@
 import { withDb } from '@repo/db/effect';
 import {
   document,
+  DocumentStatus,
   type Document,
   type DocumentId,
-  type DocumentStatus,
 } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { Effect } from 'effect';
@@ -64,7 +64,7 @@ export const documentWriteMethods: Pick<
       const updates: Partial<typeof document.$inferInsert> = {
         status,
         updatedAt: new Date(),
-        errorMessage: status === 'failed' ? (errorMessage ?? null) : null,
+        errorMessage: status === DocumentStatus.FAILED ? (errorMessage ?? null) : null,
       };
 
       const [doc] = await db

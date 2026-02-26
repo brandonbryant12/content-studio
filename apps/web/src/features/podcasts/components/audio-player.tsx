@@ -1,5 +1,5 @@
 import { PauseIcon, PlayIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
-import { useRef, useState } from 'react';
+import { type CSSProperties, useRef, useState } from 'react';
 import { useAudioPlayer, formatTime } from '@/shared/hooks/use-audio-player';
 
 interface AudioPlayerProps {
@@ -69,8 +69,8 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
             return (
               <div
                 key={i}
-                className={`audio-player-bar ${isActive ? 'active' : ''} ${isPlaying && isActive ? 'playing' : ''}`}
-                style={{ height: `${height * 100}%` }}
+                className={`audio-player-bar h-[var(--h)] ${isActive ? 'active' : ''} ${isPlaying && isActive ? 'playing' : ''}`}
+                style={{ '--h': `${height * 100}%` } as CSSProperties}
               />
             );
           })}

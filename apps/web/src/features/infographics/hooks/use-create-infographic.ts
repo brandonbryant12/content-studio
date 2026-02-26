@@ -56,6 +56,8 @@ export function useCreateInfographic() {
             ),
           );
         }
+      } else {
+        toast.success('Infographic created');
       }
 
       navigate({

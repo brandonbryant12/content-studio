@@ -1,4 +1,4 @@
-import { PauseIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, PauseIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
@@ -27,6 +27,7 @@ export interface PodcastListItem {
   status: VersionStatus;
   duration: number | null;
   coverImageStorageKey: string | null;
+  approvedBy: string | null;
 }
 
 function StatusBadge({ status }: { status: VersionStatus | undefined }) {
@@ -161,6 +162,12 @@ export const PodcastItem = memo(function PodcastItem({
             <div className="content-card-meta">
               <StatusBadge status={podcast.status} />
               <FormatBadge format={podcast.format} />
+              {podcast.approvedBy && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <CheckCircledIcon className="w-3 h-3" />
+                  Approved
+                </span>
+              )}
             </div>
             {podcast.description && (
               <p className="content-card-description">{podcast.description}</p>

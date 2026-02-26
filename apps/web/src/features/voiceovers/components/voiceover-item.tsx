@@ -11,4 +11,5 @@ export interface VoiceoverListItem {
   createdAt: string;
   status: VoiceoverStatusType;
   duration: number | null;
+  approvedBy: string | null;
 }

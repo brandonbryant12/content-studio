@@ -1,3 +1,4 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateInfographic } from '../hooks/use-create-infographic';
@@ -9,7 +10,9 @@ import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import { InfographicList } from './infographic-list';
 import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
   apiClient.infographics.delete.mutationOptions().mutationFn!(input, context);
@@ -19,7 +22,7 @@ export function InfographicListContainer() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const { data: infographics = [], isLoading } = useInfographicList();
+  const { data: infographics = [], isLoading, isError, error, refetch } = useInfographicList();
 
   const createMutation = useCreateInfographic();
   const deleteMutation = useOptimisticDeleteList();
@@ -69,13 +72,30 @@ export function InfographicListContainer() {
       <div className="page-container-narrow">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="page-eyebrow">Visual Content</p>
+            <p className="page-eyebrow">Infographics</p>
             <h1 className="page-title">Infographics</h1>
           </div>
         </div>
         <div className="loading-center-lg">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <Spinner size="lg" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="page-container-narrow">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="page-eyebrow">Infographics</p>
+            <h1 className="page-title">Infographics</h1>
+          </div>
+        </div>
+        <ErrorFallback
+          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load infographics'))}
+          resetErrorBoundary={() => refetch()}
+        />
       </div>
     );
   }

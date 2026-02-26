@@ -1,5 +1,6 @@
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { useState } from 'react';
+import { DocumentStatus } from '@repo/db/schema';
+import { type CSSProperties, useState } from 'react';
 import type { DocumentDetailDocument } from './document-detail-types';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
@@ -94,8 +95,8 @@ function ResearchCallout({
               {sources.map((source, i) => (
                 <li
                   key={source.url}
-                  className="research-source-item"
-                  style={{ animationDelay: `${i * 30}ms` }}
+                  className="research-source-item [animation-delay:var(--delay)]"
+                  style={{ '--delay': `${i * 30}ms` } as CSSProperties}
                 >
                   <a
                     href={source.url}
@@ -161,8 +162,8 @@ function ResearchCallout({
               {outlineSections.map((section, index) => (
                 <li
                   key={`${section.heading}-${index}`}
-                  className="research-source-item"
-                  style={{ animationDelay: `${index * 30}ms` }}
+                  className="research-source-item [animation-delay:var(--delay)]"
+                  style={{ '--delay': `${index * 30}ms` } as CSSProperties}
                 >
                   <div className="flex flex-col gap-1.5 text-sm">
                     <p className="font-medium text-foreground">
@@ -213,7 +214,7 @@ export function DocumentMetadataBar({
 
       <span className="doc-meta-separator" aria-hidden="true" />
 
-      {document.status === 'ready' && (
+      {document.status === DocumentStatus.READY && (
         <>
           <span className="doc-meta-item">
             {document.wordCount.toLocaleString()} words

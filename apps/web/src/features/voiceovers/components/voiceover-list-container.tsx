@@ -1,3 +1,4 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateVoiceover } from '../hooks/use-create-voiceover';
@@ -8,8 +9,10 @@ import {
 } from '../hooks/use-voiceover-list';
 import { VoiceoverList } from './voiceover-list';
 import { apiClient } from '@/clients/apiClient';
+import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
   apiClient.voiceovers.delete.mutationOptions().mutationFn!(input, context);
@@ -18,7 +21,7 @@ export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: voiceovers = [], isLoading } = useVoiceoverList();
+  const { data: voiceovers = [], isLoading, isError, error, refetch } = useVoiceoverList();
   const createMutation = useCreateVoiceover();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
@@ -66,13 +69,30 @@ export function VoiceoverListContainer() {
       <div className="page-container-narrow">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="page-eyebrow">Audio Content</p>
+            <p className="page-eyebrow">Voiceovers</p>
             <h1 className="page-title">Voiceovers</h1>
           </div>
         </div>
         <div className="loading-center-lg">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <Spinner size="lg" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="page-container-narrow">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="page-eyebrow">Voiceovers</p>
+            <h1 className="page-title">Voiceovers</h1>
+          </div>
+        </div>
+        <ErrorFallback
+          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load voiceovers'))}
+          resetErrorBoundary={() => refetch()}
+        />
       </div>
     );
   }

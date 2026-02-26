@@ -1,4 +1,5 @@
 import {
+  CheckCircledIcon,
   MagnifyingGlassIcon,
   PauseIcon,
   PlayIcon,
@@ -198,7 +199,15 @@ const VoiceoverRow = memo(function VoiceoverRow({
       </td>
       {/* Status */}
       <td className="py-3 px-4">
-        <StatusBadge status={voiceover.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={voiceover.status} />
+          {voiceover.approvedBy && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <CheckCircledIcon className="w-3 h-3" />
+              Approved
+            </span>
+          )}
+        </div>
       </td>
       {/* Voice */}
       <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">
@@ -312,7 +321,7 @@ export function VoiceoverList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Audio Content</p>
+          <p className="page-eyebrow">Voiceovers</p>
           <h1 className="page-title">Voiceovers</h1>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>

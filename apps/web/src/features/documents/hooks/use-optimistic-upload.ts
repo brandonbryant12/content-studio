@@ -15,7 +15,7 @@ export function useOptimisticUpload(options?: { onSuccess?: () => void }) {
     apiClient.documents.upload.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
-        toast.success('Document uploaded successfully');
+        toast.success('Document uploaded');
         options?.onSuccess?.();
       },
       onError: (error) => {

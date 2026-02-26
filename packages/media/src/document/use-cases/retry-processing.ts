@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import { JobType } from '@repo/db/schema';
+import { DocumentStatus, JobType } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessUrlPayload, ProcessResearchPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
@@ -29,10 +29,10 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
     // Only allow retry on failed documents
-    if (doc.status === 'processing') {
+    if (doc.status === DocumentStatus.PROCESSING) {
       return yield* new DocumentAlreadyProcessing({ id: doc.id });
     }
-    if (doc.status !== 'failed') {
+    if (doc.status !== DocumentStatus.FAILED) {
       // Document is ready — nothing to retry
       return doc;
     }
@@ -42,7 +42,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
       const sourceUrl = doc.sourceUrl;
       yield* withTransactionalStateAndEnqueue(
         Effect.gen(function* () {
-          yield* documentRepo.updateStatus(doc.id, 'processing');
+          yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
           yield* enqueueJob({
             type: JobType.PROCESS_URL,
             payload: {
@@ -56,7 +56,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
         (error) =>
           documentRepo.updateStatus(
             doc.id,
-            'failed',
+            DocumentStatus.FAILED,
             `Failed to enqueue URL retry: ${formatUnknownError(error)}`,
           ),
       );
@@ -64,7 +64,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
       const query = doc.researchConfig.query;
       yield* withTransactionalStateAndEnqueue(
         Effect.gen(function* () {
-          yield* documentRepo.updateStatus(doc.id, 'processing');
+          yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
           yield* enqueueJob({
             type: JobType.PROCESS_RESEARCH,
             payload: {
@@ -78,12 +78,12 @@ export const retryProcessing = (input: RetryProcessingInput) =>
         (error) =>
           documentRepo.updateStatus(
             doc.id,
-            'failed',
+            DocumentStatus.FAILED,
             `Failed to enqueue research retry: ${formatUnknownError(error)}`,
           ),
       );
     } else {
-      yield* documentRepo.updateStatus(doc.id, 'processing');
+      yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
     }
 
     return yield* documentRepo.findByIdForUser(doc.id, user.id);

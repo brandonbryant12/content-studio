@@ -6,9 +6,9 @@ import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
-import { VOICES } from '@/features/podcasts/hooks/use-podcast-settings';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useVoicePreviewController } from '@/shared/hooks';
+import { VOICES } from '@/shared/lib/voices';
 
 type Persona = RouterOutput['personas']['get'];
 

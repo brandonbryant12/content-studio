@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import type { JobId, JobStatus } from '@repo/db/schema';
+import { InfographicStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import type { GenerateInfographicPayload } from '@repo/queue';
 import {
   annotateUseCaseSpan,
@@ -48,7 +48,7 @@ export const generateInfographic = (input: GenerateInfographicInput) =>
     const job = yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
         yield* repo.update(input.id, {
-          status: 'generating',
+          status: InfographicStatus.GENERATING,
           errorMessage: null,
         });
         return yield* enqueueJob({

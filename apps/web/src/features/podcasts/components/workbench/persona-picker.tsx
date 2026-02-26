@@ -1,7 +1,7 @@
 import { ChevronDownIcon, PersonIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { cn } from '@repo/ui/lib/utils';
-import { usePersonaList } from '@/features/personas/hooks/use-persona-list';
+import { usePersonaList } from '@/features/personas/hooks';
 
 interface PersonaPickerProps {
   selectedPersonaId: string | null;

@@ -8,7 +8,18 @@ import { SSEProvider, useSSEContext, useSSERecovery } from '../sse-provider';
 vi.mock('@/shared/hooks/sse-handlers', () => ({
   handleJobCompletion: vi.fn(),
   handleVoiceoverJobCompletion: vi.fn(),
+  handleInfographicJobCompletion: vi.fn(),
+  handleDocumentJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
+  handleActivityLogged: vi.fn(),
+  setNavigateFn: vi.fn(),
+}));
+
+// Mock TanStack Router
+vi.mock('@tanstack/react-router', () => ({
+  useRouter: () => ({
+    history: { push: vi.fn() },
+  }),
 }));
 
 // Mock auth client

@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import { JobType } from '@repo/db/schema';
+import { DocumentStatus, JobType } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessResearchPayload } from '@repo/queue';
 import {
@@ -36,7 +36,7 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
           mimeType: 'text/plain',
           wordCount: 0,
           source: 'research',
-          status: 'processing',
+          status: DocumentStatus.PROCESSING,
           researchConfig: {
             query: input.query,
             autoGeneratePodcast: input.autoGeneratePodcast === true,
@@ -69,7 +69,7 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
         insertedDocumentId
           ? documentRepo.updateStatus(
               insertedDocumentId,
-              'failed',
+              DocumentStatus.FAILED,
               `Failed to enqueue research processing: ${formatUnknownError(error)}`,
             )
           : Effect.void,

@@ -137,7 +137,7 @@ export function PodcastList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Audio Content</p>
+          <p className="page-eyebrow">Podcasts</p>
           <h1 className="page-title">Podcasts</h1>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>

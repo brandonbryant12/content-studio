@@ -17,6 +17,7 @@ interface GlobalActionBarProps {
   onGenerate: () => void;
   disabled?: boolean;
   audioUrl?: string;
+  errorMessage?: string | null;
 }
 
 export function GlobalActionBar({
@@ -28,6 +29,7 @@ export function GlobalActionBar({
   onGenerate,
   disabled,
   audioUrl,
+  errorMessage,
 }: GlobalActionBarProps) {
   const hasAudio = !!audioUrl;
   const showChangesState = hasChanges && status === VersionStatus.READY;
@@ -107,9 +109,24 @@ export function GlobalActionBar({
     return null;
   };
 
+  const showError =
+    !isGenerating &&
+    status === VersionStatus.FAILED &&
+    typeof errorMessage === 'string' &&
+    errorMessage.trim().length > 0;
+
   return (
-    <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
-      <div
+    <>
+      {showError && (
+        <div
+          className="mx-4 mb-3 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      )}
+      <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
+        <div
         className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
       >
         {isGenerating ? (
@@ -130,5 +147,6 @@ export function GlobalActionBar({
 
       <div className="action-bar-actions">{renderAction()}</div>
     </div>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import { DocumentStatus } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
@@ -54,10 +55,10 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     );
 
     // If all ready, return immediately
-    if (docs.every((d) => d.status === 'ready')) return;
+    if (docs.every((d) => d.status === DocumentStatus.READY)) return;
 
     // If any failed, fail immediately
-    const failed = docs.find((d) => d.status === 'failed');
+    const failed = docs.find((d) => d.status === DocumentStatus.FAILED);
     if (failed) {
       return yield* Effect.fail(
         new DocumentsNotReadyTimeout({
@@ -81,9 +82,9 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
         `Poll attempt ${attempt}: ${docs.map((d) => `${d.title}=${d.status}`).join(', ')} (elapsed: ${Math.round(elapsed / 1000)}s)`,
       );
 
-      if (docs.every((d) => d.status === 'ready')) return;
+      if (docs.every((d) => d.status === DocumentStatus.READY)) return;
 
-      const failedDoc = docs.find((d) => d.status === 'failed');
+      const failedDoc = docs.find((d) => d.status === DocumentStatus.FAILED);
       if (failedDoc) {
         return yield* Effect.fail(
           new DocumentsNotReadyTimeout({

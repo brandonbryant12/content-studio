@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   handleJobCompletion,
@@ -7,6 +8,7 @@ import {
   handleDocumentJobCompletion,
   handleEntityChange,
   handleActivityLogged,
+  setNavigateFn,
 } from './sse-handlers';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -28,6 +30,11 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const queryClientRef = useRef(queryClient);
   queryClientRef.current = queryClient;
+
+  const router = useRouter();
+  useEffect(() => {
+    setNavigateFn((path: string) => router.history.push(path));
+  }, [router]);
 
   const [connectionState, setConnectionState] =
     useState<SSEConnectionState>('disconnected');

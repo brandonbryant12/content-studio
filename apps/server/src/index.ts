@@ -3,6 +3,7 @@ import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
+import { timing } from 'hono/timing';
 import type { auth } from './services';
 import { env } from './env';
 import { globalErrorHandler } from './error-handler';
@@ -27,6 +28,7 @@ const app = new Hono<{
 }>();
 
 app.use(requestIdMiddleware);
+app.use(timing());
 app.use(logger());
 app.use(
   secureHeaders({

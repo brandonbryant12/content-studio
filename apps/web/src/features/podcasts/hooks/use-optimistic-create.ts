@@ -17,6 +17,7 @@ export function useOptimisticCreate() {
     apiClient.podcasts.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getPodcastListQueryKey() });
+        toast.success('Podcast created');
         navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },

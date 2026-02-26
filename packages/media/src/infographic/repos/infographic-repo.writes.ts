@@ -2,6 +2,7 @@ import { withDb } from '@repo/db/effect';
 import {
   infographic,
   infographicVersion,
+  InfographicStatus,
   type Infographic,
   type InfographicId,
 } from '@repo/db/schema';
@@ -41,7 +42,7 @@ export const infographicWriteMethods: Pick<
           styleProperties: data.styleProperties ?? [],
           layout: data.layout,
           format: data.format,
-          status: data.status ?? 'draft',
+          status: data.status ?? InfographicStatus.DRAFT,
           createdBy: data.createdBy,
         })
         .returning();

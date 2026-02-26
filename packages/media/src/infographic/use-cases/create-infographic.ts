@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import {
   generateInfographicId,
+  InfographicStatus,
   type InfographicFormat,
   type StyleProperty,
 } from '@repo/db/schema';
@@ -35,7 +36,7 @@ export const createInfographic = (input: CreateInfographicInput) =>
       prompt: input.prompt,
       styleProperties: sanitizeStyleProperties(input.styleProperties ?? []),
       format: input.format,
-      status: 'draft',
+      status: InfographicStatus.DRAFT,
       createdBy: user.id,
     });
     yield* annotateUseCaseSpan({

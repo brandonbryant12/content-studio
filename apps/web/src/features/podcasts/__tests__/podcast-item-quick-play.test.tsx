@@ -46,6 +46,7 @@ const podcastWithAudio: PodcastListItem = {
   status: 'ready',
   duration: 120,
   coverImageStorageKey: null,
+  approvedBy: null,
 };
 
 describe('PodcastItem quick play', () => {

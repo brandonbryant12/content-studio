@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import { JobType, type JsonValue } from '@repo/db/schema';
+import { DocumentStatus, JobType, type JsonValue } from '@repo/db/schema';
 import { Effect } from 'effect';
 import type { ProcessUrlPayload } from '@repo/queue';
 import { DocumentAlreadyProcessing } from '../../errors';
@@ -40,10 +40,10 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
           'document.url': input.url,
         },
       });
-      if (existing.status === 'ready') {
+      if (existing.status === DocumentStatus.READY) {
         return existing;
       }
-      if (existing.status === 'processing') {
+      if (existing.status === DocumentStatus.PROCESSING) {
         return yield* new DocumentAlreadyProcessing({ id: existing.id });
       }
       // If failed, allow creating a new one (delete the old one)
@@ -62,7 +62,7 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
           wordCount: 0,
           source: 'url',
           sourceUrl: url,
-          status: 'processing',
+          status: DocumentStatus.PROCESSING,
           metadata: sanitizeMetadata(input.metadata),
           createdBy: user.id,
         });
@@ -92,7 +92,7 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
         insertedDocumentId
           ? documentRepo.updateStatus(
               insertedDocumentId,
-              'failed',
+              DocumentStatus.FAILED,
               `Failed to enqueue URL processing: ${formatUnknownError(error)}`,
             )
           : Effect.void,

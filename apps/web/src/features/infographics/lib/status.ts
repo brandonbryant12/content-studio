@@ -1,4 +1,8 @@
-export type InfographicStatusType = 'draft' | 'generating' | 'ready' | 'failed';
+import { InfographicStatus } from '@repo/db/schema';
+
+export { InfographicStatus };
+export type InfographicStatusType =
+  (typeof InfographicStatus)[keyof typeof InfographicStatus];
 
 interface StatusConfig {
   label: string;
@@ -6,10 +10,10 @@ interface StatusConfig {
 }
 
 const STATUS_MAP: Record<InfographicStatusType, StatusConfig> = {
-  draft: { label: 'Draft', badgeVariant: 'default' },
-  generating: { label: 'Generating', badgeVariant: 'info' },
-  ready: { label: 'Ready', badgeVariant: 'success' },
-  failed: { label: 'Failed', badgeVariant: 'error' },
+  [InfographicStatus.DRAFT]: { label: 'Draft', badgeVariant: 'default' },
+  [InfographicStatus.GENERATING]: { label: 'Generating', badgeVariant: 'purple' },
+  [InfographicStatus.READY]: { label: 'Ready', badgeVariant: 'success' },
+  [InfographicStatus.FAILED]: { label: 'Failed', badgeVariant: 'error' },
 };
 
 export function getStatusConfig(
@@ -22,5 +26,5 @@ export function getStatusConfig(
 export function isGeneratingStatus(
   status: InfographicStatusType | undefined,
 ): boolean {
-  return status === 'generating';
+  return status === InfographicStatus.GENERATING;
 }

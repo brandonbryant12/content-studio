@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { timing } from 'hono/timing';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('security headers', () => {
@@ -34,6 +35,19 @@ describe('security headers', () => {
   it('sets Referrer-Policy header', async () => {
     const res = await app.request('/');
     expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+  });
+});
+
+describe('server-timing header', () => {
+  it('includes Server-Timing header with total duration', async () => {
+    const app = new Hono();
+    app.use(timing());
+    app.get('/test', (c) => c.text('ok'));
+
+    const res = await app.request('/test');
+    const serverTiming = res.headers.get('Server-Timing');
+    expect(serverTiming).toBeTruthy();
+    expect(serverTiming).toMatch(/total;dur=\d/);
   });
 });
 
