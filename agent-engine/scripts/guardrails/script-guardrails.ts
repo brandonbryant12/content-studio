@@ -4,6 +4,7 @@ import path from 'node:path';
 export const ENTRY_SCRIPT_PATHS = [
   'agent-engine/scripts/skills/check-quality.ts',
   'agent-engine/scripts/workflows/generate-readme.ts',
+  'agent-engine/scripts/guardrails/check-web-build-artifacts.ts',
   'agent-engine/scripts/workflow-memory/add-entry.ts',
   'agent-engine/scripts/workflow-memory/sync-git.ts',
   'agent-engine/scripts/workflow-memory/retrieve.ts',
@@ -16,6 +17,8 @@ export const ENTRY_SCRIPT_PATHS = [
 export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
   'test:scripts': 'vitest run --config agent-engine/scripts/vitest.config.ts',
   'scripts:lint': 'pnpm exec tsx agent-engine/scripts/guardrails/lint-scripts.ts',
+  'web:build:guardrails':
+    'pnpm exec tsx agent-engine/scripts/guardrails/check-web-build-artifacts.ts --dist apps/web/dist',
   'skills:check': 'pnpm exec tsx agent-engine/scripts/skills/check-quality.ts',
   'skills:check:strict': 'pnpm exec tsx agent-engine/scripts/skills/check-quality.ts --strict',
   'workflows:generate': 'pnpm exec tsx agent-engine/scripts/workflows/generate-readme.ts',

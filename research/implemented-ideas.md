@@ -21,6 +21,27 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-02-26 - Explicit Manual Chunking + Web Build Artifact Guardrails
+- Issue: https://github.com/brandonbryant12/content-studio/issues/168
+- PR: (this PR)
+- Paper link(s):
+  - https://rollupjs.org/configuration-options/#output-manualchunks
+  - https://rollupjs.org/configuration-options/#output-onlyexplicitmanualchunks
+  - https://main.vitejs.dev/guide/rolldown.html
+- Adopted idea(s):
+  - Keep manual chunk assignment explicit to avoid implicit dependency graph merging.
+  - Enforce bundle-health thresholds (chunk count and largest chunk size) with a deterministic script guardrail.
+- Implementation summary:
+  - Documented the current Vite/Rollup compatibility gap for `onlyExplicitManualChunks` and enforced explicit function-form chunk boundaries by limiting assignments to known vendor groups.
+  - Added `web:build:guardrails` script plus tested guard implementation that reports and enforces JS chunk count and largest chunk thresholds from build artifacts.
+  - Wired guardrail execution into web build and documented when `manualChunks` should be edited versus relying on router auto code splitting.
+- Code references:
+  - [`apps/web/vite.config.ts`](../apps/web/vite.config.ts)
+  - [`apps/web/package.json`](../apps/web/package.json)
+  - [`agent-engine/scripts/guardrails/check-web-build-artifacts.ts`](../agent-engine/scripts/guardrails/check-web-build-artifacts.ts)
+  - [`agent-engine/scripts/__tests__/check-web-build-artifacts.test.ts`](../agent-engine/scripts/__tests__/check-web-build-artifacts.test.ts)
+  - [`docs/frontend/project-structure.md`](../docs/frontend/project-structure.md)
+
 ### 2026-02-25 - Schema-First Contracts for Podcast, Infographic, and Document Generation
 - Issue: https://github.com/brandonbryant12/content-studio/issues/141
 - PR: https://github.com/brandonbryant12/content-studio/pull/157

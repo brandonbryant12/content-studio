@@ -83,6 +83,8 @@ export default defineConfig({
         // constraining this function to coarse vendor buckets.
         // Keep chunking coarse-grained. The previous per-package strategy
         // created many tiny/empty chunks in production builds.
+        // `onlyExplicitManualChunks` is not yet supported by this Vite/Rollup stack.
+        // Keep explicit boundaries by returning chunk names only for known package groups.
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
 
