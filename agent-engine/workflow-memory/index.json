@@ -1,5 +1,30 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-ready-for-dev-queue-empty",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Ready-for-dev queue empty",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "ready-for-dev",
+      "triage",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:planning",
+      "capability:tool-use",
+      "failure:env-drift"
+    ],
+    "importance": 0.67,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
