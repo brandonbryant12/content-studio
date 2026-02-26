@@ -132,7 +132,7 @@ export function PersonaList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Characters</p>
+          <p className="page-eyebrow">Personas</p>
           <h1 className="page-title">Personas</h1>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>

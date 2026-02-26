@@ -113,7 +113,7 @@ describe('PodcastList', () => {
     render(<PodcastList {...createDefaultProps()} />);
 
     // Check header
-    expect(screen.getByText('Podcasts')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Podcasts' })).toBeInTheDocument();
     expect(
       screen.getAllByRole('button', { name: /create podcast/i }).length,
     ).toBeGreaterThan(0);

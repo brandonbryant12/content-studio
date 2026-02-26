@@ -199,7 +199,7 @@ export function InfographicList({
     <div className="page-container">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Visual Content</p>
+          <p className="page-eyebrow">Infographics</p>
           <h1 className="page-title">Infographics</h1>
         </div>
         <Button onClick={openDialog} disabled={isCreating}>

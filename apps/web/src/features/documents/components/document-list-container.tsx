@@ -1,3 +1,4 @@
+import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateFromUrl } from '../hooks/use-create-from-url';
@@ -11,7 +12,9 @@ import { DocumentList } from './document-list';
 import { ResearchChatContainer } from './research-chat-container';
 import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
   apiClient.documents.delete.mutationOptions().mutationFn!(input, context);
@@ -24,7 +27,7 @@ export function DocumentListContainer() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const { data: documents = [], isLoading } = useDocumentList();
+  const { data: documents = [], isLoading, isError, error, refetch } = useDocumentList();
   const deleteMutation = useOptimisticDeleteDocument();
   const createFromUrlMutation = useCreateFromUrl();
   const selection = useBulkSelection();
@@ -78,8 +81,25 @@ export function DocumentListContainer() {
           </div>
         </div>
         <div className="loading-center-lg">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <Spinner size="lg" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="page-container-narrow">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="page-eyebrow">Documents</p>
+            <h1 className="page-title">Documents</h1>
+          </div>
+        </div>
+        <ErrorFallback
+          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load documents'))}
+          resetErrorBoundary={() => refetch()}
+        />
       </div>
     );
   }

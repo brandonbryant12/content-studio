@@ -312,7 +312,7 @@ export function VoiceoverList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Audio Content</p>
+          <p className="page-eyebrow">Voiceovers</p>
           <h1 className="page-title">Voiceovers</h1>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>
