@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm env:run build",
+    "build": "pnpm env:run build && pnpm build:chunk-report",
+    "build:chunk-report": "tsx scripts/check-build-chunks.ts",
     "clean": "git clean -xdf .cache dist .turbo node_modules",
     "dev": "pnpm env:run dev",
     "env:copy-example": "shx -- cp -n .env.example .env",

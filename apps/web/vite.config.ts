@@ -78,6 +78,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Vite's current bundler path does not honor Rollup's
+        // `onlyExplicitManualChunks`, so we keep chunking explicit by
+        // constraining this function to coarse vendor buckets.
         // Keep chunking coarse-grained. The previous per-package strategy
         // created many tiny/empty chunks in production builds.
         manualChunks(id) {
