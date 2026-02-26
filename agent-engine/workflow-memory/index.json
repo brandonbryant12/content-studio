@@ -1,5 +1,27 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-bpr-observability-random-walk-telemetry-fallback-and-otel-versio",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "BPR observability random-walk: telemetry fallback and OTel version drift",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation:best-practice-researcher",
+      "skill:periodic-scans",
+      "domain:observability",
+      "research:external",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "recency": 1,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
