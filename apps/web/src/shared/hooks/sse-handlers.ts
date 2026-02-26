@@ -9,7 +9,7 @@ import type {
 import type { QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { getActivityListQueryKey } from '@/features/admin/hooks/use-activity-list';
+import { getActivityListQueryKey } from '@/features/admin/hooks';
 
 /** Module-level navigate callback, set by useSSE hook. */
 let navigateToPath: ((path: string) => void) | null = null;

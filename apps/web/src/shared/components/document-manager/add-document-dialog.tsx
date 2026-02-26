@@ -11,7 +11,7 @@ import { apiClient } from '@/clients/apiClient';
 import {
   useDocuments,
   getDocumentListQueryKey,
-} from '@/features/documents/hooks/use-document-list';
+} from '@/features/documents/hooks';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { fileToBase64 } from '@/shared/lib/file-base64';

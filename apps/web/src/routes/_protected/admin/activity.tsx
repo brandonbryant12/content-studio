@@ -6,7 +6,7 @@ import { ActivityDashboardContainer } from '@/features/admin/components/activity
 import {
   DEFAULT_ACTIVITY_LIST_LIMIT,
   getActivityListInfiniteQueryOptions,
-} from '@/features/admin/hooks/use-activity-list';
+} from '@/features/admin/hooks';
 
 export const Route = createFileRoute('/_protected/admin/activity')({
   loader: () => {

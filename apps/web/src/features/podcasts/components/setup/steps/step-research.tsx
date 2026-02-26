@@ -6,9 +6,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
-import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
-import { useResearchChat } from '@/features/documents/hooks/use-research-chat';
-import { useSynthesizeResearch } from '@/features/documents/hooks/use-synthesize-research';
+import {
+  getDocumentListQueryKey,
+  useResearchChat,
+  useSynthesizeResearch,
+} from '@/features/documents/hooks';
 import { ChatThread } from '@/shared/components/chat-thread';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import {
