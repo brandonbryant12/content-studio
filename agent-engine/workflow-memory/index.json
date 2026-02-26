@@ -1,5 +1,24 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-sanity-check-ci-runtime-scan-no-op",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Sanity check: CI/runtime scan no-op",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "sanity-check",
+      "periodic-scans",
+      "ci-runtime",
+      "no-op-scan"
+    ],
+    "importance": 0.34,
+    "recency": 1,
+    "confidence": 0.83,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
