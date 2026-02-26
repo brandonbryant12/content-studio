@@ -18,6 +18,7 @@ export function useCreatePersona() {
     apiClient.personas.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getPersonaListQueryKey() });
+        toast.success('Persona created');
         navigate({
           to: '/personas/$personaId',
           params: { personaId: data.id },

@@ -7,7 +7,7 @@ interface StatusConfig {
 
 const STATUS_MAP: Record<InfographicStatusType, StatusConfig> = {
   draft: { label: 'Draft', badgeVariant: 'default' },
-  generating: { label: 'Generating', badgeVariant: 'info' },
+  generating: { label: 'Generating', badgeVariant: 'purple' },
   ready: { label: 'Ready', badgeVariant: 'success' },
   failed: { label: 'Failed', badgeVariant: 'error' },
 };

@@ -13,7 +13,11 @@ import { useSSE } from '../use-sse';
 vi.mock('../sse-handlers', () => ({
   handleJobCompletion: vi.fn(),
   handleVoiceoverJobCompletion: vi.fn(),
+  handleInfographicJobCompletion: vi.fn(),
+  handleDocumentJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
+  handleActivityLogged: vi.fn(),
+  setNavigateFn: vi.fn(),
 }));
 
 // Create a controllable async iterator for mocking the ORPC client
@@ -65,6 +69,13 @@ function createMockIterator() {
     },
   };
 }
+
+// Mock TanStack Router
+vi.mock('@tanstack/react-router', () => ({
+  useRouter: () => ({
+    history: { push: vi.fn() },
+  }),
+}));
 
 // Mock the raw API client
 const mockSubscribe = vi.fn();

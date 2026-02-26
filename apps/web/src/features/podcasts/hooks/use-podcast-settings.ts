@@ -268,6 +268,9 @@ export function usePodcastSettings({
 
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
+      onSuccess: () => {
+        toast.success('Settings saved');
+      },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to save settings'));
       },

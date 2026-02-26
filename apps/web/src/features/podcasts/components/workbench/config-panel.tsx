@@ -3,9 +3,7 @@ import { useState } from 'react';
 import type { UseDocumentSelectionReturn } from '../../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
 import type { RouterOutput } from '@repo/api/client';
-import { VersionStatus } from '../../lib/status';
 import { DocumentManager } from './document-manager';
-import { ErrorDisplay } from './error-display';
 import { GenerationStatus } from './generation-status';
 import { PodcastSettings } from './podcast-settings';
 import { PromptViewerPanel } from './prompt-viewer';
@@ -42,13 +40,6 @@ export function ConfigPanel({
                 isSavingSettings={false}
                 isPendingGeneration={isPendingGeneration}
               />
-            </div>
-          )}
-
-          {/* Error Display */}
-          {podcast.status === VersionStatus.FAILED && podcast.errorMessage && (
-            <div className="config-section-v2">
-              <ErrorDisplay message={podcast.errorMessage} />
             </div>
           )}
 

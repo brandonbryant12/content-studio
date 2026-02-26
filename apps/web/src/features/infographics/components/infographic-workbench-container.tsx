@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, TrashIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
@@ -256,6 +256,11 @@ function ControlsSidebar({
             <>
               <Spinner className="w-4 h-4 mr-2" />
               {hasExistingImage ? 'Generating New Version...' : 'Generating...'}
+            </>
+          ) : infographic.status === 'failed' ? (
+            <>
+              <ReloadIcon className="w-4 h-4 mr-2" />
+              Retry
             </>
           ) : hasExistingImage && isViewingHistoricalVersion ? (
             `Generate From Base v${latestVersionNumber ?? '—'}`

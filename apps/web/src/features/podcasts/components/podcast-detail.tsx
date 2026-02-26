@@ -125,6 +125,7 @@ export function PodcastDetail({
           onGenerate={onGenerate}
           disabled={isGenerating}
           audioUrl={displayAudio?.url}
+          errorMessage={podcast.errorMessage}
         />
       }
     />
