@@ -1,5 +1,25 @@
 [
   {
+    "id": "2026-02-26-feature-delivery-no-actionable-ready-for-dev-issues",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "No actionable ready-for-dev issues",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "automation",
+      "no-op",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
