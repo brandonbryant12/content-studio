@@ -114,6 +114,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
 - **Query retry policy must be explicit**: disable retries for `*_NOT_FOUND` class errors; retry bounded times for transient failures.
 - **Backend Effect error tests must assert `_tag` + fields**, not `toBeInstanceOf(...)` for domain/app errors (built-in classes like `URL`/`Buffer` are allowed).
+- **Use `Effect.forkDaemon` (not `Effect.fork`) when forking long-lived fibers** from `ManagedRuntime.runPromise`. `Effect.fork` scopes to the caller—the fiber is immediately interrupted when `runPromise` returns. See `docs/patterns/effect-runtime.md` § "Forking Long-Lived Fibers".
 - **Avoid aggressive Vite per-package `manualChunks` strategies** that create many tiny or empty chunks; prefer Router auto code splitting and targeted overrides only.
 - **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
 - **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.

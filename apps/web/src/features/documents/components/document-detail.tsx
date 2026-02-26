@@ -180,32 +180,34 @@ export function DocumentDetail({
 
       <div className="workbench-main">
         <div className="workbench-scroll-container">
-          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <DocumentMetadataBar document={document} />
-            <DocumentSourceCallout document={document} />
+          <div className="doc-reader-wrapper">
+            <div className="doc-reader-surface">
+              <DocumentMetadataBar document={document} />
+              <DocumentSourceCallout document={document} />
 
-            {document.status === 'processing' && (
-              <DocumentProcessingState source={document.source} />
-            )}
+              {document.status === 'processing' && (
+                <DocumentProcessingState source={document.source} />
+              )}
 
-            {document.status === 'failed' && (
-              <DocumentFailedState
-                errorMessage={document.errorMessage}
-                onRetry={onRetry}
-                isRetrying={isRetrying}
-              />
-            )}
+              {document.status === 'failed' && (
+                <DocumentFailedState
+                  errorMessage={document.errorMessage}
+                  onRetry={onRetry}
+                  isRetrying={isRetrying}
+                />
+              )}
 
-            {document.status === 'ready' && (
-              <DocumentContentReader
-                content={content}
-                paragraphs={paragraphs}
-                queryLength={search.query.length}
-                matchCount={search.matches.length}
-                currentMatchIndex={search.currentMatchIndex}
-                matchesByParagraph={matchesByParagraph}
-              />
-            )}
+              {document.status === 'ready' && (
+                <DocumentContentReader
+                  content={content}
+                  paragraphs={paragraphs}
+                  queryLength={search.query.length}
+                  matchCount={search.matches.length}
+                  currentMatchIndex={search.currentMatchIndex}
+                  matchesByParagraph={matchesByParagraph}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

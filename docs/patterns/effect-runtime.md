@@ -109,6 +109,24 @@ Derive the env type instead of maintaining it manually:
 export type MediaEnv = Layer.Layer.Context<typeof MediaLive>;
 ```
 
+## Forking Long-Lived Fibers from ManagedRuntime <!-- enforced-by: manual-review -->
+
+When forking a long-lived fiber (poll loop, background worker) via `ManagedRuntime.runPromise`, **use `Effect.forkDaemon`**, not `Effect.fork`.
+
+`Effect.fork` scopes the child fiber to the caller's scope. When `runPromise` completes and returns the fiber reference, it closes that scope, immediately **interrupting** the forked fiber before it runs.
+
+`Effect.forkDaemon` attaches the fiber to the global runtime scope, so it survives the `runPromise` call and runs until explicitly interrupted or the runtime is disposed.
+
+```typescript
+// ❌ WRONG — fiber is immediately interrupted when runPromise completes
+const fiber = await runtime.runPromise(Effect.fork(longRunningLoop));
+await runtime.runPromise(Fiber.join(fiber)); // gets "All fibers interrupted"
+
+// ✅ CORRECT — fiber survives the runPromise scope
+const fiber = await runtime.runPromise(Effect.forkDaemon(longRunningLoop));
+await runtime.runPromise(Fiber.join(fiber)); // runs until completion/shutdown
+```
+
 ## Cross-System Integration Exception <!-- enforced-by: manual-review -->
 
 Auth hooks (better-auth `databaseHooks`) run **outside** the Effect runtime. Use direct Drizzle queries, not Effect-based repos. Keep logic simple; if complex, consider a cron job.

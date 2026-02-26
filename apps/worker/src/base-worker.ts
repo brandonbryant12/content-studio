@@ -375,7 +375,7 @@ export const createWorker = <
 
     const fiber = await runtime
       .runPromise(
-        Effect.fork(loop).pipe(
+        Effect.forkDaemon(loop).pipe(
           Effect.tap((f) =>
             Effect.sync(() => {
               loopFiber = f;

@@ -195,56 +195,67 @@ function ResearchCallout({
   );
 }
 
+function estimateReadTime(wordCount: number): string {
+  const minutes = Math.max(1, Math.round(wordCount / 200));
+  return `${minutes} min read`;
+}
+
 export function DocumentMetadataBar({
   document,
 }: {
   document: DocumentDetailDocument;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-8 text-sm">
+    <div className="doc-meta-bar">
       <span className={getFileBadgeClass(document.source)}>
         {getFileLabel(document.source)}
       </span>
+
+      <span className="doc-meta-separator" aria-hidden="true" />
+
       {document.status === 'ready' && (
-        <span className="text-muted-foreground">
-          {document.wordCount.toLocaleString()} words
-        </span>
+        <>
+          <span className="doc-meta-item">
+            {document.wordCount.toLocaleString()} words
+          </span>
+          <span className="doc-meta-separator" aria-hidden="true" />
+          <span className="doc-meta-item">
+            {estimateReadTime(document.wordCount)}
+          </span>
+        </>
       )}
+
       {document.originalFileSize && (
         <>
-          <span className="text-border" aria-hidden="true">
-            |
-          </span>
-          <span className="text-muted-foreground">
+          <span className="doc-meta-separator" aria-hidden="true" />
+          <span className="doc-meta-item">
             {formatFileSize(document.originalFileSize)}
           </span>
         </>
       )}
+
       {document.originalFileName && (
         <>
-          <span className="text-border" aria-hidden="true">
-            |
-          </span>
+          <span className="doc-meta-separator" aria-hidden="true" />
           <span
-            className="text-muted-foreground truncate max-w-[200px]"
+            className="doc-meta-item truncate max-w-[200px]"
             title={document.originalFileName}
           >
             {document.originalFileName}
           </span>
         </>
       )}
-      <span className="text-border" aria-hidden="true">
-        |
-      </span>
+
+      <span className="doc-meta-separator" aria-hidden="true" />
       <span
-        className="text-muted-foreground"
+        className="doc-meta-item"
         title={`Created: ${formatDateTime(document.createdAt)}`}
       >
         {formatDate(document.createdAt)}
       </span>
       {document.updatedAt !== document.createdAt && (
         <span
-          className="text-muted-foreground italic"
+          className="doc-meta-item italic"
           title={`Updated: ${formatDateTime(document.updatedAt)}`}
         >
           (edited)
@@ -260,21 +271,43 @@ export function DocumentSourceCallout({
   document: DocumentDetailDocument;
 }) {
   if (document.source === 'url' && document.sourceUrl) {
+    const domain = extractDomain(document.sourceUrl);
     return (
-      <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4 text-sm">
-        <span className="text-muted-foreground">Scraped from </span>
-        <a
-          href={document.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline break-all"
-        >
-          {document.sourceUrl}
-        </a>
-        <span className="text-muted-foreground">
-          {' '}
-          on {formatDate(document.createdAt)}
-        </span>
+      <div className="doc-url-callout">
+        <div className="doc-url-callout-accent" aria-hidden="true" />
+        <div className="doc-url-callout-body">
+          <div className="doc-url-callout-header">
+            <span className="doc-url-callout-favicon" aria-hidden="true">
+              <SourceFavicon domain={domain} />
+            </span>
+            <span className="doc-url-callout-domain">{domain}</span>
+            <span className="doc-url-callout-date">
+              {formatDate(document.createdAt)}
+            </span>
+          </div>
+          <a
+            href={document.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="doc-url-callout-link"
+          >
+            {document.sourceUrl}
+            <svg
+              className="doc-url-callout-arrow"
+              viewBox="0 0 15 15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.5 2.5h9v9M12 3 3.5 11.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+        </div>
       </div>
     );
   }
