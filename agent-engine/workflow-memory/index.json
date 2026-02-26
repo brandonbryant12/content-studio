@@ -1,5 +1,27 @@
 [
   {
+    "id": "2026-02-26-feature-delivery-skipped-duplicate-168-implementation-after-concurrent-main-merge",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Skipped duplicate #168 implementation after concurrent main merge",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "feature-delivery",
+      "dedupe",
+      "concurrency",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "skill:test-surface-steward",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
