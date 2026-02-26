@@ -23,7 +23,7 @@ Record each shipped change that adopts an idea from an external paper.
 <!-- Add new entries at the top of this section -->
 ### 2026-02-26 - Explicit Manual Chunking + Web Build Artifact Guardrails
 - Issue: https://github.com/brandonbryant12/content-studio/issues/168
-- PR: (this PR)
+- PR: https://github.com/brandonbryant12/content-studio/pull/174
 - Paper link(s):
   - https://rollupjs.org/configuration-options/#output-manualchunks
   - https://rollupjs.org/configuration-options/#output-onlyexplicitmanualchunks
