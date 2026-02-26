@@ -53,6 +53,7 @@ const voiceovers: readonly VoiceoverListItem[] = [
     createdAt: '2024-01-01T00:00:00Z',
     status: 'ready',
     duration: 120,
+    approvedBy: null,
   },
   {
     id: 'vo_2',
@@ -64,6 +65,7 @@ const voiceovers: readonly VoiceoverListItem[] = [
     createdAt: '2024-01-02T00:00:00Z',
     status: 'drafting',
     duration: null,
+    approvedBy: null,
   },
 ];
 

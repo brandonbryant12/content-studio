@@ -42,6 +42,7 @@ const mockPodcasts: PodcastListItem[] = [
     status: VersionStatus.READY,
     duration: 1800,
     coverImageStorageKey: null,
+    approvedBy: null,
   },
   {
     id: 'podcast-2',
@@ -53,6 +54,7 @@ const mockPodcasts: PodcastListItem[] = [
     status: VersionStatus.GENERATING_SCRIPT,
     duration: null,
     coverImageStorageKey: null,
+    approvedBy: null,
   },
   {
     id: 'podcast-3',
@@ -64,6 +66,7 @@ const mockPodcasts: PodcastListItem[] = [
     status: VersionStatus.DRAFTING,
     duration: null,
     coverImageStorageKey: null,
+    approvedBy: null,
   },
 ];
 

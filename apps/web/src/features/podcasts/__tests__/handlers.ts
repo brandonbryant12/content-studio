@@ -22,6 +22,7 @@ export function createMockPodcastListItem(
     status: VersionStatus.READY,
     duration: 300,
     coverImageStorageKey: null,
+    approvedBy: null,
     ...overrides,
   };
 }

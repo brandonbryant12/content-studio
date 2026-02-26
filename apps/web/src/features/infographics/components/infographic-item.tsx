@@ -1,4 +1,4 @@
-import { TrashIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
@@ -20,6 +20,7 @@ export interface InfographicListItem {
   status: InfographicStatusType;
   imageStorageKey: string | null;
   createdAt: string;
+  approvedBy: string | null;
 }
 
 function StatusBadge({
@@ -149,6 +150,12 @@ export const InfographicItem = memo(function InfographicItem({
             <span className="text-meta">
               {FORMAT_LABELS[infographic.format] ?? infographic.format}
             </span>
+            {infographic.approvedBy && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <CheckCircledIcon className="w-3 h-3" />
+                Approved
+              </span>
+            )}
           </div>
         </div>
       </Link>
