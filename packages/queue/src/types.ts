@@ -6,7 +6,7 @@ import type {
 
 export type JobStatus = DbJobStatus;
 
-export type JobType = DbJobType[keyof DbJobType];
+export type JobType = DbJobType;
 
 export interface Job<TPayload = unknown, TResult = unknown> {
   readonly id: JobId;

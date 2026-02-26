@@ -8,7 +8,12 @@ import {
   StylePropertySchema,
   StylePropertiesSchema,
 } from '../schemas/infographics';
-import { JobStatus, JobType, JobStatusSchema } from '../schemas/jobs';
+import {
+  JobStatus,
+  JobType,
+  JobStatusSchema,
+  type JobType as JobTypeValue,
+} from '../schemas/jobs';
 import {
   VersionStatus,
   PodcastFormatSchema,
@@ -62,6 +67,13 @@ describe('enum companion objects', () => {
       expect(JobType.GENERATE_AUDIO).toBe('generate-audio');
       expect(JobType.GENERATE_VOICEOVER).toBe('generate-voiceover');
       expect(JobType.GENERATE_INFOGRAPHIC).toBe('generate-infographic');
+      expect(JobType.PROCESS_URL).toBe('process-url');
+      expect(JobType.PROCESS_RESEARCH).toBe('process-research');
+    });
+
+    it('is a value-union type assignable from enum values', () => {
+      const jobType: JobTypeValue = JobType.PROCESS_RESEARCH;
+      expect(jobType).toBe('process-research');
     });
   });
 });
