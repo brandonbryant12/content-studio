@@ -97,3 +97,11 @@ import { apiClient } from '@/clients/apiClient';
 ```
 
 `@/` maps to `apps/web/src/`.
+
+## Chunk Splitting Policy
+
+- Prefer TanStack Router automatic route-level code splitting for feature and route code.
+- Edit `apps/web/vite.config.ts` `manualChunks` only when a stable, cross-route vendor grouping prevents measurable regressions.
+- Do not add per-package or per-file `manualChunks` branches for route/application code.
+- Current Vite bundler output does not honor Rollup `output.onlyExplicitManualChunks`; use the constrained coarse-bucket `manualChunks` policy plus build guardrail instead.
+- Validate chunk health with `pnpm --filter web build` (includes `build:chunk-report` guardrail for JS chunk count and largest JS chunk size).
