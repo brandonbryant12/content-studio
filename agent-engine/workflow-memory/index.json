@@ -1,5 +1,36 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-issue-evaluator-triage-decisions-for-open-queue",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Issue evaluator triage decisions for open queue",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "issue-evaluator",
+      "memory",
+      "workflow-memory",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write",
+      "capability:planning",
+      "capability:tool-use",
+      "capability:long-term-reasoning",
+      "capability:instruction-following",
+      "failure:env-drift",
+      "failure:tool-misuse"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
