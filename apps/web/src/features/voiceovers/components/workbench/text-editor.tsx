@@ -62,17 +62,13 @@ const CharacterCountRing = memo(function CharacterCountRing({
           strokeDasharray={RING_CIRCUMFERENCE}
           strokeDashoffset={strokeDashoffset}
           className={cn(
-            'transition-all duration-300',
+            '-rotate-90 origin-center transition-all duration-300',
             isError
               ? 'text-destructive'
               : isWarning
                 ? 'text-warning'
                 : 'text-warning/60',
           )}
-          style={{
-            transform: 'rotate(-90deg)',
-            transformOrigin: 'center',
-          }}
         />
       </svg>
       <span

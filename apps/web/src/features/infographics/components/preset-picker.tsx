@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
-import { useState, useCallback, type MouseEvent } from 'react';
+import { useState, useCallback, type CSSProperties, type MouseEvent } from 'react';
 import type { StyleProperty } from '../hooks/use-infographic-settings';
 import {
   useStylePresets,
@@ -34,8 +34,8 @@ function ColorDots({ properties }: { properties: readonly StyleProperty[] }) {
       {colors.map((c) => (
         <span
           key={c.value}
-          className="w-2.5 h-2.5 rounded-full ring-1 ring-background"
-          style={{ backgroundColor: c.value }}
+          className="w-2.5 h-2.5 rounded-full ring-1 ring-background bg-[var(--dot-color)]"
+          style={{ '--dot-color': c.value } as CSSProperties}
         />
       ))}
     </span>
