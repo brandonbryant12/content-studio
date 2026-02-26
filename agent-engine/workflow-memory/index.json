@@ -1,5 +1,31 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-best-practice-researcher-scanned-frontend-boundary-drift-and-ope",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best-practice researcher scanned frontend boundary drift and opened follow-up issues",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "frontend",
+      "boundaries",
+      "skill:periodic-scans",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "recency": 0.99,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
