@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-reopened-styling-regression-issues-from-docs-guardrail-drift-sca",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Reopened styling regression issues from docs guardrail drift scan",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "best-practice-researcher",
+      "periodic-scans",
+      "docs-drift",
+      "frontend",
+      "guardrails",
+      "skill:periodic-scans",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.76,
+    "confidence": 0.91,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
