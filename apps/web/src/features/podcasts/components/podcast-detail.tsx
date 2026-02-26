@@ -2,6 +2,7 @@ import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
 import type { RouterOutput } from '@repo/api/client';
+import { VersionStatus } from '@repo/db/schema';
 import {
   WorkbenchLayout,
   ScriptPanel,
@@ -99,7 +100,7 @@ export function PodcastDetail({
           summary={podcast.summary ?? null}
           hasChanges={scriptEditor.hasChanges}
           isSaving={scriptEditor.isSaving}
-          disabled={podcast.status !== 'ready'}
+          disabled={podcast.status !== VersionStatus.READY}
           onUpdateSegment={scriptEditor.updateSegment}
           onRemoveSegment={scriptEditor.removeSegment}
           onAddSegment={scriptEditor.addSegment}

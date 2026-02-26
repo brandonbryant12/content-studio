@@ -111,7 +111,7 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
       );
     }
 
-    yield* voiceoverRepo.updateStatus(input.voiceoverId, 'generating_audio');
+    yield* voiceoverRepo.updateStatus(input.voiceoverId, VoiceoverStatus.GENERATING_AUDIO);
     yield* voiceoverRepo.clearApproval(input.voiceoverId);
 
     const { annotatedText, title: generatedTitle } = yield* preprocessText(
@@ -145,7 +145,7 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
 
     const updatedVoiceover = yield* voiceoverRepo.updateStatus(
       input.voiceoverId,
-      'ready',
+      VoiceoverStatus.READY,
     );
 
     return { voiceover: updatedVoiceover, audioUrl, duration };
@@ -155,7 +155,7 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
         const voiceoverRepo = yield* VoiceoverRepo;
         yield* voiceoverRepo.updateStatus(
           input.voiceoverId,
-          'failed',
+          VoiceoverStatus.FAILED,
           error.message,
         );
         return yield* Effect.fail(error);

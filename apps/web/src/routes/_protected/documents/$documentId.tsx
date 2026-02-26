@@ -1,3 +1,4 @@
+import { DocumentStatus } from '@repo/db/schema';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
@@ -12,7 +13,7 @@ export const Route = createFileRoute('/_protected/documents/$documentId')({
         input: { id: params.documentId },
       }),
     );
-    if (doc.status === 'ready') {
+    if (doc.status === DocumentStatus.READY) {
       await queryClient.ensureQueryData(
         apiClient.documents.getContent.queryOptions({
           input: { id: params.documentId },

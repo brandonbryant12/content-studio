@@ -2,7 +2,7 @@ import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
-import type { Podcast, ScriptSegment } from '@repo/db/schema';
+import { VersionStatus, type Podcast, type ScriptSegment } from '@repo/db/schema';
 import { PersonaRepo } from '../../persona';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
@@ -63,7 +63,7 @@ export const generateAudio = (input: GenerateAudioInput) =>
       user.id,
     );
 
-    if (podcast.status !== 'script_ready') {
+    if (podcast.status !== VersionStatus.SCRIPT_READY) {
       return yield* Effect.fail(
         new InvalidAudioGenerationError({
           podcastId: input.podcastId,
@@ -83,7 +83,7 @@ export const generateAudio = (input: GenerateAudioInput) =>
       );
     }
 
-    yield* podcastRepo.updateStatus(input.podcastId, 'generating_audio');
+    yield* podcastRepo.updateStatus(input.podcastId, VersionStatus.GENERATING_AUDIO);
 
     // Load persona names for speaker detection
     let hostPersonaName: string | undefined;
@@ -148,7 +148,7 @@ export const generateAudio = (input: GenerateAudioInput) =>
     yield* podcastRepo.updateAudio(input.podcastId, { audioUrl, duration });
     const updatedPodcast = yield* podcastRepo.updateStatus(
       input.podcastId,
-      'ready',
+      VersionStatus.READY,
     );
 
     return { podcast: updatedPodcast, audioUrl, duration };
@@ -158,7 +158,7 @@ export const generateAudio = (input: GenerateAudioInput) =>
         const podcastRepo = yield* PodcastRepo;
         yield* podcastRepo.updateStatus(
           input.podcastId,
-          'failed',
+          VersionStatus.FAILED,
           error.message,
         );
         return yield* Effect.fail(error);

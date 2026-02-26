@@ -1,5 +1,6 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
+import { DocumentStatus } from '@repo/db/schema';
 import { useCallback, useState } from 'react';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
@@ -24,7 +25,7 @@ export function DocumentDetailContainer({
   const { data: document } = useDocument(documentId);
 
   // Only fetch content when document is ready (hook always called, `enabled` controls fetching)
-  const isReady = document.status === 'ready';
+  const isReady = document.status === DocumentStatus.READY;
   const { data: contentData } = useDocumentContentOptional(documentId, isReady);
   const documentContent = contentData?.content ?? null;
 

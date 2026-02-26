@@ -16,6 +16,7 @@ import {
 } from '@repo/ui/components/dropdown-menu';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { DocumentStatus } from '@repo/db/schema';
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import type { DocumentDetailDocument } from './document-detail-types';
@@ -185,11 +186,11 @@ export function DocumentDetail({
               <DocumentMetadataBar document={document} />
               <DocumentSourceCallout document={document} />
 
-              {document.status === 'processing' && (
+              {document.status === DocumentStatus.PROCESSING && (
                 <DocumentProcessingState source={document.source} />
               )}
 
-              {document.status === 'failed' && (
+              {document.status === DocumentStatus.FAILED && (
                 <DocumentFailedState
                   errorMessage={document.errorMessage}
                   onRetry={onRetry}
@@ -197,7 +198,7 @@ export function DocumentDetail({
                 />
               )}
 
-              {document.status === 'ready' && (
+              {document.status === DocumentStatus.READY && (
                 <DocumentContentReader
                   content={content}
                   paragraphs={paragraphs}

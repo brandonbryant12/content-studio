@@ -7,6 +7,7 @@ import {
   CheckCircledIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
+import { DocumentStatus } from '@repo/db/schema';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,7 +22,7 @@ import { apiClient } from '@/clients/apiClient';
 import {
   useDocuments,
   getDocumentListQueryKey,
-} from '@/features/documents/hooks/use-document-list';
+} from '@/features/documents/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { fileToBase64 } from '@/shared/lib/file-base64';
 
@@ -393,7 +394,7 @@ export function StepDocuments({
   // Filter documents: only show ready ones, then apply search
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
-    const ready = documents.filter((doc) => doc.status === 'ready');
+    const ready = documents.filter((doc) => doc.status === DocumentStatus.READY);
     if (!searchQuery.trim()) return ready;
     const query = searchQuery.toLowerCase();
     return ready.filter((doc) => doc.title.toLowerCase().includes(query));

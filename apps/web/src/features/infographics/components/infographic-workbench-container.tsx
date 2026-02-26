@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import type { UseInfographicSettingsReturn } from '../hooks/use-infographic-settings';
 import type { InfographicVersion } from '../hooks/use-infographic-versions';
 import type { RouterOutput } from '@repo/api/client';
+import { InfographicStatus } from '@repo/db/schema';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
 import { useInfographic } from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
@@ -257,7 +258,7 @@ function ControlsSidebar({
               <Spinner className="w-4 h-4 mr-2" />
               {hasExistingImage ? 'Generating New Version...' : 'Generating...'}
             </>
-          ) : infographic.status === 'failed' ? (
+          ) : infographic.status === InfographicStatus.FAILED ? (
             <>
               <ReloadIcon className="w-4 h-4 mr-2" />
               Retry
