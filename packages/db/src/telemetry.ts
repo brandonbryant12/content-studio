@@ -1,17 +1,20 @@
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
-import {
-  BatchSpanProcessor,
-  type SpanExporter,
-  SimpleSpanProcessor,
-  ConsoleSpanExporter,
-} from '@opentelemetry/sdk-trace-base';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { Effect, Layer } from 'effect';
+
+export class MalformedOtlpHeadersError extends Error {
+  readonly _tag = 'MalformedOtlpHeadersError';
+  constructor(readonly malformedEntries: string[]) {
+    super(`Malformed OTLP header entries: ${malformedEntries.join(', ')}`);
+    this.name = 'MalformedOtlpHeadersError';
+  }
+}
 
 export interface TelemetryConfig {
   readonly serviceName: string;
@@ -54,23 +57,30 @@ const parseOtlpHeaders = (
     return undefined;
   }
 
-  const entries = rawHeaders
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0)
-    .map((entry) => {
-      const separatorIndex = entry.indexOf('=');
-      if (separatorIndex <= 0 || separatorIndex === entry.length - 1) {
-        return null;
-      }
-      const key = entry.slice(0, separatorIndex).trim();
-      const value = entry.slice(separatorIndex + 1).trim();
-      if (!key || !value) {
-        return null;
-      }
-      return [key, value] as const;
-    })
-    .filter((entry): entry is readonly [string, string] => entry !== null);
+  const malformed: string[] = [];
+  const entries: [string, string][] = [];
+
+  for (const raw of rawHeaders.split(',')) {
+    const entry = raw.trim();
+    if (entry.length === 0) continue;
+
+    const separatorIndex = entry.indexOf('=');
+    if (separatorIndex <= 0 || separatorIndex === entry.length - 1) {
+      malformed.push(entry);
+      continue;
+    }
+    const key = entry.slice(0, separatorIndex).trim();
+    const value = entry.slice(separatorIndex + 1).trim();
+    if (!key || !value) {
+      malformed.push(entry);
+      continue;
+    }
+    entries.push([key, value]);
+  }
+
+  if (malformed.length > 0) {
+    throw new MalformedOtlpHeadersError(malformed);
+  }
 
   if (entries.length === 0) {
     return undefined;
@@ -94,46 +104,44 @@ export const resolveTracesHeaders = (
   return parseOtlpHeaders(config.otlpHeaders);
 };
 
-const createSpanExporter = (
-  config: TelemetryConfig,
-  tracesEndpoint?: string,
-): SpanExporter => {
-  if (tracesEndpoint) {
-    return new OTLPTraceExporter({
-      url: tracesEndpoint,
-      headers: resolveTracesHeaders(config),
-    });
-  }
-
-  return new ConsoleSpanExporter();
-};
-
 export const initTelemetry = (config: TelemetryConfig): void => {
   if (config.enabled === false || initialized) return;
 
+  const tracesEndpoint = resolveTracesEndpoint(config);
+  if (!tracesEndpoint) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'Telemetry enabled but no OTEL_EXPORTER_OTLP_TRACES_ENDPOINT set — skipping trace export',
+    );
+    initialized = true;
+    return;
+  }
+
   provider = new NodeTracerProvider({
-    resource: new Resource({
+    resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: config.serviceName,
       [ATTR_SERVICE_VERSION]: config.serviceVersion ?? '0.0.0',
       [DEPLOYMENT_ENVIRONMENT_NAME]: config.environment ?? 'development',
     }),
+    spanProcessors: [
+      new BatchSpanProcessor(
+        new OTLPTraceExporter({
+          url: tracesEndpoint,
+          headers: resolveTracesHeaders(config),
+        }),
+      ),
+    ],
   });
 
-  const tracesEndpoint = resolveTracesEndpoint(config);
-  const exporter = createSpanExporter(config, tracesEndpoint);
-  if (tracesEndpoint) {
-    provider.addSpanProcessor(new BatchSpanProcessor(exporter));
-  } else {
-    provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-  }
   provider.register();
   initialized = true;
 };
 
 export const shutdownTelemetry = async (): Promise<void> => {
-  if (!provider) return;
-  await provider.shutdown();
-  provider = null;
+  if (provider) {
+    await provider.shutdown();
+    provider = null;
+  }
   initialized = false;
 };
 

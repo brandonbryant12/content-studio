@@ -111,8 +111,12 @@ This ensures spans are exported reliably and flush on termination.
 ### Exporter Behavior
 
 - If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use it as-is with OTLP HTTP export + `BatchSpanProcessor`.
-- If neither endpoint is configured, fall back to `ConsoleSpanExporter` for local debugging.
-- `OTEL_EXPORTER_OTLP_HEADERS` applies to trace export headers.
+- If no endpoint is configured, telemetry logs a warning and skips trace export entirely (no `ConsoleSpanExporter` fallback).
+- `OTEL_EXPORTER_OTLP_HEADERS` applies to trace export headers. Malformed entries (missing `=`, empty key/value) cause a `MalformedOtlpHeadersError` at startup rather than being silently dropped.
+
+### Server-Timing Header
+
+The Hono server includes `timing()` middleware that adds a `Server-Timing` response header with `total;dur=<ms>` to every non-streaming response. This enables browser DevTools performance analysis without additional instrumentation. Streaming responses (SSE) are unaffected — headers are sent before the body starts.
 
 ## Error Observability
 <!-- enforced-by: architecture -->
