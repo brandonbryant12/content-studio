@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-best-practice-micro-scan-query-key-and-enum-drift",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best-practice micro scan: query-key and enum drift",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation:best-practice-researcher",
+      "skill:periodic-scans",
+      "repo:content-studio"
+    ],
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
