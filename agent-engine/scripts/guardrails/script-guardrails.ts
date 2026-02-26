@@ -20,6 +20,7 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
   'skills:check:strict': 'pnpm exec tsx agent-engine/scripts/skills/check-quality.ts --strict',
   'workflows:generate': 'pnpm exec tsx agent-engine/scripts/workflows/generate-readme.ts',
   'workflow-memory:add-entry': 'pnpm exec tsx agent-engine/scripts/workflow-memory/add-entry.ts',
+  'workflow-memory:preflight': 'node agent-engine/scripts/guardrails/workflow-memory-preflight.js',
   'workflow-memory:sync': 'pnpm exec tsx agent-engine/scripts/workflow-memory/sync-git.ts',
   'workflow-memory:retrieve': 'pnpm exec tsx agent-engine/scripts/workflow-memory/retrieve.ts',
   'workflow-memory:compact': 'pnpm exec tsx agent-engine/scripts/workflow-memory/compact-memory.ts',
