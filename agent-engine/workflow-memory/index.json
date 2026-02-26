@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-02-26-feature-delivery-guarded-web-chunk-splitting-in-ready-for-dev-lane",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Guarded web chunk splitting in ready-for-dev lane",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "ready-for-dev",
+      "web",
+      "performance-guard",
+      "automation",
+      "capability:tool-use",
+      "capability:instruction-following",
+      "failure:env-drift"
+    ],
+    "importance": 0.78,
+    "recency": 1,
+    "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
