@@ -73,7 +73,7 @@ export const JobType = {
   PROCESS_RESEARCH: 'process-research',
 } as const;
 
-export type JobType = typeof JobType;
+export type JobType = (typeof JobType)[keyof typeof JobType];
 
 export const JobStatusSchema = Schema.Literal(...jobStatusEnum.enumValues);
 
