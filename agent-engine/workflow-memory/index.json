@@ -1,5 +1,36 @@
 [
   {
+    "id": "2026-02-26-periodic-scans-best-practice-researcher-orpc-hono-contract-layer-sse-resume-ote",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: oRPC + Hono contract layer — SSE resume, OTEL instrumentation, Server-Timing",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:api-contracts-orpc-hono",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.82,
+    "confidence": 0.88,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-26-periodic-scans-product-owner-reviewer-approval-retry-loop-ux-completion-toasts-",
     "date": "2026-02-26",
     "month": "2026-02",
