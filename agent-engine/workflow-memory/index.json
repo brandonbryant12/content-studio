@@ -1,5 +1,36 @@
 [
   {
+    "id": "2026-02-26-feature-delivery-aligned-generation-language-matrix-for-149-with-env-blocked-full",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Aligned generation language matrix for #149 with env-blocked full test gate",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "ready-for-dev",
+      "issue-149",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "env-drift",
+      "memory-form:parametric",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:planning",
+      "capability:tool-use",
+      "capability:instruction-following",
+      "failure:env-drift"
+    ],
+    "importance": 0.82,
+    "recency": 1,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
