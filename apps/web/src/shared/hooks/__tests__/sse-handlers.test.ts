@@ -4,11 +4,13 @@ import type {
   JobCompletionEvent,
   EntityChangeEvent,
   InfographicJobCompletionEvent,
+  ActivityLoggedEvent,
 } from '@repo/api/contracts';
 import {
   handleJobCompletion,
   handleEntityChange,
   handleInfographicJobCompletion,
+  handleActivityLogged,
 } from '../sse-handlers';
 
 // Mock the apiClient
@@ -52,6 +54,19 @@ vi.mock('@/clients/apiClient', () => ({
       listVersions: {
         queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
           queryKey: ['infographics', 'versions', input.id],
+        })),
+      },
+    },
+    admin: {
+      list: {
+        queryOptions: vi.fn(({ input }: { input?: Record<string, unknown> }) => ({
+          queryKey: [
+            {
+              scope: 'activity',
+              route: 'admin.list',
+            },
+            input ?? {},
+          ],
         })),
       },
     },
@@ -345,6 +360,34 @@ describe('SSE Handlers', () => {
           queryKey: ['infographics', 'versions', 'infographic-123'],
         });
       });
+    });
+  });
+
+  describe('handleActivityLogged', () => {
+    it('invalidates by canonical activity list key scope', () => {
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+      const event: ActivityLoggedEvent = {
+        type: 'activity_logged',
+        activityId: 'activity-123',
+        userId: 'user-123',
+        action: 'podcast_generated',
+        entityType: 'podcast',
+        entityId: 'podcast-123',
+        timestamp: new Date().toISOString(),
+      };
+
+      handleActivityLogged(event, queryClient);
+
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: [
+          {
+            scope: 'activity',
+            route: 'admin.list',
+          },
+        ],
+      });
+      expect(invalidateSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

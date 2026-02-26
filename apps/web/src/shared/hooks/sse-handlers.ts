@@ -8,6 +8,7 @@ import type {
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
+import { getActivityListQueryKey } from '@/features/admin/hooks/use-activity-list';
 
 const getPodcastQueryKey = (podcastId: string) =>
   apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }).queryKey;
@@ -125,13 +126,11 @@ export function handleActivityLogged(
   _event: ActivityLoggedEvent,
   queryClient: QueryClient,
 ): void {
-  // Invalidate all admin activity queries so the dashboard auto-refreshes.
-  // Uses a broad prefix to catch both ORPC-generated and custom infinite query keys.
+  // Scope invalidation to the canonical admin activity list key prefix.
+  const activityListQueryKeyScope = getActivityListQueryKey().slice(0, 1);
+
   queryClient.invalidateQueries({
-    predicate: (query) => {
-      const key = query.queryKey;
-      return Array.isArray(key) && key[0] === 'admin';
-    },
+    queryKey: activityListQueryKeyScope,
   });
 }
 
