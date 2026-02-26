@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-02-26-feature-delivery-replace-hardcoded-admin-sse-invalidation-key",
+    "date": "2026-02-26",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Replace hardcoded admin SSE invalidation key",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:177",
+      "pr:183",
+      "skill:feature-delivery",
+      "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-25-feature-delivery-hardened-server-cors-and-rate-limit-proxy-trust",
     "date": "2026-02-25",
     "month": "2026-02",
