@@ -103,7 +103,7 @@ export function DocumentDetailContainer({
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Delete Document"
-        description="Are you sure you want to delete this document? This action cannot be undone. Any podcasts or voiceovers using this document will not be affected."
+        description={`Are you sure you want to delete "${document.title}"? This action cannot be undone. Any podcasts or voiceovers using this document will not be affected.`}
         confirmText="Delete"
         variant="destructive"
         isLoading={actions.isDeleting}

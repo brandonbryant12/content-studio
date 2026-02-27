@@ -70,7 +70,7 @@ describe('ActionBar', () => {
     it('shows generating progress state', () => {
       render(<ActionBar {...createDefaultProps({ isGenerating: true })} />);
 
-      expect(screen.getByText('Generating audio...')).toBeInTheDocument();
+      expect(screen.getByText('Generating...')).toBeInTheDocument();
       expect(screen.getByTestId('spinner')).toBeInTheDocument();
     });
 

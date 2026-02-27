@@ -145,7 +145,6 @@ export const initTelemetry = (config: TelemetryConfig): void => {
 
   const tracesEndpoint = resolveTracesEndpoint(config);
   if (!tracesEndpoint) {
-     
     console.warn(
       'Telemetry enabled but no OTEL_EXPORTER_OTLP_TRACES_ENDPOINT set — skipping trace export',
     );

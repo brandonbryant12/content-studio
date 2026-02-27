@@ -7,6 +7,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VersionStatus, type VersionStatusType } from '../../lib/status';
 import { AudioPlayer } from '../audio-player';
+import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 
 interface GlobalActionBarProps {
   status: VersionStatusType | undefined;
@@ -46,10 +47,10 @@ export function GlobalActionBar({
       }
       return 'Processing...';
     }
-    if (showChangesState) return 'Unsaved changes';
-    if (status === VersionStatus.READY) return 'Ready';
-    if (status === VersionStatus.FAILED) return 'Generation failed';
-    return 'Draft';
+    if (showChangesState) return GENERATION_LABELS.statusUnsavedChanges;
+    if (status === VersionStatus.READY) return GENERATION_LABELS.statusReady;
+    if (status === VersionStatus.FAILED) return GENERATION_LABELS.statusFailed;
+    return GENERATION_LABELS.statusDraft;
   };
 
   const renderAction = () => {
@@ -66,12 +67,12 @@ export function GlobalActionBar({
           {isSaving ? (
             <>
               <Spinner className="w-3.5 h-3.5" />
-              <span>Saving...</span>
+              <span>{GENERATION_LABELS.saving}</span>
             </>
           ) : (
             <>
               <LightningBoltIcon className="w-3.5 h-3.5" />
-              <span>Save & Regenerate</span>
+              <span>{GENERATION_LABELS.saveAndRegenerate}</span>
             </>
           )}
         </Button>
@@ -101,7 +102,7 @@ export function GlobalActionBar({
           className="action-bar-btn-primary"
         >
           <ReloadIcon className="w-3.5 h-3.5" />
-          <span>Retry</span>
+          <span>{GENERATION_LABELS.retry}</span>
         </Button>
       );
     }

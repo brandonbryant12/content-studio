@@ -44,7 +44,7 @@ export function useUpdatePersona(personaId: string) {
           queryKey: getPersonaQueryKey(personaId),
         });
         queryClient.invalidateQueries({ queryKey: getPersonaListQueryKey() });
-        toast.success('Persona updated');
+        toast.success('Persona saved');
       },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to update persona'));

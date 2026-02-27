@@ -146,7 +146,7 @@ export function DocumentListContainer() {
           if (!open) setPendingDeleteId(null);
         }}
         title="Delete Document"
-        description="Are you sure you want to delete this document? This action cannot be undone."
+        description={`Are you sure you want to delete "${documents.find((d) => d.id === pendingDeleteId)?.title ?? 'this document'}"? This action cannot be undone.`}
         confirmText="Delete"
         variant="destructive"
         onConfirm={handleDeleteConfirm}

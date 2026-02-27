@@ -344,7 +344,7 @@ export function VoiceoverList({
         <Input
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="Search voiceovers..."
+          placeholder="Search voiceovers…"
           className="search-input pl-10"
           autoComplete="off"
           aria-label="Search voiceovers"

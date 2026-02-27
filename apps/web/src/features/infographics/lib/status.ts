@@ -1,4 +1,5 @@
 import { InfographicStatus } from '@repo/db/schema';
+import type { BadgeVariant } from '@repo/ui/components/badge';
 
 export { InfographicStatus };
 export type InfographicStatusType =
@@ -7,7 +8,7 @@ export type InfographicStatusType =
 interface StatusConfig {
   label: string;
   message: string;
-  badgeVariant: 'default' | 'info' | 'warning' | 'success' | 'error' | 'purple';
+  badgeVariant: BadgeVariant;
 }
 
 const STATUS_MAP: Record<InfographicStatusType, StatusConfig> = {
@@ -33,11 +34,11 @@ const STATUS_MAP: Record<InfographicStatusType, StatusConfig> = {
   },
 };
 
+/** Get the status configuration for a given status */
 export function getStatusConfig(
   status: InfographicStatusType | undefined,
-): StatusConfig | null {
-  if (!status) return null;
-  return STATUS_MAP[status] ?? null;
+): StatusConfig | undefined {
+  return status ? STATUS_MAP[status] : undefined;
 }
 
 export function isGeneratingStatus(

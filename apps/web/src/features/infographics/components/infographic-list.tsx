@@ -167,7 +167,7 @@ export function InfographicList({
         <Input
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="Search infographics..."
+          placeholder="Search infographics…"
           className="search-input pl-10"
           autoComplete="off"
           aria-label="Search infographics"

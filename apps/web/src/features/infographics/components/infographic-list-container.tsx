@@ -130,7 +130,7 @@ export function InfographicListContainer() {
           if (!open) setPendingDeleteId(null);
         }}
         title="Delete Infographic"
-        description="Are you sure you want to delete this infographic? This action cannot be undone."
+        description={`Are you sure you want to delete "${infographics.find((i) => i.id === pendingDeleteId)?.title ?? 'this infographic'}"? This action cannot be undone.`}
         confirmText="Delete"
         variant="destructive"
         isLoading={deletingId !== null}

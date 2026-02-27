@@ -156,7 +156,7 @@ export function PersonaList({
           <Input
             value={searchQuery}
             onChange={handleSearch}
-            placeholder="Search personas..."
+            placeholder="Search personas…"
             className="search-input pl-10"
             autoComplete="off"
             aria-label="Search personas"

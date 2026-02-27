@@ -70,10 +70,7 @@ describe('resolveTracesHeaders', () => {
       expect.fail('Expected MalformedOtlpHeadersError to be thrown');
     } catch (err) {
       expect(err).toHaveProperty('_tag', 'MalformedOtlpHeadersError');
-      expect(err).toHaveProperty('malformedEntries', [
-        'malformed',
-        'bad=',
-      ]);
+      expect(err).toHaveProperty('malformedEntries', ['malformed', 'bad=']);
     }
   });
 });

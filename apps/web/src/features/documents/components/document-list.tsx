@@ -1,6 +1,7 @@
 // Presenter: Pure UI component with no data fetching or state management
 
 import { MagnifyingGlassIcon, TrashIcon } from '@radix-ui/react-icons';
+import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
@@ -10,6 +11,7 @@ import { memo, useCallback, useMemo, useTransition } from 'react';
 import type { DocumentListItem } from './document-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
+import { DocumentStatus, getStatusConfig } from '../lib/status';
 import { DocumentEntryMenu } from './document-entry-menu';
 import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
@@ -17,23 +19,17 @@ import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 
 function StatusBadge({ status }: { status: string }) {
-  switch (status) {
-    case 'processing':
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          Processing
-        </span>
-      );
-    case 'failed':
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
-          Failed
-        </span>
-      );
-    default:
-      return null;
-  }
+  if (status === DocumentStatus.READY) return null;
+  const config = getStatusConfig(
+    status as (typeof DocumentStatus)[keyof typeof DocumentStatus],
+  );
+  if (!config) return null;
+  return (
+    <Badge variant={config.badgeVariant} className="gap-1.5">
+      {status === DocumentStatus.PROCESSING && <Spinner className="w-3 h-3" />}
+      {config.label}
+    </Badge>
+  );
 }
 
 function EmptyState({

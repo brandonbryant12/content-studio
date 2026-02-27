@@ -7,6 +7,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VoiceoverStatus, type VoiceoverStatusType } from '../../lib/status';
 import { getErrorMessage } from '@/shared/lib/errors';
+import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 
 interface ActionBarProps {
   status: VoiceoverStatusType | undefined;
@@ -59,7 +60,7 @@ export function ActionBar({
             <div className="global-action-bar-status">
               <Spinner className="w-4 h-4 text-warning" />
               <span className="global-action-bar-status-text">
-                Generating audio...
+                {`${GENERATION_LABELS.statusGenerating}...`}
               </span>
             </div>
           </div>
@@ -78,7 +79,7 @@ export function ActionBar({
             <div className="global-action-bar-changes">
               <div className="global-action-bar-indicator" />
               <span className="global-action-bar-changes-text">
-                Unsaved changes
+                {GENERATION_LABELS.statusUnsavedChanges}
               </span>
             </div>
             <div className="global-action-bar-actions">
@@ -91,12 +92,12 @@ export function ActionBar({
                 {isSaving ? (
                   <>
                     <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                    Saving...
+                    {GENERATION_LABELS.saving}
                   </>
                 ) : (
                   <>
                     <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                    Save & Regenerate
+                    {GENERATION_LABELS.saveAndRegenerate}
                   </>
                 )}
               </Button>
@@ -109,10 +110,10 @@ export function ActionBar({
 
   const statusLabel =
     status === VoiceoverStatus.READY
-      ? 'Ready'
+      ? GENERATION_LABELS.statusReady
       : status === VoiceoverStatus.FAILED
-        ? 'Generation failed'
-        : 'Draft';
+        ? GENERATION_LABELS.statusFailed
+        : GENERATION_LABELS.statusDraft;
 
   return (
     <>
@@ -143,7 +144,7 @@ export function ActionBar({
                 className="global-action-bar-btn-primary"
               >
                 <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-                Retry
+                {GENERATION_LABELS.retry}
               </Button>
             )}
           </div>

@@ -66,7 +66,7 @@ export function useDocumentActions({
   const updateMutation = useMutation(
     apiClient.documents.update.mutationOptions({
       onSuccess: (updated) => {
-        toast.success('Document updated');
+        toast.success('Document saved');
         clearDraftTitle(document.id);
         // Update the single-document cache
         queryClient.setQueryData(

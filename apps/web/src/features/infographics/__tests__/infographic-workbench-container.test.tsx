@@ -8,7 +8,7 @@ import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import { useInfographicVersions } from '../hooks/use-infographic-versions';
 import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { act, fireEvent, render, screen, waitFor } from '@/test-utils';
+import { act, fireEvent, renderWithQuery, screen, waitFor } from '@/test-utils';
 
 const { promptPanelSpy, versionHistoryStripSpy } = vi.hoisted(() => ({
   promptPanelSpy: vi.fn(),
@@ -110,6 +110,14 @@ vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
   ConfirmationDialog: () => null,
 }));
 
+vi.mock('@/env', () => ({
+  env: {
+    PUBLIC_SERVER_URL: 'http://localhost:3035',
+    PUBLIC_SERVER_API_PATH: '/api',
+    PUBLIC_BASE_PATH: '/',
+  },
+}));
+
 vi.mock('@/shared/lib/storage-url', () => ({
   getStorageUrl: (key: string) => `/storage/${key}`,
 }));
@@ -183,7 +191,9 @@ describe('InfographicWorkbenchContainer', () => {
       createMockActions({ hasChanges: true, isGenerating: false }) as never,
     );
 
-    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+    renderWithQuery(
+      <InfographicWorkbenchContainer infographicId="infographic-1" />,
+    );
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: true,
@@ -195,7 +205,9 @@ describe('InfographicWorkbenchContainer', () => {
       createMockActions({ hasChanges: true, isGenerating: true }) as never,
     );
 
-    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+    renderWithQuery(
+      <InfographicWorkbenchContainer infographicId="infographic-1" />,
+    );
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: false,
@@ -216,7 +228,9 @@ describe('InfographicWorkbenchContainer', () => {
       createMockActions() as never,
     );
 
-    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+    renderWithQuery(
+      <InfographicWorkbenchContainer infographicId="infographic-1" />,
+    );
 
     const promptPanelProps = getLastPromptPanelProps<{
       prompt: string;
@@ -227,7 +241,7 @@ describe('InfographicWorkbenchContainer', () => {
       isEditMode: true,
     });
     expect(
-      screen.getByRole('button', { name: 'Generate New Version' }),
+      screen.getByRole('button', { name: 'Save & Regenerate' }),
     ).toBeDisabled();
   });
 
@@ -244,7 +258,9 @@ describe('InfographicWorkbenchContainer', () => {
     const actions = createMockActions();
     vi.mocked(useInfographicActions).mockReturnValue(actions as never);
 
-    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+    renderWithQuery(
+      <InfographicWorkbenchContainer infographicId="infographic-1" />,
+    );
 
     const initialPromptPanelProps = getLastPromptPanelProps<{
       onPromptChange: (value: string) => void;
@@ -254,9 +270,7 @@ describe('InfographicWorkbenchContainer', () => {
       initialPromptPanelProps?.onPromptChange('Make the title larger');
     });
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Generate New Version' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Regenerate' }));
 
     expect(actions.handleGenerate).toHaveBeenCalledWith(
       'Make the title larger',
@@ -288,6 +302,8 @@ describe('InfographicWorkbenchContainer', () => {
           imageStorageKey: 'infographics/v1.png',
           thumbnailStorageKey: null,
           format: 'portrait',
+          prompt: '',
+          styleProperties: [],
           createdAt: '2025-01-01T00:00:00Z',
         },
         {
@@ -296,6 +312,8 @@ describe('InfographicWorkbenchContainer', () => {
           imageStorageKey: 'infographics/v2.png',
           thumbnailStorageKey: null,
           format: 'portrait',
+          prompt: '',
+          styleProperties: [],
           createdAt: '2025-01-02T00:00:00Z',
         },
       ],
@@ -305,7 +323,9 @@ describe('InfographicWorkbenchContainer', () => {
       createMockActions() as never,
     );
 
-    render(<InfographicWorkbenchContainer infographicId="infographic-1" />);
+    renderWithQuery(
+      <InfographicWorkbenchContainer infographicId="infographic-1" />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /select version 1/i }));
 

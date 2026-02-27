@@ -42,6 +42,7 @@ import {
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { getErrorMessage } from '@/shared/lib/errors';
+import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
 type InfographicFull = RouterOutput['infographics']['get'];
@@ -284,17 +285,19 @@ function ControlsSidebar({
           {actions.isGenerating ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
-              {hasExistingImage ? 'Regenerating...' : 'Generating...'}
+              {hasExistingImage
+                ? `${GENERATION_LABELS.statusGenerating}...`
+                : `${GENERATION_LABELS.statusGenerating}...`}
             </>
           ) : infographic.status === InfographicStatus.FAILED ? (
             <>
               <ReloadIcon className="w-4 h-4 mr-2" />
-              Retry
+              {GENERATION_LABELS.retry}
             </>
           ) : hasExistingImage && isViewingHistoricalVersion ? (
             `Generate From Base v${latestVersionNumber ?? '—'}`
           ) : hasExistingImage ? (
-            'Save & Regenerate'
+            GENERATION_LABELS.saveAndRegenerate
           ) : (
             'Generate Infographic'
           )}
@@ -585,7 +588,7 @@ export function InfographicWorkbenchContainer({
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Delete Infographic"
-        description="Are you sure you want to delete this infographic? This action cannot be undone."
+        description={`Are you sure you want to delete "${infographic.title}"? This action cannot be undone.`}
         confirmText="Delete"
         variant="destructive"
         isLoading={actions.isDeleting}

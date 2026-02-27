@@ -65,7 +65,7 @@ export function useInfographicActions({
       await settings.saveSettings(
         hasPromptOverride ? { prompt: promptOverride } : undefined,
       );
-      toast.success('Settings saved');
+      toast.success('Infographic saved');
     },
     [settings, generateMutation.isPending],
   );
