@@ -8,7 +8,12 @@ import {
   DialogFooter,
 } from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
-import { useState, useCallback, type CSSProperties, type MouseEvent } from 'react';
+import {
+  useState,
+  useCallback,
+  type CSSProperties,
+  type MouseEvent,
+} from 'react';
 import type { StyleProperty } from '../hooks/use-infographic-settings';
 import {
   useStylePresets,

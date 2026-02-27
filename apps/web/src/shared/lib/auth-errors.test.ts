@@ -37,10 +37,7 @@ describe('getAuthErrorMessage', () => {
 
   it('maps rate limiting by status', () => {
     expect(
-      getAuthErrorMessage(
-        { status: 429 },
-        'Unable to sign in with Microsoft.',
-      ),
+      getAuthErrorMessage({ status: 429 }, 'Unable to sign in with Microsoft.'),
     ).toBe('Too many sign-in attempts. Please try again in a moment.');
   });
 

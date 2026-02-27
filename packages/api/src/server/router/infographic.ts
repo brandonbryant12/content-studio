@@ -38,7 +38,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.list',
           attributes: {
             'pagination.limit': input.limit ?? 50,
             'pagination.offset': input.offset ?? 0,
@@ -59,7 +58,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.get',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -83,7 +81,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.create',
           attributes: { 'infographic.title': input.title },
         },
       );
@@ -102,7 +99,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.update',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -127,7 +123,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.delete',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -143,7 +138,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.generate',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -161,7 +155,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.getJob',
           attributes: { 'job.id': input.jobId },
         },
       );
@@ -181,7 +174,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.approve',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -201,7 +193,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.revokeApproval',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -221,7 +212,6 @@ const infographicRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.infographics.listVersions',
           attributes: { 'infographic.id': input.id },
         },
       );
@@ -242,7 +232,6 @@ const infographicRouter = {
           errors,
           {
             requestId: context.requestId,
-            span: 'api.infographics.stylePresets.list',
           },
         );
       },
@@ -259,7 +248,6 @@ const infographicRouter = {
           errors,
           {
             requestId: context.requestId,
-            span: 'api.infographics.stylePresets.create',
           },
         );
       },
@@ -274,7 +262,6 @@ const infographicRouter = {
           errors,
           {
             requestId: context.requestId,
-            span: 'api.infographics.stylePresets.delete',
             attributes: { 'preset.id': input.id },
           },
         );

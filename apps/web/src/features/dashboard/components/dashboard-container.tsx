@@ -16,11 +16,13 @@ import {
   useVoiceoversOrdered,
   useCreateVoiceover,
 } from '@/features/voiceovers/hooks';
+import { useOnboardingDismissed } from '@/shared/hooks/use-onboarding-dismissed';
 
 export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [researchDialogOpen, setResearchDialogOpen] = useState(false);
+  const { isDismissed, dismiss } = useOnboardingDismissed();
 
   const { data: documents, isLoading: docsLoading } = useDocumentsOrdered({
     orderBy: 'desc',
@@ -57,6 +59,12 @@ export function DashboardContainer() {
   const voiceoverCount = voiceovers?.length ?? 0;
   const infographicCount = infographics?.length ?? 0;
 
+  const totalCount =
+    docCount + podcastCount + voiceoverCount + infographicCount;
+  const anyLoading =
+    docsLoading || podcastsLoading || voiceoversLoading || infographicsLoading;
+  const showOnboarding = totalCount === 0 && !anyLoading && !isDismissed;
+
   return (
     <DashboardPage
       counts={{
@@ -64,6 +72,10 @@ export function DashboardContainer() {
         podcasts: podcastCount,
         voiceovers: voiceoverCount,
         infographics: infographicCount,
+      }}
+      onboarding={{
+        show: showOnboarding,
+        onDismiss: dismiss,
       }}
       loading={{
         documents: docsLoading,
@@ -87,11 +99,7 @@ export function DashboardContainer() {
         onCreateVoiceover: () =>
           createVoiceover.mutate({ title: 'Untitled Voiceover' }),
         isVoiceoverPending: createVoiceover.isPending,
-        onCreateInfographic: () =>
-          createInfographic.mutate({
-            title: 'Untitled Infographic',
-            format: 'portrait',
-          }),
+        onCreateInfographic: (payload) => createInfographic.mutate(payload),
         isInfographicPending: createInfographic.isPending,
       }}
       documentDialogs={{

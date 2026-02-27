@@ -8,6 +8,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
+import { OnboardingGuidance } from './onboarding-guidance';
 import { DocumentsRecentSection, RecentSection } from './recent-section';
 import { StatCard } from './stat-card';
 import {
@@ -16,6 +17,10 @@ import {
   ResearchChatContainer,
   UploadDocumentDialog,
 } from '@/features/documents/components';
+import {
+  CreateInfographicDialog,
+  type CreateInfographicPayload,
+} from '@/features/infographics/components/create-infographic-dialog';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import { formatDuration } from '@/shared/lib/formatters';
 
@@ -58,7 +63,7 @@ interface CreateActions {
   isPodcastPending: boolean;
   onCreateVoiceover: () => void;
   isVoiceoverPending: boolean;
-  onCreateInfographic: () => void;
+  onCreateInfographic: (payload: CreateInfographicPayload) => void;
   isInfographicPending: boolean;
 }
 
@@ -73,12 +78,18 @@ interface DocumentDialogs {
   isCreateFromUrlPending: boolean;
 }
 
+interface OnboardingState {
+  show: boolean;
+  onDismiss: () => void;
+}
+
 export interface DashboardPageProps {
   counts: ContentCounts;
   loading: LoadingState;
   recent: RecentItems;
   createActions: CreateActions;
   documentDialogs: DocumentDialogs;
+  onboarding: OnboardingState;
 }
 
 export function DashboardPage({
@@ -87,6 +98,7 @@ export function DashboardPage({
   recent,
   createActions,
   documentDialogs,
+  onboarding,
 }: DashboardPageProps) {
   return (
     <div className="page-container">
@@ -131,6 +143,13 @@ export function DashboardPage({
           isLoading={loading.infographics}
         />
       </div>
+
+      {/* First-value onboarding guidance */}
+      {onboarding.show && (
+        <div className="mb-8">
+          <OnboardingGuidance onDismiss={onboarding.onDismiss} />
+        </div>
+      )}
 
       {/* Content Grid - 2 columns on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
@@ -262,9 +281,7 @@ function PodcastsRecentSection({
           <div className="recent-item-info">
             <div className="recent-item-title">{podcast.title}</div>
             <div className="recent-item-meta">
-              {podcast.duration
-                ? formatDuration(podcast.duration)
-                : 'No audio'}
+              {podcast.duration ? formatDuration(podcast.duration) : 'No audio'}
             </div>
           </div>
         </Link>
@@ -336,7 +353,7 @@ function InfographicsRecentSection({
   count: number;
   items: RecentItems['infographics'];
   isLoading: boolean;
-  onCreateInfographic: () => void;
+  onCreateInfographic: (payload: CreateInfographicPayload) => void;
   isPending: boolean;
 }) {
   return (
@@ -350,11 +367,25 @@ function InfographicsRecentSection({
       emptyMessage="No infographics yet"
       linkTo="/infographics"
       action={
-        <CreateButton
-          label={CREATE_ACTION_LABELS.infographic}
-          isPending={isPending}
-          onClick={onCreateInfographic}
-        />
+        <CreateInfographicDialog
+          isCreating={isPending}
+          onCreate={onCreateInfographic}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isPending}
+            className="gap-1.5 text-xs"
+            aria-label={CREATE_ACTION_LABELS.infographic}
+          >
+            {isPending ? (
+              <Spinner className="w-3.5 h-3.5" />
+            ) : (
+              <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
+            {CREATE_ACTION_LABELS.infographic}
+          </Button>
+        </CreateInfographicDialog>
       }
       renderItem={(ig) => (
         <Link

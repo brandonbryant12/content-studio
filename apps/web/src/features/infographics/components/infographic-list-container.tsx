@@ -22,7 +22,13 @@ export function InfographicListContainer() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const { data: infographics = [], isLoading, isError, error, refetch } = useInfographicList();
+  const {
+    data: infographics = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfographicList();
 
   const createMutation = useCreateInfographic();
   const deleteMutation = useOptimisticDeleteList();
@@ -93,7 +99,11 @@ export function InfographicListContainer() {
           </div>
         </div>
         <ErrorFallback
-          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load infographics'))}
+          error={
+            error instanceof Error
+              ? error
+              : new Error(getErrorMessage(error, 'Failed to load infographics'))
+          }
           resetErrorBoundary={() => refetch()}
         />
       </div>

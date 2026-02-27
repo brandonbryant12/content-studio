@@ -16,7 +16,7 @@ interface StatusConfig {
  */
 const VOICEOVER_STATUS_CONFIG: Record<VoiceoverStatusType, StatusConfig> = {
   [VoiceoverStatus.DRAFTING]: {
-    label: 'Drafting',
+    label: 'Draft',
     message: 'Ready to generate',
     badgeVariant: 'default',
   },
@@ -49,4 +49,17 @@ export function getStatusConfig(
   status: VoiceoverStatusType | undefined,
 ): StatusConfig | undefined {
   return status ? VOICEOVER_STATUS_CONFIG[status] : undefined;
+}
+
+/** Check if the quick start guide should be visible for a brand-new voiceover */
+export function isQuickStartVisible(voiceover: {
+  status: string;
+  text: string;
+  audioUrl: string | null;
+}): boolean {
+  return (
+    voiceover.status === VoiceoverStatus.DRAFTING &&
+    voiceover.text.trim().length === 0 &&
+    voiceover.audioUrl === null
+  );
 }

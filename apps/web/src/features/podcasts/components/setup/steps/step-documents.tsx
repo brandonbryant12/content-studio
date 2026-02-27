@@ -394,7 +394,9 @@ export function StepDocuments({
   // Filter documents: only show ready ones, then apply search
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
-    const ready = documents.filter((doc) => doc.status === DocumentStatus.READY);
+    const ready = documents.filter(
+      (doc) => doc.status === DocumentStatus.READY,
+    );
     if (!searchQuery.trim()) return ready;
     const query = searchQuery.toLowerCase();
     return ready.filter((doc) => doc.title.toLowerCase().includes(query));

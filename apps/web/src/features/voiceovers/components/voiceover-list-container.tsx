@@ -21,7 +21,13 @@ export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: voiceovers = [], isLoading, isError, error, refetch } = useVoiceoverList();
+  const {
+    data: voiceovers = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useVoiceoverList();
   const createMutation = useCreateVoiceover();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
@@ -90,7 +96,11 @@ export function VoiceoverListContainer() {
           </div>
         </div>
         <ErrorFallback
-          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load voiceovers'))}
+          error={
+            error instanceof Error
+              ? error
+              : new Error(getErrorMessage(error, 'Failed to load voiceovers'))
+          }
           resetErrorBoundary={() => refetch()}
         />
       </div>

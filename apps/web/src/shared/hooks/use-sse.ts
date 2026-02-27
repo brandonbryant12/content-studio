@@ -1,3 +1,4 @@
+import { getEventMeta } from '@repo/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
@@ -33,12 +34,13 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
 
   const router = useRouter();
   useEffect(() => {
-    setNavigateFn((path: string) => router.history.push(path));
+    setNavigateFn((path: string) => void router.navigate({ to: path }));
   }, [router]);
 
   const [connectionState, setConnectionState] =
     useState<SSEConnectionState>('disconnected');
   const controllerRef = useRef<AbortController | null>(null);
+  const lastEventIdRef = useRef<string | undefined>(undefined);
 
   const connect = useCallback(() => {
     controllerRef.current?.abort();
@@ -53,10 +55,18 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
         try {
           const iterator = await rawApiClient.events.subscribe(undefined, {
             signal: controller.signal,
+            lastEventId: lastEventIdRef.current,
           });
 
           for await (const event of iterator) {
             if (controller.signal.aborted) break;
+
+            // Track event ID for resume on reconnect
+            const meta = getEventMeta(event);
+            if (meta?.id) {
+              lastEventIdRef.current = meta.id;
+            }
+
             const qc = queryClientRef.current;
 
             switch (event.type) {

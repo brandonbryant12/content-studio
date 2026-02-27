@@ -28,7 +28,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.list',
           attributes: {
             'pagination.limit': input.limit ?? 50,
             'pagination.offset': input.offset ?? 0,
@@ -49,7 +48,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.get',
           attributes: { 'persona.id': input.id },
         },
       );
@@ -68,7 +66,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.create',
           attributes: { 'persona.name': input.name },
         },
       );
@@ -92,7 +89,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.update',
           attributes: { 'persona.id': id },
         },
       );
@@ -108,7 +104,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.delete',
           attributes: { 'persona.id': input.id },
         },
       );
@@ -124,7 +119,6 @@ const personaRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.personas.generateAvatar',
           attributes: { 'persona.id': input.id },
         },
       );

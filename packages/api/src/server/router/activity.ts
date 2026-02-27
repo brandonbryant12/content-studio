@@ -24,7 +24,6 @@ const activityRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.admin.activity.list',
           attributes: { 'pagination.limit': input.limit ?? 25 },
         },
       );
@@ -40,7 +39,6 @@ const activityRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.admin.activity.stats',
           attributes: { 'activity.period': input.period },
         },
       );

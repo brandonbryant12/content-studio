@@ -6,14 +6,31 @@ export type InfographicStatusType =
 
 interface StatusConfig {
   label: string;
+  message: string;
   badgeVariant: 'default' | 'info' | 'warning' | 'success' | 'error' | 'purple';
 }
 
 const STATUS_MAP: Record<InfographicStatusType, StatusConfig> = {
-  [InfographicStatus.DRAFT]: { label: 'Draft', badgeVariant: 'default' },
-  [InfographicStatus.GENERATING]: { label: 'Generating', badgeVariant: 'purple' },
-  [InfographicStatus.READY]: { label: 'Ready', badgeVariant: 'success' },
-  [InfographicStatus.FAILED]: { label: 'Failed', badgeVariant: 'error' },
+  [InfographicStatus.DRAFT]: {
+    label: 'Draft',
+    message: 'Ready to generate',
+    badgeVariant: 'default',
+  },
+  [InfographicStatus.GENERATING]: {
+    label: 'Generating',
+    message: 'Generating infographic...',
+    badgeVariant: 'purple',
+  },
+  [InfographicStatus.READY]: {
+    label: 'Ready',
+    message: 'Your infographic is ready!',
+    badgeVariant: 'success',
+  },
+  [InfographicStatus.FAILED]: {
+    label: 'Failed',
+    message: 'Generation failed',
+    badgeVariant: 'error',
+  },
 };
 
 export function getStatusConfig(

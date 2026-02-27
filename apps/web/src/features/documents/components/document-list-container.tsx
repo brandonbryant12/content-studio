@@ -27,7 +27,13 @@ export function DocumentListContainer() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const { data: documents = [], isLoading, isError, error, refetch } = useDocumentList();
+  const {
+    data: documents = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDocumentList();
   const deleteMutation = useOptimisticDeleteDocument();
   const createFromUrlMutation = useCreateFromUrl();
   const selection = useBulkSelection();
@@ -97,7 +103,11 @@ export function DocumentListContainer() {
           </div>
         </div>
         <ErrorFallback
-          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load documents'))}
+          error={
+            error instanceof Error
+              ? error
+              : new Error(getErrorMessage(error, 'Failed to load documents'))
+          }
           resetErrorBoundary={() => refetch()}
         />
       </div>

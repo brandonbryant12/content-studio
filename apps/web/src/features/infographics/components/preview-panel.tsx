@@ -30,7 +30,7 @@ function LoadingSkeleton() {
       <div>
         <p className="text-sm font-medium">Generating infographic...</p>
         <p className="text-xs text-muted-foreground mt-1">
-          This may take a moment
+          This may take a minute
         </p>
       </div>
     </div>

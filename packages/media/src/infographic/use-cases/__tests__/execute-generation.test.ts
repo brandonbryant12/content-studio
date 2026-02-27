@@ -49,7 +49,6 @@ describe('executeInfographicGeneration', () => {
             versionNumber: input.versionNumber,
             prompt: input.prompt ?? null,
             styleProperties: input.styleProperties ?? [],
-            layout: input.layout ?? null,
             format: input.format,
             imageStorageKey: input.imageStorageKey,
             thumbnailStorageKey: null,
@@ -79,17 +78,7 @@ describe('executeInfographicGeneration', () => {
       createMockActivityLogRepo(),
       createMockLLM({
         response: {
-          title: 'Structured Layout Title',
-          sections: [
-            {
-              heading: 'Problem',
-              body: 'A clear statement of the current challenge.',
-              chartData: [
-                { label: 'Before', value: 42 },
-                { label: 'After', value: 75 },
-              ],
-            },
-          ],
+          title: 'Generated Title',
         },
       }),
       createMockImageGen(),
@@ -110,14 +99,12 @@ describe('executeInfographicGeneration', () => {
     expect(insertVersionSpy).toHaveBeenCalledTimes(1);
     expect(insertVersionSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        layout: expect.objectContaining({
-          title: 'Structured Layout Title',
-        }),
+        infographicId: infographic.id,
+        versionNumber: 1,
       }),
     );
     expect(updateSpy).toHaveBeenCalledWith(infographic.id, {
       title: infographic.title,
-      layout: expect.objectContaining({ title: 'Structured Layout Title' }),
       status: 'ready',
       imageStorageKey: expect.stringContaining(
         `infographics/${infographic.id}/`,

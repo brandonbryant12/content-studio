@@ -28,9 +28,9 @@ describe('chat handler invariants', () => {
     expect(source).not.toMatch(forbidden);
   });
 
-  it('routes declare api.chat spans for each handler', () => {
+  it('routes pass requestId for each handler (spans auto-provided by @orpc/otel)', () => {
     const source = readChatRouter();
-    const matches = source.match(/span:\s*'api\.chat\.[^']+'/g) ?? [];
+    const matches = source.match(/requestId:\s*context\.requestId/g) ?? [];
 
     expect(matches).toHaveLength(5);
   });

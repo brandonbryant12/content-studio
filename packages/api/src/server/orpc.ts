@@ -106,15 +106,17 @@ const base = implement(appContract);
 
 export const publicProcedure = base.$context<ORPCContext>();
 
-export const protectedProcedure = publicProcedure.use(
-  ({ context, next, errors }) => {
-    if (!context.session?.user || !context.user) {
-      throw errors.UNAUTHORIZED({
-        message: 'Missing user session. Please log in!',
-      });
-    }
-    return next({
-      context: context as AuthenticatedORPCContext,
+export const protectedProcedure = publicProcedure.use(function auth({
+  context,
+  next,
+  errors,
+}) {
+  if (!context.session?.user || !context.user) {
+    throw errors.UNAUTHORIZED({
+      message: 'Missing user session. Please log in!',
     });
-  },
-);
+  }
+  return next({
+    context: context as AuthenticatedORPCContext,
+  });
+});

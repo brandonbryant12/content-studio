@@ -96,9 +96,7 @@ export function ActionBar({
                 ) : (
                   <>
                     <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                    {status === VoiceoverStatus.READY
-                      ? 'Save & Regenerate'
-                      : 'Save & Generate'}
+                    Save & Regenerate
                   </>
                 )}
               </Button>

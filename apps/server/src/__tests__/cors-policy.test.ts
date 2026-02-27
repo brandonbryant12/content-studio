@@ -21,9 +21,11 @@ describe('createCredentialedCorsPolicy', () => {
 
     expect(policy.credentials).toBe(true);
     expect(typeof policy.origin).toBe('function');
-    expect((policy.origin as (origin: string) => string | null)('http://localhost:3000')).toBe(
-      'http://localhost:3000',
-    );
+    expect(
+      (policy.origin as (origin: string) => string | null)(
+        'http://localhost:3000',
+      ),
+    ).toBe('http://localhost:3000');
   });
 
   it('returns a normalized allowlist for non-wildcard config', () => {

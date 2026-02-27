@@ -21,7 +21,7 @@ interface StatusConfig {
  */
 const VERSION_STATUS_CONFIG: Record<VersionStatusType, StatusConfig> = {
   [VersionStatus.DRAFTING]: {
-    label: 'Drafting',
+    label: 'Draft',
     message: 'Ready to generate',
     badgeVariant: 'default',
   },
@@ -36,7 +36,7 @@ const VERSION_STATUS_CONFIG: Record<VersionStatusType, StatusConfig> = {
     badgeVariant: 'warning',
   },
   [VersionStatus.GENERATING_AUDIO]: {
-    label: 'Creating Audio',
+    label: 'Generating Audio',
     message: 'Synthesizing audio...',
     badgeVariant: 'purple',
   },

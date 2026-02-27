@@ -14,13 +14,17 @@ const createRuntime = (): ServerRuntime =>
     runPromise: (effect: Effect.Effect<unknown, unknown, never>) =>
       Effect.runPromise(
         effect.pipe(
-          Effect.provide(policyLayer as unknown as Layer.Layer<never, never, never>),
+          Effect.provide(
+            policyLayer as unknown as Layer.Layer<never, never, never>,
+          ),
         ),
       ),
     runPromiseExit: (effect: Effect.Effect<unknown, unknown, never>) =>
       Effect.runPromiseExit(
         effect.pipe(
-          Effect.provide(policyLayer as unknown as Layer.Layer<never, never, never>),
+          Effect.provide(
+            policyLayer as unknown as Layer.Layer<never, never, never>,
+          ),
         ),
       ),
   }) as unknown as ServerRuntime;
@@ -66,7 +70,10 @@ describe('createORPCContext integration', () => {
       }),
     ).rejects.toMatchObject({
       code: 'SERVICE_UNAVAILABLE',
-      data: { requestId: 'req-auth-failure', errorTag: 'AuthSessionLookupError' },
+      data: {
+        requestId: 'req-auth-failure',
+        errorTag: 'AuthSessionLookupError',
+      },
     });
 
     expect(logSpy).toHaveBeenCalledWith(

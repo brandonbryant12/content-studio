@@ -116,7 +116,9 @@ describe('PodcastList', () => {
     render(<PodcastList {...createDefaultProps()} />);
 
     // Check header
-    expect(screen.getByRole('heading', { name: 'Podcasts' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Podcasts' }),
+    ).toBeInTheDocument();
     expect(
       screen.getAllByRole('button', { name: /create podcast/i }).length,
     ).toBeGreaterThan(0);
@@ -171,7 +173,9 @@ describe('PodcastList', () => {
     const onCreate = vi.fn();
     render(<PodcastList {...createDefaultProps()} onCreate={onCreate} />);
 
-    const createButton = screen.getByRole('button', { name: /create podcast/i });
+    const createButton = screen.getByRole('button', {
+      name: /create podcast/i,
+    });
     fireEvent.click(createButton);
 
     expect(onCreate).toHaveBeenCalledTimes(1);

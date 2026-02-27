@@ -164,7 +164,7 @@ describe('ActionBar', () => {
   });
 
   describe('with unsaved changes and hasText (drafting)', () => {
-    it('shows Save & Generate button', () => {
+    it('shows Save & Regenerate button', () => {
       render(
         <ActionBar
           {...createDefaultProps({
@@ -176,11 +176,11 @@ describe('ActionBar', () => {
       );
 
       expect(
-        screen.getByRole('button', { name: /save & generate/i }),
+        screen.getByRole('button', { name: /save & regenerate/i }),
       ).toBeInTheDocument();
     });
 
-    it('calls onGenerate when Save & Generate clicked', () => {
+    it('calls onGenerate when Save & Regenerate clicked', () => {
       const onGenerate = vi.fn();
       render(
         <ActionBar
@@ -193,11 +193,13 @@ describe('ActionBar', () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole('button', { name: /save & generate/i }));
+      fireEvent.click(
+        screen.getByRole('button', { name: /save & regenerate/i }),
+      );
       expect(onGenerate).toHaveBeenCalled();
     });
 
-    it('disables Save & Generate while saving', () => {
+    it('disables Save & Regenerate while saving', () => {
       render(
         <ActionBar
           {...createDefaultProps({

@@ -4,3 +4,4 @@ export { TextEditor } from './text-editor';
 export { VoiceSelector } from './voice-selector';
 export { AudioStage } from './audio-stage';
 export { WritingAssistantContainer } from './writing-assistant-container';
+export { QuickStartGuide } from './quick-start-guide';

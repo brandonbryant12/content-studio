@@ -87,7 +87,7 @@ export function GlobalActionBar({
           className="action-bar-btn-primary"
         >
           <LightningBoltIcon className="w-3.5 h-3.5" />
-          <span>Generate</span>
+          <span>Generate Podcast</span>
         </Button>
       );
     }
@@ -127,26 +127,26 @@ export function GlobalActionBar({
       )}
       <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
         <div
-        className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
-      >
-        {isGenerating ? (
-          <Spinner className="w-4 h-4" />
-        ) : showChangesState ? (
-          <div className="action-bar-pulse" />
-        ) : status === VersionStatus.READY ? (
-          <CheckIcon className="w-4 h-4" />
-        ) : null}
-        <span>{getStatusMessage()}</span>
-      </div>
-
-      {hasAudio && (
-        <div className="action-bar-audio">
-          <AudioPlayer url={audioUrl} />
+          className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
+        >
+          {isGenerating ? (
+            <Spinner className="w-4 h-4" />
+          ) : showChangesState ? (
+            <div className="action-bar-pulse" />
+          ) : status === VersionStatus.READY ? (
+            <CheckIcon className="w-4 h-4" />
+          ) : null}
+          <span>{getStatusMessage()}</span>
         </div>
-      )}
 
-      <div className="action-bar-actions">{renderAction()}</div>
-    </div>
+        {hasAudio && (
+          <div className="action-bar-audio">
+            <AudioPlayer url={audioUrl} />
+          </div>
+        )}
+
+        <div className="action-bar-actions">{renderAction()}</div>
+      </div>
     </>
   );
 }

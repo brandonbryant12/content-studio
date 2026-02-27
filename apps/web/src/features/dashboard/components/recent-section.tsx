@@ -56,7 +56,7 @@ export function RecentSection<T>({
           </div>
         ) : items.length === 0 ? (
           <div className="recent-section-empty">
-            <p className="text-body">{emptyMessage}</p>
+            {emptyMessage && <p className="text-body">{emptyMessage}</p>}
             {emptyAction}
           </div>
         ) : (
@@ -92,7 +92,7 @@ export function DocumentsRecentSection({
       count={count}
       items={items}
       isLoading={isLoading}
-      emptyMessage="No documents yet"
+      emptyMessage=""
       linkTo="/documents"
       action={
         <DocumentEntryMenu

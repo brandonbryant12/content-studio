@@ -19,7 +19,13 @@ export function PersonaListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
 
-  const { data: personas = [], isLoading, isError, error, refetch } = usePersonaList();
+  const {
+    data: personas = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePersonaList();
   const selection = useBulkSelection();
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getPersonaListQueryKey(),
@@ -62,7 +68,11 @@ export function PersonaListContainer() {
           </div>
         </div>
         <ErrorFallback
-          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load personas'))}
+          error={
+            error instanceof Error
+              ? error
+              : new Error(getErrorMessage(error, 'Failed to load personas'))
+          }
           resetErrorBoundary={() => refetch()}
         />
       </div>

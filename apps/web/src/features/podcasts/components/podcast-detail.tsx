@@ -1,8 +1,8 @@
+import { VersionStatus } from '@repo/db/schema';
 import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
 import type { RouterOutput } from '@repo/api/client';
-import { VersionStatus } from '@repo/db/schema';
 import {
   WorkbenchLayout,
   ScriptPanel,

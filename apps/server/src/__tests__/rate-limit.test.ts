@@ -86,7 +86,9 @@ describe('rateLimiter middleware', () => {
   });
 
   it('ignores spoofed proxy headers when trustProxyHeaders is disabled', async () => {
-    app.use(rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: false }));
+    app.use(
+      rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: false }),
+    );
     app.get('/', (c) => c.text('ok'));
 
     const res1 = await app.request('/', {
@@ -101,7 +103,9 @@ describe('rateLimiter middleware', () => {
   });
 
   it('uses forwarded headers only when trustProxyHeaders is enabled', async () => {
-    app.use(rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: true }));
+    app.use(
+      rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: true }),
+    );
     app.get('/', (c) => c.text('ok'));
 
     const res1 = await app.request('/', {
@@ -120,7 +124,9 @@ describe('rateLimiter middleware', () => {
   });
 
   it('falls back to x-real-ip when x-forwarded-for is absent in trust mode', async () => {
-    app.use(rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: true }));
+    app.use(
+      rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: true }),
+    );
     app.get('/', (c) => c.text('ok'));
 
     const res1 = await app.request('/', {
@@ -135,7 +141,9 @@ describe('rateLimiter middleware', () => {
   });
 
   it('uses "unknown" when no trusted identity source is available', async () => {
-    app.use(rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: false }));
+    app.use(
+      rateLimiter({ limit: 1, windowMs: 60_000, trustProxyHeaders: false }),
+    );
     app.get('/', (c) => c.text('ok'));
 
     const res1 = await app.request('/');

@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
+import { VoiceoverStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
-import { VoiceoverStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import type { GenerateVoiceoverPayload } from '@repo/queue';
 import { InvalidVoiceoverAudioGeneration } from '../../errors';
 import {
@@ -71,7 +71,10 @@ export const startVoiceoverGeneration = (
 
     const job = yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
-        yield* voiceoverRepo.updateStatus(voiceover.id, VoiceoverStatus.GENERATING_AUDIO);
+        yield* voiceoverRepo.updateStatus(
+          voiceover.id,
+          VoiceoverStatus.GENERATING_AUDIO,
+        );
         yield* voiceoverRepo.clearApproval(voiceover.id);
         return yield* enqueueJob({
           type: 'generate-voiceover',

@@ -7,6 +7,7 @@ import {
   Pencil1Icon,
   TrashIcon,
 } from '@radix-ui/react-icons';
+import { DocumentStatus } from '@repo/db/schema';
 import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
@@ -16,7 +17,6 @@ import {
 } from '@repo/ui/components/dropdown-menu';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import { DocumentStatus } from '@repo/db/schema';
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import type { DocumentDetailDocument } from './document-detail-types';

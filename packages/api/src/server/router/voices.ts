@@ -10,7 +10,7 @@ const voicesRouter = {
       context.user,
       listVoicesWithPreviews({}),
       errors,
-      { requestId: context.requestId, span: 'api.voices.list' },
+      { requestId: context.requestId },
     );
   }),
 
@@ -29,7 +29,6 @@ const voicesRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voices.preview',
           attributes: { 'voice.id': input.voiceId },
         },
       );

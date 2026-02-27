@@ -71,7 +71,8 @@ export function VersionHistoryStrip({
   const viewingVersionNumber =
     selectedVersion?.versionNumber ?? latestVersionNumber;
   const isViewingHistoricalVersion =
-    selectedVersion !== null && selectedVersion.versionNumber !== latestVersionNumber;
+    selectedVersion !== null &&
+    selectedVersion.versionNumber !== latestVersionNumber;
 
   return (
     <div className="shrink-0 border-t border-border bg-card px-5 py-3">

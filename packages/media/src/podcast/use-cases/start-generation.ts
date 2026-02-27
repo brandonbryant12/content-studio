@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
+import { VersionStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
-import { VersionStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import type { GeneratePodcastPayload } from '@repo/queue';
 import {
   annotateUseCaseSpan,

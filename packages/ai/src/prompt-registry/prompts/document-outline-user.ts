@@ -25,7 +25,9 @@ export const documentOutlineUserPrompt =
       notes:
         'Processes query + generated research content into persisted structured outline sections.',
     }),
-    render: (input) => `Create a concise, factual outline for the research document.
+    render: (
+      input,
+    ) => `Create a concise, factual outline for the research document.
 
 Research query:
 ${input.query}

@@ -1,7 +1,7 @@
 import { LLM } from '@repo/ai/llm';
 import { getCurrentUser } from '@repo/auth/policy';
-import { Effect, Schema } from 'effect';
 import { VersionStatus, type Podcast } from '@repo/db/schema';
+import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
 import { getDocumentContent } from '../../document';
 import { PersonaRepo } from '../../persona';
@@ -75,7 +75,10 @@ export const generateScript = (input: GenerateScriptInput) =>
       user.id,
     );
 
-    yield* podcastRepo.updateStatus(input.podcastId, VersionStatus.GENERATING_SCRIPT);
+    yield* podcastRepo.updateStatus(
+      input.podcastId,
+      VersionStatus.GENERATING_SCRIPT,
+    );
 
     // Load personas if assigned
     let hostPersona: PersonaContext | undefined;
@@ -181,7 +184,10 @@ export const generateScript = (input: GenerateScriptInput) =>
       summary: llmResult.object.summary,
       generationPrompt: `System: ${systemPrompt}\n\nUser: ${userPrompt}`,
     });
-    yield* podcastRepo.updateStatus(input.podcastId, VersionStatus.SCRIPT_READY);
+    yield* podcastRepo.updateStatus(
+      input.podcastId,
+      VersionStatus.SCRIPT_READY,
+    );
 
     const updatedPodcast = yield* podcastRepo.update(input.podcastId, {
       title: llmResult.object.title,

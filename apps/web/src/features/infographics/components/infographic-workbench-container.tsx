@@ -1,23 +1,38 @@
-import { ArrowLeftIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  ArrowLeftIcon,
+  Pencil1Icon,
+  ReloadIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
+import { InfographicStatus } from '@repo/db/schema';
+import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
+import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import type { UseInfographicSettingsReturn } from '../hooks/use-infographic-settings';
 import type { InfographicVersion } from '../hooks/use-infographic-versions';
 import type { RouterOutput } from '@repo/api/client';
-import { InfographicStatus } from '@repo/db/schema';
 import { useApproveInfographic } from '../hooks/use-approve-infographic';
-import { useInfographic } from '../hooks/use-infographic';
+import {
+  useInfographic,
+  getInfographicQueryKey,
+} from '../hooks/use-infographic';
 import { useInfographicActions } from '../hooks/use-infographic-actions';
 import { useInfographicSettings } from '../hooks/use-infographic-settings';
 import { useInfographicVersions } from '../hooks/use-infographic-versions';
+import { getStatusConfig, isGeneratingStatus } from '../lib/status';
 import { ExportDropdown } from './export-dropdown';
 import { FormatSelector } from './format-selector';
 import { PreviewPanel } from './preview-panel';
 import { PromptPanel } from './prompt-panel';
 import { StyleSection } from './style-section';
 import { VersionHistoryStrip } from './version-history-strip';
+import { VersionSettingsPanel } from './version-settings-panel';
+import { apiClient } from '@/clients/apiClient';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
@@ -26,12 +41,15 @@ import {
   useNavigationBlock,
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
 type InfographicFull = RouterOutput['infographics']['get'];
 
 interface WorkbenchHeaderProps {
   infographic: InfographicFull;
+  title: string;
+  onTitleChange: (title: string) => void;
   isApproved: boolean;
   isAdmin: boolean;
   isApprovalPending: boolean;
@@ -49,6 +67,8 @@ interface WorkbenchHeaderProps {
 
 function WorkbenchHeader({
   infographic,
+  title,
+  onTitleChange,
   isApproved,
   isAdmin,
   isApprovalPending,
@@ -63,6 +83,9 @@ function WorkbenchHeader({
   onDeleteRequest,
   actions,
 }: WorkbenchHeaderProps) {
+  const statusConfig = getStatusConfig(infographic.status);
+  const isGenerating = isGeneratingStatus(infographic.status);
+
   return (
     <header className="workbench-header">
       <div className="workbench-header-content">
@@ -75,9 +98,31 @@ function WorkbenchHeader({
             <ArrowLeftIcon />
           </Link>
           <div className="workbench-title-group">
-            <div className="min-w-0">
-              <h1 className="workbench-title">{infographic.title}</h1>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={title}
+                  onChange={(e) => onTitleChange(e.target.value)}
+                  className="workbench-title-input"
+                  aria-label="Infographic title"
+                />
+                {hasUnsavedChanges && (
+                  <Pencil1Icon
+                    className="w-3.5 h-3.5 text-primary shrink-0"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
             </div>
+            {statusConfig && (
+              <Badge
+                variant={statusConfig.badgeVariant}
+                className="gap-1.5 shrink-0"
+              >
+                {isGenerating && <Spinner className="w-3 h-3" />}
+                {statusConfig.label}
+              </Badge>
+            )}
           </div>
           <div className="workbench-meta">
             <ApproveButton
@@ -109,7 +154,7 @@ function WorkbenchHeader({
                 variant="ghost"
                 size="icon"
                 onClick={onDeleteRequest}
-                disabled={actions.isDeleting}
+                disabled={actions.isDeleting || actions.isGenerating}
                 className="workbench-delete-btn"
                 aria-label={`Delete ${infographic.title}`}
               >
@@ -158,8 +203,6 @@ function ControlsSidebar({
   hasPrompt,
   onGenerate,
 }: ControlsSidebarProps) {
-  const layoutSections = infographic.layout?.sections ?? [];
-
   return (
     <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto overscroll-y-contain">
@@ -193,33 +236,18 @@ function ControlsSidebar({
             </div>
           )}
 
+          {isViewingHistoricalVersion && selectedVersion ? (
+            <div className="mb-4">
+              <VersionSettingsPanel version={selectedVersion} />
+            </div>
+          ) : null}
+
           <PromptPanel
             prompt={prompt}
             onPromptChange={onPromptChange}
             disabled={actions.isGenerating}
             isEditMode={hasExistingImage}
           />
-
-          {layoutSections.length > 0 && (
-            <div className="mt-4 rounded-lg border border-border/70 bg-muted/30 p-3 text-xs">
-              <p className="font-semibold text-foreground">Structured Layout</p>
-              <p className="mt-0.5 text-muted-foreground">
-                {infographic.layout?.title}
-              </p>
-              <ul className="mt-2 space-y-2">
-                {layoutSections.slice(0, 4).map((section, index) => (
-                  <li key={`${section.heading}-${index}`} className="space-y-1">
-                    <p className="font-medium text-foreground/90">
-                      {section.heading}
-                    </p>
-                    <p className="text-muted-foreground line-clamp-2">
-                      {section.body}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         <div className="border-t border-border/40 p-5 pb-4">
@@ -256,7 +284,7 @@ function ControlsSidebar({
           {actions.isGenerating ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
-              {hasExistingImage ? 'Generating New Version...' : 'Generating...'}
+              {hasExistingImage ? 'Regenerating...' : 'Generating...'}
             </>
           ) : infographic.status === InfographicStatus.FAILED ? (
             <>
@@ -266,9 +294,9 @@ function ControlsSidebar({
           ) : hasExistingImage && isViewingHistoricalVersion ? (
             `Generate From Base v${latestVersionNumber ?? '—'}`
           ) : hasExistingImage ? (
-            'Generate New Version'
+            'Save & Regenerate'
           ) : (
-            'Generate'
+            'Generate Infographic'
           )}
         </Button>
         {hasExistingImage && isViewingHistoricalVersion && selectedVersion ? (
@@ -323,6 +351,7 @@ export function InfographicWorkbenchContainer({
   const currentUserId = user?.id ?? '';
   const isAdmin = useIsAdmin();
 
+  const queryClient = useQueryClient();
   const { data: infographic } = useInfographic(infographicId);
   const settings = useInfographicSettings({ infographic });
 
@@ -349,6 +378,26 @@ export function InfographicWorkbenchContainer({
     null,
   );
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [titleDraft, setTitleDraft] = useState<string | null>(null);
+  const editedTitle = titleDraft ?? infographic.title;
+  const hasTitleChange =
+    titleDraft !== null && titleDraft.trim() !== infographic.title;
+
+  const titleMutation = useMutation(
+    apiClient.infographics.update.mutationOptions({
+      onSuccess: (updated) => {
+        queryClient.setQueryData(
+          getInfographicQueryKey(infographicId),
+          updated,
+        );
+        setTitleDraft(null);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to save title'));
+      },
+    }),
+  );
+
   const versionViewState = resolveVersionViewState(
     versions,
     selectedVersionId,
@@ -386,7 +435,8 @@ export function InfographicWorkbenchContainer({
     hasExistingImage &&
     iterationPrompt.trim().length > 0 &&
     iterationPrompt !== settings.prompt;
-  const hasUnsavedChanges = actions.hasChanges || hasPromptDraft;
+  const hasUnsavedChanges =
+    actions.hasChanges || hasPromptDraft || hasTitleChange;
 
   const getPromptOverride = useCallback(() => {
     if (!hasExistingImage) return undefined;
@@ -407,10 +457,23 @@ export function InfographicWorkbenchContainer({
   const handleSave = useCallback(async () => {
     try {
       await actions.handleSave(getPromptOverride());
+      if (hasTitleChange) {
+        titleMutation.mutate({
+          id: infographicId,
+          title: titleDraft!.trim(),
+        });
+      }
     } catch {
       // Errors are surfaced in mutation toasts.
     }
-  }, [actions, getPromptOverride]);
+  }, [
+    actions,
+    getPromptOverride,
+    hasTitleChange,
+    titleMutation,
+    infographicId,
+    titleDraft,
+  ]);
 
   const handleGenerate = useCallback(async () => {
     const promptOverride = getPromptOverride();
@@ -462,6 +525,8 @@ export function InfographicWorkbenchContainer({
       <div className="workbench">
         <WorkbenchHeader
           infographic={infographic}
+          title={editedTitle}
+          onTitleChange={setTitleDraft}
           isApproved={isApproved}
           isAdmin={isAdmin}
           isApprovalPending={isApprovalPending}

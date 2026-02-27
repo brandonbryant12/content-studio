@@ -1,12 +1,14 @@
+import { useState, type ReactNode } from 'react';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
-import type { ReactNode } from 'react';
+import { isQuickStartVisible } from '../lib/status';
 import {
   WorkbenchLayout,
   TextEditor,
   VoiceSelector,
   ActionBar,
   AudioStage,
+  QuickStartGuide,
 } from './workbench';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
@@ -69,6 +71,12 @@ export function VoiceoverDetail({
     workbenchState;
   const { isApproved, isAdmin, isApprovalPending } = approvalState;
 
+  const [quickStartDismissed, setQuickStartDismissed] = useState(false);
+  const showQuickStart =
+    !quickStartDismissed &&
+    isQuickStartVisible(voiceover) &&
+    settings.text.length === 0;
+
   return (
     <WorkbenchLayout
       voiceover={voiceover}
@@ -109,11 +117,19 @@ export function VoiceoverDetail({
 
         {/* Full-width Manuscript - fills remaining space, scrolls internally */}
         <div className="flex-1 min-h-0">
-          <TextEditor
-            text={settings.text}
-            onChange={settings.setText}
-            disabled={isGenerating}
-          />
+          {showQuickStart ? (
+            <QuickStartGuide
+              onStartWriting={() => setQuickStartDismissed(true)}
+              onDismiss={() => setQuickStartDismissed(true)}
+            />
+          ) : (
+            <TextEditor
+              text={settings.text}
+              onChange={settings.setText}
+              disabled={isGenerating}
+              autoFocus={quickStartDismissed}
+            />
+          )}
         </div>
 
         {/* Audio Stage (when available) - pinned at bottom */}

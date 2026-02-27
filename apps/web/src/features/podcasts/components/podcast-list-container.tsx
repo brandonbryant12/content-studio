@@ -21,7 +21,13 @@ export function PodcastListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: podcasts = [], isLoading, isError, error, refetch } = usePodcastList();
+  const {
+    data: podcasts = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePodcastList();
   const createMutation = useOptimisticCreate();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
@@ -92,7 +98,11 @@ export function PodcastListContainer() {
           </div>
         </div>
         <ErrorFallback
-          error={error instanceof Error ? error : new Error(getErrorMessage(error, 'Failed to load podcasts'))}
+          error={
+            error instanceof Error
+              ? error
+              : new Error(getErrorMessage(error, 'Failed to load podcasts'))
+          }
           resetErrorBoundary={() => refetch()}
         />
       </div>

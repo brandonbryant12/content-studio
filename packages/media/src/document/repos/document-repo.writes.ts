@@ -64,7 +64,8 @@ export const documentWriteMethods: Pick<
       const updates: Partial<typeof document.$inferInsert> = {
         status,
         updatedAt: new Date(),
-        errorMessage: status === DocumentStatus.FAILED ? (errorMessage ?? null) : null,
+        errorMessage:
+          status === DocumentStatus.FAILED ? (errorMessage ?? null) : null,
       };
 
       const [doc] = await db

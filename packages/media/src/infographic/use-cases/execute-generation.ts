@@ -1,25 +1,14 @@
 import {
   ImageGen,
   LLM,
-  infographicLayoutUserPrompt,
   infographicTitleUserPrompt,
   renderPrompt,
 } from '@repo/ai';
-import {
-  InfographicLayoutSchema,
-  InfographicStatus,
-  type Infographic,
-  type StyleProperty,
-} from '@repo/db/schema';
+import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
-import { logActivity } from '../../activity';
 import { syncEntityTitle } from '../../activity';
-import {
-  annotateUseCaseSpan,
-  runSchemaContractWithRetries,
-  withUseCaseSpan,
-} from '../../shared';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { buildInfographicPrompt } from '../prompts';
 import { InfographicRepo } from '../repos';
 import {
@@ -70,56 +59,6 @@ const generateTitle = (sourcePrompt: string) =>
     Effect.withSpan('infographic.generateTitle'),
   );
 
-const generateLayout = (input: {
-  prompt: string;
-  format: Infographic['format'];
-  styleProperties: readonly StyleProperty[];
-  userId: string;
-  infographicId: string;
-  infographicTitle: string;
-}) =>
-  Effect.gen(function* () {
-    const llm = yield* LLM;
-
-    const { object } = yield* runSchemaContractWithRetries({
-      maxAttempts: 3,
-      run: () =>
-        llm.generate({
-          prompt: renderPrompt(infographicLayoutUserPrompt, {
-            prompt: input.prompt,
-            format: input.format,
-            styleProperties: input.styleProperties,
-          }),
-          schema: InfographicLayoutSchema,
-          temperature: 0.2,
-        }),
-      onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
-        logActivity({
-          userId: input.userId,
-          action: willRetry
-            ? 'schema-validation-retry'
-            : 'schema-validation-failed',
-          entityType: 'infographic',
-          entityId: input.infographicId,
-          entityTitle: input.infographicTitle,
-          metadata: {
-            contract: 'infographic.layout',
-            attempt,
-            maxAttempts,
-            errorTag:
-              typeof error === 'object' &&
-              error !== null &&
-              '_tag' in error &&
-              typeof error._tag === 'string'
-                ? error._tag
-                : 'UnknownError',
-          },
-        }).pipe(Effect.catchAll(() => Effect.void)),
-    });
-
-    return object;
-  }).pipe(Effect.withSpan('infographic.generateLayout'));
-
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -147,21 +86,12 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     });
 
     const isEdit = latestVersion !== null;
-    const layout = yield* generateLayout({
-      prompt: infographic.prompt ?? 'Create an infographic',
-      format: infographic.format,
-      styleProperties: infographic.styleProperties ?? [],
-      userId: infographic.createdBy,
-      infographicId,
-      infographicTitle: infographic.title,
-    });
 
     const prompt = buildInfographicPrompt({
       styleProperties: infographic.styleProperties ?? [],
       format: infographic.format,
       prompt: infographic.prompt ?? 'Create an infographic',
       isEdit,
-      layout,
     });
 
     const referenceImage = latestVersion
@@ -194,7 +124,6 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
         versionNumber: nextVersion,
         prompt: infographic.prompt ?? undefined,
         styleProperties: infographic.styleProperties ?? [],
-        layout,
         format: infographic.format,
         imageStorageKey: storageKey,
       })
@@ -206,14 +135,11 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
       infographic.title === UNTITLED_INFOGRAPHIC_TITLE &&
       originalQueryPrompt.length > 0;
     const title = shouldGenerateTitle
-      ? (layout.title.trim().length > 0
-          ? layout.title.trim()
-          : yield* generateTitle(originalQueryPrompt))
+      ? yield* generateTitle(originalQueryPrompt)
       : infographic.title;
 
     yield* repo.update(infographicId, {
       title,
-      layout,
       status: InfographicStatus.READY,
       imageStorageKey: storageKey,
       errorMessage: null,

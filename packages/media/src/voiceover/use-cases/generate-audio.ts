@@ -111,7 +111,10 @@ export const generateVoiceoverAudio = (input: GenerateVoiceoverAudioInput) =>
       );
     }
 
-    yield* voiceoverRepo.updateStatus(input.voiceoverId, VoiceoverStatus.GENERATING_AUDIO);
+    yield* voiceoverRepo.updateStatus(
+      input.voiceoverId,
+      VoiceoverStatus.GENERATING_AUDIO,
+    );
     yield* voiceoverRepo.clearApproval(input.voiceoverId);
 
     const { annotatedText, title: generatedTitle } = yield* preprocessText(

@@ -11,6 +11,7 @@ import { appContract } from '../contracts';
 
 export { isDefinedError, safe } from '@orpc/client';
 export { eventIteratorToUnproxiedDataStream } from '@orpc/client';
+export { getEventMeta } from '@orpc/server';
 
 export interface APIClientOptions {
   serverUrl: string;

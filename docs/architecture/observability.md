@@ -5,8 +5,8 @@
 1. Every use case has a `withSpan` call.
 <!-- enforced-by: invariant-test -->
 
-2. Every handler call to `handleEffectWithProtocol` includes a span name.
-<!-- enforced-by: types -->
+2. Every handler call gets an automatic span via `@orpc/otel` (`ORPCSpanRenamer` maps `call_procedure` → `api.{domain}.{action}`).
+<!-- enforced-by: runtime -->
 
 3. Avoid `console.log` in `packages/` directories; exceptions require an explicit `eslint-disable no-console` comment (for test infra or bootstrap output).
 <!-- enforced-by: eslint -->
@@ -35,19 +35,46 @@ Use camelCase for multi-word names within a segment: `useCase.startPodcastGenera
 | `job.id` | Worker spans | Job ID being processed |
 | `error._tag` | Error spans | Typed error tag on failure |
 
-## Handler Span Integration
-<!-- enforced-by: types -->
+## Automatic Procedure Instrumentation (@orpc/otel)
+<!-- enforced-by: runtime -->
 
-`handleEffectWithProtocol` requires a `span` parameter. This is enforced by the TypeScript type signature of `HandleEffectOptions`.
+All oRPC procedure calls, middleware, and handler phases are automatically instrumented via `@orpc/otel`. A custom `ORPCSpanRenamer` processor transforms the default oRPC span names to match our convention:
+
+| oRPC Default | Renamed |
+|---|---|
+| `call_procedure` (with `procedure.path` attribute) | `api.documents.get` |
+| `middleware.auth` | `middleware.auth` (unchanged) |
+| `handler` | `handler` (unchanged) |
+| `validate_input` / `validate_output` | unchanged |
+
+### Trace Structure
+
+A typical authenticated request produces:
+
+```
+api.documents.get (auto — oRPC + ORPCSpanRenamer)
+  └── middleware.auth (auto — oRPC, named function)
+       └── handler (auto — oRPC)
+            └── useCase.getDocument (Effect.withSpan — use case level)
+                 └── documentRepo.findById (Effect.withSpan — repo level)
+```
+
+Manual `span` in `handleEffectWithProtocol` is optional. Handlers rely on @orpc/otel auto-spans; use-case and repo spans remain manual via `Effect.withSpan`.
+
+## Handler Span Integration
+<!-- enforced-by: @orpc/otel auto-instrumentation -->
+
+`handleEffectWithProtocol` accepts an optional `span` parameter. When omitted, the handler relies on `@orpc/otel` auto-instrumentation for the outer span. Use-case spans (`Effect.withSpan`) remain required.
 
 ```typescript
-// In handler:
-return handleEffectWithProtocol({
-  effect: getDocument({ id: input.id }),
+// Handler — span auto-provided by @orpc/otel:
+return handleEffectWithProtocol(
+  context.runtime,
+  context.user,
+  getDocument({ id: input.id }),
   errors,
-  span: 'api.documents.get',  // Required by types
-  serialize: serializeDocument,
-});
+  { requestId: context.requestId },
+);
 ```
 
 ## Use Case Span Integration
@@ -136,6 +163,6 @@ Typed errors carry their `_tag` into spans automatically via `handleEffectWithPr
 | `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` -- span creation + error mapping |
 | `packages/media/src/shared/safety-primitives.ts` | `withSpan` re-export and safety wrappers |
 | `packages/media/src/shared/__tests__/safety-invariants.test.ts` | Invariant enforcement |
-| `packages/db/src/telemetry.ts` | OTLP exporter setup + provider lifecycle (`initTelemetry` / `shutdownTelemetry`) |
+| `packages/db/src/telemetry.ts` | OTLP exporter setup, `ORPCSpanRenamer`, `@orpc/otel` registration, provider lifecycle |
 | `apps/server/src/server.ts` | Server telemetry bootstrap + graceful shutdown hook |
 | `apps/worker/src/worker.ts` | Worker telemetry bootstrap + graceful shutdown hook |

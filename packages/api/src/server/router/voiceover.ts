@@ -33,7 +33,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.list',
           attributes: {
             'pagination.limit': input.limit ?? 50,
             'pagination.offset': input.offset ?? 0,
@@ -54,7 +53,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.get',
           attributes: { 'voiceover.id': input.id },
         },
       );
@@ -73,7 +71,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.create',
           attributes: { 'voiceover.title': input.title },
         },
       );
@@ -97,7 +94,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.update',
           attributes: { 'voiceover.id': id },
         },
       );
@@ -124,7 +120,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.delete',
           attributes: { 'voiceover.id': input.id },
         },
       );
@@ -142,7 +137,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.generate',
           attributes: { 'voiceover.id': input.id },
         },
       );
@@ -160,7 +154,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.getJob',
           attributes: { 'job.id': input.jobId },
         },
       );
@@ -180,7 +173,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.approve',
           attributes: { 'voiceover.id': input.id },
         },
       );
@@ -200,7 +192,6 @@ const voiceoverRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.voiceovers.revokeApproval',
           attributes: { 'voiceover.id': input.id },
         },
       );

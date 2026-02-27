@@ -69,14 +69,11 @@ describe('resolveTracesHeaders', () => {
       });
       expect.fail('Expected MalformedOtlpHeadersError to be thrown');
     } catch (err) {
-      expect(err).toBeInstanceOf(MalformedOtlpHeadersError);
-      expect((err as MalformedOtlpHeadersError).malformedEntries).toEqual([
+      expect(err).toHaveProperty('_tag', 'MalformedOtlpHeadersError');
+      expect(err).toHaveProperty('malformedEntries', [
         'malformed',
         'bad=',
       ]);
-      expect((err as MalformedOtlpHeadersError)._tag).toBe(
-        'MalformedOtlpHeadersError',
-      );
     }
   });
 });

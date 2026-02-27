@@ -1,0 +1,489 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Content Studio — Interactive Deploy Script
+#
+# Prompts for all required environment variables, deduplicates across services,
+# writes a root .env for docker compose, then builds and starts everything.
+# ─────────────────────────────────────────────────────────────────────────────
+
+ENV_FILE=".env.deploy"
+
+# ── Colors ───────────────────────────────────────────────────────────────────
+BOLD='\033[1m'
+DIM='\033[2m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+header()  { printf "\n${BOLD}${CYAN}═══ %s ═══${RESET}\n\n" "$1"; }
+info()    { printf "${GREEN}✓${RESET} %s\n" "$1"; }
+warn()    { printf "${YELLOW}⚠${RESET} %s\n" "$1"; }
+error()   { printf "${RED}✗${RESET} %s\n" "$1" >&2; }
+
+# ── Env-file reader ────────────────────────────────────────────────────────
+
+# read_env_value FILE KEY — returns last non-commented value for KEY, or ""
+read_env_value() {
+  local file="$1" key="$2"
+  [[ -f "$file" ]] || return 0
+  grep -E "^${key}=" "$file" 2>/dev/null | tail -1 | sed "s/^${key}=//" | sed 's/^["'"'"']//;s/["'"'"']$//'
+}
+
+# extract_port "http://host:1234" → "1234"
+extract_port() {
+  echo "$1" | sed -nE 's|.*:([0-9]+)/?$|\1|p'
+}
+
+# ── Load defaults from existing app .env files ─────────────────────────────
+
+load_app_defaults() {
+  local server_env="apps/server/.env"
+  local web_env="apps/web/.env"
+  local worker_env="apps/worker/.env"
+
+  local found_files=""
+  for f in "$server_env" "$web_env" "$worker_env"; do
+    [[ -f "$f" ]] && found_files="$found_files $f"
+  done
+
+  if [[ -n "$found_files" ]]; then
+    info "Found existing .env files:${found_files}"
+    printf "  ${DIM}Values from these files will be suggested as defaults.${RESET}\n"
+  fi
+
+  # ── Auth (prefer server) ──────────────────────────────────────────────
+  _DEF_SERVER_AUTH_SECRET=$(read_env_value "$server_env" "SERVER_AUTH_SECRET")
+  _DEF_AUTH_MODE=$(read_env_value "$server_env" "AUTH_MODE")
+  # Fall back to web's PUBLIC_AUTH_MODE
+  [[ -z "$_DEF_AUTH_MODE" ]] && _DEF_AUTH_MODE=$(read_env_value "$web_env" "PUBLIC_AUTH_MODE")
+
+  _DEF_AUTH_MICROSOFT_CLIENT_ID=$(read_env_value "$server_env" "AUTH_MICROSOFT_CLIENT_ID")
+  _DEF_AUTH_MICROSOFT_CLIENT_SECRET=$(read_env_value "$server_env" "AUTH_MICROSOFT_CLIENT_SECRET")
+  _DEF_AUTH_MICROSOFT_TENANT_ID=$(read_env_value "$server_env" "AUTH_MICROSOFT_TENANT_ID")
+  _DEF_AUTH_ROLE_ADMIN_GROUP_IDS=$(read_env_value "$server_env" "AUTH_ROLE_ADMIN_GROUP_IDS")
+  _DEF_AUTH_ROLE_USER_GROUP_IDS=$(read_env_value "$server_env" "AUTH_ROLE_USER_GROUP_IDS")
+
+  # ── AI (prefer server, fall back to worker) ───────────────────────────
+  _DEF_USE_MOCK_AI=$(read_env_value "$server_env" "USE_MOCK_AI")
+  [[ -z "$_DEF_USE_MOCK_AI" ]] && _DEF_USE_MOCK_AI=$(read_env_value "$worker_env" "USE_MOCK_AI")
+
+  _DEF_GEMINI_API_KEY=$(read_env_value "$server_env" "GEMINI_API_KEY")
+  [[ -z "$_DEF_GEMINI_API_KEY" ]] && _DEF_GEMINI_API_KEY=$(read_env_value "$worker_env" "GEMINI_API_KEY")
+
+  # ── CORS ──────────────────────────────────────────────────────────────
+  _DEF_CORS_ORIGINS=$(read_env_value "$server_env" "CORS_ORIGINS")
+
+  # ── Telemetry (prefer server, fall back to worker) ────────────────────
+  _DEF_TELEMETRY_ENABLED=$(read_env_value "$server_env" "TELEMETRY_ENABLED")
+  [[ -z "$_DEF_TELEMETRY_ENABLED" ]] && _DEF_TELEMETRY_ENABLED=$(read_env_value "$worker_env" "TELEMETRY_ENABLED")
+
+  _DEF_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=$(read_env_value "$server_env" "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
+  [[ -z "$_DEF_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT" ]] && \
+    _DEF_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=$(read_env_value "$worker_env" "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
+
+  _DEF_OTEL_EXPORTER_OTLP_HEADERS=$(read_env_value "$server_env" "OTEL_EXPORTER_OTLP_HEADERS")
+  [[ -z "$_DEF_OTEL_EXPORTER_OTLP_HEADERS" ]] && \
+    _DEF_OTEL_EXPORTER_OTLP_HEADERS=$(read_env_value "$worker_env" "OTEL_EXPORTER_OTLP_HEADERS")
+
+  # ── Ports (extract from URLs or explicit vars) ────────────────────────
+  _DEF_SERVER_PORT=$(read_env_value "$server_env" "SERVER_PORT")
+  if [[ -z "$_DEF_SERVER_PORT" ]]; then
+    local server_url
+    server_url=$(read_env_value "$server_env" "PUBLIC_SERVER_URL")
+    [[ -n "$server_url" ]] && _DEF_SERVER_PORT=$(extract_port "$server_url")
+  fi
+
+  _DEF_WEB_PORT=""
+  local web_url
+  web_url=$(read_env_value "$server_env" "PUBLIC_WEB_URL")
+  [[ -z "$web_url" ]] && web_url=$(read_env_value "$web_env" "PUBLIC_WEB_URL")
+  [[ -n "$web_url" ]] && _DEF_WEB_PORT=$(extract_port "$web_url")
+}
+
+# ── Prompt helpers ───────────────────────────────────────────────────────────
+
+# prompt VAR_NAME "description" [default]
+prompt() {
+  local var_name="$1" desc="$2" default="${3:-}"
+  local value
+  if [[ -n "$default" ]]; then
+    printf "  ${BOLD}%s${RESET} ${DIM}(%s)${RESET}\n" "$desc" "$var_name"
+    printf "  Default: ${DIM}%s${RESET}\n" "$default"
+    printf "  > "
+    read -r value
+    value="${value:-$default}"
+  else
+    printf "  ${BOLD}%s${RESET} ${DIM}(%s)${RESET}\n" "$desc" "$var_name"
+    printf "  > "
+    read -r value
+  fi
+  eval "$var_name=\$value"
+}
+
+# prompt_secret VAR_NAME "description" [default]
+# Masks displayed default for secrets longer than 12 chars.
+prompt_secret() {
+  local var_name="$1" desc="$2" default="${3:-}"
+  local value display_default
+  if [[ -n "$default" ]]; then
+    if (( ${#default} > 12 )); then
+      display_default="${default:0:4}····${default: -4}"
+    else
+      display_default="$default"
+    fi
+    printf "  ${BOLD}%s${RESET} ${DIM}(%s)${RESET}\n" "$desc" "$var_name"
+    printf "  Default: ${DIM}%s${RESET}\n" "$display_default"
+    printf "  > "
+    read -rs value
+    echo
+    value="${value:-$default}"
+  else
+    printf "  ${BOLD}%s${RESET} ${DIM}(%s)${RESET}\n" "$desc" "$var_name"
+    printf "  > "
+    read -rs value
+    echo
+  fi
+  eval "$var_name=\$value"
+}
+
+# prompt_choice VAR_NAME "description" "opt1|opt2|opt3" [default]
+prompt_choice() {
+  local var_name="$1" desc="$2" options="$3" default="${4:-}"
+  local value
+  printf "  ${BOLD}%s${RESET} ${DIM}(%s)${RESET}\n" "$desc" "$var_name"
+  printf "  Options: ${CYAN}%s${RESET}\n" "$options"
+  if [[ -n "$default" ]]; then
+    printf "  Default: ${DIM}%s${RESET}\n" "$default"
+  fi
+  while true; do
+    printf "  > "
+    read -r value
+    value="${value:-$default}"
+    if echo "$options" | tr '|' '\n' | grep -qx "$value"; then
+      break
+    fi
+    warn "Invalid choice. Pick one of: $options"
+  done
+  eval "$var_name=\$value"
+}
+
+# prompt_yesno VAR_NAME "description" [default: y/n]
+prompt_yesno() {
+  local var_name="$1" desc="$2" default="${3:-y}"
+  local value
+  printf "  ${BOLD}%s${RESET} [y/n] ${DIM}(default: %s)${RESET}: " "$desc" "$default"
+  read -r value
+  value="${value:-$default}"
+  case "$value" in
+    [Yy]*) eval "$var_name=true" ;;
+    *)     eval "$var_name=false" ;;
+  esac
+}
+
+# ── Prerequisites ────────────────────────────────────────────────────────────
+
+check_prerequisites() {
+  header "Checking Prerequisites"
+
+  if ! command -v docker &>/dev/null; then
+    error "Docker is not installed. Please install Docker first."
+    exit 1
+  fi
+  info "Docker found"
+
+  if ! docker compose version &>/dev/null; then
+    error "Docker Compose (v2) not found. Please install docker compose."
+    exit 1
+  fi
+  info "Docker Compose found"
+
+  if ! docker info &>/dev/null 2>&1; then
+    error "Docker daemon is not running. Please start Docker."
+    exit 1
+  fi
+  info "Docker daemon is running"
+}
+
+# ── Detect host IP ──────────────────────────────────────────────────────────
+
+detect_host_ip() {
+  local ip=""
+  case "$(uname -s)" in
+    Darwin)
+      ip=$(ipconfig getifaddr en0 2>/dev/null || true)
+      ;;
+    Linux)
+      ip=$(hostname -I 2>/dev/null | awk '{print $1}' || true)
+      ;;
+  esac
+  echo "${ip:-localhost}"
+}
+
+# ── Generate auth secret ────────────────────────────────────────────────────
+
+generate_secret() {
+  openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64
+}
+
+# ── Load existing env ────────────────────────────────────────────────────────
+
+load_existing_env() {
+  if [[ -f "$ENV_FILE" ]]; then
+    warn "Found existing $ENV_FILE"
+    prompt_yesno REUSE_ENV "Use existing configuration?" "y"
+    if [[ "$REUSE_ENV" == "true" ]]; then
+      info "Using existing $ENV_FILE"
+      return 0
+    fi
+  fi
+  return 1
+}
+
+# ── Collect all variables ───────────────────────────────────────────────────
+
+collect_variables() {
+  local detected_ip
+  detected_ip=$(detect_host_ip)
+
+  # ── Docker Registry ──────────────────────────────────────────────────────
+  header "Docker Registry"
+  printf "  ${DIM}Registry used to pull base images (postgres, redis, minio).${RESET}\n"
+  printf "  ${DIM}Examples: docker.io, ghcr.io, registry.example.com${RESET}\n\n"
+
+  prompt DOCKER_REGISTRY "Docker image registry" "docker.io"
+
+  # ── Network ──────────────────────────────────────────────────────────────
+  header "Network Configuration"
+  printf "  ${DIM}All services use this IP for public-facing URLs.${RESET}\n"
+  printf "  ${DIM}Use 'localhost' for local-only access or your LAN IP for network access.${RESET}\n\n"
+
+  prompt HOST_IP "Host IP / hostname" "$detected_ip"
+
+  # ── Authentication ───────────────────────────────────────────────────────
+  header "Authentication"
+
+  local default_secret
+  default_secret="${_DEF_SERVER_AUTH_SECRET:-$(generate_secret)}"
+  prompt_secret SERVER_AUTH_SECRET "Auth session signing secret" "$default_secret"
+
+  prompt_choice AUTH_MODE "Authentication mode" "dev-password|hybrid|sso-only" "${_DEF_AUTH_MODE:-dev-password}"
+
+  AUTH_MICROSOFT_CLIENT_ID=""
+  AUTH_MICROSOFT_CLIENT_SECRET=""
+  AUTH_MICROSOFT_TENANT_ID=""
+  AUTH_ROLE_ADMIN_GROUP_IDS=""
+  AUTH_ROLE_USER_GROUP_IDS=""
+
+  if [[ "$AUTH_MODE" != "dev-password" ]]; then
+    printf "\n  ${DIM}Microsoft SSO configuration required for '%s' mode${RESET}\n\n" "$AUTH_MODE"
+    prompt        AUTH_MICROSOFT_CLIENT_ID     "Microsoft OAuth client ID"            "${_DEF_AUTH_MICROSOFT_CLIENT_ID:-}"
+    prompt_secret AUTH_MICROSOFT_CLIENT_SECRET "Microsoft OAuth client secret"        "${_DEF_AUTH_MICROSOFT_CLIENT_SECRET:-}"
+    prompt        AUTH_MICROSOFT_TENANT_ID     "Microsoft tenant ID"                  "${_DEF_AUTH_MICROSOFT_TENANT_ID:-}"
+    prompt        AUTH_ROLE_ADMIN_GROUP_IDS    "Admin group IDs (comma-separated)"    "${_DEF_AUTH_ROLE_ADMIN_GROUP_IDS:-}"
+    prompt        AUTH_ROLE_USER_GROUP_IDS     "User group IDs (comma-separated)"     "${_DEF_AUTH_ROLE_USER_GROUP_IDS:-}"
+  fi
+
+  # ── AI Services ──────────────────────────────────────────────────────────
+  header "AI Services"
+
+  local mock_default="y"
+  [[ "$_DEF_USE_MOCK_AI" == "false" ]] && mock_default="n"
+  prompt_yesno USE_MOCK_AI "Use mock AI? (no real API calls)" "$mock_default"
+
+  GEMINI_API_KEY=""
+  if [[ "$USE_MOCK_AI" == "false" ]]; then
+    printf "\n  ${DIM}Real AI requires a Gemini API key.${RESET}\n\n"
+    prompt_secret GEMINI_API_KEY "Google Gemini API key" "${_DEF_GEMINI_API_KEY:-}"
+    if [[ -z "$GEMINI_API_KEY" ]]; then
+      warn "No API key provided — AI features will fail at runtime."
+    fi
+  fi
+
+  # ── CORS ─────────────────────────────────────────────────────────────────
+  header "CORS"
+  printf "  ${DIM}Comma-separated origins or '*' for allow-all.${RESET}\n"
+  printf "  ${DIM}The web app origin is always allowed.${RESET}\n\n"
+  prompt CORS_ORIGINS "Allowed CORS origins" "${_DEF_CORS_ORIGINS:-*}"
+
+  # ── Telemetry ────────────────────────────────────────────────────────────
+  header "Telemetry (OpenTelemetry / Datadog)"
+
+  local telemetry_default="n"
+  [[ "$_DEF_TELEMETRY_ENABLED" == "true" ]] && telemetry_default="y"
+  prompt_yesno TELEMETRY_ENABLED "Enable OTLP trace export?" "$telemetry_default"
+
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=""
+  OTEL_EXPORTER_OTLP_HEADERS=""
+
+  if [[ "$TELEMETRY_ENABLED" == "true" ]]; then
+    prompt OTEL_EXPORTER_OTLP_TRACES_ENDPOINT "OTLP traces endpoint" "${_DEF_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://localhost:4318/v1/traces}"
+    prompt OTEL_EXPORTER_OTLP_HEADERS "OTLP headers (KEY=value,KEY2=value2)" "${_DEF_OTEL_EXPORTER_OTLP_HEADERS:-}"
+  fi
+
+  # ── Ports ────────────────────────────────────────────────────────────────
+  header "Port Configuration"
+  printf "  ${DIM}Change these if you have port conflicts.${RESET}\n\n"
+
+  prompt WEB_PORT        "Web app port"         "${_DEF_WEB_PORT:-8086}"
+  prompt SERVER_PORT     "API server port"      "${_DEF_SERVER_PORT:-3036}"
+  prompt POSTGRES_PORT   "PostgreSQL port"      "5432"
+  prompt REDIS_PORT      "Redis port"           "6379"
+  prompt MINIO_API_PORT  "MinIO S3 API port"    "9001"
+  prompt MINIO_UI_PORT   "MinIO console port"   "9090"
+}
+
+# ── Write .env file ─────────────────────────────────────────────────────────
+
+write_env_file() {
+  header "Writing Configuration"
+
+  cat > "$ENV_FILE" <<EOF
+# ─────────────────────────────────────────────────────────────────────────────
+# Content Studio — Deploy Configuration
+# Generated by ./deploy on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+#
+# This file is read by docker compose. Re-run ./deploy to regenerate,
+# or edit values directly and run: docker compose --env-file $ENV_FILE up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Docker Registry ──────────────────────────────────────────────────────────
+DOCKER_REGISTRY=${DOCKER_REGISTRY}
+
+# ── Network ──────────────────────────────────────────────────────────────────
+HOST_IP=${HOST_IP}
+
+# ── Ports ────────────────────────────────────────────────────────────────────
+WEB_PORT=${WEB_PORT}
+SERVER_PORT=${SERVER_PORT}
+POSTGRES_PORT=${POSTGRES_PORT}
+REDIS_PORT=${REDIS_PORT}
+MINIO_API_PORT=${MINIO_API_PORT}
+MINIO_UI_PORT=${MINIO_UI_PORT}
+
+# ── Authentication ───────────────────────────────────────────────────────────
+SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET}
+AUTH_MODE=${AUTH_MODE}
+AUTH_MICROSOFT_CLIENT_ID=${AUTH_MICROSOFT_CLIENT_ID}
+AUTH_MICROSOFT_CLIENT_SECRET=${AUTH_MICROSOFT_CLIENT_SECRET}
+AUTH_MICROSOFT_TENANT_ID=${AUTH_MICROSOFT_TENANT_ID}
+AUTH_ROLE_ADMIN_GROUP_IDS=${AUTH_ROLE_ADMIN_GROUP_IDS}
+AUTH_ROLE_USER_GROUP_IDS=${AUTH_ROLE_USER_GROUP_IDS}
+
+# ── AI ───────────────────────────────────────────────────────────────────────
+USE_MOCK_AI=${USE_MOCK_AI}
+GEMINI_API_KEY=${GEMINI_API_KEY}
+
+# ── CORS ─────────────────────────────────────────────────────────────────────
+CORS_ORIGINS=${CORS_ORIGINS}
+
+# ── Telemetry ────────────────────────────────────────────────────────────────
+TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}
+OTEL_EXPORTER_OTLP_HEADERS=${OTEL_EXPORTER_OTLP_HEADERS}
+EOF
+
+  info "Configuration written to $ENV_FILE"
+  printf "  ${DIM}Tip: edit $ENV_FILE directly for future changes${RESET}\n"
+}
+
+# ── Update compose to use env-driven ports ───────────────────────────────────
+
+build_and_run() {
+  header "Deploying Content Studio"
+
+  printf "  ${DIM}Services: web, server, worker, db, redis, minio${RESET}\n"
+  printf "  ${DIM}Storage:  MinIO (S3-compatible object store)${RESET}\n"
+  printf "  ${DIM}This will build images and start all containers.${RESET}\n\n"
+
+  # Export vars so compose can interpolate them
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+
+  docker compose --env-file "$ENV_FILE" up --build -d
+
+  header "Waiting for Services"
+
+  # Wait for health checks (up to 120s)
+  local timeout=120
+  local elapsed=0
+  local interval=5
+
+  while (( elapsed < timeout )); do
+    local healthy=0
+    local total=0
+
+    while IFS= read -r line; do
+      total=$((total + 1))
+      if echo "$line" | grep -q "(healthy)"; then
+        healthy=$((healthy + 1))
+      fi
+    done < <(docker compose --env-file "$ENV_FILE" ps --format "{{.Name}} ({{.Status}})" 2>/dev/null | grep -v "minio-init\|migrate")
+
+    printf "\r  Healthy: ${GREEN}%d${RESET}/%d services (${DIM}%ds elapsed${RESET})  " "$healthy" "$total" "$elapsed"
+
+    if (( healthy >= total && total > 0 )); then
+      echo
+      break
+    fi
+
+    sleep "$interval"
+    elapsed=$((elapsed + interval))
+  done
+
+  if (( elapsed >= timeout )); then
+    echo
+    warn "Some services may not be healthy yet. Check with: docker compose --env-file $ENV_FILE ps"
+  fi
+
+  # ── Summary ────────────────────────────────────────────────────────────────
+  header "Deploy Complete"
+
+  printf "  ${GREEN}Web App${RESET}        http://%s:%s\n" "$HOST_IP" "$WEB_PORT"
+  printf "  ${GREEN}API Server${RESET}     http://%s:%s\n" "$HOST_IP" "$SERVER_PORT"
+  printf "  ${GREEN}MinIO Console${RESET}  http://%s:%s  ${DIM}(minioadmin/minioadmin)${RESET}\n" "$HOST_IP" "$MINIO_UI_PORT"
+  printf "  ${GREEN}MinIO S3 API${RESET}   http://%s:%s\n" "$HOST_IP" "$MINIO_API_PORT"
+  printf "  ${GREEN}PostgreSQL${RESET}     localhost:%s   ${DIM}(postgres/postgres)${RESET}\n" "$POSTGRES_PORT"
+  printf "  ${GREEN}Redis${RESET}          localhost:%s\n" "$REDIS_PORT"
+
+  printf "\n  ${DIM}Useful commands:${RESET}\n"
+  printf "    docker compose --env-file %s logs -f        ${DIM}# tail all logs${RESET}\n" "$ENV_FILE"
+  printf "    docker compose --env-file %s logs -f server  ${DIM}# tail server logs${RESET}\n" "$ENV_FILE"
+  printf "    docker compose --env-file %s down            ${DIM}# stop everything${RESET}\n" "$ENV_FILE"
+  printf "    docker compose --env-file %s down -v         ${DIM}# stop + delete volumes${RESET}\n" "$ENV_FILE"
+  printf "    ./deploy                                     ${DIM}# re-deploy (reuses config)${RESET}\n"
+}
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+main() {
+  printf "\n${BOLD}${CYAN}"
+  printf "  ┌─────────────────────────────────────────┐\n"
+  printf "  │       Content Studio — Deploy            │\n"
+  printf "  │  Docker Compose interactive setup        │\n"
+  printf "  └─────────────────────────────────────────┘\n"
+  printf "${RESET}\n"
+
+  check_prerequisites
+
+  if ! load_existing_env; then
+    load_app_defaults
+    collect_variables
+    write_env_file
+  else
+    # Load existing values for the summary
+    set -a
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    set +a
+  fi
+
+  build_and_run
+}
+
+main "$@"

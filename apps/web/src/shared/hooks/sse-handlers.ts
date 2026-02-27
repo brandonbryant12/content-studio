@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
@@ -7,7 +8,6 @@ import type {
   ActivityLoggedEvent,
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import { getActivityListQueryKey } from '@/features/admin/hooks';
 
@@ -84,6 +84,7 @@ interface NotifyOptions {
   entityPath: string;
   status: 'completed' | 'failed';
   error?: string;
+  title?: string;
   queryClient: QueryClient;
 }
 
@@ -93,15 +94,17 @@ function notifyJobCompletion({
   entityPath,
   status,
   error,
+  title: providedTitle,
   queryClient,
 }: NotifyOptions): void {
   // Don't notify if user is already viewing this entity
   if (isViewingEntity(entityPath, entityId)) return;
 
-  const queryKeyFn = entityQueryKeys[entityType as keyof typeof entityQueryKeys]?.get;
-  const title = queryKeyFn
-    ? getCachedTitle(queryClient, queryKeyFn(entityId))
-    : null;
+  const queryKeyFn =
+    entityQueryKeys[entityType as keyof typeof entityQueryKeys]?.get;
+  const title =
+    providedTitle ??
+    (queryKeyFn ? getCachedTitle(queryClient, queryKeyFn(entityId)) : null);
 
   const label = entityType.charAt(0).toUpperCase() + entityType.slice(1);
 
@@ -154,14 +157,23 @@ export function handleJobCompletion(
 
   // Notify on final completion (generate-podcast covers full pipeline)
   if (jobType === 'generate-podcast' && podcastId) {
-    notifyJobCompletion({
-      entityType: 'podcast',
-      entityId: podcastId,
-      entityPath: 'podcasts',
-      status: event.status,
-      error: event.error,
-      queryClient,
-    });
+    const notify = (title?: string) =>
+      notifyJobCompletion({
+        entityType: 'podcast',
+        entityId: podcastId,
+        entityPath: 'podcasts',
+        status: event.status,
+        error: event.error,
+        title,
+        queryClient,
+      });
+
+    queryClient
+      .fetchQuery(
+        apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
+      )
+      .then((data) => notify(data?.title))
+      .catch(() => notify());
   }
 }
 
@@ -181,14 +193,23 @@ export function handleVoiceoverJobCompletion(
     queryKey: getVoiceoversListQueryKey(),
   });
 
-  notifyJobCompletion({
-    entityType: 'voiceover',
-    entityId: voiceoverId,
-    entityPath: 'voiceovers',
-    status: event.status,
-    error: event.error,
-    queryClient,
-  });
+  const notify = (title?: string) =>
+    notifyJobCompletion({
+      entityType: 'voiceover',
+      entityId: voiceoverId,
+      entityPath: 'voiceovers',
+      status: event.status,
+      error: event.error,
+      title,
+      queryClient,
+    });
+
+  queryClient
+    .fetchQuery(
+      apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }),
+    )
+    .then((data) => notify(data?.title))
+    .catch(() => notify());
 }
 
 export function handleInfographicJobCompletion(
@@ -212,14 +233,23 @@ export function handleInfographicJobCompletion(
     queryKey: getInfographicVersionsQueryKey(infographicId),
   });
 
-  notifyJobCompletion({
-    entityType: 'infographic',
-    entityId: infographicId,
-    entityPath: 'infographics',
-    status: event.status,
-    error: event.error,
-    queryClient,
-  });
+  const notify = (title?: string) =>
+    notifyJobCompletion({
+      entityType: 'infographic',
+      entityId: infographicId,
+      entityPath: 'infographics',
+      status: event.status,
+      error: event.error,
+      title,
+      queryClient,
+    });
+
+  queryClient
+    .fetchQuery(
+      apiClient.infographics.get.queryOptions({ input: { id: infographicId } }),
+    )
+    .then((data) => notify(data?.title))
+    .catch(() => notify());
 }
 
 export function handleDocumentJobCompletion(
@@ -238,14 +268,23 @@ export function handleDocumentJobCompletion(
     queryKey: getDocumentsListQueryKey(),
   });
 
-  notifyJobCompletion({
-    entityType: 'document',
-    entityId: documentId,
-    entityPath: 'documents',
-    status: event.status,
-    error: event.error,
-    queryClient,
-  });
+  const notify = (title?: string) =>
+    notifyJobCompletion({
+      entityType: 'document',
+      entityId: documentId,
+      entityPath: 'documents',
+      status: event.status,
+      error: event.error,
+      title,
+      queryClient,
+    });
+
+  queryClient
+    .fetchQuery(
+      apiClient.documents.get.queryOptions({ input: { id: documentId } }),
+    )
+    .then((data) => notify(data?.title))
+    .catch(() => notify());
 }
 
 export function handleActivityLogged(

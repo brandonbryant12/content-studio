@@ -63,10 +63,12 @@
   "dependencies": {
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",
+    "@opentelemetry/instrumentation": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@orpc/otel": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "^3.16.0",
     "pg": "catalog:"
@@ -80,8 +82,8 @@
     "dotenv-cli": "catalog:",
     "drizzle-kit": "catalog:",
     "eslint": "catalog:",
-    "shx": "catalog:",
     "prettier": "catalog:",
+    "shx": "catalog:",
     "typescript": "catalog:"
   }
 }

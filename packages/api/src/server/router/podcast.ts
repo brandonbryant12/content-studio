@@ -35,7 +35,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.list',
           attributes: {
             'pagination.limit': input.limit ?? 50,
             'pagination.offset': input.offset ?? 0,
@@ -56,7 +55,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.get',
           attributes: { 'podcast.id': input.id },
         },
       );
@@ -75,7 +73,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.create',
           attributes: { 'podcast.title': input.title ?? 'Untitled' },
         },
       );
@@ -96,7 +93,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.update',
           attributes: { 'podcast.id': id },
         },
       );
@@ -121,7 +117,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.delete',
           attributes: { 'podcast.id': input.id },
         },
       );
@@ -140,7 +135,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.generate',
           attributes: { 'podcast.id': input.id },
         },
       );
@@ -156,7 +150,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.getJob',
           attributes: { 'job.id': input.jobId },
         },
       );
@@ -181,7 +174,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.saveChanges',
           attributes: { 'podcast.id': input.id },
         },
       );
@@ -199,7 +191,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.approve',
           attributes: { 'podcast.id': input.id },
         },
       );
@@ -217,7 +208,6 @@ const podcastRouter = {
         errors,
         {
           requestId: context.requestId,
-          span: 'api.podcasts.revokeApproval',
           attributes: { 'podcast.id': input.id },
         },
       );

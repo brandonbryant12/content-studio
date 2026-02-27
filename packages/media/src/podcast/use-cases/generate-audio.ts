@@ -1,8 +1,12 @@
 import { TTS, type SpeakerTurn, type SpeakerVoiceConfig } from '@repo/ai/tts';
 import { getCurrentUser } from '@repo/auth/policy';
+import {
+  VersionStatus,
+  type Podcast,
+  type ScriptSegment,
+} from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
-import { VersionStatus, type Podcast, type ScriptSegment } from '@repo/db/schema';
 import { PersonaRepo } from '../../persona';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
@@ -83,7 +87,10 @@ export const generateAudio = (input: GenerateAudioInput) =>
       );
     }
 
-    yield* podcastRepo.updateStatus(input.podcastId, VersionStatus.GENERATING_AUDIO);
+    yield* podcastRepo.updateStatus(
+      input.podcastId,
+      VersionStatus.GENERATING_AUDIO,
+    );
 
     // Load persona names for speaker detection
     let hostPersonaName: string | undefined;

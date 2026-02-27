@@ -10,8 +10,8 @@ import type { ServerRuntime, SharedServices } from './runtime';
  * Options for handleEffectWithProtocol.
  */
 export interface HandleEffectOptions {
-  /** Required span name for tracing (e.g., 'api.documents.get') */
-  span: string;
+  /** Optional span name for tracing. When omitted, @orpc/otel auto-instrumentation provides the span. */
+  span?: string;
   /** Optional span attributes */
   attributes?: Record<string, string | number | boolean>;
   /** Optional request id for handler spans */
@@ -222,12 +222,12 @@ export const handleTaggedError = <E extends TaggedError>(
  * @param user - The authenticated user (or null for public routes)
  * @param effect - The Effect to run (requirements must be subset of SharedServices)
  * @param errors - The oRPC error factory
- * @param options - Required configuration (span name, attributes)
+ * @param options - Configuration (optional span name, attributes)
  * @param customHandlers - Optional custom handlers for specific error types
  *
  * @example
  * ```typescript
- * // Simple case - all errors handled by protocol
+ * // Simple case — span auto-provided by @orpc/otel:
  * return handleEffectWithProtocol(
  *   context.runtime,
  *   context.user,
@@ -235,7 +235,7 @@ export const handleTaggedError = <E extends TaggedError>(
  *     Effect.flatMap(serializeDocumentEffect)
  *   ),
  *   errors,
- *   { span: 'api.documents.get', attributes: { 'document.id': input.id } },
+ *   { requestId: context.requestId, attributes: { 'document.id': input.id } },
  * );
  *
  * // Custom override for specific error
@@ -244,7 +244,7 @@ export const handleTaggedError = <E extends TaggedError>(
  *   context.user,
  *   createDocument(input),
  *   errors,
- *   { span: 'api.documents.create' },
+ *   { requestId: context.requestId },
  *   {
  *     DocumentQuotaExceeded: (e) => {
  *       throw errors.PAYMENT_REQUIRED({ message: 'Upgrade to create more' });
@@ -261,14 +261,16 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   options: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
-  const tracedEffect = effect.pipe(
-    Effect.withSpan(options.span, {
-      attributes: {
-        ...options.attributes,
-        ...(options.requestId ? { 'request.id': options.requestId } : {}),
-      },
-    }),
-  );
+  const tracedEffect = options.span
+    ? effect.pipe(
+        Effect.withSpan(options.span, {
+          attributes: {
+            ...options.attributes,
+            ...(options.requestId ? { 'request.id': options.requestId } : {}),
+          },
+        }),
+      )
+    : effect;
 
   const scopedEffect = user
     ? withCurrentUser(user)(tracedEffect)

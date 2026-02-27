@@ -7,6 +7,7 @@ import {
   ssePublisher,
   subscribeToSSEEvents,
 } from '../publisher';
+import { sseReplayBuffer } from '../replay-buffer';
 
 const testEvent: SSEEvent = {
   type: 'entity_change',
@@ -20,6 +21,7 @@ const testEvent: SSEEvent = {
 afterEach(async () => {
   configureSSEPublisher({ redisUrl: undefined, channelPrefix: 'cs:sse:user' });
   await shutdownSSEPublisher();
+  sseReplayBuffer.clear();
 });
 
 describe('sse publisher', () => {
@@ -36,7 +38,8 @@ describe('sse publisher', () => {
 
     const received = await nextEvent;
     expect(received.done).toBe(false);
-    expect(received.value).toEqual(testEvent);
+    expect(received.value).toMatchObject(testEvent);
+    expect(received.value).toHaveProperty('__sseId');
 
     abort.abort();
     await iterator.return?.();
@@ -55,7 +58,8 @@ describe('sse publisher', () => {
 
     const received = await pending;
     expect(received.done).toBe(false);
-    expect(received.value).toEqual({ ...testEvent, userId: 'user_2' });
+    expect(received.value).toMatchObject({ ...testEvent, userId: 'user_2' });
+    expect(received.value).toHaveProperty('__sseId');
 
     abort.abort();
     await iterator.return?.();

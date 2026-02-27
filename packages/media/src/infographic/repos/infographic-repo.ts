@@ -5,7 +5,6 @@ import {
   type InfographicId,
   type InfographicStatusType,
   type StyleProperty,
-  type InfographicLayout,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { InfographicNotFound } from '../../errors';
@@ -22,7 +21,6 @@ export interface InsertInfographic {
   title: string;
   prompt?: string;
   styleProperties?: StyleProperty[];
-  layout?: InfographicLayout;
   format: Infographic['format'];
   status?: InfographicStatusType;
   createdBy: string;
@@ -32,7 +30,6 @@ export interface UpdateInfographic {
   title?: string;
   prompt?: string;
   styleProperties?: StyleProperty[];
-  layout?: InfographicLayout | null;
   format?: Infographic['format'];
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
@@ -45,7 +42,6 @@ export interface InsertInfographicVersion {
   versionNumber: number;
   prompt?: string;
   styleProperties?: StyleProperty[];
-  layout?: InfographicLayout;
   format: InfographicVersion['format'];
   imageStorageKey: string;
   thumbnailStorageKey?: string;

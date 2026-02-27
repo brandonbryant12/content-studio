@@ -6,6 +6,7 @@ import { useVoiceover } from '../hooks/use-voiceover';
 import { useVoiceoverActions } from '../hooks/use-voiceover-actions';
 import { useVoiceoverSettings } from '../hooks/use-voiceover-settings';
 import {
+  useKeyboardShortcut,
   useNavigationBlock,
   useSessionGuard,
   useIsAdmin,
@@ -190,5 +191,58 @@ describe('VoiceoverDetailContainer', () => {
       expect.any(String),
       'test-voiceover-script-20260220.txt',
     );
+  });
+
+  it('maps Cmd+S to save (not generate)', () => {
+    const saveSettings = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useVoiceoverSettings).mockReturnValue({
+      text: 'Hello world',
+      voice: 'Charon',
+      setText: vi.fn(),
+      setVoice: vi.fn(),
+      hasChanges: true,
+      isSaving: false,
+      saveSettings,
+      discardChanges: vi.fn(),
+    } as never);
+
+    const handleGenerate = vi.fn();
+    vi.mocked(useVoiceoverActions).mockReturnValue(
+      createMockActions({ hasChanges: true, handleGenerate }) as never,
+    );
+
+    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+
+    // Find the Cmd+S shortcut call
+    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
+    const cmdSCall = shortcutCalls.find(
+      ([opts]) => opts.key === 's' && opts.cmdOrCtrl === true,
+    );
+
+    expect(cmdSCall).toBeDefined();
+    // Cmd+S should NOT call handleGenerate
+    expect(cmdSCall![0].onTrigger).not.toBe(handleGenerate);
+  });
+
+  it('maps Cmd+Enter to generate', () => {
+    const handleGenerate = vi.fn();
+    vi.mocked(useVoiceoverActions).mockReturnValue(
+      createMockActions({
+        hasText: true,
+        isGenerating: false,
+        handleGenerate,
+      }) as never,
+    );
+
+    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+
+    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
+    const cmdEnterCall = shortcutCalls.find(
+      ([opts]) => opts.key === 'Enter' && opts.cmdOrCtrl === true,
+    );
+
+    expect(cmdEnterCall).toBeDefined();
+    expect(cmdEnterCall![0].onTrigger).toBe(handleGenerate);
+    expect(cmdEnterCall![0].enabled).toBe(true);
   });
 });

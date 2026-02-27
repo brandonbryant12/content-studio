@@ -1,4 +1,9 @@
-import { CheckCircledIcon, PauseIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  CheckCircledIcon,
+  PauseIcon,
+  PlayIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';

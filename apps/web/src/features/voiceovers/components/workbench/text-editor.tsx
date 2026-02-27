@@ -1,11 +1,12 @@
 import { cn } from '@repo/ui/lib/utils';
-import { memo, useCallback, type ChangeEvent } from 'react';
+import { memo, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
 
 interface TextEditorProps {
   text: string;
   onChange: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
 const MAX_CHARACTERS = 5000;
@@ -94,7 +95,16 @@ export function TextEditor({
   onChange,
   disabled,
   placeholder = 'Speak, and the Oracle shall give voice to your words...',
+  autoFocus,
 }: TextEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) {
+      textareaRef.current?.focus();
+    }
+  }, [autoFocus]);
+
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
       onChange(e.target.value);
@@ -105,6 +115,7 @@ export function TextEditor({
   return (
     <div className={cn('manuscript', disabled && 'manuscript-disabled')}>
       <textarea
+        ref={textareaRef}
         className="manuscript-content"
         value={text}
         onChange={handleChange}

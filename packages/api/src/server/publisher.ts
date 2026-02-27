@@ -1,6 +1,7 @@
 import { EventPublisher } from '@orpc/server';
 import { createClient } from 'redis';
 import type { SSEEvent } from '../contracts/events';
+import { sseReplayBuffer } from './replay-buffer';
 
 const LOG_PREFIX = '[SSE Publisher]';
 const DEFAULT_CHANNEL_PREFIX = 'cs:sse:user';
@@ -122,13 +123,17 @@ export async function publishSSEEvent(
   userId: string,
   event: SSEEvent,
 ): Promise<void> {
+  // Buffer for replay and tag with monotonic ID
+  const sseId = sseReplayBuffer.push(userId, event);
+  const taggedEvent = { ...event, __sseId: sseId };
+
   if (!config.redisUrl) {
-    inMemoryPublisher.publish(userId, event);
+    inMemoryPublisher.publish(userId, taggedEvent);
     return;
   }
 
   const client = await ensureRedisPublisher();
-  await client.publish(channelForUser(userId), JSON.stringify(event));
+  await client.publish(channelForUser(userId), JSON.stringify(taggedEvent));
 }
 
 async function* subscribeViaRedis(

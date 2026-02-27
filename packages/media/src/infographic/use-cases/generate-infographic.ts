@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
-import { Effect } from 'effect';
 import { InfographicStatus, type JobId, type JobStatus } from '@repo/db/schema';
+import { Effect } from 'effect';
 import type { GenerateInfographicPayload } from '@repo/queue';
 import {
   annotateUseCaseSpan,

@@ -116,6 +116,27 @@ export function handleJobCompletion(event: JobCompletionEvent, qc: QueryClient) 
 }
 ```
 
+## Event Replay on Reconnect
+
+When a connection drops, events published during the gap are replayed on reconnect via `lastEventId`.
+
+### How It Works
+
+| Step | Component | Action |
+|------|-----------|--------|
+| 1 | Server publisher | Pushes every event into per-user `SSEReplayBuffer`, assigns monotonic ID |
+| 2 | Server handler | Tags each yielded event with `withEventMeta(event, { id })` |
+| 3 | Client hook | Stores latest event ID in `lastEventIdRef` via `getEventMeta()` |
+| 4 | On reconnect | Client passes `lastEventId` to subscribe call |
+| 5 | Server handler | Replays buffered events with `id > lastEventId`, then deduplicates live stream |
+
+### Limitations
+
+- **In-memory only** — buffer is lost on server restart
+- **120-second TTL** — events older than 2 minutes are evicted
+- **Per-server buffer** — in multi-server deployments, replay only covers events buffered on the reconnected server
+- **200 events per user** — oldest events are evicted when the cap is reached
+
 ## Rules
 
 - Mount `useSSE` once at the app root (inside auth boundary) <!-- enforced-by: architecture -->

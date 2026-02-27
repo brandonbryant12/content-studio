@@ -34,7 +34,9 @@ function main() {
   console.log(`- JS chunks: ${chunkCount} (threshold: <= ${MAX_JS_CHUNKS})`);
   console.log(
     `- Largest JS chunk: ${
-      largestChunk ? `${largestChunk.file} (${formatKiB(largestChunkBytes)})` : 'n/a'
+      largestChunk
+        ? `${largestChunk.file} (${formatKiB(largestChunkBytes)})`
+        : 'n/a'
     } (threshold: <= ${formatKiB(MAX_LARGEST_JS_CHUNK_BYTES)})`,
   );
 

@@ -90,6 +90,22 @@ vi.mock('../components/workbench', () => ({
       Action Bar
     </div>
   ),
+  QuickStartGuide: ({
+    onStartWriting,
+    onDismiss,
+  }: {
+    onStartWriting: () => void;
+    onDismiss: () => void;
+  }) => (
+    <div data-testid="quick-start-guide">
+      <button type="button" onClick={onStartWriting}>
+        Start Writing
+      </button>
+      <button type="button" onClick={onDismiss}>
+        Skip this guide
+      </button>
+    </div>
+  ),
 }));
 
 // Mock voiceover data
@@ -316,5 +332,96 @@ describe('VoiceoverDetail', () => {
     );
 
     expect(screen.getByText('Writing Assistant Panel')).toBeInTheDocument();
+  });
+
+  describe('Quick Start Guide', () => {
+    function createNewVoiceoverProps(
+      overrides: Parameters<typeof createDefaultProps>[0] = {},
+    ) {
+      return createDefaultProps({
+        voiceover: createMockVoiceover({
+          text: '',
+          audioUrl: null,
+          status: VoiceoverStatus.DRAFTING,
+        }),
+        settings: createMockSettings({ text: '' }),
+        ...overrides,
+      });
+    }
+
+    it('shows Quick Start when voiceover is DRAFTING with empty text and no audio', () => {
+      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
+
+      expect(screen.getByTestId('quick-start-guide')).toBeInTheDocument();
+      expect(screen.queryByTestId('text-editor')).not.toBeInTheDocument();
+    });
+
+    it('shows TextEditor when voiceover has text', () => {
+      render(
+        <VoiceoverDetail
+          {...createNewVoiceoverProps({
+            voiceover: createMockVoiceover({
+              text: 'Some script',
+              audioUrl: null,
+              status: VoiceoverStatus.DRAFTING,
+            }),
+            settings: createMockSettings({ text: 'Some script' }),
+          })}
+        />,
+      );
+
+      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
+    });
+
+    it('shows TextEditor when voiceover status is READY', () => {
+      render(
+        <VoiceoverDetail
+          {...createNewVoiceoverProps({
+            voiceover: createMockVoiceover({
+              text: '',
+              audioUrl: null,
+              status: VoiceoverStatus.READY,
+            }),
+          })}
+        />,
+      );
+
+      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
+    });
+
+    it('dismisses Quick Start on "Skip" click and shows TextEditor', () => {
+      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
+
+      expect(screen.getByTestId('quick-start-guide')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Skip this guide'));
+
+      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
+      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+    });
+
+    it('dismisses Quick Start on "Start Writing" click and shows TextEditor', () => {
+      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
+
+      fireEvent.click(screen.getByText('Start Writing'));
+
+      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
+      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+    });
+
+    it('shows TextEditor when settings.text becomes non-empty', () => {
+      render(
+        <VoiceoverDetail
+          {...createNewVoiceoverProps({
+            settings: createMockSettings({ text: 'typed something' }),
+          })}
+        />,
+      );
+
+      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
+    });
   });
 });

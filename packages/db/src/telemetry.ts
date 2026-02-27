@@ -1,12 +1,20 @@
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  BatchSpanProcessor,
+  type ReadableSpan,
+  type SpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
+import { ORPCInstrumentation } from '@orpc/otel';
 import { Effect, Layer } from 'effect';
+import type { Context } from '@opentelemetry/api';
+import type { Span } from '@opentelemetry/sdk-trace-base';
 
 export class MalformedOtlpHeadersError extends Error {
   readonly _tag = 'MalformedOtlpHeadersError';
@@ -23,6 +31,34 @@ export interface TelemetryConfig {
   readonly enabled?: boolean;
   readonly otlpTracesEndpoint?: string;
   readonly otlpHeaders?: string;
+}
+
+/**
+ * SpanProcessor that renames oRPC auto-generated spans to match our naming convention.
+ * Transforms the `call_procedure` span using its `procedure.path` attribute:
+ *   call_procedure [procedure.path=["documents","get"]] → api.documents.get
+ */
+class ORPCSpanRenamer implements SpanProcessor {
+  forceFlush(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  shutdown(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  onStart(span: Span, _parentContext: Context): void {
+    if (span.name === 'call_procedure') {
+      const path = span.attributes['procedure.path'];
+      if (Array.isArray(path)) {
+        span.updateName(`api.${path.join('.')}`);
+      }
+    }
+  }
+
+  onEnd(_span: ReadableSpan): void {
+    // No-op
+  }
 }
 
 let initialized = false;
@@ -109,7 +145,7 @@ export const initTelemetry = (config: TelemetryConfig): void => {
 
   const tracesEndpoint = resolveTracesEndpoint(config);
   if (!tracesEndpoint) {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       'Telemetry enabled but no OTEL_EXPORTER_OTLP_TRACES_ENDPOINT set — skipping trace export',
     );
@@ -124,6 +160,7 @@ export const initTelemetry = (config: TelemetryConfig): void => {
       [DEPLOYMENT_ENVIRONMENT_NAME]: config.environment ?? 'development',
     }),
     spanProcessors: [
+      new ORPCSpanRenamer(),
       new BatchSpanProcessor(
         new OTLPTraceExporter({
           url: tracesEndpoint,
@@ -134,6 +171,12 @@ export const initTelemetry = (config: TelemetryConfig): void => {
   });
 
   provider.register();
+
+  registerInstrumentations({
+    tracerProvider: provider,
+    instrumentations: [new ORPCInstrumentation()],
+  });
+
   initialized = true;
 };
 

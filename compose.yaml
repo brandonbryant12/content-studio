@@ -1,31 +1,35 @@
 # Content Studio — full-stack Docker Compose
 #
-# Usage:
-#   HOST_IP=<your-lan-ip> docker compose up --build
+# Quick start:
+#   ./deploy                          # interactive setup
+#
+# Manual usage:
+#   docker compose --env-file .env.deploy up --build
 #
 # Defaults to localhost if HOST_IP is not set.
 # Services exposed:
-#   - Web app:       http://<HOST_IP>:8086
-#   - API server:    http://<HOST_IP>:3036
-#   - MinIO S3 API:  http://<HOST_IP>:9001
-#   - MinIO Console: http://<HOST_IP>:9090
+#   - Web app:       http://<HOST_IP>:<WEB_PORT>
+#   - API server:    http://<HOST_IP>:<SERVER_PORT>
+#   - MinIO S3 API:  http://<HOST_IP>:<MINIO_API_PORT>
+#   - MinIO Console: http://<HOST_IP>:<MINIO_UI_PORT>
 # Internal services:
 #   - Worker:        background job processor
 #   - Redis:         SSE/event pub-sub
 
 services:
   # ------------------------------------------------------------------ #
-  # Web App (port 8086)
+  # Web App
   # ------------------------------------------------------------------ #
   web:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
     ports:
-      - "8086:8080"
+      - "${WEB_PORT:-8086}:8080"
     environment:
-      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
       PUBLIC_SERVER_API_PATH: /api
+      PUBLIC_AUTH_MODE: "${AUTH_MODE:-dev-password}"
     healthcheck:
       interval: 30s
       timeout: 10s
@@ -40,24 +44,30 @@ services:
         condition: service_healthy
 
   # ------------------------------------------------------------------ #
-  # API Server (port 3036)
+  # API Server
   # ------------------------------------------------------------------ #
   server:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
     ports:
-      - "3036:3036"
+      - "${SERVER_PORT:-3036}:3036"
     environment:
       NODE_ENV: production
       SERVER_AUTH_SECRET: "${SERVER_AUTH_SECRET:-please_change_this_in_production}"
+      AUTH_MODE: "${AUTH_MODE:-dev-password}"
+      AUTH_MICROSOFT_CLIENT_ID: "${AUTH_MICROSOFT_CLIENT_ID:-}"
+      AUTH_MICROSOFT_CLIENT_SECRET: "${AUTH_MICROSOFT_CLIENT_SECRET:-}"
+      AUTH_MICROSOFT_TENANT_ID: "${AUTH_MICROSOFT_TENANT_ID:-}"
+      AUTH_ROLE_ADMIN_GROUP_IDS: "${AUTH_ROLE_ADMIN_GROUP_IDS:-}"
+      AUTH_ROLE_USER_GROUP_IDS: "${AUTH_ROLE_USER_GROUP_IDS:-}"
       SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
       SERVER_REDIS_URL: "redis://redis:6379"
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "3036"
-      PUBLIC_WEB_URL: "http://${HOST_IP:-localhost}:8086"
-      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
-      CORS_ORIGINS: "*"
+      PUBLIC_WEB_URL: "http://${HOST_IP:-localhost}:${WEB_PORT:-8086}"
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
       USE_MOCK_AI: "${USE_MOCK_AI:-true}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       # S3 / MinIO storage
@@ -67,7 +77,12 @@ services:
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
       S3_ENDPOINT: "http://minio:9001"
-      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:9001"
+      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:${MINIO_API_PORT:-9001}"
+      # Telemetry
+      TELEMETRY_ENABLED: "${TELEMETRY_ENABLED:-false}"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
+      OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
+      OTEL_SERVICE_NAME: content-studio-server
     healthcheck:
       interval: 10s
       timeout: 5s
@@ -99,7 +114,7 @@ services:
       NODE_ENV: production
       SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
       SERVER_REDIS_URL: "redis://redis:6379"
-      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:3036"
+      PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
       USE_MOCK_AI: "${USE_MOCK_AI:-true}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       # S3 / MinIO storage
@@ -109,7 +124,12 @@ services:
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
       S3_ENDPOINT: "http://minio:9001"
-      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:9001"
+      S3_PUBLIC_ENDPOINT: "http://${HOST_IP:-localhost}:${MINIO_API_PORT:-9001}"
+      # Telemetry
+      TELEMETRY_ENABLED: "${TELEMETRY_ENABLED:-false}"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
+      OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
+      OTEL_SERVICE_NAME: content-studio-worker
     depends_on:
       db:
         condition: service_healthy
@@ -124,9 +144,9 @@ services:
   # PostgreSQL
   # ------------------------------------------------------------------ #
   db:
-    image: docker.io/postgres:16
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:16
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     command: ["postgres", "-c", "wal_level=logical"]
     environment:
       POSTGRES_USER: postgres
@@ -144,8 +164,10 @@ services:
   # Redis (SSE pub/sub)
   # ------------------------------------------------------------------ #
   redis:
-    image: redis:7-alpine
+    image: ${DOCKER_REGISTRY:-docker.io}/redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -169,13 +191,13 @@ services:
         condition: service_healthy
 
   # ------------------------------------------------------------------ #
-  # MinIO (S3-compatible storage) — API on 9001, Console on 9090
+  # MinIO (S3-compatible storage)
   # ------------------------------------------------------------------ #
   minio:
-    image: minio/minio:latest
+    image: ${DOCKER_REGISTRY:-docker.io}/minio/minio:latest
     ports:
-      - "9001:9001"
-      - "9090:9090"
+      - "${MINIO_API_PORT:-9001}:9001"
+      - "${MINIO_UI_PORT:-9090}:9090"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -192,7 +214,7 @@ services:
   # MinIO init — create bucket + set public anonymous access
   # ------------------------------------------------------------------ #
   minio-init:
-    image: minio/mc:latest
+    image: ${DOCKER_REGISTRY:-docker.io}/minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy

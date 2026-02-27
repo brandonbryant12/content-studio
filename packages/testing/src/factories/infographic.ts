@@ -5,7 +5,6 @@ import {
   type InfographicVersion,
   type InfographicId,
   type StyleProperty,
-  type InfographicLayout,
 } from '@repo/db/schema';
 
 export interface CreateTestInfographicOptions {
@@ -13,7 +12,6 @@ export interface CreateTestInfographicOptions {
   title?: string;
   prompt?: string | null;
   styleProperties?: StyleProperty[];
-  layout?: InfographicLayout | null;
   format?: Infographic['format'];
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
@@ -43,7 +41,6 @@ export function createTestInfographic(
     title: options.title ?? `Test Infographic ${infographicCounter}`,
     prompt: options.prompt ?? `Test prompt ${infographicCounter}`,
     styleProperties: options.styleProperties ?? [],
-    layout: options.layout ?? null,
     format: options.format ?? 'portrait',
     imageStorageKey: options.imageStorageKey ?? null,
     thumbnailStorageKey: options.thumbnailStorageKey ?? null,
@@ -78,7 +75,6 @@ export interface CreateTestInfographicVersionOptions {
   versionNumber?: number;
   prompt?: string | null;
   styleProperties?: StyleProperty[];
-  layout?: InfographicLayout | null;
   format?: InfographicVersion['format'];
   imageStorageKey?: string;
   thumbnailStorageKey?: string | null;
@@ -107,7 +103,6 @@ export function createTestInfographicVersion(
     versionNumber: options.versionNumber ?? versionCounter,
     prompt: options.prompt ?? `Version prompt ${versionCounter}`,
     styleProperties: options.styleProperties ?? [],
-    layout: options.layout ?? null,
     format: options.format ?? 'portrait',
     imageStorageKey:
       options.imageStorageKey ??

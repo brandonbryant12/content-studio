@@ -150,7 +150,9 @@ function ResearchCallout({
           >
             <span className="research-sources-count">
               {outlineSections.length}{' '}
-              {outlineSections.length === 1 ? 'outline section' : 'outline sections'}
+              {outlineSections.length === 1
+                ? 'outline section'
+                : 'outline sections'}
             </span>
             <ChevronDownIcon
               className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${outlineOpen ? 'rotate-180' : ''}`}

@@ -57,11 +57,28 @@ export function VoiceoverDetailContainer({
     revoke.mutate({ id: voiceoverId });
   }, [revoke, voiceoverId]);
 
+  const handleSave = useCallback(async () => {
+    if (!settings.hasChanges) return;
+    try {
+      await settings.saveSettings();
+      toast.success('Voiceover saved');
+    } catch {
+      // Error toast is handled by the mutation in useVoiceoverSettings
+    }
+  }, [settings]);
+
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
+    onTrigger: handleSave,
+    enabled: settings.hasChanges,
+  });
+
+  useKeyboardShortcut({
+    key: 'Enter',
+    cmdOrCtrl: true,
     onTrigger: actions.handleGenerate,
-    enabled: actions.hasChanges,
+    enabled: actions.hasText && !actions.isGenerating,
   });
 
   useNavigationBlock({

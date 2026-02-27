@@ -19,7 +19,7 @@ const chatRouter = {
         context.user,
         streamResearchChat({ messages: input.messages }),
         errors,
-        { requestId: context.requestId, span: 'api.chat.research' },
+        { requestId: context.requestId },
       ),
   ),
 
@@ -31,10 +31,7 @@ const chatRouter = {
           context.user,
           synthesizeResearchQuery({ messages: input.messages }),
           errors,
-          {
-            requestId: context.requestId,
-            span: 'api.chat.synthesizeResearchQuery',
-          },
+          { requestId: context.requestId },
         ),
     ),
 
@@ -45,7 +42,7 @@ const chatRouter = {
         context.user,
         streamPersonaChat({ messages: input.messages }),
         errors,
-        { requestId: context.requestId, span: 'api.chat.personaChat' },
+        { requestId: context.requestId },
       ),
   ),
 
@@ -56,7 +53,7 @@ const chatRouter = {
         context.user,
         streamWritingAssistantChat({ messages: input.messages }),
         errors,
-        { requestId: context.requestId, span: 'api.chat.writingAssistant' },
+        { requestId: context.requestId },
       ),
   ),
 
@@ -67,7 +64,7 @@ const chatRouter = {
         context.user,
         synthesizePersona({ messages: input.messages }),
         errors,
-        { requestId: context.requestId, span: 'api.chat.synthesizePersona' },
+        { requestId: context.requestId },
       ),
   ),
 };
