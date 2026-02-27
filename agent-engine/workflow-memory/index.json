@@ -95,6 +95,31 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-27-periodic-scans-weekly-cross-facet-audit-2026-02-26",
+    "date": "2026-02-27",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Weekly cross-facet audit 2026-02-26",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "scan:weekly",
+      "facet:architecture",
+      "facet:authz",
+      "facet:query-keys",
+      "facet:frontend-states",
+      "facet:security",
+      "facet:docs-drift",
+      "facet:code-simplifier",
+      "memory-form:parametric",
+      "memory-function:semantic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.7,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-26-periodic-scans-best-practice-researcher-orpc-hono-contract-layer-sse-resume-ote",
     "date": "2026-02-26",
     "month": "2026-02",

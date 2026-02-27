@@ -6,9 +6,8 @@ import { getErrorMessage } from '@/shared/lib/errors';
 
 /**
  * Upload document mutation with query invalidation.
- * Uses standard mutation (not optimistic) since the document is server-processed.
  */
-export function useOptimisticUpload(options?: { onSuccess?: () => void }) {
+export function useUploadDocument(options?: { onSuccess?: () => void }) {
   const queryClient = useQueryClient();
 
   return useMutation(

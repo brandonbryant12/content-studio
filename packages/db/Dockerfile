@@ -25,10 +25,7 @@ FROM base AS runner
 
 COPY --from=builder /app/out/json/ .
 
-RUN pnpm --filter=@repo/db add dotenv-cli drizzle-kit \
-     && pnpm install --filter=@repo/db --prod --frozen-lockfile \
-     && pnpm store prune \
-     && rm -rf /root/.cache
+RUN NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 

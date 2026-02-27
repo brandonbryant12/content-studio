@@ -4,6 +4,7 @@ import {
   infographicTitleUserPrompt,
   renderPrompt,
 } from '@repo/ai';
+import { getCurrentUser } from '@repo/auth/policy';
 import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
@@ -67,16 +68,17 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
   Effect.gen(function* () {
     const { infographicId } = input;
 
+    const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
     const imageGen = yield* ImageGen;
     const storage = yield* Storage;
 
-    const infographic = yield* repo.findById(infographicId);
     yield* annotateUseCaseSpan({
-      userId: infographic.createdBy,
+      userId: user.id,
       resourceId: infographicId,
       attributes: { 'infographic.id': infographicId },
     });
+    const infographic = yield* repo.findByIdForUser(infographicId, user.id);
 
     const existingVersions = yield* repo.listVersions(infographicId);
     const latestVersion = existingVersions.at(-1) ?? null;

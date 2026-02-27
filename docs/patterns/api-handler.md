@@ -21,7 +21,7 @@ sequenceDiagram
 
 1. **Call exactly ONE use case per handler** <!-- enforced-by: manual-review -->
 2. **Use Effect-based serializers** (`serializeXxxEffect`) in handlers for tracing <!-- enforced-by: manual-review -->
-3. **Span required**: every call to `handleEffectWithProtocol` must include `{ span }` <!-- enforced-by: types -->
+3. **`requestId` recommended; span is auto-provided by @orpc/otel**: pass `{ requestId: context.requestId }` for log correlation <!-- enforced-by: manual-review -->
 4. **Don't serialize in use cases** -- handlers only <!-- enforced-by: invariant-test -->
 5. **Streaming endpoints must keep typed streams end-to-end** (no `unknown` stream payloads) <!-- enforced-by: lint -->
 
@@ -39,7 +39,7 @@ get: protectedProcedure.documents.get.handler(
         Effect.flatMap(serializeDocumentEffect),
       ),
       errors,
-      { span: 'api.documents.get', attributes: { 'document.id': input.id } },
+      { requestId: context.requestId, attributes: { 'document.id': input.id } },
     );
   },
 ),
@@ -48,7 +48,7 @@ get: protectedProcedure.documents.get.handler(
 ## Handler Pipeline
 
 ```
-handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(errors, { span })
+handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(errors, { requestId })
 ```
 
 Every handler follows this exact shape. Custom error overrides are rare -- only for business logic like upsell flows:
@@ -59,7 +59,7 @@ handleEffectWithProtocol(
   user,
   effect,
   errors,
-  { span: "api.documents.create" },
+  { requestId: context.requestId },
   {
     DocumentQuotaExceeded: (e) => {
       throw errors.PAYMENT_REQUIRED({ message: "..." });
@@ -135,7 +135,7 @@ Use `handleEffectWithProtocol` -- errors handle themselves via static HTTP proto
 
 ```typescript
 // Correct
-return handleEffectWithProtocol(runtime, user, effect, errors, { span });
+return handleEffectWithProtocol(runtime, user, effect, errors, { requestId: context.requestId });
 
 // Wrong -- legacy manual mapping
 return handleEffect(runtime, user, effect, { DocumentNotFound: (e) => { ... } }, { span });

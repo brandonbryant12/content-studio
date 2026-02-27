@@ -141,7 +141,12 @@ export const envSchema = Schema.Struct({
   NO_PROXY: Schema.optional(Schema.String),
 });
 
-const rawEnv = Schema.decodeUnknownSync(envSchema)(process.env);
+// Docker Compose sets `VAR: "${VAR:-}"` which resolves to "" when unset.
+// Strip empty strings so Schema.optional treats them as missing.
+const sanitizedEnv = Object.fromEntries(
+  Object.entries(process.env).filter(([, v]) => v !== ''),
+);
+const rawEnv = Schema.decodeUnknownSync(envSchema)(sanitizedEnv);
 
 if (!rawEnv.USE_MOCK_AI) {
   if (!rawEnv.GEMINI_API_KEY) {

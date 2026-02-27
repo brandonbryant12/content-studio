@@ -9,14 +9,16 @@ import {
   useCreateInfographic,
 } from '@/features/infographics/hooks';
 import {
-  useOptimisticCreate as useCreatePodcast,
+  useCreatePodcast,
   usePodcastsOrdered,
 } from '@/features/podcasts/hooks';
 import {
   useVoiceoversOrdered,
   useCreateVoiceover,
 } from '@/features/voiceovers/hooks';
+import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useOnboardingDismissed } from '@/shared/hooks/use-onboarding-dismissed';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -24,16 +26,38 @@ export function DashboardContainer() {
   const [researchDialogOpen, setResearchDialogOpen] = useState(false);
   const { isDismissed, dismiss } = useOnboardingDismissed();
 
-  const { data: documents, isLoading: docsLoading } = useDocumentsOrdered({
+  const {
+    data: documents,
+    isLoading: docsLoading,
+    isError: docsError,
+    error: docsErrorObj,
+    refetch: refetchDocs,
+  } = useDocumentsOrdered({
     orderBy: 'desc',
   });
-  const { data: podcasts, isLoading: podcastsLoading } = usePodcastsOrdered({
+  const {
+    data: podcasts,
+    isLoading: podcastsLoading,
+    isError: podcastsError,
+    error: podcastsErrorObj,
+    refetch: refetchPodcasts,
+  } = usePodcastsOrdered({
     orderBy: 'desc',
   });
-  const { data: voiceovers, isLoading: voiceoversLoading } =
-    useVoiceoversOrdered({ orderBy: 'desc' });
-  const { data: infographics, isLoading: infographicsLoading } =
-    useInfographicList();
+  const {
+    data: voiceovers,
+    isLoading: voiceoversLoading,
+    isError: voiceoversError,
+    error: voiceoversErrorObj,
+    refetch: refetchVoiceovers,
+  } = useVoiceoversOrdered({ orderBy: 'desc' });
+  const {
+    data: infographics,
+    isLoading: infographicsLoading,
+    isError: infographicsError,
+    error: infographicsErrorObj,
+    refetch: refetchInfographics,
+  } = useInfographicList();
 
   const createPodcast = useCreatePodcast();
   const createVoiceover = useCreateVoiceover();
@@ -53,6 +77,32 @@ export function DashboardContainer() {
     },
     [createFromUrlMutation],
   );
+
+  const anyError =
+    docsError || podcastsError || voiceoversError || infographicsError;
+
+  if (anyError) {
+    const firstError =
+      docsErrorObj ??
+      podcastsErrorObj ??
+      voiceoversErrorObj ??
+      infographicsErrorObj;
+    return (
+      <ErrorFallback
+        error={
+          firstError instanceof Error
+            ? firstError
+            : new Error(getErrorMessage(firstError, 'Failed to load dashboard'))
+        }
+        resetErrorBoundary={() => {
+          refetchDocs();
+          refetchPodcasts();
+          refetchVoiceovers();
+          refetchInfographics();
+        }}
+      />
+    );
+  }
 
   const docCount = documents?.length ?? 0;
   const podcastCount = podcasts?.length ?? 0;

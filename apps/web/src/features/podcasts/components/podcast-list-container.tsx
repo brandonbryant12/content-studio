@@ -1,7 +1,7 @@
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import type { MutationFunctionContext } from '@tanstack/react-query';
-import { useOptimisticCreate } from '../hooks/use-optimistic-create';
+import { useCreatePodcast } from '../hooks/use-create-podcast';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
   usePodcastList,
@@ -28,7 +28,7 @@ export function PodcastListContainer() {
     error,
     refetch,
   } = usePodcastList();
-  const createMutation = useOptimisticCreate();
+  const createMutation = useCreatePodcast();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
   const selection = useBulkSelection();

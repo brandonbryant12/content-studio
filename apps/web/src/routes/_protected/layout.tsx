@@ -27,12 +27,26 @@ import type { ComponentType } from 'react';
 import { authClient } from '@/clients/authClient';
 import { useSSERecovery } from '@/providers/sse-provider';
 import UserAvatar from '@/routes/-components/layout/nav/user-avatar';
-import { ErrorBoundary } from '@/shared/components/error-boundary';
+import {
+  ErrorBoundary,
+  ErrorFallback,
+} from '@/shared/components/error-boundary';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { useSidebar } from '@/shared/hooks/use-sidebar';
 
 export const Route = createFileRoute('/_protected')({
   component: Layout,
+  pendingComponent: () => (
+    <div className="flex items-center justify-center h-[calc(100vh-var(--navbar-height))]">
+      <Spinner />
+    </div>
+  ),
+  errorComponent: ({ error, reset }) => (
+    <ErrorFallback
+      error={error instanceof Error ? error : new Error(String(error))}
+      resetErrorBoundary={reset}
+    />
+  ),
 });
 
 type ColorScheme = 'primary' | 'sky' | 'violet' | 'emerald' | 'amber' | 'rose';

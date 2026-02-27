@@ -4,7 +4,7 @@ import { VersionStatus, type Podcast } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
 import { getDocumentContent } from '../../document';
-import { PersonaRepo } from '../../persona';
+import { loadPersonaByIdSafe } from '../../persona';
 import {
   annotateUseCaseSpan,
   runSchemaContractWithRetries,
@@ -85,10 +85,7 @@ export const generateScript = (input: GenerateScriptInput) =>
     let coHostPersona: PersonaContext | undefined;
 
     if (podcast.hostPersonaId) {
-      const personaRepo = yield* PersonaRepo;
-      const p = yield* personaRepo
-        .findById(podcast.hostPersonaId)
-        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      const p = yield* loadPersonaByIdSafe(podcast.hostPersonaId);
       if (p) {
         hostPersona = {
           name: p.name,
@@ -101,10 +98,7 @@ export const generateScript = (input: GenerateScriptInput) =>
     }
 
     if (podcast.coHostPersonaId) {
-      const personaRepo = yield* PersonaRepo;
-      const p = yield* personaRepo
-        .findById(podcast.coHostPersonaId)
-        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      const p = yield* loadPersonaByIdSafe(podcast.coHostPersonaId);
       if (p) {
         coHostPersona = {
           name: p.name,

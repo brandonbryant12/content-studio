@@ -7,7 +7,7 @@ import {
 } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
-import { PersonaRepo } from '../../persona';
+import { loadPersonaByIdSafe } from '../../persona';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
@@ -97,18 +97,12 @@ export const generateAudio = (input: GenerateAudioInput) =>
     let coHostPersonaName: string | undefined;
 
     if (podcast.hostPersonaId) {
-      const personaRepo = yield* PersonaRepo;
-      const p = yield* personaRepo
-        .findById(podcast.hostPersonaId)
-        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      const p = yield* loadPersonaByIdSafe(podcast.hostPersonaId);
       if (p) hostPersonaName = p.name.toLowerCase();
     }
 
     if (podcast.coHostPersonaId) {
-      const personaRepo = yield* PersonaRepo;
-      const p = yield* personaRepo
-        .findById(podcast.coHostPersonaId)
-        .pipe(Effect.catchTag('PersonaNotFound', () => Effect.succeed(null)));
+      const p = yield* loadPersonaByIdSafe(podcast.coHostPersonaId);
       if (p) coHostPersonaName = p.name.toLowerCase();
     }
 

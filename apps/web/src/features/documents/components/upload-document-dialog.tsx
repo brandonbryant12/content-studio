@@ -15,7 +15,7 @@ import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { useOptimisticUpload } from '../hooks/use-optimistic-upload';
+import { useUploadDocument } from '../hooks/use-upload-document';
 import { fileToBase64 } from '@/shared/lib/file-base64';
 
 const SUPPORTED_TYPES = [
@@ -47,7 +47,7 @@ export function UploadDocumentDialog({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const uploadMutation = useOptimisticUpload({ onSuccess: handleClose });
+  const uploadMutation = useUploadDocument({ onSuccess: handleClose });
 
   const handleFileSelect = useCallback((selectedFile: File | null) => {
     if (!selectedFile) return;

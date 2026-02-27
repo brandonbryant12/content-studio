@@ -31,7 +31,7 @@ RUN turbo prune server --docker
 FROM builder-base AS installer
 
 COPY --from=builder /app/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 RUN pnpm --filter=server build
@@ -50,4 +50,4 @@ USER hono
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget --quiet --spider http://${SERVER_HOST}:${SERVER_PORT}/healthcheck || exit 1
 
-CMD ["node", "/app/dist/server.js"]
+CMD ["node", "/app/dist/server.mjs"]

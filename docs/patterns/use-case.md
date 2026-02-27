@@ -28,23 +28,27 @@ packages/media/src/{domain}/use-cases/{action}.ts   # one file per use case
 > See `packages/media/src/document/use-cases/get-document.ts`
 
 ```typescript
-import { requireOwnership } from '@repo/auth/policy';
+import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
+import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
 export interface GetDocumentInput { id: string }
 
 export const getDocument = (input: GetDocumentInput) =>
   Effect.gen(function* () {
+    const user = yield* getCurrentUser;
     const documentRepo = yield* DocumentRepo;
-    const doc = yield* documentRepo.findById(input.id);
-    yield* requireOwnership(doc.createdBy);
-    return doc;                         // raw domain data
-  }).pipe(
-    Effect.withSpan('useCase.getDocument', {
+
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
       attributes: { 'document.id': input.id },
-    }),
-  );
+    });
+    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
+
+    return doc;                         // raw domain data
+  }).pipe(withUseCaseSpan('useCase.getDocument'));
 ```
 
 ## Rules

@@ -6,6 +6,8 @@ import {
 } from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
 import { ActivityDashboard } from './activity-dashboard';
+import { ErrorFallback } from '@/shared/components/error-boundary';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 export function ActivityDashboardContainer() {
   const [period, setPeriod] = useState<Period>('7d');
@@ -30,6 +32,9 @@ export function ActivityDashboardContainer() {
   const {
     data: activityPages,
     isLoading: feedLoading,
+    isError: feedError,
+    error: feedErrorObj,
+    refetch: refetchFeed,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -40,7 +45,35 @@ export function ActivityDashboardContainer() {
     limit: DEFAULT_ACTIVITY_LIST_LIMIT,
   });
 
-  const { data: stats, isLoading: statsLoading } = useActivityStats(period);
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    error: statsErrorObj,
+    refetch: refetchStats,
+  } = useActivityStats(period);
+
+  if (feedError || statsError) {
+    const firstError = feedErrorObj ?? statsErrorObj;
+    return (
+      <ErrorFallback
+        error={
+          firstError instanceof Error
+            ? firstError
+            : new Error(
+                getErrorMessage(
+                  firstError,
+                  'Failed to load activity dashboard',
+                ),
+              )
+        }
+        resetErrorBoundary={() => {
+          refetchFeed();
+          refetchStats();
+        }}
+      />
+    );
+  }
 
   const activities = useMemo(() => {
     if (!activityPages?.pages) return [];

@@ -31,7 +31,7 @@ RUN turbo prune worker --docker
 FROM builder-base AS installer
 
 COPY --from=builder /app/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 RUN pnpm --filter=worker build
@@ -47,4 +47,4 @@ COPY --from=installer --chown=worker:nodejs /app/apps/worker/dist /app/dist
 
 USER worker
 
-CMD ["node", "/app/dist/worker.js"]
+CMD ["node", "/app/dist/worker.mjs"]

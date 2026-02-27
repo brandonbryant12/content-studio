@@ -4,7 +4,7 @@ export {
   usePodcastsOrdered,
 } from './use-podcast-list';
 
-export { useOptimisticCreate } from './use-optimistic-create';
+export { useCreatePodcast } from './use-create-podcast';
 
 export {
   usePodcastSettings,

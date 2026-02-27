@@ -61,6 +61,7 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
+    "@effect/opentelemetry": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",
     "@opentelemetry/instrumentation": "catalog:",

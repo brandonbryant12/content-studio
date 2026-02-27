@@ -5,6 +5,8 @@ export {
   type PersonaListOptions,
 } from './repos';
 
+export { loadPersonaByIdSafe } from './load-persona';
+
 export {
   createPersona,
   getPersona,

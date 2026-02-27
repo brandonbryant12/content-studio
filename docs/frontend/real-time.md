@@ -109,10 +109,17 @@ After `MAX_ATTEMPTS`, connection state becomes `'error'`. The hook exposes `reco
 SSE handlers in `apps/web/src/shared/hooks/sse-handlers.ts` invalidate the appropriate TanStack Query caches:
 
 ```tsx
+const getPodcastQueryKey = (podcastId: string) =>
+  apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }).queryKey;
+
+const getPodcastsListQueryKey = () =>
+  apiClient.podcasts.list.queryOptions({ input: {} }).queryKey;
+
 export function handleJobCompletion(event: JobCompletionEvent, qc: QueryClient) {
-  qc.invalidateQueries({ queryKey: ['podcasts', 'get', event.podcastId] });
-  qc.invalidateQueries({ queryKey: ['podcasts', 'list'] });
-  qc.invalidateQueries({ queryKey: ['jobs'] });
+  if (event.podcastId) {
+    qc.invalidateQueries({ queryKey: getPodcastQueryKey(event.podcastId) });
+  }
+  qc.invalidateQueries({ queryKey: getPodcastsListQueryKey() });
 }
 ```
 

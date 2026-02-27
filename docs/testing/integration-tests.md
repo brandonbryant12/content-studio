@@ -53,8 +53,8 @@ pnpm --filter @repo/api test
 | Test Database | Docker (`pnpm test:db:up`) | PostgreSQL on port 5433 |
 | `createTestContext` | `@repo/testing` | DB connection + transaction |
 | `createTestUser` / `toUser` | `@repo/testing` | Test user factory |
-| `createInMemoryStorage` | `@repo/testing/mocks` | In-memory S3-compatible storage |
-| `MockLLMLive` / `MockTTSLive` | `@repo/testing/mocks` | Mock AI service layers |
+| `createInMemoryStorage` | `@repo/storage/testing` | In-memory S3-compatible storage |
+| `MockLLMLive` / `MockTTSLive` | `@repo/ai/testing` | Mock AI service layers |
 | `createMockContext` | `./helpers` | Mock oRPC context with runtime + user |
 | `createMockErrors` | `./helpers` | Mock oRPC error factories |
 

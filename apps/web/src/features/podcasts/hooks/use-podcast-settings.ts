@@ -197,7 +197,7 @@ export function usePodcastSettings({
   );
 
   // Derive hasChanges by comparing current state to server data
-  const serverValues = getInitialValues(podcast);
+  const serverValues = useMemo(() => getInitialValues(podcast), [podcast]);
 
   const hasScriptSettingsChanges =
     state.targetDuration !== serverValues.targetDuration ||

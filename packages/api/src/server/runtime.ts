@@ -9,6 +9,7 @@ import {
   type UrlScraper,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
+import { OtelTracerLive, type TelemetryConfig } from '@repo/db/telemetry';
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import type { StorageConfig } from './orpc';
 import type { DatabaseInstance } from '@repo/db/client';
@@ -40,6 +41,8 @@ export interface ServerRuntimeConfig {
   useMockAI?: boolean;
   /** Gemini API key (required when useMockAI=false) */
   geminiApiKey?: string;
+  /** When provided, bridges Effect spans to the global OTel TracerProvider */
+  telemetryConfig?: TelemetryConfig;
 }
 
 /**
@@ -73,6 +76,10 @@ export const createSharedLayers = (
 
   const loggerLayer = Logger.pretty;
 
+  const tracerLayer = config.telemetryConfig
+    ? OtelTracerLive(config.telemetryConfig)
+    : Layer.empty;
+
   return Layer.mergeAll(
     dbLayer,
     policyLayer,
@@ -82,6 +89,7 @@ export const createSharedLayers = (
     mediaLayer,
     UrlScraperLive,
     loggerLayer,
+    tracerLayer,
   );
 };
 

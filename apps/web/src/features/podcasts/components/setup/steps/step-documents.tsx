@@ -64,6 +64,7 @@ function getDocumentSourceBadge(doc: DocumentItem): string {
 function ExistingDocumentsPanel({
   documents,
   loadingDocs,
+  isError,
   filteredDocuments,
   selectedIds,
   searchQuery,
@@ -73,6 +74,7 @@ function ExistingDocumentsPanel({
 }: {
   documents: readonly DocumentItem[] | null;
   loadingDocs: boolean;
+  isError: boolean;
   filteredDocuments: readonly DocumentItem[];
   selectedIds: string[];
   searchQuery: string;
@@ -80,6 +82,19 @@ function ExistingDocumentsPanel({
   onToggleDocument: (docId: string) => void;
   onSwitchToUpload: () => void;
 }) {
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+        <p className="text-sm font-medium text-destructive">
+          Failed to load documents
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Please try again later or switch to another tab to upload directly.
+        </p>
+      </div>
+    );
+  }
+
   if (loadingDocs) {
     return (
       <div className="loading-center">
@@ -385,7 +400,11 @@ export function StepDocuments({
   const selectedIdsRef = useRef(selectedIds);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: documents, isLoading: loadingDocs } = useDocuments();
+  const {
+    data: documents,
+    isLoading: loadingDocs,
+    isError: docsError,
+  } = useDocuments();
 
   useEffect(() => {
     selectedIdsRef.current = selectedIds;
@@ -576,6 +595,7 @@ export function StepDocuments({
         <ExistingDocumentsPanel
           documents={documents ?? null}
           loadingDocs={loadingDocs}
+          isError={docsError}
           filteredDocuments={filteredDocuments}
           selectedIds={selectedIds}
           searchQuery={searchQuery}

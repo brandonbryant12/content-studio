@@ -285,9 +285,7 @@ function ControlsSidebar({
           {actions.isGenerating ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
-              {hasExistingImage
-                ? `${GENERATION_LABELS.statusGenerating}...`
-                : `${GENERATION_LABELS.statusGenerating}...`}
+              {`${GENERATION_LABELS.statusGenerating}...`}
             </>
           ) : infographic.status === InfographicStatus.FAILED ? (
             <>

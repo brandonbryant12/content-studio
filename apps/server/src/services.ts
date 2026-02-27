@@ -46,6 +46,14 @@ export const serverRuntime = createServerRuntime({
   storageConfig,
   useMockAI: env.USE_MOCK_AI,
   geminiApiKey: env.GEMINI_API_KEY,
+  telemetryConfig: {
+    enabled: env.TELEMETRY_ENABLED,
+    serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-server',
+    serviceVersion: env.OTEL_SERVICE_VERSION,
+    environment: env.OTEL_ENV,
+    otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
+  },
 });
 
 export const api = createApi({

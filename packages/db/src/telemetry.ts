@@ -12,6 +12,10 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { ORPCInstrumentation } from '@orpc/otel';
+import {
+  Tracer as OtelEffectTracer,
+  Resource as OtelResource,
+} from '@effect/opentelemetry';
 import { Effect, Layer } from 'effect';
 import type { Context } from '@opentelemetry/api';
 import type { Span } from '@opentelemetry/sdk-trace-base';
@@ -79,9 +83,6 @@ const normalizeOtlpTracesEndpoint = (endpoint: string): string => {
   const url = parseOtlpEndpointUrl(trimmed);
   if (!url) {
     return trimmed;
-  }
-  if (!url.pathname || url.pathname === '') {
-    url.pathname = '/';
   }
   return url.toString();
 };
@@ -191,3 +192,26 @@ export const TelemetryLive = (config: TelemetryConfig): Layer.Layer<never> =>
   Layer.effectDiscard(Effect.sync(() => initTelemetry(config)));
 
 export const TelemetryDisabled: Layer.Layer<never> = Layer.empty;
+
+/**
+ * Bridges Effect's internal tracing to the globally-registered OpenTelemetry
+ * TracerProvider. All `Effect.withSpan` calls will produce real OTel spans
+ * exported via the `NodeTracerProvider` set up by `initTelemetry`.
+ *
+ * Returns `Layer<never>` — no output services, no type pollution.
+ * When telemetry is disabled, callers should use `Layer.empty` instead.
+ */
+export const OtelTracerLive = (config: TelemetryConfig): Layer.Layer<never> => {
+  const resourceLayer = OtelResource.layer({
+    serviceName: config.serviceName,
+    serviceVersion: config.serviceVersion ?? '0.0.0',
+    attributes: {
+      [DEPLOYMENT_ENVIRONMENT_NAME]: config.environment ?? 'development',
+    },
+  });
+
+  return OtelEffectTracer.layerWithoutOtelTracer.pipe(
+    Layer.provide(OtelEffectTracer.layerGlobalTracer),
+    Layer.provide(resourceLayer),
+  );
+};
