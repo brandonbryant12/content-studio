@@ -1,5 +1,37 @@
 [
   {
+    "id": "2026-02-27-periodic-scans-product-owner-reviewer-infographic-end-to-end-journey-title-edit",
+    "date": "2026-02-27",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: infographic end-to-end journey — title editing, version metadata, creation flow unification",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:create-edit-generate-infographic",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:grep",
+      "tool:glob",
+      "tool:read",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-26-periodic-scans-best-practice-researcher-orpc-hono-contract-layer-sse-resume-ote",
     "date": "2026-02-26",
     "month": "2026-02",
