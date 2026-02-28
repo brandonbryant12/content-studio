@@ -42,7 +42,12 @@ process.on('uncaughtException', (error) => {
 async function startWorker(): Promise<void> {
   console.log('Verifying database connection...');
 
-  const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
+  const db = createDb({
+    databaseUrl: env.SERVER_POSTGRES_URL,
+    max: 5,
+    idleTimeoutMillis: 60_000,
+    connectionTimeoutMillis: 10_000,
+  });
   const storageConfig = buildStorageConfig();
 
   configureSSEPublisher({

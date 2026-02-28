@@ -144,6 +144,18 @@ Split repo files into read/write modules when any threshold is hit:
 - Public repo methods >= 8
 - Repo touches multiple aggregates/tables in distinct flows
 
+## Connection Pool Sizing
+
+`createDb()` in `packages/db/src/client.ts` exposes `max`, `idleTimeoutMillis`, and `connectionTimeoutMillis`. Callers should pass values tuned to their workload:
+
+| App | `max` | `idleTimeoutMillis` | `connectionTimeoutMillis` | Rationale |
+|-----|-------|---------------------|---------------------------|-----------|
+| Server | 20 | 30 000 | 5 000 | Many short-lived HTTP requests |
+| Worker | 5 | 60 000 | 10 000 | Fewer, longer-running job queries |
+| CLI / tests | default (10) | default (30 000) | default (5 000) | Short-lived, low concurrency |
+
+Each PostgreSQL connection uses ~10 MB backend RAM. Formula: `pool_max = total_db_connections / max_app_instances`. For managed PG with a 200-connection limit, 20 (server) + 5 (worker) = 25 per replica leaves headroom for migrations and admin tools.
+
 ## Index File
 
 ```typescript
