@@ -57,9 +57,9 @@ function EmptyState({
           />
         </svg>
       </div>
-      <h3 className="empty-state-title">
+      <h2 className="empty-state-title">
         {hasSearch ? 'No documents found' : 'No documents yet'}
-      </h3>
+      </h2>
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'

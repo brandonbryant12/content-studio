@@ -35,7 +35,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <h3 className="empty-state-title">No personas yet</h3>
+      <h2 className="empty-state-title">No personas yet</h2>
       <p className="empty-state-description">
         Create your first persona to give your content a unique voice and
         personality.
@@ -172,6 +172,8 @@ export function PersonaList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
+          role="list"
+          aria-label="Persona list"
           className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredPersonas.map((persona) => (

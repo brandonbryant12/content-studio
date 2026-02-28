@@ -13,7 +13,7 @@
   "prettier": "@repo/prettier-config",
   "dependencies": {
     "tailwindcss": "catalog:",
-    "tailwindcss-animate": "catalog:"
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
