@@ -46,13 +46,13 @@ export interface EntityRepoService {
     userId: string,
   ) => Effect.Effect<Entity, EntityNotFound | DatabaseError, Db>;
   readonly insert:   (data: InsertInput) => Effect.Effect<Entity, DatabaseError, Db>;
-  readonly listForUser: (
-    opts: ListOptions & { userId: string }
+  readonly list: (
+    options: ListOptions
   ) => Effect.Effect<readonly Entity[], DatabaseError, Db>;
   readonly update:   (id: string, data: UpdateInput) => Effect.Effect<Entity, EntityNotFound | DatabaseError, Db>;
   readonly delete:   (id: string) => Effect.Effect<boolean, DatabaseError, Db>;
-  readonly countForUser: (
-    opts: { userId: string }
+  readonly count: (
+    options?: { createdBy?: string }
   ) => Effect.Effect<number, DatabaseError, Db>;
 }
 
@@ -60,7 +60,7 @@ export interface EntityRepoService {
 export class EntityRepo extends Context.Tag('@repo/media/EntityRepo')<EntityRepo, EntityRepoService>() {}
 
 // 3. Read methods
-export const readMethods: Pick<EntityRepoService, 'findByIdForUser' | 'listForUser' | 'countForUser'> = {
+export const readMethods: Pick<EntityRepoService, 'findByIdForUser' | 'list' | 'count'> = {
   findByIdForUser: (id, userId) =>
     withDb('entityRepo.findByIdForUser', (db) =>
       db.select().from(entity).where(
@@ -89,10 +89,10 @@ export const EntityRepoLive: Layer.Layer<EntityRepo> =
 |--------|---------|------------------|-------|
 | `insert` | `Entity` | constraint violation | Single insert + returning |
 | `findByIdForUser` | `Entity` | `EntityNotFound` | Conceals missing vs not-owned |
-| `listForUser` | `Entity[]` | (empty array) | Paginated with `limit`/`offset` |
+| `list` | `Entity[]` | (empty array) | Paginated with `limit`/`offset`; filter via `ListOptions` |
 | `update` | `Entity` | `EntityNotFound` | Set `updatedAt: new Date()` |
 | `delete` | `boolean` | (returns false) | Idempotent |
-| `countForUser` | `number` | (returns 0) | Optional filters |
+| `count` | `number` | (returns 0) | Optional `{ createdBy? }` filter |
 
 ## Rules
 
