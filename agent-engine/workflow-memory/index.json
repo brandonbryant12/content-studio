@@ -1,5 +1,25 @@
 [
   {
+    "id": "2026-02-28-docs-knowledge-drift-tanstack-router-query-form-best-practices-research-feb-2026",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "TanStack Router/Query/Form best practices research (Feb 2026)",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:docs-knowledge-drift",
+      "tanstack",
+      "router",
+      "query",
+      "form",
+      "frontend"
+    ],
+    "importance": 0.8,
+    "confidence": 0.85,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-add-missing-db-indexes-and-partial-indexes-221-228",
     "date": "2026-02-28",
     "month": "2026-02",
@@ -391,6 +411,34 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-periodic-scans-issue-evaluator-run-10-issues-evaluated-3-ready-for-dev-7-human-",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Issue evaluator run: 10 issues evaluated, 3 ready-for-dev, 7 human-eval-needed, 0 rejected",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "issue-evaluator",
+      "memory",
+      "workflow-memory",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.7,
+    "recency": 1,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-periodic-scans-product-owner-reviewer-chat-and-ai-assistant-interaction-clarity",
     "date": "2026-02-28",
     "month": "2026-02",
@@ -482,6 +530,30 @@
     "importance": 0.8,
     "recency": 0.95,
     "confidence": 0.88,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-28-self-improvement-react-19-shadcn-ui-vite-best-practices-research-feb-2026",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Self-Improvement",
+    "title": "React 19 + shadcn/ui + Vite best practices research (Feb 2026)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:self-improvement",
+      "react-19",
+      "shadcn-ui",
+      "vite",
+      "research",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "capability:long-term-reasoning",
+      "failure:state-loss"
+    ],
+    "importance": 0.8,
+    "confidence": 0.9,
     "eventFile": "events/2026-02.jsonl"
   },
   {
