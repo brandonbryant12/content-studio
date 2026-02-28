@@ -18,6 +18,7 @@ pipeline {
     timestamps()
     ansiColor('xterm')
     disableConcurrentBuilds()
+    timeout(time: 60, unit: 'MINUTES')
     buildDiscarder(logRotator(numToKeepStr: '60', artifactNumToKeepStr: '30'))
   }
 
@@ -60,17 +61,35 @@ pipeline {
       }
     }
 
-    stage('Spec + Quality Gates') {
+    stage('Spec Check') {
       steps {
-        sh '''
-          # Keep this sequence aligned with repository guardrails.
-          pnpm spec:check
-          pnpm typecheck
-          pnpm lint
-          pnpm test
-          pnpm test:invariants
-          pnpm build
-        '''
+        sh 'pnpm spec:check'
+      }
+    }
+
+    stage('Quality Gates') {
+      parallel {
+        stage('Typecheck') {
+          steps {
+            sh 'pnpm typecheck'
+          }
+        }
+        stage('Lint') {
+          steps {
+            sh 'pnpm lint'
+          }
+        }
+        stage('Test') {
+          steps {
+            sh 'pnpm test && pnpm test:invariants'
+          }
+        }
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'pnpm build'
       }
     }
 
@@ -110,6 +129,7 @@ pipeline {
 
   post {
     always {
+      junit testResults: '**/reports/*-junit.xml', allowEmptyResults: true
       deleteDir()
     }
   }

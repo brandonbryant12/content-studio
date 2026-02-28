@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
+    reporters: process.env.CI
+      ? ['default', ['junit', { outputFile: 'reports/vitest-junit.xml' }]]
+      : ['default'],
     include: ['src/**/*.test.ts', 'src/__tests__/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
     coverage: {

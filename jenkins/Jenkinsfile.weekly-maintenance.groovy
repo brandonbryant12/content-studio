@@ -105,6 +105,7 @@ pipeline {
 
   post {
     always {
+      junit testResults: '**/reports/*-junit.xml', allowEmptyResults: true
       archiveArtifacts artifacts: 'reports/**,docs/master-spec.md,docs/spec/generated/**', allowEmptyArchive: true
       deleteDir()
     }

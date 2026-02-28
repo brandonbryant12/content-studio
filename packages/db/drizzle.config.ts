@@ -1,5 +1,5 @@
+import { defineConfig } from 'drizzle-kit';
 import { Schema } from 'effect';
-import type { Config } from 'drizzle-kit';
 
 const envSchema = Schema.Struct({
   DB_POSTGRES_URL: Schema.String.pipe(Schema.minLength(1)),
@@ -10,8 +10,8 @@ const env = Schema.decodeUnknownSync(envSchema)(process.env);
 // Supabase pooling URL uses 6543, which we don't need for migrations
 const nonPoolingUrl = env.DB_POSTGRES_URL.replace(':6543', ':5432');
 
-export default {
+export default defineConfig({
   schema: './src/schema.ts',
   dialect: 'postgresql',
   dbCredentials: { url: nonPoolingUrl },
-} satisfies Config;
+});
