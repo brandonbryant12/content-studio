@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-28-feature-delivery-ready-for-dev-executor-a11y-batch-207-208-209",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: a11y batch #207 #208 #209",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor",
+      "domain:frontend",
+      "area:accessibility"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-skip-product-owner-github-preflight-checks",
     "date": "2026-02-28",
     "month": "2026-02",
