@@ -1,3 +1,4 @@
+import { getTableColumns } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -232,3 +233,74 @@ export const serializeDocumentsEffect = createBatchEffectSerializer(
 );
 
 export const serializeDocument = documentTransform;
+
+/**
+ * Columns for list queries — omits heavy text fields not needed in list views.
+ */
+const {
+  extractedText: _extractedText,
+  ...documentListColumns
+} = getTableColumns(document);
+
+export { documentListColumns };
+
+/**
+ * Lean list-item type returned by the repo `list` method.
+ */
+export type DocumentListItem = Omit<Document, 'extractedText'>;
+
+export const DocumentListItemOutputSchema = Schema.Struct({
+  id: DocumentIdSchema,
+  title: Schema.String,
+  contentKey: Schema.String,
+  mimeType: Schema.String,
+  wordCount: Schema.Number,
+  source: DocumentSourceSchema,
+  originalFileName: Schema.NullOr(Schema.String),
+  originalFileSize: Schema.NullOr(Schema.Number),
+  metadata: Schema.NullOr(MetadataSchema),
+  status: DocumentStatusSchema,
+  errorMessage: Schema.NullOr(Schema.String),
+  sourceUrl: Schema.NullOr(Schema.String),
+  researchConfig: Schema.NullOr(ResearchConfigSchema),
+  jobId: Schema.NullOr(Schema.String),
+  contentHash: Schema.NullOr(Schema.String),
+  createdBy: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+});
+
+export type DocumentListItemOutput = typeof DocumentListItemOutputSchema.Type;
+
+const documentListItemTransform = (doc: DocumentListItem): DocumentListItemOutput => ({
+  id: doc.id,
+  title: doc.title,
+  contentKey: doc.contentKey,
+  mimeType: doc.mimeType,
+  wordCount: doc.wordCount,
+  source: doc.source,
+  originalFileName: doc.originalFileName,
+  originalFileSize: doc.originalFileSize,
+  metadata: doc.metadata,
+  status: doc.status,
+  errorMessage: doc.errorMessage,
+  sourceUrl: doc.sourceUrl,
+  researchConfig: doc.researchConfig,
+  jobId: doc.jobId,
+  contentHash: doc.contentHash,
+  createdBy: doc.createdBy,
+  createdAt: doc.createdAt.toISOString(),
+  updatedAt: doc.updatedAt.toISOString(),
+});
+
+export const serializeDocumentListItemEffect = createEffectSerializer(
+  'documentListItem',
+  documentListItemTransform,
+);
+
+export const serializeDocumentListItemsEffect = createBatchEffectSerializer(
+  'documentListItem',
+  documentListItemTransform,
+);
+
+export const serializeDocumentListItem = documentListItemTransform;

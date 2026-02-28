@@ -1,6 +1,7 @@
 import { withDb } from '@repo/db/effect';
 import {
   podcast,
+  podcastListColumns,
   document,
   type Document,
   type DocumentId,
@@ -80,7 +81,7 @@ export const podcastReadMethods: Pick<
       const createdBy = options.userId || options.createdBy;
 
       return db
-        .select()
+        .select(podcastListColumns)
         .from(podcast)
         .where(createdBy ? eq(podcast.createdBy, createdBy) : undefined)
         .orderBy(desc(podcast.createdAt))

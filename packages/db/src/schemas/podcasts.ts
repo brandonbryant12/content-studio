@@ -1,3 +1,4 @@
+import { getTableColumns } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -266,7 +267,53 @@ export const PodcastFullOutputSchema = Schema.Struct({
   documents: Schema.Array(DocumentOutputSchema),
 });
 
-export const PodcastListItemOutputSchema = PodcastOutputSchema;
+/**
+ * Columns for list queries — omits heavy JSONB/text fields not needed in list views.
+ */
+const {
+  segments: _segments,
+  generationContext: _generationContext,
+  generationPrompt: _generationPrompt,
+  summary: _summary,
+  ...podcastListColumns
+} = getTableColumns(podcast);
+
+export { podcastListColumns };
+
+/**
+ * Lean list-item type returned by the repo `list` method.
+ */
+export type PodcastListItem = Omit<
+  Podcast,
+  'segments' | 'generationContext' | 'generationPrompt' | 'summary'
+>;
+
+export const PodcastListItemOutputSchema = Schema.Struct({
+  id: PodcastIdSchema,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  format: PodcastFormatSchema,
+  hostVoice: Schema.NullOr(Schema.String),
+  hostVoiceName: Schema.NullOr(Schema.String),
+  coHostVoice: Schema.NullOr(Schema.String),
+  coHostVoiceName: Schema.NullOr(Schema.String),
+  promptInstructions: Schema.NullOr(Schema.String),
+  targetDurationMinutes: Schema.NullOr(Schema.Number),
+  tags: Schema.Array(Schema.String),
+  sourceDocumentIds: Schema.Array(DocumentIdSchema),
+  status: VersionStatusSchema,
+  audioUrl: Schema.NullOr(Schema.String),
+  duration: Schema.NullOr(Schema.Number),
+  errorMessage: Schema.NullOr(Schema.String),
+  hostPersonaId: Schema.NullOr(PersonaIdSchema),
+  coHostPersonaId: Schema.NullOr(PersonaIdSchema),
+  coverImageStorageKey: Schema.NullOr(Schema.String),
+  approvedBy: Schema.NullOr(Schema.String),
+  approvedAt: Schema.NullOr(Schema.String),
+  createdBy: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+});
 
 export type Podcast = typeof podcast.$inferSelect;
 export type PodcastFormat = Podcast['format'];
@@ -275,6 +322,33 @@ export type GenerationContextOutput = typeof GenerationContextOutputSchema.Type;
 export type PodcastOutput = typeof PodcastOutputSchema.Type;
 export type PodcastFullOutput = typeof PodcastFullOutputSchema.Type;
 export type PodcastListItemOutput = typeof PodcastListItemOutputSchema.Type;
+
+const podcastListItemTransform = (p: PodcastListItem): PodcastListItemOutput => ({
+  id: p.id,
+  title: p.title,
+  description: p.description,
+  format: p.format,
+  hostVoice: p.hostVoice,
+  hostVoiceName: p.hostVoiceName,
+  coHostVoice: p.coHostVoice,
+  coHostVoiceName: p.coHostVoiceName,
+  promptInstructions: p.promptInstructions,
+  targetDurationMinutes: p.targetDurationMinutes,
+  tags: p.tags ?? [],
+  sourceDocumentIds: p.sourceDocumentIds ?? [],
+  status: p.status,
+  audioUrl: p.audioUrl ?? null,
+  duration: p.duration ?? null,
+  errorMessage: p.errorMessage ?? null,
+  hostPersonaId: p.hostPersonaId ?? null,
+  coHostPersonaId: p.coHostPersonaId ?? null,
+  coverImageStorageKey: p.coverImageStorageKey ?? null,
+  approvedBy: p.approvedBy ?? null,
+  approvedAt: p.approvedAt?.toISOString() ?? null,
+  createdBy: p.createdBy,
+  createdAt: p.createdAt.toISOString(),
+  updatedAt: p.updatedAt.toISOString(),
+});
 export type CreatePodcast = typeof CreatePodcastSchema.Type;
 export type UpdatePodcast = typeof UpdatePodcastSchema.Type;
 export type UpdateScript = typeof UpdateScriptSchema.Type;
@@ -342,12 +416,12 @@ export const serializePodcastFull = podcastFullTransform;
 
 export const serializePodcastListItemEffect = createEffectSerializer(
   'podcastListItem',
-  podcastTransform,
+  podcastListItemTransform,
 );
 
 export const serializePodcastListItemsEffect = createBatchEffectSerializer(
   'podcastListItem',
-  podcastTransform,
+  podcastListItemTransform,
 );
 
-export const serializePodcastListItem = podcastTransform;
+export const serializePodcastListItem = podcastListItemTransform;

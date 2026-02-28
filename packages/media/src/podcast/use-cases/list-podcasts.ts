@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import type { Podcast } from '@repo/db/schema';
+import type { PodcastListItem } from '@repo/db/schema';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
@@ -15,7 +15,7 @@ export interface ListPodcastsInput {
 }
 
 export interface ListPodcastsResult {
-  podcasts: readonly Podcast[];
+  podcasts: readonly PodcastListItem[];
   total: number;
   hasMore: boolean;
 }

@@ -1,6 +1,6 @@
 import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import type { Document } from '@repo/db/schema';
+import type { DocumentListItem } from '@repo/db/schema';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { DocumentRepo } from '../repos';
 
@@ -17,7 +17,7 @@ export interface ListDocumentsInput {
 }
 
 export interface ListDocumentsResult {
-  documents: readonly Document[];
+  documents: readonly DocumentListItem[];
   total: number;
   hasMore: boolean;
 }

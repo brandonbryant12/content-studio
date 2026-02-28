@@ -9,7 +9,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { DatabaseInstance } from '@repo/db/client';
-import type { Document } from '@repo/db/schema';
+import type { DocumentListItem } from '@repo/db/schema';
 import {
   DocumentRepo,
   type DocumentRepoService,
@@ -22,7 +22,7 @@ import { listDocuments } from '../list-documents';
 // =============================================================================
 
 interface MockRepoState {
-  documents: Document[];
+  documents: DocumentListItem[];
 }
 
 const createMockDocumentRepo = (state: MockRepoState): DocumentRepoService => ({

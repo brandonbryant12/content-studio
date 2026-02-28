@@ -1,6 +1,6 @@
 import {
   serializeDocumentEffect,
-  serializeDocumentsEffect,
+  serializeDocumentListItemsEffect,
 } from '@repo/db/schema';
 import {
   listDocuments,
@@ -27,7 +27,7 @@ const documentRouter = {
         context.user,
         listDocuments(input).pipe(
           Effect.flatMap((result) =>
-            serializeDocumentsEffect(result.documents),
+            serializeDocumentListItemsEffect([...result.documents]),
           ),
         ),
         errors,
