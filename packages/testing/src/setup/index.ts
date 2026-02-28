@@ -6,4 +6,6 @@ export {
   type TestContext,
 } from './database';
 
+export { createPGliteTestContext, resetPGliteSnapshot } from './pglite';
+
 export { withTestUser, toUser } from './layers';
