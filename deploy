@@ -431,7 +431,8 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}
 OTEL_EXPORTER_OTLP_HEADERS=${OTEL_EXPORTER_OTLP_HEADERS}
 EOF
 
-  info "Configuration written to $ENV_FILE"
+  chmod 600 "$ENV_FILE"
+  info "Configuration written to $ENV_FILE (permissions: 600)"
   printf "  ${DIM}Tip: edit $ENV_FILE directly for future changes${RESET}\n"
 }
 
