@@ -1,21 +1,16 @@
+import {
+  Tracer as OtelEffectTracer,
+  Resource as OtelResource,
+} from '@effect/opentelemetry';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   BatchSpanProcessor,
   type ReadableSpan,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from '@opentelemetry/semantic-conventions';
 import { ORPCInstrumentation } from '@orpc/otel';
-import {
-  Tracer as OtelEffectTracer,
-  Resource as OtelResource,
-} from '@effect/opentelemetry';
 import { Effect, Layer } from 'effect';
 import type { Context } from '@opentelemetry/api';
 import type { Span } from '@opentelemetry/sdk-trace-base';
@@ -64,9 +59,6 @@ class ORPCSpanRenamer implements SpanProcessor {
     // No-op
   }
 }
-
-let initialized = false;
-let provider: NodeTracerProvider | null = null;
 
 const DEPLOYMENT_ENVIRONMENT_NAME = 'deployment.environment.name';
 
@@ -141,67 +133,29 @@ export const resolveTracesHeaders = (
   return parseOtlpHeaders(config.otlpHeaders);
 };
 
-export const initTelemetry = (config: TelemetryConfig): void => {
-  if (config.enabled === false || initialized) return;
+/**
+ * Unified telemetry layer that manages the full OpenTelemetry SDK lifecycle.
+ *
+ * Creates a `NodeTracerProvider` with:
+ * - `ORPCSpanRenamer` for procedure span naming
+ * - `BatchSpanProcessor` → `OTLPTraceExporter` for trace export
+ * - Global provider registration for `@orpc/otel` auto-instrumentation
+ * - Effect span bridge via `@effect/opentelemetry` (all `Effect.withSpan`
+ *   calls produce real OTel spans)
+ * - Scoped lifecycle: provider is flushed + shut down when the Effect
+ *   runtime is disposed (no manual `shutdownTelemetry()` needed)
+ *
+ * When `enabled` is false or no OTLP endpoint is configured, returns
+ * `Layer.empty` (no-op).
+ */
+export const TelemetryLive = (config: TelemetryConfig): Layer.Layer<never> => {
+  if (config.enabled === false) return Layer.empty;
 
   const tracesEndpoint = resolveTracesEndpoint(config);
   if (!tracesEndpoint) {
-    console.warn(
-      'Telemetry enabled but no OTEL_EXPORTER_OTLP_TRACES_ENDPOINT set — skipping trace export',
-    );
-    initialized = true;
-    return;
+    return Layer.empty;
   }
 
-  provider = new NodeTracerProvider({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: config.serviceName,
-      [ATTR_SERVICE_VERSION]: config.serviceVersion ?? '0.0.0',
-      [DEPLOYMENT_ENVIRONMENT_NAME]: config.environment ?? 'development',
-    }),
-    spanProcessors: [
-      new ORPCSpanRenamer(),
-      new BatchSpanProcessor(
-        new OTLPTraceExporter({
-          url: tracesEndpoint,
-          headers: resolveTracesHeaders(config),
-        }),
-      ),
-    ],
-  });
-
-  provider.register();
-
-  registerInstrumentations({
-    tracerProvider: provider,
-    instrumentations: [new ORPCInstrumentation()],
-  });
-
-  initialized = true;
-};
-
-export const shutdownTelemetry = async (): Promise<void> => {
-  if (provider) {
-    await provider.shutdown();
-    provider = null;
-  }
-  initialized = false;
-};
-
-export const TelemetryLive = (config: TelemetryConfig): Layer.Layer<never> =>
-  Layer.effectDiscard(Effect.sync(() => initTelemetry(config)));
-
-export const TelemetryDisabled: Layer.Layer<never> = Layer.empty;
-
-/**
- * Bridges Effect's internal tracing to the globally-registered OpenTelemetry
- * TracerProvider. All `Effect.withSpan` calls will produce real OTel spans
- * exported via the `NodeTracerProvider` set up by `initTelemetry`.
- *
- * Returns `Layer<never>` — no output services, no type pollution.
- * When telemetry is disabled, callers should use `Layer.empty` instead.
- */
-export const OtelTracerLive = (config: TelemetryConfig): Layer.Layer<never> => {
   const resourceLayer = OtelResource.layer({
     serviceName: config.serviceName,
     serviceVersion: config.serviceVersion ?? '0.0.0',
@@ -210,8 +164,44 @@ export const OtelTracerLive = (config: TelemetryConfig): Layer.Layer<never> => {
     },
   });
 
+  const providerLayer = Layer.scoped(
+    OtelEffectTracer.OtelTracerProvider,
+    Effect.flatMap(OtelResource.Resource, (resource) =>
+      Effect.acquireRelease(
+        Effect.sync(() => {
+          const nodeProvider = new NodeTracerProvider({
+            resource,
+            spanProcessors: [
+              new ORPCSpanRenamer(),
+              new BatchSpanProcessor(
+                new OTLPTraceExporter({
+                  url: tracesEndpoint,
+                  headers: resolveTracesHeaders(config),
+                }),
+              ),
+            ],
+          });
+
+          nodeProvider.register();
+
+          registerInstrumentations({
+            tracerProvider: nodeProvider,
+            instrumentations: [new ORPCInstrumentation()],
+          });
+
+          return nodeProvider;
+        }),
+        (nodeProvider) =>
+          Effect.promise(() =>
+            nodeProvider.forceFlush().then(() => nodeProvider.shutdown()),
+          ).pipe(Effect.ignoreLogged, Effect.interruptible),
+      ),
+    ),
+  );
+
   return OtelEffectTracer.layerWithoutOtelTracer.pipe(
-    Layer.provide(OtelEffectTracer.layerGlobalTracer),
+    Layer.provide(OtelEffectTracer.layer),
+    Layer.provide(providerLayer),
     Layer.provide(resourceLayer),
   );
 };
