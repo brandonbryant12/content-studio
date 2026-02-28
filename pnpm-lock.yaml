@@ -199,8 +199,8 @@ catalogs:
       specifier: ^16.5.0
       version: 16.5.0
     hono:
-      specifier: ^4.11.10
-      version: 4.11.10
+      specifier: ^4.12.3
+      version: 4.12.3
     next-themes:
       specifier: ^0.4.6
       version: 0.4.6
@@ -295,7 +295,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 'catalog:'
-        version: 1.19.6(hono@4.11.10)
+        version: 1.19.6(hono@4.12.3)
       '@repo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
@@ -322,7 +322,7 @@ importers:
         version: 3.19.8
       hono:
         specifier: 'catalog:'
-        version: 4.11.10
+        version: 4.12.3
       redis:
         specifier: ^5.10.0
         version: 5.10.0
@@ -5518,8 +5518,8 @@ packages:
   highlightjs-vue@1.0.0:
     resolution: {integrity: sha512-PDEfEF102G23vHmPhLyPboFCD+BkMGu+GuJe2d9/eH4FsCwvgBpnc9n0pGE+ffKdph38s6foEZiEjdgHdzp+IA==}
 
-  hono@4.11.10:
-    resolution: {integrity: sha512-kyWP5PAiMooEvGrA9jcD3IXF7ATu8+o7B3KCbPXid5se52NPqnOpM/r9qeW2heMnOekF4kqR1fXJqCYeCLKrZg==}
+  hono@4.12.3:
+    resolution: {integrity: sha512-SFsVSjp8sj5UumXOOFlkZOG6XS9SJDKw0TbwFeV+AJ8xlST8kxK5Z/5EYa111UY8732lK2S/xB653ceuaoGwpg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -8637,9 +8637,9 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hono/node-server@1.19.6(hono@4.11.10)':
+  '@hono/node-server@1.19.6(hono@4.12.3)':
     dependencies:
-      hono: 4.11.10
+      hono: 4.12.3
 
   '@humanfs/core@0.19.1': {}
 
@@ -12294,7 +12294,7 @@ snapshots:
 
   highlightjs-vue@1.0.0: {}
 
-  hono@4.11.10: {}
+  hono@4.12.3: {}
 
   hookable@5.5.3: {}
 

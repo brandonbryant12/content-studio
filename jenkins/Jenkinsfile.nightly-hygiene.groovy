@@ -74,6 +74,12 @@ pipeline {
       }
     }
 
+    stage('Build') {
+      steps {
+        sh 'pnpm build'
+      }
+    }
+
     stage('Database + E2E') {
       steps {
         sh '''
@@ -103,6 +109,8 @@ pipeline {
     always {
       // Always tear down DB containers, even when earlier stages fail.
       sh 'pnpm test:db:down || true'
+
+      junit testResults: '**/reports/*-junit.xml', allowEmptyResults: true
 
       // Archive E2E artifacts for triage. Paths are optional by design.
       archiveArtifacts artifacts: 'apps/web/playwright-report/**,apps/web/test-results/**', allowEmptyArchive: true

@@ -15,6 +15,9 @@ out/
 
 .coverage
 
+# CI test reports (JUnit XML, etc.)
+reports/
+
 # E2E test outputs
 apps/web/e2e-results/
 apps/web/playwright-report/
