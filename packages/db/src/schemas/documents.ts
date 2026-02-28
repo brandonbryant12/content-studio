@@ -100,6 +100,7 @@ export const document = pgTable(
     index('document_createdAt_idx').on(table.createdAt),
     index('document_status_idx').on(table.status),
     index('document_sourceUrl_idx').on(table.sourceUrl),
+    index('document_source_idx').on(table.source),
   ],
 );
 
