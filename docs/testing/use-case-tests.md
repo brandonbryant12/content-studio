@@ -8,7 +8,7 @@
 2. Assert error `_tag`, never error message strings.
 <!-- enforced-by: manual-review -->
 
-3. Test isolation: `beforeEach(createTestContext)`, `afterEach(cleanup)`.
+3. Test isolation: `beforeEach(() => resetAllFactories())` with mock repo layers.
 <!-- enforced-by: manual-review -->
 
 4. Use `Effect.runPromiseExit` + `_tag` assertions for typed errors.
@@ -34,39 +34,64 @@ See: `packages/media/src/document/use-cases/__tests__/get-document.test.ts`
 ## Test Pattern
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Effect, Exit, Cause, Option } from 'effect';
-import { createTestContext, withTestUser, type TestContext } from '@repo/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Effect, Layer } from 'effect';
+import { createTestUser, createTestDocument, withTestUser, resetAllFactories } from '@repo/testing';
+import { MockDbLive } from '@repo/media/test-utils';
+import { DocumentRepo } from '../../repos/document-repo';
+import { getDocument } from '../get-document';
 
-describe('useCaseName', () => {
-  let ctx: TestContext;
-
-  beforeEach(async () => {
-    ctx = await createTestContext();
+// Inline mock repo — override only the methods under test
+const createMockDocumentRepo = (
+  overrides: Partial<DocumentRepoService> = {},
+) =>
+  Layer.succeed(DocumentRepo, {
+    findByIdForUser: () => Effect.die('not implemented'),
+    list: () => Effect.die('not implemented'),
+    insert: () => Effect.die('not implemented'),
+    update: () => Effect.die('not implemented'),
+    delete: () => Effect.die('not implemented'),
+    count: () => Effect.die('not implemented'),
+    ...overrides,
   });
 
-  afterEach(async () => {
-    await ctx.cleanup();
+describe('getDocument', () => {
+  beforeEach(() => {
+    resetAllFactories();
   });
 
-  it('succeeds with valid input', async () => {
+  it('returns document when user owns it', async () => {
+    const user = createTestUser({ id: 'user-1' });
+    const document = createTestDocument({ createdBy: user.id });
+    const mockRepo = createMockDocumentRepo({
+      findByIdForUser: () => Effect.succeed(document),
+    });
+    const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
     const result = await Effect.runPromise(
-      withTestUser(user)(useCase(input)).pipe(Effect.provide(ctx.layers))
+      withTestUser(user)(getDocument({ id: document.id })).pipe(
+        Effect.provide(layers),
+      ),
     );
-    expect(result.id).toBe(expected);
+    expect(result.id).toBe(document.id);
   });
 
-  it('fails with typed error', async () => {
-    const exit = await Effect.runPromiseExit(
-      withTestUser(user)(useCase(badInput)).pipe(Effect.provide(ctx.layers))
+  it('fails with DocumentNotFound for missing document', async () => {
+    const user = createTestUser({ id: 'user-1' });
+    const mockRepo = createMockDocumentRepo({
+      findByIdForUser: () => Effect.fail(new DocumentNotFound({ id: 'missing' })),
+    });
+    const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(user)(getDocument({ id: 'missing' })).pipe(
+        Effect.provide(layers),
+      ),
     );
-    expect(Exit.isFailure(exit)).toBe(true);
-    if (Exit.isFailure(exit)) {
-      const error = Cause.failureOption(exit.cause);
-      expect(Option.isSome(error)).toBe(true);
-      if (Option.isSome(error)) {
-        expect(error.value._tag).toBe('DocumentNotFound');
-      }
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+      expect(error?._tag).toBe('DocumentNotFound');
     }
   });
 });
@@ -84,43 +109,90 @@ describe('useCaseName', () => {
 
 ## Test Utilities
 
-### Test Context
+### Mock Repo Factories
 
-Provides DB connection, layers, and cleanup. Always create fresh per test.
+Use shared factories from `packages/media/src/test-utils/` to avoid manually stubbing every method:
 
 ```typescript
-import { createTestContext, type TestContext } from '@repo/testing';
+import { createMockPodcastRepo, createMockDocumentRepo, MockDbLive } from '@repo/media/test-utils';
+
+const mockRepo = createMockPodcastRepo({
+  findByIdForUser: () => Effect.succeed(testPodcast),
+});
+const layers = Layer.mergeAll(MockDbLive, mockRepo);
 ```
+
+Available: `createMockPodcastRepo`, `createMockVoiceoverRepo`, `createMockDocumentRepo`, `createMockActivityLogRepo`, `createMockInfographicRepo`, `createMockStylePresetRepo`, `MockDbLive`.
 
 ### withTestUser
 
 Sets the current user on the FiberRef for the duration of the effect.
 
 ```typescript
-import { withTestUser } from '@repo/testing';
+import { withTestUser, createTestUser } from '@repo/testing';
 
+const user = createTestUser({ id: 'user-1' });
 const result = await Effect.runPromise(
-  withTestUser(user)(effect).pipe(Effect.provide(ctx.layers))
+  withTestUser(user)(effect).pipe(Effect.provide(layers))
 );
 ```
 
-### Factories
+### Test Data Factories
 
-Use factories from `@repo/testing` to create test data. Prefer `create` (persisted) over `build` (in-memory).
+Use `createTestUser`, `createTestDocument`, etc. from `@repo/testing` for in-memory test fixtures:
 
 ```typescript
-import { UserFactory, DocumentFactory } from '@repo/testing';
+import { createTestUser, createTestDocument, resetAllFactories } from '@repo/testing';
 
-const user = await UserFactory.create(ctx.db);
-const doc = await DocumentFactory.create(ctx.db, { userId: user.id });
+beforeEach(() => resetAllFactories());
+
+const user = createTestUser({ id: 'user-1' });
+const doc = createTestDocument({ createdBy: user.id, title: 'Test Doc' });
 ```
+
+### Integration Test Context (packages/api only)
+
+For integration tests that need a real database, use `createTestContext` from `@repo/testing`. This creates a Postgres connection with transaction rollback:
+
+```typescript
+import { createTestContext } from '@repo/testing';
+
+let ctx: Awaited<ReturnType<typeof createTestContext>>;
+beforeEach(async () => { ctx = await createTestContext(); });
+afterEach(async () => { await ctx.rollback(); });
+```
+
+> **Note:** `createTestContext` is for integration tests in `packages/api/src/server/router/__tests__/` only. Unit tests in `packages/media/` use `MockDbLive` + mock repo layers instead.
+
+## @effect/vitest (packages/ai)
+
+Tests in `packages/ai/` use `@effect/vitest` for ergonomic Effect test runners:
+
+```typescript
+import { it } from '@effect/vitest';
+import { describe, expect } from 'vitest';
+
+describe('previewVoice', () => {
+  it.layer(createMockTTSLayer())('successful preview', (it) => {
+    it.effect('generates audio preview', () =>
+      Effect.gen(function* () {
+        const result = yield* previewVoice({ voiceId: 'Charon' });
+        expect(result.voiceId).toBe('Charon');
+      })
+    );
+  });
+});
+```
+
+- `it.effect('name', () => Effect.gen(...))` — runs Effect automatically, no `await Effect.runPromise()`
+- `it.layer(myLayer)('group', (it) => { ... })` — auto-provides layer to all tests in block
 
 ## Decision Table: Error Assertion Style
 <!-- enforced-by: manual-review -->
 
 | Scenario | Use |
 |---|---|
-| Verify error type only | `Effect.runPromiseExit` + `_tag` check |
-| Verify error type + properties | `Effect.runPromiseExit` + destructure error value |
+| Verify error type only | `Effect.runPromiseExit` + `result.cause._tag === 'Fail'` + `error._tag` |
+| Verify error type + properties | `Effect.runPromiseExit` + destructure error value + assert fields |
 | Add runtime class guard (non-use-case tests only) | Optional outside use-case tests; use `_tag` + fields inside use-case tests |
 | Quick check in test prototyping | `rejects.toThrow('TagName')` (upgrade before merge) |

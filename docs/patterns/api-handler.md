@@ -13,7 +13,7 @@ sequenceDiagram
   UC-->>H: raw domain data
   H->>S: Effect.flatMap(serializeXxxEffect)
   S-->>H: SerializedXxx (traced)
-  H->>P: errors + span
+  H->>P: errors + requestId
   P-->>H: Promise<SerializedXxx>
 ```
 
@@ -74,7 +74,7 @@ handleEffectWithProtocol(
 | ---------------- | ----------------------- | --------------------- |
 | Handler          | `api.{domain}.{action}` | `api.documents.get`   |
 | Serializer       | `serialize.{entity}`    | `serialize.document`  |
-| Batch serializer | `serialize.{entities}`  | `serialize.documents` |
+| Batch serializer | `serialize.{entity}.batch` | `serialize.document.batch` |
 
 ## Serializer Variants <!-- enforced-by: manual-review -->
 
@@ -90,9 +90,13 @@ Batch is derived from single via `Effect.all(..., { concurrency: 'unbounded' })`
 
 ### Serializer Implementation Pattern
 
+Use the factory functions from `packages/db/src/schemas/serialization.ts`:
+
 ```typescript
-// Sync (base)
-export const serializeDocument = (doc: Document): SerializedDocument => ({
+import { createEffectSerializer, createBatchEffectSerializer } from '@repo/db/schema';
+
+// 1. Transform function (pure, no tracing)
+const documentTransform = (doc: Document): SerializedDocument => ({
   id: doc.id,
   title: doc.title,
   createdAt: doc.createdAt.toISOString(),
@@ -100,24 +104,30 @@ export const serializeDocument = (doc: Document): SerializedDocument => ({
   description: doc.description ?? null,
 });
 
-// Effect (traced) -- used in handlers
-export const serializeDocumentEffect = (doc: Document) =>
-  Effect.sync(() => serializeDocument(doc)).pipe(
-    Effect.withSpan("serialize.document", {
-      attributes: { "document.id": doc.id },
-    }),
-  );
+// 2. Effect serializers (traced, produces SerializationError on failure)
+export const serializeDocumentEffect = createEffectSerializer('document', documentTransform);
+export const serializeDocumentsEffect = createBatchEffectSerializer('document', documentTransform);
 
-// Batch (traced, parallel) -- used in list handlers
-export const serializeDocumentsEffect = (docs: Document[]) =>
-  Effect.all(docs.map(serializeDocumentEffect), {
-    concurrency: "unbounded",
-  }).pipe(
-    Effect.withSpan("serialize.documents", {
-      attributes: { count: docs.length },
-    }),
-  );
+// 3. Plain export for tests / intermediate transforms
+export const serializeDocument = documentTransform;
 ```
+
+The factories wrap in `Effect.try` (catching into `SerializationError`) and add `Effect.withSpan` automatically.
+
+## Activity Logging
+
+Handlers can compose fire-and-forget activity logging via `tapLogActivity`:
+
+```typescript
+import { tapLogActivity } from '../log-activity';
+
+createDocument(input).pipe(
+  Effect.flatMap(serializeDocumentEffect),
+  tapLogActivity(context.runtime, context.user, 'created', 'document'),
+),
+```
+
+This logs asynchronously without blocking the response. Used in document, podcast, voiceover, and infographic handlers.
 
 ## Transformation Rules <!-- enforced-by: manual-review -->
 

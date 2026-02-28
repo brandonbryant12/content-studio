@@ -64,8 +64,10 @@ Handler integration -- `handleEffectWithProtocol` calls `withCurrentUser` intern
 
 ```typescript
 return handleEffectWithProtocol(
-  context.runtime, context.user, createDocument(input), errors,
-  { span: 'api.documents.create' },
+  context.runtime, context.user,
+  createDocument(input).pipe(Effect.flatMap(serializeDocumentEffect)),
+  errors,
+  { requestId: context.requestId },
 );
 ```
 

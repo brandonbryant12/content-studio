@@ -27,9 +27,12 @@ const CreatePodcastSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
 });
 
+const FormSchema = Schema.standardSchemaV1(CreatePodcastSchema);
+
 export function CreatePodcastForm({ onSubmit }: { onSubmit: (values: typeof CreatePodcastSchema.Type) => void }) {
   const form = useForm({
     defaultValues: { title: '', description: '' },
+    validators: { onChange: FormSchema },
     onSubmit: ({ value }) => onSubmit(value),
   });
 
@@ -71,18 +74,25 @@ export function CreatePodcastForm({ onSubmit }: { onSubmit: (values: typeof Crea
 Displays validation errors beneath each field. Must be included for every `form.Field`.
 
 ```tsx
-function FormFieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+import type { AnyFieldApi } from '@tanstack/react-form';
+
+export default function FormFieldInfo({ field }: { field: AnyFieldApi }) {
+  const hasErrors = field.state.meta.isTouched && field.state.meta.errors.length > 0;
+
   return (
-    <>
-      {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-        <p className="text-sm text-destructive mt-1">
-          {field.state.meta.errors.join(', ')}
-        </p>
-      )}
-    </>
+    <div className="mt-2" aria-live="polite">
+      {hasErrors ? (
+        <em id={`${field.name}-error`} className="text-destructive">
+          {field.state.meta.errors.map((e) => e.message).join(', ')}
+        </em>
+      ) : null}
+      {field.state.meta.isValidating ? 'Validating...' : null}
+    </div>
   );
 }
 ```
+
+> See `apps/web/src/routes/-components/common/form-field-info.tsx` for the actual implementation.
 
 ## Container Integration
 
@@ -134,4 +144,40 @@ Schema.optional(Schema.String)
 - [ ] Container passes `onSubmit`, form never calls mutations directly <!-- enforced-by: manual-review -->
 - [ ] Validation uses `Schema.standardSchemaV1()` wrapper <!-- enforced-by: types -->
 
-**Canonical example:** `apps/web/src/features/personas/components/persona-form.tsx`
+**Canonical TanStack Form example:** `apps/web/src/routes/_public/-components/login-form.tsx`
+
+## Controlled Form Pattern
+
+Feature forms embedded in larger workflows (persona creation, podcast setup) use a simpler controlled-component pattern instead of TanStack Form:
+
+```tsx
+interface PersonaFormProps {
+  values: PersonaFormValues;
+  onChange: (values: PersonaFormValues) => void;
+  disabled?: boolean;
+}
+
+export function PersonaForm({ values, onChange, disabled }: PersonaFormProps) {
+  const handleFieldChange = useCallback(
+    (field: keyof PersonaFormValues, value: string) => {
+      onChange({ ...values, [field]: value });
+    },
+    [values, onChange],
+  );
+
+  return (
+    <div>
+      <Label>Name</Label>
+      <Input
+        value={values.name}
+        onChange={(e) => handleFieldChange('name', e.target.value)}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+```
+
+The container owns all state and validation. Use this pattern when the form is part of a multi-step flow where the container manages submission.
+
+**Canonical controlled form example:** `apps/web/src/features/personas/components/persona-form.tsx`
