@@ -1,5 +1,30 @@
 [
   {
+    "id": "2026-02-28-feature-delivery-skip-product-owner-github-preflight-checks",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Skip product-owner GitHub preflight checks",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "automation",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.63,
+    "confidence": 0.96,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-strengthen-deep-research-query-synthesis-and-persona-chat-creati",
     "date": "2026-02-28",
     "month": "2026-02",
@@ -27,6 +52,38 @@
     ],
     "importance": 0.79,
     "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
+    "id": "2026-02-28-periodic-scans-product-owner-reviewer-chat-and-ai-assistant-interaction-clarity",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: chat and AI-assistant interaction clarity — synthesis preview gap, auto-trigger transparency, error handling divergence",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:chat-ai-assistant-clarity",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:grep",
+      "tool:glob",
+      "tool:read",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.87,
+    "confidence": 0.92,
     "eventFile": "events/2026-02.jsonl"
   },
   {
