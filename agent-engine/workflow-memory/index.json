@@ -53,6 +53,26 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-feature-delivery-docker-compose-security-hardening-227-231",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Docker Compose security hardening (#227 + #231)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:security-dependency-hygiene",
+      "automation:ready-for-dev-executor",
+      "docker",
+      "compose",
+      "security"
+    ],
+    "importance": 0.7,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-docker-hardening-tini-buildkit-cache-dockerignore-restart-polici",
     "date": "2026-02-28",
     "month": "2026-02",
