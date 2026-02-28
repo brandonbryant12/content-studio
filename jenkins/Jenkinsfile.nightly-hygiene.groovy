@@ -11,8 +11,7 @@
  */
 
 pipeline {
-  // Nightly jobs often need Docker for test database setup.
-  agent { label 'linux && node22 && docker' }
+  agent { label 'linux && node22' }
 
   options {
     timestamps()
@@ -80,15 +79,9 @@ pipeline {
       }
     }
 
-    stage('Database + E2E') {
+    stage('E2E') {
       steps {
-        sh '''
-          # Bring up ephemeral test DB and push schema.
-          pnpm test:db:setup
-
-          # Run end-to-end browser flows.
-          pnpm test:e2e
-        '''
+        sh 'pnpm test:e2e'
       }
     }
 
@@ -107,9 +100,6 @@ pipeline {
 
   post {
     always {
-      // Always tear down DB containers, even when earlier stages fail.
-      sh 'pnpm test:db:down || true'
-
       junit testResults: '**/reports/*-junit.xml', allowEmptyResults: true
 
       // Archive E2E artifacts for triage. Paths are optional by design.

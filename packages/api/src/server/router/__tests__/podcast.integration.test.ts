@@ -19,7 +19,7 @@ import {
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createTestContext,
+  createPGliteTestContext,
   createTestUser,
   createTestDocument,
   createTestPodcast,
@@ -248,7 +248,7 @@ describe('podcast router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createTestContext();
+    ctx = await createPGliteTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
     user = toUser(testUser);

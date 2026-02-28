@@ -18,6 +18,13 @@ export type DatabaseError =
 
 export interface DbService {
   readonly db: DatabaseInstance;
+  /**
+   * When true, the underlying driver has a single connection (e.g. PGlite).
+   * `db.transaction()` locks that connection, so any code that uses a
+   * separately captured `db` reference inside the transaction will deadlock.
+   * Callers should fall back to compensating-action mode instead.
+   */
+  readonly singleConnection?: boolean;
 }
 
 export class Db extends Context.Tag('@repo/db/Db')<Db, DbService>() {}

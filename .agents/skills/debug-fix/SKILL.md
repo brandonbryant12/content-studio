@@ -20,7 +20,7 @@ Run the smallest failing target first.
 - Invariant test:
   - `pnpm test:invariants`
 
-If router/workflow tests require DB state, run `pnpm test:db:setup` before retrying.
+Router/workflow integration tests use PGlite (in-process) — no Docker or DB setup required.
 
 ## 2) Narrow by Evidence
 

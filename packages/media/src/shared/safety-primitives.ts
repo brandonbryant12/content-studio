@@ -29,21 +29,28 @@ export const withCompensatingAction = <A, E, R, RC>(
 
 const supportsTransactions = (
   db: DatabaseInstance,
+  singleConnection?: boolean,
 ): db is DatabaseInstance & {
   transaction: DatabaseInstance['transaction'];
-} => typeof db.transaction === 'function';
+} =>
+  typeof db.transaction === 'function' &&
+  // Single-connection drivers (e.g. PGlite) deadlock when db.transaction()
+  // locks the connection and other code (e.g. queue service) uses a
+  // separately captured db reference inside the callback.
+  !singleConnection;
 
 /**
  * Run state changes and enqueue in one database transaction when available.
- * Falls back to compensating action mode in mocked/non-transactional test setups.
+ * Falls back to compensating action mode in mocked/non-transactional test setups
+ * and single-connection drivers (PGlite).
  */
 export const withTransactionalStateAndEnqueue = <A, E, R, RC>(
   effect: Effect.Effect<A, E, R>,
   compensate: (error: E) => Effect.Effect<unknown, unknown, RC>,
 ): Effect.Effect<A, E, R | RC | Db> =>
   Effect.gen(function* () {
-    const { db } = yield* Db;
-    if (!supportsTransactions(db)) {
+    const { db, singleConnection } = yield* Db;
+    if (!supportsTransactions(db, singleConnection)) {
       return yield* withCompensatingAction(effect, compensate);
     }
 

@@ -152,17 +152,17 @@ const doc = createTestDocument({ createdBy: user.id, title: 'Test Doc' });
 
 ### Integration Test Context (packages/api only)
 
-For integration tests that need a real database, use `createTestContext` from `@repo/testing`. This creates a Postgres connection with transaction rollback:
+For integration tests that need a real database, use `createPGliteTestContext` from `@repo/testing`. This creates an in-process PGlite instance with snapshot isolation:
 
 ```typescript
-import { createTestContext } from '@repo/testing';
+import { createPGliteTestContext } from '@repo/testing';
 
-let ctx: Awaited<ReturnType<typeof createTestContext>>;
-beforeEach(async () => { ctx = await createTestContext(); });
+let ctx: Awaited<ReturnType<typeof createPGliteTestContext>>;
+beforeEach(async () => { ctx = await createPGliteTestContext(); });
 afterEach(async () => { await ctx.rollback(); });
 ```
 
-> **Note:** `createTestContext` is for integration tests in `packages/api/src/server/router/__tests__/` only. Unit tests in `packages/media/` use `MockDbLive` + mock repo layers instead.
+> **Note:** `createPGliteTestContext` is for integration tests in `packages/api/src/server/router/__tests__/` only. Unit tests in `packages/media/` use `MockDbLive` + mock repo layers instead.
 
 ## @effect/vitest (packages/ai)
 

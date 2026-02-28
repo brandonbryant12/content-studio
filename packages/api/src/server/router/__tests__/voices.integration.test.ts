@@ -3,7 +3,7 @@ import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { user as userTable } from '@repo/db/schema';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createTestContext,
+  createPGliteTestContext,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -142,7 +142,7 @@ describe('voices router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createTestContext();
+    ctx = await createPGliteTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
     user = toUser(testUser);

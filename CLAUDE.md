@@ -99,7 +99,6 @@ pnpm dev          # Start all dev servers (Turborepo watch mode)
 pnpm db:push      # Push Drizzle schema to database
 pnpm db:studio    # Open Drizzle Studio GUI
 pnpm test:e2e     # Run Playwright e2e tests
-pnpm test:db:setup # Start test DB container + push schema
 pnpm skills:check:strict # Validate skill metadata, paths, and mirror symlinks
 pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage baseline
 ```

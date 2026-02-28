@@ -5,12 +5,22 @@ import { pushSchema } from 'drizzle-kit/api';
 import { drizzle } from 'drizzle-orm/pglite';
 import { Layer } from 'effect';
 
-import type { TestContext } from './database';
 import type { DatabaseInstance } from '@repo/db/client';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
 
+/**
+ * Drizzle instance with our schema but without the $client: Pool constraint.
+ * Used in test contexts where the underlying client may be PGlite
+ * rather than a Pool.
+ */
 type TestDatabaseInstance = NodePgDatabase<typeof schema>;
+
+export interface TestContext {
+  db: TestDatabaseInstance;
+  dbLayer: Layer.Layer<Db>;
+  rollback: () => Promise<void>;
+}
 
 /**
  * Cached schema snapshot for fast per-test isolation.
@@ -27,7 +37,10 @@ let baseSnapshot: File | Blob | null = null;
 function toDbLayer(
   db: ReturnType<typeof drizzle<typeof schema>>,
 ): Layer.Layer<Db> {
-  return Layer.succeed(Db, { db: db as unknown as DatabaseInstance });
+  return Layer.succeed(Db, {
+    db: db as unknown as DatabaseInstance,
+    singleConnection: true,
+  });
 }
 
 async function ensureSnapshot(): Promise<File | Blob> {

@@ -25,7 +25,7 @@ import {
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createTestContext,
+  createPGliteTestContext,
   createTestUser,
   resetAllFactories,
   type TestContext,
@@ -119,7 +119,7 @@ describe('voiceover job workflow', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createTestContext();
+    ctx = await createPGliteTestContext();
     runtime = createWorkflowRuntime(ctx);
     testUser = createTestUser();
     user = {

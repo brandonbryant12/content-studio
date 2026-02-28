@@ -85,26 +85,6 @@ pnpm db:push                    # 5. Push database schema
 | `pnpm db:studio` | Open Drizzle Studio GUI |
 | `pnpm test:e2e` | Run Playwright E2E tests |
 
-### Test Database
-
-Integration tests require a separate PostgreSQL instance.
-
-```bash
-pnpm test:db:up                 # Start test DB container
-pnpm test:db:setup              # Push schema to test DB
-pnpm --filter @repo/api test    # Run integration tests
-pnpm test:db:down               # Stop test DB container
-```
-
-| Setting | Value |
-|---|---|
-| Host | `localhost` |
-| Port | `5433` |
-| Database | `content_studio_test` |
-| User / Password | `test` / `test` |
-| Connection URL | `postgresql://test:test@localhost:5433/content_studio_test` |
-| Storage | `tmpfs` (ephemeral; data is lost when container stops) |
-
 ### Environment Variables
 
 #### Required
@@ -179,10 +159,7 @@ Set `OTEL_SERVICE_NAME=content-studio-worker` in worker env files.
 
 | Problem | Fix |
 |---|---|
-| Test DB connection refused | `pnpm test:db:down && pnpm test:db:up && pnpm test:db:setup` |
-| Port 5433 in use | `lsof -i :5433` to find conflicting process |
 | Schema out of sync (dev) | `pnpm db:push` |
-| Schema out of sync (test) | `DB_POSTGRES_URL=postgresql://test:test@localhost:5433/content_studio_test pnpm db:push` |
 | pnpm version mismatch | `corepack enable && pnpm install` |
 | Stale `@repo/db` dist | `pnpm --filter @repo/db build` before downstream `typecheck` |
 | Stale `@repo/testing` dist | `rm -rf packages/testing/dist && pnpm --filter @repo/testing build` |

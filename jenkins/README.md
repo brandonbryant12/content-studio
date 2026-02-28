@@ -21,7 +21,7 @@ Key gates: Same quality gates as CI, then manual approval + deploy placeholder.
 
 2. [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
 Purpose: Deep nightly checks.
-Key gates: Core gates + `test:db:setup` + `test:e2e`, optional `test:live`.
+Key gates: Core gates + `test:e2e`, optional `test:live`.
 
 3. [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
 Purpose: Repo cleanliness and hygiene drift checks.
@@ -53,7 +53,6 @@ Trigger: Cron, example `H 4 * * 1`.
 
 2. Nightly hygiene job:
 - Same as baseline
-- Docker (required for `pnpm test:db:setup` and `pnpm test:db:down`)
 
 ## Secrets / Credentials
 

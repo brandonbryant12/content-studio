@@ -7,7 +7,7 @@ import {
 import { ActivityLogRepoLive } from '@repo/media';
 import {
   createTestAdmin,
-  createTestContext,
+  createPGliteTestContext,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -136,7 +136,7 @@ describe('activity router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createTestContext();
+    ctx = await createPGliteTestContext();
     runtime = createTestRuntime(ctx);
     adminUser = createTestAdmin({ id: 'admin-1', name: 'Admin User' });
     admin = toUser(adminUser);
