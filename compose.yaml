@@ -15,6 +15,13 @@
 # Internal services:
 #   - Worker:        background job processor
 #   - Redis:         SSE/event pub-sub
+#
+# Security notes:
+#   - All services drop Linux capabilities and block privilege escalation.
+#   - Backend services (db, redis, minio, worker) are on an internal network
+#     with no direct external access.
+#   - DB and Redis ports are exposed for local development convenience only.
+#     In production, remove or firewall these port mappings.
 
 services:
   # ------------------------------------------------------------------ #
@@ -31,6 +38,20 @@ services:
       PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
       PUBLIC_SERVER_API_PATH: /api
       PUBLIC_AUTH_MODE: "${AUTH_MODE:-dev-password}"
+    # Note: read_only is not set because the entrypoint writes /app/dist/env.js
+    # at startup to inject runtime PUBLIC_* env vars into the SPA bundle.
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       interval: 30s
       timeout: 10s
@@ -43,6 +64,7 @@ services:
     depends_on:
       server:
         condition: service_healthy
+    networks: [frontend]
 
   # ------------------------------------------------------------------ #
   # API Server
@@ -85,6 +107,21 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
       OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
       OTEL_SERVICE_NAME: content-studio-server
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       interval: 10s
       timeout: 5s
@@ -104,6 +141,7 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+    networks: [frontend, backend]
 
   # ------------------------------------------------------------------ #
   # Worker (background jobs)
@@ -133,6 +171,21 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
       OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
       OTEL_SERVICE_NAME: content-studio-worker
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on:
       db:
         condition: service_healthy
@@ -142,9 +195,12 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+    networks: [backend]
 
   # ------------------------------------------------------------------ #
   # PostgreSQL
+  # Dev-only: port is exposed for local tooling (Drizzle Studio, psql).
+  # In production, remove the ports mapping or firewall it.
   # ------------------------------------------------------------------ #
   db:
     restart: unless-stopped
@@ -158,14 +214,29 @@ services:
       POSTGRES_DB: content_studio
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       interval: 5s
       timeout: 5s
       retries: 5
       test: ["CMD-SHELL", "pg_isready -U postgres -d content_studio"]
+    networks: [backend]
 
   # ------------------------------------------------------------------ #
   # Redis (SSE pub/sub)
+  # Dev-only: port is exposed for local debugging (redis-cli).
+  # In production, remove the ports mapping or firewall it.
   # ------------------------------------------------------------------ #
   redis:
     restart: unless-stopped
@@ -175,11 +246,24 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+    cap_drop: [ALL]
+    cap_add: [SETUID, SETGID]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks: [backend]
 
   # ------------------------------------------------------------------ #
   # Database migrations
@@ -191,9 +275,17 @@ services:
       dockerfile: ./packages/db/Dockerfile
     environment:
       DB_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on:
       db:
         condition: service_healthy
+    networks: [backend]
 
   # ------------------------------------------------------------------ #
   # MinIO (S3-compatible storage)
@@ -210,14 +302,31 @@ services:
     command: server /data --address ":9001" --console-address ":9090"
     volumes:
       - minio_data:/data
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9001/minio/health/live || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks: [backend]
 
   # ------------------------------------------------------------------ #
-  # MinIO init — create bucket + set public anonymous access
+  # MinIO init — create bucket
+  # NOTE: anonymous=public is required because packages/storage uses
+  # unauthenticated fetch() for S3 operations. Switching to
+  # authenticated access requires adding the AWS SDK or Sigv4 signing
+  # to the S3 storage provider — tracked as a separate improvement.
   # ------------------------------------------------------------------ #
   minio-init:
     image: ${DOCKER_REGISTRY:-docker.io}/minio/mc:latest
@@ -232,7 +341,22 @@ services:
         mc alias set myminio http://minio:9001 minioadmin minioadmin
         mc mb --ignore-existing myminio/content-studio
         mc anonymous set public myminio/content-studio
-        echo "MinIO bucket 'content-studio' ready with public access"
+        echo "MinIO bucket 'content-studio' ready"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks: [backend]
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
 
 volumes:
   postgres_data:
