@@ -6,6 +6,11 @@ import {
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@repo/ui/components/tabs';
 import type { Period, StatBreakdown } from '../types';
 import type { ComponentType } from 'react';
 
@@ -76,24 +81,22 @@ export function ActivityStats({
         <h2 className="text-sm font-medium text-muted-foreground">
           Activity Overview
         </h2>
-        <div className="flex gap-1" role="tablist" aria-label="Time period">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              role="tab"
-              aria-selected={period === p.value}
-              onClick={() => onPeriodChange(p.value)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                period === p.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={period}
+          onValueChange={(value) => onPeriodChange(value as Period)}
+        >
+          <TabsList className="flex gap-1 h-auto p-0 bg-transparent" aria-label="Time period">
+            {PERIODS.map((p) => (
+              <TabsTrigger
+                key={p.value}
+                value={p.value}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none text-muted-foreground hover:bg-muted/60 hover:text-foreground`}
+              >
+                {p.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Stat cards */}
