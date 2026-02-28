@@ -7,7 +7,12 @@ import * as schema from './schema';
 
 export interface DatabaseClientOptions {
   databaseUrl?: string;
+  /** Maximum number of clients in the pool (pg default: 10). */
   max?: number;
+  /** Milliseconds a client can sit idle before being closed (pg default: 10_000). */
+  idleTimeoutMillis?: number;
+  /** Milliseconds to wait for a connection before throwing (pg default: 0 = no timeout). */
+  connectionTimeoutMillis?: number;
 }
 
 export type DatabaseInstance = NodePgDatabase<typeof schema> & {
@@ -20,7 +25,9 @@ export const createDb = (opts?: DatabaseClientOptions): DatabaseInstance => {
     casing: 'snake_case',
     connection: {
       connectionString: opts?.databaseUrl,
-      max: opts?.max,
+      max: opts?.max ?? 10,
+      idleTimeoutMillis: opts?.idleTimeoutMillis ?? 30_000,
+      connectionTimeoutMillis: opts?.connectionTimeoutMillis ?? 5_000,
     },
   });
 };

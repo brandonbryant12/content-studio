@@ -88,7 +88,12 @@ const createWorkerRuntime = (
     );
   }
 
-  const db = createDb({ databaseUrl: config.databaseUrl });
+  const db = createDb({
+    databaseUrl: config.databaseUrl,
+    max: 5,
+    idleTimeoutMillis: 60_000,
+    connectionTimeoutMillis: 10_000,
+  });
   const runtime = createServerRuntime({
     db,
     storageConfig: config.storageConfig,

@@ -10,7 +10,12 @@ import { env } from './env';
 
 export const storageConfig = buildStorageConfig();
 
-export const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
+export const db = createDb({
+  databaseUrl: env.SERVER_POSTGRES_URL,
+  max: 20,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
+});
 
 const microsoftSSOConfig =
   env.AUTH_MODE === AuthMode.DEV_PASSWORD
