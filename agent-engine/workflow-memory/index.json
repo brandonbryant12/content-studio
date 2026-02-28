@@ -94,6 +94,25 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-feature-delivery-prepared-statements-for-high-frequency-db-queries-225",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Prepared statements for high-frequency DB queries (#225)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:db",
+      "domain:media",
+      "domain:queue",
+      "prepared-statements",
+      "drizzle",
+      "ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-ready-for-dev-executor-217-hono-bump-219-drizzle-defineconfig-22",
     "date": "2026-02-28",
     "month": "2026-02",
