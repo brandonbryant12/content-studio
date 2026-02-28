@@ -40,10 +40,10 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 app && \
     adduser --system --uid 1001 --ingroup app app
 
-# Copy built SPA and the static file server
-COPY --from=installer /app/apps/web/dist ./dist
-COPY apps/web/serve.js ./serve.js
-COPY apps/web/entrypoint.sh ./entrypoint.sh
+# Copy built SPA and runtime scripts with app ownership so entrypoint can write env.js
+COPY --from=installer --chown=app:app /app/apps/web/dist ./dist
+COPY --chown=app:app apps/web/serve.js ./serve.js
+COPY --chown=app:app apps/web/entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x ./entrypoint.sh
 
@@ -54,6 +54,6 @@ ENV PORT=8080
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD wget --quiet --spider http://0.0.0.0:8080/healthcheck || exit 1
+  CMD wget --quiet --spider http://127.0.0.1:8080/healthcheck || exit 1
 
 CMD ["./entrypoint.sh"]

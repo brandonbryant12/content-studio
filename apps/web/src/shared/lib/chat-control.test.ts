@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { UIMessage } from 'ai';
 import {
   CHAT_CONTROL_TOKENS,
+  MAX_CHAT_FOLLOW_UPS,
   getChatAutomationState,
   stripChatControlTokens,
 } from './chat-control';
@@ -84,5 +85,38 @@ describe('chat-control', () => {
 
     expect(state.hasControlToken).toBe(true);
     expect(state.shouldAutoTrigger).toBe(false);
+  });
+
+  it('exposes followUpLimit defaulting to MAX_CHAT_FOLLOW_UPS', () => {
+    const state = getChatAutomationState([], {
+      token: CHAT_CONTROL_TOKENS.startResearch,
+      isStreaming: false,
+    });
+
+    expect(state.followUpLimit).toBe(MAX_CHAT_FOLLOW_UPS);
+  });
+
+  it('respects custom maxFollowUps parameter', () => {
+    const messages: UIMessage[] = [
+      userMessage('u1', 'Research AI'),
+      assistantMessage('a1', 'Tell me more'),
+      userMessage('u2', 'Hospitals'),
+      assistantMessage('a2', 'Focus window?'),
+    ];
+
+    const stateDefault = getChatAutomationState(messages, {
+      token: CHAT_CONTROL_TOKENS.startResearch,
+      isStreaming: false,
+    });
+    expect(stateDefault.shouldAutoTrigger).toBe(true);
+    expect(stateDefault.followUpLimit).toBe(2);
+
+    const stateExtended = getChatAutomationState(messages, {
+      token: CHAT_CONTROL_TOKENS.startResearch,
+      isStreaming: false,
+      maxFollowUps: 3,
+    });
+    expect(stateExtended.shouldAutoTrigger).toBe(false);
+    expect(stateExtended.followUpLimit).toBe(3);
   });
 });

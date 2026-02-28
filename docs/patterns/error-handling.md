@@ -17,6 +17,7 @@ flowchart LR
 4. **Let Effect infer the error union**; export derived alias for consumers/tests <!-- enforced-by: types -->
 5. **In Effect logic, prefer `Effect.fail` / `Effect.die` over `throw`**; especially never `throw` directly inside `Effect.gen` <!-- enforced-by: eslint -->
 6. **In backend tests, assert tagged errors via `_tag` + fields** rather than `toBeInstanceOf(...)` for domain/app errors <!-- enforced-by: eslint -->
+7. **Avoid paranoid fallbacks in backend flows**; do not add speculative default return values for every code path. Model expected failures as typed errors and fail explicitly when invariants are violated <!-- enforced-by: manual-review -->
 
 ## Error Template
 

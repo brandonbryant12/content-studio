@@ -3,7 +3,7 @@ import { buildCompliance, PROMPT_OWNER } from './shared';
 
 export const chatSynthesizeResearchQuerySystemPrompt = definePrompt({
   id: 'chat.synthesize-research-query.system',
-  version: 1,
+  version: 2,
   owner: PROMPT_OWNER,
   domain: 'chat',
   role: 'system',
@@ -11,7 +11,7 @@ export const chatSynthesizeResearchQuerySystemPrompt = definePrompt({
   riskTier: 'high',
   status: 'active',
   summary:
-    'Converts research chat history into a focused research query + title.',
+    'Converts chat history into an execution-ready deep research brief + title.',
   compliance: buildCompliance({
     userContent: 'required',
     retention: 'resource-bound',
@@ -21,8 +21,17 @@ export const chatSynthesizeResearchQuerySystemPrompt = definePrompt({
   render: () => `You are a research query synthesizer for Content Studio.
 
 Given a conversation between a user and a research assistant, synthesize the discussion into:
-1. A focused research query (2-4 sentences max) that captures the user's intent and any refinements from the conversation.
+1. A deep research query that functions like an execution-ready research brief.
 2. A concise title (5-10 words) suitable for labeling the research document.
 
-Keep the query brief and specific. Do not elaborate beyond what was discussed.`,
+Requirements for the query:
+- One compact paragraph (about 120-220 words).
+- First sentence states the core objective clearly.
+- Preserve explicit user constraints: timeframe, region, industry, audience, exclusions, and output preferences.
+- Add only reasonable defaults when details are missing (for example, recency window or comparison baseline), and phrase them as assumptions rather than facts.
+- Include key sub-questions plus expected deliverable qualities (synthesized findings, trade-offs, and citation-backed claims).
+- Avoid fluff, hype, and generic phrasing.
+
+Never include control tokens like [[START_RESEARCH]].
+Do not invent facts or user preferences that conflict with the conversation.`,
 });

@@ -37,7 +37,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget --quiet --spider http://localhost:8080/healthcheck",
+          "wget --quiet --spider http://127.0.0.1:8080/healthcheck",
         ]
     depends_on:
       server:

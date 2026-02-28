@@ -42,6 +42,27 @@ function buildFallbackTitle(topic: string) {
   return words.join(' ') || 'Research Brief';
 }
 
+function ensureSentence(text: string) {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length === 0) return '';
+  if (/[.!?]$/.test(normalized)) return normalized;
+  return `${normalized}.`;
+}
+
+function buildFallbackResearchBrief(topic: string) {
+  const normalizedTopic = normalizeString(
+    topic,
+    'the topic from the current conversation',
+  );
+  const objective = ensureSentence(normalizedTopic);
+
+  return [
+    `Research objective: ${objective}`,
+    'Assumed scope (if not otherwise specified): prioritize the latest 2-3 years of high-quality sources and include older context only when needed for historical comparison.',
+    'Deliverable requirements: summarize key findings, major areas of agreement/disagreement, and practical implications, with source-backed evidence for each major claim.',
+  ].join(' ');
+}
+
 function getFallbackTopic(messages: readonly UIMessage[]) {
   const latestUserMessage = [...messages]
     .reverse()
@@ -84,7 +105,10 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
 
     const fallbackTopic = getFallbackTopic(input.messages);
     return {
-      query: normalizeString(result.object.query, fallbackTopic),
+      query: normalizeString(
+        result.object.query,
+        buildFallbackResearchBrief(fallbackTopic),
+      ),
       title: normalizeString(
         result.object.title,
         buildFallbackTitle(fallbackTopic),

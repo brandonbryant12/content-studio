@@ -7,7 +7,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: day-to-day product-owner lane focused on coherent user journeys, UX clarity, and cross-feature storytelling for Content Studio. Keep this lane strictly focused on making Content Studio better for daily users; reject generic UX advice that does not materially improve this product. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
-Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
+Skip standalone GitHub preflight commands. Start the lane workflow directly and handle any `gh` auth/permission failures at the actual command that needs GitHub access, recording blocker details in inbox update and automation memory.
 
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 
@@ -20,7 +20,9 @@ Memory-driven review protocol:
 3. Domain graph:
 - onboarding and first-value flow for normal users (meso)
 - create/edit/generate flow for each content surface (document/podcast/voiceover/infographic/persona) (meso)
-- chat and AI-assistant interaction clarity (meso)
+- chat and AI-assistant interaction clarity (meso), including:
+  - deep research chat quality from first user query -> final execution-ready research brief
+  - persona creation chat quality from first user idea -> successful auto-create readiness
 - approval/review/retry loops and state communication (micro)
 - empty/loading/error/success UX consistency (micro)
 - terminology consistency and narrative cohesion across routes/components (micro)
@@ -34,6 +36,9 @@ Memory-driven review protocol:
 Review protocol:
 - Compare current UX and interaction patterns against [`docs/frontend/project-structure.md`](../../../docs/frontend/project-structure.md), [`docs/frontend/components.md`](../../../docs/frontend/components.md), [`docs/frontend/error-handling.md`](../../../docs/frontend/error-handling.md), [`docs/master-spec.md`](../../../docs/master-spec.md), and current route/component evidence.
 - Evaluate whether flows tell a coherent product story for normal users creating content with AI.
+- When scanning chat/assistant surfaces, explicitly validate:
+  - Deep research chat can transform a raw first query into a concrete, high-signal research brief with minimal friction.
+  - Persona chat can collect enough specificity for distinctive persona creation without post-create cleanup churn.
 - Produce 3-6 ranked UX/product-owner recommendations with impact, effort, confidence, and concrete repository evidence.
 - Apply materiality checks: "Does this reduce user friction on a real journey?" and "Does this improve cohesion across adjacent features?"
 - Apply complexity checks:

@@ -12,7 +12,14 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useCallback } from 'react';
 import type { UIMessage } from 'ai';
+import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
+import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
 import { ChatThread } from '@/shared/components/chat-thread';
+import {
+  type ResearchSynthesisPreview,
+  ResearchPreviewContent,
+  SynthesisPreviewCard,
+} from '@/shared/components/synthesis-preview-card';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import {
   CHAT_INPUT_MAX_LENGTH,
@@ -33,12 +40,20 @@ interface ResearchChatDialogProps {
   error: Error | undefined;
   canStartResearch: boolean;
   autoStartReady: boolean;
+  synthesizeError: Error | undefined;
   startError: Error | undefined;
   onSendMessage: (text: string) => void;
-  onStartResearch: () => void;
+  onSynthesize: () => void;
+  isSynthesizing: boolean;
+  preview: ResearchSynthesisPreview | null;
+  onConfirmResearch: () => void;
   isStartingResearch: boolean;
+  onDismissPreview: () => void;
   autoGeneratePodcast: boolean;
   onAutoGeneratePodcastChange: (value: boolean) => void;
+  followUpCount: number;
+  followUpLimit: number;
+  onKeepRefining: () => void;
 }
 
 export function ResearchChatDialog({
@@ -49,14 +64,23 @@ export function ResearchChatDialog({
   error,
   canStartResearch,
   autoStartReady,
+  synthesizeError,
   startError,
   onSendMessage,
-  onStartResearch,
+  onSynthesize,
+  isSynthesizing,
+  preview,
+  onConfirmResearch,
   isStartingResearch,
+  onDismissPreview,
   autoGeneratePodcast,
   onAutoGeneratePodcastChange,
+  followUpCount,
+  followUpLimit,
+  onKeepRefining,
 }: ResearchChatDialogProps) {
-  const isInputDisabled = isStreaming || isStartingResearch;
+  const isInputDisabled =
+    isStreaming || isSynthesizing || isStartingResearch || preview !== null;
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
     onSendMessage,
@@ -76,6 +100,12 @@ export function ResearchChatDialog({
           <DialogTitle className="flex items-center gap-2">
             <MagnifyingGlassIcon className="w-5 h-5" />
             Deep Research
+            {followUpCount > 0 && !autoStartReady && !preview && (
+              <ChatProgressBadge
+                current={followUpCount}
+                total={followUpLimit}
+              />
+            )}
           </DialogTitle>
           <DialogDescription>
             Describe your research topic and I&apos;ll help refine it for the
@@ -100,7 +130,7 @@ export function ResearchChatDialog({
                     key={topic}
                     type="button"
                     onClick={() => handleExampleClick(topic)}
-                    className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {topic}
                   </button>
@@ -110,51 +140,89 @@ export function ResearchChatDialog({
           }
         />
 
-        <div className="border-t px-6 py-3">
-          <label className="flex items-start gap-3">
-            <Checkbox
-              checked={autoGeneratePodcast}
-              onCheckedChange={(checked) =>
-                onAutoGeneratePodcastChange(checked === true)
-              }
-              disabled={isStartingResearch}
-              aria-label="Auto-generate podcast from findings"
-            />
-            <span className="text-sm leading-5">
-              Auto-generate podcast from findings
-              <span className="block text-xs text-muted-foreground">
-                Uses defaults: 5 min, no custom instructions, Aoede + Charon.
-              </span>
-            </span>
-          </label>
-        </div>
-
-        {/* Start Research button */}
-        {canStartResearch && (
-          <div className="px-6 pb-3 space-y-2">
+        {/* Synthesis preview */}
+        {preview && (
+          <div className="px-6 py-3">
+            <SynthesisPreviewCard
+              title="Research Brief"
+              actionLabel="Start Research"
+              isPending={isStartingResearch}
+              pendingLabel="Starting research..."
+              onConfirm={onConfirmResearch}
+              onKeepRefining={onDismissPreview}
+            >
+              <ResearchPreviewContent
+                title={preview.title}
+                query={preview.query}
+              />
+            </SynthesisPreviewCard>
             {startError && (
-              <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
+              <p className="mt-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
                 Failed to start research. Please try again.
               </p>
             )}
-            <Button
-              onClick={onStartResearch}
-              disabled={isStartingResearch || (autoStartReady && !startError)}
-              className="w-full"
-            >
-              {isStartingResearch ? (
-                <>
-                  <Spinner className="w-4 h-4 mr-2" />
-                  Preparing research...
-                </>
-              ) : startError ? (
-                'Retry'
-              ) : autoStartReady ? (
-                'Starting automatically...'
-              ) : (
-                'Start Research'
-              )}
-            </Button>
+          </div>
+        )}
+
+        {/* Auto-generate podcast checkbox */}
+        {!preview && (
+          <div className="border-t px-6 py-3">
+            <label className="flex items-start gap-3">
+              <Checkbox
+                checked={autoGeneratePodcast}
+                onCheckedChange={(checked) =>
+                  onAutoGeneratePodcastChange(checked === true)
+                }
+                disabled={isSynthesizing || isStartingResearch}
+                aria-label="Auto-generate podcast from findings"
+              />
+              <span className="text-sm leading-5">
+                Auto-generate podcast from findings
+                <span className="block text-xs text-muted-foreground">
+                  Uses defaults: 5 min, no custom instructions, Aoede + Charon.
+                </span>
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* Synthesize / Start Research controls (when no preview shown) */}
+        {!preview && canStartResearch && (
+          <div className="px-6 pb-3">
+            {autoStartReady ? (
+              <ChatAutoTriggerConfirmation
+                actionLabel="Start Research"
+                isPending={isSynthesizing}
+                pendingLabel="Analyzing conversation..."
+                error={synthesizeError}
+                onConfirm={onSynthesize}
+                onKeepRefining={onKeepRefining}
+              />
+            ) : (
+              <div className="space-y-2">
+                {synthesizeError && (
+                  <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
+                    Failed to analyze conversation. Please try again.
+                  </p>
+                )}
+                <Button
+                  onClick={onSynthesize}
+                  disabled={isSynthesizing}
+                  className="w-full"
+                >
+                  {isSynthesizing ? (
+                    <>
+                      <Spinner className="w-4 h-4 mr-2" />
+                      Analyzing conversation...
+                    </>
+                  ) : synthesizeError ? (
+                    'Retry'
+                  ) : (
+                    'Start Research'
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -168,8 +236,8 @@ export function ResearchChatDialog({
             onChange={(e) => composer.setInput(e.target.value)}
             onKeyDown={composer.handleInputKeyDown}
             placeholder={
-              autoStartReady && !startError
-                ? 'Research is starting automatically...'
+              preview
+                ? 'Review the brief above, then confirm or keep refining...'
                 : canStartResearch
                   ? 'Add more details or click Start Research...'
                   : 'Describe your research topic...'
