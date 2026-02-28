@@ -38,6 +38,44 @@ extract_port() {
   echo "$1" | sed -nE 's|.*:([0-9]+)/?$|\1|p'
 }
 
+build_web_origin() {
+  local host_ip="${HOST_IP:-localhost}"
+  local web_port="${WEB_PORT:-8086}"
+  echo "http://${host_ip}:${web_port}"
+}
+
+normalize_cors_origins() {
+  local web_origin
+  web_origin="$(build_web_origin)"
+
+  if [[ -z "${CORS_ORIGINS:-}" || -z "${CORS_ORIGINS//[[:space:]]/}" ]]; then
+    warn "CORS_ORIGINS is empty. Using ${web_origin}."
+    CORS_ORIGINS="$web_origin"
+    return
+  fi
+
+  if [[ "$CORS_ORIGINS" == "*" ]]; then
+    warn "CORS_ORIGINS='*' is invalid for this production deploy. Using ${web_origin}."
+    CORS_ORIGINS="$web_origin"
+  fi
+}
+
+print_failed_service_logs() {
+  local failed_services
+  failed_services=$(
+    docker compose --env-file "$ENV_FILE" ps --status exited --services 2>/dev/null \
+      | grep -vE '^(migrate|minio-init)$' || true
+  )
+  [[ -n "$failed_services" ]] || return 0
+
+  warn "Some services exited during startup. Showing recent logs:"
+  while IFS= read -r service; do
+    [[ -z "$service" ]] && continue
+    printf "\n${BOLD}${YELLOW}--- %s (last 80 lines) ---${RESET}\n" "$service"
+    docker compose --env-file "$ENV_FILE" logs --no-color --tail=80 "$service" || true
+  done <<< "$failed_services"
+}
+
 # ── Load defaults from existing app .env files ─────────────────────────────
 
 load_app_defaults() {
@@ -305,9 +343,14 @@ collect_variables() {
 
   # ── CORS ─────────────────────────────────────────────────────────────────
   header "CORS"
-  printf "  ${DIM}Comma-separated origins or '*' for allow-all.${RESET}\n"
+  printf "  ${DIM}Comma-separated origins. '*' is not supported in this deploy mode.${RESET}\n"
   printf "  ${DIM}The web app origin is always allowed.${RESET}\n\n"
-  prompt CORS_ORIGINS "Allowed CORS origins" "${_DEF_CORS_ORIGINS:-*}"
+
+  local default_cors_origins="${_DEF_CORS_ORIGINS:-http://${HOST_IP}:${_DEF_WEB_PORT:-8086}}"
+  if [[ "$default_cors_origins" == "*" ]]; then
+    default_cors_origins="http://${HOST_IP}:${_DEF_WEB_PORT:-8086}"
+  fi
+  prompt CORS_ORIGINS "Allowed CORS origins" "$default_cors_origins"
 
   # ── Telemetry ────────────────────────────────────────────────────────────
   header "Telemetry (OpenTelemetry / Datadog)"
@@ -334,6 +377,8 @@ collect_variables() {
   prompt REDIS_PORT      "Redis port"           "6379"
   prompt MINIO_API_PORT  "MinIO S3 API port"    "9001"
   prompt MINIO_UI_PORT   "MinIO console port"   "9090"
+
+  normalize_cors_origins
 }
 
 # ── Write .env file ─────────────────────────────────────────────────────────
@@ -405,7 +450,30 @@ build_and_run() {
   source "$ENV_FILE"
   set +a
 
-  docker compose --env-file "$ENV_FILE" up --build -d
+  normalize_cors_origins
+
+  local deploy_log
+  deploy_log="$(mktemp)"
+
+  if ! docker compose --env-file "$ENV_FILE" up --build -d 2>&1 | tee "$deploy_log"; then
+    if grep -q 'Could not resolve "../hooks/use-optimistic-create"' "$deploy_log"; then
+      warn "Detected stale web build context. Retrying web build without Docker cache."
+      if ! docker compose --env-file "$ENV_FILE" build --no-cache web; then
+        error "Web rebuild still failed. Pull latest code and verify podcast list imports use-create-podcast."
+        rm -f "$deploy_log"
+        exit 1
+      fi
+
+      docker compose --env-file "$ENV_FILE" up -d
+    else
+      error "docker compose up --build failed. See logs above."
+      print_failed_service_logs
+      rm -f "$deploy_log"
+      exit 1
+    fi
+  fi
+
+  rm -f "$deploy_log"
 
   header "Waiting for Services"
 
@@ -415,19 +483,25 @@ build_and_run() {
   local interval=5
 
   while (( elapsed < timeout )); do
-    local healthy=0
+    local ready=0
     local total=0
 
     while IFS= read -r line; do
       total=$((total + 1))
       if echo "$line" | grep -q "(healthy)"; then
-        healthy=$((healthy + 1))
+        ready=$((ready + 1))
+      elif echo "$line" | grep -q "(unhealthy)"; then
+        :
+      elif echo "$line" | grep -q "(health: starting)"; then
+        :
+      elif echo "$line" | grep -q "(Up"; then
+        ready=$((ready + 1))
       fi
     done < <(docker compose --env-file "$ENV_FILE" ps --format "{{.Name}} ({{.Status}})" 2>/dev/null | grep -v "minio-init\|migrate")
 
-    printf "\r  Healthy: ${GREEN}%d${RESET}/%d services (${DIM}%ds elapsed${RESET})  " "$healthy" "$total" "$elapsed"
+    printf "\r  Ready: ${GREEN}%d${RESET}/%d services (${DIM}%ds elapsed${RESET})  " "$ready" "$total" "$elapsed"
 
-    if (( healthy >= total && total > 0 )); then
+    if (( ready >= total && total > 0 )); then
       echo
       break
     fi
@@ -439,6 +513,7 @@ build_and_run() {
   if (( elapsed >= timeout )); then
     echo
     warn "Some services may not be healthy yet. Check with: docker compose --env-file $ENV_FILE ps"
+    print_failed_service_logs
   fi
 
   # ── Summary ────────────────────────────────────────────────────────────────

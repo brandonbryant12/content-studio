@@ -113,6 +113,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 - **`useChat` streaming state must be explicit**: `status === 'submitted' || status === 'streaming'` (not `status !== 'ready'`).
 - **All mutating use cases on existing resources must enforce authorization** (`requireOwnership` / role policy) before write/delete.
 - **Sanitize user-editable structured fields before persistence or prompt composition** (trim, drop empty key/value entries, normalize types).
+- **Avoid paranoid fallbacks by default**: do not add speculative fallback branches/values for every code path; model expected states explicitly and fail with typed errors when invariants are violated.
 - **Default to direct end-state implementation**: do not plan migration/cutover paths unless the user explicitly asks for a staged rollout.
 - **Query retry policy must be explicit**: disable retries for `*_NOT_FOUND` class errors; retry bounded times for transient failures.
 - **Backend Effect error tests must assert `_tag` + fields**, not `toBeInstanceOf(...)` for domain/app errors (built-in classes like `URL`/`Buffer` are allowed).

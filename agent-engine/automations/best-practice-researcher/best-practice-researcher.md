@@ -51,7 +51,7 @@ Issue policy:
   - `gh label create best-practice-researcher --color 0052CC --description "Best-practice random-walk research findings" --force`
 - Search open and closed issues plus open PRs before creating anything.
 - Reuse/extend existing issues when possible.
-- Open up to 3 high-signal non-duplicate issues when confidence >= 0.8.
+- Open all high-signal non-duplicate issues when confidence >= 0.8.
 - Every new issue title must start with `[Best Practice Researcher]`.
 - Every new issue must include:
   - Why This Change Makes Sense Now For Humans

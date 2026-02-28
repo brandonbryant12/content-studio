@@ -3,7 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import {
@@ -11,7 +11,14 @@ import {
   useResearchChat,
   useSynthesizeResearch,
 } from '@/features/documents/hooks';
+import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
+import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
 import { ChatThread } from '@/shared/components/chat-thread';
+import {
+  type ResearchSynthesisPreview,
+  ResearchPreviewContent,
+  SynthesisPreviewCard,
+} from '@/shared/components/synthesis-preview-card';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import {
   CHAT_INPUT_MAX_LENGTH,
@@ -40,12 +47,16 @@ export function StepResearch({
     messages,
     sendMessage,
     isStreaming,
+    error,
     canStartResearch,
     shouldAutoStart,
+    followUpCount,
+    followUpLimit,
+    extendFollowUps,
   } = useResearchChat();
   const synthesize = useSynthesizeResearch();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const autoStartTriggeredRef = useRef(false);
+  const [preview, setPreview] = useState<ResearchSynthesisPreview | null>(null);
 
   const startResearchMutation = useMutation(
     apiClient.documents.fromResearch.mutationOptions({
@@ -68,8 +79,10 @@ export function StepResearch({
     }
   }, [createdDocumentId]);
 
-  const isStarting = synthesize.isPending || startResearchMutation.isPending;
-  const isInputDisabled = isStreaming || isStarting;
+  const isStarting = startResearchMutation.isPending;
+  const startError = startResearchMutation.error ?? undefined;
+  const isInputDisabled =
+    isStreaming || synthesize.isPending || isStarting || preview !== null;
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
     onSendMessage: (text) => {
@@ -84,28 +97,29 @@ export function StepResearch({
     [sendMessage],
   );
 
-  const handleStartResearch = useCallback(async () => {
-    if (messages.length === 0 || isStarting) return;
-    autoStartTriggeredRef.current = true;
+  const handleSynthesize = useCallback(() => {
+    if (messages.length === 0 || synthesize.isPending) return;
 
-    const result = await synthesize.mutateAsync(messages);
-    startResearchMutation.mutate({
-      query: result.query,
-      title: result.title,
+    synthesize.mutate(messages, {
+      onSuccess: (result) => {
+        setPreview(result);
+      },
     });
-  }, [messages, isStarting, synthesize, startResearchMutation]);
+  }, [messages, synthesize]);
 
-  useEffect(() => {
-    if (createdDocumentId || autoStartTriggeredRef.current) return;
-    if (!shouldAutoStart || isStreaming || isStarting) return;
-    void handleStartResearch();
-  }, [
-    createdDocumentId,
-    shouldAutoStart,
-    isStreaming,
-    isStarting,
-    handleStartResearch,
-  ]);
+  const handleConfirmResearch = useCallback(() => {
+    if (!preview || isStarting) return;
+
+    startResearchMutation.mutate({
+      query: preview.query,
+      title: preview.title,
+    });
+  }, [preview, isStarting, startResearchMutation]);
+
+  const handleDismissPreview = useCallback(() => {
+    setPreview(null);
+    extendFollowUps();
+  }, [extendFollowUps]);
 
   // Complete state — research document created
   if (createdDocumentId) {
@@ -128,12 +142,20 @@ export function StepResearch({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Progress badge */}
+      {followUpCount > 0 && !shouldAutoStart && !preview && (
+        <div className="flex justify-center">
+          <ChatProgressBadge current={followUpCount} total={followUpLimit} />
+        </div>
+      )}
+
       <ChatThread
         messages={messages}
         isStreaming={isStreaming}
+        error={error}
         className={
           messages.length > 0
-            ? 'flex flex-col gap-3 max-h-[320px] overflow-y-auto p-1'
+            ? 'flex flex-col space-y-3 max-h-[320px] overflow-y-auto px-1'
             : undefined
         }
         emptyState={
@@ -147,7 +169,7 @@ export function StepResearch({
                   key={topic}
                   type="button"
                   onClick={() => handleTopicClick(topic)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {topic}
                 </button>
@@ -157,22 +179,56 @@ export function StepResearch({
         }
       />
 
-      {/* Start Research button */}
-      {canStartResearch && !isStarting && (
-        <div className="flex justify-center">
-          <Button onClick={handleStartResearch} size="sm">
-            Start Research
-          </Button>
+      {/* Synthesis preview */}
+      {preview && (
+        <div>
+          <SynthesisPreviewCard
+            title="Research Brief"
+            actionLabel="Start Research"
+            isPending={isStarting}
+            pendingLabel="Starting research..."
+            onConfirm={handleConfirmResearch}
+            onKeepRefining={handleDismissPreview}
+          >
+            <ResearchPreviewContent
+              title={preview.title}
+              query={preview.query}
+            />
+          </SynthesisPreviewCard>
+          {startError && (
+            <p className="mt-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
+              Failed to start research. Please try again.
+            </p>
+          )}
         </div>
       )}
 
-      {/* Starting state */}
-      {isStarting && (
-        <div className="flex items-center justify-center gap-2 py-2">
-          <Spinner className="w-4 h-4" />
-          <span className="text-sm text-muted-foreground">
-            Preparing research…
-          </span>
+      {/* Synthesize / Start Research controls (when no preview shown) */}
+      {!preview && canStartResearch && (
+        <div>
+          {shouldAutoStart ? (
+            <ChatAutoTriggerConfirmation
+              actionLabel="Start Research"
+              isPending={synthesize.isPending}
+              pendingLabel="Analyzing conversation..."
+              error={synthesize.error ?? undefined}
+              onConfirm={handleSynthesize}
+              onKeepRefining={extendFollowUps}
+            />
+          ) : synthesize.isPending ? (
+            <div className="flex items-center justify-center gap-2 py-2">
+              <Spinner className="w-4 h-4" />
+              <span className="text-sm text-muted-foreground">
+                Analyzing conversation…
+              </span>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <Button onClick={handleSynthesize} size="sm">
+                Start Research
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

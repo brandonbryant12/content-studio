@@ -10,7 +10,11 @@ Execution contract:
 - Repository playbook is the source of truth for this lane.
 - Read and execute `agent-engine/automations/product-owner-reviewer/product-owner-reviewer.md` in the repository root before making decisions.
 - Follow the playbook's memory-driven review and issue policies exactly.
+- Skip standalone GitHub preflight checks; execute workflow steps directly and handle `gh` failures in-context.
 - Prioritize UX cohesion and user-journey recommendations for normal users across existing product surfaces.
+- In recurring chat/assistant reviews, periodically prioritize:
+  - deep research prompt quality (first query -> execution-ready brief transformation)
+  - persona chat quality (first idea -> creation-ready persona details)
 - Keep recommendations strictly scoped to making Content Studio better (not generic UX commentary).
 - Advisory-only lane: do not implement repository code/docs changes and do not open PRs.
 - Exception: every run must append workflow memory and run `pnpm workflow-memory:sync` to commit/push memory artifacts.

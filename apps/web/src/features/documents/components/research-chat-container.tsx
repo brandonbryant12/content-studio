@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
+import type { ResearchSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { ResearchChatDialog } from './research-chat-dialog';
 
 interface ResearchChatContainerProps {
@@ -16,19 +17,16 @@ export function ResearchChatContainer({
   const chat = useResearchChat();
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
-  const autoStartTriggeredRef = useRef(false);
   const [autoGeneratePodcast, setAutoGeneratePodcast] = useState(false);
+  const [preview, setPreview] = useState<ResearchSynthesisPreview | null>(null);
 
-  const isStartingResearch =
-    synthesizeMutation.isPending || startResearchMutation.isPending;
-  const startError =
-    synthesizeMutation.error ?? startResearchMutation.error ?? undefined;
+  const startError = startResearchMutation.error ?? undefined;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        autoStartTriggeredRef.current = false;
         setAutoGeneratePodcast(false);
+        setPreview(null);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -43,40 +41,31 @@ export function ResearchChatContainer({
     [chat],
   );
 
-  const handleStartResearch = useCallback(() => {
-    if (chat.messages.length === 0 || isStartingResearch) return;
-    autoStartTriggeredRef.current = true;
+  const handleSynthesize = useCallback(() => {
+    if (chat.messages.length === 0 || synthesizeMutation.isPending) return;
 
     synthesizeMutation.mutate(chat.messages, {
-      onSuccess: ({ query, title }) => {
-        startResearchMutation.mutate(
-          { query, title, autoGeneratePodcast },
-          {
-            onSuccess: () => handleOpenChange(false),
-          },
-        );
+      onSuccess: (result) => {
+        setPreview(result);
       },
     });
-  }, [
-    chat.messages,
-    isStartingResearch,
-    synthesizeMutation,
-    startResearchMutation,
-    autoGeneratePodcast,
-    handleOpenChange,
-  ]);
+  }, [chat.messages, synthesizeMutation]);
 
-  useEffect(() => {
-    if (!open || autoStartTriggeredRef.current) return;
-    if (!chat.shouldAutoStart || chat.isStreaming || isStartingResearch) return;
-    handleStartResearch();
-  }, [
-    open,
-    chat.shouldAutoStart,
-    chat.isStreaming,
-    isStartingResearch,
-    handleStartResearch,
-  ]);
+  const handleConfirmResearch = useCallback(() => {
+    if (!preview || startResearchMutation.isPending) return;
+
+    startResearchMutation.mutate(
+      { query: preview.query, title: preview.title, autoGeneratePodcast },
+      {
+        onSuccess: () => handleOpenChange(false),
+      },
+    );
+  }, [preview, startResearchMutation, autoGeneratePodcast, handleOpenChange]);
+
+  const handleDismissPreview = useCallback(() => {
+    setPreview(null);
+    chat.extendFollowUps();
+  }, [chat]);
 
   return (
     <ResearchChatDialog
@@ -87,12 +76,20 @@ export function ResearchChatContainer({
       error={chat.error}
       canStartResearch={chat.canStartResearch}
       autoStartReady={chat.shouldAutoStart}
+      synthesizeError={synthesizeMutation.error ?? undefined}
       startError={startError}
       onSendMessage={handleSendMessage}
-      onStartResearch={handleStartResearch}
-      isStartingResearch={isStartingResearch}
+      onSynthesize={handleSynthesize}
+      isSynthesizing={synthesizeMutation.isPending}
+      preview={preview}
+      onConfirmResearch={handleConfirmResearch}
+      isStartingResearch={startResearchMutation.isPending}
+      onDismissPreview={handleDismissPreview}
       autoGeneratePodcast={autoGeneratePodcast}
       onAutoGeneratePodcastChange={setAutoGeneratePodcast}
+      followUpCount={chat.followUpCount}
+      followUpLimit={chat.followUpLimit}
+      onKeepRefining={chat.extendFollowUps}
     />
   );
 }

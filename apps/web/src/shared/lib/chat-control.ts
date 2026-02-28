@@ -25,8 +25,11 @@ export function getMessageText(message: UIMessage) {
     .join('');
 }
 
+export const MAX_EXTENDED_FOLLOW_UPS = 4;
+
 export interface ChatAutomationState {
   readonly assistantMessageCount: number;
+  readonly followUpLimit: number;
   readonly hasAssistantResponse: boolean;
   readonly hasControlToken: boolean;
   readonly shouldAutoTrigger: boolean;
@@ -63,6 +66,7 @@ export function getChatAutomationState(
 
   return {
     assistantMessageCount,
+    followUpLimit,
     hasAssistantResponse,
     hasControlToken,
     shouldAutoTrigger,

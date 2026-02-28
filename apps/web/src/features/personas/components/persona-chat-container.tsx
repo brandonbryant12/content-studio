@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useState } from 'react';
 import { usePersonaChat } from '../hooks/use-persona-chat';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
 import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
+import type { PersonaSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { PersonaChatDialog } from './persona-chat-dialog';
 
 interface PersonaChatContainerProps {
@@ -16,15 +17,14 @@ export function PersonaChatContainer({
   const chat = usePersonaChat();
   const synthesizeMutation = useSynthesizePersona();
   const createMutation = useCreatePersona();
-  const autoCreateTriggeredRef = useRef(false);
+  const [preview, setPreview] = useState<PersonaSynthesisPreview | null>(null);
 
-  const isCreatingPersona =
-    synthesizeMutation.isPending || createMutation.isPending;
+  const isCreatingPersona = createMutation.isPending;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        autoCreateTriggeredRef.current = false;
+        setPreview(null);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -39,50 +39,39 @@ export function PersonaChatContainer({
     [chat],
   );
 
-  const handleCreatePersona = useCallback(() => {
-    if (chat.messages.length === 0 || isCreatingPersona) return;
-    autoCreateTriggeredRef.current = true;
+  const handleSynthesize = useCallback(() => {
+    if (chat.messages.length === 0 || synthesizeMutation.isPending) return;
 
     synthesizeMutation.mutate(chat.messages, {
-      onSuccess: (persona) => {
-        createMutation.mutate(
-          {
-            name: persona.name,
-            role: persona.role,
-            personalityDescription: persona.personalityDescription,
-            speakingStyle: persona.speakingStyle,
-            exampleQuotes: [...persona.exampleQuotes],
-            voiceId: persona.voiceId,
-            voiceName: persona.voiceName,
-          },
-          {
-            onSuccess: () => handleOpenChange(false),
-          },
-        );
+      onSuccess: (result) => {
+        setPreview(result);
       },
     });
-  }, [
-    chat.messages,
-    isCreatingPersona,
-    synthesizeMutation,
-    createMutation,
-    handleOpenChange,
-  ]);
+  }, [chat.messages, synthesizeMutation]);
 
-  const synthesizeError =
-    synthesizeMutation.error ?? createMutation.error ?? undefined;
+  const handleConfirmPersona = useCallback(() => {
+    if (!preview || isCreatingPersona) return;
 
-  useEffect(() => {
-    if (!open || autoCreateTriggeredRef.current) return;
-    if (!chat.shouldAutoCreate || chat.isStreaming || isCreatingPersona) return;
-    handleCreatePersona();
-  }, [
-    open,
-    chat.shouldAutoCreate,
-    chat.isStreaming,
-    isCreatingPersona,
-    handleCreatePersona,
-  ]);
+    createMutation.mutate(
+      {
+        name: preview.name,
+        role: preview.role,
+        personalityDescription: preview.personalityDescription,
+        speakingStyle: preview.speakingStyle,
+        exampleQuotes: [...preview.exampleQuotes],
+        voiceId: preview.voiceId,
+        voiceName: preview.voiceName,
+      },
+      {
+        onSuccess: () => handleOpenChange(false),
+      },
+    );
+  }, [preview, isCreatingPersona, createMutation, handleOpenChange]);
+
+  const handleDismissPreview = useCallback(() => {
+    setPreview(null);
+    chat.extendFollowUps();
+  }, [chat]);
 
   return (
     <PersonaChatDialog
@@ -91,12 +80,20 @@ export function PersonaChatContainer({
       messages={chat.messages}
       isStreaming={chat.isStreaming}
       error={chat.error}
-      synthesizeError={synthesizeError}
+      synthesizeError={synthesizeMutation.error ?? undefined}
+      createError={createMutation.error ?? undefined}
       canCreatePersona={chat.canCreatePersona}
       autoCreateReady={chat.shouldAutoCreate}
       onSendMessage={handleSendMessage}
-      onCreatePersona={handleCreatePersona}
+      onSynthesize={handleSynthesize}
+      isSynthesizing={synthesizeMutation.isPending}
+      preview={preview}
+      onConfirmPersona={handleConfirmPersona}
       isCreatingPersona={isCreatingPersona}
+      onDismissPreview={handleDismissPreview}
+      followUpCount={chat.followUpCount}
+      followUpLimit={chat.followUpLimit}
+      onKeepRefining={chat.extendFollowUps}
     />
   );
 }

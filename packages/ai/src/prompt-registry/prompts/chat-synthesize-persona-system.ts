@@ -3,14 +3,14 @@ import { buildCompliance, PROMPT_OWNER } from './shared';
 
 export const chatSynthesizePersonaSystemPrompt = definePrompt({
   id: 'chat.synthesize-persona.system',
-  version: 1,
+  version: 2,
   owner: PROMPT_OWNER,
   domain: 'chat',
   role: 'system',
   modelType: 'llm',
   riskTier: 'high',
   status: 'active',
-  summary: 'Converts persona chat history into a typed persona record.',
+  summary: 'Converts persona chat history into a robust typed persona record.',
   compliance: buildCompliance({
     userContent: 'required',
     retention: 'resource-bound',
@@ -26,6 +26,16 @@ Given a conversation between a user and a persona creation assistant, synthesize
 4. A speaking style description (tone, patterns, verbal habits)
 5. 2-3 example quotes that capture how this persona would speak
 6. A voice that best matches the persona's character from the available voices
+
+## Output quality rules
+- Resolve contradictions by favoring the user's most recent direction.
+- Fill missing details with coherent defaults; avoid placeholder-like values.
+- Name should be specific and memorable (not generic labels like "Tech Host").
+- Role should be concise and concrete (roughly 3-8 words).
+- Personality description should include perspective/expertise plus 2-4 defining traits.
+- Speaking style should describe cadence, tone, and verbal habits in one concise paragraph.
+- Example quotes should be short, in-character lines (max about 18 words each).
+- Voice should match persona energy, tone, and communication style.
 
 ## Available Voices
 Female:
