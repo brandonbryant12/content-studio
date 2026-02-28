@@ -1,9 +1,8 @@
-import { withDb } from '@repo/db/effect';
+import { withDb, prepared } from '@repo/db/effect';
 import {
   document,
   documentListColumns,
   type Document,
-  type DocumentId,
   type DocumentSource,
   type DocumentStatus,
 } from '@repo/db/schema';
@@ -28,26 +27,34 @@ export const documentReadMethods: Pick<
 > = {
   findById: (id) =>
     withDb('documentRepo.findById', (db) =>
-      db
-        .select()
-        .from(document)
-        .where(eq(document.id, id as DocumentId))
-        .limit(1)
+      prepared(db, 'documentRepo.findById', (db) =>
+        db
+          .select()
+          .from(document)
+          .where(eq(document.id, sql.placeholder('id')))
+          .limit(1)
+          .prepare('documentRepo_findById'),
+      )
+        .execute({ id })
         .then((rows) => rows[0]),
     ).pipe(requireDocument(id)),
 
   findByIdForUser: (id, userId) =>
     withDb('documentRepo.findByIdForUser', (db) =>
-      db
-        .select()
-        .from(document)
-        .where(
-          and(
-            eq(document.id, id as DocumentId),
-            eq(document.createdBy, userId),
-          ),
-        )
-        .limit(1)
+      prepared(db, 'documentRepo.findByIdForUser', (db) =>
+        db
+          .select()
+          .from(document)
+          .where(
+            and(
+              eq(document.id, sql.placeholder('id')),
+              eq(document.createdBy, sql.placeholder('userId')),
+            ),
+          )
+          .limit(1)
+          .prepare('documentRepo_findByIdForUser'),
+      )
+        .execute({ id, userId })
         .then((rows) => rows[0]),
     ).pipe(requireDocument(id)),
 

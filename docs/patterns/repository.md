@@ -144,6 +144,79 @@ Split repo files into read/write modules when any threshold is hit:
 - Public repo methods >= 8
 - Repo touches multiple aggregates/tables in distinct flows
 
+## Prepared Statements
+
+Use Drizzle's `.prepare()` with `sql.placeholder()` for high-frequency queries to avoid SQL string construction on every call and let PostgreSQL reuse query plans per connection.
+
+### When to use
+
+| Priority | Candidate | Reason |
+|----------|-----------|--------|
+| HIGH | `findById`, `findByIdForUser` | Called on every detail page load / worker lookup |
+| HIGH | Queue `getJob` | Polled on every job status check |
+| MEDIUM | `list`, `count`, `getJobsByUser` | Called on list pages; dynamic filters make single-statement prep harder |
+
+### Pattern — repos using `withDb` (`Layer.succeed`)
+
+Use the `prepared()` cache from `@repo/db/effect`. It caches per `DatabaseInstance` (WeakMap) so tests with different db instances get isolated caches.
+
+```typescript
+import { withDb, prepared } from '@repo/db/effect';
+import { sql } from 'drizzle-orm';
+
+findByIdForUser: (id, userId) =>
+  withDb('entityRepo.findByIdForUser', (db) =>
+    prepared(db, 'entityRepo.findByIdForUser', (db) =>
+      db
+        .select()
+        .from(entity)
+        .where(
+          and(
+            eq(entity.id, sql.placeholder('id')),
+            eq(entity.createdBy, sql.placeholder('userId')),
+          ),
+        )
+        .limit(1)
+        .prepare('entityRepo_findByIdForUser'),
+    )
+      .execute({ id, userId })
+      .then((rows) => rows[0]),
+  ).pipe(requireEntity(id)),
+```
+
+### Pattern — services using `Layer.effect` (queue)
+
+When the service captures `db` at construction via `yield* Db`, create prepared statements at init:
+
+```typescript
+const makeService = Effect.gen(function* () {
+  const { db } = yield* Db;
+
+  const getJobStmt = db
+    .select()
+    .from(job)
+    .where(eq(job.id, sql.placeholder('jobId')))
+    .limit(1)
+    .prepare('queue_getJob');
+
+  const getJob = (jobId: string) =>
+    runQuery('getJob', async () => {
+      const [row] = await getJobStmt.execute({ jobId });
+      return row;
+    }, 'Failed to get job');
+});
+```
+
+### Naming convention
+
+Prepared statement names use the format `{repoName}_{methodName}` (e.g. `documentRepo_findByIdForUser`). The cache key in `prepared()` uses the span name format `{repoName}.{methodName}`.
+
+### Queries NOT suited for `.prepare()`
+
+- Queries with dynamic/optional WHERE clauses (varying filter combinations)
+- Raw SQL via `db.execute(sql\`...\`)` (e.g. `claimNextJob` with `FOR UPDATE SKIP LOCKED`)
+- Queries with `inArray()` where array length varies
+
 ## Connection Pool Sizing
 
 `createDb()` in `packages/db/src/client.ts` exposes `max`, `idleTimeoutMillis`, and `connectionTimeoutMillis`. Callers should pass values tuned to their workload:
