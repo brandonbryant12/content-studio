@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-28-feature-delivery-bump-effect-3-19-8-3-19-19-218-pr-241",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Bump Effect 3.19.8 → 3.19.19 (#218 → PR #241)",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "deps",
+      "effect",
+      "ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-docker-hardening-tini-buildkit-cache-dockerignore-restart-polici",
     "date": "2026-02-28",
     "month": "2026-02",
