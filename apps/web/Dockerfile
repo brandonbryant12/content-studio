@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM node:22-slim AS base
 
 WORKDIR /app
@@ -14,7 +16,7 @@ RUN corepack enable pnpm
 
 FROM base AS builder
 
-RUN pnpm install --global turbo@^2
+RUN pnpm install --global turbo@2.6.1
 
 COPY . .
 
@@ -26,7 +28,8 @@ RUN turbo prune web --docker
 FROM base AS installer
 
 COPY --from=builder /app/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 RUN pnpm build
@@ -36,6 +39,8 @@ RUN pnpm build
 FROM node:22-alpine AS production
 
 WORKDIR /app
+
+RUN apk add --no-cache tini
 
 RUN addgroup --system --gid 1001 app && \
     adduser --system --uid 1001 --ingroup app app
@@ -52,6 +57,8 @@ USER app
 ENV PORT=8080
 
 EXPOSE 8080
+
+ENTRYPOINT ["/sbin/tini", "--"]
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget --quiet --spider http://127.0.0.1:8080/healthcheck || exit 1

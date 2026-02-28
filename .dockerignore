@@ -1,11 +1,55 @@
+# Dependencies and build outputs
 **/node_modules/
 **/dist/
 **/out/
-
-**/.cache/
 **/.turbo/
-**/.vscode/
+**/.cache/
+**/tsconfig.tsbuildinfo
 
+# Version control
+.git
+.gitignore
+
+# IDE and OS
+**/.vscode/
+**/.idea/
 **/.DS_Store
 
+# Environment files
 **/.env*
+
+# Documentation and non-build files
+docs/
+agent-engine/
+research/
+.agents/
+.agent/
+.claude/
+.github/
+*.md
+LICENSE
+
+# Test and CI artifacts
+**/*.test.ts
+**/*.spec.ts
+**/*.test.tsx
+**/*.spec.tsx
+**/vitest.config.*
+**/playwright.config.*
+**/__tests__/
+**/__mocks__/
+**/test-utils/
+**/coverage/
+playwright-report/
+e2e-results/
+
+# Worktrees
+.worktrees/
+.codex-worktrees/
+
+# Deploy and compose (not needed inside images)
+compose.yaml
+deploy
+.env.deploy
+jenkins/
+tools/

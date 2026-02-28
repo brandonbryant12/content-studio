@@ -21,6 +21,7 @@ services:
   # Web App
   # ------------------------------------------------------------------ #
   web:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -47,6 +48,7 @@ services:
   # API Server
   # ------------------------------------------------------------------ #
   server:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
@@ -107,6 +109,7 @@ services:
   # Worker (background jobs)
   # ------------------------------------------------------------------ #
   worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./apps/worker/Dockerfile
@@ -144,6 +147,7 @@ services:
   # PostgreSQL
   # ------------------------------------------------------------------ #
   db:
+    restart: unless-stopped
     image: ${DOCKER_REGISTRY:-docker.io}/postgres:16
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -164,6 +168,7 @@ services:
   # Redis (SSE pub/sub)
   # ------------------------------------------------------------------ #
   redis:
+    restart: unless-stopped
     image: ${DOCKER_REGISTRY:-docker.io}/redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
     ports:
@@ -194,6 +199,7 @@ services:
   # MinIO (S3-compatible storage)
   # ------------------------------------------------------------------ #
   minio:
+    restart: unless-stopped
     image: ${DOCKER_REGISTRY:-docker.io}/minio/minio:latest
     ports:
       - "${MINIO_API_PORT:-9001}:9001"

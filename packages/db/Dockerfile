@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM node:22-alpine AS base
 
 WORKDIR /app
@@ -9,7 +11,7 @@ ENV CI=1
 ENV NODE_ENV=production
 
 RUN corepack enable pnpm \
-    && pnpm install --global turbo@^2
+    && pnpm install --global turbo@2.6.1
 
 # =========================================================================== #
 
@@ -25,7 +27,8 @@ FROM base AS runner
 
 COPY --from=builder /app/out/json/ .
 
-RUN NODE_ENV=development pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 
