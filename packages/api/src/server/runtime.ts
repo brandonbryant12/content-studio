@@ -2,6 +2,7 @@ import { type AI, GoogleAILive } from '@repo/ai';
 import { MockAIWithLatency } from '@repo/ai/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
+import { TelemetryLive, type TelemetryConfig } from '@repo/db/telemetry';
 import {
   MediaLive,
   UrlScraperLive,
@@ -9,7 +10,6 @@ import {
   type UrlScraper,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
-import { OtelTracerLive, type TelemetryConfig } from '@repo/db/telemetry';
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import type { StorageConfig } from './orpc';
 import type { DatabaseInstance } from '@repo/db/client';
@@ -77,7 +77,7 @@ export const createSharedLayers = (
   const loggerLayer = Logger.pretty;
 
   const tracerLayer = config.telemetryConfig
-    ? OtelTracerLive(config.telemetryConfig)
+    ? TelemetryLive(config.telemetryConfig)
     : Layer.empty;
 
   return Layer.mergeAll(

@@ -11,7 +11,6 @@ import {
   ssePublisher,
 } from '@repo/api/server';
 import { createDb, verifyDbConnection } from '@repo/db/client';
-import { initTelemetry, shutdownTelemetry } from '@repo/db/telemetry';
 import { buildStorageConfig } from './config';
 import { MAX_CONCURRENT_JOBS, QUEUE_DEFAULTS } from './constants';
 import { env } from './env';
@@ -23,20 +22,7 @@ const fatalExit = async (context: string, error?: unknown): Promise<void> => {
   isFatalExiting = true;
 
   console.error(context, error instanceof Error ? error.message : error);
-
-  try {
-    await shutdownTelemetry();
-    console.log('Telemetry exporter stopped (fatal exit)');
-  } catch (shutdownError) {
-    console.error('Failed to stop telemetry exporter during fatal exit:', {
-      message:
-        shutdownError instanceof Error
-          ? shutdownError.message
-          : String(shutdownError),
-    });
-  } finally {
-    process.exit(1);
-  }
+  process.exit(1);
 };
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -54,15 +40,6 @@ process.on('uncaughtException', (error) => {
 });
 
 async function startWorker(): Promise<void> {
-  initTelemetry({
-    enabled: env.TELEMETRY_ENABLED,
-    serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',
-    serviceVersion: env.OTEL_SERVICE_VERSION,
-    environment: env.OTEL_ENV,
-    otlpTracesEndpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-    otlpHeaders: env.OTEL_EXPORTER_OTLP_HEADERS,
-  });
-
   console.log('Verifying database connection...');
 
   const db = createDb({ databaseUrl: env.SERVER_POSTGRES_URL });
@@ -139,9 +116,6 @@ async function startWorker(): Promise<void> {
 
       await shutdownSSEPublisher();
       console.log('SSE publisher stopped');
-
-      await shutdownTelemetry();
-      console.log('Telemetry exporter stopped');
 
       console.log('Worker has stopped gracefully.');
     } catch (error) {

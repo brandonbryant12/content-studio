@@ -1,10 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   MalformedOtlpHeadersError,
-  initTelemetry,
   resolveTracesEndpoint,
   resolveTracesHeaders,
-  shutdownTelemetry,
 } from '../telemetry';
 
 describe('resolveTracesEndpoint', () => {
@@ -72,33 +70,5 @@ describe('resolveTracesHeaders', () => {
       expect(err).toHaveProperty('_tag', 'MalformedOtlpHeadersError');
       expect(err).toHaveProperty('malformedEntries', ['malformed', 'bad=']);
     }
-  });
-});
-
-describe('initTelemetry', () => {
-  afterEach(async () => {
-    await shutdownTelemetry();
-  });
-
-  it('warns when enabled but no OTLP endpoint is set', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    initTelemetry({ serviceName: 'test-service' });
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'),
-    );
-
-    warnSpy.mockRestore();
-  });
-
-  it('does not warn when explicitly disabled', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    initTelemetry({ serviceName: 'test-service', enabled: false });
-
-    expect(warnSpy).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
   });
 });

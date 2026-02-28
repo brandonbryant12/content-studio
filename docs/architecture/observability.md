@@ -119,10 +119,10 @@ The web frontend currently does not send client-side error telemetry.
 ### Runtime Wiring Pattern
 
 1. Parse telemetry env vars in each backend app's `env.ts`.
-2. Call `initTelemetry(...)` at process startup before serving requests or jobs.
-3. Call `shutdownTelemetry()` during graceful shutdown before process exit.
+2. Pass `telemetryConfig` to `createServerRuntime(...)` — the `TelemetryLive` Effect layer manages the full `NodeTracerProvider` lifecycle (creation, global registration, and scoped shutdown).
+3. On graceful shutdown, call `runtime.dispose()` — the layer finalizer flushes and shuts down the trace exporter automatically.
 
-This ensures spans are exported reliably and flush on termination.
+No imperative `initTelemetry`/`shutdownTelemetry` calls are needed; the Effect runtime owns the telemetry lifecycle.
 
 ### OTLP Environment Contract
 
@@ -163,6 +163,7 @@ Typed errors carry their `_tag` into spans automatically via `handleEffectWithPr
 | `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` -- span creation + error mapping |
 | `packages/media/src/shared/safety-primitives.ts` | `withSpan` re-export and safety wrappers |
 | `packages/media/src/shared/__tests__/safety-invariants.test.ts` | Invariant enforcement |
-| `packages/db/src/telemetry.ts` | OTLP exporter setup, `ORPCSpanRenamer`, `@orpc/otel` registration, provider lifecycle |
-| `apps/server/src/server.ts` | Server telemetry bootstrap + graceful shutdown hook |
-| `apps/worker/src/worker.ts` | Worker telemetry bootstrap + graceful shutdown hook |
+| `packages/db/src/telemetry.ts` | `TelemetryLive` layer — OTLP exporter, `ORPCSpanRenamer`, `@orpc/otel` registration, Effect span bridge, scoped provider lifecycle |
+| `packages/api/src/server/runtime.ts` | `createSharedLayers` — includes `TelemetryLive` when config is provided |
+| `apps/server/src/server.ts` | Server startup + graceful shutdown (calls `runtime.dispose()` which triggers telemetry finalizer) |
+| `apps/worker/src/worker.ts` | Worker startup + graceful shutdown (same pattern) |
