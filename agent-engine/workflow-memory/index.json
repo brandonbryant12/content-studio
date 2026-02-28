@@ -1,5 +1,26 @@
 [
   {
+    "id": "2026-02-28-feature-delivery-docker-hardening-tini-buildkit-cache-dockerignore-restart-polici",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Docker hardening: tini, BuildKit cache, .dockerignore, restart policies",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker",
+      "dockerfile",
+      "dockerignore",
+      "tini",
+      "buildkit",
+      "compose",
+      "restart-policy",
+      "healthcheck"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-ready-for-dev-executor-217-hono-bump-219-drizzle-defineconfig-22",
     "date": "2026-02-28",
     "month": "2026-02",
