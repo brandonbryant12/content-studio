@@ -54,6 +54,7 @@
     "workflow-memory:coverage:strict": "pnpm exec tsx agent-engine/scripts/workflow-memory/check-coverage.ts --strict",
     "scenario:validate": "pnpm exec tsx agent-engine/scripts/workflow-memory/replay-scenarios.ts",
     "scenario:validate:strict": "pnpm exec tsx agent-engine/scripts/workflow-memory/replay-scenarios.ts --strict",
+    "ready-for-dev": "bash agent-engine/scripts/ready-for-dev-loop.sh",
     "scripts:lint": "pnpm exec tsx agent-engine/scripts/guardrails/lint-scripts.ts",
     "typecheck": "turbo run typecheck",
     "cli": "pnpm --filter @repo/cli dev --",
