@@ -8,6 +8,7 @@ import {
 } from './errors';
 
 export { DbError, ConstraintViolationError, DeadlockError, ConnectionError };
+export { prepared } from './prepared';
 
 export type DatabaseError =
   | DbError

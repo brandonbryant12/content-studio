@@ -1,6 +1,6 @@
-import { withDb } from '@repo/db/effect';
-import { persona, type Persona, type PersonaId } from '@repo/db/schema';
-import { and, count as drizzleCount, desc, eq } from 'drizzle-orm';
+import { withDb, prepared } from '@repo/db/effect';
+import { persona, type Persona } from '@repo/db/schema';
+import { and, count as drizzleCount, desc, eq, sql } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { PersonaRepoService } from './persona-repo';
 import { PersonaNotFound } from '../../errors';
@@ -15,26 +15,37 @@ export const personaReadMethods: Pick<
   'findById' | 'findByIdForUser' | 'list' | 'count'
 > = {
   findById: (id) =>
-    withDb('personaRepo.findById', async (db) => {
-      const [p] = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, id as PersonaId))
-        .limit(1);
-      return p ?? null;
-    }).pipe(requirePersona(id)),
+    withDb('personaRepo.findById', (db) =>
+      prepared(db, 'personaRepo.findById', (db) =>
+        db
+          .select()
+          .from(persona)
+          .where(eq(persona.id, sql.placeholder('id')))
+          .limit(1)
+          .prepare('personaRepo_findById'),
+      )
+        .execute({ id })
+        .then((rows) => rows[0] ?? null),
+    ).pipe(requirePersona(id)),
 
   findByIdForUser: (id, userId) =>
-    withDb('personaRepo.findByIdForUser', async (db) => {
-      const [p] = await db
-        .select()
-        .from(persona)
-        .where(
-          and(eq(persona.id, id as PersonaId), eq(persona.createdBy, userId)),
-        )
-        .limit(1);
-      return p ?? null;
-    }).pipe(requirePersona(id)),
+    withDb('personaRepo.findByIdForUser', (db) =>
+      prepared(db, 'personaRepo.findByIdForUser', (db) =>
+        db
+          .select()
+          .from(persona)
+          .where(
+            and(
+              eq(persona.id, sql.placeholder('id')),
+              eq(persona.createdBy, sql.placeholder('userId')),
+            ),
+          )
+          .limit(1)
+          .prepare('personaRepo_findByIdForUser'),
+      )
+        .execute({ id, userId })
+        .then((rows) => rows[0] ?? null),
+    ).pipe(requirePersona(id)),
 
   list: (options) =>
     withDb('personaRepo.list', (db) =>

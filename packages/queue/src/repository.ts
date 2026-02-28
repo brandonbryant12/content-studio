@@ -18,6 +18,14 @@ const mapRowToJob = (row: JobRow): Job => ({
 const makeQueueService = Effect.gen(function* () {
   const { db } = yield* Db;
 
+  // Prepared statements — created once at service init, reused on every call.
+  const getJobStmt = db
+    .select()
+    .from(job)
+    .where(eq(job.id, sql.placeholder('jobId')))
+    .limit(1)
+    .prepare('queue_getJob');
+
   const runQuery = <A>(
     name: string,
     fn: (db: DatabaseInstance) => Promise<A>,
@@ -120,12 +128,8 @@ const makeQueueService = Effect.gen(function* () {
   const getJob: QueueService['getJob'] = (jobId) =>
     runQuery(
       'getJob',
-      async (db) => {
-        const [row] = await db
-          .select()
-          .from(job)
-          .where(eq(job.id, jobId))
-          .limit(1);
+      async () => {
+        const [row] = await getJobStmt.execute({ jobId });
         return row;
       },
       'Failed to get job',

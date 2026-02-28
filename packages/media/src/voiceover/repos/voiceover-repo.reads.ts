@@ -1,6 +1,6 @@
-import { withDb } from '@repo/db/effect';
-import { voiceover, type Voiceover, type VoiceoverId } from '@repo/db/schema';
-import { and, count as drizzleCount, desc, eq } from 'drizzle-orm';
+import { withDb, prepared } from '@repo/db/effect';
+import { voiceover, type Voiceover } from '@repo/db/schema';
+import { and, count as drizzleCount, desc, eq, sql } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { VoiceoverRepoService } from './voiceover-repo';
 import { VoiceoverNotFound } from '../../errors';
@@ -15,29 +15,37 @@ export const voiceoverReadMethods: Pick<
   'findById' | 'findByIdForUser' | 'list' | 'count'
 > = {
   findById: (id) =>
-    withDb('voiceoverRepo.findById', async (db) => {
-      const [vo] = await db
-        .select()
-        .from(voiceover)
-        .where(eq(voiceover.id, id as VoiceoverId))
-        .limit(1);
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
+    withDb('voiceoverRepo.findById', (db) =>
+      prepared(db, 'voiceoverRepo.findById', (db) =>
+        db
+          .select()
+          .from(voiceover)
+          .where(eq(voiceover.id, sql.placeholder('id')))
+          .limit(1)
+          .prepare('voiceoverRepo_findById'),
+      )
+        .execute({ id })
+        .then((rows) => rows[0] ?? null),
+    ).pipe(requireVoiceover(id)),
 
   findByIdForUser: (id, userId) =>
-    withDb('voiceoverRepo.findByIdForUser', async (db) => {
-      const [vo] = await db
-        .select()
-        .from(voiceover)
-        .where(
-          and(
-            eq(voiceover.id, id as VoiceoverId),
-            eq(voiceover.createdBy, userId),
-          ),
-        )
-        .limit(1);
-      return vo ?? null;
-    }).pipe(requireVoiceover(id)),
+    withDb('voiceoverRepo.findByIdForUser', (db) =>
+      prepared(db, 'voiceoverRepo.findByIdForUser', (db) =>
+        db
+          .select()
+          .from(voiceover)
+          .where(
+            and(
+              eq(voiceover.id, sql.placeholder('id')),
+              eq(voiceover.createdBy, sql.placeholder('userId')),
+            ),
+          )
+          .limit(1)
+          .prepare('voiceoverRepo_findByIdForUser'),
+      )
+        .execute({ id, userId })
+        .then((rows) => rows[0] ?? null),
+    ).pipe(requireVoiceover(id)),
 
   list: (options) =>
     withDb('voiceoverRepo.list', (db) => {
