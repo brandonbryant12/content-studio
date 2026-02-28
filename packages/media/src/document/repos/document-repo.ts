@@ -1,6 +1,7 @@
 import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
   type Document,
+  type DocumentListItem,
   type DocumentSource,
   type DocumentStatus,
   type JsonValue,
@@ -117,10 +118,11 @@ export interface DocumentRepoService {
 
   /**
    * List documents with optional filters.
+   * Returns lean list items without heavy text fields.
    */
   readonly list: (
     options: ListOptions,
-  ) => Effect.Effect<readonly Document[], DatabaseError, Db>;
+  ) => Effect.Effect<readonly DocumentListItem[], DatabaseError, Db>;
 
   /**
    * Update document by ID (metadata only).

@@ -1,6 +1,7 @@
 import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
   type Podcast,
+  type PodcastListItem,
   type CreatePodcast,
   type UpdatePodcast,
   type GenerationContext,
@@ -106,10 +107,11 @@ export interface PodcastRepoService {
 
   /**
    * List podcasts with optional filters.
+   * Returns lean list items without heavy JSONB/text fields.
    */
   readonly list: (
     options: ListOptions,
-  ) => Effect.Effect<readonly Podcast[], DatabaseError, Db>;
+  ) => Effect.Effect<readonly PodcastListItem[], DatabaseError, Db>;
 
   /**
    * Count podcasts with optional filters.

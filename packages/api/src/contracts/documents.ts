@@ -3,6 +3,7 @@ import {
   CreateDocumentSchema,
   UpdateDocumentFields,
   DocumentOutputSchema,
+  DocumentListItemOutputSchema,
   DocumentIdSchema,
   MetadataSchema,
 } from '@repo/db/schema';
@@ -94,7 +95,7 @@ const documentContract = oc
           }),
         ),
       )
-      .output(std(Schema.Array(DocumentOutputSchema))),
+      .output(std(Schema.Array(DocumentListItemOutputSchema))),
 
     // Get a single document by ID
     get: oc

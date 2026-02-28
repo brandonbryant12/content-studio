@@ -8,7 +8,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { DatabaseInstance } from '@repo/db/client';
-import type { Podcast } from '@repo/db/schema';
+import type { PodcastListItem } from '@repo/db/schema';
 import {
   PodcastRepo,
   type PodcastRepoService,
@@ -21,7 +21,7 @@ import { listPodcasts } from '../list-podcasts';
 // =============================================================================
 
 interface MockRepoState {
-  podcasts: Podcast[];
+  podcasts: PodcastListItem[];
 }
 
 const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({

@@ -1,6 +1,7 @@
 import { withDb } from '@repo/db/effect';
 import {
   document,
+  documentListColumns,
   type Document,
   type DocumentId,
   type DocumentSource,
@@ -63,7 +64,7 @@ export const documentReadMethods: Pick<
       const conditions = filters.length > 0 ? and(...filters) : undefined;
 
       return db
-        .select()
+        .select(documentListColumns)
         .from(document)
         .where(conditions)
         .orderBy(desc(document.createdAt))
