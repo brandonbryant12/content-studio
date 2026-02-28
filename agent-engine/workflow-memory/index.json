@@ -114,6 +114,29 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-feature-delivery-frontend-a11y-dependency-hygiene-248-252-253",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Frontend a11y + dependency hygiene (#248 #252 #253)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor",
+      "domain:web",
+      "issue:248",
+      "issue:252",
+      "issue:253",
+      "pr:254",
+      "a11y",
+      "dependency-hygiene"
+    ],
+    "importance": 0.7,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-pglite-in-process-postgresql-for-integration-tests",
     "date": "2026-02-28",
     "month": "2026-02",
