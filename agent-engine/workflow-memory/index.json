@@ -55,6 +55,37 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-periodic-scans-best-practice-researcher-database-drizzle-postgres-connection-po",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: database-drizzle-postgres — connection pool config, partial indexes, PGlite testing",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:database-drizzle-postgres",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-periodic-scans-best-practice-researcher-database-drizzle-postgres-missing-index",
     "date": "2026-02-28",
     "month": "2026-02",
