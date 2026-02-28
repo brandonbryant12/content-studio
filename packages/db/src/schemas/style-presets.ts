@@ -5,6 +5,7 @@ import {
   varchar,
   boolean,
   jsonb,
+  index,
 } from 'drizzle-orm/pg-core';
 import { Schema } from 'effect';
 import { user } from './auth';
@@ -23,27 +24,33 @@ import {
 // Table
 // =============================================================================
 
-export const infographicStylePreset = pgTable('infographic_style_preset', {
-  id: varchar('id', { length: 21 })
-    .$type<InfographicStylePresetId>()
-    .$default(generateInfographicStylePresetId)
-    .primaryKey(),
-  name: text('name').notNull(),
-  properties: jsonb('properties')
-    .$type<StyleProperty[]>()
-    .notNull()
-    .default([]),
-  isBuiltIn: boolean('is_built_in').notNull().default(false),
-  createdBy: text('created_by').references(() => user.id, {
-    onDelete: 'cascade',
-  }),
-  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const infographicStylePreset = pgTable(
+  'infographic_style_preset',
+  {
+    id: varchar('id', { length: 21 })
+      .$type<InfographicStylePresetId>()
+      .$default(generateInfographicStylePresetId)
+      .primaryKey(),
+    name: text('name').notNull(),
+    properties: jsonb('properties')
+      .$type<StyleProperty[]>()
+      .notNull()
+      .default([]),
+    isBuiltIn: boolean('is_built_in').notNull().default(false),
+    createdBy: text('created_by').references(() => user.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('infographic_style_preset_createdBy_idx').on(table.createdBy),
+  ],
+);
 
 // =============================================================================
 // Effect Schemas

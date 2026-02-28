@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -53,6 +54,12 @@ export const job = pgTable(
     index('job_createdBy_idx').on(table.createdBy),
     index('job_status_idx').on(table.status),
     index('job_type_status_idx').on(table.type, table.status),
+    index('job_pending_idx')
+      .on(table.type, table.createdAt)
+      .where(sql`status = 'pending'`),
+    index('job_processing_idx')
+      .on(table.type, table.startedAt)
+      .where(sql`status = 'processing'`),
   ],
 );
 
