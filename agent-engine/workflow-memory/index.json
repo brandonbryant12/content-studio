@@ -94,6 +94,24 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-feature-delivery-pglite-in-process-postgresql-for-integration-tests",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "PGlite in-process PostgreSQL for integration tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "skill:feature-delivery",
+      "area:testing",
+      "area:dx"
+    ],
+    "importance": 0.7,
+    "confidence": 0.9,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-prepared-statements-for-high-frequency-db-queries-225",
     "date": "2026-02-28",
     "month": "2026-02",
