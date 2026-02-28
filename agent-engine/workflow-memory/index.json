@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-02-28-feature-delivery-add-missing-db-indexes-and-partial-indexes-221-228",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Add missing DB indexes and partial indexes (#221 + #228)",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "db-indexes",
+      "ready-for-dev-executor",
+      "bundled-issues"
+    ],
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-bump-effect-3-19-8-3-19-19-218-pr-241",
     "date": "2026-02-28",
     "month": "2026-02",
