@@ -14,6 +14,12 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { Spinner } from '@repo/ui/components/spinner';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@repo/ui/components/tabs';
 import { Link } from '@tanstack/react-router';
 import { type ReactNode, useState, useCallback } from 'react';
 import type { RouterOutput } from '@repo/api/client';
@@ -24,7 +30,6 @@ import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/conf
 import { formatDuration } from '@/shared/lib/formatters';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
-type TabId = 'script' | 'settings';
 
 interface WorkbenchLayoutProps {
   podcast: PodcastFull;
@@ -69,7 +74,7 @@ export function WorkbenchLayout({
   const handleExportAudio = onExportAudio ?? (() => {});
   const handleExportScript = onExportScript ?? (() => {});
   const handleCopyTranscript = onCopyTranscript ?? (() => {});
-  const [activeTab, setActiveTab] = useState<TabId>('script');
+  const [activeTab, setActiveTab] = useState('script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -162,53 +167,40 @@ export function WorkbenchLayout({
         </div>
       </header>
 
-      <nav
-        className="workbench-v3-tabs"
-        role="tablist"
-        aria-label="Podcast workbench"
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="workbench-v3-tabs-root"
       >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'script'}
-          onClick={() => setActiveTab('script')}
-          className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
-        >
-          <FileTextIcon className="w-4 h-4" />
-          <span>Script</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'settings'}
-          onClick={() => setActiveTab('settings')}
-          className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
-        >
-          <MixerHorizontalIcon className="w-4 h-4" />
-          <span>Settings</span>
-        </button>
-      </nav>
-
-      <div className="workbench-v3-main">
-        {activeTab === 'script' && (
-          <div
-            className="workbench-v3-content"
-            role="tabpanel"
-            aria-label="Script"
+        <TabsList className="workbench-v3-tabs" aria-label="Podcast workbench">
+          <TabsTrigger
+            value="script"
+            className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
           >
+            <FileTextIcon className="w-4 h-4" />
+            <span>Script</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="settings"
+            className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
+          >
+            <MixerHorizontalIcon className="w-4 h-4" />
+            <span>Settings</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="workbench-v3-main">
+          <TabsContent value="script" className="workbench-v3-content">
             {leftPanel}
-          </div>
-        )}
-        {activeTab === 'settings' && (
-          <div
+          </TabsContent>
+          <TabsContent
+            value="settings"
             className="workbench-v3-content workbench-v3-settings"
-            role="tabpanel"
-            aria-label="Settings"
           >
             {rightPanel}
-          </div>
-        )}
-      </div>
+          </TabsContent>
+        </div>
+      </Tabs>
 
       {actionBar}
 

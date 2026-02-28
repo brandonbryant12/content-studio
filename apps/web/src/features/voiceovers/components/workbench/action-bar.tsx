@@ -55,7 +55,7 @@ export function ActionBar({
     return (
       <>
         {failurePanel}
-        <div className="global-action-bar">
+        <div className="global-action-bar" role="status" aria-live="polite">
           <div className="global-action-bar-content">
             <div className="global-action-bar-status">
               <Spinner className="w-4 h-4 text-warning" />
@@ -118,7 +118,7 @@ export function ActionBar({
   return (
     <>
       {failurePanel}
-      <div className="global-action-bar">
+      <div className="global-action-bar" role="status" aria-live="polite">
         <div className="global-action-bar-content">
           <div className="global-action-bar-status ready">
             <CheckIcon className="w-4 h-4" />

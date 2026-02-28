@@ -119,19 +119,14 @@ export const PodcastItem = memo(function PodcastItem({
         className="content-card group"
         data-selected={isSelected || undefined}
       >
-        <Link
-          to="/podcasts/$podcastId"
-          params={{ podcastId: podcast.id }}
-          search={{ version: undefined }}
-          className="flex flex-col flex-1"
-        >
-          <div className="content-card-thumb thumb-podcast">
-            {onToggleSelect && (
-              <div
-                className="content-card-checkbox"
-                data-visible={hasSelection || isSelected || undefined}
-                role="button"
-                tabIndex={0}
+        <div className="content-card-thumb thumb-podcast">
+          {onToggleSelect && (
+            <div
+              className="content-card-checkbox"
+              data-visible={hasSelection || isSelected || undefined}
+            >
+              <Checkbox
+                checked={isSelected}
                 onClick={handleCheckboxClick}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -139,29 +134,31 @@ export const PodcastItem = memo(function PodcastItem({
                     onToggleSelect?.(podcast.id);
                   }
                 }}
-              >
-                <Checkbox
-                  checked={isSelected}
-                  tabIndex={-1}
-                  aria-label={`Select ${podcast.title}`}
-                />
-              </div>
-            )}
-            {podcast.coverImageStorageKey ? (
-              <img
-                src={getStorageUrl(podcast.coverImageStorageKey)}
-                alt={`${podcast.title} cover`}
-                loading="lazy"
+                aria-label={`Select ${podcast.title}`}
               />
-            ) : (
-              <PodcastIcon format={podcast.format} status={podcast.status} />
-            )}
-            {isGeneratingStatus(podcast.status) && (
-              <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
-                <Spinner className="w-6 h-6 text-primary" />
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+          {podcast.coverImageStorageKey ? (
+            <img
+              src={getStorageUrl(podcast.coverImageStorageKey)}
+              alt={`${podcast.title} cover`}
+              loading="lazy"
+            />
+          ) : (
+            <PodcastIcon format={podcast.format} status={podcast.status} />
+          )}
+          {isGeneratingStatus(podcast.status) && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
+              <Spinner className="w-6 h-6 text-primary" />
+            </div>
+          )}
+        </div>
+        <Link
+          to="/podcasts/$podcastId"
+          params={{ podcastId: podcast.id }}
+          search={{ version: undefined }}
+          className="flex flex-col flex-1"
+        >
           <div className="content-card-body">
             <h3 className="content-card-title">{podcast.title}</h3>
             <div className="content-card-meta">

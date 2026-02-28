@@ -277,29 +277,31 @@ function ControlsSidebar({
             {infographic.errorMessage}
           </div>
         )}
-        <Button
-          className="w-full"
-          onClick={onGenerate}
-          disabled={!hasPrompt || actions.isGenerating}
-        >
-          {actions.isGenerating ? (
-            <>
-              <Spinner className="w-4 h-4 mr-2" />
-              {`${GENERATION_LABELS.statusGenerating}...`}
-            </>
-          ) : infographic.status === InfographicStatus.FAILED ? (
-            <>
-              <ReloadIcon className="w-4 h-4 mr-2" />
-              {GENERATION_LABELS.retry}
-            </>
-          ) : hasExistingImage && isViewingHistoricalVersion ? (
-            `Generate From Base v${latestVersionNumber ?? '—'}`
-          ) : hasExistingImage ? (
-            GENERATION_LABELS.saveAndRegenerate
-          ) : (
-            'Generate Infographic'
-          )}
-        </Button>
+        <div role="status" aria-live="polite">
+          <Button
+            className="w-full"
+            onClick={onGenerate}
+            disabled={!hasPrompt || actions.isGenerating}
+          >
+            {actions.isGenerating ? (
+              <>
+                <Spinner className="w-4 h-4 mr-2" />
+                {`${GENERATION_LABELS.statusGenerating}...`}
+              </>
+            ) : infographic.status === InfographicStatus.FAILED ? (
+              <>
+                <ReloadIcon className="w-4 h-4 mr-2" />
+                {GENERATION_LABELS.retry}
+              </>
+            ) : hasExistingImage && isViewingHistoricalVersion ? (
+              `Generate From Base v${latestVersionNumber ?? '—'}`
+            ) : hasExistingImage ? (
+              GENERATION_LABELS.saveAndRegenerate
+            ) : (
+              'Generate Infographic'
+            )}
+          </Button>
+        </div>
         {hasExistingImage && isViewingHistoricalVersion && selectedVersion ? (
           <p className="rounded-md border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             Viewing v{selectedVersion.versionNumber}. New generations will use

@@ -10,6 +10,12 @@ import {
 import { DocumentStatus } from '@repo/db/schema';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@repo/ui/components/tabs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -573,78 +579,75 @@ export function StepDocuments({
       )}
 
       {/* Tabs */}
-      <div className="setup-tabs" role="tablist" aria-label="Document source">
-        {STEP_DOCUMENT_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`setup-tab ${activeTab === tab.key ? 'active' : ''}`}
-          >
-            {tab.label}
-            {tab.key === 'research' && researchDocId && (
-              <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
-            )}
-          </button>
-        ))}
-      </div>
-
-      <div hidden={activeTab !== 'existing'}>
-        <ExistingDocumentsPanel
-          documents={documents ?? null}
-          loadingDocs={loadingDocs}
-          isError={docsError}
-          filteredDocuments={filteredDocuments}
-          selectedIds={selectedIds}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          onToggleDocument={toggleDocument}
-          onSwitchToUpload={() => setActiveTab('upload')}
-        />
-      </div>
-
-      <div
-        role="tabpanel"
-        aria-label="Upload New"
-        hidden={activeTab !== 'upload'}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as StepDocumentsTab)}
       >
-        <UploadPanel
-          uploadFile={uploadFile}
-          uploadTitle={uploadTitle}
-          onUploadTitleChange={setUploadTitle}
-          onClearFile={clearUploadFile}
-          onUpload={handleUpload}
-          isUploading={uploadMutation.isPending}
-          isDragging={isDragging}
-          onDragOver={() => setIsDragging(true)}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          onFilePick={openFilePicker}
-          fileInputRef={fileInputRef}
-          onFileSelect={handleFileSelect}
-        />
-      </div>
+        <TabsList className="setup-tabs" aria-label="Document source">
+          {STEP_DOCUMENT_TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.key}
+              value={tab.key}
+              className={`setup-tab ${activeTab === tab.key ? 'active' : ''}`}
+            >
+              {tab.label}
+              {tab.key === 'research' && researchDocId && (
+                <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <div role="tabpanel" aria-label="From URL" hidden={activeTab !== 'url'}>
-        <UrlPanel
-          url={urlInput}
-          title={urlTitle}
-          onUrlChange={setUrlInput}
-          onTitleChange={setUrlTitle}
-          onSubmit={handleCreateFromUrl}
-          isSubmitting={fromUrlMutation.isPending}
-        />
-      </div>
+        <TabsContent value="existing">
+          <ExistingDocumentsPanel
+            documents={documents ?? null}
+            loadingDocs={loadingDocs}
+            isError={docsError}
+            filteredDocuments={filteredDocuments}
+            selectedIds={selectedIds}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            onToggleDocument={toggleDocument}
+            onSwitchToUpload={() => setActiveTab('upload')}
+          />
+        </TabsContent>
 
-      {/* Research tab */}
-      <div hidden={activeTab !== 'research'}>
-        <StepResearch
-          onDocumentCreated={onDocumentCreated}
-          createdDocumentId={researchDocId}
-        />
-      </div>
+        <TabsContent value="upload">
+          <UploadPanel
+            uploadFile={uploadFile}
+            uploadTitle={uploadTitle}
+            onUploadTitleChange={setUploadTitle}
+            onClearFile={clearUploadFile}
+            onUpload={handleUpload}
+            isUploading={uploadMutation.isPending}
+            isDragging={isDragging}
+            onDragOver={() => setIsDragging(true)}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            onFilePick={openFilePicker}
+            fileInputRef={fileInputRef}
+            onFileSelect={handleFileSelect}
+          />
+        </TabsContent>
+
+        <TabsContent value="url">
+          <UrlPanel
+            url={urlInput}
+            title={urlTitle}
+            onUrlChange={setUrlInput}
+            onTitleChange={setUrlTitle}
+            onSubmit={handleCreateFromUrl}
+            isSubmitting={fromUrlMutation.isPending}
+          />
+        </TabsContent>
+
+        <TabsContent value="research">
+          <StepResearch
+            onDocumentCreated={onDocumentCreated}
+            createdDocumentId={researchDocId}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
