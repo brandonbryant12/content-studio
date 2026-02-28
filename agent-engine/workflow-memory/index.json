@@ -55,6 +55,37 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-forms-md-use-c",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: docs-and-guardrail-drift — forms.md, use-case-tests.md, api-handler.md, repository.md, Hono upgrade",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:docs-and-guardrail-drift",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-periodic-scans-product-owner-reviewer-chat-and-ai-assistant-interaction-clarity",
     "date": "2026-02-28",
     "month": "2026-02",
