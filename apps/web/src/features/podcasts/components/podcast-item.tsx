@@ -116,6 +116,7 @@ export const PodcastItem = memo(function PodcastItem({
   return (
     <>
       <div
+        role="listitem"
         className="content-card group"
         data-selected={isSelected || undefined}
       >

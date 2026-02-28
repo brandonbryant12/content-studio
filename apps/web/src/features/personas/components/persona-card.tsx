@@ -25,6 +25,7 @@ export const PersonaCard = memo(function PersonaCard({
 
   return (
     <div
+      role="listitem"
       className={`group relative rounded-xl border transition-all duration-200 ${
         isSelected
           ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20'

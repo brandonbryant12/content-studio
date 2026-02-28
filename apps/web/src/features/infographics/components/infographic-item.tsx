@@ -86,7 +86,7 @@ export const InfographicItem = memo(function InfographicItem({
     : null;
 
   return (
-    <div className="content-card group" data-selected={isSelected || undefined}>
+    <div role="listitem" className="content-card group" data-selected={isSelected || undefined}>
       <div className="content-card-thumb thumb-infographic">
         {onToggleSelect && (
           <div

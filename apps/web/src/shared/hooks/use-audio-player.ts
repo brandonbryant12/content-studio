@@ -121,7 +121,15 @@ export function useAudioPlayer(
   const handleSliderKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const audio = audioRef.current;
-      if (!audio || !duration) return;
+      if (!audio) return;
+
+      if (e.key === ' ') {
+        e.preventDefault();
+        togglePlay();
+        return;
+      }
+
+      if (!duration) return;
 
       const step = e.shiftKey ? 10 : 5;
       let newTime = audio.currentTime;
@@ -137,7 +145,7 @@ export function useAudioPlayer(
       e.preventDefault();
       audio.currentTime = newTime;
     },
-    [duration],
+    [duration, togglePlay],
   );
 
   return {

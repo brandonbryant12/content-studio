@@ -52,7 +52,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <h3 className="empty-state-title">No voiceovers yet</h3>
+      <h2 className="empty-state-title">No voiceovers yet</h2>
       <p className="empty-state-description">
         Create your first voiceover to get started.
       </p>

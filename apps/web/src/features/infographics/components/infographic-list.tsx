@@ -42,7 +42,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <h3 className="empty-state-title">No infographics yet</h3>
+      <h2 className="empty-state-title">No infographics yet</h2>
       <p className="empty-state-description">
         Create your first infographic to get started.
       </p>
@@ -181,6 +181,8 @@ export function InfographicList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
+          role="list"
+          aria-label="Infographic list"
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredInfographics.map((infographic) => (

@@ -35,7 +35,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <h3 className="empty-state-title">No podcasts yet</h3>
+      <h2 className="empty-state-title">No podcasts yet</h2>
       <p className="empty-state-description">
         Create your first podcast to get started.
       </p>
@@ -175,6 +175,8 @@ export function PodcastList({
         <NoResults searchQuery={searchQuery} />
       ) : (
         <div
+          role="list"
+          aria-label="Podcast list"
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           {filteredPodcasts.map((podcast) => (
