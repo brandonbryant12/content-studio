@@ -32,6 +32,27 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-feature-delivery-column-specific-select-for-list-endpoints-223",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Feature Delivery",
+    "title": "Column-specific SELECT for list endpoints (#223)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:db",
+      "domain:media",
+      "domain:api",
+      "issue:223",
+      "pr:244",
+      "automation:ready-for-dev-executor"
+    ],
+    "importance": 0.7,
+    "confidence": 0.95,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-feature-delivery-docker-hardening-tini-buildkit-cache-dockerignore-restart-polici",
     "date": "2026-02-28",
     "month": "2026-02",
