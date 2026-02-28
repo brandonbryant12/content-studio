@@ -148,6 +148,37 @@
     "eventFile": "events/2026-02.jsonl"
   },
   {
+    "id": "2026-02-28-periodic-scans-best-practice-researcher-repo-tooling-and-pipeline-config-docker",
+    "date": "2026-02-28",
+    "month": "2026-02",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: repo-tooling-and-pipeline-config — Docker lifecycle hardening, Compose security, BuildKit cache optimization",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:repo-tooling-and-pipeline-config",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.92,
+    "eventFile": "events/2026-02.jsonl"
+  },
+  {
     "id": "2026-02-28-periodic-scans-best-practice-researcher-repo-tooling-and-pipeline-config-jenkin",
     "date": "2026-02-28",
     "month": "2026-02",
