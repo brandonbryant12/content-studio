@@ -1,13 +1,12 @@
-import { withDb } from '@repo/db/effect';
+import { withDb, prepared } from '@repo/db/effect';
 import {
   podcast,
   podcastListColumns,
   document,
   type Document,
   type DocumentId,
-  type PodcastId,
 } from '@repo/db/schema';
-import { and, count as drizzleCount, desc, eq, inArray } from 'drizzle-orm';
+import { and, count as drizzleCount, desc, eq, inArray, sql } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { PodcastWithDocuments, PodcastRepoService } from './podcast-repo';
 import { DocumentNotFound, PodcastNotFound } from '../../errors';
@@ -25,11 +24,14 @@ export const podcastReadMethods: Pick<
 > = {
   findById: (id) =>
     withDb('podcastRepo.findById', async (db) => {
-      const [pod] = await db
-        .select()
-        .from(podcast)
-        .where(eq(podcast.id, id as PodcastId))
-        .limit(1);
+      const [pod] = await prepared(db, 'podcastRepo.findById', (db) =>
+        db
+          .select()
+          .from(podcast)
+          .where(eq(podcast.id, sql.placeholder('id')))
+          .limit(1)
+          .prepare('podcastRepo_findById'),
+      ).execute({ id });
 
       if (!pod) return null;
 
@@ -51,13 +53,19 @@ export const podcastReadMethods: Pick<
 
   findByIdForUser: (id, userId) =>
     withDb('podcastRepo.findByIdForUser', async (db) => {
-      const [pod] = await db
-        .select()
-        .from(podcast)
-        .where(
-          and(eq(podcast.id, id as PodcastId), eq(podcast.createdBy, userId)),
-        )
-        .limit(1);
+      const [pod] = await prepared(db, 'podcastRepo.findByIdForUser', (db) =>
+        db
+          .select()
+          .from(podcast)
+          .where(
+            and(
+              eq(podcast.id, sql.placeholder('id')),
+              eq(podcast.createdBy, sql.placeholder('userId')),
+            ),
+          )
+          .limit(1)
+          .prepare('podcastRepo_findByIdForUser'),
+      ).execute({ id, userId });
       if (!pod) return null;
 
       const docs =
