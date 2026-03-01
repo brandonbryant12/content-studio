@@ -46,6 +46,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-250-blocked-by-baseline-lint-run",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #250 blocked by baseline lint",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "ready-for-dev",
+      "feature-delivery",
+      "lint-blocker"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
