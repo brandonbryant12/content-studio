@@ -145,6 +145,38 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-product-owner-reviewer-podcast-create-edit-generate-flow-discard",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: podcast create/edit/generate flow — discard confirmation, instruction preset parity, regeneration warning",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:create-edit-generate-podcast",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:grep",
+      "tool:glob",
+      "tool:read",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-02-28-docs-knowledge-drift-tanstack-router-query-form-best-practices-research-feb-2026",
     "date": "2026-02-28",
     "month": "2026-02",
