@@ -1,4 +1,6 @@
-import { QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/shared/lib/errors';
 
 interface ApiLikeError {
   code: string;
@@ -40,6 +42,15 @@ const retryDelay = (attempt: number, error: unknown): number => {
 };
 
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (mutation.options.onError) {
+        return;
+      }
+
+      toast.error(getErrorMessage(error, 'Operation failed'));
+    },
+  }),
   defaultOptions: {
     queries: {
       // Data is fresh for 1 minute - prevents unnecessary refetches
