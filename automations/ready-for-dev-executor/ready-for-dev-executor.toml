@@ -3,7 +3,9 @@ id = "ready-for-dev-executor"
 name = "Ready-for-Dev Executor"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
-Run this command from repository root:
+Run these commands from repository root:
+`pnpm install`
+`pnpm software-factory doctor`
 `pnpm software-factory operation run ready-for-dev-executor`
 
 Contract:

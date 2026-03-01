@@ -8,6 +8,12 @@ Automations are external scheduler wrappers. They live at repository root and in
 automation.toml schedule
       |
       v
+pnpm install
+      |
+      v
+pnpm software-factory doctor
+      |
+      v
 pnpm software-factory operation run <id>
       |
       v
@@ -17,7 +23,7 @@ operation runner + playbook execution
 ## Rules
 
 1. Wrappers do not implement delivery logic.
-2. Wrappers call `operation run` only.
+2. Wrappers bootstrap dependencies and runtime checks before `operation run`.
 3. Operation IDs are the automation contract key.
 4. Playbooks (`*.md`) are source of truth for behavior.
 
@@ -32,23 +38,16 @@ operation runner + playbook execution
 Push wrapper updates to local Codex runtime:
 
 ```bash
-cp automations/best-practice-researcher/best-practice-researcher.toml ~/.codex/automations/best-practice-researcher/automation.toml
-cp automations/ready-for-dev-executor/ready-for-dev-executor.toml ~/.codex/automations/ready-for-dev-executor/automation.toml
-cp automations/software-factory-researcher/software-factory-researcher.toml ~/.codex/automations/software-factory-researcher/automation.toml
-cp automations/product-vision-researcher/product-vision-researcher.toml ~/.codex/automations/product-vision-researcher/automation.toml
-cp automations/product-owner-reviewer/product-owner-reviewer.toml ~/.codex/automations/product-owner-reviewer/automation.toml
-cp automations/issue-evaluator/issue-evaluator.toml ~/.codex/automations/issue-evaluator/automation.toml
-cp automations/sanity-check/sanity-check.toml ~/.codex/automations/sanity-check/automation.toml
+pnpm automations:sync:runtime
 ```
 
-Pull runtime wrappers back into repo mirror:
+Preview sync actions without writing files:
 
 ```bash
-cp ~/.codex/automations/best-practice-researcher/automation.toml automations/best-practice-researcher/best-practice-researcher.toml
-cp ~/.codex/automations/ready-for-dev-executor/automation.toml automations/ready-for-dev-executor/ready-for-dev-executor.toml
-cp ~/.codex/automations/software-factory-researcher/automation.toml automations/software-factory-researcher/software-factory-researcher.toml
-cp ~/.codex/automations/product-vision-researcher/automation.toml automations/product-vision-researcher/product-vision-researcher.toml
-cp ~/.codex/automations/product-owner-reviewer/automation.toml automations/product-owner-reviewer/product-owner-reviewer.toml
-cp ~/.codex/automations/issue-evaluator/automation.toml automations/issue-evaluator/issue-evaluator.toml
-cp ~/.codex/automations/sanity-check/automation.toml automations/sanity-check/sanity-check.toml
+pnpm automations:sync:runtime:dry-run
 ```
+
+This sync script:
+1. Copies every `automations/<id>/<id>.toml` wrapper into `~/.codex/automations/content-studio--<id>/automation.toml`
+2. Rewrites runtime-only fields (`id`, `name`, `cwds`, `updated_at`)
+3. Preserves wrapper contract fields (`prompt`, `status`, `rrule`, `created_at`) from repo source of truth

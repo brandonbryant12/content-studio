@@ -3,7 +3,9 @@ id = "issue-evaluator"
 name = "Issue Evaluator"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
-Run this command from repository root:
+Run these commands from repository root:
+`pnpm install`
+`pnpm software-factory doctor`
 `pnpm software-factory operation run issue-evaluator`
 
 Contract:

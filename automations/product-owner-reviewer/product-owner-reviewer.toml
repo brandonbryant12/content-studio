@@ -3,7 +3,9 @@ id = "product-owner-reviewer"
 name = "Product Owner Reviewer"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
-Run this command from repository root:
+Run these commands from repository root:
+`pnpm install`
+`pnpm software-factory doctor`
 `pnpm software-factory operation run product-owner-reviewer`
 
 Contract:

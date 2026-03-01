@@ -51,6 +51,8 @@
     "workflow-memory:validate-scenarios": "pnpm software-factory workflow-memory validate-scenarios",
     "workflow-memory:validate-scenarios:strict": "pnpm software-factory workflow-memory validate-scenarios --strict",
     "software-factory": "pnpm exec tsx software-factory/scripts/factory/software-factory.ts",
+    "automations:sync:runtime": "./automations/sync-content-studio-runtime.sh",
+    "automations:sync:runtime:dry-run": "./automations/sync-content-studio-runtime.sh --dry-run",
     "ready-for-dev": "pnpm software-factory operation run ready-for-dev-executor",
     "scripts:lint": "pnpm software-factory scripts lint",
     "typecheck": "turbo run typecheck",
