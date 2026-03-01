@@ -54,7 +54,7 @@ Record each shipped change that adopts an idea from an external paper.
   - Added a canonical workflow-memory taxonomy and wired it into workflow docs, skill guidance, and `add-entry.mjs` validation so memory and agent-failure tags are structured instead of free-form.
 - Code references:
   - [`software-factory/workflow-memory/taxonomy.md`](../software-factory/workflow-memory/taxonomy.md)
-  - `software-factory/scripts/workflow-memory/add-entry.mjs`
+  - `software-factory/scripts/workflow-memory/add-entry.ts`
   - [`software-factory/workflow-memory/README.md`](../software-factory/workflow-memory/README.md)
   - [`software-factory/workflows/README.md`](../software-factory/workflows/README.md)
   - [`.agents/skills/periodic-scans/SKILL.md`](../.agents/skills/periodic-scans/SKILL.md)
@@ -70,5 +70,5 @@ Record each shipped change that adopts an idea from an external paper.
   - Added optional scoring fields to workflow memory events/index and a retrieval helper that ranks by weighted score.
 - Code references:
   - [`software-factory/workflow-memory/README.md`](../software-factory/workflow-memory/README.md)
-  - `software-factory/scripts/workflow-memory/add-entry.mjs`
-  - `software-factory/scripts/workflow-memory/retrieve.mjs`
+  - `software-factory/scripts/workflow-memory/add-entry.ts`
+  - `software-factory/scripts/workflow-memory/retrieve.ts`

@@ -13,7 +13,7 @@
           "name": "issue",
           "type": "number",
           "required": false,
-          "description": "Optional issue number. Defaults to the oldest open ready-for-dev issue."
+          "description": "Optional issue number to restrict planner candidates to a specific ready-for-dev issue."
         },
         {
           "name": "dry-run",

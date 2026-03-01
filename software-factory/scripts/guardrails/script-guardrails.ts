@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 export const ENTRY_SCRIPT_PATHS = [
+  'software-factory/scripts/factory/software-factory.ts',
   'software-factory/scripts/skills/check-quality.ts',
   'software-factory/scripts/workflows/generate-readme.ts',
   'software-factory/scripts/workflow-memory/add-entry.ts',
@@ -14,6 +15,7 @@ export const ENTRY_SCRIPT_PATHS = [
 ] as const;
 
 export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
+  'software-factory': 'pnpm exec tsx software-factory/scripts/factory/software-factory.ts',
   'test:scripts': 'vitest run --config software-factory/scripts/vitest.config.ts',
   'scripts:lint': 'pnpm exec tsx software-factory/scripts/guardrails/lint-scripts.ts',
   'skills:check': 'pnpm exec tsx software-factory/scripts/skills/check-quality.ts',
@@ -32,7 +34,7 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
     'pnpm exec tsx software-factory/scripts/workflow-memory/replay-scenarios.ts --strict',
 };
 
-const ENTRY_DIRECTORIES = ['skills', 'workflow-memory', 'workflows', 'guardrails'] as const;
+const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails'] as const;
 const RUN_SCRIPT_MAIN_RE = /^\s*runScript\(main\);\s*$/m;
 
 export type ScriptGuardrailIssue = {

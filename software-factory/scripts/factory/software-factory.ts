@@ -168,6 +168,30 @@ const ensureThinking = (value: string | undefined, fallback: string): string => 
   return resolved;
 };
 
+const ensureModel = (value: string | undefined, fallback: string): string => {
+  const resolved = (value ?? fallback).trim();
+  if (!VALID_MODELS.has(resolved)) {
+    throw new Error(
+      `Unsupported execution model '${resolved}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
+    );
+  }
+  return resolved;
+};
+
+const readOptionalModelOverride = (value: string | undefined): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  return ensureModel(value, "");
+};
+
+const readOptionalThinkingOverride = (value: string | undefined): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  return ensureThinking(value, "");
+};
+
 const runCodexPlaybook = (
   operation: Operation,
   options: Record<string, string>,
@@ -177,7 +201,7 @@ const runCodexPlaybook = (
     throw new Error(`Operation ${operation.id} is not configured for codex-playbook runner.`);
   }
 
-  const model = options.model?.trim() || operation.defaultModel;
+  const model = ensureModel(options.model, operation.defaultModel);
   const thinking = ensureThinking(options.thinking, operation.defaultThinking);
   const issue = options.issue?.trim();
 
@@ -406,6 +430,9 @@ const runReadyForDevRouter = (
     return 0;
   }
 
+  const modelOverride = readOptionalModelOverride(options.model);
+  const thinkingOverride = readOptionalThinkingOverride(options.thinking);
+
   const plannerPrompt = [
     "You are selecting a coherent ready-for-dev implementation bundle.",
     "Select 1 to 5 issues that are tightly related and can be implemented together in one PR.",
@@ -445,6 +472,12 @@ const runReadyForDevRouter = (
   ];
 
   if (asBool(options.dry_run)) {
+    if (modelOverride) {
+      console.log(`Execution model override: ${modelOverride}`);
+    }
+    if (thinkingOverride) {
+      console.log(`Execution thinking override: ${thinkingOverride}`);
+    }
     console.log(`Planner candidates: ${candidates.length}`);
     console.log("Planner dry run command:");
     console.log(`  codex ${plannerArgs.join(" ")}`);
@@ -476,13 +509,8 @@ const runReadyForDevRouter = (
     return issue;
   });
 
-  const model = (options.model?.trim() || plan.model).trim();
-  const thinking = ensureThinking(options.thinking, plan.thinking);
-  if (!VALID_MODELS.has(model)) {
-    throw new Error(
-      `Unsupported execution model '${model}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
-    );
-  }
+  const model = modelOverride ?? ensureModel(plan.model, "");
+  const thinking = thinkingOverride ?? ensureThinking(plan.thinking, "");
   ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
 
   for (const selected of selectedIssues) {
