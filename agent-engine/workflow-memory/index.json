@@ -31,6 +31,38 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-product-owner-reviewer-accessibility-and-keyboard-focus-usabilit",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: accessibility and keyboard/focus/usability — chat input accessible names, podcast action bar aria-live parity, list loading state announcements",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:micro",
+      "trajectory:domain:accessibility-keyboard-focus-usability",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:grep",
+      "tool:glob",
+      "tool:read",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.87,
+    "confidence": 0.91,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-02-28-docs-knowledge-drift-tanstack-router-query-form-best-practices-research-feb-2026",
     "date": "2026-02-28",
     "month": "2026-02",
