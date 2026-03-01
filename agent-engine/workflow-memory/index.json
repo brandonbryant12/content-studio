@@ -108,6 +108,36 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-telemetry-life",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: docs-and-guardrail-drift — telemetry lifecycle and handler-span docs alignment",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:docs-and-guardrail-drift",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-frontend-react-tanstack-router-query-sh",
     "date": "2026-03-01",
     "month": "2026-03",
