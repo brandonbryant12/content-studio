@@ -1,18 +1,10 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
 const ARCHIVE_DIR = path.join(EVENTS_DIR, "archive");
-
-const USAGE = `Usage:
-  pnpm workflow-memory:compact [--archive-closed] [--days 90] [--dry-run]
-`;
 
 const CLOSED_STATUSES = new Set(["closed", "resolved", "done"]);
 
@@ -21,23 +13,6 @@ export type WorkflowMemoryCompactOptions = {
   days: number;
   dryRun: boolean;
 };
-
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) continue;
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-    args[key] = next;
-    i += 1;
-  }
-  return args;
-}
 
 function isEventFile(name) {
   return /^\d{4}-\d{2}\.jsonl$/.test(name);
@@ -188,21 +163,3 @@ export const runWorkflowMemoryCompact = async ({
   );
   return 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemoryCompact({
-    archiveClosed: args.archive_closed === "true",
-    days: Number.parseInt(args.days ?? "90", 10),
-    dryRun: args.dry_run === "true",
-  });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

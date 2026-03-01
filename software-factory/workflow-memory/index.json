@@ -11,6 +11,17 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-architecture-adr-guard-remove-standalone-utility-script-entrypoints-from-software-facto",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Remove standalone utility script entrypoints from software-factory",
+    "severity": "low",
+    "status": "open",
+    "tags": [],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-replace-utility-argv-adapters-with-typed-command-dispatch",
     "date": "2026-03-01",
     "month": "2026-03",

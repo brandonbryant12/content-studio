@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  parseArgs,
   runWorkflowMemoryPreflight,
 } from '../guardrails/workflow-memory-preflight';
 
@@ -11,22 +10,6 @@ type MockResult = {
 };
 
 describe('workflow-memory preflight', () => {
-  it('parses bootstrap and path overrides', () => {
-    const parsed = parseArgs([
-      '--bootstrap',
-      '--cwd',
-      '/tmp/repo',
-      '--memory-path',
-      'custom/memory',
-    ]);
-
-    expect(parsed).toEqual({
-      bootstrap: true,
-      cwd: '/tmp/repo',
-      memoryPath: 'custom/memory',
-    });
-  });
-
   it('fails fast with one remediation when tsx is missing and bootstrap is disabled', async () => {
     const logs: string[] = [];
     const errors: string[] = [];

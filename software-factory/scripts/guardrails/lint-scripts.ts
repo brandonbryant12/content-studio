@@ -1,8 +1,3 @@
-#!/usr/bin/env node
-
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { runScript } from '../lib/effect-script';
 import { checkScriptGuardrails } from './script-guardrails';
 
 export const runScriptGuardrailsLint = async (): Promise<number> => {
@@ -21,16 +16,3 @@ export const runScriptGuardrailsLint = async (): Promise<number> => {
 
   return 1;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  if (argv.includes('--help') || argv.includes('-h')) {
-    console.log('Usage:\n  pnpm software-factory scripts lint');
-    return 0;
-  }
-
-  return await runScriptGuardrailsLint();
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

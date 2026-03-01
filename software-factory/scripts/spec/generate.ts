@@ -1,7 +1,5 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { runCommand } from '../lib/command';
-import { runScript } from '../lib/effect-script';
 import { assembleMasterSpec } from './assemble-master-spec';
 import { generateDataModelArtifact } from './generate-data-model';
 import { generateDomainMapArtifact } from './generate-domain-map';
@@ -63,15 +61,6 @@ const createSnapshotMetadataMarkdown = (input: {
   return lines.join('\n');
 };
 
-export const main = async (argv: string[] = process.argv.slice(2)): Promise<number> => {
-  if (argv.includes('--help') || argv.includes('-h')) {
-    console.log('Usage:\n  pnpm software-factory spec generate');
-    return 0;
-  }
-
-  return await runSpecGenerate();
-};
-
 export const runSpecGenerate = async (): Promise<number> => {
   await ensureDir(generatedRoot);
 
@@ -106,7 +95,3 @@ export const runSpecGenerate = async (): Promise<number> => {
   await assembleMasterSpec();
   return 0;
 };
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

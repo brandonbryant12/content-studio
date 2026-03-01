@@ -1,9 +1,5 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { runScript } from "../lib/effect-script";
 
 const ROOT = process.cwd();
 const CANONICAL_SKILLS_DIR = path.join(ROOT, ".agents", "skills");
@@ -41,27 +37,10 @@ const PATH_PREFIXES = [
 const MAX_RECOMMENDED_LINES = 120;
 const MIN_CONCRETE_PATH_ANCHORS = 2;
 
-const USAGE = `Usage:
-  pnpm skills:check [--strict] [--json]
-
-Options:
-  --strict  Treat warnings as failures (non-zero exit code)
-  --json    Print machine-readable JSON output
-`;
-
 export type SkillsCheckOptions = {
   strict: boolean;
   json: boolean;
 };
-
-function parseArgs(argv) {
-  const flags = new Set(argv.filter((arg) => arg.startsWith("--")));
-  return {
-    strict: flags.has("--strict"),
-    json: flags.has("--json"),
-    help: flags.has("--help") || flags.has("-h"),
-  };
-}
 
 function stripQuotes(value) {
   return value.replace(/^['"]|['"]$/g, "");
@@ -339,18 +318,3 @@ export const runSkillsCheck = async ({
 
   return failed ? 1 : 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const { strict, json, help } = parseArgs(argv);
-
-  if (help) {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runSkillsCheck({ strict, json });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

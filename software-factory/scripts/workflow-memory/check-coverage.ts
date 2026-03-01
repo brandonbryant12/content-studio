@@ -1,10 +1,6 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { readWorkflowRegistry } from "../workflows/registry";
-import { runScript } from "../lib/effect-script";
 
 const INDEX_PATH = path.join(
   "software-factory",
@@ -12,15 +8,6 @@ const INDEX_PATH = path.join(
   "index.json",
 );
 
-
-const USAGE = `Usage:
-  pnpm workflow-memory:coverage [--month YYYY-MM] [--min 1] [--strict] [--json] [--audit-taxonomy]
-
-Examples:
-  pnpm workflow-memory:coverage
-  pnpm workflow-memory:coverage --month 2026-02 --strict
-  pnpm workflow-memory:coverage --month 2026-02 --audit-taxonomy
-`;
 
 const MEMORY_TRIGGER_TAGS = new Set(["memory", "workflow-memory", "memory-eval"]);
 const MEMORY_FORM_PREFIX = "memory-form:";
@@ -34,30 +21,6 @@ export type WorkflowMemoryCoverageOptions = {
   json: boolean;
   auditTaxonomy: boolean;
 };
-
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) {
-      continue;
-    }
-    if (token === "--") {
-      continue;
-    }
-
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-
-    args[key] = next;
-    i += 1;
-  }
-  return args;
-}
 
 function validateMonth(month) {
   return /^\d{4}-\d{2}$/.test(month);
@@ -91,15 +54,6 @@ async function readKnownWorkflows() {
   }
 
   return Array.from(new Set(workflows));
-}
-
-function parsePositiveInt(raw, fallback) {
-  if (!raw) return fallback;
-  const value = Number.parseInt(raw, 10);
-  if (!Number.isFinite(value) || value <= 0) {
-    return fallback;
-  }
-  return value;
 }
 
 function hasTagPrefix(tags, prefix) {
@@ -269,23 +223,3 @@ export const runWorkflowMemoryCoverage = async ({
 
   return hasCoverageFailure || hasTaxonomyFailure ? 1 : 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemoryCoverage({
-    month: args.month,
-    min: parsePositiveInt(args.min, 1),
-    strict: args.strict === "true",
-    json: args.json === "true",
-    auditTaxonomy: args.audit_taxonomy === "true",
-  });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

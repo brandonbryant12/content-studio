@@ -1,11 +1,7 @@
-#!/usr/bin/env node
-
 import { execFile as execFileCallback } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { runScript } from "../lib/effect-script";
 
 const execFile = promisify(execFileCallback);
 
@@ -18,23 +14,6 @@ const MEMORY_PATHS = [EVENTS_PATH, INDEX_PATH, SUMMARIES_PATH] as const;
 const DEFAULT_REMOTE = "origin";
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_COMMIT_MESSAGE = "chore(workflow-memory): append automation memory";
-
-const USAGE = `Usage:
-  pnpm workflow-memory:sync \\
-    [--remote origin] \\
-    [--branch <current-branch>] \\
-    [--message "chore(workflow-memory): append automation memory"] \\
-    [--max-attempts 5] \\
-    [--dry-run]
-
-Notes:
-  - Stages and commits only workflow-memory append artifacts:
-    - software-factory/workflow-memory/events/*.jsonl
-    - software-factory/workflow-memory/index.json
-    - software-factory/workflow-memory/summaries/*.md
-  - Retries push on non-fast-forward and auto-resolves append-only memory conflicts.
-  - Aborts if non-memory conflicts appear during rebase.
-`;
 
 export type WorkflowMemorySyncOptions = {
   remote?: string;
@@ -70,27 +49,6 @@ type IndexRow = {
   hasScenario?: true;
   scenarioSkill?: string;
 };
-
-function parseArgs(argv: string[]): Record<string, string> {
-  const args: Record<string, string> = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) {
-      continue;
-    }
-
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-
-    args[key] = next;
-    i += 1;
-  }
-  return args;
-}
 
 function toFsPath(repoPath: string): string {
   return path.join(process.cwd(), ...repoPath.split("/"));
@@ -632,23 +590,3 @@ export const runWorkflowMemorySync = async ({
   console.log(`Workflow-memory sync complete: ${remoteValue}/${branchValue}`);
   return 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemorySync({
-    remote: args.remote,
-    branch: args.branch,
-    message: args.message,
-    maxAttempts: args.max_attempts ? Number(args.max_attempts) : undefined,
-    dryRun: args.dry_run === "true",
-  });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

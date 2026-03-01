@@ -2,7 +2,6 @@ import { writeFile } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readWorkflowRegistry } from "./registry";
-import { runScript } from "../lib/effect-script";
 
 export const runWorkflowsGenerate = async (): Promise<number> => {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -110,16 +109,3 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
   console.log(`Generated ${readmePath}`);
   return 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  if (argv.includes("--help") || argv.includes("-h")) {
-    console.log("Usage:\n  pnpm software-factory workflows generate");
-    return 0;
-  }
-
-  return await runWorkflowsGenerate();
-}
-
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

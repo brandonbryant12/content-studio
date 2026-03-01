@@ -1,9 +1,5 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
@@ -22,26 +18,6 @@ const SECRET_PATTERNS = [
   /xox[bpas]-[A-Za-z0-9\-]{10,}/,
 ];
 
-const USAGE = `Usage:
-  pnpm workflow-memory:validate-scenarios [options]
-
-Options:
-  --skill <name>    Filter by target skill
-  --check <name>    Filter by specific check
-  --id <event-id>   Validate single scenario
-  --month <YYYY-MM> Filter by month
-  --json            Output as JSON
-  --strict          Exit code 1 on any validation failure
-  --help            Show this help message
-
-Validates scenario integrity:
-  - Fixture file exists at software-factory/workflow-memory/scenarios/{id}.md
-  - Fixture has ## Input and ## Expected Findings sections
-  - No secrets detected in fixture content
-  - Event ID matches safe regex [a-z0-9][a-z0-9-]*[a-z0-9]
-  - Fixture path is contained in scenarios directory (no symlink escapes)
-`;
-
 export type WorkflowMemoryValidateScenariosOptions = {
   skill?: string;
   check?: string;
@@ -50,24 +26,6 @@ export type WorkflowMemoryValidateScenariosOptions = {
   json: boolean;
   strict: boolean;
 };
-
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) continue;
-    if (token === "--") continue;
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-    args[key] = next;
-    i += 1;
-  }
-  return args;
-}
 
 function isEventFile(name) {
   return /^\d{4}-\d{2}\.jsonl$/.test(name);
@@ -287,25 +245,3 @@ export const runWorkflowMemoryValidateScenarios = async ({
 
   return strict && invalid > 0 ? 1 : 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemoryValidateScenarios({
-    skill: args.skill,
-    check: args.check,
-    id: args.id,
-    month: args.month,
-    json: args.json === "true",
-    strict: args.strict === "true",
-  });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

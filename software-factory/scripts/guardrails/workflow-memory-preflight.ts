@@ -1,11 +1,4 @@
-#!/usr/bin/env node
-
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { runCommand } from "../lib/command";
-import { runScript } from "../lib/effect-script";
-
-const DEFAULT_MEMORY_PATH = path.join("software-factory", "workflow-memory");
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 type CommandResult = {
@@ -39,34 +32,6 @@ const runCommandWithResult: CommandRunner = async (
 const isTsxMissingError = (output: string): boolean =>
   output.includes('Command "tsx" not found') ||
   output.includes("ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL");
-
-export const parseArgs = (argv: string[]) => {
-  let bootstrap = false;
-  let cwd = process.cwd();
-  let memoryPath = DEFAULT_MEMORY_PATH;
-
-  for (let index = 0; index < argv.length; index += 1) {
-    const value = argv[index];
-
-    if (value === "--bootstrap") {
-      bootstrap = true;
-      continue;
-    }
-
-    if (value === "--cwd") {
-      cwd = argv[index + 1] ?? cwd;
-      index += 1;
-      continue;
-    }
-
-    if (value === "--memory-path") {
-      memoryPath = argv[index + 1] ?? memoryPath;
-      index += 1;
-    }
-  }
-
-  return { bootstrap, cwd, memoryPath };
-};
 
 export type WorkflowMemoryPreflightOptions = {
   bootstrap: boolean;
@@ -147,11 +112,3 @@ export const runWorkflowMemoryPreflight = async ({
   }
   return 1;
 };
-
-export const main = async (argv: string[] = process.argv.slice(2)): Promise<number> => {
-  return await runWorkflowMemoryPreflight(parseArgs(argv));
-};
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

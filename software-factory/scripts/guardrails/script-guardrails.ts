@@ -4,17 +4,6 @@ import { REQUIRED_UTILITY_PACKAGE_SCRIPTS } from '../factory/utility-command-man
 
 export const ENTRY_SCRIPT_PATHS = [
   'software-factory/scripts/factory/software-factory.ts',
-  'software-factory/scripts/skills/check-quality.ts',
-  'software-factory/scripts/workflows/generate-readme.ts',
-  'software-factory/scripts/workflow-memory/add-entry.ts',
-  'software-factory/scripts/workflow-memory/sync-git.ts',
-  'software-factory/scripts/workflow-memory/retrieve.ts',
-  'software-factory/scripts/workflow-memory/compact-memory.ts',
-  'software-factory/scripts/workflow-memory/check-coverage.ts',
-  'software-factory/scripts/workflow-memory/replay-scenarios.ts',
-  'software-factory/scripts/guardrails/lint-scripts.ts',
-  'software-factory/scripts/guardrails/workflow-memory-preflight.ts',
-  'software-factory/scripts/spec/generate.ts',
 ] as const;
 
 export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
@@ -214,7 +203,7 @@ export const checkScriptGuardrails = async (
         code: 'untracked-entry-script',
         path: entryPath,
         message:
-          'Found a script entrypoint that is not covered by guardrails. Add it to ENTRY_SCRIPT_PATHS and package.json scripts.',
+          'Found a legacy standalone script entrypoint. Use software-factory/scripts/factory/software-factory.ts as the only CLI entrypoint.',
       });
     }
   }

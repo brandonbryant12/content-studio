@@ -1,10 +1,6 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { readWorkflowRegistry } from "../workflows/registry";
-import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
@@ -47,43 +43,6 @@ const FAILURE_VALUES = new Set([
   "env-drift",
 ]);
 
-const USAGE = `Usage:
-  pnpm workflow-memory:add-entry \\
-    --workflow "Feature Delivery" \\
-    --title "Short title" \\
-    --trigger "What triggered this" \\
-    --finding "Decision/finding" \\
-    --evidence "File/PR/evidence" \\
-    --follow-up "Guardrail/follow-up" \\
-    --reflection "What went well/what to repeat" \\
-    --feedback "What to improve/avoid" \\
-    --owner "@team" \\
-    --status "open" \\
-    [--id custom-event-id] \\
-    [--date YYYY-MM-DD] \\
-    [--severity low|medium|high|critical] \\
-    [--tags a,b,c] \\
-    [--memory-form parametric|external[,..]] \\
-    [--memory-function semantic|episodic|working[,..]] \\
-    [--memory-dynamics write|retrieve|decay|conflict[,..]] \\
-    [--capability planning|tool-use|long-term-reasoning|instruction-following|debugging[,..]] \\
-    [--failure-mode tool-misuse|state-loss|incorrect-patch|test-evasion|env-drift[,..]] \\
-    [--importance 0-1] \\
-    [--recency 0-1] \\
-    [--confidence 0-1] \\
-    [--source manual] \\
-    [--scenario-skill <skill-name>] \\
-    [--scenario-check <check-name>] \\
-    [--scenario-verdict pass|fail] \\
-    [--scenario-pattern <pattern-name>] \\
-    [--scenario-severity low|medium|high|critical]
-
-Scenario flags:
-  When any --scenario-* flag is provided, --scenario-skill and --scenario-verdict
-  are required. Scenarios create replayable test cases linked to fixture files at
-  software-factory/workflow-memory/scenarios/{id}.md.
-`;
-
 type WorkflowMemoryAddEntryArgs = Record<string, string>;
 
 export type WorkflowMemoryAddEntryOptions = {
@@ -123,30 +82,6 @@ function slug(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
-}
-
-function parseArgs(argv: string[]): WorkflowMemoryAddEntryArgs {
-  const args: WorkflowMemoryAddEntryArgs = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) {
-      continue;
-    }
-    if (token === "--") {
-      continue;
-    }
-
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-
-    args[key] = next;
-    i += 1;
-  }
-  return args;
 }
 
 async function readJsonArray(filePath) {
@@ -601,18 +536,3 @@ export const runWorkflowMemoryAddEntry = async (
 ): Promise<number> => {
   return await runWorkflowMemoryAddEntryFromArgs(toAddEntryArgs(options));
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemoryAddEntryFromArgs(args);
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}

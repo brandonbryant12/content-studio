@@ -1,32 +1,8 @@
-#!/usr/bin/env node
-
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
-
-const USAGE = `Usage:
-  pnpm workflow-memory:retrieve \\
-    --workflow "Self-Improvement" \\
-    --tags guardrail,docs \\
-    --limit 5 \\
-    --min-score 0.35 \\
-    [--month YYYY-MM] \\
-    [--has-scenario] \\
-    [--scenario-skill <skill-name>]
-
-Scoring (0-1):
-  score = 0.4 * importance + 0.3 * recency + 0.2 * tagMatch + 0.1 * confidence
-
-Recency defaults to a 90-day linear decay if the row lacks a recency field.
-
-Scenario filters:
-  --has-scenario       Only return events that have an attached scenario
-  --scenario-skill     Only return events whose scenario targets this skill
-`;
 
 export type WorkflowMemoryRetrieveOptions = {
   workflow?: string;
@@ -37,26 +13,6 @@ export type WorkflowMemoryRetrieveOptions = {
   hasScenario: boolean;
   scenarioSkill?: string;
 };
-
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) continue;
-    if (token === "--") continue;
-
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      args[key] = "true";
-      continue;
-    }
-
-    args[key] = next;
-    i += 1;
-  }
-  return args;
-}
 
 async function readJsonArray(filePath) {
   try {
@@ -101,20 +57,6 @@ function computeTagMatch(rowTags, desiredTags) {
     if (rowSet.has(tag)) hits += 1;
   }
   return hits / desiredTags.length;
-}
-
-function parseLimit(raw) {
-  if (!raw) return 5;
-  const parsed = Number.parseInt(raw, 10);
-  if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  throw new Error(`Invalid --limit value: ${raw}`);
-}
-
-function parseMinScore(raw) {
-  if (!raw) return 0;
-  const parsed = Number(raw);
-  if (Number.isFinite(parsed)) return parsed;
-  throw new Error(`Invalid --min-score value: ${raw}`);
 }
 
 export const runWorkflowMemoryRetrieve = async ({
@@ -194,26 +136,3 @@ export const runWorkflowMemoryRetrieve = async ({
   console.log(JSON.stringify(response, null, 2));
   return 0;
 };
-
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  return await runWorkflowMemoryRetrieve({
-    workflow: args.workflow,
-    tags: args.tags,
-    limit: parseLimit(args.limit),
-    minScore: parseMinScore(args.min_score),
-    month: args.month,
-    hasScenario: args.has_scenario === "true",
-    scenarioSkill: args.scenario_skill,
-  });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runScript(main);
-}
