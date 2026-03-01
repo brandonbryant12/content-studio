@@ -46,6 +46,32 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-258-blocked-by-baseline-lint-gate",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #258 blocked by baseline lint gate",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:258",
+      "skill:intake-triage",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "selection_outcome:blocked_gate",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:working",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:env-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
