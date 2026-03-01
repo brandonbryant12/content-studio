@@ -356,16 +356,16 @@ pnpm workflow-memory:add-entry \
 
 ```bash
 # Validate all scenarios
-pnpm scenario:validate
+pnpm workflow-memory:validate-scenarios
 
 # Strict mode (exit 1 on failures)
-pnpm scenario:validate:strict
+pnpm workflow-memory:validate-scenarios:strict
 
 # Filter by skill
-pnpm scenario:validate --skill pr-risk-review
+pnpm workflow-memory:validate-scenarios --skill pr-risk-review
 
 # JSON output
-pnpm scenario:validate --json
+pnpm workflow-memory:validate-scenarios --json
 ```
 
 ### Retrieving Scenarios

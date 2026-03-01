@@ -68,6 +68,12 @@ export const parseArgs = (argv: string[]) => {
   return { bootstrap, cwd, memoryPath };
 };
 
+export type WorkflowMemoryPreflightOptions = {
+  bootstrap: boolean;
+  cwd: string;
+  memoryPath: string;
+};
+
 export const runWorkflowMemoryPreflight = async ({
   bootstrap,
   cwd,
@@ -75,10 +81,7 @@ export const runWorkflowMemoryPreflight = async ({
   logger = console.log,
   errorLogger = console.error,
   commandRunner = runCommandWithResult,
-}: {
-  bootstrap: boolean;
-  cwd: string;
-  memoryPath: string;
+}: WorkflowMemoryPreflightOptions & {
   logger?: (line: string) => void;
   errorLogger?: (line: string) => void;
   commandRunner?: CommandRunner;

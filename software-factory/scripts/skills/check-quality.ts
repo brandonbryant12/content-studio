@@ -49,6 +49,11 @@ Options:
   --json    Print machine-readable JSON output
 `;
 
+export type SkillsCheckOptions = {
+  strict: boolean;
+  json: boolean;
+};
+
 function parseArgs(argv) {
   const flags = new Set(argv.filter((arg) => arg.startsWith("--")));
   return {
@@ -294,14 +299,10 @@ function printHumanReport(skillCount, issues, strict) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const { strict, json, help } = parseArgs(argv);
-
-  if (help) {
-    console.log(USAGE);
-    return 0;
-  }
-
+export const runSkillsCheck = async ({
+  strict,
+  json,
+}: SkillsCheckOptions): Promise<number> => {
   if (!(await pathExists(CANONICAL_SKILLS_DIR))) {
     throw new Error(`Canonical skills directory not found: ${CANONICAL_SKILLS_DIR}`);
   }
@@ -337,6 +338,17 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 
   return failed ? 1 : 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const { strict, json, help } = parseArgs(argv);
+
+  if (help) {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runSkillsCheck({ strict, json });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

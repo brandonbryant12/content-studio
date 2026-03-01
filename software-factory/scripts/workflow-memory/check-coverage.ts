@@ -27,6 +27,14 @@ const MEMORY_FORM_PREFIX = "memory-form:";
 const MEMORY_FUNCTION_PREFIX = "memory-function:";
 const MEMORY_DYNAMICS_PREFIX = "memory-dynamics:";
 
+export type WorkflowMemoryCoverageOptions = {
+  month?: string;
+  min?: number;
+  strict: boolean;
+  json: boolean;
+  auditTaxonomy: boolean;
+};
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -210,26 +218,28 @@ function printHumanReport(summary) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
+export const runWorkflowMemoryCoverage = async ({
+  month,
+  min,
+  strict,
+  json,
+  auditTaxonomy,
+}: WorkflowMemoryCoverageOptions): Promise<number> => {
+  const monthValue = month ?? currentMonth();
+  const minPerWorkflow = min ?? 1;
+
+  if (!validateMonth(monthValue)) {
+    throw new Error(`Invalid month: ${monthValue}. Expected YYYY-MM.`);
   }
 
-  const month = args.month ?? currentMonth();
-  if (!validateMonth(month)) {
-    throw new Error(`Invalid month: ${month}. Expected YYYY-MM.`);
+  if (!Number.isFinite(minPerWorkflow) || minPerWorkflow < 1) {
+    throw new Error(`Invalid min threshold: ${minPerWorkflow}. Expected integer >= 1.`);
   }
 
-  const minPerWorkflow = parsePositiveInt(args.min, 1);
-  const strict = args.strict === "true";
-  const json = args.json === "true";
-  const auditTaxonomy = args.audit_taxonomy === "true";
-
+  const normalizedMin = Math.floor(minPerWorkflow);
   const indexRows = await readIndex();
   const knownWorkflows = await readKnownWorkflows();
-  const summary = summarizeCoverage(indexRows, month, minPerWorkflow, knownWorkflows);
+  const summary = summarizeCoverage(indexRows, monthValue, normalizedMin, knownWorkflows);
   const missingMemoryTaxonomy = auditTaxonomy
     ? findMissingMemoryTaxonomy(summary.rowsForMonth)
     : [];
@@ -258,6 +268,22 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const hasTaxonomyFailure = strict && auditTaxonomy && missingMemoryTaxonomy.length > 0;
 
   return hasCoverageFailure || hasTaxonomyFailure ? 1 : 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemoryCoverage({
+    month: args.month,
+    min: parsePositiveInt(args.min, 1),
+    strict: args.strict === "true",
+    json: args.json === "true",
+    auditTaxonomy: args.audit_taxonomy === "true",
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

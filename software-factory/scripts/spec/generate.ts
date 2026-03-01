@@ -69,6 +69,10 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<numb
     return 0;
   }
 
+  return await runSpecGenerate();
+};
+
+export const runSpecGenerate = async (): Promise<number> => {
   await ensureDir(generatedRoot);
 
   const openapi = await generateOpenApiArtifacts();

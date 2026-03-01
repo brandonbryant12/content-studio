@@ -22,7 +22,7 @@ const UTILITY_HANDLERS: Record<UtilityCommandKey, UtilityMain> = {
   "workflow-memory:retrieve": retrieveWorkflowMemoryMain,
   "workflow-memory:compact": compactWorkflowMemoryMain,
   "workflow-memory:coverage": checkWorkflowMemoryCoverageMain,
-  "scenario:validate": replayScenariosMain,
+  "workflow-memory:validate-scenarios": replayScenariosMain,
   "scripts:lint": lintScriptsMain,
   "spec:generate": specGenerateMain,
 };

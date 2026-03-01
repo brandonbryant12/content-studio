@@ -84,6 +84,39 @@ Scenario flags:
   software-factory/workflow-memory/scenarios/{id}.md.
 `;
 
+type WorkflowMemoryAddEntryArgs = Record<string, string>;
+
+export type WorkflowMemoryAddEntryOptions = {
+  workflow: string;
+  title: string;
+  trigger: string;
+  finding: string;
+  evidence: string;
+  follow_up: string;
+  owner: string;
+  status: string;
+  id?: string;
+  date?: string;
+  severity?: string;
+  tags?: string;
+  reflection?: string;
+  feedback?: string;
+  memory_form?: string;
+  memory_function?: string;
+  memory_dynamics?: string;
+  capability?: string;
+  failure_mode?: string;
+  importance?: number;
+  recency?: number;
+  confidence?: number;
+  source?: string;
+  scenario_skill?: string;
+  scenario_check?: string;
+  scenario_verdict?: string;
+  scenario_pattern?: string;
+  scenario_severity?: string;
+};
+
 function slug(value) {
   return value
     .toLowerCase()
@@ -92,8 +125,8 @@ function slug(value) {
     .slice(0, 64);
 }
 
-function parseArgs(argv) {
-  const args = {};
+function parseArgs(argv: string[]): WorkflowMemoryAddEntryArgs {
+  const args: WorkflowMemoryAddEntryArgs = {};
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (!token.startsWith("--")) {
@@ -197,7 +230,7 @@ function validateDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date);
 }
 
-function parseOptionalScore(args, key) {
+function parseOptionalScore(args: WorkflowMemoryAddEntryArgs, key: string) {
   if (args[key] === undefined) {
     return null;
   }
@@ -347,7 +380,7 @@ function printCoverageSummary(index, month, knownWorkflows) {
   }
 }
 
-function buildScenario(args) {
+function buildScenario(args: WorkflowMemoryAddEntryArgs) {
   const hasScenarioFlags = Object.keys(args).some((k) => k.startsWith("scenario_"));
   if (!hasScenarioFlags) return undefined;
 
@@ -375,7 +408,7 @@ function buildScenario(args) {
   };
 }
 
-function buildEvent(args) {
+function buildEvent(args: WorkflowMemoryAddEntryArgs) {
   const date = args.date ?? new Date().toISOString().slice(0, 10);
   if (!validateDate(date)) {
     throw new Error(`Invalid date: ${date}. Expected YYYY-MM-DD.`);
@@ -465,14 +498,53 @@ function buildEvent(args) {
   };
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
+const toAddEntryArgs = (options: WorkflowMemoryAddEntryOptions): WorkflowMemoryAddEntryArgs => {
+  const args: WorkflowMemoryAddEntryArgs = {
+    workflow: options.workflow,
+    title: options.title,
+    trigger: options.trigger,
+    finding: options.finding,
+    evidence: options.evidence,
+    follow_up: options.follow_up,
+    owner: options.owner,
+    status: options.status,
+  };
 
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
+  const optionalValues: Array<[keyof WorkflowMemoryAddEntryOptions, string]> = [
+    ["id", "id"],
+    ["date", "date"],
+    ["severity", "severity"],
+    ["tags", "tags"],
+    ["reflection", "reflection"],
+    ["feedback", "feedback"],
+    ["memory_form", "memory_form"],
+    ["memory_function", "memory_function"],
+    ["memory_dynamics", "memory_dynamics"],
+    ["capability", "capability"],
+    ["failure_mode", "failure_mode"],
+    ["importance", "importance"],
+    ["recency", "recency"],
+    ["confidence", "confidence"],
+    ["source", "source"],
+    ["scenario_skill", "scenario_skill"],
+    ["scenario_check", "scenario_check"],
+    ["scenario_verdict", "scenario_verdict"],
+    ["scenario_pattern", "scenario_pattern"],
+    ["scenario_severity", "scenario_severity"],
+  ];
+
+  for (const [sourceKey, targetKey] of optionalValues) {
+    const value = options[sourceKey];
+    if (value !== undefined) {
+      args[targetKey] = String(value);
+    }
   }
+  return args;
+};
 
+const runWorkflowMemoryAddEntryFromArgs = async (
+  args: WorkflowMemoryAddEntryArgs,
+): Promise<number> => {
   const event = buildEvent(args);
   const knownWorkflows = await readKnownWorkflows();
   assertKnownWorkflow(event.workflow, knownWorkflows);
@@ -522,6 +594,23 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   console.log(`Index updated: ${INDEX_PATH}`);
   printCoverageSummary(deduped, month, knownWorkflows);
   return 0;
+};
+
+export const runWorkflowMemoryAddEntry = async (
+  options: WorkflowMemoryAddEntryOptions,
+): Promise<number> => {
+  return await runWorkflowMemoryAddEntryFromArgs(toAddEntryArgs(options));
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemoryAddEntryFromArgs(args);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -36,6 +36,14 @@ Notes:
   - Aborts if non-memory conflicts appear during rebase.
 `;
 
+export type WorkflowMemorySyncOptions = {
+  remote?: string;
+  branch?: string;
+  message?: string;
+  maxAttempts?: number;
+  dryRun: boolean;
+};
+
 type CommandResult = {
   code: number;
   stdout: string;
@@ -569,21 +577,28 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
+export const runWorkflowMemorySync = async ({
+  remote,
+  branch,
+  message,
+  maxAttempts,
+  dryRun,
+}: WorkflowMemorySyncOptions): Promise<number> => {
+  const maxAttemptsValue = maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const remoteValue = (remote ?? DEFAULT_REMOTE).trim();
+  const messageValue = (message ?? DEFAULT_COMMIT_MESSAGE).trim();
 
-  const maxAttempts = Number(args.max_attempts ?? DEFAULT_MAX_ATTEMPTS);
-  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+  if (!Number.isInteger(maxAttemptsValue) || maxAttemptsValue < 1) {
     throw new Error("--max-attempts must be an integer >= 1.");
   }
 
-  const remote = (args.remote ?? DEFAULT_REMOTE).trim();
-  const message = (args.message ?? DEFAULT_COMMIT_MESSAGE).trim();
-  const dryRun = args.dry_run === "true";
+  if (!remoteValue) {
+    throw new Error("Remote cannot be empty.");
+  }
+
+  if (!messageValue) {
+    throw new Error("Commit message cannot be empty.");
+  }
 
   await runCommand("git", ["rev-parse", "--is-inside-work-tree"]);
   const currentBranch = (await runCommand("git", ["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim();
@@ -591,8 +606,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     throw new Error("workflow-memory:sync requires a named branch (detached HEAD is not supported).");
   }
 
-  const branch = (args.branch ?? currentBranch).trim();
-  if (!branch) {
+  const branchValue = (branch ?? currentBranch).trim();
+  if (!branchValue) {
     throw new Error("Target branch cannot be empty.");
   }
 
@@ -602,7 +617,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     return 0;
   }
 
-  const committed = await commitMemoryChanges(message);
+  const committed = await commitMemoryChanges(messageValue);
   if (!committed) {
     console.log("No workflow-memory commit created (nothing to commit).");
     return 0;
@@ -613,9 +628,25 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     return 0;
   }
 
-  await pushWithRetry(remote, branch, maxAttempts);
-  console.log(`Workflow-memory sync complete: ${remote}/${branch}`);
+  await pushWithRetry(remoteValue, branchValue, maxAttemptsValue);
+  console.log(`Workflow-memory sync complete: ${remoteValue}/${branchValue}`);
   return 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemorySync({
+    remote: args.remote,
+    branch: args.branch,
+    message: args.message,
+    maxAttempts: args.max_attempts ? Number(args.max_attempts) : undefined,
+    dryRun: args.dry_run === "true",
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -16,6 +16,12 @@ const USAGE = `Usage:
 
 const CLOSED_STATUSES = new Set(["closed", "resolved", "done"]);
 
+export type WorkflowMemoryCompactOptions = {
+  archiveClosed: boolean;
+  days: number;
+  dryRun: boolean;
+};
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -87,18 +93,13 @@ async function appendJsonl(filePath, entries, dryRun) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  const dryRun = args.dry_run === "true";
-  const archiveClosed = args.archive_closed === "true";
-  const days = Number.parseInt(args.days ?? "90", 10);
+export const runWorkflowMemoryCompact = async ({
+  archiveClosed,
+  days,
+  dryRun,
+}: WorkflowMemoryCompactOptions): Promise<number> => {
   if (!Number.isFinite(days) || days < 1) {
-    throw new Error(`Invalid --days value: ${args.days}`);
+    throw new Error(`Invalid --days value: ${days}`);
   }
 
   await fs.mkdir(EVENTS_DIR, { recursive: true });
@@ -186,6 +187,20 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     `${dryRun ? "Dry run" : "Compaction"} complete. Read=${totalRead}, active=${activeEvents.length}, deduped=${duplicatesRemoved}, archived=${archivedCount}.`,
   );
   return 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemoryCompact({
+    archiveClosed: args.archive_closed === "true",
+    days: Number.parseInt(args.days ?? "90", 10),
+    dryRun: args.dry_run === "true",
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

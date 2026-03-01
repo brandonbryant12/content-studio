@@ -28,6 +28,16 @@ Scenario filters:
   --scenario-skill     Only return events whose scenario targets this skill
 `;
 
+export type WorkflowMemoryRetrieveOptions = {
+  workflow?: string;
+  tags?: string;
+  limit?: number;
+  minScore?: number;
+  month?: string;
+  hasScenario: boolean;
+  scenarioSkill?: string;
+};
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -107,38 +117,37 @@ function parseMinScore(raw) {
   throw new Error(`Invalid --min-score value: ${raw}`);
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  const workflow = args.workflow ? args.workflow.trim() : "";
-  const month = args.month ? args.month.trim() : "";
-  const tags = args.tags
-    ? args.tags
+export const runWorkflowMemoryRetrieve = async ({
+  workflow,
+  tags,
+  limit,
+  minScore,
+  month,
+  hasScenario,
+  scenarioSkill,
+}: WorkflowMemoryRetrieveOptions): Promise<number> => {
+  const workflowValue = workflow?.trim() ?? "";
+  const monthValue = month?.trim() ?? "";
+  const scenarioSkillValue = scenarioSkill?.trim() ?? "";
+  const tagsValue = tags
+    ? tags
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean)
     : [];
-  const limit = parseLimit(args.limit);
-  const minScore = parseMinScore(args.min_score);
+  const limitValue = limit ?? 5;
+  const minScoreValue = minScore ?? 0;
 
   const index = await readJsonArray(INDEX_PATH);
   const now = new Date();
 
-  const hasScenario = args.has_scenario === "true";
-  const scenarioSkill = args.scenario_skill ? args.scenario_skill.trim() : "";
-
   const scored = index
     .filter((row) => {
       if (!row || typeof row !== "object") return false;
-      if (workflow && row.workflow !== workflow) return false;
-      if (month && row.month !== month) return false;
+      if (workflowValue && row.workflow !== workflowValue) return false;
+      if (monthValue && row.month !== monthValue) return false;
       if (hasScenario && !row.hasScenario) return false;
-      if (scenarioSkill && row.scenarioSkill !== scenarioSkill) return false;
+      if (scenarioSkillValue && row.scenarioSkill !== scenarioSkillValue) return false;
       return true;
     })
     .map((row) => {
@@ -147,7 +156,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       const recency = clamp01(
         parseOptionalNumber(row.recency) ?? computeRecency(row.date, now),
       );
-      const tagMatch = clamp01(computeTagMatch(row.tags, tags));
+      const tagMatch = clamp01(computeTagMatch(row.tags, tagsValue));
       const score =
         0.4 * importance + 0.3 * recency + 0.2 * tagMatch + 0.1 * confidence;
 
@@ -167,23 +176,42 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         eventFile: row.eventFile,
       };
     })
-    .filter((row) => row.score >= minScore)
+    .filter((row) => row.score >= minScoreValue)
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    .slice(0, limitValue);
 
   const response = {
     query: {
-      workflow: workflow || null,
-      tags,
-      month: month || null,
-      minScore,
-      limit,
+      workflow: workflowValue || null,
+      tags: tagsValue,
+      month: monthValue || null,
+      minScore: minScoreValue,
+      limit: limitValue,
     },
     results: scored,
   };
 
   console.log(JSON.stringify(response, null, 2));
   return 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemoryRetrieve({
+    workflow: args.workflow,
+    tags: args.tags,
+    limit: parseLimit(args.limit),
+    minScore: parseMinScore(args.min_score),
+    month: args.month,
+    hasScenario: args.has_scenario === "true",
+    scenarioSkill: args.scenario_skill,
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

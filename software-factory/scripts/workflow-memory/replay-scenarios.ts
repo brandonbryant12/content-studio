@@ -23,7 +23,7 @@ const SECRET_PATTERNS = [
 ];
 
 const USAGE = `Usage:
-  pnpm scenario:validate [options]
+  pnpm workflow-memory:validate-scenarios [options]
 
 Options:
   --skill <name>    Filter by target skill
@@ -41,6 +41,15 @@ Validates scenario integrity:
   - Event ID matches safe regex [a-z0-9][a-z0-9-]*[a-z0-9]
   - Fixture path is contained in scenarios directory (no symlink escapes)
 `;
+
+export type WorkflowMemoryValidateScenariosOptions = {
+  skill?: string;
+  check?: string;
+  id?: string;
+  month?: string;
+  json: boolean;
+  strict: boolean;
+};
 
 function parseArgs(argv) {
   const args = {};
@@ -151,20 +160,18 @@ async function validateFixture(scenarioId) {
   return { fixturePath, errors, status };
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const args = parseArgs(argv);
-
-  if (args.help === "true" || args.h === "true") {
-    console.log(USAGE);
-    return 0;
-  }
-
-  const strict = args.strict === "true";
-  const jsonOutput = args.json === "true";
-  const filterSkill = args.skill ? args.skill.trim() : "";
-  const filterCheck = args.check ? args.check.trim() : "";
-  const filterId = args.id ? args.id.trim() : "";
-  const filterMonth = args.month ? args.month.trim() : "";
+export const runWorkflowMemoryValidateScenarios = async ({
+  skill,
+  check,
+  id,
+  month,
+  json,
+  strict,
+}: WorkflowMemoryValidateScenariosOptions): Promise<number> => {
+  const filterSkill = skill?.trim() ?? "";
+  const filterCheck = check?.trim() ?? "";
+  const filterId = id?.trim() ?? "";
+  const filterMonth = month?.trim() ?? "";
 
   // Read events from JSONL files (source of truth)
   let eventFiles;
@@ -234,7 +241,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const valid = results.filter((r) => r.status === "OK").length;
   const invalid = results.length - valid;
 
-  if (jsonOutput) {
+  if (json) {
     console.log(
       JSON.stringify(
         {
@@ -279,6 +286,24 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 
   return strict && invalid > 0 ? 1 : 0;
+};
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const args = parseArgs(argv);
+
+  if (args.help === "true" || args.h === "true") {
+    console.log(USAGE);
+    return 0;
+  }
+
+  return await runWorkflowMemoryValidateScenarios({
+    skill: args.skill,
+    check: args.check,
+    id: args.id,
+    month: args.month,
+    json: args.json === "true",
+    strict: args.strict === "true",
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

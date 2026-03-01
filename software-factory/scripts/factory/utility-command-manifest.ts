@@ -122,18 +122,19 @@ export const UTILITY_COMMAND_SPECS = [
     ],
   },
   {
-    key: "scenario:validate",
-    domain: "scenario",
-    action: "validate",
-    usage: "pnpm software-factory scenario validate [--strict]",
+    key: "workflow-memory:validate-scenarios",
+    domain: "workflow-memory",
+    action: "validate-scenarios",
+    usage:
+      "pnpm software-factory workflow-memory validate-scenarios [--skill <name>] [--check <name>] [--id <event-id>] [--month YYYY-MM] [--json] [--strict]",
     packageScripts: [
       {
-        name: "scenario:validate",
-        command: "pnpm software-factory scenario validate",
+        name: "workflow-memory:validate-scenarios",
+        command: "pnpm software-factory workflow-memory validate-scenarios",
       },
       {
-        name: "scenario:validate:strict",
-        command: "pnpm software-factory scenario validate --strict",
+        name: "workflow-memory:validate-scenarios:strict",
+        command: "pnpm software-factory workflow-memory validate-scenarios --strict",
       },
     ],
   },

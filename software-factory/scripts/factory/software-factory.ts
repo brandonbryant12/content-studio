@@ -89,7 +89,6 @@ const ROOT_COMMAND_NAMES = new Set([
   "skills",
   "workflows",
   "workflow-memory",
-  "scenario",
   "scripts",
   "spec",
   "operation",
@@ -101,11 +100,172 @@ const ROOT_DESCRIPTION = [
   "Terms are strict: Trigger -> Operation -> Strategy -> Skills.",
   "Use --dry-run to print launch commands without executing codex.",
   "",
+  "Quick start:",
+  "1) Inspect registered triggers: pnpm software-factory trigger list",
+  "2) Explain one trigger: pnpm software-factory trigger explain --trigger-id <id>",
+  "3) Fire one trigger: pnpm software-factory trigger fire --trigger-id <id> [--dry-run]",
+  "4) Inspect operations: pnpm software-factory operation list",
+  "5) Run one operation: pnpm software-factory operation run --operation-id <id> [--dry-run]",
+  "",
+  "Workflow-memory common tasks:",
+  "- Add entry: pnpm software-factory workflow-memory add-entry --workflow <text> --title <text> ...",
+  "- Retrieve entries: pnpm software-factory workflow-memory retrieve --workflow <name> [--limit <n>]",
+  "- Coverage gate: pnpm software-factory workflow-memory coverage --strict",
+  "- Validate scenarios: pnpm software-factory workflow-memory validate-scenarios --strict",
+  "",
+  "Use subcommand help for details:",
+  "- pnpm software-factory trigger --help",
+  "- pnpm software-factory operation --help",
+  "- pnpm software-factory workflow-memory --help",
+  "",
   "Utility command surfaces:",
   ...UTILITY_USAGE_LINES.map((line) => `- ${line}`),
 ].join("\n");
+const HELP_FLAGS = new Set(["--help", "-h"]);
+const ROOT_COMMAND_HELP_ROWS = [
+  ["skills", "Skill quality and consistency tooling."],
+  ["workflows", "Workflow catalog tooling."],
+  ["workflow-memory", "Workflow-memory maintenance commands."],
+  ["scripts", "Script quality commands."],
+  ["spec", "Documentation specification commands."],
+  ["operation", "Operation inspection and execution."],
+  ["trigger", "Trigger inspection and execution."],
+  ["doctor", "Run software-factory environment diagnostics."],
+] as const;
+const WORKFLOW_MEMORY_HELP_ROWS = [
+  ["add-entry", "Append a workflow-memory event entry."],
+  ["preflight", "Validate workflow-memory runtime prerequisites."],
+  ["sync", "Commit and push append-only workflow-memory artifacts."],
+  ["retrieve", "Retrieve ranked workflow-memory entries."],
+  ["compact", "Compact workflow-memory events and rebuild index."],
+  ["coverage", "Check monthly workflow-memory coverage."],
+  ["validate-scenarios", "Validate workflow-memory replay scenarios."],
+] as const;
+const OPERATION_HELP_ROWS = [
+  ["list", "List registered operations."],
+  ["explain", "Describe one operation and linked triggers."],
+  ["run", "Run one operation directly."],
+] as const;
+const TRIGGER_HELP_ROWS = [
+  ["list", "List registered triggers."],
+  ["explain", "Describe one trigger and linked operation."],
+  ["fire", "Fire one trigger with optional overrides."],
+] as const;
 
 const asBool = (raw: string | undefined): boolean => raw === "true";
+
+const formatHelpRows = (rows: readonly (readonly [string, string])[]): string[] => {
+  return rows.map(([command, description]) => `  ${command}  ${description}`);
+};
+
+const printCompactRootHelp = (): void => {
+  const lines = [
+    "software-factory",
+    "",
+    "USAGE",
+    "  pnpm software-factory <command> [options]",
+    "",
+    "START HERE",
+    "  pnpm software-factory trigger list",
+    "  pnpm software-factory trigger explain --trigger-id <id>",
+    "  pnpm software-factory trigger fire --trigger-id <id> [--dry-run]",
+    "",
+    "COMMANDS",
+    ...formatHelpRows(ROOT_COMMAND_HELP_ROWS),
+    "",
+    "UTILITY SHORTCUTS",
+    "  pnpm software-factory workflow-memory coverage --strict",
+    "  pnpm software-factory workflow-memory validate-scenarios --strict",
+    "",
+    "MORE",
+    "  pnpm software-factory <command> --help",
+  ];
+  console.log(lines.join("\n"));
+};
+
+const printCompactWorkflowMemoryHelp = (): void => {
+  const lines = [
+    "software-factory workflow-memory",
+    "",
+    "USAGE",
+    "  pnpm software-factory workflow-memory <command> [options]",
+    "",
+    "COMMANDS",
+    ...formatHelpRows(WORKFLOW_MEMORY_HELP_ROWS),
+    "",
+    "EXAMPLES",
+    "  pnpm software-factory workflow-memory retrieve --workflow \"Feature Delivery\" --limit 10",
+    "  pnpm software-factory workflow-memory coverage --strict",
+    "  pnpm software-factory workflow-memory validate-scenarios --strict",
+  ];
+  console.log(lines.join("\n"));
+};
+
+const printCompactOperationHelp = (): void => {
+  const lines = [
+    "software-factory operation",
+    "",
+    "USAGE",
+    "  pnpm software-factory operation <command> [options]",
+    "",
+    "COMMANDS",
+    ...formatHelpRows(OPERATION_HELP_ROWS),
+    "",
+    "EXAMPLES",
+    "  pnpm software-factory operation list",
+    "  pnpm software-factory operation explain --operation-id ready-for-dev-executor",
+    "  pnpm software-factory operation run --operation-id ready-for-dev-executor --dry-run",
+  ];
+  console.log(lines.join("\n"));
+};
+
+const printCompactTriggerHelp = (): void => {
+  const lines = [
+    "software-factory trigger",
+    "",
+    "USAGE",
+    "  pnpm software-factory trigger <command> [options]",
+    "",
+    "COMMANDS",
+    ...formatHelpRows(TRIGGER_HELP_ROWS),
+    "",
+    "EXAMPLES",
+    "  pnpm software-factory trigger list",
+    "  pnpm software-factory trigger explain --trigger-id ready-for-dev-executor",
+    "  pnpm software-factory trigger fire --trigger-id ready-for-dev-executor --dry-run",
+  ];
+  console.log(lines.join("\n"));
+};
+
+const printCompactHelp = (argv: string[]): boolean => {
+  const args = argv.slice(2);
+  const hasHelp = args.some((arg) => HELP_FLAGS.has(arg));
+  if (!hasHelp) {
+    return false;
+  }
+
+  const commandPath = args.filter((arg) => !arg.startsWith("-"));
+  const [rootCommand] = commandPath;
+
+  if (!rootCommand) {
+    printCompactRootHelp();
+    return true;
+  }
+  if (rootCommand === "workflow-memory" && commandPath.length === 1) {
+    printCompactWorkflowMemoryHelp();
+    return true;
+  }
+  if (rootCommand === "operation" && commandPath.length === 1) {
+    printCompactOperationHelp();
+    return true;
+  }
+  if (rootCommand === "trigger" && commandPath.length === 1) {
+    printCompactTriggerHelp();
+    return true;
+  }
+
+  return false;
+};
 
 const readJson = async <T>(filePath: string): Promise<T> => {
   const raw = await fs.readFile(filePath, "utf8");
@@ -950,8 +1110,14 @@ const workflowMemoryPreflightCommand = Command.make(
   "preflight",
   {
     bootstrap: Options.boolean("bootstrap"),
-    cwd: Options.text("cwd").pipe(Options.optional),
-    memory_path: Options.text("memory-path").pipe(Options.optional),
+    cwd: Options.text("cwd").pipe(
+      Options.withDescription("Working directory to run runtime checks from."),
+      Options.optional,
+    ),
+    memory_path: Options.text("memory-path").pipe(
+      Options.withDescription("Override workflow-memory directory path."),
+      Options.optional,
+    ),
   },
   ({ bootstrap, cwd, memory_path }) =>
     effectFromPromise(async () => {
@@ -966,10 +1132,22 @@ const workflowMemoryPreflightCommand = Command.make(
 const workflowMemorySyncCommand = Command.make(
   "sync",
   {
-    remote: Options.text("remote").pipe(Options.optional),
-    branch: Options.text("branch").pipe(Options.optional),
-    message: Options.text("message").pipe(Options.optional),
-    max_attempts: Options.integer("max-attempts").pipe(Options.optional),
+    remote: Options.text("remote").pipe(
+      Options.withDescription("Git remote name (default: origin)."),
+      Options.optional,
+    ),
+    branch: Options.text("branch").pipe(
+      Options.withDescription("Target branch name (default: current branch)."),
+      Options.optional,
+    ),
+    message: Options.text("message").pipe(
+      Options.withDescription("Commit message for workflow-memory append artifacts."),
+      Options.optional,
+    ),
+    max_attempts: Options.integer("max-attempts").pipe(
+      Options.withDescription("Maximum push/rebase retry attempts."),
+      Options.optional,
+    ),
     dry_run: dryRunOption,
   },
   ({ remote, branch, message, max_attempts, dry_run }) =>
@@ -987,13 +1165,33 @@ const workflowMemorySyncCommand = Command.make(
 const workflowMemoryRetrieveCommand = Command.make(
   "retrieve",
   {
-    workflow: Options.text("workflow").pipe(Options.optional),
-    tags: Options.text("tags").pipe(Options.optional),
-    limit: Options.integer("limit").pipe(Options.optional),
-    min_score: Options.float("min-score").pipe(Options.optional),
-    month: Options.text("month").pipe(Options.optional),
-    has_scenario: Options.boolean("has-scenario"),
-    scenario_skill: Options.text("scenario-skill").pipe(Options.optional),
+    workflow: Options.text("workflow").pipe(
+      Options.withDescription("Filter by workflow key (for example: Feature Delivery)."),
+      Options.optional,
+    ),
+    tags: Options.text("tags").pipe(
+      Options.withDescription("CSV tag filter (all listed tags must match)."),
+      Options.optional,
+    ),
+    limit: Options.integer("limit").pipe(
+      Options.withDescription("Maximum results to return."),
+      Options.optional,
+    ),
+    min_score: Options.float("min-score").pipe(
+      Options.withDescription("Minimum ranking score threshold."),
+      Options.optional,
+    ),
+    month: Options.text("month").pipe(
+      Options.withDescription("Filter month in YYYY-MM format."),
+      Options.optional,
+    ),
+    has_scenario: Options.boolean("has-scenario").pipe(
+      Options.withDescription("Return only entries with attached scenario metadata."),
+    ),
+    scenario_skill: Options.text("scenario-skill").pipe(
+      Options.withDescription("Filter by scenario target skill."),
+      Options.optional,
+    ),
   },
   ({ workflow, tags, limit, min_score, month, has_scenario, scenario_skill }) =>
     effectFromPromise(async () => {
@@ -1029,11 +1227,19 @@ const workflowMemoryCompactCommand = Command.make(
 const workflowMemoryCoverageCommand = Command.make(
   "coverage",
   {
-    month: Options.text("month").pipe(Options.optional),
-    min: Options.integer("min").pipe(Options.optional),
+    month: Options.text("month").pipe(
+      Options.withDescription("Coverage month in YYYY-MM format (default: current month)."),
+      Options.optional,
+    ),
+    min: Options.integer("min").pipe(
+      Options.withDescription("Minimum entries required per workflow."),
+      Options.optional,
+    ),
     strict: Options.boolean("strict"),
     json: jsonOption,
-    audit_taxonomy: Options.boolean("audit-taxonomy"),
+    audit_taxonomy: Options.boolean("audit-taxonomy").pipe(
+      Options.withDescription("Report missing required memory taxonomy tags."),
+    ),
   },
   ({ month, min, strict, json, audit_taxonomy }) =>
     effectFromPromise(async () => {
@@ -1047,27 +1253,29 @@ const workflowMemoryCoverageCommand = Command.make(
     }),
 ).pipe(Command.withDescription("Check monthly workflow-memory coverage."));
 
-const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
-  Command.withDescription("Workflow-memory maintenance commands."),
-  Command.withSubcommands([
-    workflowMemoryAddEntryCommand,
-    workflowMemoryPreflightCommand,
-    workflowMemorySyncCommand,
-    workflowMemoryRetrieveCommand,
-    workflowMemoryCompactCommand,
-    workflowMemoryCoverageCommand,
-  ]),
-);
-
-const scenarioValidateCommand = Command.make(
-  "validate",
+const workflowMemoryValidateScenariosCommand = Command.make(
+  "validate-scenarios",
   {
-    skill: Options.text("skill").pipe(Options.optional),
-    check: Options.text("check").pipe(Options.optional),
-    id: Options.text("id").pipe(Options.optional),
-    month: Options.text("month").pipe(Options.optional),
+    skill: Options.text("skill").pipe(
+      Options.withDescription("Filter by scenario target skill."),
+      Options.optional,
+    ),
+    check: Options.text("check").pipe(
+      Options.withDescription("Filter by scenario check name."),
+      Options.optional,
+    ),
+    id: Options.text("id").pipe(
+      Options.withDescription("Validate one scenario by event id."),
+      Options.optional,
+    ),
+    month: Options.text("month").pipe(
+      Options.withDescription("Validate scenarios from one month (YYYY-MM)."),
+      Options.optional,
+    ),
     json: jsonOption,
-    strict: Options.boolean("strict"),
+    strict: Options.boolean("strict").pipe(
+      Options.withDescription("Exit with code 1 on any validation failure."),
+    ),
   },
   ({ skill, check, id, month, json, strict }) =>
     effectFromPromise(async () => {
@@ -1078,13 +1286,21 @@ const scenarioValidateCommand = Command.make(
       appendValueFlag(argv, "month", optionToUndefined(month));
       appendBooleanFlag(argv, "json", json);
       appendBooleanFlag(argv, "strict", strict);
-      await executeUtilityCommand("scenario", "validate", argv);
+      await executeUtilityCommand("workflow-memory", "validate-scenarios", argv);
     }),
 ).pipe(Command.withDescription("Validate workflow-memory replay scenarios."));
 
-const scenarioCommand = Command.make("scenario", {}).pipe(
-  Command.withDescription("Scenario quality commands."),
-  Command.withSubcommands([scenarioValidateCommand]),
+const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
+  Command.withDescription("Workflow-memory maintenance commands."),
+  Command.withSubcommands([
+    workflowMemoryAddEntryCommand,
+    workflowMemoryPreflightCommand,
+    workflowMemorySyncCommand,
+    workflowMemoryRetrieveCommand,
+    workflowMemoryCompactCommand,
+    workflowMemoryCoverageCommand,
+    workflowMemoryValidateScenariosCommand,
+  ]),
 );
 
 const scriptsLintCommand = Command.make(
@@ -1243,7 +1459,6 @@ const cli = Command.make("software-factory", {}).pipe(
     skillsCommand,
     workflowsCommand,
     workflowMemoryCommand,
-    scenarioCommand,
     scriptsCommand,
     specCommand,
     operationCommand,
@@ -1273,6 +1488,9 @@ const validateTopLevelCommand = (argv: string[]): void => {
 const main = async (): Promise<void> => {
   const args = process.argv.length <= 2 ? [...process.argv, "--help"] : process.argv;
   validateTopLevelCommand(args);
+  if (printCompactHelp(args)) {
+    return;
+  }
   await Effect.runPromise(app(args).pipe(Effect.provide(NodeContext.layer)));
 };
 
