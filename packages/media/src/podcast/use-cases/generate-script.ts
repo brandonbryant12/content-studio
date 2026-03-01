@@ -84,30 +84,36 @@ export const generateScript = (input: GenerateScriptInput) =>
     let hostPersona: PersonaContext | undefined;
     let coHostPersona: PersonaContext | undefined;
 
-    if (podcast.hostPersonaId) {
-      const p = yield* loadPersonaByIdSafe(podcast.hostPersonaId);
-      if (p) {
-        hostPersona = {
-          name: p.name,
-          role: p.role,
-          personalityDescription: p.personalityDescription,
-          speakingStyle: p.speakingStyle,
-          exampleQuotes: p.exampleQuotes ?? [],
-        };
-      }
+    const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
+      [
+        podcast.hostPersonaId
+          ? loadPersonaByIdSafe(podcast.hostPersonaId)
+          : Effect.succeed(null),
+        podcast.coHostPersonaId
+          ? loadPersonaByIdSafe(podcast.coHostPersonaId)
+          : Effect.succeed(null),
+      ],
+      { concurrency: 2 },
+    );
+
+    if (hostPersonaResult) {
+      hostPersona = {
+        name: hostPersonaResult.name,
+        role: hostPersonaResult.role,
+        personalityDescription: hostPersonaResult.personalityDescription,
+        speakingStyle: hostPersonaResult.speakingStyle,
+        exampleQuotes: hostPersonaResult.exampleQuotes ?? [],
+      };
     }
 
-    if (podcast.coHostPersonaId) {
-      const p = yield* loadPersonaByIdSafe(podcast.coHostPersonaId);
-      if (p) {
-        coHostPersona = {
-          name: p.name,
-          role: p.role,
-          personalityDescription: p.personalityDescription,
-          speakingStyle: p.speakingStyle,
-          exampleQuotes: p.exampleQuotes ?? [],
-        };
-      }
+    if (coHostPersonaResult) {
+      coHostPersona = {
+        name: coHostPersonaResult.name,
+        role: coHostPersonaResult.role,
+        personalityDescription: coHostPersonaResult.personalityDescription,
+        speakingStyle: coHostPersonaResult.speakingStyle,
+        exampleQuotes: coHostPersonaResult.exampleQuotes ?? [],
+      };
     }
 
     const documentContents = yield* Effect.all(

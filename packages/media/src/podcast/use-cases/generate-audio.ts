@@ -96,14 +96,21 @@ export const generateAudio = (input: GenerateAudioInput) =>
     let hostPersonaName: string | undefined;
     let coHostPersonaName: string | undefined;
 
-    if (podcast.hostPersonaId) {
-      const p = yield* loadPersonaByIdSafe(podcast.hostPersonaId);
-      if (p) hostPersonaName = p.name.toLowerCase();
-    }
+    const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
+      [
+        podcast.hostPersonaId
+          ? loadPersonaByIdSafe(podcast.hostPersonaId)
+          : Effect.succeed(null),
+        podcast.coHostPersonaId
+          ? loadPersonaByIdSafe(podcast.coHostPersonaId)
+          : Effect.succeed(null),
+      ],
+      { concurrency: 2 },
+    );
 
-    if (podcast.coHostPersonaId) {
-      const p = yield* loadPersonaByIdSafe(podcast.coHostPersonaId);
-      if (p) coHostPersonaName = p.name.toLowerCase();
+    if (hostPersonaResult) hostPersonaName = hostPersonaResult.name.toLowerCase();
+    if (coHostPersonaResult) {
+      coHostPersonaName = coHostPersonaResult.name.toLowerCase();
     }
 
     const hostVoice = podcast.hostVoice ?? 'Charon';
