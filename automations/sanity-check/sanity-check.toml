@@ -1,0 +1,18 @@
+version = 1
+id = "sanity-check"
+name = "Sanity Check"
+prompt = '''Use gpt-5.3-codex with reasoning effort medium.
+
+Run this command from repository root:
+`pnpm software-factory operation run sanity-check`
+
+Contract:
+- This wrapper is automation-only.
+- Do not re-implement routing/execution logic in this prompt.
+- The Software Factory CLI is source of truth for operation selection, model/thinking routing, and launch behavior.
+- Return a concise summary with routed operation, command status, and no-op reason if any.'''
+status = "ACTIVE"
+rrule = "RRULE:FREQ=HOURLY;INTERVAL=1;BYMINUTE=37;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+cwds = ["$REPO_ROOT"]
+created_at = 1771798300000
+updated_at = 1771798300000

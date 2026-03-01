@@ -39,4 +39,4 @@ Each item includes severity, exploitability, impact, and file/package evidence.
 
 ## Memory + Compounding
 
-`Security + Dependency Hygiene` is a utility skill. Record memory under the parent core workflow key (`Periodic Scans`, `Feature Delivery`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.
+`Security + Dependency Hygiene` is a utility skill. Record memory under the parent core workflow key (`Periodic Scans`, `Feature Delivery`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md). Include the event `id` in output.

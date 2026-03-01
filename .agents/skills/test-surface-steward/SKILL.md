@@ -42,4 +42,4 @@ Include file evidence and expected confidence gain for each recommendation.
 
 ## Memory + Compounding
 
-`Test Surface Steward` is a utility skill. Record memory under the parent core workflow key (`Feature Delivery`, `Periodic Scans`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.
+`Test Surface Steward` is a utility skill. Record memory under the parent core workflow key (`Feature Delivery`, `Periodic Scans`, or `Self-Improvement`) using `pnpm workflow-memory:add-entry` per [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md). Include the event `id` in output.

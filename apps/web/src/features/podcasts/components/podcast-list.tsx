@@ -181,7 +181,8 @@ export function PodcastList({
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           <div role="status" aria-live="polite" className="sr-only">
-            {filteredPodcasts.length} {filteredPodcasts.length === 1 ? 'podcast' : 'podcasts'} found
+            {filteredPodcasts.length}{' '}
+            {filteredPodcasts.length === 1 ? 'podcast' : 'podcasts'} found
           </div>
           {filteredPodcasts.map((podcast) => (
             <PodcastItem

@@ -10,7 +10,7 @@ Use this skill at the start of every feature, refactor, bugfix, or operational c
 ## Objectives
 
 - Convert requests into implementable scope with explicit acceptance criteria.
-- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `agent-engine/workflows/README.md` and `docs/master-spec.md`).
+- Anchor scope to standards in [`docs/**/*.md`](../../../docs/) before coding (for example `software-factory/workflows/README.md` and `docs/master-spec.md`).
 - Surface risk and uncertainty early so downstream workflows are predictable.
 
 ## Intake Steps
@@ -58,7 +58,7 @@ Produce this before implementation starts:
 - `Architecture + ADR Guard` for architecture-governed intake
 - `Self-Improvement` for guardrail/process improvement intake
 
-Use `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md) and include the event `id` in output.
+Use `pnpm workflow-memory:add-entry` per [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md) and include the event `id` in output.
 
 ## Definition Of Done
 

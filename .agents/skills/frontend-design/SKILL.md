@@ -51,4 +51,4 @@ Apply this skill when shipping design-heavy frontend changes in `apps/web`.
 ## Memory + Compounding
 
 No standalone memory key.
-Use the parent workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`) and log outcomes with `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md).
+Use the parent workflow key (`Feature Delivery`, `Architecture + ADR Guard`, or `Self-Improvement`) and log outcomes with `pnpm workflow-memory:add-entry` per [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md).

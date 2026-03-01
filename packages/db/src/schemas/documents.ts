@@ -237,10 +237,8 @@ export const serializeDocument = documentTransform;
 /**
  * Columns for list queries — omits heavy text fields not needed in list views.
  */
-const {
-  extractedText: _extractedText,
-  ...documentListColumns
-} = getTableColumns(document);
+const { extractedText: _extractedText, ...documentListColumns } =
+  getTableColumns(document);
 
 export { documentListColumns };
 
@@ -272,7 +270,9 @@ export const DocumentListItemOutputSchema = Schema.Struct({
 
 export type DocumentListItemOutput = typeof DocumentListItemOutputSchema.Type;
 
-const documentListItemTransform = (doc: DocumentListItem): DocumentListItemOutput => ({
+const documentListItemTransform = (
+  doc: DocumentListItem,
+): DocumentListItemOutput => ({
   id: doc.id,
   title: doc.title,
   contentKey: doc.contentKey,

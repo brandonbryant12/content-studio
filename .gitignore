@@ -28,3 +28,8 @@ tools/cli/.output/
 
 # Standards debate workspace
 agentic-harness-framework/scripts/standards-debate/workspace/
+
+.worktrees
+
+# Local Claude desktop permissions (machine-local, never commit)
+.claude/settings.local.json

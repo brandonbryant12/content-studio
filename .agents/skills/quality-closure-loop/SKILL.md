@@ -17,7 +17,7 @@ Use this when the request is "run the loop" or "scan and fix findings end-to-end
 
 ## 1) Scan
 
-- Anchor to standards in [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md), [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
+- Anchor to standards in [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md), [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md), and [`AGENTS.md`](../../../AGENTS.md).
 - Companion skill references: `.agents/skills/periodic-scans/SKILL.md`, `.agents/skills/test-surface-steward/SKILL.md`.
 - Command anchors: `pnpm workflow-memory:coverage`, `pnpm workflow-memory:add-entry`.
 - Establish shell/toolchain context before running checks:
@@ -60,12 +60,12 @@ Rules:
 
 ## 4) Prevent Recurrence
 
-If a pattern appears in 2+ memory events in `agent-engine/workflow-memory/index.json` or `agent-engine/workflow-memory/events/YYYY-MM.jsonl`:
+If a pattern appears in 2+ memory events in `software-factory/workflow-memory/index.json` or `software-factory/workflow-memory/events/YYYY-MM.jsonl`:
 
 - run `self-improvement`
 - land at least one guardrail (test, lint, docs rule, skill rule, or automation)
 - validate fail-before/pass-after where possible
-- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md) when standards change
+- update [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), and [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md) when standards change
 
 ## 5) Persist + Close
 

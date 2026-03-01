@@ -323,7 +323,9 @@ export type PodcastOutput = typeof PodcastOutputSchema.Type;
 export type PodcastFullOutput = typeof PodcastFullOutputSchema.Type;
 export type PodcastListItemOutput = typeof PodcastListItemOutputSchema.Type;
 
-const podcastListItemTransform = (p: PodcastListItem): PodcastListItemOutput => ({
+const podcastListItemTransform = (
+  p: PodcastListItem,
+): PodcastListItemOutput => ({
   id: p.id,
   title: p.title,
   description: p.description,

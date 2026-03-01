@@ -47,8 +47,13 @@ packages/
 
 ## AI Workflow + Skills
 
-- **Follow [`agent-engine/workflows/README.md`](./agent-engine/workflows/README.md)** for workflow selection and distinctions.
-- **Persist compounding notes in `agent-engine/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
+- **Software Factory terms are canonical**: `Automation -> Operation -> Strategy -> Skill` (see [`software-factory/README.md`](./software-factory/README.md)).
+- **Use Software Factory CLI for automation entrypoints**:
+  - `pnpm software-factory operation list`
+  - `pnpm software-factory operation explain --operation-id <id>`
+  - `pnpm software-factory operation run <id>`
+- **Follow [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)** for strategy selection and distinctions.
+- **Persist compounding notes in `software-factory/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:
   - `pnpm workflow-memory:add-entry --help`
 - Preferred memory git persistence helper:
@@ -56,7 +61,7 @@ packages/
 - Preferred memory retrieval helper (ranked by scoring fields):
   - `pnpm workflow-memory:retrieve --help`
 - Use only core workflow keys for workflow-memory entries; record utility skills as tags (for example, `skill:intake-triage`).
-- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](./agent-engine/workflow-memory/taxonomy.md).
+- For memory-related or agent-run diagnostic events, use canonical taxonomy tags from [`software-factory/workflow-memory/taxonomy.md`](./software-factory/workflow-memory/taxonomy.md).
 - Preferred memory coverage helper:
   - `pnpm workflow-memory:coverage:strict`
   - If `coverage:strict` fails in an active quality loop due to missing monthly workflow classes, run those workflow passes and append events in the same cycle before closing.
@@ -65,7 +70,7 @@ packages/
 - **Canonical skills live in `.agents/skills/`**.
 - **`.claude/skills`, `.agent/skills`, `.github/skills` must stay symlinked mirrors** of `.agents/skills`.
 - After any skill add/update/delete, run:
-  - `agent-engine/scripts/sync-skills.sh`
+  - `software-factory/scripts/sync-skills.sh`
 - Preferred project skills:
   - `code-simplifier`
   - `quality-closure-loop`
@@ -94,7 +99,7 @@ pnpm test:scripts # Script guardrail tests (included in pnpm test)
 pnpm test:invariants # Safety invariants (must pass for agent-authored changes)
 pnpm build        # Build all packages
 pnpm lint         # Lint all packages
-pnpm scripts:lint # Script lint/guardrails for agent-engine scripts
+pnpm scripts:lint # Script lint/guardrails for software-factory scripts
 pnpm dev          # Start all dev servers (Turborepo watch mode)
 pnpm db:push      # Push Drizzle schema to database
 pnpm db:studio    # Open Drizzle Studio GUI

@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "id": "ready-for-dev-executor",
+      "name": "Ready-for-Dev Executor",
+      "description": "Implements approved ready-for-dev issues using a two-step codex planner/executor flow with label-constrained model/thinking routing.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "high",
+      "strategy": "auto",
+      "args": [
+        {
+          "name": "issue",
+          "type": "number",
+          "required": false,
+          "description": "Optional issue number to restrict planner candidates to a specific ready-for-dev issue."
+        },
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Resolve and print routing without launching codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "ready-for-dev-router",
+        "playbookPath": "automations/ready-for-dev-executor/ready-for-dev-executor.md"
+      }
+    },
+    {
+      "id": "issue-evaluator",
+      "name": "Issue Evaluator",
+      "description": "Evaluates open issues and applies ready-for-dev, human-eval-needed, or rejected decisions.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "xhigh",
+      "strategy": "periodic-scans",
+      "labelingContext": {
+        "modelLabels": [
+          "model:gpt-5.3-codex",
+          "model:gpt-5.3-codex-spark"
+        ],
+        "thinkingLabels": [
+          "thinking:low",
+          "thinking:medium",
+          "thinking:high",
+          "thinking:xhigh"
+        ],
+        "decisionLabels": [
+          "ready-for-dev",
+          "human-eval-needed",
+          "rejected"
+        ]
+      },
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/issue-evaluator/issue-evaluator.md"
+      }
+    },
+    {
+      "id": "sanity-check",
+      "name": "Sanity Check",
+      "description": "Runs periodic sanity scan + fix loop with recurrence prevention policy.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "xhigh",
+      "strategy": "periodic-scans",
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/sanity-check/sanity-check.md"
+      }
+    },
+    {
+      "id": "best-practice-researcher",
+      "name": "Best Practice Researcher",
+      "description": "Research lane that proposes bounded best-practice issues with repo-specific evidence.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "high",
+      "strategy": "periodic-scans",
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/best-practice-researcher/best-practice-researcher.md"
+      }
+    },
+    {
+      "id": "software-factory-researcher",
+      "name": "Software Factory Researcher",
+      "description": "Research lane for software-factory architecture and self-improvement recommendations.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "high",
+      "strategy": "self-improvement",
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/software-factory-researcher/software-factory-researcher.md"
+      }
+    },
+    {
+      "id": "product-vision-researcher",
+      "name": "Product Vision Researcher",
+      "description": "Strategic product-opportunity research lane for long-horizon opportunities.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "xhigh",
+      "strategy": "periodic-scans",
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/product-vision-researcher/product-vision-researcher.md"
+      }
+    },
+    {
+      "id": "product-owner-reviewer",
+      "name": "Product Owner Reviewer",
+      "description": "Tactical UX/journey improvement research lane focused on daily user outcomes.",
+      "defaultModel": "gpt-5.3-codex",
+      "defaultThinking": "xhigh",
+      "strategy": "periodic-scans",
+      "args": [
+        {
+          "name": "dry-run",
+          "type": "boolean",
+          "required": false,
+          "description": "Print launch command without executing codex."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Optional override model for this run."
+        },
+        {
+          "name": "thinking",
+          "type": "string",
+          "required": false,
+          "description": "Optional override reasoning effort: low|medium|high|xhigh."
+        }
+      ],
+      "runner": {
+        "type": "codex-playbook",
+        "playbookPath": "automations/product-owner-reviewer/product-owner-reviewer.md"
+      }
+    }
+  ]
+}

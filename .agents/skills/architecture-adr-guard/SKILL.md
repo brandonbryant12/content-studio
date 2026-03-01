@@ -39,7 +39,7 @@ Use this skill when a change may cross package boundaries, layer rules, or core 
 
 If a change intentionally deviates from current standards:
 
-1. Document the deviation in [`agent-engine/workflow-memory/guardrails.md`](../../../agent-engine/workflow-memory/guardrails.md).
+1. Document the deviation in [`software-factory/workflow-memory/guardrails.md`](../../../software-factory/workflow-memory/guardrails.md).
 2. Include:
    - context
    - decision
@@ -61,4 +61,4 @@ Each finding must include severity, file evidence, and suggested fix.
 
 ## Memory + Compounding
 
-Record one event with workflow key `Architecture + ADR Guard` using `pnpm workflow-memory:add-entry` per [`agent-engine/workflow-memory/README.md`](../../../agent-engine/workflow-memory/README.md). Include the event `id` in output.
+Record one event with workflow key `Architecture + ADR Guard` using `pnpm workflow-memory:add-entry` per [`software-factory/workflow-memory/README.md`](../../../software-factory/workflow-memory/README.md). Include the event `id` in output.

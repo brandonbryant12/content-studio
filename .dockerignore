@@ -20,7 +20,7 @@
 
 # Documentation and non-build files
 docs/
-agent-engine/
+software-factory/
 research/
 .agents/
 .agent/

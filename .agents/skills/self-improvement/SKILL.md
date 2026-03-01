@@ -54,9 +54,9 @@ Apply the lightest fix that prevents recurrence:
 - Run repo-level validation for affected surfaces.
 - Confirm the guardrail fails before the fix and passes after the fix where possible.
 - For memory-system changes, run `pnpm workflow-memory:coverage:strict` after updates.
-- For skill changes, run `pnpm skills:check:strict` and `agent-engine/scripts/sync-skills.sh`.
+- For skill changes, run `pnpm skills:check:strict` and `software-factory/scripts/sync-skills.sh`.
 - When a failure is captured and a skill is patched, create a replayable scenario:
-  1. Write a fixture file to `agent-engine/workflow-memory/scenarios/{id}.md` with `## Input` (exact code) and `## Expected Findings`.
+  1. Write a fixture file to `software-factory/workflow-memory/scenarios/{id}.md` with `## Input` (exact code) and `## Expected Findings`.
   2. Use `workflow-memory:add-entry` with `--scenario-skill`, `--scenario-verdict`, and optional `--scenario-check`, `--scenario-pattern`, `--scenario-severity` flags.
   3. Run `pnpm scenario:validate:strict` to confirm the scenario is well-formed.
 
@@ -66,19 +66,19 @@ Update:
 
 - [`AGENTS.md`](../../../AGENTS.md)
 - [`CLAUDE.md`](../../../CLAUDE.md)
-- [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md)
+- [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md)
 
-Also resync skill symlinks with `agent-engine/scripts/sync-skills.sh`.
+Also resync skill symlinks with `software-factory/scripts/sync-skills.sh`.
 
 ## 6) Persist Memory
 
-Record one structured memory event in `agent-engine/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Self-Improvement"` (prefer `pnpm workflow-memory:add-entry`):
+Record one structured memory event in `software-factory/workflow-memory/events/YYYY-MM.jsonl` with `workflow: "Self-Improvement"` (prefer `pnpm workflow-memory:add-entry`):
 
 - root cause class
 - guardrail change shipped
 - validation evidence
 - what should be automated next
-- taxonomy tags from [`agent-engine/workflow-memory/taxonomy.md`](../../../agent-engine/workflow-memory/taxonomy.md) when memory or agent-run diagnostics are involved
+- taxonomy tags from [`software-factory/workflow-memory/taxonomy.md`](../../../software-factory/workflow-memory/taxonomy.md) when memory or agent-run diagnostics are involved
 
 ## Output Contract
 
