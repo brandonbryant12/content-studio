@@ -139,6 +139,35 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-best-practice-run-datadog-lifecycle-docs-drift",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best-practice run: datadog lifecycle docs drift",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation:best-practice-researcher",
+      "domain:docs-and-guardrail-drift",
+      "issue:278",
+      "issue:271",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:working",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:planning",
+      "capability:instruction-following",
+      "capability:long-term-reasoning",
+      "failure:state-loss",
+      "failure:env-drift"
+    ],
+    "importance": 0.87,
+    "recency": 1,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-issue-evaluator-run-10-issues-evaluated-3-ready-for-dev-7-human-",
     "date": "2026-03-01",
     "month": "2026-03",
