@@ -1,5 +1,36 @@
 [
   {
+    "id": "2026-03-01-periodic-scans-best-practice-researcher-frontend-react-tanstack-router-query-sh",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: frontend-react-tanstack-router-query-shadcn — SSE query key duplication, MutationCache fallback, persona entity gap, QueryErrorResetBoundary",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:frontend-react-tanstack-router-query-shadcn",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-02-28-docs-knowledge-drift-tanstack-router-query-form-best-practices-research-feb-2026",
     "date": "2026-02-28",
     "month": "2026-02",
