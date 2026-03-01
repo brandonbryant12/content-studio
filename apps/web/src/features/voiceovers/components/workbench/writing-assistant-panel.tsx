@@ -121,6 +121,7 @@ export function WritingAssistantPanel({
           size="icon"
           disabled={!composer.canSubmit}
           className="shrink-0"
+          aria-label="Send message"
         >
           <PaperPlaneIcon className="w-4 h-4" />
         </Button>

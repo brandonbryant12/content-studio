@@ -129,6 +129,8 @@ export function GlobalActionBar({
       <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>
         <div
           className={`action-bar-status ${isGenerating ? 'generating' : ''} ${showChangesState ? 'unsaved' : ''}`}
+          role="status"
+          aria-live="polite"
         >
           {isGenerating ? (
             <Spinner className="w-4 h-4" />

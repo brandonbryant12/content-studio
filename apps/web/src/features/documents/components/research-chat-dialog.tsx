@@ -246,6 +246,7 @@ export function ResearchChatDialog({
             maxLength={CHAT_INPUT_MAX_LENGTH}
             rows={1}
             className={CHAT_INPUT_TEXTAREA_CLASS}
+            aria-label="Research topic"
             autoFocus
           />
           <Button
@@ -253,6 +254,7 @@ export function ResearchChatDialog({
             size="icon"
             disabled={!composer.canSubmit}
             className="shrink-0"
+            aria-label="Send message"
           >
             <PaperPlaneIcon className="w-4 h-4" />
           </Button>
