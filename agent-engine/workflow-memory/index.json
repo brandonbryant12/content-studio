@@ -1,5 +1,26 @@
 [
   {
+    "id": "2026-03-01-architecture-adr-guard-ready-for-dev-telemetry-docs-run-blocked-by-baseline-lint",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Ready-for-dev telemetry docs run blocked by baseline lint",
+    "severity": "medium",
+    "status": "blocked",
+    "tags": [
+      "automation",
+      "ready-for-dev",
+      "telemetry",
+      "docs",
+      "failure:env-drift",
+      "capability:planning",
+      "skill:architecture-adr-guard",
+      "skill:feature-delivery",
+      "skill:intake-triage"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-feature-delivery-aria-accessibility-fixes-chat-inputs-podcast-action-bar-list-pag",
     "date": "2026-03-01",
     "month": "2026-03",
