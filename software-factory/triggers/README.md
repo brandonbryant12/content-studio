@@ -27,4 +27,10 @@ Registry source of truth:
 ## Commands
 
 1. `pnpm software-factory trigger list`
-2. `pnpm software-factory trigger fire <trigger-id>`
+2. `pnpm software-factory trigger explain <trigger-id>`
+3. `pnpm software-factory trigger fire <trigger-id>`
+
+## Trigger Fire vs Operation Run
+
+1. Use `trigger fire` for scheduler-style automation entrypoints (applies trigger defaults and preserves trigger identity in logs/history).
+2. Use `operation run` for direct/manual operation execution when you intentionally bypass trigger wrappers.

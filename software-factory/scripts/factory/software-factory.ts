@@ -89,8 +89,10 @@ const USAGE = `software-factory
 
 Usage:
   pnpm software-factory operation list [--json]
+  pnpm software-factory operation explain <operation-id> [--json]
   pnpm software-factory operation run <operation-id> [--issue <n>] [--model <model>] [--thinking <level>] [--dry-run]
   pnpm software-factory trigger list [--json]
+  pnpm software-factory trigger explain <trigger-id> [--json]
   pnpm software-factory trigger fire <trigger-id> [--issue <n>] [--model <model>] [--thinking <level>] [--dry-run]
   pnpm software-factory doctor
 
@@ -138,6 +140,24 @@ const readOperations = async (): Promise<Operation[]> => {
 const readTriggers = async (): Promise<Trigger[]> => {
   const parsed = await readJson<{ triggers: Trigger[] }>(TRIGGERS_PATH);
   return parsed.triggers;
+};
+
+const getOperationOrThrow = async (operationId: string): Promise<Operation> => {
+  const operations = await readOperations();
+  const operation = operations.find((entry) => entry.id === operationId);
+  if (!operation) {
+    throw new Error(`Unknown operation: ${operationId}`);
+  }
+  return operation;
+};
+
+const getTriggerOrThrow = async (triggerId: string): Promise<Trigger> => {
+  const triggers = await readTriggers();
+  const trigger = triggers.find((entry) => entry.id === triggerId);
+  if (!trigger) {
+    throw new Error(`Unknown trigger: ${triggerId}`);
+  }
+  return trigger;
 };
 
 const ensureThinking = (value: string | undefined, fallback: string): string => {
@@ -539,11 +559,7 @@ const runOperation = async (
   operationId: string,
   rawOptions: Record<string, string>,
 ): Promise<number> => {
-  const operations = await readOperations();
-  const operation = operations.find((entry) => entry.id === operationId);
-  if (!operation) {
-    throw new Error(`Unknown operation: ${operationId}`);
-  }
+  const operation = await getOperationOrThrow(operationId);
 
   if (operation.runner.type === "ready-for-dev-router") {
     return runReadyForDevRouter(operation, rawOptions);
@@ -565,9 +581,49 @@ const listOperations = async (json: boolean): Promise<void> => {
   for (const operation of operations) {
     const args = operation.args.map((arg) => `--${arg.name}`).join(", ");
     console.log(
-      `- ${operation.id} | strategy=${operation.strategy} | default=${operation.defaultModel}/${operation.defaultThinking}`,
+      `- ${operation.id} (${operation.name}) | strategy=${operation.strategy} | default=${operation.defaultModel}/${operation.defaultThinking}`,
     );
+    console.log(`  description: ${operation.description}`);
     console.log(`  args: ${args || "(none)"}`);
+  }
+};
+
+const explainOperation = async (operationId: string, json: boolean): Promise<void> => {
+  const [operation, triggers] = await Promise.all([getOperationOrThrow(operationId), readTriggers()]);
+  const linkedTriggers = triggers.filter((trigger) => trigger.operationId === operation.id);
+
+  if (json) {
+    console.log(JSON.stringify({ operation, triggers: linkedTriggers }, null, 2));
+    return;
+  }
+
+  console.log(`Operation ${operation.id}`);
+  console.log(`  name: ${operation.name}`);
+  console.log(`  purpose: ${operation.description}`);
+  console.log(`  strategy: ${operation.strategy}`);
+  console.log(`  defaults: ${operation.defaultModel}/${operation.defaultThinking}`);
+  console.log(`  runner: ${operation.runner.type}`);
+  console.log(`  playbook: ${operation.runner.playbookPath}`);
+
+  if (operation.args.length === 0) {
+    console.log("  args: (none)");
+  } else {
+    console.log("  args:");
+    for (const arg of operation.args) {
+      const required = arg.required ? "required" : "optional";
+      console.log(`    --${arg.name} (${arg.type}, ${required})`);
+      console.log(`      ${arg.description}`);
+    }
+  }
+
+  if (linkedTriggers.length === 0) {
+    console.log("  triggers: (none)");
+    return;
+  }
+
+  console.log("  triggers:");
+  for (const trigger of linkedTriggers) {
+    console.log(`    - ${trigger.id} (${trigger.rrule})`);
   }
 };
 
@@ -580,8 +636,34 @@ const listTriggers = async (json: boolean): Promise<void> => {
 
   console.log("Triggers");
   for (const trigger of triggers) {
-    console.log(`- ${trigger.id} -> ${trigger.operationId}`);
+    console.log(`- ${trigger.id} (${trigger.name}) -> ${trigger.operationId}`);
     console.log(`  schedule: ${trigger.rrule}`);
+  }
+};
+
+const explainTrigger = async (triggerId: string, json: boolean): Promise<void> => {
+  const trigger = await getTriggerOrThrow(triggerId);
+  const operation = await getOperationOrThrow(trigger.operationId);
+
+  if (json) {
+    console.log(JSON.stringify({ trigger, operation }, null, 2));
+    return;
+  }
+
+  console.log(`Trigger ${trigger.id}`);
+  console.log(`  name: ${trigger.name}`);
+  console.log(`  schedule: ${trigger.rrule}`);
+  console.log(`  operation: ${trigger.operationId}`);
+  console.log(`  operation strategy: ${operation.strategy}`);
+  console.log(`  operation defaults: ${operation.defaultModel}/${operation.defaultThinking}`);
+  console.log(`  operation runner: ${operation.runner.type}`);
+  if (Object.keys(trigger.args).length === 0) {
+    console.log("  trigger args: (none)");
+  } else {
+    console.log("  trigger args:");
+    for (const [key, value] of Object.entries(trigger.args)) {
+      console.log(`    --${key}=${value}`);
+    }
   }
 };
 
@@ -589,11 +671,7 @@ const fireTrigger = async (
   triggerId: string,
   overrides: Record<string, string>,
 ): Promise<number> => {
-  const triggers = await readTriggers();
-  const trigger = triggers.find((entry) => entry.id === triggerId);
-  if (!trigger) {
-    throw new Error(`Unknown trigger: ${triggerId}`);
-  }
+  const trigger = await getTriggerOrThrow(triggerId);
 
   const mergedArgs: Record<string, string> = {
     ...trigger.args,
@@ -715,6 +793,24 @@ const main = async (): Promise<void> => {
 
   if (domain === "trigger" && action === "list") {
     await listTriggers(json);
+    return;
+  }
+
+  if (domain === "operation" && action === "explain") {
+    if (!target) {
+      throw new Error(
+        "Missing operation id. Usage: software-factory operation explain <operation-id>",
+      );
+    }
+    await explainOperation(target, json);
+    return;
+  }
+
+  if (domain === "trigger" && action === "explain") {
+    if (!target) {
+      throw new Error("Missing trigger id. Usage: software-factory trigger explain <trigger-id>");
+    }
+    await explainTrigger(target, json);
     return;
   }
 

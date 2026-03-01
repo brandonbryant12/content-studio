@@ -52,10 +52,18 @@ Trigger -> Operation -> Strategy -> Skill -> Artifacts
 ## CLI Surfaces
 
 1. `pnpm software-factory operation list`
-2. `pnpm software-factory operation run <operation-id> ...`
-3. `pnpm software-factory trigger list`
-4. `pnpm software-factory trigger fire <trigger-id> ...`
-5. `pnpm software-factory doctor`
+2. `pnpm software-factory operation explain <operation-id>`
+3. `pnpm software-factory operation run <operation-id> ...`
+4. `pnpm software-factory trigger list`
+5. `pnpm software-factory trigger explain <trigger-id>`
+6. `pnpm software-factory trigger fire <trigger-id> ...`
+7. `pnpm software-factory doctor`
+
+## Execution Choice
+
+- Use `operation run` for direct/manual invocation of one operation.
+- Use `trigger fire` for scheduler-like invocation through a registered trigger.
+- Use `operation explain` and `trigger explain` to inspect ownership, defaults, args, and links before running.
 
 ## Source Of Truth
 

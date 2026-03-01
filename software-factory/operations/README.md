@@ -59,5 +59,7 @@ Registry source of truth:
 ## Runtime Notes
 
 - Use `pnpm software-factory operation list` for machine-readable discovery (`--json`).
+- Use `pnpm software-factory operation explain <id>` to inspect runner, defaults, args, and linked triggers.
 - Use `pnpm software-factory operation run <id> --dry-run` to inspect resolved launch commands.
+- Use `pnpm software-factory trigger fire <trigger-id>` when the caller should execute through scheduler trigger wiring.
 - Use `pnpm software-factory operation run ready-for-dev-executor` for a single routed execution (no internal loop).
