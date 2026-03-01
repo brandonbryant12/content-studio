@@ -145,9 +145,8 @@ export const runWorkflowMemoryPreflight = async ({
   return 1;
 };
 
-export const main = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
-  const exitCode = await runWorkflowMemoryPreflight(parseArgs(argv));
-  process.exitCode = exitCode;
+export const main = async (argv: string[] = process.argv.slice(2)): Promise<number> => {
+  return await runWorkflowMemoryPreflight(parseArgs(argv));
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

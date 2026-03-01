@@ -63,10 +63,10 @@ const createSnapshotMetadataMarkdown = (input: {
   return lines.join('\n');
 };
 
-export const main = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
+export const main = async (argv: string[] = process.argv.slice(2)): Promise<number> => {
   if (argv.includes('--help') || argv.includes('-h')) {
     console.log('Usage:\n  pnpm software-factory spec generate');
-    return;
+    return 0;
   }
 
   await ensureDir(generatedRoot);
@@ -100,6 +100,7 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   );
 
   await assembleMasterSpec();
+  return 0;
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

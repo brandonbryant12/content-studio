@@ -107,12 +107,12 @@ function parseMinScore(raw) {
   throw new Error(`Invalid --min-score value: ${raw}`);
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
 
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   const workflow = args.workflow ? args.workflow.trim() : "";
@@ -183,6 +183,7 @@ export async function main(argv: string[] = process.argv.slice(2)) {
   };
 
   console.log(JSON.stringify(response, null, 2));
+  return 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

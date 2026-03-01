@@ -1,5 +1,16 @@
 [
   {
+    "id": "2026-03-01-architecture-adr-guard-normalize-utility-script-exit-contracts-to-explicit-status-codes",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Normalize utility script exit contracts to explicit status codes",
+    "severity": "low",
+    "status": "open",
+    "tags": [],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-docs-knowledge-drift-backend-docs-conformity-guardrails-expanded",
     "date": "2026-03-01",
     "month": "2026-03",

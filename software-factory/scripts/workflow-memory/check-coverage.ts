@@ -210,11 +210,11 @@ function printHumanReport(summary) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   const month = args.month ?? currentMonth();
@@ -253,13 +253,11 @@ export async function main(argv: string[] = process.argv.slice(2)) {
     });
   }
 
-  if (strict && (summary.missingWorkflows.length > 0 || unknownWorkflowKeys.length > 0)) {
-    process.exitCode = 1;
-  }
+  const hasCoverageFailure =
+    strict && (summary.missingWorkflows.length > 0 || unknownWorkflowKeys.length > 0);
+  const hasTaxonomyFailure = strict && auditTaxonomy && missingMemoryTaxonomy.length > 0;
 
-  if (strict && auditTaxonomy && missingMemoryTaxonomy.length > 0) {
-    process.exitCode = 1;
-  }
+  return hasCoverageFailure || hasTaxonomyFailure ? 1 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

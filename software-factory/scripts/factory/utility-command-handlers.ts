@@ -11,7 +11,7 @@ import { main as syncWorkflowMemoryMain } from "../workflow-memory/sync-git";
 import { main as generateWorkflowsReadmeMain } from "../workflows/generate-readme";
 import { findUtilityCommandSpec, type UtilityCommandKey } from "./utility-command-manifest";
 
-type UtilityMain = (argv?: string[]) => Promise<void>;
+type UtilityMain = (argv?: string[]) => Promise<number>;
 
 const UTILITY_HANDLERS: Record<UtilityCommandKey, UtilityMain> = {
   "skills:check": skillsCheckMain,
@@ -25,18 +25,6 @@ const UTILITY_HANDLERS: Record<UtilityCommandKey, UtilityMain> = {
   "scenario:validate": replayScenariosMain,
   "scripts:lint": lintScriptsMain,
   "spec:generate": specGenerateMain,
-};
-
-const runUtilityMain = async (run: UtilityMain, argv: string[]): Promise<number> => {
-  const previousExitCode = process.exitCode;
-  process.exitCode = undefined;
-
-  try {
-    await run(argv);
-    return process.exitCode ?? 0;
-  } finally {
-    process.exitCode = previousExitCode;
-  }
 };
 
 export const runUtilityCommand = async (
@@ -54,5 +42,5 @@ export const runUtilityCommand = async (
     throw new Error(`Missing utility command handler for ${command.key}.`);
   }
 
-  return await runUtilityMain(handler, argv);
+  return await handler(argv);
 };

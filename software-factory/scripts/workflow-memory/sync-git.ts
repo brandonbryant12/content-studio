@@ -569,11 +569,11 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   const maxAttempts = Number(args.max_attempts ?? DEFAULT_MAX_ATTEMPTS);
@@ -599,22 +599,23 @@ export async function main(argv: string[] = process.argv.slice(2)) {
   await stageMemoryChanges();
   if (!(await hasStagedMemoryChanges())) {
     console.log("No workflow-memory changes to sync.");
-    return;
+    return 0;
   }
 
   const committed = await commitMemoryChanges(message);
   if (!committed) {
     console.log("No workflow-memory commit created (nothing to commit).");
-    return;
+    return 0;
   }
 
   if (dryRun) {
     console.log("Dry-run mode enabled: committed workflow-memory changes locally; push skipped.");
-    return;
+    return 0;
   }
 
   await pushWithRetry(remote, branch, maxAttempts);
   console.log(`Workflow-memory sync complete: ${remote}/${branch}`);
+  return 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

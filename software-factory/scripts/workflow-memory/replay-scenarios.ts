@@ -151,12 +151,12 @@ async function validateFixture(scenarioId) {
   return { fixturePath, errors, status };
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
 
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   const strict = args.strict === "true";
@@ -278,9 +278,7 @@ export async function main(argv: string[] = process.argv.slice(2)) {
     }
   }
 
-  if (strict && invalid > 0) {
-    process.exitCode = 1;
-  }
+  return strict && invalid > 0 ? 1 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

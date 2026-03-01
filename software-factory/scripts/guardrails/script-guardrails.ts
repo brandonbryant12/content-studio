@@ -26,6 +26,7 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
 
 const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails', 'spec'] as const;
 const RUN_SCRIPT_MAIN_RE = /^\s*runScript\(main\);\s*$/m;
+const ENTRY_EXIT_SIDE_EFFECT_RE = /\bprocess\.exitCode\s*=/;
 
 export type ScriptGuardrailIssue = {
   code:
@@ -34,6 +35,7 @@ export type ScriptGuardrailIssue = {
     | 'missing-entry-file'
     | 'missing-effect-runner-import'
     | 'missing-run-script-call'
+    | 'entry-script-exit-side-effect'
     | 'untracked-entry-script'
     | 'legacy-js-script'
     | 'legacy-mjs-script'
@@ -153,6 +155,17 @@ const checkEntryFileContracts = async (
       code: 'missing-run-script-call',
       path: repoPath,
       message: 'Script entry must terminate with runScript(main);',
+    });
+  }
+
+  if (
+    repoPath !== 'software-factory/scripts/factory/software-factory.ts' &&
+    ENTRY_EXIT_SIDE_EFFECT_RE.test(source)
+  ) {
+    issues.push({
+      code: 'entry-script-exit-side-effect',
+      path: repoPath,
+      message: 'Entry scripts must return status codes from main instead of mutating process.exitCode.',
     });
   }
 

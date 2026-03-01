@@ -87,11 +87,11 @@ async function appendJsonl(filePath, entries, dryRun) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   const dryRun = args.dry_run === "true";
@@ -185,6 +185,7 @@ export async function main(argv: string[] = process.argv.slice(2)) {
   console.log(
     `${dryRun ? "Dry run" : "Compaction"} complete. Read=${totalRead}, active=${activeEvents.length}, deduped=${duplicatesRemoved}, archived=${archivedCount}.`,
   );
+  return 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

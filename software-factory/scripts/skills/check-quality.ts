@@ -294,12 +294,12 @@ function printHumanReport(skillCount, issues, strict) {
   }
 }
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const { strict, json, help } = parseArgs(argv);
 
   if (help) {
     console.log(USAGE);
-    return;
+    return 0;
   }
 
   if (!(await pathExists(CANONICAL_SKILLS_DIR))) {
@@ -336,9 +336,7 @@ export async function main(argv: string[] = process.argv.slice(2)) {
     printHumanReport(skillNames.length, issues, strict);
   }
 
-  if (failed) {
-    process.exitCode = 1;
-  }
+  return failed ? 1 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -5,17 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { runScript } from '../lib/effect-script';
 import { checkScriptGuardrails } from './script-guardrails';
 
-export async function main(argv: string[] = process.argv.slice(2)) {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   if (argv.includes('--help') || argv.includes('-h')) {
     console.log('Usage:\n  pnpm software-factory scripts lint');
-    return;
+    return 0;
   }
 
   const issues = await checkScriptGuardrails();
 
   if (issues.length === 0) {
     console.log('Script lint guardrails passed.');
-    return;
+    return 0;
   }
 
   console.error(`Script lint guardrails failed with ${issues.length} issue(s):`);
@@ -24,7 +24,7 @@ export async function main(argv: string[] = process.argv.slice(2)) {
     console.error(`- [${issue.code}] ${location}${issue.message}`);
   }
 
-  process.exitCode = 1;
+  return 1;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
