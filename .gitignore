@@ -28,3 +28,5 @@ tools/cli/.output/
 
 # Standards debate workspace
 agentic-harness-framework/scripts/standards-debate/workspace/
+
+.worktrees
