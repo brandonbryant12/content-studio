@@ -23,7 +23,7 @@ describe("software-factory cli", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("pnpm software-factory <command> [options]");
     expect(result.stdout).toContain("COMMANDS");
-    expect(result.stdout).toContain("trigger");
+    expect(result.stdout).toContain("operation");
   });
 
   it("fails unknown top-level commands with deterministic messaging", () => {

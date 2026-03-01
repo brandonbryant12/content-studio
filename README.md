@@ -44,13 +44,13 @@ Start here:
 
 ## Software Factory
 
-Operation, strategy, trigger, and workflow-memory conventions are defined in [`software-factory/`](./software-factory/).
+Operation, strategy, automation, and workflow-memory conventions are defined in [`software-factory/`](./software-factory/).
 
 Start here:
 
 1. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)
-2. Triggers catalog: [`software-factory/triggers/README.md`](./software-factory/triggers/README.md)
-3. Strategy catalog: [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)
+2. Strategy catalog: [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)
+3. Automations guide: [`automations/README.md`](./automations/README.md)
 4. Workflow memory guide: [`software-factory/workflow-memory/README.md`](./software-factory/workflow-memory/README.md)
 
 ## Development Setup

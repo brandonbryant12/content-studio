@@ -13,13 +13,12 @@ It maps each surface to its canonical location, enforcement path, and output evi
 | Testing standards | `docs/testing/*` | Test selection and CI gates | Correct test depth by change type |
 | Strategy catalog | `software-factory/workflows/registry.json`, `software-factory/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated strategy catalog + per-strategy playbooks |
 | Operation catalog | `software-factory/operations/registry.json` | `pnpm software-factory operation list` | Runnable operation inventory + argument contracts |
-| Trigger catalog | `software-factory/triggers/registry.json` | `pnpm software-factory trigger list` | Trigger inventory + schedule/operation mapping |
 | Skill system | `.agents/skills/*/SKILL.md` | `software-factory/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Valid canonical skills + symlink mirrors |
 | Lint rules | `tools/eslint/base.js`, `tools/eslint/custom-rules.js`, package eslint configs | `pnpm lint` | Static rule pass/fail |
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
 | Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test`, `pnpm build` | Full build and runtime confidence |
 | Workflow memory | `software-factory/workflow-memory/*`, `software-factory/scripts/workflow-memory/*.ts` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
-| Trigger wrappers | `software-factory/automations/*/*.md`, `software-factory/automations/*/*.toml` | Trigger contracts + CLI delegation checks | Automated issue/PR execution trails |
+| Automation wrappers | `automations/*/*.md`, `automations/*/*.toml` | Automation contracts + CLI delegation checks | Automated issue/PR execution trails |
 | CI/CD pipelines | `Jenkinsfile`, `jenkins/*.groovy` | Jenkins job gates | Branch/main/nightly/weekly quality reports |
 
 ## `enforced-by` Markers In Standards Docs
@@ -49,11 +48,11 @@ Many docs rules include `<!-- enforced-by: ... -->` markers. They indicate expec
 
 ## Naming Boundaries To Keep Clear
 
-1. Strategy memory keys are not operation IDs and not trigger IDs.
+1. Strategy memory keys are not operation IDs and not automation IDs.
 Examples:
 - Memory key: `Feature Delivery`
 - Operation: `ready-for-dev-executor`
-- Trigger: `ready-for-dev-executor`
+- Automation ID: `ready-for-dev-executor`
 
 2. Operations are runnable entrypoints; strategies are process contracts; skills are execution methods.
 Examples:
@@ -61,9 +60,9 @@ Examples:
 - Strategy: `Feature Delivery`
 - Skill: `feature-delivery`
 
-3. Operations can execute multiple strategies/skills and triggers can start operations.
+3. Operations can execute multiple strategies/skills and automations can start operations.
 Examples:
-- Trigger: `ready-for-dev-executor`
+- Automation wrapper: `ready-for-dev-executor`
 - Starts operation: `ready-for-dev-executor`
 - Operation executes: `Self-Improvement` strategy and `Feature Delivery` strategy with utility skills such as `debug-fix`
 

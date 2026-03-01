@@ -20,7 +20,7 @@ export class CliInputError extends Data.TaggedError("CliInputError")<{
 }
 
 export class RegistryLookupError extends Data.TaggedError("RegistryLookupError")<{
-  entity: "operation" | "trigger";
+  entity: "operation";
   id: string;
 }> {
   get message(): string {

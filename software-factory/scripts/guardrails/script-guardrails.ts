@@ -10,7 +10,7 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
   'software-factory': 'pnpm exec tsx software-factory/scripts/factory/software-factory.ts',
   'test:scripts': 'vitest run --config software-factory/scripts/vitest.config.ts',
   ...REQUIRED_UTILITY_PACKAGE_SCRIPTS,
-  'ready-for-dev': 'pnpm software-factory trigger fire --trigger-id ready-for-dev-executor',
+  'ready-for-dev': 'pnpm software-factory operation run --operation-id ready-for-dev-executor',
 };
 
 const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails', 'spec'] as const;

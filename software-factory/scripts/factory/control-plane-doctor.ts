@@ -1,11 +1,11 @@
 import { promises as fs } from "node:fs";
 import { runCommand } from "../lib/command";
-import { OPERATIONS_PATH, TRIGGERS_PATH } from "./control-plane-types";
+import { OPERATIONS_PATH } from "./control-plane-types";
 
 export const runDoctor = async (): Promise<number> => {
   const checks: Array<{ name: string; ok: boolean; details: string }> = [];
 
-  const paths = [OPERATIONS_PATH, TRIGGERS_PATH];
+  const paths = [OPERATIONS_PATH];
   for (const candidate of paths) {
     try {
       await fs.access(candidate);

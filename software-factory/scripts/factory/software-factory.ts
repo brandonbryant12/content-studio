@@ -12,14 +12,11 @@ import {
 import { runDoctor } from "./control-plane-doctor";
 import {
   type OperationRunInput,
-  type TriggerFireInput,
 } from "./control-plane-types";
-import { fireTrigger, runOperation } from "./control-plane-execution";
+import { runOperation } from "./control-plane-execution";
 import {
   explainOperation,
-  explainTrigger,
   listOperations,
-  listTriggers,
 } from "./control-plane-registry";
 import { runUtilityCommandEffect, type UtilityCommand } from "./utility-command-handlers";
 import { UTILITY_USAGE_LINES } from "./utility-command-manifest";
@@ -31,20 +28,17 @@ const ROOT_COMMAND_NAMES = new Set([
   "scripts",
   "spec",
   "operation",
-  "trigger",
   "doctor",
 ]);
 const ROOT_DESCRIPTION = [
   "Software Factory execution control plane.",
-  "Terms are strict: Trigger -> Operation -> Strategy -> Skills.",
+  "Terms are strict: Operation -> Strategy -> Skills.",
   "Use --dry-run to print launch commands without executing codex.",
   "",
   "Quick start:",
-  "1) Inspect registered triggers: pnpm software-factory trigger list",
-  "2) Explain one trigger: pnpm software-factory trigger explain --trigger-id <id>",
-  "3) Fire one trigger: pnpm software-factory trigger fire --trigger-id <id> [--dry-run]",
-  "4) Inspect operations: pnpm software-factory operation list",
-  "5) Run one operation: pnpm software-factory operation run --operation-id <id> [--dry-run]",
+  "1) Inspect operations: pnpm software-factory operation list",
+  "2) Explain one operation: pnpm software-factory operation explain --operation-id <id>",
+  "3) Run one operation: pnpm software-factory operation run --operation-id <id> [--dry-run]",
   "",
   "Workflow-memory common tasks:",
   "- Add entry: pnpm software-factory workflow-memory add-entry --workflow <text> --title <text> ...",
@@ -53,7 +47,6 @@ const ROOT_DESCRIPTION = [
   "- Validate scenarios: pnpm software-factory workflow-memory validate-scenarios --strict",
   "",
   "Use subcommand help for details:",
-  "- pnpm software-factory trigger --help",
   "- pnpm software-factory operation --help",
   "- pnpm software-factory workflow-memory --help",
   "",
@@ -68,7 +61,6 @@ const ROOT_COMMAND_HELP_ROWS = [
   ["scripts", "Script quality commands."],
   ["spec", "Documentation specification commands."],
   ["operation", "Operation inspection and execution."],
-  ["trigger", "Trigger inspection and execution."],
   ["doctor", "Run software-factory environment diagnostics."],
 ] as const;
 const WORKFLOW_MEMORY_HELP_ROWS = [
@@ -82,13 +74,8 @@ const WORKFLOW_MEMORY_HELP_ROWS = [
 ] as const;
 const OPERATION_HELP_ROWS = [
   ["list", "List registered operations."],
-  ["explain", "Describe one operation and linked triggers."],
+  ["explain", "Describe one operation."],
   ["run", "Run one operation directly."],
-] as const;
-const TRIGGER_HELP_ROWS = [
-  ["list", "List registered triggers."],
-  ["explain", "Describe one trigger and linked operation."],
-  ["fire", "Fire one trigger with optional overrides."],
 ] as const;
 
 const formatHelpRows = (rows: readonly (readonly [string, string])[]): string[] => {
@@ -103,9 +90,9 @@ const printCompactRootHelp = (): void => {
     "  pnpm software-factory <command> [options]",
     "",
     "START HERE",
-    "  pnpm software-factory trigger list",
-    "  pnpm software-factory trigger explain --trigger-id <id>",
-    "  pnpm software-factory trigger fire --trigger-id <id> [--dry-run]",
+    "  pnpm software-factory operation list",
+    "  pnpm software-factory operation explain --operation-id <id>",
+    "  pnpm software-factory operation run --operation-id <id> [--dry-run]",
     "",
     "COMMANDS",
     ...formatHelpRows(ROOT_COMMAND_HELP_ROWS),
@@ -156,24 +143,6 @@ const printCompactOperationHelp = (): void => {
   console.log(lines.join("\n"));
 };
 
-const printCompactTriggerHelp = (): void => {
-  const lines = [
-    "software-factory trigger",
-    "",
-    "USAGE",
-    "  pnpm software-factory trigger <command> [options]",
-    "",
-    "COMMANDS",
-    ...formatHelpRows(TRIGGER_HELP_ROWS),
-    "",
-    "EXAMPLES",
-    "  pnpm software-factory trigger list",
-    "  pnpm software-factory trigger explain --trigger-id ready-for-dev-executor",
-    "  pnpm software-factory trigger fire --trigger-id ready-for-dev-executor --dry-run",
-  ];
-  console.log(lines.join("\n"));
-};
-
 const printCompactHelp = (argv: string[]): boolean => {
   const args = argv.slice(2);
   const hasHelp = args.some((arg) => HELP_FLAGS.has(arg));
@@ -194,10 +163,6 @@ const printCompactHelp = (argv: string[]): boolean => {
   }
   if (rootCommand === "operation" && commandPath.length === 1) {
     printCompactOperationHelp();
-    return true;
-  }
-  if (rootCommand === "trigger" && commandPath.length === 1) {
-    printCompactTriggerHelp();
     return true;
   }
 
@@ -235,17 +200,6 @@ const executeOperationRun = (
     catch: (error) => toCliExecutionError("operation run", error),
   });
 
-const executeTriggerFire = (
-  input: TriggerFireInput,
-): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
-  Effect.tryPromise({
-    try: async () => {
-      const status = await fireTrigger(input);
-      applyExitCode(status);
-    },
-    catch: (error) => toCliExecutionError("trigger fire", error),
-  });
-
 const executeDoctor = (): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
   Effect.tryPromise({
     try: async () => {
@@ -257,9 +211,6 @@ const executeDoctor = (): Effect.Effect<void, ReturnType<typeof toCliExecutionEr
 
 const operationIdOption = Options.text("operation-id").pipe(
   Options.withDescription("Registered operation id."),
-);
-const triggerIdOption = Options.text("trigger-id").pipe(
-  Options.withDescription("Registered trigger id."),
 );
 
 const dryRunOption = Options.boolean("dry-run").pipe(
@@ -623,7 +574,7 @@ const operationExplainCommand = Command.make(
       try: () => explainOperation(operation_id, json),
       catch: (error) => toCliExecutionError("operation explain", error),
     }),
-).pipe(Command.withDescription("Describe one operation and linked triggers."));
+).pipe(Command.withDescription("Describe one operation."));
 
 const operationRunCommand = Command.make(
   "run",
@@ -653,57 +604,6 @@ const operationCommand = Command.make("operation", {}).pipe(
   ]),
 );
 
-const triggerListCommand = Command.make(
-  "list",
-  { json: jsonOption },
-  ({ json }) =>
-    Effect.tryPromise({
-      try: () => listTriggers(json),
-      catch: (error) => toCliExecutionError("trigger list", error),
-    }),
-).pipe(Command.withDescription("List registered triggers."));
-
-const triggerExplainCommand = Command.make(
-  "explain",
-  {
-    trigger_id: triggerIdOption,
-    json: jsonOption,
-  },
-  ({ trigger_id, json }) =>
-    Effect.tryPromise({
-      try: () => explainTrigger(trigger_id, json),
-      catch: (error) => toCliExecutionError("trigger explain", error),
-    }),
-).pipe(Command.withDescription("Describe one trigger and linked operation."));
-
-const triggerFireCommand = Command.make(
-  "fire",
-  {
-    trigger_id: triggerIdOption,
-    issue: issueOption,
-    model: modelOption,
-    thinking: thinkingOption,
-    dry_run: dryRunOption,
-  },
-  ({ trigger_id, issue, model, thinking, dry_run }) =>
-    executeTriggerFire({
-      triggerId: trigger_id,
-      issue: optionToUndefined(issue),
-      model: optionToUndefined(model),
-      thinking: optionToUndefined(thinking),
-      dryRun: dry_run,
-    }),
-).pipe(Command.withDescription("Fire one trigger with optional overrides."));
-
-const triggerCommand = Command.make("trigger", {}).pipe(
-  Command.withDescription("Trigger inspection and execution."),
-  Command.withSubcommands([
-    triggerListCommand,
-    triggerExplainCommand,
-    triggerFireCommand,
-  ]),
-);
-
 const doctorCommand = Command.make(
   "doctor",
   {},
@@ -719,7 +619,6 @@ const cli = Command.make("software-factory", {}).pipe(
     scriptsCommand,
     specCommand,
     operationCommand,
-    triggerCommand,
     doctorCommand,
   ]),
 );

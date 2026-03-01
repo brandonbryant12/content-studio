@@ -14,9 +14,8 @@ import {
   type Operation,
   type OperationRunInput,
   type OperationRunOptions,
-  type TriggerFireInput,
 } from "./control-plane-types";
-import { getOperationOrThrow, getTriggerOrThrow } from "./control-plane-registry";
+import { getOperationOrThrow } from "./control-plane-registry";
 import { runCommand, runStreamingCommand } from "../lib/command";
 
 type GhIssueLabel = {
@@ -494,53 +493,6 @@ const runReadyForDevRouter = async (
   return result.status;
 };
 
-const parseBooleanTriggerArg = (key: string, value: string): boolean => {
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "true") {
-    return true;
-  }
-  if (normalized === "false") {
-    return false;
-  }
-  throw new CliInputError({
-    reason: `Invalid trigger arg '${key}=${value}'. Expected true or false.`,
-  });
-};
-
-const parseTriggerOperationOverrides = (
-  args: Record<string, string>,
-): Partial<OperationRunOptions> => {
-  const parsed: Partial<OperationRunOptions> = {};
-
-  for (const [key, rawValue] of Object.entries(args)) {
-    const value = rawValue.trim();
-    if (!value) {
-      continue;
-    }
-
-    switch (key) {
-      case "issue":
-        parsed.issue = value;
-        break;
-      case "model":
-        parsed.model = value;
-        break;
-      case "thinking":
-        parsed.thinking = value;
-        break;
-      case "dry_run":
-        parsed.dryRun = parseBooleanTriggerArg(key, value);
-        break;
-      default:
-        throw new CliInputError({
-          reason: `Unsupported trigger arg '${key}' on trigger registry. Allowed keys: issue, model, thinking, dry_run.`,
-        });
-    }
-  }
-
-  return parsed;
-};
-
 export const runOperation = async (input: OperationRunInput): Promise<number> => {
   const operation = await getOperationOrThrow(input.operationId);
   const options: OperationRunOptions = {
@@ -558,24 +510,5 @@ export const runOperation = async (input: OperationRunInput): Promise<number> =>
   }
   throw new RunnerConfigurationError({
     reason: `Unsupported runner type for operation ${operation.id}.`,
-  });
-};
-
-export const fireTrigger = async ({
-  triggerId,
-  issue,
-  model,
-  thinking,
-  dryRun,
-}: TriggerFireInput): Promise<number> => {
-  const trigger = await getTriggerOrThrow(triggerId);
-  const triggerOverrides = parseTriggerOperationOverrides(trigger.args);
-
-  return runOperation({
-    operationId: trigger.operationId,
-    issue: issue ?? triggerOverrides.issue,
-    model: model ?? triggerOverrides.model,
-    thinking: thinking ?? triggerOverrides.thinking,
-    dryRun: dryRun || triggerOverrides.dryRun === true,
   });
 };

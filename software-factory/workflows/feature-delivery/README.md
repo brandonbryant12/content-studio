@@ -7,15 +7,15 @@
 
 Runs the default request-to-merge delivery loop: plan slices, implement safely, validate, update docs, and compound learnings.
 
-## Trigger Skills
+## Workflow Skills
 
 - `feature-delivery` (primary)
 - Common companions: `tanstack-vite`, `architecture-adr-guard`, `test-surface-steward`, `docs-knowledge-drift`
 
 ## Automation Entry Points
 
-- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved `ready-for-dev` issues through full validation gates.
-- [`sanity-check`](../../automations/sanity-check/sanity-check.md): periodically scans and directly ships bounded high-confidence fixes through full validation gates.
+- [`ready-for-dev-executor`](../../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved `ready-for-dev` issues through full validation gates.
+- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): periodically scans and directly ships bounded high-confidence fixes through full validation gates.
 
 ## How It Works
 

@@ -36,7 +36,7 @@
       ],
       "runner": {
         "type": "ready-for-dev-router",
-        "playbookPath": "software-factory/automations/ready-for-dev-executor/ready-for-dev-executor.md"
+        "playbookPath": "automations/ready-for-dev-executor/ready-for-dev-executor.md"
       }
     },
     {
@@ -85,7 +85,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/issue-evaluator/issue-evaluator.md"
+        "playbookPath": "automations/issue-evaluator/issue-evaluator.md"
       }
     },
     {
@@ -117,7 +117,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/sanity-check/sanity-check.md"
+        "playbookPath": "automations/sanity-check/sanity-check.md"
       }
     },
     {
@@ -149,7 +149,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/best-practice-researcher/best-practice-researcher.md"
+        "playbookPath": "automations/best-practice-researcher/best-practice-researcher.md"
       }
     },
     {
@@ -181,7 +181,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/software-factory-researcher/software-factory-researcher.md"
+        "playbookPath": "automations/software-factory-researcher/software-factory-researcher.md"
       }
     },
     {
@@ -213,7 +213,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/product-vision-researcher/product-vision-researcher.md"
+        "playbookPath": "automations/product-vision-researcher/product-vision-researcher.md"
       }
     },
     {
@@ -245,7 +245,7 @@
       ],
       "runner": {
         "type": "codex-playbook",
-        "playbookPath": "software-factory/automations/product-owner-reviewer/product-owner-reviewer.md"
+        "playbookPath": "automations/product-owner-reviewer/product-owner-reviewer.md"
       }
     }
   ]

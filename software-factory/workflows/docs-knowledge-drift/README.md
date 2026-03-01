@@ -7,7 +7,7 @@
 
 Keeps standards, workflow guidance, and onboarding docs aligned with real repository behavior.
 
-## Trigger Skills
+## Workflow Skills
 
 - `docs-knowledge-drift` (primary)
 - Common companions: `feature-delivery`, `self-improvement`

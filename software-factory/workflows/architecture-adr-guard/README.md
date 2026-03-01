@@ -7,16 +7,16 @@
 
 Validates package boundaries, layer direction, runtime composition, authz placement, and observability expectations for architecture-impacting changes.
 
-## Trigger Skills
+## Workflow Skills
 
 - `architecture-adr-guard` (primary)
 - Common companion: `feature-delivery`
 
 ## Automation Entry Points
 
-- [`best-practice-researcher`](../../automations/best-practice-researcher/best-practice-researcher.md): discovers architecture and best-practice improvements and opens approval-gated issues.
-- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md): executes approved architecture-impacting issues and enforces boundary-safe delivery.
-- [`sanity-check`](../../automations/sanity-check/sanity-check.md): detects architecture/runtime guardrail drift and can directly apply bounded fixes.
+- [`best-practice-researcher`](../../../automations/best-practice-researcher/best-practice-researcher.md): discovers architecture and best-practice improvements and opens approval-gated issues.
+- [`ready-for-dev-executor`](../../../automations/ready-for-dev-executor/ready-for-dev-executor.md): executes approved architecture-impacting issues and enforces boundary-safe delivery.
+- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): detects architecture/runtime guardrail drift and can directly apply bounded fixes.
 
 ## How It Works
 

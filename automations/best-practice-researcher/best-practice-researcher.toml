@@ -4,10 +4,10 @@ name = "Best Practice Researcher"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire --trigger-id best-practice-researcher`
+`pnpm software-factory operation run --operation-id best-practice-researcher`
 
 Contract:
-- This wrapper is trigger-only.
+- This wrapper is automation-only.
 - Do not re-implement routing/execution logic in this prompt.
 - The Software Factory CLI is source of truth for operation selection, model/thinking routing, and launch behavior.
 - Return a concise summary with routed operation, command status, and no-op reason if any.'''

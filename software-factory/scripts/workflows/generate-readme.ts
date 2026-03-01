@@ -16,7 +16,7 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
 
   const coreNameById = new Map(core.map((entry) => [entry.id, entry.name]));
 
-  const laneLink = (lane) => `[\`${lane}\`](../automations/${lane}/${lane}.md)`;
+  const laneLink = (lane) => `[\`${lane}\`](../../automations/${lane}/${lane}.md)`;
   const skillLink = (skill) => `[\`${skill}\`](../../.agents/skills/${skill}/SKILL.md)`;
   const workflowDocLink = (entry) => {
     const absolutePath = resolve(repoRoot, entry.docsPath);
@@ -66,7 +66,7 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
   lines.push("- `Workflow`: A process contract that defines scope, expected outcome, and workflow-memory key.");
   lines.push("- `Skill`: A reusable execution method that implements one part of a workflow (or a helper task).");
   lines.push(
-    "- `Automation`: A runtime lane (scheduled or event-driven) that can trigger one or more workflows and skills with lane-specific policies.",
+    "- `Automation`: A runtime lane (scheduled or event-driven) that invokes one or more workflows and skills with lane-specific policies.",
   );
   lines.push("");
   lines.push("Not every workflow has an automation lane, and not every automation lane maps 1:1 to one workflow.");
@@ -75,7 +75,7 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
   lines.push("");
   lines.push("Core workflows are the only entries with first-class workflow memory keys.");
   lines.push("");
-  lines.push("| Workflow | Directory | Memory Key | Primary Skills | Automation Triggers | Intent |");
+  lines.push("| Workflow | Directory | Memory Key | Primary Skills | Automation Lanes | Intent |");
   lines.push("|---|---|---|---|---|---|");
 
   for (const entry of core) {
@@ -89,7 +89,7 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
   lines.push("");
   lines.push("These are reusable helper/orchestrator skills. They do not define standalone workflow classes.");
   lines.push("");
-  lines.push("| Utility Skill | Memory Key | Source Skill | Used With Workflows | Automation Triggers | Purpose |");
+  lines.push("| Utility Skill | Memory Key | Source Skill | Used With Workflows | Automation Lanes | Purpose |");
   lines.push("|---|---|---|---|---|---|");
 
   for (const entry of utility) {

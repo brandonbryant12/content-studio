@@ -5,10 +5,9 @@ Operations are the runnable units of the Software Factory CLI.
 Execution model:
 
 ```text
-Trigger -> Operation -> Strategy -> Skills -> Artifacts
+Automation -> Operation -> Strategy -> Skills -> Artifacts
 ```
 
-- `Trigger`: schedule or manual event that starts a run.
 - `Operation`: CLI-run entrypoint (`software-factory operation run ...`).
 - `Strategy`: internal execution contract selected by the operation.
 - `Skill`: reusable method invoked during strategy phases.
@@ -59,7 +58,6 @@ Registry source of truth:
 ## Runtime Notes
 
 - Use `pnpm software-factory operation list` for machine-readable discovery (`--json`).
-- Use `pnpm software-factory operation explain --operation-id <id>` to inspect runner, defaults, args, and linked triggers.
+- Use `pnpm software-factory operation explain --operation-id <id>` to inspect runner, defaults, and args.
 - Use `pnpm software-factory operation run --operation-id <id> --dry-run` to inspect resolved launch commands.
-- Use `pnpm software-factory trigger fire --trigger-id <trigger-id>` when the caller should execute through scheduler trigger wiring.
 - Use `pnpm software-factory operation run --operation-id ready-for-dev-executor` for a single routed execution (no internal loop).

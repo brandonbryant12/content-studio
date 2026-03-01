@@ -1,18 +1,18 @@
 version = 1
-id = "software-factory-researcher"
-name = "Software Factory Researcher"
+id = "product-vision-researcher"
+name = "Product Vision Researcher"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire --trigger-id software-factory-researcher`
+`pnpm software-factory operation run --operation-id product-vision-researcher`
 
 Contract:
-- This wrapper is trigger-only.
+- This wrapper is automation-only.
 - Do not re-implement routing/execution logic in this prompt.
 - The Software Factory CLI is source of truth for operation selection, model/thinking routing, and launch behavior.
 - Return a concise summary with routed operation, command status, and no-op reason if any.'''
 status = "ACTIVE"
-rrule = "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+rrule = "RRULE:FREQ=HOURLY;INTERVAL=12;BYMINUTE=5;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["$REPO_ROOT"]
-created_at = 1771627823000
-updated_at = 1771797871000
+created_at = 1771810862000
+updated_at = 1771810862000

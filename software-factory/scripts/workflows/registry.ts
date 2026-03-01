@@ -118,7 +118,6 @@ export async function readWorkflowRegistry() {
     for (const lane of entry.automationLanes ?? []) {
       const lanePath = resolve(
         repoRoot,
-        "software-factory",
         "automations",
         lane,
         `${lane}.md`,
@@ -126,7 +125,7 @@ export async function readWorkflowRegistry() {
       validationTasks.push(
         pathExists(lanePath).then((exists) => {
           if (!exists) {
-            issues.push(`Missing automation lane for "${entry.id}": software-factory/automations/${lane}/${lane}.md`);
+            issues.push(`Missing automation lane for "${entry.id}": automations/${lane}/${lane}.md`);
           }
         }),
       );

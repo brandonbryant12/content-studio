@@ -10,11 +10,11 @@ Start with [`software-factory/README.md`](./README.md), then use this page for t
 
 - `Operation`: runnable CLI entrypoint (cataloged in `software-factory/operations/registry.json`).
 - `Strategy`: internal execution contract + memory key (implemented under `software-factory/workflows/`).
-- `Trigger`: schedule/event policy wrapper (`software-factory/triggers/registry.json` and `software-factory/automations/*`).
+- `Automation`: schedule/event policy wrapper (`automations/*`).
 - `Skill`: reusable execution method (canonical in `.agents/skills/*/SKILL.md`).
 
 Relationship rule:
-- triggers invoke operations.
+- automations invoke operations.
 - operations select strategies.
 - strategies invoke skills.
 
@@ -26,7 +26,7 @@ The repo already has strong controls, but they are distributed across:
 - `.agents/skills/`
 - `software-factory/scripts/`
 - invariant tests and lint rules
-- `software-factory/automations/`
+- `automations/`
 
 This framework reduces orientation time by showing one coherent model.
 
@@ -34,7 +34,7 @@ This framework reduces orientation time by showing one coherent model.
 
 ```mermaid
 flowchart TD
-  R[Request / Change Trigger] --> T[Trigger]
+  R[Request / Change Event] --> T[Automation]
   T --> O[Operation]
   O --> S0[Strategy Selection]
   S0 --> SK[Skills]
@@ -58,11 +58,10 @@ flowchart TD
 | Product/system spec | [`docs/master-spec.md`](../docs/master-spec.md) + `docs/spec/generated/*` | `pnpm spec:generate`, `pnpm spec:check` | Generated snapshots + spec drift gate |
 | Strategy catalog | `software-factory/workflows/registry.json`, `software-factory/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated catalog + per-strategy pages |
 | Operation catalog | `software-factory/operations/registry.json` | `pnpm software-factory operation list` | Runnable operation inventory + args |
-| Trigger catalog | `software-factory/triggers/registry.json` | `pnpm software-factory trigger list` | Scheduler-facing trigger inventory |
 | Skill system | `.agents/skills/*/SKILL.md` | `software-factory/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
 | Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
 | Workflow memory | `software-factory/workflow-memory/*` | `software-factory/scripts/workflow-memory/*.ts`, coverage checks | JSONL events + index + summaries |
-| Automation lanes | `software-factory/automations/*/*.md` + `software-factory/automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
+| Automation lanes | `automations/*/*.md` + `automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
 
 ## Execution Model
 
@@ -84,7 +83,7 @@ Keep docs layered to avoid duplication:
 2. Standards docs (`docs/architecture`, `docs/patterns`, `docs/frontend`, `docs/testing`): what rules are.
 3. Operation/strategy/skills docs ([`software-factory/operations/`](./operations/), [`software-factory/workflows/`](./workflows/), `.agents/skills/*`): how work is executed.
 4. Enforcement artifacts (`software-factory/scripts/`, lint rules, invariants, CI): what is automatically checked.
-5. Memory/automation docs (`software-factory/workflow-memory`, `software-factory/automations/`): how learnings compound and lanes operate.
+5. Memory/automation docs (`software-factory/workflow-memory`, `automations/`): how learnings compound and lanes operate.
 
 When updating policy, prefer editing the deepest true source rather than repeating text in multiple places.
 
@@ -92,6 +91,5 @@ When updating policy, prefer editing the deepest true source rather than repeati
 
 1. [`software-factory/control-surfaces.md`](./control-surfaces.md)
 2. [`software-factory/operations/README.md`](./operations/README.md)
-3. [`software-factory/triggers/README.md`](./triggers/README.md)
-4. [`software-factory/workflow-memory/README.md`](./workflow-memory/README.md)
-5. [`software-factory/automations/README.md`](./automations/README.md)
+3. [`software-factory/workflow-memory/README.md`](./workflow-memory/README.md)
+4. [`automations/README.md`](../automations/README.md)

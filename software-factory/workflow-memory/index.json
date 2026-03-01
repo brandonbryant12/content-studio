@@ -573,6 +573,27 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-self-improvement-remove-trigger-command-scope-and-externalize-automations",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Remove trigger command scope and externalize automations",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "software-factory",
+      "cli",
+      "automation",
+      "effect-cli",
+      "memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-02-28-docs-knowledge-drift-tanstack-router-query-form-best-practices-research-feb-2026",
     "date": "2026-02-28",
     "month": "2026-02",

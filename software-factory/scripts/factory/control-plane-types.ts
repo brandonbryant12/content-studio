@@ -33,14 +33,6 @@ export type Operation = {
   runner: Runner;
 };
 
-export type Trigger = {
-  id: string;
-  name: string;
-  operationId: string;
-  rrule: string;
-  args: Record<string, string>;
-};
-
 export type OperationRunOptions = {
   issue?: string;
   model?: string;
@@ -52,12 +44,7 @@ export type OperationRunInput = OperationRunOptions & {
   operationId: string;
 };
 
-export type TriggerFireInput = OperationRunOptions & {
-  triggerId: string;
-};
-
 export const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
-export const TRIGGERS_PATH = path.join("software-factory", "triggers", "registry.json");
 
 export const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
 export const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);

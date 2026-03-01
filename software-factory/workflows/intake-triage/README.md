@@ -16,8 +16,8 @@ Converts a request into scoped vertical slices, acceptance criteria, test intent
 
 ## Automation Entry Points
 
-- [`ready-for-dev-executor`](../../automations/ready-for-dev-executor/ready-for-dev-executor.md)
-- [`sanity-check`](../../automations/sanity-check/sanity-check.md)
+- [`ready-for-dev-executor`](../../../automations/ready-for-dev-executor/ready-for-dev-executor.md)
+- [`sanity-check`](../../../automations/sanity-check/sanity-check.md)
 
 ## Note
 
