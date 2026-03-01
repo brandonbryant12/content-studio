@@ -4,7 +4,12 @@ import { fileURLToPath } from "node:url";
 import { readWorkflowRegistry } from "./registry";
 import { runScript } from "../lib/effect-script";
 
-async function main() {
+export async function main(argv: string[] = process.argv.slice(2)) {
+  if (argv.includes("--help") || argv.includes("-h")) {
+    console.log("Usage:\n  pnpm software-factory workflows generate");
+    return;
+  }
+
   const scriptDir = dirname(fileURLToPath(import.meta.url));
   const workflowsDir = resolve(scriptDir, "../../workflows");
   const readmePath = resolve(workflowsDir, "README.md");
@@ -110,4 +115,6 @@ async function main() {
   console.log(`Generated ${readmePath}`);
 }
 
-runScript(main);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}

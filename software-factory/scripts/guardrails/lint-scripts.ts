@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { runScript } from '../lib/effect-script';
 import { checkScriptGuardrails } from './script-guardrails';
 
-async function main() {
+export async function main(argv: string[] = process.argv.slice(2)) {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log('Usage:\n  pnpm software-factory scripts lint');
+    return;
+  }
+
   const issues = await checkScriptGuardrails();
 
   if (issues.length === 0) {
@@ -20,4 +27,6 @@ async function main() {
   process.exitCode = 1;
 }
 
-runScript(main);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}

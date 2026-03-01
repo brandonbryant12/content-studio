@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runScript } from "../lib/effect-script";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
@@ -106,8 +107,8 @@ function parseMinScore(raw) {
   throw new Error(`Invalid --min-score value: ${raw}`);
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
+export async function main(argv: string[] = process.argv.slice(2)) {
+  const args = parseArgs(argv);
 
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
@@ -184,4 +185,6 @@ async function main() {
   console.log(JSON.stringify(response, null, 2));
 }
 
-runScript(main);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}

@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Args, Command, Options } from "@effect/cli";
+import { NodeContext } from "@effect/platform-node";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+import { runUtilityCommand } from "./utility-command-handlers";
+import { UTILITY_USAGE_LINES } from "./utility-command-manifest";
+import { runCommand, runStreamingCommand } from "../lib/command";
 import { runScript } from "../lib/effect-script";
 
 type Runner =
@@ -46,11 +52,6 @@ type Trigger = {
   args: Record<string, string>;
 };
 
-type Parsed = {
-  positionals: string[];
-  flags: Record<string, string>;
-};
-
 type GhIssueLabel = {
   name: string;
 };
@@ -84,46 +85,14 @@ const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
 const PLANNER_MODEL = "gpt-5.3-codex";
 const PLANNER_THINKING = "xhigh";
 const CODEX_DANGEROUS_FLAG = "--dangerously-bypass-approvals-and-sandbox";
-
-const USAGE = `software-factory
-
-Usage:
-  pnpm software-factory operation list [--json]
-  pnpm software-factory operation explain <operation-id> [--json]
-  pnpm software-factory operation run <operation-id> [--issue <n>] [--model <model>] [--thinking <level>] [--dry-run]
-  pnpm software-factory trigger list [--json]
-  pnpm software-factory trigger explain <trigger-id> [--json]
-  pnpm software-factory trigger fire <trigger-id> [--issue <n>] [--model <model>] [--thinking <level>] [--dry-run]
-  pnpm software-factory doctor
-
-Notes:
-  - Terms are strict: Trigger -> Operation -> Strategy -> Skills.
-  - Use --dry-run to print launch commands without executing codex.
-`;
-
-const parseArgs = (argv: string[]): Parsed => {
-  const positionals: string[] = [];
-  const flags: Record<string, string> = {};
-
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token.startsWith("--")) {
-      positionals.push(token);
-      continue;
-    }
-
-    const key = token.slice(2).replace(/-/g, "_");
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      flags[key] = "true";
-      continue;
-    }
-    flags[key] = next;
-    i += 1;
-  }
-
-  return { positionals, flags };
-};
+const ROOT_DESCRIPTION = [
+  "Software Factory execution control plane.",
+  "Terms are strict: Trigger -> Operation -> Strategy -> Skills.",
+  "Use --dry-run to print launch commands without executing codex.",
+  "",
+  "Utility command surfaces:",
+  ...UTILITY_USAGE_LINES.map((line) => `- ${line}`),
+].join("\n");
 
 const asBool = (raw: string | undefined): boolean => raw === "true";
 
@@ -192,10 +161,10 @@ const readOptionalThinkingOverride = (value: string | undefined): string | undef
   return ensureThinking(value, "");
 };
 
-const runCodexPlaybook = (
+const runCodexPlaybook = async (
   operation: Operation,
   options: Record<string, string>,
-): number => {
+): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "codex-playbook") {
     throw new Error(`Operation ${operation.id} is not configured for codex-playbook runner.`);
@@ -257,20 +226,20 @@ const runCodexPlaybook = (
     return 0;
   }
 
-  const result = spawnSync("codex", codexArgs, {
+  const result = await runStreamingCommand("codex", codexArgs, {
     cwd: process.cwd(),
     input: prompt,
-    stdio: ["pipe", "inherit", "inherit"],
+    allowFailure: true,
   });
-  return result.status ?? 1;
+  return result.status;
 };
 
-const runGhJson = <T>(args: string[], errorContext: string): T => {
-  const result = spawnSync("gh", args, {
+const runGhJson = async <T>(args: string[], errorContext: string): Promise<T> => {
+  const result = await runCommand("gh", args, {
     cwd: process.cwd(),
-    encoding: "utf8",
+    allowFailure: true,
   });
-  if ((result.status ?? 1) !== 0) {
+  if (result.status !== 0) {
     const details = (result.stderr || result.stdout || "").trim();
     throw new Error(`${errorContext}. ${details}`);
   }
@@ -282,8 +251,10 @@ const runGhJson = <T>(args: string[], errorContext: string): T => {
   return JSON.parse(stdout) as T;
 };
 
-const listReadyForDevCandidates = (explicitIssue: string | undefined): GhIssueCandidate[] => {
-  const candidates = runGhJson<GhIssueCandidate[]>(
+const listReadyForDevCandidates = async (
+  explicitIssue: string | undefined,
+): Promise<GhIssueCandidate[]> => {
+  const candidates = await runGhJson<GhIssueCandidate[]>(
     [
       "issue",
       "list",
@@ -413,10 +384,10 @@ const ensureIssueRoutingCompatibility = (
   }
 };
 
-const runReadyForDevRouter = (
+const runReadyForDevRouter = async (
   operation: Operation,
   options: Record<string, string>,
-): number => {
+): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "ready-for-dev-router") {
     throw new Error(
@@ -424,7 +395,7 @@ const runReadyForDevRouter = (
     );
   }
 
-  const candidates = listReadyForDevCandidates(options.issue?.trim());
+  const candidates = await listReadyForDevCandidates(options.issue?.trim());
   if (candidates.length === 0) {
     console.log("No open issues with label ready-for-dev.");
     return 0;
@@ -489,12 +460,12 @@ const runReadyForDevRouter = (
     return 0;
   }
 
-  const plannerResult = spawnSync("codex", plannerArgs, {
+  const plannerResult = await runCommand("codex", plannerArgs, {
     cwd: process.cwd(),
     input: plannerPrompt,
-    encoding: "utf8",
+    allowFailure: true,
   });
-  if ((plannerResult.status ?? 1) !== 0) {
+  if (plannerResult.status !== 0) {
     const details = (plannerResult.stderr || plannerResult.stdout || "").trim();
     throw new Error(`Ready-for-dev planner call failed. ${details}`);
   }
@@ -514,7 +485,7 @@ const runReadyForDevRouter = (
   ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
 
   for (const selected of selectedIssues) {
-    const issueView = runGhJson<GhIssueView>(
+    const issueView = await runGhJson<GhIssueView>(
       [
         "issue",
         "view",
@@ -575,12 +546,12 @@ const runReadyForDevRouter = (
   console.log(`  model:    ${model}`);
   console.log(`  thinking: ${thinking}`);
 
-  const result = spawnSync("codex", codexArgs, {
+  const result = await runStreamingCommand("codex", codexArgs, {
     cwd: process.cwd(),
     input: prompt,
-    stdio: ["pipe", "inherit", "inherit"],
+    allowFailure: true,
   });
-  return result.status ?? 1;
+  return result.status;
 };
 
 const runOperation = async (
@@ -590,10 +561,10 @@ const runOperation = async (
   const operation = await getOperationOrThrow(operationId);
 
   if (operation.runner.type === "ready-for-dev-router") {
-    return runReadyForDevRouter(operation, rawOptions);
+    return await runReadyForDevRouter(operation, rawOptions);
   }
   if (operation.runner.type === "codex-playbook") {
-    return runCodexPlaybook(operation, rawOptions);
+    return await runCodexPlaybook(operation, rawOptions);
   }
   throw new Error(`Unsupported runner type for operation ${operation.id}.`);
 };
@@ -722,28 +693,28 @@ const runDoctor = async (): Promise<number> => {
     }
   }
 
-  const codexVersion = spawnSync("codex", ["--version"], {
+  const codexVersion = await runCommand("codex", ["--version"], {
     cwd: process.cwd(),
-    encoding: "utf8",
+    allowFailure: true,
   });
   checks.push({
     name: "codex --version",
-    ok: (codexVersion.status ?? 1) === 0,
+    ok: codexVersion.status === 0,
     details: (codexVersion.stdout || codexVersion.stderr || "").trim(),
   });
 
-  const ghStatus = spawnSync("gh", ["auth", "status"], {
+  const ghStatus = await runCommand("gh", ["auth", "status"], {
     cwd: process.cwd(),
-    encoding: "utf8",
+    allowFailure: true,
   });
   checks.push({
     name: "gh auth status",
-    ok: (ghStatus.status ?? 1) === 0,
+    ok: ghStatus.status === 0,
     details: ((ghStatus.stdout || ghStatus.stderr) || "").trim().split("\n")[0] || "",
   });
 
   let hasMissingRouting = false;
-  const routingCheck = spawnSync(
+  const routingCheck = await runCommand(
     "gh",
     [
       "issue",
@@ -759,9 +730,9 @@ const runDoctor = async (): Promise<number> => {
       "--jq",
       '[.[] | {n:.number,m:([.labels[].name|select(startswith("model:"))]|length),t:([.labels[].name|select(startswith("thinking:"))]|length)} | select(.m!=1 or .t!=1)] | length',
     ],
-    { cwd: process.cwd(), encoding: "utf8" },
+    { cwd: process.cwd(), allowFailure: true },
   );
-  if ((routingCheck.status ?? 1) === 0) {
+  if (routingCheck.status === 0) {
     const count = Number.parseInt((routingCheck.stdout || "0").trim(), 10);
     hasMissingRouting = Number.isFinite(count) && count > 0;
     checks.push({
@@ -784,76 +755,500 @@ const runDoctor = async (): Promise<number> => {
   return checks.every((check) => check.ok) ? 0 : 1;
 };
 
+const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
+  Option.isSome(value) ? value.value : undefined;
+
+const appendBooleanFlag = (argv: string[], flagName: string, enabled: boolean): void => {
+  if (enabled) {
+    argv.push(`--${flagName}`);
+  }
+};
+
+const appendValueFlag = (
+  argv: string[],
+  flagName: string,
+  value: string | number | undefined,
+): void => {
+  if (value !== undefined) {
+    argv.push(`--${flagName}`, String(value));
+  }
+};
+
+const applyExitCode = (status: number): void => {
+  if (status !== 0) {
+    process.exitCode = status;
+  }
+};
+
+const executeUtilityCommand = async (
+  domain: string,
+  action: string,
+  argv: string[],
+): Promise<void> => {
+  const status = await runUtilityCommand(domain, action, argv);
+  if (status === null) {
+    throw new Error(`Unknown utility command: ${domain} ${action}`);
+  }
+  applyExitCode(status);
+};
+
+const effectFromPromise = (run: () => Promise<void>): Effect.Effect<void, Error> =>
+  Effect.tryPromise({
+    try: run,
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });
+
+const operationIdArg = Args.text({ name: "operation-id" }).pipe(
+  Args.withDescription("Registered operation id."),
+);
+const triggerIdArg = Args.text({ name: "trigger-id" }).pipe(
+  Args.withDescription("Registered trigger id."),
+);
+
+const dryRunOption = Options.boolean("dry-run").pipe(
+  Options.withDescription("Print launch command without executing codex."),
+);
+const issueOption = Options.text("issue").pipe(
+  Options.optional,
+  Options.withDescription("Issue number override."),
+);
+const modelOption = Options.text("model").pipe(
+  Options.optional,
+  Options.withDescription("Execution model override."),
+);
+const thinkingOption = Options.text("thinking").pipe(
+  Options.optional,
+  Options.withDescription("Execution thinking override (low|medium|high|xhigh)."),
+);
+const jsonOption = Options.boolean("json").pipe(
+  Options.withDescription("Print JSON output."),
+);
+
+const skillsCheckCommand = Command.make(
+  "check",
+  {
+    strict: Options.boolean("strict").pipe(
+      Options.withDescription("Fail on warnings."),
+    ),
+    json: jsonOption,
+  },
+  ({ strict, json }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendBooleanFlag(argv, "strict", strict);
+      appendBooleanFlag(argv, "json", json);
+      await executeUtilityCommand("skills", "check", argv);
+    }),
+).pipe(Command.withDescription("Validate skill metadata, contracts, and mirrors."));
+
+const skillsCommand = Command.make("skills", {}).pipe(
+  Command.withDescription("Skill quality and consistency tooling."),
+  Command.withSubcommands([skillsCheckCommand]),
+);
+
+const workflowsGenerateCommand = Command.make(
+  "generate",
+  {},
+  () => effectFromPromise(() => executeUtilityCommand("workflows", "generate", [])),
+).pipe(Command.withDescription("Generate workflow catalog README from registry."));
+
+const workflowsCommand = Command.make("workflows", {}).pipe(
+  Command.withDescription("Workflow catalog tooling."),
+  Command.withSubcommands([workflowsGenerateCommand]),
+);
+
+const workflowMemoryAddEntryCommand = Command.make(
+  "add-entry",
+  {
+    workflow: Options.text("workflow"),
+    title: Options.text("title"),
+    trigger: Options.text("trigger"),
+    finding: Options.text("finding"),
+    evidence: Options.text("evidence"),
+    follow_up: Options.text("follow-up"),
+    owner: Options.text("owner"),
+    status: Options.text("status"),
+    id: Options.text("id").pipe(Options.optional),
+    date: Options.text("date").pipe(Options.optional),
+    severity: Options.text("severity").pipe(Options.optional),
+    tags: Options.text("tags").pipe(Options.optional),
+    reflection: Options.text("reflection").pipe(Options.optional),
+    feedback: Options.text("feedback").pipe(Options.optional),
+    memory_form: Options.text("memory-form").pipe(Options.optional),
+    memory_function: Options.text("memory-function").pipe(Options.optional),
+    memory_dynamics: Options.text("memory-dynamics").pipe(Options.optional),
+    capability: Options.text("capability").pipe(Options.optional),
+    failure_mode: Options.text("failure-mode").pipe(Options.optional),
+    importance: Options.float("importance").pipe(Options.optional),
+    recency: Options.float("recency").pipe(Options.optional),
+    confidence: Options.float("confidence").pipe(Options.optional),
+    source: Options.text("source").pipe(Options.optional),
+    scenario_skill: Options.text("scenario-skill").pipe(Options.optional),
+    scenario_check: Options.text("scenario-check").pipe(Options.optional),
+    scenario_verdict: Options.text("scenario-verdict").pipe(Options.optional),
+    scenario_pattern: Options.text("scenario-pattern").pipe(Options.optional),
+    scenario_severity: Options.text("scenario-severity").pipe(Options.optional),
+  },
+  (input) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [
+        "--workflow",
+        input.workflow,
+        "--title",
+        input.title,
+        "--trigger",
+        input.trigger,
+        "--finding",
+        input.finding,
+        "--evidence",
+        input.evidence,
+        "--follow-up",
+        input.follow_up,
+        "--owner",
+        input.owner,
+        "--status",
+        input.status,
+      ];
+
+      appendValueFlag(argv, "id", optionToUndefined(input.id));
+      appendValueFlag(argv, "date", optionToUndefined(input.date));
+      appendValueFlag(argv, "severity", optionToUndefined(input.severity));
+      appendValueFlag(argv, "tags", optionToUndefined(input.tags));
+      appendValueFlag(argv, "reflection", optionToUndefined(input.reflection));
+      appendValueFlag(argv, "feedback", optionToUndefined(input.feedback));
+      appendValueFlag(argv, "memory-form", optionToUndefined(input.memory_form));
+      appendValueFlag(argv, "memory-function", optionToUndefined(input.memory_function));
+      appendValueFlag(argv, "memory-dynamics", optionToUndefined(input.memory_dynamics));
+      appendValueFlag(argv, "capability", optionToUndefined(input.capability));
+      appendValueFlag(argv, "failure-mode", optionToUndefined(input.failure_mode));
+      appendValueFlag(argv, "importance", optionToUndefined(input.importance));
+      appendValueFlag(argv, "recency", optionToUndefined(input.recency));
+      appendValueFlag(argv, "confidence", optionToUndefined(input.confidence));
+      appendValueFlag(argv, "source", optionToUndefined(input.source));
+      appendValueFlag(argv, "scenario-skill", optionToUndefined(input.scenario_skill));
+      appendValueFlag(argv, "scenario-check", optionToUndefined(input.scenario_check));
+      appendValueFlag(argv, "scenario-verdict", optionToUndefined(input.scenario_verdict));
+      appendValueFlag(argv, "scenario-pattern", optionToUndefined(input.scenario_pattern));
+      appendValueFlag(argv, "scenario-severity", optionToUndefined(input.scenario_severity));
+
+      await executeUtilityCommand("workflow-memory", "add-entry", argv);
+    }),
+).pipe(Command.withDescription("Append a workflow-memory event entry."));
+
+const workflowMemoryPreflightCommand = Command.make(
+  "preflight",
+  {
+    bootstrap: Options.boolean("bootstrap"),
+    cwd: Options.text("cwd").pipe(Options.optional),
+    memory_path: Options.text("memory-path").pipe(Options.optional),
+  },
+  ({ bootstrap, cwd, memory_path }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendBooleanFlag(argv, "bootstrap", bootstrap);
+      appendValueFlag(argv, "cwd", optionToUndefined(cwd));
+      appendValueFlag(argv, "memory-path", optionToUndefined(memory_path));
+      await executeUtilityCommand("workflow-memory", "preflight", argv);
+    }),
+).pipe(Command.withDescription("Validate workflow-memory runtime prerequisites."));
+
+const workflowMemorySyncCommand = Command.make(
+  "sync",
+  {
+    remote: Options.text("remote").pipe(Options.optional),
+    branch: Options.text("branch").pipe(Options.optional),
+    message: Options.text("message").pipe(Options.optional),
+    max_attempts: Options.integer("max-attempts").pipe(Options.optional),
+    dry_run: dryRunOption,
+  },
+  ({ remote, branch, message, max_attempts, dry_run }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendValueFlag(argv, "remote", optionToUndefined(remote));
+      appendValueFlag(argv, "branch", optionToUndefined(branch));
+      appendValueFlag(argv, "message", optionToUndefined(message));
+      appendValueFlag(argv, "max-attempts", optionToUndefined(max_attempts));
+      appendBooleanFlag(argv, "dry-run", dry_run);
+      await executeUtilityCommand("workflow-memory", "sync", argv);
+    }),
+).pipe(Command.withDescription("Commit and push append-only workflow-memory artifacts."));
+
+const workflowMemoryRetrieveCommand = Command.make(
+  "retrieve",
+  {
+    workflow: Options.text("workflow").pipe(Options.optional),
+    tags: Options.text("tags").pipe(Options.optional),
+    limit: Options.integer("limit").pipe(Options.optional),
+    min_score: Options.float("min-score").pipe(Options.optional),
+    month: Options.text("month").pipe(Options.optional),
+    has_scenario: Options.boolean("has-scenario"),
+    scenario_skill: Options.text("scenario-skill").pipe(Options.optional),
+  },
+  ({ workflow, tags, limit, min_score, month, has_scenario, scenario_skill }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendValueFlag(argv, "workflow", optionToUndefined(workflow));
+      appendValueFlag(argv, "tags", optionToUndefined(tags));
+      appendValueFlag(argv, "limit", optionToUndefined(limit));
+      appendValueFlag(argv, "min-score", optionToUndefined(min_score));
+      appendValueFlag(argv, "month", optionToUndefined(month));
+      appendBooleanFlag(argv, "has-scenario", has_scenario);
+      appendValueFlag(argv, "scenario-skill", optionToUndefined(scenario_skill));
+      await executeUtilityCommand("workflow-memory", "retrieve", argv);
+    }),
+).pipe(Command.withDescription("Retrieve ranked workflow-memory entries."));
+
+const workflowMemoryCompactCommand = Command.make(
+  "compact",
+  {
+    archive_closed: Options.boolean("archive-closed"),
+    days: Options.integer("days").pipe(Options.optional),
+    dry_run: dryRunOption,
+  },
+  ({ archive_closed, days, dry_run }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendBooleanFlag(argv, "archive-closed", archive_closed);
+      appendValueFlag(argv, "days", optionToUndefined(days));
+      appendBooleanFlag(argv, "dry-run", dry_run);
+      await executeUtilityCommand("workflow-memory", "compact", argv);
+    }),
+).pipe(Command.withDescription("Compact workflow-memory events and rebuild index."));
+
+const workflowMemoryCoverageCommand = Command.make(
+  "coverage",
+  {
+    month: Options.text("month").pipe(Options.optional),
+    min: Options.integer("min").pipe(Options.optional),
+    strict: Options.boolean("strict"),
+    json: jsonOption,
+    audit_taxonomy: Options.boolean("audit-taxonomy"),
+  },
+  ({ month, min, strict, json, audit_taxonomy }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendValueFlag(argv, "month", optionToUndefined(month));
+      appendValueFlag(argv, "min", optionToUndefined(min));
+      appendBooleanFlag(argv, "strict", strict);
+      appendBooleanFlag(argv, "json", json);
+      appendBooleanFlag(argv, "audit-taxonomy", audit_taxonomy);
+      await executeUtilityCommand("workflow-memory", "coverage", argv);
+    }),
+).pipe(Command.withDescription("Check monthly workflow-memory coverage."));
+
+const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
+  Command.withDescription("Workflow-memory maintenance commands."),
+  Command.withSubcommands([
+    workflowMemoryAddEntryCommand,
+    workflowMemoryPreflightCommand,
+    workflowMemorySyncCommand,
+    workflowMemoryRetrieveCommand,
+    workflowMemoryCompactCommand,
+    workflowMemoryCoverageCommand,
+  ]),
+);
+
+const scenarioValidateCommand = Command.make(
+  "validate",
+  {
+    skill: Options.text("skill").pipe(Options.optional),
+    check: Options.text("check").pipe(Options.optional),
+    id: Options.text("id").pipe(Options.optional),
+    month: Options.text("month").pipe(Options.optional),
+    json: jsonOption,
+    strict: Options.boolean("strict"),
+  },
+  ({ skill, check, id, month, json, strict }) =>
+    effectFromPromise(async () => {
+      const argv: string[] = [];
+      appendValueFlag(argv, "skill", optionToUndefined(skill));
+      appendValueFlag(argv, "check", optionToUndefined(check));
+      appendValueFlag(argv, "id", optionToUndefined(id));
+      appendValueFlag(argv, "month", optionToUndefined(month));
+      appendBooleanFlag(argv, "json", json);
+      appendBooleanFlag(argv, "strict", strict);
+      await executeUtilityCommand("scenario", "validate", argv);
+    }),
+).pipe(Command.withDescription("Validate workflow-memory replay scenarios."));
+
+const scenarioCommand = Command.make("scenario", {}).pipe(
+  Command.withDescription("Scenario quality commands."),
+  Command.withSubcommands([scenarioValidateCommand]),
+);
+
+const scriptsLintCommand = Command.make(
+  "lint",
+  {},
+  () => effectFromPromise(() => executeUtilityCommand("scripts", "lint", [])),
+).pipe(Command.withDescription("Run software-factory script guardrails."));
+
+const scriptsCommand = Command.make("scripts", {}).pipe(
+  Command.withDescription("Script quality commands."),
+  Command.withSubcommands([scriptsLintCommand]),
+);
+
+const specGenerateCommand = Command.make(
+  "generate",
+  {},
+  () => effectFromPromise(() => executeUtilityCommand("spec", "generate", [])),
+).pipe(Command.withDescription("Regenerate docs spec artifacts."));
+
+const specCommand = Command.make("spec", {}).pipe(
+  Command.withDescription("Documentation specification commands."),
+  Command.withSubcommands([specGenerateCommand]),
+);
+
+const operationListCommand = Command.make(
+  "list",
+  { json: jsonOption },
+  ({ json }) => effectFromPromise(() => listOperations(json)),
+).pipe(Command.withDescription("List registered operations."));
+
+const operationExplainCommand = Command.make(
+  "explain",
+  {
+    operation_id: operationIdArg,
+    json: jsonOption,
+  },
+  ({ operation_id, json }) => effectFromPromise(() => explainOperation(operation_id, json)),
+).pipe(Command.withDescription("Describe one operation and linked triggers."));
+
+const operationRunCommand = Command.make(
+  "run",
+  {
+    operation_id: operationIdArg,
+    issue: issueOption,
+    model: modelOption,
+    thinking: thinkingOption,
+    dry_run: dryRunOption,
+  },
+  ({ operation_id, issue, model, thinking, dry_run }) =>
+    effectFromPromise(async () => {
+      const overrides: Record<string, string> = {};
+
+      const issueValue = optionToUndefined(issue);
+      const modelValue = optionToUndefined(model);
+      const thinkingValue = optionToUndefined(thinking);
+
+      if (issueValue !== undefined) {
+        overrides.issue = issueValue;
+      }
+      if (modelValue !== undefined) {
+        overrides.model = modelValue;
+      }
+      if (thinkingValue !== undefined) {
+        overrides.thinking = thinkingValue;
+      }
+      if (dry_run) {
+        overrides.dry_run = "true";
+      }
+
+      const status = await runOperation(operation_id, overrides);
+      applyExitCode(status);
+    }),
+).pipe(Command.withDescription("Run one operation directly."));
+
+const operationCommand = Command.make("operation", {}).pipe(
+  Command.withDescription("Operation inspection and execution."),
+  Command.withSubcommands([
+    operationListCommand,
+    operationExplainCommand,
+    operationRunCommand,
+  ]),
+);
+
+const triggerListCommand = Command.make(
+  "list",
+  { json: jsonOption },
+  ({ json }) => effectFromPromise(() => listTriggers(json)),
+).pipe(Command.withDescription("List registered triggers."));
+
+const triggerExplainCommand = Command.make(
+  "explain",
+  {
+    trigger_id: triggerIdArg,
+    json: jsonOption,
+  },
+  ({ trigger_id, json }) => effectFromPromise(() => explainTrigger(trigger_id, json)),
+).pipe(Command.withDescription("Describe one trigger and linked operation."));
+
+const triggerFireCommand = Command.make(
+  "fire",
+  {
+    trigger_id: triggerIdArg,
+    issue: issueOption,
+    model: modelOption,
+    thinking: thinkingOption,
+    dry_run: dryRunOption,
+  },
+  ({ trigger_id, issue, model, thinking, dry_run }) =>
+    effectFromPromise(async () => {
+      const overrides: Record<string, string> = {};
+
+      const issueValue = optionToUndefined(issue);
+      const modelValue = optionToUndefined(model);
+      const thinkingValue = optionToUndefined(thinking);
+
+      if (issueValue !== undefined) {
+        overrides.issue = issueValue;
+      }
+      if (modelValue !== undefined) {
+        overrides.model = modelValue;
+      }
+      if (thinkingValue !== undefined) {
+        overrides.thinking = thinkingValue;
+      }
+      if (dry_run) {
+        overrides.dry_run = "true";
+      }
+
+      const status = await fireTrigger(trigger_id, overrides);
+      applyExitCode(status);
+    }),
+).pipe(Command.withDescription("Fire one trigger with optional overrides."));
+
+const triggerCommand = Command.make("trigger", {}).pipe(
+  Command.withDescription("Trigger inspection and execution."),
+  Command.withSubcommands([
+    triggerListCommand,
+    triggerExplainCommand,
+    triggerFireCommand,
+  ]),
+);
+
+const doctorCommand = Command.make(
+  "doctor",
+  {},
+  () =>
+    effectFromPromise(async () => {
+      const status = await runDoctor();
+      applyExitCode(status);
+    }),
+).pipe(Command.withDescription("Run software-factory environment diagnostics."));
+
+const cli = Command.make("software-factory", {}).pipe(
+  Command.withDescription(ROOT_DESCRIPTION),
+  Command.withSubcommands([
+    skillsCommand,
+    workflowsCommand,
+    workflowMemoryCommand,
+    scenarioCommand,
+    scriptsCommand,
+    specCommand,
+    operationCommand,
+    triggerCommand,
+    doctorCommand,
+  ]),
+);
+
+const app = Command.run(cli, {
+  name: "software-factory",
+  version: "0.0.1",
+});
+
 const main = async (): Promise<void> => {
-  const parsed = parseArgs(process.argv.slice(2));
-  const [domain, action, target] = parsed.positionals;
-
-  if (!domain || parsed.flags.help === "true" || parsed.flags.h === "true") {
-    console.log(USAGE);
-    return;
-  }
-
-  if (domain === "doctor") {
-    const code = await runDoctor();
-    if (code !== 0) {
-      process.exitCode = code;
-    }
-    return;
-  }
-
-  const json = asBool(parsed.flags.json);
-
-  if (domain === "operation" && action === "list") {
-    await listOperations(json);
-    return;
-  }
-
-  if (domain === "operation" && action === "run") {
-    if (!target) {
-      throw new Error("Missing operation id. Usage: software-factory operation run <operation-id>");
-    }
-    const code = await runOperation(target, parsed.flags);
-    if (code !== 0) {
-      process.exitCode = code;
-    }
-    return;
-  }
-
-  if (domain === "trigger" && action === "list") {
-    await listTriggers(json);
-    return;
-  }
-
-  if (domain === "operation" && action === "explain") {
-    if (!target) {
-      throw new Error(
-        "Missing operation id. Usage: software-factory operation explain <operation-id>",
-      );
-    }
-    await explainOperation(target, json);
-    return;
-  }
-
-  if (domain === "trigger" && action === "explain") {
-    if (!target) {
-      throw new Error("Missing trigger id. Usage: software-factory trigger explain <trigger-id>");
-    }
-    await explainTrigger(target, json);
-    return;
-  }
-
-  if (domain === "trigger" && action === "fire") {
-    if (!target) {
-      throw new Error("Missing trigger id. Usage: software-factory trigger fire <trigger-id>");
-    }
-    const code = await fireTrigger(target, parsed.flags);
-    if (code !== 0) {
-      process.exitCode = code;
-    }
-    return;
-  }
-
-  throw new Error(`Unknown command: ${parsed.positionals.join(" ")}`);
+  const args = process.argv.length <= 2 ? [...process.argv, "--help"] : process.argv;
+  await Effect.runPromise(app(args).pipe(Effect.provide(NodeContext.layer)));
 };
 
 runScript(main);

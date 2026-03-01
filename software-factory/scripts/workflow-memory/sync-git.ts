@@ -3,6 +3,7 @@
 import { execFile as execFileCallback } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { runScript } from "../lib/effect-script";
 
@@ -568,8 +569,8 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
   }
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
+export async function main(argv: string[] = process.argv.slice(2)) {
+  const args = parseArgs(argv);
   if (args.help === "true" || args.h === "true") {
     console.log(USAGE);
     return;
@@ -616,4 +617,6 @@ async function main() {
   console.log(`Workflow-memory sync complete: ${remote}/${branch}`);
 }
 
-runScript(main);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}

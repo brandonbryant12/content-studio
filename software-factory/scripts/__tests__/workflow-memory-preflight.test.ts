@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   parseArgs,
   runWorkflowMemoryPreflight,
-} from '../guardrails/workflow-memory-preflight.js';
+} from '../guardrails/workflow-memory-preflight';
 
 type MockResult = {
   status: number | null;
@@ -27,7 +27,7 @@ describe('workflow-memory preflight', () => {
     });
   });
 
-  it('fails fast with one remediation when tsx is missing and bootstrap is disabled', () => {
+  it('fails fast with one remediation when tsx is missing and bootstrap is disabled', async () => {
     const logs: string[] = [];
     const errors: string[] = [];
     const commandRunner = vi
@@ -37,7 +37,7 @@ describe('workflow-memory preflight', () => {
         stderr: 'ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "tsx" not found',
       });
 
-    const exitCode = runWorkflowMemoryPreflight({
+    const exitCode = await runWorkflowMemoryPreflight({
       bootstrap: false,
       cwd: '/tmp/repo',
       memoryPath: 'software-factory/workflow-memory',
@@ -53,7 +53,7 @@ describe('workflow-memory preflight', () => {
     expect(logs[0]).toContain('memory path');
   });
 
-  it('bootstraps dependencies and succeeds when retry finds tsx', () => {
+  it('bootstraps dependencies and succeeds when retry finds tsx', async () => {
     const commandRunner = vi
       .fn<[string, string, string[]], MockResult>()
       .mockImplementationOnce(() => ({
@@ -69,7 +69,7 @@ describe('workflow-memory preflight', () => {
         stdout: 'tsx 4.20.6',
       }));
 
-    const exitCode = runWorkflowMemoryPreflight({
+    const exitCode = await runWorkflowMemoryPreflight({
       bootstrap: true,
       cwd: '/tmp/repo',
       memoryPath: 'software-factory/workflow-memory',

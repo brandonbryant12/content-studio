@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { REQUIRED_UTILITY_PACKAGE_SCRIPTS } from '../factory/utility-command-manifest';
 
 export const ENTRY_SCRIPT_PATHS = [
   'software-factory/scripts/factory/software-factory.ts',
@@ -12,29 +13,18 @@ export const ENTRY_SCRIPT_PATHS = [
   'software-factory/scripts/workflow-memory/check-coverage.ts',
   'software-factory/scripts/workflow-memory/replay-scenarios.ts',
   'software-factory/scripts/guardrails/lint-scripts.ts',
+  'software-factory/scripts/guardrails/workflow-memory-preflight.ts',
+  'software-factory/scripts/spec/generate.ts',
 ] as const;
 
 export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
   'software-factory': 'pnpm exec tsx software-factory/scripts/factory/software-factory.ts',
   'test:scripts': 'vitest run --config software-factory/scripts/vitest.config.ts',
-  'scripts:lint': 'pnpm exec tsx software-factory/scripts/guardrails/lint-scripts.ts',
-  'skills:check': 'pnpm exec tsx software-factory/scripts/skills/check-quality.ts',
-  'skills:check:strict': 'pnpm exec tsx software-factory/scripts/skills/check-quality.ts --strict',
-  'workflows:generate': 'pnpm exec tsx software-factory/scripts/workflows/generate-readme.ts',
-  'workflow-memory:add-entry': 'pnpm exec tsx software-factory/scripts/workflow-memory/add-entry.ts',
-  'workflow-memory:preflight': 'node software-factory/scripts/guardrails/workflow-memory-preflight.js',
-  'workflow-memory:sync': 'pnpm exec tsx software-factory/scripts/workflow-memory/sync-git.ts',
-  'workflow-memory:retrieve': 'pnpm exec tsx software-factory/scripts/workflow-memory/retrieve.ts',
-  'workflow-memory:compact': 'pnpm exec tsx software-factory/scripts/workflow-memory/compact-memory.ts',
-  'workflow-memory:coverage': 'pnpm exec tsx software-factory/scripts/workflow-memory/check-coverage.ts',
-  'workflow-memory:coverage:strict':
-    'pnpm exec tsx software-factory/scripts/workflow-memory/check-coverage.ts --strict',
-  'scenario:validate': 'pnpm exec tsx software-factory/scripts/workflow-memory/replay-scenarios.ts',
-  'scenario:validate:strict':
-    'pnpm exec tsx software-factory/scripts/workflow-memory/replay-scenarios.ts --strict',
+  ...REQUIRED_UTILITY_PACKAGE_SCRIPTS,
+  'ready-for-dev': 'pnpm software-factory trigger fire ready-for-dev-executor',
 };
 
-const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails'] as const;
+const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails', 'spec'] as const;
 const RUN_SCRIPT_MAIN_RE = /^\s*runScript\(main\);\s*$/m;
 
 export type ScriptGuardrailIssue = {
@@ -45,6 +35,7 @@ export type ScriptGuardrailIssue = {
     | 'missing-effect-runner-import'
     | 'missing-run-script-call'
     | 'untracked-entry-script'
+    | 'legacy-js-script'
     | 'legacy-mjs-script'
     | 'missing-vitest-project';
   message: string;
@@ -96,9 +87,12 @@ const collectEntryScripts = async (rootDir: string): Promise<string[]> => {
   return results.sort();
 };
 
-const collectLegacyMjsScripts = async (rootDir: string): Promise<string[]> => {
+const collectLegacyScripts = async (
+  rootDir: string,
+): Promise<{ js: string[]; mjs: string[] }> => {
   const scriptRoot = path.join(rootDir, 'software-factory', 'scripts');
-  const results: string[] = [];
+  const jsResults: string[] = [];
+  const mjsResults: string[] = [];
 
   const walk = async (directory: string): Promise<void> => {
     const entries = await fs.readdir(directory, { withFileTypes: true });
@@ -110,15 +104,18 @@ const collectLegacyMjsScripts = async (rootDir: string): Promise<string[]> => {
         continue;
       }
 
+      if (entry.isFile() && entry.name.endsWith('.js')) {
+        jsResults.push(normalizePath(path.relative(rootDir, absolutePath)));
+      }
       if (entry.isFile() && entry.name.endsWith('.mjs')) {
-        results.push(normalizePath(path.relative(rootDir, absolutePath)));
+        mjsResults.push(normalizePath(path.relative(rootDir, absolutePath)));
       }
     }
   };
 
   await walk(scriptRoot);
 
-  return results.sort();
+  return { js: jsResults.sort(), mjs: mjsResults.sort() };
 };
 
 const checkEntryFileContracts = async (
@@ -209,7 +206,16 @@ export const checkScriptGuardrails = async (
     }
   }
 
-  const legacyMjsScripts = await collectLegacyMjsScripts(rootDir);
+  const legacyScripts = await collectLegacyScripts(rootDir);
+  for (const legacyPath of legacyScripts.js) {
+    issues.push({
+      code: 'legacy-js-script',
+      path: legacyPath,
+      message: 'Legacy .js script found under software-factory/scripts; migrate to Effect TypeScript.',
+    });
+  }
+
+  const legacyMjsScripts = legacyScripts.mjs;
   for (const legacyPath of legacyMjsScripts) {
     issues.push({
       code: 'legacy-mjs-script',

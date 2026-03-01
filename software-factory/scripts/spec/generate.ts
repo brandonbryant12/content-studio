@@ -1,5 +1,7 @@
-import { execSync } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { runCommand } from '../lib/command';
+import { runScript } from '../lib/effect-script';
 import { assembleMasterSpec } from './assemble-master-spec';
 import { generateDataModelArtifact } from './generate-data-model';
 import { generateDomainMapArtifact } from './generate-domain-map';
@@ -7,17 +9,17 @@ import { generateOpenApiArtifacts } from './generate-openapi';
 import { generateUiSurfaceArtifact } from './generate-ui-surface';
 import { ensureDir, generatedRoot, repoRoot, writeUtf8 } from './utils';
 
-const gitValue = (args: string[]): string => {
-  try {
-    return execSync(`git ${args.join(' ')}`, {
-      cwd: repoRoot,
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-      .toString()
-      .trim();
-  } catch {
+const gitValue = async (args: string[]): Promise<string> => {
+  const result = await runCommand('git', args, {
+    cwd: repoRoot,
+    allowFailure: true,
+  });
+  if (result.status !== 0) {
     return 'unknown';
   }
+
+  const value = result.stdout.trim();
+  return value || 'unknown';
 };
 
 const createSnapshotMetadataMarkdown = (input: {
@@ -61,7 +63,12 @@ const createSnapshotMetadataMarkdown = (input: {
   return lines.join('\n');
 };
 
-const run = async (): Promise<void> => {
+export const main = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log('Usage:\n  pnpm software-factory spec generate');
+    return;
+  }
+
   await ensureDir(generatedRoot);
 
   const openapi = await generateOpenApiArtifacts();
@@ -70,8 +77,10 @@ const run = async (): Promise<void> => {
   const ui = await generateUiSurfaceArtifact();
 
   const generatedAt = new Date().toISOString();
-  const branch = gitValue(['rev-parse', '--abbrev-ref', 'HEAD']);
-  const commit = gitValue(['rev-parse', '--short', 'HEAD']);
+  const [branch, commit] = await Promise.all([
+    gitValue(['rev-parse', '--abbrev-ref', 'HEAD']),
+    gitValue(['rev-parse', '--short', 'HEAD']),
+  ]);
 
   await writeUtf8(
     path.join(generatedRoot, 'snapshot-metadata.md'),
@@ -93,7 +102,6 @@ const run = async (): Promise<void> => {
   await assembleMasterSpec();
 };
 
-void run().catch((error) => {
-  console.error('[spec:generate] failed', error);
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}

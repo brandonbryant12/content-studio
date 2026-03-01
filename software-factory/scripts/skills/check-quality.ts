@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runScript } from "../lib/effect-script";
 
 const ROOT = process.cwd();
@@ -50,13 +51,10 @@ Options:
 
 function parseArgs(argv) {
   const flags = new Set(argv.filter((arg) => arg.startsWith("--")));
-  if (argv.includes("--help") || argv.includes("-h")) {
-    console.log(USAGE);
-    process.exit(0);
-  }
   return {
     strict: flags.has("--strict"),
     json: flags.has("--json"),
+    help: flags.has("--help") || flags.has("-h"),
   };
 }
 
@@ -175,8 +173,7 @@ async function validateSkillFile(skillName, issues) {
     MEMORY_MARKERS.some((marker) => content.includes(marker)) ||
     (content.includes("workflow-memory") &&
       (content.includes("workflow-memory:add-entry") ||
-        content.includes("add-entry.ts") ||
-        content.includes("add-entry.mjs")));
+        content.includes("add-entry.ts")));
 
   if (!hasMemoryGuidance) {
     addIssue(issues, "warning", "Missing memory guidance section", skillPath);
@@ -297,8 +294,13 @@ function printHumanReport(skillCount, issues, strict) {
   }
 }
 
-async function main() {
-  const { strict, json } = parseArgs(process.argv.slice(2));
+export async function main(argv: string[] = process.argv.slice(2)) {
+  const { strict, json, help } = parseArgs(argv);
+
+  if (help) {
+    console.log(USAGE);
+    return;
+  }
 
   if (!(await pathExists(CANONICAL_SKILLS_DIR))) {
     throw new Error(`Canonical skills directory not found: ${CANONICAL_SKILLS_DIR}`);
@@ -339,4 +341,6 @@ async function main() {
   }
 }
 
-runScript(main);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScript(main);
+}
