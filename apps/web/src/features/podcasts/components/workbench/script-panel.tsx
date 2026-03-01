@@ -10,6 +10,7 @@ import { Button } from '@repo/ui/components/button';
 import { useState } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 
 interface ScriptPanelProps {
   segments: ScriptSegment[];
@@ -38,7 +39,13 @@ export function ScriptPanel({
   onDiscard,
 }: ScriptPanelProps) {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const isEmpty = segments.length === 0;
+
+  const handleConfirmDiscard = () => {
+    setDiscardConfirmOpen(false);
+    onDiscard();
+  };
 
   return (
     <div className="script-panel-v2">
@@ -58,7 +65,7 @@ export function ScriptPanel({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onDiscard}
+                onClick={() => setDiscardConfirmOpen(true)}
                 disabled={isSaving}
                 className="script-status-discard"
               >
@@ -132,6 +139,17 @@ export function ScriptPanel({
           )}
         </div>
       </div>
+
+      <ConfirmationDialog
+        open={discardConfirmOpen}
+        onOpenChange={setDiscardConfirmOpen}
+        title="Discard unsaved changes?"
+        description="Your script edits will be lost. This cannot be undone."
+        confirmText="Discard"
+        variant="destructive"
+        isLoading={isSaving}
+        onConfirm={handleConfirmDiscard}
+      />
     </div>
   );
 }
