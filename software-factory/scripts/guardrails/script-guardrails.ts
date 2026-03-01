@@ -25,6 +25,9 @@ export type ScriptGuardrailIssue = {
     | 'missing-effect-runner-import'
     | 'missing-run-script-call'
     | 'entry-script-exit-side-effect'
+    | 'legacy-argv-parser'
+    | 'non-root-process-argv'
+    | 'non-root-run-script'
     | 'untracked-entry-script'
     | 'legacy-js-script'
     | 'legacy-mjs-script'
@@ -107,6 +110,30 @@ const collectLegacyScripts = async (
   await walk(scriptRoot);
 
   return { js: jsResults.sort(), mjs: mjsResults.sort() };
+};
+
+const collectTypeScriptSources = async (rootDir: string): Promise<string[]> => {
+  const scriptRoot = path.join(rootDir, 'software-factory', 'scripts');
+  const results: string[] = [];
+
+  const walk = async (directory: string): Promise<void> => {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolutePath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.endsWith('.ts')) {
+        results.push(normalizePath(path.relative(rootDir, absolutePath)));
+      }
+    }
+  };
+
+  await walk(scriptRoot);
+  return results.sort();
 };
 
 const checkEntryFileContracts = async (
@@ -204,6 +231,45 @@ export const checkScriptGuardrails = async (
         path: entryPath,
         message:
           'Found a legacy standalone script entrypoint. Use software-factory/scripts/factory/software-factory.ts as the only CLI entrypoint.',
+      });
+    }
+  }
+
+  const ROOT_ENTRY_SCRIPT = 'software-factory/scripts/factory/software-factory.ts';
+  const tsSources = await collectTypeScriptSources(rootDir);
+  for (const sourcePath of tsSources) {
+    if (sourcePath === ROOT_ENTRY_SCRIPT) {
+      continue;
+    }
+
+    const source = await fs.readFile(path.join(rootDir, sourcePath), 'utf8');
+    if (/\bfunction\s+parseArgs\s*\(/.test(source) || /\bconst\s+parseArgs\s*=/.test(source)) {
+      issues.push({
+        code: 'legacy-argv-parser',
+        path: sourcePath,
+        message: 'Legacy parseArgs helper is not allowed. Parse CLI input only at the root @effect/cli command layer.',
+      });
+    }
+
+    if (
+      sourcePath !== 'software-factory/scripts/guardrails/script-guardrails.ts' &&
+      /\bprocess\.argv\b/.test(source)
+    ) {
+      issues.push({
+        code: 'non-root-process-argv',
+        path: sourcePath,
+        message: 'Only software-factory/scripts/factory/software-factory.ts may reference process.argv.',
+      });
+    }
+
+    if (
+      sourcePath !== 'software-factory/scripts/guardrails/script-guardrails.ts' &&
+      /\brunScript\s*\(/.test(source)
+    ) {
+      issues.push({
+        code: 'non-root-run-script',
+        path: sourcePath,
+        message: 'Only software-factory/scripts/factory/software-factory.ts may call runScript(...).',
       });
     }
   }

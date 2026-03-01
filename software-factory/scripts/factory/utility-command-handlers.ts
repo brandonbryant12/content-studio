@@ -1,6 +1,7 @@
 import {
   runScriptGuardrailsLint,
 } from "../guardrails/lint-scripts";
+import { Effect } from "effect";
 import {
   runWorkflowMemoryPreflight,
   type WorkflowMemoryPreflightOptions,
@@ -32,6 +33,7 @@ import {
   type WorkflowMemorySyncOptions,
 } from "../workflow-memory/sync-git";
 import { runWorkflowsGenerate } from "../workflows/generate-readme";
+import { toUtilityCommandExecutionError } from "./errors";
 
 export type UtilityCommand =
   | {
@@ -76,7 +78,7 @@ export type UtilityCommand =
       key: "spec:generate";
     };
 
-export const runUtilityCommand = async (command: UtilityCommand): Promise<number> => {
+const runUtilityCommandPromise = async (command: UtilityCommand): Promise<number> => {
   switch (command.key) {
     case "skills:check":
       return await runSkillsCheck(command.input);
@@ -102,3 +104,11 @@ export const runUtilityCommand = async (command: UtilityCommand): Promise<number
       return await runSpecGenerate();
   }
 };
+
+export const runUtilityCommandEffect = (
+  command: UtilityCommand,
+): Effect.Effect<number, ReturnType<typeof toUtilityCommandExecutionError>> =>
+  Effect.tryPromise({
+    try: () => runUtilityCommandPromise(command),
+    catch: (error) => toUtilityCommandExecutionError(command.key, error),
+  });

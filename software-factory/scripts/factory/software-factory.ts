@@ -6,7 +6,11 @@ import { Command, Options } from "@effect/cli";
 import { NodeContext } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { runUtilityCommand, type UtilityCommand } from "./utility-command-handlers";
+import {
+  UnknownTopLevelCommandError,
+  toCliExecutionError,
+} from "./errors";
+import { runUtilityCommandEffect, type UtilityCommand } from "./utility-command-handlers";
 import { UTILITY_USAGE_LINES } from "./utility-command-manifest";
 import { runCommand, runStreamingCommand } from "../lib/command";
 import { runScript } from "../lib/effect-script";
@@ -935,16 +939,16 @@ const applyExitCode = (status: number): void => {
   }
 };
 
-const executeUtilityCommand = async (command: UtilityCommand): Promise<void> => {
-  const status = await runUtilityCommand(command);
-  applyExitCode(status);
-};
-
-const effectFromPromise = (run: () => Promise<void>): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: run,
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-  });
+const executeUtilityCommand = (
+  command: UtilityCommand,
+): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
+  runUtilityCommandEffect(command).pipe(
+    Effect.tap((status) => Effect.sync(() => applyExitCode(status))),
+    Effect.asVoid,
+    Effect.mapError((error) =>
+      toCliExecutionError(`utility command ${command.key}`, error),
+    ),
+  );
 
 const operationIdOption = Options.text("operation-id").pipe(
   Options.withDescription("Registered operation id."),
@@ -980,8 +984,7 @@ const skillsCheckCommand = Command.make(
     ),
     json: jsonOption,
   },
-  ({ strict, json }) =>
-    effectFromPromise(() => executeUtilityCommand({ key: "skills:check", input: { strict, json } })),
+  ({ strict, json }) => executeUtilityCommand({ key: "skills:check", input: { strict, json } }),
 ).pipe(Command.withDescription("Validate skill metadata, contracts, and mirrors."));
 
 const skillsCommand = Command.make("skills", {}).pipe(
@@ -992,7 +995,7 @@ const skillsCommand = Command.make("skills", {}).pipe(
 const workflowsGenerateCommand = Command.make(
   "generate",
   {},
-  () => effectFromPromise(() => executeUtilityCommand({ key: "workflows:generate" })),
+  () => executeUtilityCommand({ key: "workflows:generate" }),
 ).pipe(Command.withDescription("Generate workflow catalog README from registry."));
 
 const workflowsCommand = Command.make("workflows", {}).pipe(
@@ -1033,41 +1036,39 @@ const workflowMemoryAddEntryCommand = Command.make(
     scenario_severity: Options.text("scenario-severity").pipe(Options.optional),
   },
   (input) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:add-entry",
-        input: {
-          workflow: input.workflow,
-          title: input.title,
-          trigger: input.trigger,
-          finding: input.finding,
-          evidence: input.evidence,
-          follow_up: input.follow_up,
-          owner: input.owner,
-          status: input.status,
-          id: optionToUndefined(input.id),
-          date: optionToUndefined(input.date),
-          severity: optionToUndefined(input.severity),
-          tags: optionToUndefined(input.tags),
-          reflection: optionToUndefined(input.reflection),
-          feedback: optionToUndefined(input.feedback),
-          memory_form: optionToUndefined(input.memory_form),
-          memory_function: optionToUndefined(input.memory_function),
-          memory_dynamics: optionToUndefined(input.memory_dynamics),
-          capability: optionToUndefined(input.capability),
-          failure_mode: optionToUndefined(input.failure_mode),
-          importance: optionToUndefined(input.importance),
-          recency: optionToUndefined(input.recency),
-          confidence: optionToUndefined(input.confidence),
-          source: optionToUndefined(input.source),
-          scenario_skill: optionToUndefined(input.scenario_skill),
-          scenario_check: optionToUndefined(input.scenario_check),
-          scenario_verdict: optionToUndefined(input.scenario_verdict),
-          scenario_pattern: optionToUndefined(input.scenario_pattern),
-          scenario_severity: optionToUndefined(input.scenario_severity),
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:add-entry",
+      input: {
+        workflow: input.workflow,
+        title: input.title,
+        trigger: input.trigger,
+        finding: input.finding,
+        evidence: input.evidence,
+        follow_up: input.follow_up,
+        owner: input.owner,
+        status: input.status,
+        id: optionToUndefined(input.id),
+        date: optionToUndefined(input.date),
+        severity: optionToUndefined(input.severity),
+        tags: optionToUndefined(input.tags),
+        reflection: optionToUndefined(input.reflection),
+        feedback: optionToUndefined(input.feedback),
+        memory_form: optionToUndefined(input.memory_form),
+        memory_function: optionToUndefined(input.memory_function),
+        memory_dynamics: optionToUndefined(input.memory_dynamics),
+        capability: optionToUndefined(input.capability),
+        failure_mode: optionToUndefined(input.failure_mode),
+        importance: optionToUndefined(input.importance),
+        recency: optionToUndefined(input.recency),
+        confidence: optionToUndefined(input.confidence),
+        source: optionToUndefined(input.source),
+        scenario_skill: optionToUndefined(input.scenario_skill),
+        scenario_check: optionToUndefined(input.scenario_check),
+        scenario_verdict: optionToUndefined(input.scenario_verdict),
+        scenario_pattern: optionToUndefined(input.scenario_pattern),
+        scenario_severity: optionToUndefined(input.scenario_severity),
+      },
+    }),
 ).pipe(Command.withDescription("Append a workflow-memory event entry."));
 
 const workflowMemoryPreflightCommand = Command.make(
@@ -1084,17 +1085,15 @@ const workflowMemoryPreflightCommand = Command.make(
     ),
   },
   ({ bootstrap, cwd, memory_path }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:preflight",
-        input: {
-          bootstrap,
-          cwd: optionToUndefined(cwd) ?? process.cwd(),
-          memoryPath:
-            optionToUndefined(memory_path) ?? path.join("software-factory", "workflow-memory"),
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:preflight",
+      input: {
+        bootstrap,
+        cwd: optionToUndefined(cwd) ?? process.cwd(),
+        memoryPath:
+          optionToUndefined(memory_path) ?? path.join("software-factory", "workflow-memory"),
+      },
+    }),
 ).pipe(Command.withDescription("Validate workflow-memory runtime prerequisites."));
 
 const workflowMemorySyncCommand = Command.make(
@@ -1119,18 +1118,16 @@ const workflowMemorySyncCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ remote, branch, message, max_attempts, dry_run }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:sync",
-        input: {
-          remote: optionToUndefined(remote),
-          branch: optionToUndefined(branch),
-          message: optionToUndefined(message),
-          maxAttempts: optionToUndefined(max_attempts),
-          dryRun: dry_run,
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:sync",
+      input: {
+        remote: optionToUndefined(remote),
+        branch: optionToUndefined(branch),
+        message: optionToUndefined(message),
+        maxAttempts: optionToUndefined(max_attempts),
+        dryRun: dry_run,
+      },
+    }),
 ).pipe(Command.withDescription("Commit and push append-only workflow-memory artifacts."));
 
 const workflowMemoryRetrieveCommand = Command.make(
@@ -1165,20 +1162,18 @@ const workflowMemoryRetrieveCommand = Command.make(
     ),
   },
   ({ workflow, tags, limit, min_score, month, has_scenario, scenario_skill }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:retrieve",
-        input: {
-          workflow: optionToUndefined(workflow),
-          tags: optionToUndefined(tags),
-          limit: optionToUndefined(limit),
-          minScore: optionToUndefined(min_score),
-          month: optionToUndefined(month),
-          hasScenario: has_scenario,
-          scenarioSkill: optionToUndefined(scenario_skill),
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:retrieve",
+      input: {
+        workflow: optionToUndefined(workflow),
+        tags: optionToUndefined(tags),
+        limit: optionToUndefined(limit),
+        minScore: optionToUndefined(min_score),
+        month: optionToUndefined(month),
+        hasScenario: has_scenario,
+        scenarioSkill: optionToUndefined(scenario_skill),
+      },
+    }),
 ).pipe(Command.withDescription("Retrieve ranked workflow-memory entries."));
 
 const workflowMemoryCompactCommand = Command.make(
@@ -1189,16 +1184,14 @@ const workflowMemoryCompactCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ archive_closed, days, dry_run }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:compact",
-        input: {
-          archiveClosed: archive_closed,
-          days: optionToUndefined(days) ?? 90,
-          dryRun: dry_run,
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:compact",
+      input: {
+        archiveClosed: archive_closed,
+        days: optionToUndefined(days) ?? 90,
+        dryRun: dry_run,
+      },
+    }),
 ).pipe(Command.withDescription("Compact workflow-memory events and rebuild index."));
 
 const workflowMemoryCoverageCommand = Command.make(
@@ -1219,18 +1212,16 @@ const workflowMemoryCoverageCommand = Command.make(
     ),
   },
   ({ month, min, strict, json, audit_taxonomy }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:coverage",
-        input: {
-          month: optionToUndefined(month),
-          min: optionToUndefined(min),
-          strict,
-          json,
-          auditTaxonomy: audit_taxonomy,
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:coverage",
+      input: {
+        month: optionToUndefined(month),
+        min: optionToUndefined(min),
+        strict,
+        json,
+        auditTaxonomy: audit_taxonomy,
+      },
+    }),
 ).pipe(Command.withDescription("Check monthly workflow-memory coverage."));
 
 const workflowMemoryValidateScenariosCommand = Command.make(
@@ -1258,19 +1249,17 @@ const workflowMemoryValidateScenariosCommand = Command.make(
     ),
   },
   ({ skill, check, id, month, json, strict }) =>
-    effectFromPromise(() =>
-      executeUtilityCommand({
-        key: "workflow-memory:validate-scenarios",
-        input: {
-          skill: optionToUndefined(skill),
-          check: optionToUndefined(check),
-          id: optionToUndefined(id),
-          month: optionToUndefined(month),
-          json,
-          strict,
-        },
-      }),
-    ),
+    executeUtilityCommand({
+      key: "workflow-memory:validate-scenarios",
+      input: {
+        skill: optionToUndefined(skill),
+        check: optionToUndefined(check),
+        id: optionToUndefined(id),
+        month: optionToUndefined(month),
+        json,
+        strict,
+      },
+    }),
 ).pipe(Command.withDescription("Validate workflow-memory replay scenarios."));
 
 const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
@@ -1289,7 +1278,7 @@ const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
 const scriptsLintCommand = Command.make(
   "lint",
   {},
-  () => effectFromPromise(() => executeUtilityCommand({ key: "scripts:lint" })),
+  () => executeUtilityCommand({ key: "scripts:lint" }),
 ).pipe(Command.withDescription("Run software-factory script guardrails."));
 
 const scriptsCommand = Command.make("scripts", {}).pipe(
@@ -1300,7 +1289,7 @@ const scriptsCommand = Command.make("scripts", {}).pipe(
 const specGenerateCommand = Command.make(
   "generate",
   {},
-  () => effectFromPromise(() => executeUtilityCommand({ key: "spec:generate" })),
+  () => executeUtilityCommand({ key: "spec:generate" }),
 ).pipe(Command.withDescription("Regenerate docs spec artifacts."));
 
 const specCommand = Command.make("spec", {}).pipe(
@@ -1311,7 +1300,11 @@ const specCommand = Command.make("spec", {}).pipe(
 const operationListCommand = Command.make(
   "list",
   { json: jsonOption },
-  ({ json }) => effectFromPromise(() => listOperations(json)),
+  ({ json }) =>
+    Effect.tryPromise({
+      try: () => listOperations(json),
+      catch: (error) => toCliExecutionError("operation list", error),
+    }),
 ).pipe(Command.withDescription("List registered operations."));
 
 const operationExplainCommand = Command.make(
@@ -1320,7 +1313,11 @@ const operationExplainCommand = Command.make(
     operation_id: operationIdOption,
     json: jsonOption,
   },
-  ({ operation_id, json }) => effectFromPromise(() => explainOperation(operation_id, json)),
+  ({ operation_id, json }) =>
+    Effect.tryPromise({
+      try: () => explainOperation(operation_id, json),
+      catch: (error) => toCliExecutionError("operation explain", error),
+    }),
 ).pipe(Command.withDescription("Describe one operation and linked triggers."));
 
 const operationRunCommand = Command.make(
@@ -1333,28 +1330,31 @@ const operationRunCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ operation_id, issue, model, thinking, dry_run }) =>
-    effectFromPromise(async () => {
-      const overrides: Record<string, string> = {};
+    Effect.tryPromise({
+      try: async () => {
+        const overrides: Record<string, string> = {};
 
-      const issueValue = optionToUndefined(issue);
-      const modelValue = optionToUndefined(model);
-      const thinkingValue = optionToUndefined(thinking);
+        const issueValue = optionToUndefined(issue);
+        const modelValue = optionToUndefined(model);
+        const thinkingValue = optionToUndefined(thinking);
 
-      if (issueValue !== undefined) {
-        overrides.issue = issueValue;
-      }
-      if (modelValue !== undefined) {
-        overrides.model = modelValue;
-      }
-      if (thinkingValue !== undefined) {
-        overrides.thinking = thinkingValue;
-      }
-      if (dry_run) {
-        overrides.dry_run = "true";
-      }
+        if (issueValue !== undefined) {
+          overrides.issue = issueValue;
+        }
+        if (modelValue !== undefined) {
+          overrides.model = modelValue;
+        }
+        if (thinkingValue !== undefined) {
+          overrides.thinking = thinkingValue;
+        }
+        if (dry_run) {
+          overrides.dry_run = "true";
+        }
 
-      const status = await runOperation(operation_id, overrides);
-      applyExitCode(status);
+        const status = await runOperation(operation_id, overrides);
+        applyExitCode(status);
+      },
+      catch: (error) => toCliExecutionError("operation run", error),
     }),
 ).pipe(Command.withDescription("Run one operation directly."));
 
@@ -1370,7 +1370,11 @@ const operationCommand = Command.make("operation", {}).pipe(
 const triggerListCommand = Command.make(
   "list",
   { json: jsonOption },
-  ({ json }) => effectFromPromise(() => listTriggers(json)),
+  ({ json }) =>
+    Effect.tryPromise({
+      try: () => listTriggers(json),
+      catch: (error) => toCliExecutionError("trigger list", error),
+    }),
 ).pipe(Command.withDescription("List registered triggers."));
 
 const triggerExplainCommand = Command.make(
@@ -1379,7 +1383,11 @@ const triggerExplainCommand = Command.make(
     trigger_id: triggerIdOption,
     json: jsonOption,
   },
-  ({ trigger_id, json }) => effectFromPromise(() => explainTrigger(trigger_id, json)),
+  ({ trigger_id, json }) =>
+    Effect.tryPromise({
+      try: () => explainTrigger(trigger_id, json),
+      catch: (error) => toCliExecutionError("trigger explain", error),
+    }),
 ).pipe(Command.withDescription("Describe one trigger and linked operation."));
 
 const triggerFireCommand = Command.make(
@@ -1392,28 +1400,31 @@ const triggerFireCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ trigger_id, issue, model, thinking, dry_run }) =>
-    effectFromPromise(async () => {
-      const overrides: Record<string, string> = {};
+    Effect.tryPromise({
+      try: async () => {
+        const overrides: Record<string, string> = {};
 
-      const issueValue = optionToUndefined(issue);
-      const modelValue = optionToUndefined(model);
-      const thinkingValue = optionToUndefined(thinking);
+        const issueValue = optionToUndefined(issue);
+        const modelValue = optionToUndefined(model);
+        const thinkingValue = optionToUndefined(thinking);
 
-      if (issueValue !== undefined) {
-        overrides.issue = issueValue;
-      }
-      if (modelValue !== undefined) {
-        overrides.model = modelValue;
-      }
-      if (thinkingValue !== undefined) {
-        overrides.thinking = thinkingValue;
-      }
-      if (dry_run) {
-        overrides.dry_run = "true";
-      }
+        if (issueValue !== undefined) {
+          overrides.issue = issueValue;
+        }
+        if (modelValue !== undefined) {
+          overrides.model = modelValue;
+        }
+        if (thinkingValue !== undefined) {
+          overrides.thinking = thinkingValue;
+        }
+        if (dry_run) {
+          overrides.dry_run = "true";
+        }
 
-      const status = await fireTrigger(trigger_id, overrides);
-      applyExitCode(status);
+        const status = await fireTrigger(trigger_id, overrides);
+        applyExitCode(status);
+      },
+      catch: (error) => toCliExecutionError("trigger fire", error),
     }),
 ).pipe(Command.withDescription("Fire one trigger with optional overrides."));
 
@@ -1430,9 +1441,12 @@ const doctorCommand = Command.make(
   "doctor",
   {},
   () =>
-    effectFromPromise(async () => {
-      const status = await runDoctor();
-      applyExitCode(status);
+    Effect.tryPromise({
+      try: async () => {
+        const status = await runDoctor();
+        applyExitCode(status);
+      },
+      catch: (error) => toCliExecutionError("doctor", error),
     }),
 ).pipe(Command.withDescription("Run software-factory environment diagnostics."));
 
@@ -1462,9 +1476,7 @@ const validateTopLevelCommand = (argv: string[]): void => {
   }
 
   if (!ROOT_COMMAND_NAMES.has(firstToken)) {
-    throw new Error(
-      `Unknown command: ${firstToken}. Run 'pnpm software-factory --help' for available commands.`,
-    );
+    throw new UnknownTopLevelCommandError({ command: firstToken });
   }
 };
 
