@@ -46,6 +46,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-268-discard-confirmation-shipped",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #268 discard confirmation shipped",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:268",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
