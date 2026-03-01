@@ -183,8 +183,12 @@ export function InfographicList({
         <div
           role="list"
           aria-label="Infographic list"
+          aria-busy={isPending}
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
+          <div role="status" aria-live="polite" className="sr-only">
+            {filteredInfographics.length} {filteredInfographics.length === 1 ? 'infographic' : 'infographics'} found
+          </div>
           {filteredInfographics.map((infographic) => (
             <InfographicItem
               key={infographic.id}

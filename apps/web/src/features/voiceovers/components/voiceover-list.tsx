@@ -360,8 +360,12 @@ export function VoiceoverList({
       ) : (
         <div
           className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          aria-busy={isPending}
         >
-          <table className="w-full">
+          <div role="status" aria-live="polite" className="sr-only">
+            {filteredVoiceovers.length} {filteredVoiceovers.length === 1 ? 'voiceover' : 'voiceovers'} found
+          </div>
+          <table className="w-full" aria-label="Voiceovers">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="py-2.5 pl-4 pr-1 w-10">

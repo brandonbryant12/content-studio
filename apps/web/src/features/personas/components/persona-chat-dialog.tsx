@@ -221,6 +221,7 @@ export function PersonaChatDialog({
             maxLength={CHAT_INPUT_MAX_LENGTH}
             rows={1}
             className={CHAT_INPUT_TEXTAREA_CLASS}
+            aria-label="Persona description"
             autoFocus
           />
           <Button
@@ -228,6 +229,7 @@ export function PersonaChatDialog({
             size="icon"
             disabled={!composer.canSubmit}
             className="shrink-0"
+            aria-label="Send message"
           >
             <PaperPlaneIcon className="w-4 h-4" />
           </Button>

@@ -177,8 +177,12 @@ export function PodcastList({
         <div
           role="list"
           aria-label="Podcast list"
+          aria-busy={isPending}
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
+          <div role="status" aria-live="polite" className="sr-only">
+            {filteredPodcasts.length} {filteredPodcasts.length === 1 ? 'podcast' : 'podcasts'} found
+          </div>
           {filteredPodcasts.map((podcast) => (
             <PodcastItem
               key={podcast.id}

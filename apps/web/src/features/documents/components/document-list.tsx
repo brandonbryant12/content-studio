@@ -268,8 +268,12 @@ export function DocumentList({
       ) : (
         <div
           className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          aria-busy={isPending}
         >
-          <table className="w-full">
+          <div role="status" aria-live="polite" className="sr-only">
+            {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'} found
+          </div>
+          <table className="w-full" aria-label="Documents">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="py-2.5 pl-4 pr-1 w-10">
