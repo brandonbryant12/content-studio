@@ -46,6 +46,29 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-executor-delivered-sse-query-key-cleanup-bundle",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev executor delivered SSE query-key cleanup bundle",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:255",
+      "issue:257",
+      "skill:intake-triage",
+      "skill:tanstack-vite",
+      "memory",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
