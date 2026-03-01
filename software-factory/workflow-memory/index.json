@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "CLI integration golden tests for root command",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:test-surface-steward",
+      "software-factory",
+      "effect-cli",
+      "integration-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-effect-native-cli-error-and-execution-hardening",
     "date": "2026-03-01",
     "month": "2026-03",
