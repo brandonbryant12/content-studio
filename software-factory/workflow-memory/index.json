@@ -11,6 +11,17 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-architecture-adr-guard-replace-utility-argv-adapters-with-typed-command-dispatch",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Replace utility argv adapters with typed command dispatch",
+    "severity": "low",
+    "status": "open",
+    "tags": [],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-docs-knowledge-drift-backend-docs-conformity-guardrails-expanded",
     "date": "2026-03-01",
     "month": "2026-03",
@@ -119,6 +130,26 @@
       "skill:feature-delivery",
       "software-factory",
       "cli",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-01-feature-delivery-compact-cli-help-renderer",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add compact custom help renderer for software-factory CLI",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "software-factory",
+      "cli",
+      "usability",
       "workflow-memory",
       "memory-form:external",
       "memory-function:semantic",

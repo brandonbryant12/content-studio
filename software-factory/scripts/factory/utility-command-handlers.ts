@@ -1,46 +1,104 @@
-import { main as lintScriptsMain } from "../guardrails/lint-scripts";
-import { main as workflowMemoryPreflightMain } from "../guardrails/workflow-memory-preflight";
-import { main as skillsCheckMain } from "../skills/check-quality";
-import { main as specGenerateMain } from "../spec/generate";
-import { main as addWorkflowMemoryEntryMain } from "../workflow-memory/add-entry";
-import { main as checkWorkflowMemoryCoverageMain } from "../workflow-memory/check-coverage";
-import { main as compactWorkflowMemoryMain } from "../workflow-memory/compact-memory";
-import { main as retrieveWorkflowMemoryMain } from "../workflow-memory/retrieve";
-import { main as replayScenariosMain } from "../workflow-memory/replay-scenarios";
-import { main as syncWorkflowMemoryMain } from "../workflow-memory/sync-git";
-import { main as generateWorkflowsReadmeMain } from "../workflows/generate-readme";
-import { findUtilityCommandSpec, type UtilityCommandKey } from "./utility-command-manifest";
+import {
+  runScriptGuardrailsLint,
+} from "../guardrails/lint-scripts";
+import {
+  runWorkflowMemoryPreflight,
+  type WorkflowMemoryPreflightOptions,
+} from "../guardrails/workflow-memory-preflight";
+import { runSkillsCheck, type SkillsCheckOptions } from "../skills/check-quality";
+import { runSpecGenerate } from "../spec/generate";
+import {
+  runWorkflowMemoryAddEntry,
+  type WorkflowMemoryAddEntryOptions,
+} from "../workflow-memory/add-entry";
+import {
+  runWorkflowMemoryCoverage,
+  type WorkflowMemoryCoverageOptions,
+} from "../workflow-memory/check-coverage";
+import {
+  runWorkflowMemoryCompact,
+  type WorkflowMemoryCompactOptions,
+} from "../workflow-memory/compact-memory";
+import {
+  runWorkflowMemoryRetrieve,
+  type WorkflowMemoryRetrieveOptions,
+} from "../workflow-memory/retrieve";
+import {
+  runWorkflowMemoryValidateScenarios,
+  type WorkflowMemoryValidateScenariosOptions,
+} from "../workflow-memory/replay-scenarios";
+import {
+  runWorkflowMemorySync,
+  type WorkflowMemorySyncOptions,
+} from "../workflow-memory/sync-git";
+import { runWorkflowsGenerate } from "../workflows/generate-readme";
 
-type UtilityMain = (argv?: string[]) => Promise<number>;
+export type UtilityCommand =
+  | {
+      key: "skills:check";
+      input: SkillsCheckOptions;
+    }
+  | {
+      key: "workflows:generate";
+    }
+  | {
+      key: "workflow-memory:add-entry";
+      input: WorkflowMemoryAddEntryOptions;
+    }
+  | {
+      key: "workflow-memory:preflight";
+      input: WorkflowMemoryPreflightOptions;
+    }
+  | {
+      key: "workflow-memory:sync";
+      input: WorkflowMemorySyncOptions;
+    }
+  | {
+      key: "workflow-memory:retrieve";
+      input: WorkflowMemoryRetrieveOptions;
+    }
+  | {
+      key: "workflow-memory:compact";
+      input: WorkflowMemoryCompactOptions;
+    }
+  | {
+      key: "workflow-memory:coverage";
+      input: WorkflowMemoryCoverageOptions;
+    }
+  | {
+      key: "workflow-memory:validate-scenarios";
+      input: WorkflowMemoryValidateScenariosOptions;
+    }
+  | {
+      key: "scripts:lint";
+    }
+  | {
+      key: "spec:generate";
+    };
 
-const UTILITY_HANDLERS: Record<UtilityCommandKey, UtilityMain> = {
-  "skills:check": skillsCheckMain,
-  "workflows:generate": generateWorkflowsReadmeMain,
-  "workflow-memory:add-entry": addWorkflowMemoryEntryMain,
-  "workflow-memory:preflight": workflowMemoryPreflightMain,
-  "workflow-memory:sync": syncWorkflowMemoryMain,
-  "workflow-memory:retrieve": retrieveWorkflowMemoryMain,
-  "workflow-memory:compact": compactWorkflowMemoryMain,
-  "workflow-memory:coverage": checkWorkflowMemoryCoverageMain,
-  "workflow-memory:validate-scenarios": replayScenariosMain,
-  "scripts:lint": lintScriptsMain,
-  "spec:generate": specGenerateMain,
-};
-
-export const runUtilityCommand = async (
-  domain: string,
-  action: string | undefined,
-  argv: string[],
-): Promise<number | null> => {
-  const command = findUtilityCommandSpec(domain, action);
-  if (!command) {
-    return null;
+export const runUtilityCommand = async (command: UtilityCommand): Promise<number> => {
+  switch (command.key) {
+    case "skills:check":
+      return await runSkillsCheck(command.input);
+    case "workflows:generate":
+      return await runWorkflowsGenerate();
+    case "workflow-memory:add-entry":
+      return await runWorkflowMemoryAddEntry(command.input);
+    case "workflow-memory:preflight":
+      return await runWorkflowMemoryPreflight(command.input);
+    case "workflow-memory:sync":
+      return await runWorkflowMemorySync(command.input);
+    case "workflow-memory:retrieve":
+      return await runWorkflowMemoryRetrieve(command.input);
+    case "workflow-memory:compact":
+      return await runWorkflowMemoryCompact(command.input);
+    case "workflow-memory:coverage":
+      return await runWorkflowMemoryCoverage(command.input);
+    case "workflow-memory:validate-scenarios":
+      return await runWorkflowMemoryValidateScenarios(command.input);
+    case "scripts:lint":
+      return await runScriptGuardrailsLint();
+    case "spec:generate":
+      return await runSpecGenerate();
   }
-
-  const handler = UTILITY_HANDLERS[command.key];
-  if (!handler) {
-    throw new Error(`Missing utility command handler for ${command.key}.`);
-  }
-
-  return await handler(argv);
 };

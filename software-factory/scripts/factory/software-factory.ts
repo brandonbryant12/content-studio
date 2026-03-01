@@ -6,7 +6,7 @@ import { Command, Options } from "@effect/cli";
 import { NodeContext } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { runUtilityCommand } from "./utility-command-handlers";
+import { runUtilityCommand, type UtilityCommand } from "./utility-command-handlers";
 import { UTILITY_USAGE_LINES } from "./utility-command-manifest";
 import { runCommand, runStreamingCommand } from "../lib/command";
 import { runScript } from "../lib/effect-script";
@@ -929,37 +929,14 @@ const runDoctor = async (): Promise<number> => {
 const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
   Option.isSome(value) ? value.value : undefined;
 
-const appendBooleanFlag = (argv: string[], flagName: string, enabled: boolean): void => {
-  if (enabled) {
-    argv.push(`--${flagName}`);
-  }
-};
-
-const appendValueFlag = (
-  argv: string[],
-  flagName: string,
-  value: string | number | undefined,
-): void => {
-  if (value !== undefined) {
-    argv.push(`--${flagName}`, String(value));
-  }
-};
-
 const applyExitCode = (status: number): void => {
   if (status !== 0) {
     process.exitCode = status;
   }
 };
 
-const executeUtilityCommand = async (
-  domain: string,
-  action: string,
-  argv: string[],
-): Promise<void> => {
-  const status = await runUtilityCommand(domain, action, argv);
-  if (status === null) {
-    throw new Error(`Unknown utility command: ${domain} ${action}`);
-  }
+const executeUtilityCommand = async (command: UtilityCommand): Promise<void> => {
+  const status = await runUtilityCommand(command);
   applyExitCode(status);
 };
 
@@ -1004,12 +981,7 @@ const skillsCheckCommand = Command.make(
     json: jsonOption,
   },
   ({ strict, json }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendBooleanFlag(argv, "strict", strict);
-      appendBooleanFlag(argv, "json", json);
-      await executeUtilityCommand("skills", "check", argv);
-    }),
+    effectFromPromise(() => executeUtilityCommand({ key: "skills:check", input: { strict, json } })),
 ).pipe(Command.withDescription("Validate skill metadata, contracts, and mirrors."));
 
 const skillsCommand = Command.make("skills", {}).pipe(
@@ -1020,7 +992,7 @@ const skillsCommand = Command.make("skills", {}).pipe(
 const workflowsGenerateCommand = Command.make(
   "generate",
   {},
-  () => effectFromPromise(() => executeUtilityCommand("workflows", "generate", [])),
+  () => effectFromPromise(() => executeUtilityCommand({ key: "workflows:generate" })),
 ).pipe(Command.withDescription("Generate workflow catalog README from registry."));
 
 const workflowsCommand = Command.make("workflows", {}).pipe(
@@ -1061,49 +1033,41 @@ const workflowMemoryAddEntryCommand = Command.make(
     scenario_severity: Options.text("scenario-severity").pipe(Options.optional),
   },
   (input) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [
-        "--workflow",
-        input.workflow,
-        "--title",
-        input.title,
-        "--trigger",
-        input.trigger,
-        "--finding",
-        input.finding,
-        "--evidence",
-        input.evidence,
-        "--follow-up",
-        input.follow_up,
-        "--owner",
-        input.owner,
-        "--status",
-        input.status,
-      ];
-
-      appendValueFlag(argv, "id", optionToUndefined(input.id));
-      appendValueFlag(argv, "date", optionToUndefined(input.date));
-      appendValueFlag(argv, "severity", optionToUndefined(input.severity));
-      appendValueFlag(argv, "tags", optionToUndefined(input.tags));
-      appendValueFlag(argv, "reflection", optionToUndefined(input.reflection));
-      appendValueFlag(argv, "feedback", optionToUndefined(input.feedback));
-      appendValueFlag(argv, "memory-form", optionToUndefined(input.memory_form));
-      appendValueFlag(argv, "memory-function", optionToUndefined(input.memory_function));
-      appendValueFlag(argv, "memory-dynamics", optionToUndefined(input.memory_dynamics));
-      appendValueFlag(argv, "capability", optionToUndefined(input.capability));
-      appendValueFlag(argv, "failure-mode", optionToUndefined(input.failure_mode));
-      appendValueFlag(argv, "importance", optionToUndefined(input.importance));
-      appendValueFlag(argv, "recency", optionToUndefined(input.recency));
-      appendValueFlag(argv, "confidence", optionToUndefined(input.confidence));
-      appendValueFlag(argv, "source", optionToUndefined(input.source));
-      appendValueFlag(argv, "scenario-skill", optionToUndefined(input.scenario_skill));
-      appendValueFlag(argv, "scenario-check", optionToUndefined(input.scenario_check));
-      appendValueFlag(argv, "scenario-verdict", optionToUndefined(input.scenario_verdict));
-      appendValueFlag(argv, "scenario-pattern", optionToUndefined(input.scenario_pattern));
-      appendValueFlag(argv, "scenario-severity", optionToUndefined(input.scenario_severity));
-
-      await executeUtilityCommand("workflow-memory", "add-entry", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:add-entry",
+        input: {
+          workflow: input.workflow,
+          title: input.title,
+          trigger: input.trigger,
+          finding: input.finding,
+          evidence: input.evidence,
+          follow_up: input.follow_up,
+          owner: input.owner,
+          status: input.status,
+          id: optionToUndefined(input.id),
+          date: optionToUndefined(input.date),
+          severity: optionToUndefined(input.severity),
+          tags: optionToUndefined(input.tags),
+          reflection: optionToUndefined(input.reflection),
+          feedback: optionToUndefined(input.feedback),
+          memory_form: optionToUndefined(input.memory_form),
+          memory_function: optionToUndefined(input.memory_function),
+          memory_dynamics: optionToUndefined(input.memory_dynamics),
+          capability: optionToUndefined(input.capability),
+          failure_mode: optionToUndefined(input.failure_mode),
+          importance: optionToUndefined(input.importance),
+          recency: optionToUndefined(input.recency),
+          confidence: optionToUndefined(input.confidence),
+          source: optionToUndefined(input.source),
+          scenario_skill: optionToUndefined(input.scenario_skill),
+          scenario_check: optionToUndefined(input.scenario_check),
+          scenario_verdict: optionToUndefined(input.scenario_verdict),
+          scenario_pattern: optionToUndefined(input.scenario_pattern),
+          scenario_severity: optionToUndefined(input.scenario_severity),
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Append a workflow-memory event entry."));
 
 const workflowMemoryPreflightCommand = Command.make(
@@ -1120,13 +1084,17 @@ const workflowMemoryPreflightCommand = Command.make(
     ),
   },
   ({ bootstrap, cwd, memory_path }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendBooleanFlag(argv, "bootstrap", bootstrap);
-      appendValueFlag(argv, "cwd", optionToUndefined(cwd));
-      appendValueFlag(argv, "memory-path", optionToUndefined(memory_path));
-      await executeUtilityCommand("workflow-memory", "preflight", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:preflight",
+        input: {
+          bootstrap,
+          cwd: optionToUndefined(cwd) ?? process.cwd(),
+          memoryPath:
+            optionToUndefined(memory_path) ?? path.join("software-factory", "workflow-memory"),
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Validate workflow-memory runtime prerequisites."));
 
 const workflowMemorySyncCommand = Command.make(
@@ -1151,15 +1119,18 @@ const workflowMemorySyncCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ remote, branch, message, max_attempts, dry_run }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendValueFlag(argv, "remote", optionToUndefined(remote));
-      appendValueFlag(argv, "branch", optionToUndefined(branch));
-      appendValueFlag(argv, "message", optionToUndefined(message));
-      appendValueFlag(argv, "max-attempts", optionToUndefined(max_attempts));
-      appendBooleanFlag(argv, "dry-run", dry_run);
-      await executeUtilityCommand("workflow-memory", "sync", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:sync",
+        input: {
+          remote: optionToUndefined(remote),
+          branch: optionToUndefined(branch),
+          message: optionToUndefined(message),
+          maxAttempts: optionToUndefined(max_attempts),
+          dryRun: dry_run,
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Commit and push append-only workflow-memory artifacts."));
 
 const workflowMemoryRetrieveCommand = Command.make(
@@ -1194,17 +1165,20 @@ const workflowMemoryRetrieveCommand = Command.make(
     ),
   },
   ({ workflow, tags, limit, min_score, month, has_scenario, scenario_skill }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendValueFlag(argv, "workflow", optionToUndefined(workflow));
-      appendValueFlag(argv, "tags", optionToUndefined(tags));
-      appendValueFlag(argv, "limit", optionToUndefined(limit));
-      appendValueFlag(argv, "min-score", optionToUndefined(min_score));
-      appendValueFlag(argv, "month", optionToUndefined(month));
-      appendBooleanFlag(argv, "has-scenario", has_scenario);
-      appendValueFlag(argv, "scenario-skill", optionToUndefined(scenario_skill));
-      await executeUtilityCommand("workflow-memory", "retrieve", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:retrieve",
+        input: {
+          workflow: optionToUndefined(workflow),
+          tags: optionToUndefined(tags),
+          limit: optionToUndefined(limit),
+          minScore: optionToUndefined(min_score),
+          month: optionToUndefined(month),
+          hasScenario: has_scenario,
+          scenarioSkill: optionToUndefined(scenario_skill),
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Retrieve ranked workflow-memory entries."));
 
 const workflowMemoryCompactCommand = Command.make(
@@ -1215,13 +1189,16 @@ const workflowMemoryCompactCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ archive_closed, days, dry_run }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendBooleanFlag(argv, "archive-closed", archive_closed);
-      appendValueFlag(argv, "days", optionToUndefined(days));
-      appendBooleanFlag(argv, "dry-run", dry_run);
-      await executeUtilityCommand("workflow-memory", "compact", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:compact",
+        input: {
+          archiveClosed: archive_closed,
+          days: optionToUndefined(days) ?? 90,
+          dryRun: dry_run,
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Compact workflow-memory events and rebuild index."));
 
 const workflowMemoryCoverageCommand = Command.make(
@@ -1242,15 +1219,18 @@ const workflowMemoryCoverageCommand = Command.make(
     ),
   },
   ({ month, min, strict, json, audit_taxonomy }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendValueFlag(argv, "month", optionToUndefined(month));
-      appendValueFlag(argv, "min", optionToUndefined(min));
-      appendBooleanFlag(argv, "strict", strict);
-      appendBooleanFlag(argv, "json", json);
-      appendBooleanFlag(argv, "audit-taxonomy", audit_taxonomy);
-      await executeUtilityCommand("workflow-memory", "coverage", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:coverage",
+        input: {
+          month: optionToUndefined(month),
+          min: optionToUndefined(min),
+          strict,
+          json,
+          auditTaxonomy: audit_taxonomy,
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Check monthly workflow-memory coverage."));
 
 const workflowMemoryValidateScenariosCommand = Command.make(
@@ -1278,16 +1258,19 @@ const workflowMemoryValidateScenariosCommand = Command.make(
     ),
   },
   ({ skill, check, id, month, json, strict }) =>
-    effectFromPromise(async () => {
-      const argv: string[] = [];
-      appendValueFlag(argv, "skill", optionToUndefined(skill));
-      appendValueFlag(argv, "check", optionToUndefined(check));
-      appendValueFlag(argv, "id", optionToUndefined(id));
-      appendValueFlag(argv, "month", optionToUndefined(month));
-      appendBooleanFlag(argv, "json", json);
-      appendBooleanFlag(argv, "strict", strict);
-      await executeUtilityCommand("workflow-memory", "validate-scenarios", argv);
-    }),
+    effectFromPromise(() =>
+      executeUtilityCommand({
+        key: "workflow-memory:validate-scenarios",
+        input: {
+          skill: optionToUndefined(skill),
+          check: optionToUndefined(check),
+          id: optionToUndefined(id),
+          month: optionToUndefined(month),
+          json,
+          strict,
+        },
+      }),
+    ),
 ).pipe(Command.withDescription("Validate workflow-memory replay scenarios."));
 
 const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
@@ -1306,7 +1289,7 @@ const workflowMemoryCommand = Command.make("workflow-memory", {}).pipe(
 const scriptsLintCommand = Command.make(
   "lint",
   {},
-  () => effectFromPromise(() => executeUtilityCommand("scripts", "lint", [])),
+  () => effectFromPromise(() => executeUtilityCommand({ key: "scripts:lint" })),
 ).pipe(Command.withDescription("Run software-factory script guardrails."));
 
 const scriptsCommand = Command.make("scripts", {}).pipe(
@@ -1317,7 +1300,7 @@ const scriptsCommand = Command.make("scripts", {}).pipe(
 const specGenerateCommand = Command.make(
   "generate",
   {},
-  () => effectFromPromise(() => executeUtilityCommand("spec", "generate", [])),
+  () => effectFromPromise(() => executeUtilityCommand({ key: "spec:generate" })),
 ).pipe(Command.withDescription("Regenerate docs spec artifacts."));
 
 const specCommand = Command.make("spec", {}).pipe(
