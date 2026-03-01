@@ -1,14 +1,14 @@
 version = 1
 id = "ready-for-dev-executor"
 name = "Ready-for-Dev Executor"
-prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
+prompt = '''Use gpt-5.3-codex with staged reasoning effort.
 
 Execution contract:
 - Execute one full `ready-for-dev-executor` run.
-- Keep reasoning effort at xhigh throughout the run; do not downgrade reasoning depth.
 - Execute code-writing work in a dedicated git worktree created from latest `origin/main`.
 - Repository playbook is the source of truth for this lane.
 - Read and execute `agent-engine/automations/ready-for-dev-executor/ready-for-dev-executor.md` in the repository root before making decisions.
+- Reasoning policy: default `high`; escalate to `xhigh` only for ambiguous high-impact decisions (bundle composition, risky routing, conflicting evidence).
 - Use this as the single implementation lane for all issues labeled `ready-for-dev`, including issue-evaluator approvals and explicit human approvals.
 - Select and implement 1..N `ready-for-dev` issues using bounded aggregation.
 - Route each selected issue to the correct workflow/skills per the playbook.

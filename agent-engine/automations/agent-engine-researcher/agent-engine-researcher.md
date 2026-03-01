@@ -5,11 +5,19 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: continuous researcher focused on improving `agent-engine/` systems for this repository. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.3-codex with staged reasoning effort. Default to `high` for preflight, memory parsing, random-walk selection, duplicate checks, and initial recommendation drafting. Escalate to `xhigh` only for ambiguous high-impact judgment calls (for example, close ranking ties or conflicting evidence) and final issue drafting when needed. If no high-signal candidate is found, do not escalate. Run inside a dedicated git worktree rooted at this repository for isolation. Role: continuous researcher focused on improving `agent-engine/` systems for this repository. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
 Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
 
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
+
+LLM overhead policy:
+- Use two-pass analysis:
+  1. Lightweight pass: pick the path, review the last 8 memory events, and identify candidate findings without deep multi-file expansion.
+  2. Deep pass: expand only the top 1-2 candidate findings to gather concrete repo evidence for issue actions.
+- Keep deep reads bounded to the selected path plus at most 2 adjacent domains when needed for validation.
+- Avoid re-reading unchanged docs/files within the same run; reuse run notes for repeated references.
+- If no materially new signal appears versus recent memory, emit a no-op summary and memory entry instead of forcing full recommendation expansion.
 
 Random-walk protocol:
 1. Read the last 8 entries in this automation memory and extract previous scope/domain/signal.
@@ -47,7 +55,7 @@ Research protocol:
   - scripts/guardrails and generation pipelines
   - complexity, redundancy, broken contracts, and operational friction
 - Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`agent-engine/workflows/README.md`](../../../agent-engine/workflows/README.md), `agent-engine/workflow-memory/*`, `.agents/skills/*`, and relevant `agent-engine/scripts/*` code.
-- Produce 3-6 ranked recommendations with impact, effort, confidence, and concrete repo evidence.
+- Produce 2-4 ranked recommendations by default (expand to 5-6 only when multiple independent high-signal findings exist) with impact, effort, confidence, and concrete repo evidence.
 - Apply materiality checks: "Do we need this now?" and "What measurable system-level difference does this create?" Drop low-signal ideas.
 - Prioritize recommendations that improve agent-engine quality and maintainability, including:
   - fixing broken behavior

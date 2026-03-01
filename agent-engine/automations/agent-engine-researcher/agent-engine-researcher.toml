@@ -1,14 +1,14 @@
 version = 1
 id = "agent-engine-researcher"
 name = "Agent Engine Researcher"
-prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
+prompt = '''Use gpt-5.3-codex with staged reasoning effort.
 
 Execution contract:
 - Execute one full `agent-engine-researcher` run.
-- Keep reasoning effort at xhigh throughout the run; do not downgrade reasoning depth.
 - Execute in a dedicated git worktree rooted at this repository for isolation.
 - Repository playbook is the source of truth for this lane.
 - Read and execute `agent-engine/automations/agent-engine-researcher/agent-engine-researcher.md` in the repository root before making decisions.
+- Reasoning policy: default `high`; escalate to `xhigh` only for ambiguous high-impact judgments and final issue drafting when evidence is conflicting or weak.
 - Follow the playbook's random-walk, memory-diversity, research, and issue policies exactly.
 - Prioritize agent-engine optimization surfaces, especially workflow/automation mapping quality in `agent-engine/workflows/registry.json`.
 - Create or update issues only for high-confidence findings (confidence >= 0.8) with concrete repo evidence.

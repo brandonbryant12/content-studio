@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: human-in-the-loop implementation lane for any repository issue explicitly approved with `ready-for-dev`. Execute all code-writing work from a dedicated git worktree, never from the primary checkout.
+Use gpt-5.3-codex with staged reasoning effort. Default to `high` for issue triage, duplicate/open-PR checks, actionability screening, command execution, and run reporting. Escalate to `xhigh` only for ambiguous high-impact decisions (for example, final bundle composition tradeoffs, risky workflow-routing decisions, or weak/conflicting issue evidence). Keep to `high` when decisions are routine and evidence is clear. Role: human-in-the-loop implementation lane for any repository issue explicitly approved with `ready-for-dev`. Execute all code-writing work from a dedicated git worktree, never from the primary checkout.
 
 Scope and approval:
 - GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR queries, comments, labels, reactions, merges, metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
@@ -20,11 +20,24 @@ Selection and bounded aggregation (`1..N` issues per run):
 - Build candidate set from actionable open issues labeled `ready-for-dev`, ordered by issue number ascending.
 - Select at least 1 issue when actionable candidates exist.
 - N is dynamic and must stay bounded by coherent scope: default target is 1-3 issues; allow up to 5 only when issues are small, tightly related, and safely deliverable together in one PR.
+- Use two-pass issue selection to reduce overhead:
+  1. Lightweight pass (no worktree/bootstrap/tests): `gh issue list` + minimal metadata (`state`, `labels`, linked open PR presence, recent memory status) to build a shortlist.
+  2. Deep pass (shortlist only, max 5): fetch full issue context and acceptance criteria, then finalize selection/bundle.
 - Bundling rules:
   - bias conservative: if uncertain, reduce scope and implement fewer issues
   - maintain one coherent implementation narrative (same subsystem/root-cause class)
   - do not bundle if scope/risk becomes hard to reason about in one context
   - keep to one PR per run
+- Bundle budget heuristic:
+  - estimate issue complexity points before final selection: `1` (tiny/localized), `2` (small multi-file), `3` (medium or contract-sensitive)
+  - target total bundle points <= 4 by default for hourly runs
+  - allow up to 6 points only when all issues are same subsystem, low-risk, and clearly verifiable together
+  - carry overflow to later runs instead of stretching one bundle
+- Never bundle with other issues when a candidate includes any of:
+  - database schema/migration changes
+  - cross-package API contract changes
+  - authz/security-sensitive behavior changes
+  - observability lifecycle/runtime boot changes
 - Skip issues already linked to an open PR or recently processed in memory without new human approval signal.
 - Before final selection, run an actionability screen on candidates and skip any candidate that fails one of these checks:
   - no longer open, missing `ready-for-dev`, or assigned status changed since list call (re-check with `gh issue view --json state,labels`)
@@ -47,6 +60,7 @@ Workflow routing contract (must use correct workflow per selected issue):
 - Execute using the selected workflow contracts and required docs/guardrails for each routed task.
 
 Runtime preflight for code tasks:
+- Run this preflight only after at least one actionable issue remains after screening.
 1) GitHub fast-path: run `gh auth status`, then proceed directly with required `gh` triage commands. If any required `gh` command fails due to transient network/DNS/TLS errors, run recovery before stopping:
   - retry `gh api rate_limit` up to 3 times with short backoff
   - retry once after clearing proxy env for this process: `unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy`

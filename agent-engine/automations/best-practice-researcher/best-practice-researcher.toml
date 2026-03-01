@@ -1,14 +1,14 @@
 version = 1
 id = "best-practice-researcher"
 name = "Best Practice Researcher"
-prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
+prompt = '''Use gpt-5.3-codex with staged reasoning effort.
 
 Execution contract:
 - Execute one full `best-practice-researcher` research run.
-- Keep reasoning effort at xhigh throughout the run; do not downgrade reasoning depth.
 - Execute in a dedicated git worktree rooted at this repository for isolation.
 - Repository playbook is the source of truth for this lane.
 - Read and execute `agent-engine/automations/best-practice-researcher/best-practice-researcher.md` in the repository root before making decisions.
+- Reasoning policy: default `high`; escalate to `xhigh` only for ambiguous high-impact judgments and final issue drafting when evidence is conflicting or weak.
 - Follow the playbook's random-walk, memory-diversity, research, and issue policies exactly.
 - Run `pnpm workflow-memory:preflight --bootstrap` before lane actions and report the preflight output.
 - If this wrapper conflicts with the playbook, follow the playbook.
