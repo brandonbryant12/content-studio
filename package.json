@@ -51,7 +51,7 @@
     "scenario:validate": "pnpm software-factory scenario validate",
     "scenario:validate:strict": "pnpm software-factory scenario validate --strict",
     "software-factory": "pnpm exec tsx software-factory/scripts/factory/software-factory.ts",
-    "ready-for-dev": "pnpm software-factory trigger fire ready-for-dev-executor",
+    "ready-for-dev": "pnpm software-factory trigger fire --trigger-id ready-for-dev-executor",
     "scripts:lint": "pnpm software-factory scripts lint",
     "typecheck": "turbo run typecheck",
     "cli": "pnpm --filter @repo/cli dev --",

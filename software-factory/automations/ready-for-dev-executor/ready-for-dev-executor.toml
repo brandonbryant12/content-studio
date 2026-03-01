@@ -4,7 +4,7 @@ name = "Ready-for-Dev Executor"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire ready-for-dev-executor`
+`pnpm software-factory trigger fire --trigger-id ready-for-dev-executor`
 
 Contract:
 - This wrapper is trigger-only.

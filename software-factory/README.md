@@ -52,11 +52,11 @@ Trigger -> Operation -> Strategy -> Skill -> Artifacts
 ## CLI Surfaces
 
 1. `pnpm software-factory operation list`
-2. `pnpm software-factory operation explain <operation-id>`
-3. `pnpm software-factory operation run <operation-id> ...`
+2. `pnpm software-factory operation explain --operation-id <operation-id>`
+3. `pnpm software-factory operation run --operation-id <operation-id> ...`
 4. `pnpm software-factory trigger list`
-5. `pnpm software-factory trigger explain <trigger-id>`
-6. `pnpm software-factory trigger fire <trigger-id> ...`
+5. `pnpm software-factory trigger explain --trigger-id <trigger-id>`
+6. `pnpm software-factory trigger fire --trigger-id <trigger-id> ...`
 7. `pnpm software-factory doctor`
 
 ## Execution Choice

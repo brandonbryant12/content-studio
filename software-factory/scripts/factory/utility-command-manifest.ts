@@ -44,7 +44,8 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:add-entry",
     domain: "workflow-memory",
     action: "add-entry",
-    usage: "pnpm software-factory workflow-memory add-entry [--flags...]",
+    usage:
+      "pnpm software-factory workflow-memory add-entry --workflow <text> --title <text> --trigger <text> --finding <text> --evidence <text> --follow-up <text> --owner <text> --status <text> [options]",
     packageScripts: [
       {
         name: "workflow-memory:add-entry",
@@ -56,7 +57,7 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:preflight",
     domain: "workflow-memory",
     action: "preflight",
-    usage: "pnpm software-factory workflow-memory preflight [--flags...]",
+    usage: "pnpm software-factory workflow-memory preflight [--bootstrap] [--cwd <path>] [--memory-path <path>]",
     packageScripts: [
       {
         name: "workflow-memory:preflight",
@@ -68,7 +69,8 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:sync",
     domain: "workflow-memory",
     action: "sync",
-    usage: "pnpm software-factory workflow-memory sync [--flags...]",
+    usage:
+      "pnpm software-factory workflow-memory sync [--remote <name>] [--branch <name>] [--message <text>] [--max-attempts <n>] [--dry-run]",
     packageScripts: [
       {
         name: "workflow-memory:sync",
@@ -80,7 +82,8 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:retrieve",
     domain: "workflow-memory",
     action: "retrieve",
-    usage: "pnpm software-factory workflow-memory retrieve [--flags...]",
+    usage:
+      "pnpm software-factory workflow-memory retrieve [--workflow <name>] [--tags <csv>] [--limit <n>] [--min-score <n>] [--month YYYY-MM] [--has-scenario] [--scenario-skill <name>]",
     packageScripts: [
       {
         name: "workflow-memory:retrieve",
@@ -92,7 +95,8 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:compact",
     domain: "workflow-memory",
     action: "compact",
-    usage: "pnpm software-factory workflow-memory compact [--flags...]",
+    usage:
+      "pnpm software-factory workflow-memory compact [--archive-closed] [--days <n>] [--dry-run]",
     packageScripts: [
       {
         name: "workflow-memory:compact",
@@ -104,7 +108,8 @@ export const UTILITY_COMMAND_SPECS = [
     key: "workflow-memory:coverage",
     domain: "workflow-memory",
     action: "coverage",
-    usage: "pnpm software-factory workflow-memory coverage [--strict] [--flags...]",
+    usage:
+      "pnpm software-factory workflow-memory coverage [--month YYYY-MM] [--min <n>] [--strict] [--json] [--audit-taxonomy]",
     packageScripts: [
       {
         name: "workflow-memory:coverage",

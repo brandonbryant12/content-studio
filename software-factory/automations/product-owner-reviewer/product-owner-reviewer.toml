@@ -4,7 +4,7 @@ name = "Product Owner Reviewer"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire product-owner-reviewer`
+`pnpm software-factory trigger fire --trigger-id product-owner-reviewer`
 
 Contract:
 - This wrapper is trigger-only.

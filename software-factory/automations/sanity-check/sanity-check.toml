@@ -4,7 +4,7 @@ name = "Sanity Check"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire sanity-check`
+`pnpm software-factory trigger fire --trigger-id sanity-check`
 
 Contract:
 - This wrapper is trigger-only.

@@ -8,7 +8,7 @@ Flow:
 Scheduler/Event
    |
    v
-software-factory trigger fire <trigger-id>
+software-factory trigger fire --trigger-id <trigger-id>
    |
    v
 Operation execution
@@ -27,8 +27,8 @@ Registry source of truth:
 ## Commands
 
 1. `pnpm software-factory trigger list`
-2. `pnpm software-factory trigger explain <trigger-id>`
-3. `pnpm software-factory trigger fire <trigger-id>`
+2. `pnpm software-factory trigger explain --trigger-id <trigger-id>`
+3. `pnpm software-factory trigger fire --trigger-id <trigger-id>`
 
 ## Trigger Fire vs Operation Run
 

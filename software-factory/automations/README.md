@@ -26,10 +26,10 @@ Automations are trigger wrappers. They do not contain execution logic.
 automation.toml schedule
       |
       v
-software-factory trigger fire <trigger-id>
+software-factory trigger fire --trigger-id <trigger-id>
       |
       v
-software-factory operation run <operation-id>
+software-factory operation run --operation-id <operation-id>
       |
       v
 strategy + skill execution (playbook source of truth)

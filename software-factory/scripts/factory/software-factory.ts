@@ -2,7 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { Args, Command, Options } from "@effect/cli";
+import { Command, Options } from "@effect/cli";
 import { NodeContext } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -85,6 +85,17 @@ const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
 const PLANNER_MODEL = "gpt-5.3-codex";
 const PLANNER_THINKING = "xhigh";
 const CODEX_DANGEROUS_FLAG = "--dangerously-bypass-approvals-and-sandbox";
+const ROOT_COMMAND_NAMES = new Set([
+  "skills",
+  "workflows",
+  "workflow-memory",
+  "scenario",
+  "scripts",
+  "spec",
+  "operation",
+  "trigger",
+  "doctor",
+]);
 const ROOT_DESCRIPTION = [
   "Software Factory execution control plane.",
   "Terms are strict: Trigger -> Operation -> Strategy -> Skills.",
@@ -798,11 +809,11 @@ const effectFromPromise = (run: () => Promise<void>): Effect.Effect<void, Error>
     catch: (error) => (error instanceof Error ? error : new Error(String(error))),
   });
 
-const operationIdArg = Args.text({ name: "operation-id" }).pipe(
-  Args.withDescription("Registered operation id."),
+const operationIdOption = Options.text("operation-id").pipe(
+  Options.withDescription("Registered operation id."),
 );
-const triggerIdArg = Args.text({ name: "trigger-id" }).pipe(
-  Args.withDescription("Registered trigger id."),
+const triggerIdOption = Options.text("trigger-id").pipe(
+  Options.withDescription("Registered trigger id."),
 );
 
 const dryRunOption = Options.boolean("dry-run").pipe(
@@ -1107,7 +1118,7 @@ const operationListCommand = Command.make(
 const operationExplainCommand = Command.make(
   "explain",
   {
-    operation_id: operationIdArg,
+    operation_id: operationIdOption,
     json: jsonOption,
   },
   ({ operation_id, json }) => effectFromPromise(() => explainOperation(operation_id, json)),
@@ -1116,7 +1127,7 @@ const operationExplainCommand = Command.make(
 const operationRunCommand = Command.make(
   "run",
   {
-    operation_id: operationIdArg,
+    operation_id: operationIdOption,
     issue: issueOption,
     model: modelOption,
     thinking: thinkingOption,
@@ -1166,7 +1177,7 @@ const triggerListCommand = Command.make(
 const triggerExplainCommand = Command.make(
   "explain",
   {
-    trigger_id: triggerIdArg,
+    trigger_id: triggerIdOption,
     json: jsonOption,
   },
   ({ trigger_id, json }) => effectFromPromise(() => explainTrigger(trigger_id, json)),
@@ -1175,7 +1186,7 @@ const triggerExplainCommand = Command.make(
 const triggerFireCommand = Command.make(
   "fire",
   {
-    trigger_id: triggerIdArg,
+    trigger_id: triggerIdOption,
     issue: issueOption,
     model: modelOption,
     thinking: thinkingOption,
@@ -1246,8 +1257,22 @@ const app = Command.run(cli, {
   version: "0.0.1",
 });
 
+const validateTopLevelCommand = (argv: string[]): void => {
+  const firstToken = argv[2];
+  if (!firstToken || firstToken.startsWith("-")) {
+    return;
+  }
+
+  if (!ROOT_COMMAND_NAMES.has(firstToken)) {
+    throw new Error(
+      `Unknown command: ${firstToken}. Run 'pnpm software-factory --help' for available commands.`,
+    );
+  }
+};
+
 const main = async (): Promise<void> => {
   const args = process.argv.length <= 2 ? [...process.argv, "--help"] : process.argv;
+  validateTopLevelCommand(args);
   await Effect.runPromise(app(args).pipe(Effect.provide(NodeContext.layer)));
 };
 

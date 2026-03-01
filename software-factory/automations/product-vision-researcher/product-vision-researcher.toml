@@ -4,7 +4,7 @@ name = "Product Vision Researcher"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory trigger fire product-vision-researcher`
+`pnpm software-factory trigger fire --trigger-id product-vision-researcher`
 
 Contract:
 - This wrapper is trigger-only.
