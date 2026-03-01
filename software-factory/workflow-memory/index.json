@@ -414,6 +414,37 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-orphaned-telem",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: docs-and-guardrail-drift — orphaned telemetry guardrail test coverage and malformed research log links",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:docs-and-guardrail-drift",
+      "tool:gh",
+      "tool:pnpm",
+      "tool:rg",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-frontend-react-tanstack-router-query-sh",
     "date": "2026-03-01",
     "month": "2026-03",
