@@ -46,6 +46,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-executor-256-global-mutationcache-onerror",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #256: global mutation fallback errors",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:256",
+      "pr:283",
+      "skill:feature-delivery",
+      "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
