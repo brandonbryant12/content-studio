@@ -19,7 +19,6 @@ export class GoogleApiError extends Error {
   readonly retryAfter?: number;
   readonly body?: string;
   readonly details?: GoogleApiErrorDetails;
-  override cause?: unknown;
 
   constructor(message: string, info: GoogleApiErrorInfo = {}) {
     super(message);
@@ -29,7 +28,10 @@ export class GoogleApiError extends Error {
     this.retryAfter = info.retryAfter;
     this.body = info.body;
     this.details = info.details;
-    this.cause = info.cause;
+    if (info.cause !== undefined) {
+      // Keep compatible with TS configs where Error.cause may or may not exist.
+      (this as Error & { cause?: unknown }).cause = info.cause;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
+import { useMemo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import {
   VOICES,
@@ -8,6 +9,10 @@ import {
   MAX_DURATION,
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
+import {
+  INSTRUCTION_CHAR_LIMIT,
+  INSTRUCTION_PRESETS,
+} from '../../lib/instruction-presets';
 import { PersonaPicker } from './persona-picker';
 import { useVoicePreviewController } from '@/shared/hooks';
 
@@ -173,6 +178,28 @@ export function PodcastSettings({
   const isConversation = podcast.format === 'conversation';
   const { playingVoiceId, previewUrls, togglePreview } =
     useVoicePreviewController();
+  const activePreset = useMemo(() => {
+    const matchingPreset = INSTRUCTION_PRESETS.find(
+      (preset) => preset.value === settings.instructions,
+    );
+    return matchingPreset?.label ?? null;
+  }, [settings.instructions]);
+
+  const handlePresetClick = (
+    preset: (typeof INSTRUCTION_PRESETS)[number],
+  ) => {
+    if (activePreset === preset.label) {
+      settings.setInstructions('');
+      return;
+    }
+
+    settings.setInstructions(preset.value);
+  };
+
+  const handleInstructionsChange = (value: string) => {
+    const nextValue = value.slice(0, INSTRUCTION_CHAR_LIMIT);
+    settings.setInstructions(nextValue);
+  };
 
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
@@ -316,14 +343,30 @@ export function PodcastSettings({
 
       <div className="mixer-notes">
         <span className="mixer-notes-label">Custom Instructions</span>
+        <div className="setup-preset-group mt-2">
+          {INSTRUCTION_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => handlePresetClick(preset)}
+              className={`setup-preset-btn ${activePreset === preset.label ? 'active' : ''}`}
+              disabled={disabled}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
         <textarea
           value={settings.instructions}
-          onChange={(e) => settings.setInstructions(e.target.value)}
+          onChange={(e) => handleInstructionsChange(e.target.value)}
           disabled={disabled}
           placeholder="Add specific instructions for the AI..."
           className="mixer-notes-textarea"
           aria-label="Custom instructions"
         />
+        <p className="setup-char-count">
+          {settings.instructions.length} / {INSTRUCTION_CHAR_LIMIT}
+        </p>
       </div>
     </div>
   );

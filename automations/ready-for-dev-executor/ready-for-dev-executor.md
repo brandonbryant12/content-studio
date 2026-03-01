@@ -76,6 +76,7 @@ Runtime preflight for code tasks:
 2) Shell + Node runtime: run toolchain checks through interactive login zsh and require Node >= 22.10.0:
   - `zsh -lic 'cd "$PWD" && node -v && pnpm -v && npm -v'`
   - run all remaining Node/pnpm preflight and gate commands through the same `zsh -lic` pattern in this run (do not hardcode Homebrew/corepack shim paths)
+  - when inside dedicated worktree execution, run commands as `zsh -lic 'cd "$WORKTREE_DIR" && <command>'`; do not hand-type absolute worktree paths
   - if check fails, capture diagnostics and stop: `echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`
 3) Workspace bootstrap fast-path: run `zsh -lic 'cd "$PWD" && pnpm install --frozen-lockfile --prefer-offline'`. If it fails due to transient network/DNS errors (for example `ENOTFOUND`, `EAI_AGAIN`, `ECONNRESET`, `ETIMEDOUT`), run recovery before stopping:
   - confirm registry settings: `npm config get registry` and `pnpm config get registry`
@@ -83,12 +84,13 @@ Runtime preflight for code tasks:
   - if still failing, retry with `npm_config_registry=https://registry.npmjs.com pnpm install --frozen-lockfile`
   - if dependency-state corruption is indicated, remove node_modules once and retry install
   - if still failing, capture diagnostics and stop: `node -v`, `pnpm -v`, `npm -v`, `nslookup registry.npmjs.org`, `curl -I https://registry.npmjs.org/`
-4) Container runtime fast-path: run `docker info --format '{{.ServerVersion}}'`. If it fails (especially permission denied on `/var/run/docker.sock`), run this recovery sequence before stopping:
+4) Container runtime fast-path: run `docker info >/dev/null`. If it fails (especially permission denied on `/var/run/docker.sock`), run this recovery sequence before stopping:
   - `docker context ls`
-  - if available, `docker context use desktop-linux`, then retry `docker info`
-  - if still failing, `export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`, then retry `docker info`
-  - if still failing, `export DOCKER_HOST=unix:///var/run/docker.sock`, then retry `docker info`
-  - if still failing, capture diagnostics and stop: `whoami`, `id`, `docker context ls`, `ls -l /var/run/docker.sock`, `ls -l $HOME/.docker/run/docker.sock`
+  - if available, `docker context use desktop-linux`, then retry `docker info >/dev/null`
+  - if still failing, `export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`, then retry `docker info >/dev/null`
+  - if still failing, `export DOCKER_HOST=unix:///var/run/docker.sock`, then retry `docker info >/dev/null`
+  - if still failing, capture diagnostics: `whoami`, `id`, `docker context ls`, `ls -l /var/run/docker.sock`, `ls -l $HOME/.docker/run/docker.sock`
+  - continue only for issue scopes that do not require Docker services (for example, pure frontend/client/cache changes); otherwise stop and report blocker
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
   - treat dirty workflow-memory paths as expected automation artifacts, not blockers:
@@ -107,6 +109,7 @@ Branching and implementation contract:
   - `WORKTREE_DIR="$REPO_ROOT/.codex-worktrees/ready-for-dev-<primary-issue-number>-$RUN_TS"`
   - `mkdir -p "$REPO_ROOT/.codex-worktrees"`
   - `git worktree add -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" origin/main`
+  - `export WORKTREE_BRANCH WORKTREE_DIR`
   - `cd "$WORKTREE_DIR"`
 - Implement the selected issue set and any conservatively bundled related issues only in `"$WORKTREE_DIR"`.
 - Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.

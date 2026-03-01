@@ -10,13 +10,19 @@ import { useScriptEditor } from '../hooks/use-script-editor';
 import { isSetupMode } from '../lib/status';
 import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { render } from '@/test-utils';
+import { act, render, waitFor } from '@/test-utils';
 
-const { podcastDetailSpy, downloadFromUrlSpy, downloadTextFileSpy } =
+const {
+  podcastDetailSpy,
+  downloadFromUrlSpy,
+  downloadTextFileSpy,
+  confirmationDialogSpy,
+} =
   vi.hoisted(() => ({
     podcastDetailSpy: vi.fn(),
     downloadFromUrlSpy: vi.fn(),
     downloadTextFileSpy: vi.fn(),
+    confirmationDialogSpy: vi.fn(),
   }));
 
 vi.mock('../hooks/use-podcast', () => ({
@@ -58,6 +64,13 @@ vi.mock('../components/setup-wizard-container', () => ({
   SetupWizardContainer: () => <div data-testid="setup-wizard" />,
 }));
 
+vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
+  ConfirmationDialog: (props: Record<string, unknown>) => {
+    confirmationDialogSpy(props);
+    return null;
+  },
+}));
+
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
   useNavigationBlock: vi.fn(),
@@ -87,6 +100,7 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
     isGenerating: false,
     isPendingGeneration: false,
     isDeleting: false,
+    needsFullRegeneration: false,
     handleSave: vi.fn(),
     handleGenerate: vi.fn(),
     handleDelete: vi.fn(),
@@ -252,5 +266,54 @@ describe('PodcastDetailContainer', () => {
       'test-podcast-script-20260220.md',
       'text/markdown;charset=utf-8',
     );
+  });
+
+  it('opens confirmation dialog before full regeneration save', async () => {
+    const handleSave = vi.fn();
+    vi.mocked(usePodcastActions).mockReturnValue(
+      createMockActions({
+        needsFullRegeneration: true,
+        hasAnyChanges: true,
+        handleSave,
+      }) as never,
+    );
+
+    render(<PodcastDetailContainer podcastId="podcast-1" />);
+
+    const props = getLastPodcastDetailProps<{ onSave?: () => void }>();
+    act(() => {
+      props?.onSave?.();
+    });
+
+    expect(handleSave).not.toHaveBeenCalled();
+
+    await waitFor(() => {
+      const confirmationCall =
+        confirmationDialogSpy.mock.calls[
+          confirmationDialogSpy.mock.calls.length - 1
+        ]?.[0] as
+          | {
+              open?: boolean;
+              title?: string;
+              onConfirm?: () => void;
+            }
+          | undefined;
+      expect(confirmationCall?.open).toBe(true);
+    });
+
+    const confirmationCall =
+      confirmationDialogSpy.mock.calls[
+        confirmationDialogSpy.mock.calls.length - 1
+      ]?.[0] as
+        | {
+            open?: boolean;
+            title?: string;
+            onConfirm?: () => void;
+          }
+        | undefined;
+
+    expect(confirmationCall?.title).toBe('Regenerate podcast from scratch?');
+    confirmationCall?.onConfirm?.();
+    expect(handleSave).toHaveBeenCalledTimes(1);
   });
 });

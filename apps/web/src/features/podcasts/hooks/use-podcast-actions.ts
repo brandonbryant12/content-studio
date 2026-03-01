@@ -20,6 +20,7 @@ interface UsePodcastActionsReturn {
   isGenerating: boolean;
   isPendingGeneration: boolean;
   isDeleting: boolean;
+  needsFullRegeneration: boolean;
   handleSave: () => Promise<void>;
   handleGenerate: () => void;
   handleDelete: () => void;
@@ -74,6 +75,8 @@ export function usePodcastActions({
   const isPendingGeneration = generateMutation.isPending;
   const isSaving = saveChangesMutation.isPending || updateMutation.isPending;
   const isDeleting = deleteMutation.isPending;
+  const needsFullRegeneration =
+    documentSelection.hasChanges || settings.hasScriptSettingsChanges;
 
   // Combined save handler for script, voice, and document changes
   const handleSave = useCallback(async () => {
@@ -86,7 +89,7 @@ export function usePodcastActions({
     }
 
     // If documents or script-affecting settings changed, we need full regeneration (script + audio)
-    if (documentSelection.hasChanges || settings.hasScriptSettingsChanges) {
+    if (needsFullRegeneration) {
       try {
         // First, save documents and any settings changes
         await updateMutation.mutateAsync({
@@ -149,6 +152,7 @@ export function usePodcastActions({
     saveChangesMutation,
     updateMutation,
     generateMutation,
+    needsFullRegeneration,
   ]);
 
   const handleGenerate = useCallback(() => {
@@ -165,6 +169,7 @@ export function usePodcastActions({
     isGenerating: isGenerating || isPendingGeneration,
     isPendingGeneration,
     isDeleting,
+    needsFullRegeneration,
     handleSave,
     handleGenerate,
     handleDelete,

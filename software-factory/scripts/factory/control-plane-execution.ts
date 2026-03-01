@@ -46,6 +46,37 @@ type ReadyForDevPlan = {
 type OperationExecutionError = CliInputError | ExternalToolError | PolicyViolationError;
 type OperationExecutionEnv = CliProcess | CliConsole | CliConfig;
 
+const DEFAULT_CODEX_PLAYBOOK_TIMEOUT_MS = 90 * 60 * 1000;
+const DEFAULT_READY_FOR_DEV_PLANNER_TIMEOUT_MS = 10 * 60 * 1000;
+const DEFAULT_READY_FOR_DEV_EXECUTOR_TIMEOUT_MS = 90 * 60 * 1000;
+
+const parseTimeoutOverride = (raw: string | undefined): number | undefined => {
+  if (raw === undefined || raw.trim().length === 0) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+  return parsed;
+};
+
+const resolveTimeoutMs = (envKey: string, fallbackMs: number): number =>
+  parseTimeoutOverride(process.env[envKey]) ?? fallbackMs;
+
+const CODEX_PLAYBOOK_TIMEOUT_MS = resolveTimeoutMs(
+  "SOFTWARE_FACTORY_CODEX_PLAYBOOK_TIMEOUT_MS",
+  DEFAULT_CODEX_PLAYBOOK_TIMEOUT_MS,
+);
+const READY_FOR_DEV_PLANNER_TIMEOUT_MS = resolveTimeoutMs(
+  "SOFTWARE_FACTORY_READY_FOR_DEV_PLANNER_TIMEOUT_MS",
+  DEFAULT_READY_FOR_DEV_PLANNER_TIMEOUT_MS,
+);
+const READY_FOR_DEV_EXECUTOR_TIMEOUT_MS = resolveTimeoutMs(
+  "SOFTWARE_FACTORY_READY_FOR_DEV_EXECUTOR_TIMEOUT_MS",
+  DEFAULT_READY_FOR_DEV_EXECUTOR_TIMEOUT_MS,
+);
+
 const readArg = (args: OperationRunArgs, key: string): string | number | boolean | undefined =>
   Object.prototype.hasOwnProperty.call(args, key) ? args[key] : undefined;
 
@@ -419,6 +450,7 @@ const runCodexPlaybook = (
       cwd: config.cwd,
       input: prompt,
       allowFailure: true,
+      timeoutMs: CODEX_PLAYBOOK_TIMEOUT_MS,
     }).pipe(
       Effect.mapError(
         (error) =>
@@ -519,6 +551,7 @@ const runReadyForDevRouter = (
       cwd: config.cwd,
       input: plannerPrompt,
       allowFailure: true,
+      timeoutMs: READY_FOR_DEV_PLANNER_TIMEOUT_MS,
     }).pipe(
       Effect.mapError(
         (error) =>
@@ -634,6 +667,7 @@ const runReadyForDevRouter = (
       cwd: config.cwd,
       input: prompt,
       allowFailure: true,
+      timeoutMs: READY_FOR_DEV_EXECUTOR_TIMEOUT_MS,
     }).pipe(
       Effect.mapError(
         (error) =>

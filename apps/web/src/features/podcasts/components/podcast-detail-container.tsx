@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useMemo } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { useDocumentSelection } from '../hooks/use-document-selection';
@@ -13,6 +13,7 @@ import {
 import { isSetupMode } from '../lib/status';
 import { PodcastDetail } from './podcast-detail';
 import { SetupWizardContainer } from './setup-wizard-container';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
@@ -72,13 +73,6 @@ export function PodcastDetailContainer({
 
   const isAdmin = useIsAdmin();
   const isApproved = podcast.approvedBy !== null;
-
-  useKeyboardShortcut({
-    key: 's',
-    cmdOrCtrl: true,
-    onTrigger: actions.handleSave,
-    enabled: actions.hasAnyChanges,
-  });
 
   useNavigationBlock({
     shouldBlock: actions.hasAnyChanges && !actions.isGenerating,
@@ -164,6 +158,32 @@ export function PodcastDetailContainer({
     }
   }, [podcast.summary, podcast.title, scriptEditor.segments]);
 
+  const [fullRegenerationConfirmOpen, setFullRegenerationConfirmOpen] =
+    useState(false);
+  const regenerationConfirmationDescription = documentSelection.hasChanges
+    ? 'This will regenerate your podcast script from scratch. Your current script edits will be replaced. New source documents will be used to generate a fresh script and audio.'
+    : 'This will regenerate your podcast script from scratch. Your current script edits will be replaced.';
+
+  const handleSave = useCallback(() => {
+    if (actions.needsFullRegeneration) {
+      setFullRegenerationConfirmOpen(true);
+      return;
+    }
+    void actions.handleSave();
+  }, [actions]);
+
+  const handleConfirmFullRegeneration = useCallback(() => {
+    setFullRegenerationConfirmOpen(false);
+    void actions.handleSave();
+  }, [actions]);
+
+  useKeyboardShortcut({
+    key: 's',
+    cmdOrCtrl: true,
+    onTrigger: handleSave,
+    enabled: actions.hasAnyChanges,
+  });
+
   if (isSetupMode(podcast)) {
     return (
       <Suspense fallback={null}>
@@ -173,24 +193,36 @@ export function PodcastDetailContainer({
   }
 
   return (
-    <PodcastDetail
-      podcast={podcast}
-      scriptEditor={scriptEditor}
-      settings={settings}
-      documentSelection={documentSelection}
-      displayAudio={displayAudio}
-      workbenchState={workbenchState}
-      approvalState={approvalState}
-      onSave={actions.handleSave}
-      onGenerate={actions.handleGenerate}
-      onDelete={actions.handleDelete}
-      onApprove={() => approve.mutate({ id: podcastId })}
-      onRevoke={() => revoke.mutate({ id: podcastId })}
-      canExportAudio={canExportAudio}
-      canExportScript={canExportScript}
-      onExportAudio={handleExportAudio}
-      onExportScript={handleExportScript}
-      onCopyTranscript={handleCopyTranscript}
-    />
+    <>
+      <PodcastDetail
+        podcast={podcast}
+        scriptEditor={scriptEditor}
+        settings={settings}
+        documentSelection={documentSelection}
+        displayAudio={displayAudio}
+        workbenchState={workbenchState}
+        approvalState={approvalState}
+        onSave={handleSave}
+        onGenerate={actions.handleGenerate}
+        onDelete={actions.handleDelete}
+        onApprove={() => approve.mutate({ id: podcastId })}
+        onRevoke={() => revoke.mutate({ id: podcastId })}
+        canExportAudio={canExportAudio}
+        canExportScript={canExportScript}
+        onExportAudio={handleExportAudio}
+        onExportScript={handleExportScript}
+        onCopyTranscript={handleCopyTranscript}
+      />
+      <ConfirmationDialog
+        open={fullRegenerationConfirmOpen}
+        onOpenChange={setFullRegenerationConfirmOpen}
+        title="Regenerate podcast from scratch?"
+        description={regenerationConfirmationDescription}
+        confirmText="Regenerate"
+        variant="destructive"
+        isLoading={actions.isSaving}
+        onConfirm={handleConfirmFullRegeneration}
+      />
+    </>
   );
 }
