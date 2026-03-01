@@ -557,6 +557,38 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-product-owner-reviewer-approval-review-retry-loops-and-state-com",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: approval/review/retry loops and state communication — document retry state sync, safe failure messaging parity, voiceover status icon semantics",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:micro",
+      "trajectory:domain:approval-review-retry",
+      "tool:gh",
+      "tool:rg",
+      "tool:sed",
+      "tool:node",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.89,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-product-owner-reviewer-podcast-create-edit-generate-flow-discard",
     "date": "2026-03-01",
     "month": "2026-03",
