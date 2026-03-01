@@ -3,6 +3,7 @@ import {
   useQuery,
   type UseSuspenseQueryResult,
   type UseQueryResult,
+  type QueryKey,
 } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
@@ -20,6 +21,15 @@ export function useDocument(
   return useSuspenseQuery(
     apiClient.documents.get.queryOptions({ input: { id } }),
   );
+}
+
+/**
+ * Get the query key for a document.
+ * Useful for cache operations.
+ */
+export function getDocumentQueryKey(documentId: string): QueryKey {
+  return apiClient.documents.get.queryOptions({ input: { id: documentId } })
+    .queryKey;
 }
 
 /**

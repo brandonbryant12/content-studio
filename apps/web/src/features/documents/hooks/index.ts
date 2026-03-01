@@ -1,4 +1,10 @@
 export {
+  useDocument,
+  useDocumentContentOptional,
+  getDocumentQueryKey,
+} from './use-document';
+
+export {
   useDocumentList,
   useDocuments,
   getDocumentListQueryKey,

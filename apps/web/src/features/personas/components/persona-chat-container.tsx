@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
+import type { PersonaSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { usePersonaChat } from '../hooks/use-persona-chat';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
 import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
-import type { PersonaSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { PersonaChatDialog } from './persona-chat-dialog';
 
 interface PersonaChatContainerProps {
