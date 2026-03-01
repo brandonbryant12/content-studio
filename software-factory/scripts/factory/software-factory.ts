@@ -7,8 +7,8 @@ import { runScript } from "../lib/effect-script";
 
 type Runner =
   | {
-      type: "shell-script";
-      script: string;
+      type: "ready-for-dev-router";
+      playbookPath: string;
     }
   | {
       type: "codex-playbook";
@@ -46,9 +46,22 @@ type Parsed = {
   flags: Record<string, string>;
 };
 
+type GhIssueLabel = {
+  name: string;
+};
+
+type GhIssueView = {
+  number: number;
+  title: string;
+  url: string;
+  state: string;
+  labels: GhIssueLabel[];
+};
+
 const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
 const TRIGGERS_PATH = path.join("software-factory", "triggers", "registry.json");
 const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
+const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
 
 const USAGE = `software-factory
 
@@ -113,43 +126,6 @@ const ensureThinking = (value: string | undefined, fallback: string): string => 
   return resolved;
 };
 
-const runShellScript = (
-  operation: Operation,
-  options: Record<string, string>,
-): number => {
-  const runner = operation.runner;
-  if (runner.type !== "shell-script") {
-    throw new Error(`Operation ${operation.id} is not configured for shell-script runner.`);
-  }
-
-  const scriptArgs: string[] = [];
-  if (options.issue) {
-    scriptArgs.push("--issue", options.issue);
-  }
-  if (options.model) {
-    scriptArgs.push("--model", options.model);
-  }
-  if (options.thinking) {
-    scriptArgs.push("--thinking", options.thinking);
-  }
-  if (asBool(options.dry_run)) {
-    scriptArgs.push("--dry-run");
-  }
-
-  const absoluteScript = path.join(process.cwd(), runner.script);
-  if (asBool(options.dry_run)) {
-    console.log(`script: ${runner.script}`);
-    console.log(`command: bash ${runner.script} ${scriptArgs.join(" ")}`.trim());
-    return 0;
-  }
-
-  const result = spawnSync("bash", [absoluteScript, ...scriptArgs], {
-    stdio: "inherit",
-    cwd: process.cwd(),
-  });
-  return result.status ?? 1;
-};
-
 const runCodexPlaybook = (
   operation: Operation,
   options: Record<string, string>,
@@ -204,6 +180,182 @@ const runCodexPlaybook = (
   return result.status ?? 1;
 };
 
+const runGhJson = <T>(args: string[], errorContext: string): T => {
+  const result = spawnSync("gh", args, {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+  if ((result.status ?? 1) !== 0) {
+    const details = (result.stderr || result.stdout || "").trim();
+    throw new Error(`${errorContext}. ${details}`);
+  }
+
+  const stdout = (result.stdout || "").trim();
+  if (!stdout) {
+    throw new Error(`${errorContext}. Empty response from gh.`);
+  }
+  return JSON.parse(stdout) as T;
+};
+
+const resolveReadyForDevIssueNumber = (options: Record<string, string>): string | null => {
+  const explicitIssue = options.issue?.trim();
+  if (explicitIssue) {
+    return explicitIssue;
+  }
+
+  const result = spawnSync(
+    "gh",
+    [
+      "issue",
+      "list",
+      "--state",
+      "open",
+      "--label",
+      "ready-for-dev",
+      "--limit",
+      "200",
+      "--json",
+      "number",
+      "--jq",
+      "sort_by(.number) | .[0].number // empty",
+    ],
+    {
+      cwd: process.cwd(),
+      encoding: "utf8",
+    },
+  );
+
+  if ((result.status ?? 1) !== 0) {
+    const details = (result.stderr || result.stdout || "").trim();
+    throw new Error(`Failed to select ready-for-dev issue. ${details}`);
+  }
+
+  const issueNumber = (result.stdout || "").trim();
+  return issueNumber || null;
+};
+
+const resolveReadyForDevModel = (
+  operation: Operation,
+  issue: GhIssueView,
+  options: Record<string, string>,
+): { model: string; thinking: string } => {
+  const labels = issue.labels ?? [];
+  const modelLabels = labels
+    .map((label) => label.name)
+    .filter((name) => name.startsWith("model:"));
+  const thinkingLabels = labels
+    .map((label) => label.name)
+    .filter((name) => name.startsWith("thinking:"));
+
+  if (modelLabels.length > 1) {
+    throw new Error(
+      `Issue #${issue.number} has multiple model labels: ${modelLabels.join(", ")}.`,
+    );
+  }
+  if (thinkingLabels.length > 1) {
+    throw new Error(
+      `Issue #${issue.number} has multiple thinking labels: ${thinkingLabels.join(", ")}.`,
+    );
+  }
+
+  const modelFromLabel = modelLabels[0]?.replace(/^model:/, "").trim();
+  const thinkingFromLabel = thinkingLabels[0]?.replace(/^thinking:/, "").trim();
+
+  const model = (options.model?.trim() || modelFromLabel || operation.defaultModel).trim();
+  const thinking = ensureThinking(options.thinking, thinkingFromLabel || operation.defaultThinking);
+
+  if (!VALID_MODELS.has(model)) {
+    throw new Error(
+      `Unsupported model value: ${model}. Expected ${Array.from(VALID_MODELS).join(" | ")}.`,
+    );
+  }
+
+  return { model, thinking };
+};
+
+const runReadyForDevRouter = (
+  operation: Operation,
+  options: Record<string, string>,
+): number => {
+  const runner = operation.runner;
+  if (runner.type !== "ready-for-dev-router") {
+    throw new Error(
+      `Operation ${operation.id} is not configured for ready-for-dev-router runner.`,
+    );
+  }
+
+  const issueNumber = resolveReadyForDevIssueNumber(options);
+  if (!issueNumber) {
+    console.log("No open issues with label ready-for-dev.");
+    return 0;
+  }
+
+  const issue = runGhJson<GhIssueView>(
+    [
+      "issue",
+      "view",
+      issueNumber,
+      "--json",
+      "number,title,url,state,labels",
+    ],
+    `Failed to read issue #${issueNumber}`,
+  );
+
+  if (issue.state !== "OPEN") {
+    throw new Error(`Issue #${issue.number} is not open (state=${issue.state}).`);
+  }
+
+  const { model, thinking } = resolveReadyForDevModel(operation, issue, options);
+  const prompt = [
+    `Execute one full \`ready-for-dev-executor\` run for issue #${issue.number} only.`,
+    "",
+    "Issue context:",
+    `- issue: #${issue.number}`,
+    `- title: ${issue.title}`,
+    `- url: ${issue.url}`,
+    `- model label: model:${model}`,
+    `- thinking label: thinking:${thinking}`,
+    "",
+    "Execution contract:",
+    `- Read and follow \`${runner.playbookPath}\`.`,
+    `- Treat #${issue.number} as the only actionable candidate for this run.`,
+    `- If #${issue.number} is no longer actionable, stop with a concise no-op report.`,
+    "- Complete implementation + validation + delivery workflow exactly as the playbook requires.",
+    "- Keep one PR max for this run.",
+    "",
+  ].join("\n");
+
+  const codexArgs = [
+    "exec",
+    "-m",
+    model,
+    "-c",
+    `model_reasoning_effort="${thinking}"`,
+    "-C",
+    process.cwd(),
+    "-",
+  ];
+
+  console.log(`Routing issue #${issue.number}`);
+  console.log(`  model:    ${model}`);
+  console.log(`  thinking: ${thinking}`);
+  console.log(`  url:      ${issue.url}`);
+
+  if (asBool(options.dry_run)) {
+    console.log("");
+    console.log("Dry run command:");
+    console.log(`  codex ${codexArgs.join(" ")}`);
+    return 0;
+  }
+
+  const result = spawnSync("codex", codexArgs, {
+    cwd: process.cwd(),
+    input: prompt,
+    stdio: ["pipe", "inherit", "inherit"],
+  });
+  return result.status ?? 1;
+};
+
 const runOperation = async (
   operationId: string,
   rawOptions: Record<string, string>,
@@ -214,10 +366,13 @@ const runOperation = async (
     throw new Error(`Unknown operation: ${operationId}`);
   }
 
-  if (operation.runner.type === "shell-script") {
-    return runShellScript(operation, rawOptions);
+  if (operation.runner.type === "ready-for-dev-router") {
+    return runReadyForDevRouter(operation, rawOptions);
   }
-  return runCodexPlaybook(operation, rawOptions);
+  if (operation.runner.type === "codex-playbook") {
+    return runCodexPlaybook(operation, rawOptions);
+  }
+  throw new Error(`Unsupported runner type for operation ${operation.id}.`);
 };
 
 const listOperations = async (json: boolean): Promise<void> => {

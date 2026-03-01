@@ -51,7 +51,7 @@
     "scenario:validate": "pnpm exec tsx software-factory/scripts/workflow-memory/replay-scenarios.ts",
     "scenario:validate:strict": "pnpm exec tsx software-factory/scripts/workflow-memory/replay-scenarios.ts --strict",
     "software-factory": "pnpm exec tsx software-factory/scripts/factory/software-factory.ts",
-    "ready-for-dev": "bash software-factory/scripts/ready-for-dev-loop.sh",
+    "ready-for-dev": "pnpm software-factory trigger fire ready-for-dev-executor",
     "scripts:lint": "pnpm exec tsx software-factory/scripts/guardrails/lint-scripts.ts",
     "typecheck": "turbo run typecheck",
     "cli": "pnpm --filter @repo/cli dev --",

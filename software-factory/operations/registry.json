@@ -35,8 +35,8 @@
         }
       ],
       "runner": {
-        "type": "shell-script",
-        "script": "software-factory/scripts/run-ready-issue.sh"
+        "type": "ready-for-dev-router",
+        "playbookPath": "software-factory/automations/ready-for-dev-executor/ready-for-dev-executor.md"
       }
     },
     {

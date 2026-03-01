@@ -21,6 +21,7 @@ Registry source of truth:
 1. `ready-for-dev-executor`
 - Purpose: implement `ready-for-dev` issues.
 - Strategy: `auto` (routed by issue complexity/surface).
+- Runner: native Effect TypeScript router (issue selection + model/thinking routing in CLI).
 - Args: `--issue`, `--dry-run`, `--model`, `--thinking`
 
 2. `issue-evaluator`
@@ -57,3 +58,4 @@ Registry source of truth:
 
 - Use `pnpm software-factory operation list` for machine-readable discovery (`--json`).
 - Use `pnpm software-factory operation run <id> --dry-run` to inspect resolved launch commands.
+- Use `pnpm software-factory operation run ready-for-dev-executor` for a single routed execution (no internal loop).

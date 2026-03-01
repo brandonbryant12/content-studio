@@ -13,7 +13,7 @@ Scope and approval:
 - Triage open GitHub issues labeled `ready-for-dev` in this repository.
 - Label-driven routing is required:
   - each candidate issue should carry exactly one `model:*` label and one `thinking:*` label
-  - use `software-factory/scripts/run-ready-issue.sh` for model/thinking-based launch when driving execution from a wrapper or shell
+  - use `pnpm software-factory operation run ready-for-dev-executor` for model/thinking-based launch routing from CLI/wrappers
   - if labels are missing, default launch settings are `model:gpt-5.3-codex` and `thinking:high`
 - This lane is the single implementation executor for issues labeled `ready-for-dev`, whether approved directly by humans or by the `issue-evaluator` lane using the repository readiness rubric.
 - Use GitHub REST-style commands for triage (`gh issue list`, `gh issue view --json`, `gh api repos/...`) and do not depend on `gh api graphql` for issue selection.
