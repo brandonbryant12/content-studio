@@ -46,6 +46,27 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-prepared-statement-coverage-completed-for-podcast-reads",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Prepared statement coverage completed for podcast reads",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "performance",
+      "repository",
+      "skill:feature-delivery",
+      "skill:intake-triage",
+      "skill:codebase-nav",
+      "skill:test-surface-steward"
+    ],
+    "importance": 0.82,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
