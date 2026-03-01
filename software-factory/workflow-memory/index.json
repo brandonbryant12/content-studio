@@ -664,6 +664,56 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-self-improvement-hardened-ready-for-dev-planner-parsing-for-label-prefixed-routin",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Hardened ready-for-dev planner parsing for label-prefixed routing tokens",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "ready-for-dev",
+      "self-improvement",
+      "workflow-memory",
+      "skill:self-improvement",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-01-self-improvement-normalized-github-routing-research-label-taxonomy-for-automation",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Normalized GitHub routing/research label taxonomy for automation lanes",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "github-labels",
+      "ready-for-dev",
+      "issue-evaluator",
+      "self-improvement",
+      "workflow-memory",
+      "skill:self-improvement",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.75,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-self-improvement-remove-trigger-command-scope-and-externalize-automations",
     "date": "2026-03-01",
     "month": "2026-03",

@@ -259,8 +259,14 @@ const parseReadyForDevPlan = (raw: string): Effect.Effect<ReadyForDevPlan, Polic
       );
     }
 
-    const model = typeof parsed.model === "string" ? parsed.model.trim() : "";
-    const thinking = typeof parsed.thinking === "string" ? parsed.thinking.trim() : "";
+    const normalizePlannerModel = (value: string): string =>
+      value.replace(/^model:/, "").trim();
+    const normalizePlannerThinking = (value: string): string =>
+      value.replace(/^thinking:/, "").trim();
+
+    const model = typeof parsed.model === "string" ? normalizePlannerModel(parsed.model) : "";
+    const thinking =
+      typeof parsed.thinking === "string" ? normalizePlannerThinking(parsed.thinking) : "";
     if (!VALID_MODELS.has(model)) {
       return yield* Effect.fail(
         new PolicyViolationError({
@@ -657,4 +663,3 @@ export const runOperation = (
     }),
   );
 };
-
