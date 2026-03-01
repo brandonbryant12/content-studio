@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-03-01-feature-delivery-aria-accessibility-fixes-chat-inputs-podcast-action-bar-list-pag",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ARIA accessibility fixes: chat inputs, podcast action bar, list pages (#259, #260, #261)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "accessibility",
+      "aria",
+      "frontend",
+      "ready-for-dev-executor",
+      "skill:codebase-nav",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.7,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-feature-delivery-migrate-packages-ui-to-unified-radix-ui-package-249",
     "date": "2026-03-01",
     "month": "2026-03",
