@@ -40,11 +40,19 @@ export type OperationRunOptions = {
   dryRun: boolean;
 };
 
-export type OperationRunInput = OperationRunOptions & {
-  operationId: string;
+export type OperationRunArgs = Record<string, string | number | boolean>;
+
+export type OperationRunInput = {
+  operation: Operation;
+  args: OperationRunArgs;
 };
 
 export const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
+export const OPERATIONS_SCHEMA_PATH = path.join(
+  "software-factory",
+  "operations",
+  "registry.schema.json",
+);
 
 export const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
 export const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);

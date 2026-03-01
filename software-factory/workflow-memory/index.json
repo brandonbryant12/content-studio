@@ -266,6 +266,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-effect-native-software-factory-cli-migration",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Effect-native software-factory CLI migration",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "software-factory",
+      "cli",
+      "effect",
+      "migration"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-feature-delivery-migrate-packages-ui-to-unified-radix-ui-package-249",
     "date": "2026-03-01",
     "month": "2026-03",

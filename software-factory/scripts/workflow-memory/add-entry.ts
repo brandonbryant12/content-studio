@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Effect } from "effect";
 import { readWorkflowRegistry } from "../workflows/registry";
+import { WorkflowMemoryError } from "../factory/cli-errors";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
@@ -51,7 +53,7 @@ export type WorkflowMemoryAddEntryOptions = {
   trigger: string;
   finding: string;
   evidence: string;
-  follow_up: string;
+  followUp: string;
   owner: string;
   status: string;
   id?: string;
@@ -60,20 +62,20 @@ export type WorkflowMemoryAddEntryOptions = {
   tags?: string;
   reflection?: string;
   feedback?: string;
-  memory_form?: string;
-  memory_function?: string;
-  memory_dynamics?: string;
+  memoryForm?: string;
+  memoryFunction?: string;
+  memoryDynamics?: string;
   capability?: string;
-  failure_mode?: string;
+  failureMode?: string;
   importance?: number;
   recency?: number;
   confidence?: number;
   source?: string;
-  scenario_skill?: string;
-  scenario_check?: string;
-  scenario_verdict?: string;
-  scenario_pattern?: string;
-  scenario_severity?: string;
+  scenarioSkill?: string;
+  scenarioCheck?: string;
+  scenarioVerdict?: string;
+  scenarioPattern?: string;
+  scenarioSeverity?: string;
 };
 
 function slug(value) {
@@ -440,7 +442,7 @@ const toAddEntryArgs = (options: WorkflowMemoryAddEntryOptions): WorkflowMemoryA
     trigger: options.trigger,
     finding: options.finding,
     evidence: options.evidence,
-    follow_up: options.follow_up,
+    follow_up: options.followUp,
     owner: options.owner,
     status: options.status,
   };
@@ -452,20 +454,20 @@ const toAddEntryArgs = (options: WorkflowMemoryAddEntryOptions): WorkflowMemoryA
     ["tags", "tags"],
     ["reflection", "reflection"],
     ["feedback", "feedback"],
-    ["memory_form", "memory_form"],
-    ["memory_function", "memory_function"],
-    ["memory_dynamics", "memory_dynamics"],
+    ["memoryForm", "memory_form"],
+    ["memoryFunction", "memory_function"],
+    ["memoryDynamics", "memory_dynamics"],
     ["capability", "capability"],
-    ["failure_mode", "failure_mode"],
+    ["failureMode", "failure_mode"],
     ["importance", "importance"],
     ["recency", "recency"],
     ["confidence", "confidence"],
     ["source", "source"],
-    ["scenario_skill", "scenario_skill"],
-    ["scenario_check", "scenario_check"],
-    ["scenario_verdict", "scenario_verdict"],
-    ["scenario_pattern", "scenario_pattern"],
-    ["scenario_severity", "scenario_severity"],
+    ["scenarioSkill", "scenario_skill"],
+    ["scenarioCheck", "scenario_check"],
+    ["scenarioVerdict", "scenario_verdict"],
+    ["scenarioPattern", "scenario_pattern"],
+    ["scenarioSeverity", "scenario_severity"],
   ];
 
   for (const [sourceKey, targetKey] of optionalValues) {
@@ -531,8 +533,20 @@ const runWorkflowMemoryAddEntryFromArgs = async (
   return 0;
 };
 
-export const runWorkflowMemoryAddEntry = async (
+const runWorkflowMemoryAddEntryPromise = async (
   options: WorkflowMemoryAddEntryOptions,
 ): Promise<number> => {
   return await runWorkflowMemoryAddEntryFromArgs(toAddEntryArgs(options));
 };
+
+export const runWorkflowMemoryAddEntry = (
+  options: WorkflowMemoryAddEntryOptions,
+): Effect.Effect<number, WorkflowMemoryError> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemoryAddEntryPromise(options),
+    catch: (error) =>
+      new WorkflowMemoryError({
+        command: "workflow-memory:add-entry",
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+  });

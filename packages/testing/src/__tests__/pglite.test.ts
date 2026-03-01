@@ -1,7 +1,4 @@
-import {
-  user as userTable,
-  document as documentTable,
-} from '@repo/db/schema';
+import { user as userTable, document as documentTable } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it } from 'vitest';
 

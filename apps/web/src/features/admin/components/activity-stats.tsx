@@ -6,11 +6,7 @@ import {
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@repo/ui/components/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import type { Period, StatBreakdown } from '../types';
 import type { ComponentType } from 'react';
 
@@ -85,7 +81,10 @@ export function ActivityStats({
           value={period}
           onValueChange={(value) => onPeriodChange(value as Period)}
         >
-          <TabsList className="flex gap-1 h-auto p-0 bg-transparent" aria-label="Time period">
+          <TabsList
+            className="flex gap-1 h-auto p-0 bg-transparent"
+            aria-label="Time period"
+          >
             {PERIODS.map((p) => (
               <TabsTrigger
                 key={p.value}

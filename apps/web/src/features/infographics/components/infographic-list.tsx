@@ -187,7 +187,9 @@ export function InfographicList({
           className={`card-grid transition-opacity ${isPending ? 'opacity-70' : ''}`}
         >
           <div role="status" aria-live="polite" className="sr-only">
-            {filteredInfographics.length} {filteredInfographics.length === 1 ? 'infographic' : 'infographics'} found
+            {filteredInfographics.length}{' '}
+            {filteredInfographics.length === 1 ? 'infographic' : 'infographics'}{' '}
+            found
           </div>
           {filteredInfographics.map((infographic) => (
             <InfographicItem

@@ -363,7 +363,8 @@ export function VoiceoverList({
           aria-busy={isPending}
         >
           <div role="status" aria-live="polite" className="sr-only">
-            {filteredVoiceovers.length} {filteredVoiceovers.length === 1 ? 'voiceover' : 'voiceovers'} found
+            {filteredVoiceovers.length}{' '}
+            {filteredVoiceovers.length === 1 ? 'voiceover' : 'voiceovers'} found
           </div>
           <table className="w-full" aria-label="Voiceovers">
             <thead>

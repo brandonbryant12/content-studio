@@ -1,5 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Effect } from "effect";
+import { WorkflowMemoryError } from "../factory/cli-errors";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const EVENTS_DIR = path.join(MEMORY_DIR, "events");
@@ -118,7 +120,7 @@ async function validateFixture(scenarioId) {
   return { fixturePath, errors, status };
 }
 
-export const runWorkflowMemoryValidateScenarios = async ({
+const runWorkflowMemoryValidateScenariosPromise = async ({
   skill,
   check,
   id,
@@ -245,3 +247,15 @@ export const runWorkflowMemoryValidateScenarios = async ({
 
   return strict && invalid > 0 ? 1 : 0;
 };
+
+export const runWorkflowMemoryValidateScenarios = (
+  options: WorkflowMemoryValidateScenariosOptions,
+): Effect.Effect<number, WorkflowMemoryError> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemoryValidateScenariosPromise(options),
+    catch: (error) =>
+      new WorkflowMemoryError({
+        command: "workflow-memory:validate-scenarios",
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+  });

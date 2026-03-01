@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from "effect";
 import {
   runWorkflowMemoryPreflight,
 } from '../guardrails/workflow-memory-preflight';
@@ -20,14 +21,14 @@ describe('workflow-memory preflight', () => {
         stderr: 'ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "tsx" not found',
       });
 
-    const exitCode = await runWorkflowMemoryPreflight({
+    const exitCode = await Effect.runPromise(runWorkflowMemoryPreflight({
       bootstrap: false,
       cwd: '/tmp/repo',
       memoryPath: 'software-factory/workflow-memory',
       logger: (line) => logs.push(line),
       errorLogger: (line) => errors.push(line),
       commandRunner,
-    });
+    }));
 
     expect(exitCode).toBe(1);
     expect(commandRunner).toHaveBeenCalledTimes(1);
@@ -52,14 +53,14 @@ describe('workflow-memory preflight', () => {
         stdout: 'tsx 4.20.6',
       }));
 
-    const exitCode = await runWorkflowMemoryPreflight({
+    const exitCode = await Effect.runPromise(runWorkflowMemoryPreflight({
       bootstrap: true,
       cwd: '/tmp/repo',
       memoryPath: 'software-factory/workflow-memory',
       commandRunner,
       logger: () => undefined,
       errorLogger: () => undefined,
-    });
+    }));
 
     expect(exitCode).toBe(0);
     expect(commandRunner).toHaveBeenNthCalledWith(2, '/tmp/repo', expect.any(String), [

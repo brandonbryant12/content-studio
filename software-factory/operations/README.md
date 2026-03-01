@@ -14,6 +14,7 @@ Automation -> Operation -> Strategy -> Skills -> Artifacts
 
 Registry source of truth:
 - [`software-factory/operations/registry.json`](./registry.json)
+- [`software-factory/operations/registry.schema.json`](./registry.schema.json)
 
 ## Available Operations
 
@@ -59,5 +60,6 @@ Registry source of truth:
 
 - Use `pnpm software-factory operation list` for machine-readable discovery (`--json`).
 - Use `pnpm software-factory operation explain --operation-id <id>` to inspect runner, defaults, and args.
-- Use `pnpm software-factory operation run --operation-id <id> --dry-run` to inspect resolved launch commands.
-- Use `pnpm software-factory operation run --operation-id ready-for-dev-executor` for a single routed execution (no internal loop).
+- `operation run` subcommands are generated from the registry descriptors. Adding/changing args in `registry.json` updates the CLI surface automatically.
+- Use `pnpm software-factory operation run <id> --dry-run` to inspect resolved launch commands.
+- Use `pnpm software-factory operation run ready-for-dev-executor` for a single routed execution (no internal loop).

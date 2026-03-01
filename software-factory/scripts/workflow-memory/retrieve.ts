@@ -1,5 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Effect } from "effect";
+import { WorkflowMemoryError } from "../factory/cli-errors";
 
 const MEMORY_DIR = path.join("software-factory", "workflow-memory");
 const INDEX_PATH = path.join(MEMORY_DIR, "index.json");
@@ -59,7 +61,7 @@ function computeTagMatch(rowTags, desiredTags) {
   return hits / desiredTags.length;
 }
 
-export const runWorkflowMemoryRetrieve = async ({
+const runWorkflowMemoryRetrievePromise = async ({
   workflow,
   tags,
   limit,
@@ -136,3 +138,15 @@ export const runWorkflowMemoryRetrieve = async ({
   console.log(JSON.stringify(response, null, 2));
   return 0;
 };
+
+export const runWorkflowMemoryRetrieve = (
+  options: WorkflowMemoryRetrieveOptions,
+): Effect.Effect<number, WorkflowMemoryError> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemoryRetrievePromise(options),
+    catch: (error) =>
+      new WorkflowMemoryError({
+        command: "workflow-memory:retrieve",
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+  });

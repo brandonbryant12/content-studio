@@ -10,12 +10,36 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
   'software-factory': 'pnpm exec tsx software-factory/scripts/factory/software-factory.ts',
   'test:scripts': 'vitest run --config software-factory/scripts/vitest.config.ts',
   ...REQUIRED_UTILITY_PACKAGE_SCRIPTS,
-  'ready-for-dev': 'pnpm software-factory operation run --operation-id ready-for-dev-executor',
+  'ready-for-dev': 'pnpm software-factory operation run ready-for-dev-executor',
 };
 
 const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails', 'spec'] as const;
 const RUN_SCRIPT_MAIN_RE = /^\s*runScript\(main\);\s*$/m;
 const ENTRY_EXIT_SIDE_EFFECT_RE = /\bprocess\.exitCode\s*=/;
+const ROOT_ENTRY_SCRIPT = 'software-factory/scripts/factory/software-factory.ts';
+const EFFECT_RUN_PROMISE_ALLOWLIST = new Set<string>([
+  ROOT_ENTRY_SCRIPT,
+  'software-factory/scripts/lib/command.ts',
+  'software-factory/scripts/lib/effect-script.ts',
+]);
+const THROW_NEW_ERROR_ALLOWLIST = new Set<string>([
+  'software-factory/scripts/workflow-memory/add-entry.ts',
+  'software-factory/scripts/workflow-memory/check-coverage.ts',
+  'software-factory/scripts/workflow-memory/compact-memory.ts',
+  'software-factory/scripts/workflow-memory/sync-git.ts',
+  'software-factory/scripts/workflows/registry.ts',
+  'software-factory/scripts/workflows/generate-readme.ts',
+  'software-factory/scripts/skills/check-quality.ts',
+  'software-factory/scripts/spec/utils.ts',
+]);
+const COMMAND_SERVICE_DIRECTORIES = [
+  'software-factory/scripts/factory/',
+  'software-factory/scripts/skills/',
+  'software-factory/scripts/workflows/',
+  'software-factory/scripts/workflow-memory/',
+  'software-factory/scripts/guardrails/',
+  'software-factory/scripts/spec/',
+];
 
 export type ScriptGuardrailIssue = {
   code:
@@ -26,13 +50,17 @@ export type ScriptGuardrailIssue = {
     | 'missing-run-script-call'
     | 'entry-script-exit-side-effect'
     | 'legacy-argv-parser'
-    | 'factory-throw-new-error'
     | 'non-root-process-argv'
     | 'non-root-run-script'
     | 'untracked-entry-script'
     | 'legacy-js-script'
     | 'legacy-mjs-script'
-    | 'missing-vitest-project';
+    | 'missing-vitest-project'
+    | 'promise-first-command-service'
+    | 'command-throw-new-error'
+    | 'non-root-effect-run-promise'
+    | 'operation-registry-drift'
+    | 'utility-command-manifest-drift';
   message: string;
   path?: string;
 };
@@ -236,9 +264,22 @@ export const checkScriptGuardrails = async (
     }
   }
 
-  const ROOT_ENTRY_SCRIPT = 'software-factory/scripts/factory/software-factory.ts';
   const tsSources = await collectTypeScriptSources(rootDir);
+  const utilityManifestSource = await fs.readFile(
+    path.join(rootDir, 'software-factory/scripts/factory/utility-command-manifest.ts'),
+    'utf8',
+  );
+  const utilityHandlerSource = await fs.readFile(
+    path.join(rootDir, 'software-factory/scripts/factory/utility-command-handlers.ts'),
+    'utf8',
+  );
+  const cliSource = await fs.readFile(path.join(rootDir, ROOT_ENTRY_SCRIPT), 'utf8');
+  const operationsRegistrySource = await fs.readFile(
+    path.join(rootDir, 'software-factory/operations/registry.json'),
+    'utf8',
+  );
   for (const sourcePath of tsSources) {
+    const isTestSource = sourcePath.includes('/__tests__/');
     if (sourcePath === ROOT_ENTRY_SCRIPT) {
       continue;
     }
@@ -253,14 +294,14 @@ export const checkScriptGuardrails = async (
     }
 
     if (
-      sourcePath.startsWith('software-factory/scripts/factory/') &&
-      /\bthrow\s+new\s+Error\s*\(/.test(source)
+      COMMAND_SERVICE_DIRECTORIES.some((prefix) => sourcePath.startsWith(prefix)) &&
+      /^\s*throw\s+new\s+Error\s*\(/m.test(source) &&
+      !THROW_NEW_ERROR_ALLOWLIST.has(sourcePath)
     ) {
       issues.push({
-        code: 'factory-throw-new-error',
+        code: 'command-throw-new-error',
         path: sourcePath,
-        message:
-          'Factory command modules must use tagged domain errors, not throw new Error(...).',
+        message: 'Command modules must use tagged domain errors, not throw new Error(...).',
       });
     }
 
@@ -284,6 +325,99 @@ export const checkScriptGuardrails = async (
         path: sourcePath,
         message: 'Only software-factory/scripts/factory/software-factory.ts may call runScript(...).',
       });
+    }
+
+    if (
+      sourcePath !== ROOT_ENTRY_SCRIPT &&
+      !isTestSource &&
+      /\bEffect\.runPromise(?:Exit)?\s*\(/.test(source) &&
+      !EFFECT_RUN_PROMISE_ALLOWLIST.has(sourcePath)
+    ) {
+      issues.push({
+        code: 'non-root-effect-run-promise',
+        path: sourcePath,
+        message: 'Effect.runPromise* is only allowed in the root CLI runner.',
+      });
+    }
+
+    if (!isTestSource && /\bexport\s+const\s+run[A-Za-z0-9_]+\s*=\s*async\s*\(/.test(source)) {
+      issues.push({
+        code: 'promise-first-command-service',
+        path: sourcePath,
+        message:
+          'Command services must expose Effect-returning run* APIs, not Promise-first async exports.',
+      });
+    }
+  }
+
+  const manifestKeys = new Set(
+    [...utilityManifestSource.matchAll(/key:\s*"([^"]+)"/g)].map((match) => match[1]),
+  );
+  const handlerKeys = new Set(
+    [...utilityHandlerSource.matchAll(/case\s+"([^"]+)":/g)].map((match) => match[1]),
+  );
+  const manifestOnly = [...manifestKeys].filter((key) => !handlerKeys.has(key));
+  const handlerOnly = [...handlerKeys].filter((key) => !manifestKeys.has(key));
+  if (manifestOnly.length > 0 || handlerOnly.length > 0) {
+    issues.push({
+      code: 'utility-command-manifest-drift',
+      path: 'software-factory/scripts/factory/utility-command-manifest.ts',
+      message: `Manifest/handler command drift detected. manifest-only=[${manifestOnly.join(', ')}] handler-only=[${handlerOnly.join(', ')}]`,
+    });
+  }
+
+  let registryParsed: { operations?: Array<{ id?: unknown; args?: unknown }> } | null = null;
+  try {
+    const parsed = JSON.parse(operationsRegistrySource) as unknown;
+    if (parsed && typeof parsed === 'object') {
+      registryParsed = parsed as { operations?: Array<{ id?: unknown; args?: unknown }> };
+    }
+  } catch (error) {
+    issues.push({
+      code: 'operation-registry-drift',
+      path: 'software-factory/operations/registry.json',
+      message: `Operation registry JSON parse failed: ${String(error)}`,
+    });
+  }
+
+  if (
+    !cliSource.includes('buildDynamicOperationRunCommand') ||
+    !cliSource.includes('operation run <operation-id>')
+  ) {
+    issues.push({
+      code: 'operation-registry-drift',
+      path: ROOT_ENTRY_SCRIPT,
+      message:
+        'Root CLI is missing dynamic operation run wiring. Expected buildDynamicOperationRunCommand + operation-id usage.',
+    });
+  }
+
+  const operations = Array.isArray(registryParsed?.operations) ? registryParsed.operations : [];
+  for (const operation of operations) {
+    const id = typeof operation.id === 'string' ? operation.id : '(unknown)';
+    const args = Array.isArray(operation.args) ? operation.args : [];
+    const argNames = args
+      .map((entry) =>
+        entry && typeof entry === 'object' ? (entry as { name?: unknown }).name : undefined,
+      )
+      .filter((name): name is string => typeof name === 'string');
+
+    if (new Set(argNames).size !== argNames.length) {
+      issues.push({
+        code: 'operation-registry-drift',
+        path: 'software-factory/operations/registry.json',
+        message: `Operation '${id}' has duplicate arg names.`,
+      });
+    }
+
+    for (const argName of argNames) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(argName)) {
+        issues.push({
+          code: 'operation-registry-drift',
+          path: 'software-factory/operations/registry.json',
+          message: `Operation '${id}' has non-kebab arg '${argName}'.`,
+        });
+      }
     }
   }
 

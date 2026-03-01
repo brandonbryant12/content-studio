@@ -8,7 +8,7 @@ Automations are external scheduler wrappers. They live at repository root and in
 automation.toml schedule
       |
       v
-pnpm software-factory operation run --operation-id <id>
+pnpm software-factory operation run <id>
       |
       v
 operation runner + playbook execution

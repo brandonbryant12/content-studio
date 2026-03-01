@@ -2,6 +2,8 @@ import { execFile as execFileCallback } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
+import { Effect } from "effect";
+import { WorkflowMemoryError } from "../factory/cli-errors";
 
 const execFile = promisify(execFileCallback);
 
@@ -535,7 +537,7 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
   }
 }
 
-export const runWorkflowMemorySync = async ({
+const runWorkflowMemorySyncPromise = async ({
   remote,
   branch,
   message,
@@ -590,3 +592,15 @@ export const runWorkflowMemorySync = async ({
   console.log(`Workflow-memory sync complete: ${remoteValue}/${branchValue}`);
   return 0;
 };
+
+export const runWorkflowMemorySync = (
+  options: WorkflowMemorySyncOptions,
+): Effect.Effect<number, WorkflowMemoryError> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemorySyncPromise(options),
+    catch: (error) =>
+      new WorkflowMemoryError({
+        command: "workflow-memory:sync",
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+  });

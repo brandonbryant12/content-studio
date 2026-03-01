@@ -33,7 +33,7 @@ import {
   type WorkflowMemorySyncOptions,
 } from "../workflow-memory/sync-git";
 import { runWorkflowsGenerate } from "../workflows/generate-readme";
-import { toUtilityCommandExecutionError } from "./errors";
+import { WorkflowMemoryError } from "./cli-errors";
 
 export type UtilityCommand =
   | {
@@ -78,37 +78,71 @@ export type UtilityCommand =
       key: "spec:generate";
     };
 
-const runUtilityCommandPromise = async (command: UtilityCommand): Promise<number> => {
-  switch (command.key) {
-    case "skills:check":
-      return await runSkillsCheck(command.input);
-    case "workflows:generate":
-      return await runWorkflowsGenerate();
-    case "workflow-memory:add-entry":
-      return await runWorkflowMemoryAddEntry(command.input);
-    case "workflow-memory:preflight":
-      return await runWorkflowMemoryPreflight(command.input);
-    case "workflow-memory:sync":
-      return await runWorkflowMemorySync(command.input);
-    case "workflow-memory:retrieve":
-      return await runWorkflowMemoryRetrieve(command.input);
-    case "workflow-memory:compact":
-      return await runWorkflowMemoryCompact(command.input);
-    case "workflow-memory:coverage":
-      return await runWorkflowMemoryCoverage(command.input);
-    case "workflow-memory:validate-scenarios":
-      return await runWorkflowMemoryValidateScenarios(command.input);
-    case "scripts:lint":
-      return await runScriptGuardrailsLint();
-    case "spec:generate":
-      return await runSpecGenerate();
-  }
-};
-
 export const runUtilityCommandEffect = (
   command: UtilityCommand,
-): Effect.Effect<number, ReturnType<typeof toUtilityCommandExecutionError>> =>
-  Effect.tryPromise({
-    try: () => runUtilityCommandPromise(command),
-    catch: (error) => toUtilityCommandExecutionError(command.key, error),
-  });
+): Effect.Effect<number, WorkflowMemoryError> => {
+  switch (command.key) {
+    case "skills:check":
+      return runSkillsCheck(command.input).pipe(
+        Effect.mapError(
+          (error) =>
+            new WorkflowMemoryError({
+              command: command.key,
+              reason: error.message,
+            }),
+        ),
+      );
+    case "workflows:generate":
+      return runWorkflowsGenerate().pipe(
+        Effect.mapError(
+          (error) =>
+            new WorkflowMemoryError({
+              command: command.key,
+              reason: error.message,
+            }),
+        ),
+      );
+    case "workflow-memory:add-entry":
+      return runWorkflowMemoryAddEntry(command.input);
+    case "workflow-memory:preflight":
+      return runWorkflowMemoryPreflight(command.input).pipe(
+        Effect.mapError(
+          (error) =>
+            new WorkflowMemoryError({
+              command: command.key,
+              reason: error.message,
+            }),
+        ),
+      );
+    case "workflow-memory:sync":
+      return runWorkflowMemorySync(command.input);
+    case "workflow-memory:retrieve":
+      return runWorkflowMemoryRetrieve(command.input);
+    case "workflow-memory:compact":
+      return runWorkflowMemoryCompact(command.input);
+    case "workflow-memory:coverage":
+      return runWorkflowMemoryCoverage(command.input);
+    case "workflow-memory:validate-scenarios":
+      return runWorkflowMemoryValidateScenarios(command.input);
+    case "scripts:lint":
+      return runScriptGuardrailsLint().pipe(
+        Effect.mapError(
+          (error) =>
+            new WorkflowMemoryError({
+              command: command.key,
+              reason: error.message,
+            }),
+        ),
+      );
+    case "spec:generate":
+      return runSpecGenerate().pipe(
+        Effect.mapError(
+          (error) =>
+            new WorkflowMemoryError({
+              command: command.key,
+              reason: error.message,
+            }),
+        ),
+      );
+  }
+};

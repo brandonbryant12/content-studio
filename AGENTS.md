@@ -51,7 +51,7 @@ packages/
 - **Use Software Factory CLI for automation entrypoints**:
   - `pnpm software-factory operation list`
   - `pnpm software-factory operation explain --operation-id <id>`
-  - `pnpm software-factory operation run --operation-id <id>`
+  - `pnpm software-factory operation run <id>`
 - **Follow [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)** for strategy selection and distinctions.
 - **Persist compounding notes in `software-factory/workflow-memory/`** for every workflow run with findings or decisions (event JSONL + index update).
 - Preferred memory write helper:

@@ -1,9 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 import { readWorkflowRegistry } from "./registry";
 
-export const runWorkflowsGenerate = async (): Promise<number> => {
+const runWorkflowsGeneratePromise = async (): Promise<number> => {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
   const workflowsDir = resolve(scriptDir, "../../workflows");
   const readmePath = resolve(workflowsDir, "README.md");
@@ -109,3 +110,9 @@ export const runWorkflowsGenerate = async (): Promise<number> => {
   console.log(`Generated ${readmePath}`);
   return 0;
 };
+
+export const runWorkflowsGenerate = (): Effect.Effect<number, Error> =>
+  Effect.tryPromise({
+    try: () => runWorkflowsGeneratePromise(),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });

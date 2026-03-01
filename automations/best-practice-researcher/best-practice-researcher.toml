@@ -4,7 +4,7 @@ name = "Best Practice Researcher"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory operation run --operation-id best-practice-researcher`
+`pnpm software-factory operation run best-practice-researcher`
 
 Contract:
 - This wrapper is automation-only.

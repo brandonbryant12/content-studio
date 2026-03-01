@@ -30,7 +30,7 @@ describe("software-factory cli", () => {
     const result = runCli(["nonsense"]);
     const combinedOutput = `${result.stdout}\n${result.stderr}`;
 
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(2);
     expect(combinedOutput).toContain("Unknown command: nonsense.");
   });
 
@@ -42,5 +42,29 @@ describe("software-factory cli", () => {
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed.length).toBeGreaterThan(0);
     expect(parsed.some((entry) => entry.id === "ready-for-dev-executor")).toBe(true);
+  });
+
+  it("runs descriptor-generated operation command surfaces", () => {
+    const result = runCli(["operation", "run", "issue-evaluator", "--dry-run"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("playbook:");
+    expect(result.stdout).toContain("command: codex exec");
+  });
+
+  it("returns deterministic exit code for unknown operations", () => {
+    const result = runCli(["operation", "run", "unknown-operation"]);
+    const combinedOutput = `${result.stdout}\n${result.stderr}`;
+
+    expect(result.status).toBe(4);
+    expect(combinedOutput).toContain("Unknown operation: unknown-operation");
+  });
+
+  it("returns deterministic input error for unknown operation args", () => {
+    const result = runCli(["operation", "run", "issue-evaluator", "--not-a-real-flag"]);
+    const combinedOutput = `${result.stdout}\n${result.stderr}`;
+
+    expect(result.status).toBe(2);
+    expect(combinedOutput).toContain("Unknown argument --not-a-real-flag");
   });
 });

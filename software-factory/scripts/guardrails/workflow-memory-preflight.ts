@@ -1,4 +1,5 @@
 import { runCommand } from "../lib/command";
+import { Effect } from "effect";
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 type CommandResult = {
@@ -39,7 +40,7 @@ export type WorkflowMemoryPreflightOptions = {
   memoryPath: string;
 };
 
-export const runWorkflowMemoryPreflight = async ({
+const runWorkflowMemoryPreflightPromise = async ({
   bootstrap,
   cwd,
   memoryPath,
@@ -112,3 +113,15 @@ export const runWorkflowMemoryPreflight = async ({
   }
   return 1;
 };
+
+export const runWorkflowMemoryPreflight = (
+  options: WorkflowMemoryPreflightOptions & {
+    logger?: (line: string) => void;
+    errorLogger?: (line: string) => void;
+    commandRunner?: CommandRunner;
+  },
+): Effect.Effect<number, Error> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemoryPreflightPromise(options),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });

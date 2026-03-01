@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Effect } from "effect";
 
 const ROOT = process.cwd();
 const CANONICAL_SKILLS_DIR = path.join(ROOT, ".agents", "skills");
@@ -278,7 +279,7 @@ function printHumanReport(skillCount, issues, strict) {
   }
 }
 
-export const runSkillsCheck = async ({
+const runSkillsCheckPromise = async ({
   strict,
   json,
 }: SkillsCheckOptions): Promise<number> => {
@@ -318,3 +319,11 @@ export const runSkillsCheck = async ({
 
   return failed ? 1 : 0;
 };
+
+export const runSkillsCheck = (
+  options: SkillsCheckOptions,
+): Effect.Effect<number, Error> =>
+  Effect.tryPromise({
+    try: () => runSkillsCheckPromise(options),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });

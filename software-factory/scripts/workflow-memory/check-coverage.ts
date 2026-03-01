@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Effect } from "effect";
 import { readWorkflowRegistry } from "../workflows/registry";
+import { WorkflowMemoryError } from "../factory/cli-errors";
 
 const INDEX_PATH = path.join(
   "software-factory",
@@ -172,7 +174,7 @@ function printHumanReport(summary) {
   }
 }
 
-export const runWorkflowMemoryCoverage = async ({
+const runWorkflowMemoryCoveragePromise = async ({
   month,
   min,
   strict,
@@ -223,3 +225,15 @@ export const runWorkflowMemoryCoverage = async ({
 
   return hasCoverageFailure || hasTaxonomyFailure ? 1 : 0;
 };
+
+export const runWorkflowMemoryCoverage = (
+  options: WorkflowMemoryCoverageOptions,
+): Effect.Effect<number, WorkflowMemoryError> =>
+  Effect.tryPromise({
+    try: () => runWorkflowMemoryCoveragePromise(options),
+    catch: (error) =>
+      new WorkflowMemoryError({
+        command: "workflow-memory:coverage",
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+  });

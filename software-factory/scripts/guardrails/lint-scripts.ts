@@ -1,6 +1,7 @@
 import { checkScriptGuardrails } from './script-guardrails';
+import { Effect } from "effect";
 
-export const runScriptGuardrailsLint = async (): Promise<number> => {
+const runScriptGuardrailsLintPromise = async (): Promise<number> => {
   const issues = await checkScriptGuardrails();
 
   if (issues.length === 0) {
@@ -16,3 +17,9 @@ export const runScriptGuardrailsLint = async (): Promise<number> => {
 
   return 1;
 };
+
+export const runScriptGuardrailsLint = (): Effect.Effect<number, Error> =>
+  Effect.tryPromise({
+    try: () => runScriptGuardrailsLintPromise(),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });

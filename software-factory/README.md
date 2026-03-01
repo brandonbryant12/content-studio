@@ -40,7 +40,7 @@ Automation -> Operation -> Strategy -> Skill -> Artifacts
 
 1. `pnpm software-factory operation list`
 2. `pnpm software-factory operation explain --operation-id <operation-id>`
-3. `pnpm software-factory operation run --operation-id <operation-id> ...`
+3. `pnpm software-factory operation run <operation-id> [operation-options]`
 4. `pnpm software-factory doctor`
 
 ## Execution Choice
@@ -53,6 +53,7 @@ Automation -> Operation -> Strategy -> Skill -> Artifacts
 | Surface | Path |
 |---|---|
 | Operations registry | [`software-factory/operations/registry.json`](./operations/registry.json) |
+| Operations schema | [`software-factory/operations/registry.schema.json`](./operations/registry.schema.json) |
 | Strategies catalog | [`software-factory/workflows/registry.json`](./workflows/registry.json) |
 | Automation wrappers + playbooks | [`automations/`](../automations/) |
 | Workflow memory | [`software-factory/workflow-memory/`](./workflow-memory/) |

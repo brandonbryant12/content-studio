@@ -271,7 +271,8 @@ export function DocumentList({
           aria-busy={isPending}
         >
           <div role="status" aria-live="polite" className="sr-only">
-            {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'} found
+            {filteredDocuments.length}{' '}
+            {filteredDocuments.length === 1 ? 'document' : 'documents'} found
           </div>
           <table className="w-full" aria-label="Documents">
             <thead>

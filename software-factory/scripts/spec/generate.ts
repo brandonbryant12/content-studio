@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { Effect } from "effect";
 import { runCommand } from '../lib/command';
 import { assembleMasterSpec } from './assemble-master-spec';
 import { generateDataModelArtifact } from './generate-data-model';
@@ -61,7 +62,7 @@ const createSnapshotMetadataMarkdown = (input: {
   return lines.join('\n');
 };
 
-export const runSpecGenerate = async (): Promise<number> => {
+const runSpecGeneratePromise = async (): Promise<number> => {
   await ensureDir(generatedRoot);
 
   const openapi = await generateOpenApiArtifacts();
@@ -95,3 +96,9 @@ export const runSpecGenerate = async (): Promise<number> => {
   await assembleMasterSpec();
   return 0;
 };
+
+export const runSpecGenerate = (): Effect.Effect<number, Error> =>
+  Effect.tryPromise({
+    try: () => runSpecGeneratePromise(),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });

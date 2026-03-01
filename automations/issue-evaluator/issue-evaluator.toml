@@ -4,7 +4,7 @@ name = "Issue Evaluator"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
 Run this command from repository root:
-`pnpm software-factory operation run --operation-id issue-evaluator`
+`pnpm software-factory operation run issue-evaluator`
 
 Contract:
 - This wrapper is automation-only.
