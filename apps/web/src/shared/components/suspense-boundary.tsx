@@ -1,4 +1,5 @@
 import { Spinner } from '@repo/ui/components/spinner';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
 import type { ErrorFallbackProps } from './error-boundary';
 import { ErrorBoundary } from './error-boundary';
@@ -34,12 +35,21 @@ export function SuspenseBoundary({
   onReset,
 }: SuspenseBoundaryProps) {
   return (
-    <ErrorBoundary
-      resetKeys={resetKeys}
-      FallbackComponent={FallbackComponent}
-      onReset={onReset}
-    >
-      <Suspense fallback={fallback ?? <DefaultFallback />}>{children}</Suspense>
-    </ErrorBoundary>
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary
+          resetKeys={resetKeys}
+          FallbackComponent={FallbackComponent}
+          onReset={() => {
+            reset();
+            onReset?.();
+          }}
+        >
+          <Suspense fallback={fallback ?? <DefaultFallback />}>
+            {children}
+          </Suspense>
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
   );
 }
