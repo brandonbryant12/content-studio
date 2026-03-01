@@ -138,7 +138,7 @@ No imperative `initTelemetry`/`shutdownTelemetry` calls are needed; the Effect r
 ### Exporter Behavior
 
 - If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use it as-is with OTLP HTTP export + `BatchSpanProcessor`.
-- If no endpoint is configured, telemetry logs a warning and skips trace export entirely (no `ConsoleSpanExporter` fallback).
+- If no endpoint is configured, telemetry performs a silent no-op and skips trace export entirely (no `ConsoleSpanExporter` fallback).
 - `OTEL_EXPORTER_OTLP_HEADERS` applies to trace export headers. Malformed entries (missing `=`, empty key/value) cause a `MalformedOtlpHeadersError` at startup rather than being silently dropped.
 
 ### Server-Timing Header
