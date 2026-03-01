@@ -42,14 +42,16 @@ Start here:
 3. Backend patterns: [`docs/patterns/`](./docs/patterns/)
 4. Frontend standards: [`docs/frontend/`](./docs/frontend/)
 
-## Agent Harness Framework
+## Software Factory
 
-Workflow contracts, automation lanes, and workflow-memory conventions are defined in [`agent-engine/`](./agent-engine/).
+Operation, strategy, trigger, and workflow-memory conventions are defined in [`software-factory/`](./software-factory/).
 
 Start here:
 
-1. Workflow catalog: [`agent-engine/workflows/README.md`](./agent-engine/workflows/README.md)
-2. Workflow memory guide: [`agent-engine/workflow-memory/README.md`](./agent-engine/workflow-memory/README.md)
+1. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)
+2. Triggers catalog: [`software-factory/triggers/README.md`](./software-factory/triggers/README.md)
+3. Strategy catalog: [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)
+4. Workflow memory guide: [`software-factory/workflow-memory/README.md`](./software-factory/workflow-memory/README.md)
 
 ## Development Setup
 
@@ -169,4 +171,4 @@ Set `OTEL_SERVICE_NAME=content-studio-worker` in worker env files.
 1. Behavior specification: [`docs/master-spec.md`](./docs/master-spec.md)
 2. Engineering docs index: [`docs/README.md`](./docs/README.md)
 3. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)
-4. Workflow catalog: [`agent-engine/workflows/README.md`](./agent-engine/workflows/README.md)
+4. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)

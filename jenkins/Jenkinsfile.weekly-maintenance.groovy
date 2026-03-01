@@ -69,7 +69,7 @@ pipeline {
       steps {
         sh '''
           # Keep the mirrored skill directories aligned with .agents/skills.
-          bash agent-engine/scripts/sync-skills.sh
+          bash software-factory/scripts/sync-skills.sh
 
           # If sync produced changes, fail with a clear message.
           if ! git diff --quiet -- .agent/skills .agents/skills .claude/skills .github/skills; then

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "triggers": [
+    {
+      "id": "ready-for-dev-executor",
+      "name": "Ready-for-Dev Executor",
+      "operationId": "ready-for-dev-executor",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=1;BYMINUTE=11;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "issue-evaluator",
+      "name": "Issue Evaluator",
+      "operationId": "issue-evaluator",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=12;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "sanity-check",
+      "name": "Sanity Check",
+      "operationId": "sanity-check",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=1;BYMINUTE=37;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "best-practice-researcher",
+      "name": "Best Practice Researcher",
+      "operationId": "best-practice-researcher",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=23;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "software-factory-researcher",
+      "name": "Software Factory Researcher",
+      "operationId": "software-factory-researcher",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "product-vision-researcher",
+      "name": "Product Vision Researcher",
+      "operationId": "product-vision-researcher",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    },
+    {
+      "id": "product-owner-reviewer",
+      "name": "Product Owner Reviewer",
+      "operationId": "product-owner-reviewer",
+      "rrule": "RRULE:FREQ=HOURLY;INTERVAL=4;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "args": {}
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     projects: [
-      'agent-engine/scripts/vitest.config.ts',
+      'software-factory/scripts/vitest.config.ts',
       'packages/db/vitest.config.ts',
       'packages/storage/vitest.config.ts',
       'packages/queue/vitest.config.ts',
