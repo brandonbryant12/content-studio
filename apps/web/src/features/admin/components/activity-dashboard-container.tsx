@@ -53,6 +53,11 @@ export function ActivityDashboardContainer() {
     refetch: refetchStats,
   } = useActivityStats(period);
 
+  const activities = useMemo(() => {
+    if (!activityPages?.pages) return [];
+    return activityPages.pages.flatMap((page) => page.data);
+  }, [activityPages]);
+
   if (feedError || statsError) {
     const firstError = feedErrorObj ?? statsErrorObj;
     return (
@@ -74,11 +79,6 @@ export function ActivityDashboardContainer() {
       />
     );
   }
-
-  const activities = useMemo(() => {
-    if (!activityPages?.pages) return [];
-    return activityPages.pages.flatMap((page) => page.data);
-  }, [activityPages]);
 
   return (
     <ActivityDashboard

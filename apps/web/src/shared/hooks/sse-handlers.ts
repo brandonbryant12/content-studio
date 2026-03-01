@@ -10,6 +10,17 @@ import type {
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
 import { getActivityListQueryKey } from '@/features/admin/hooks';
+import { getDocumentQueryKey } from '@/features/documents/hooks/use-document';
+import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
+import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
+import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
+import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
+import { getPersonaQueryKey } from '@/features/personas/hooks/use-persona';
+import { getPersonaListQueryKey } from '@/features/personas/hooks/use-persona-list';
+import { getPodcastQueryKey } from '@/features/podcasts/hooks/use-podcast';
+import { getPodcastListQueryKey } from '@/features/podcasts/hooks/use-podcast-list';
+import { getVoiceoverQueryKey } from '@/features/voiceovers/hooks/use-voiceover';
+import { getVoiceoverListQueryKey } from '@/features/voiceovers/hooks/use-voiceover-list';
 
 /** Module-level navigate callback, set by useSSE hook. */
 let navigateToPath: ((path: string) => void) | null = null;
@@ -18,45 +29,15 @@ export function setNavigateFn(fn: (path: string) => void): void {
   navigateToPath = fn;
 }
 
-const getPodcastQueryKey = (podcastId: string) =>
-  apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }).queryKey;
-
-const getPodcastsListQueryKey = () =>
-  apiClient.podcasts.list.queryOptions({ input: {} }).queryKey;
-
-const getDocumentQueryKey = (documentId: string) =>
-  apiClient.documents.get.queryOptions({ input: { id: documentId } }).queryKey;
-
-const getDocumentsListQueryKey = () =>
-  apiClient.documents.list.queryOptions({ input: {} }).queryKey;
-
-const getVoiceoverQueryKey = (voiceoverId: string) =>
-  apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } })
-    .queryKey;
-
-const getVoiceoversListQueryKey = () =>
-  apiClient.voiceovers.list.queryOptions({ input: {} }).queryKey;
-
-const getInfographicQueryKey = (infographicId: string) =>
-  apiClient.infographics.get.queryOptions({ input: { id: infographicId } })
-    .queryKey;
-
-const getInfographicsListQueryKey = () =>
-  apiClient.infographics.list.queryOptions({ input: {} }).queryKey;
-
-const getInfographicVersionsQueryKey = (infographicId: string) =>
-  apiClient.infographics.listVersions.queryOptions({
-    input: { id: infographicId },
-  }).queryKey;
-
 const entityQueryKeys = {
-  podcast: { get: getPodcastQueryKey, list: getPodcastsListQueryKey },
-  document: { get: getDocumentQueryKey, list: getDocumentsListQueryKey },
-  voiceover: { get: getVoiceoverQueryKey, list: getVoiceoversListQueryKey },
+  podcast: { get: getPodcastQueryKey, list: getPodcastListQueryKey },
+  document: { get: getDocumentQueryKey, list: getDocumentListQueryKey },
+  voiceover: { get: getVoiceoverQueryKey, list: getVoiceoverListQueryKey },
   infographic: {
     get: getInfographicQueryKey,
-    list: getInfographicsListQueryKey,
+    list: getInfographicListQueryKey,
   },
+  persona: { get: getPersonaQueryKey, list: getPersonaListQueryKey },
 } as const;
 
 /**
@@ -150,7 +131,7 @@ export function handleJobCompletion(
     case 'generate-script':
     case 'generate-audio':
       queryClient.invalidateQueries({
-        queryKey: getPodcastsListQueryKey(),
+        queryKey: getPodcastListQueryKey(),
       });
       break;
   }
@@ -190,7 +171,7 @@ export function handleVoiceoverJobCompletion(
 
   // Also invalidate the list
   queryClient.invalidateQueries({
-    queryKey: getVoiceoversListQueryKey(),
+    queryKey: getVoiceoverListQueryKey(),
   });
 
   const notify = (title?: string) =>
@@ -225,7 +206,7 @@ export function handleInfographicJobCompletion(
 
   // Also invalidate the list
   queryClient.invalidateQueries({
-    queryKey: getInfographicsListQueryKey(),
+    queryKey: getInfographicListQueryKey(),
   });
 
   // Versions are rendered in the workbench timeline.
@@ -265,7 +246,7 @@ export function handleDocumentJobCompletion(
 
   // Also invalidate the list (status changed)
   queryClient.invalidateQueries({
-    queryKey: getDocumentsListQueryKey(),
+    queryKey: getDocumentListQueryKey(),
   });
 
   const notify = (title?: string) =>

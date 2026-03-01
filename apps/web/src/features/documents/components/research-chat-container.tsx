@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
+import type { ResearchSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
-import type { ResearchSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { ResearchChatDialog } from './research-chat-dialog';
 
 interface ResearchChatContainerProps {
