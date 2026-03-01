@@ -1,5 +1,26 @@
 [
   {
+    "id": "2026-03-01-architecture-adr-guard-ready-for-dev-telemetry-guardrail-bundle-merged",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Ready-for-dev telemetry guardrail bundle merged",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:271",
+      "issue:272",
+      "pr:287",
+      "selection:bounded-bundle",
+      "skill:architecture-adr-guard",
+      "skill:intake-triage",
+      "skill:codebase-nav",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-feature-delivery-aria-accessibility-fixes-chat-inputs-podcast-action-bar-list-pag",
     "date": "2026-03-01",
     "month": "2026-03",
