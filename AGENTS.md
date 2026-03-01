@@ -119,7 +119,7 @@ pnpm workflow-memory:coverage:strict # Verify monthly workflow-memory coverage b
 - **Use `Effect.forkDaemon` (not `Effect.fork`) when forking long-lived fibers** from `ManagedRuntime.runPromise`. `Effect.fork` scopes to the caller—the fiber is immediately interrupted when `runPromise` returns. See `docs/patterns/effect-runtime.md` § "Forking Long-Lived Fibers".
 - **Avoid aggressive Vite per-package `manualChunks` strategies** that create many tiny or empty chunks; prefer Router auto code splitting and targeted overrides only.
 - **Telemetry is backend-only by default**: configure Datadog/OTLP in `apps/server` and `apps/worker`; do not add frontend client-side error telemetry unless explicitly requested.
-- **Backend telemetry lifecycle must be explicit**: call `initTelemetry(...)` before starting server/worker and `shutdownTelemetry()` during graceful shutdown.
+- **Backend telemetry lifecycle is layer-managed**: pass `telemetryConfig` to `createServerRuntime(...)`. The `TelemetryLive` Effect layer manages `NodeTracerProvider` creation, global registration, and scoped shutdown via `runtime.dispose()`.
 - **Use standard OTLP env inputs**: `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` and optional `OTEL_EXPORTER_OTLP_HEADERS` (`KEY=value,KEY2=value2`).
 
 ## Effect Layer Rules

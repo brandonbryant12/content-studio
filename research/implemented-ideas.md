@@ -21,6 +21,25 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-03-01 - Telemetry Lifecycle Guardrail and No-Endpoint Contract Alignment
+- Issue: https://github.com/brandonbryant12/content-studio/issues/271, https://github.com/brandonbryant12/content-studio/issues/272
+- PR: TBD (created by ready-for-dev-executor run on 2026-03-01)
+- Paper link(s):
+  - https://opentelemetry.io/docs/languages/js/instrumentation/
+  - https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
+- Adopted idea(s):
+  - Keep telemetry provider lifecycle documentation aligned with runtime-owned startup/shutdown semantics.
+  - Document missing-endpoint exporter behavior explicitly to avoid operational ambiguity.
+- Implementation summary:
+  - Updated AGENTS telemetry guardrail text to match layer-managed runtime wiring (`createServerRuntime(...telemetryConfig...)` + `runtime.dispose()`).
+  - Updated observability exporter behavior docs to reflect silent no-op behavior when OTLP endpoint is unset.
+  - Added a lightweight docs guardrail test to enforce AGENTS/CLAUDE lifecycle text parity and no-endpoint behavior consistency against runtime code.
+- Code references:
+  - [`AGENTS.md`](../AGENTS.md)
+  - [`docs/architecture/observability.md`](../docs/architecture/observability.md)
+  - [`agent-engine/scripts/__tests__/telemetry-guardrails-docs.test.ts`](../agent-engine/scripts/__tests__/telemetry-guardrails-docs.test.ts)
+  - [`packages/db/src/telemetry.ts`](../packages/db/src/telemetry.ts)
+
 ### 2026-02-25 - Schema-First Contracts for Podcast, Infographic, and Document Generation
 - Issue: https://github.com/brandonbryant12/content-studio/issues/141
 - PR: https://github.com/brandonbryant12/content-studio/pull/157
