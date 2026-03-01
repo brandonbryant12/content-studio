@@ -23,6 +23,34 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-periodic-scans-best-practice-observability-drift-scan",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best-practice observability drift scan",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation:best-practice-researcher",
+      "domain:observability-otel-runtime-lifecycle",
+      "skill:periodic-scans",
+      "memory",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve",
+      "capability:instruction-following",
+      "capability:tool-use",
+      "capability:long-term-reasoning",
+      "failure:env-drift"
+    ],
+    "importance": 0.86,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-coding-patterns-and-local-abstractions-",
     "date": "2026-03-01",
     "month": "2026-03",
