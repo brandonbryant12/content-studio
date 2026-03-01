@@ -30,6 +30,11 @@ type Operation = {
   defaultThinking: "low" | "medium" | "high" | "xhigh";
   strategy: string;
   args: OperationArg[];
+  labelingContext?: {
+    modelLabels?: string[];
+    thinkingLabels?: string[];
+    decisionLabels?: string[];
+  };
   runner: Runner;
 };
 
@@ -58,10 +63,27 @@ type GhIssueView = {
   labels: GhIssueLabel[];
 };
 
+type GhIssueCandidate = {
+  number: number;
+  title: string;
+  url: string;
+  labels: GhIssueLabel[];
+};
+
+type ReadyForDevPlan = {
+  selectedIssues: number[];
+  model: string;
+  thinking: string;
+  rationale?: string;
+};
+
 const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
 const TRIGGERS_PATH = path.join("software-factory", "triggers", "registry.json");
 const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
 const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
+const PLANNER_MODEL = "gpt-5.3-codex";
+const PLANNER_THINKING = "xhigh";
+const CODEX_DANGEROUS_FLAG = "--dangerously-bypass-approvals-and-sandbox";
 
 const USAGE = `software-factory
 
@@ -147,6 +169,24 @@ const runCodexPlaybook = (
     "- Treat that playbook as source of truth.",
     "- If this wrapper conflicts with the playbook, follow the playbook.",
   ];
+  const labelContext = operation.labelingContext;
+  if (
+    labelContext &&
+    ((labelContext.modelLabels?.length ?? 0) > 0 ||
+      (labelContext.thinkingLabels?.length ?? 0) > 0 ||
+      (labelContext.decisionLabels?.length ?? 0) > 0)
+  ) {
+    promptLines.push("", "Operation label context:");
+    if ((labelContext.modelLabels?.length ?? 0) > 0) {
+      promptLines.push(`- Allowed model labels: ${labelContext.modelLabels?.join(", ")}`);
+    }
+    if ((labelContext.thinkingLabels?.length ?? 0) > 0) {
+      promptLines.push(`- Allowed thinking labels: ${labelContext.thinkingLabels?.join(", ")}`);
+    }
+    if ((labelContext.decisionLabels?.length ?? 0) > 0) {
+      promptLines.push(`- Allowed decision labels: ${labelContext.decisionLabels?.join(", ")}`);
+    }
+  }
   if (issue) {
     promptLines.push(`- Focus issue: #${issue}`);
   }
@@ -154,6 +194,7 @@ const runCodexPlaybook = (
 
   const codexArgs = [
     "exec",
+    CODEX_DANGEROUS_FLAG,
     "-m",
     model,
     "-c",
@@ -197,14 +238,8 @@ const runGhJson = <T>(args: string[], errorContext: string): T => {
   return JSON.parse(stdout) as T;
 };
 
-const resolveReadyForDevIssueNumber = (options: Record<string, string>): string | null => {
-  const explicitIssue = options.issue?.trim();
-  if (explicitIssue) {
-    return explicitIssue;
-  }
-
-  const result = spawnSync(
-    "gh",
+const listReadyForDevCandidates = (explicitIssue: string | undefined): GhIssueCandidate[] => {
+  const candidates = runGhJson<GhIssueCandidate[]>(
     [
       "issue",
       "list",
@@ -215,62 +250,123 @@ const resolveReadyForDevIssueNumber = (options: Record<string, string>): string 
       "--limit",
       "200",
       "--json",
-      "number",
-      "--jq",
-      "sort_by(.number) | .[0].number // empty",
+      "number,title,url,labels",
     ],
-    {
-      cwd: process.cwd(),
-      encoding: "utf8",
-    },
+    "Failed to list ready-for-dev issues",
   );
 
-  if ((result.status ?? 1) !== 0) {
-    const details = (result.stderr || result.stdout || "").trim();
-    throw new Error(`Failed to select ready-for-dev issue. ${details}`);
+  const sorted = [...candidates].sort((a, b) => a.number - b.number);
+  if (!explicitIssue) {
+    return sorted;
   }
-
-  const issueNumber = (result.stdout || "").trim();
-  return issueNumber || null;
+  const issueNumber = Number.parseInt(explicitIssue, 10);
+  if (!Number.isFinite(issueNumber)) {
+    throw new Error(`Invalid --issue value: ${explicitIssue}`);
+  }
+  return sorted.filter((issue) => issue.number === issueNumber);
 };
 
-const resolveReadyForDevModel = (
-  operation: Operation,
-  issue: GhIssueView,
-  options: Record<string, string>,
-): { model: string; thinking: string } => {
-  const labels = issue.labels ?? [];
-  const modelLabels = labels
-    .map((label) => label.name)
-    .filter((name) => name.startsWith("model:"));
-  const thinkingLabels = labels
-    .map((label) => label.name)
-    .filter((name) => name.startsWith("thinking:"));
-
-  if (modelLabels.length > 1) {
-    throw new Error(
-      `Issue #${issue.number} has multiple model labels: ${modelLabels.join(", ")}.`,
-    );
-  }
-  if (thinkingLabels.length > 1) {
-    throw new Error(
-      `Issue #${issue.number} has multiple thinking labels: ${thinkingLabels.join(", ")}.`,
-    );
+const extractJsonObject = (raw: string): string => {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("{")) {
+    return trimmed;
   }
 
-  const modelFromLabel = modelLabels[0]?.replace(/^model:/, "").trim();
-  const thinkingFromLabel = thinkingLabels[0]?.replace(/^thinking:/, "").trim();
+  const fencedJsonMatch = trimmed.match(/```json\s*([\s\S]*?)\s*```/i);
+  if (fencedJsonMatch?.[1]) {
+    return fencedJsonMatch[1].trim();
+  }
 
-  const model = (options.model?.trim() || modelFromLabel || operation.defaultModel).trim();
-  const thinking = ensureThinking(options.thinking, thinkingFromLabel || operation.defaultThinking);
+  const fencedMatch = trimmed.match(/```\s*([\s\S]*?)\s*```/);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
 
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    return trimmed.slice(start, end + 1);
+  }
+
+  throw new Error("Planner output did not contain a JSON object.");
+};
+
+const parseReadyForDevPlan = (raw: string): ReadyForDevPlan => {
+  const jsonPayload = extractJsonObject(raw);
+  const parsed = JSON.parse(jsonPayload) as Partial<ReadyForDevPlan>;
+
+  const selectedIssues = Array.isArray(parsed.selectedIssues)
+    ? parsed.selectedIssues
+        .filter((value): value is number => Number.isInteger(value))
+        .map((value) => Number(value))
+    : [];
+
+  if (selectedIssues.length === 0) {
+    throw new Error("Planner returned no selectedIssues.");
+  }
+
+  const uniqueIssues = Array.from(new Set(selectedIssues));
+  if (uniqueIssues.length > 5) {
+    throw new Error(`Planner selected too many issues (${uniqueIssues.length}); max is 5.`);
+  }
+
+  const model = typeof parsed.model === "string" ? parsed.model.trim() : "";
+  const thinking = typeof parsed.thinking === "string" ? parsed.thinking.trim() : "";
   if (!VALID_MODELS.has(model)) {
     throw new Error(
-      `Unsupported model value: ${model}. Expected ${Array.from(VALID_MODELS).join(" | ")}.`,
+      `Planner returned unsupported model '${model}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
+    );
+  }
+  if (!VALID_THINKING.has(thinking)) {
+    throw new Error(
+      `Planner returned unsupported thinking '${thinking}'. Allowed: ${Array.from(VALID_THINKING).join(", ")}.`,
     );
   }
 
-  return { model, thinking };
+  return {
+    selectedIssues: uniqueIssues,
+    model,
+    thinking,
+    rationale: typeof parsed.rationale === "string" ? parsed.rationale : undefined,
+  };
+};
+
+const ensureIssueRoutingCompatibility = (
+  issues: GhIssueCandidate[],
+  model: string,
+  thinking: string,
+): void => {
+  for (const issue of issues) {
+    const modelLabels = issue.labels
+      .map((label) => label.name)
+      .filter((name) => name.startsWith("model:"));
+    const thinkingLabels = issue.labels
+      .map((label) => label.name)
+      .filter((name) => name.startsWith("thinking:"));
+
+    if (modelLabels.length > 1) {
+      throw new Error(`Issue #${issue.number} has multiple model labels: ${modelLabels.join(", ")}.`);
+    }
+    if (thinkingLabels.length > 1) {
+      throw new Error(
+        `Issue #${issue.number} has multiple thinking labels: ${thinkingLabels.join(", ")}.`,
+      );
+    }
+
+    const issueModel = modelLabels[0]?.replace(/^model:/, "").trim();
+    const issueThinking = thinkingLabels[0]?.replace(/^thinking:/, "").trim();
+
+    if (issueModel && issueModel !== model) {
+      throw new Error(
+        `Planner/execution model mismatch for issue #${issue.number}: issue label model:${issueModel} vs selected model:${model}.`,
+      );
+    }
+    if (issueThinking && issueThinking !== thinking) {
+      throw new Error(
+        `Planner/execution thinking mismatch for issue #${issue.number}: issue label thinking:${issueThinking} vs selected thinking:${thinking}.`,
+      );
+    }
+  }
 };
 
 const runReadyForDevRouter = (
@@ -284,42 +380,129 @@ const runReadyForDevRouter = (
     );
   }
 
-  const issueNumber = resolveReadyForDevIssueNumber(options);
-  if (!issueNumber) {
+  const candidates = listReadyForDevCandidates(options.issue?.trim());
+  if (candidates.length === 0) {
     console.log("No open issues with label ready-for-dev.");
     return 0;
   }
 
-  const issue = runGhJson<GhIssueView>(
-    [
-      "issue",
-      "view",
-      issueNumber,
-      "--json",
-      "number,title,url,state,labels",
-    ],
-    `Failed to read issue #${issueNumber}`,
-  );
+  const plannerPrompt = [
+    "You are selecting a coherent ready-for-dev implementation bundle.",
+    "Select 1 to 5 issues that are tightly related and can be implemented together in one PR.",
+    "All selected issues must use the same model and thinking profile.",
+    "Allowed model labels: model:gpt-5.3-codex, model:gpt-5.3-codex-spark",
+    "Allowed thinking labels: thinking:low, thinking:medium, thinking:high, thinking:xhigh",
+    "Use issue labels as hard routing constraints when present.",
+    "If a selected issue has model/thinking labels, selected model/thinking must match them.",
+    "Prefer conservative bundles (smaller is better) when uncertain.",
+    "Return ONLY a single JSON object with this exact shape:",
+    '{"selectedIssues":[<issue numbers>],"model":"<model id>","thinking":"<thinking level>","rationale":"<short reason>"}',
+    "",
+    "Candidates JSON:",
+    JSON.stringify(
+      candidates.map((issue) => ({
+        number: issue.number,
+        title: issue.title,
+        url: issue.url,
+        labels: issue.labels.map((label) => label.name),
+      })),
+      null,
+      2,
+    ),
+    "",
+  ].join("\n");
 
-  if (issue.state !== "OPEN") {
-    throw new Error(`Issue #${issue.number} is not open (state=${issue.state}).`);
+  const plannerArgs = [
+    "exec",
+    CODEX_DANGEROUS_FLAG,
+    "-m",
+    PLANNER_MODEL,
+    "-c",
+    `model_reasoning_effort="${PLANNER_THINKING}"`,
+    "-C",
+    process.cwd(),
+    "-",
+  ];
+
+  if (asBool(options.dry_run)) {
+    console.log(`Planner candidates: ${candidates.length}`);
+    console.log("Planner dry run command:");
+    console.log(`  codex ${plannerArgs.join(" ")}`);
+    console.log("");
+    console.log("Execution dry run command template:");
+    console.log(
+      `  codex exec ${CODEX_DANGEROUS_FLAG} -m <model-from-planner> -c model_reasoning_effort="<thinking-from-planner>" -C ${process.cwd()} -`,
+    );
+    return 0;
   }
 
-  const { model, thinking } = resolveReadyForDevModel(operation, issue, options);
+  const plannerResult = spawnSync("codex", plannerArgs, {
+    cwd: process.cwd(),
+    input: plannerPrompt,
+    encoding: "utf8",
+  });
+  if ((plannerResult.status ?? 1) !== 0) {
+    const details = (plannerResult.stderr || plannerResult.stdout || "").trim();
+    throw new Error(`Ready-for-dev planner call failed. ${details}`);
+  }
+
+  const plan = parseReadyForDevPlan(plannerResult.stdout || "");
+  const candidateMap = new Map<number, GhIssueCandidate>(candidates.map((issue) => [issue.number, issue]));
+  const selectedIssues = plan.selectedIssues.map((issueNumber) => {
+    const issue = candidateMap.get(issueNumber);
+    if (!issue) {
+      throw new Error(`Planner selected issue #${issueNumber}, which is not in candidate set.`);
+    }
+    return issue;
+  });
+
+  const model = (options.model?.trim() || plan.model).trim();
+  const thinking = ensureThinking(options.thinking, plan.thinking);
+  if (!VALID_MODELS.has(model)) {
+    throw new Error(
+      `Unsupported execution model '${model}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
+    );
+  }
+  ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
+
+  for (const selected of selectedIssues) {
+    const issueView = runGhJson<GhIssueView>(
+      [
+        "issue",
+        "view",
+        String(selected.number),
+        "--json",
+        "number,state,labels",
+      ],
+      `Failed to re-check issue #${selected.number}`,
+    );
+    if (issueView.state !== "OPEN") {
+      throw new Error(`Issue #${selected.number} is no longer open (state=${issueView.state}).`);
+    }
+    const hasReadyLabel = issueView.labels.some((label) => label.name === "ready-for-dev");
+    if (!hasReadyLabel) {
+      throw new Error(`Issue #${selected.number} no longer has ready-for-dev label.`);
+    }
+  }
+
   const prompt = [
-    `Execute one full \`ready-for-dev-executor\` run for issue #${issue.number} only.`,
+    "Execute one full `ready-for-dev-executor` run for the selected issue bundle only.",
     "",
-    "Issue context:",
-    `- issue: #${issue.number}`,
-    `- title: ${issue.title}`,
-    `- url: ${issue.url}`,
-    `- model label: model:${model}`,
-    `- thinking label: thinking:${thinking}`,
+    "Selected issues:",
+    ...selectedIssues.map(
+      (issue) => `- #${issue.number}: ${issue.title} (${issue.url})`,
+    ),
+    "",
+    "Execution routing:",
+    `- model: ${model}`,
+    `- thinking: ${thinking}`,
+    `- planner rationale: ${plan.rationale || "n/a"}`,
     "",
     "Execution contract:",
     `- Read and follow \`${runner.playbookPath}\`.`,
-    `- Treat #${issue.number} as the only actionable candidate for this run.`,
-    `- If #${issue.number} is no longer actionable, stop with a concise no-op report.`,
+    "- Treat the selected issue list above as the only actionable candidates for this run.",
+    "- If any selected issue is no longer actionable, stop with a concise no-op report.",
+    "- Do not add additional unlisted issues to scope in this run.",
     "- Complete implementation + validation + delivery workflow exactly as the playbook requires.",
     "- Keep one PR max for this run.",
     "",
@@ -327,6 +510,7 @@ const runReadyForDevRouter = (
 
   const codexArgs = [
     "exec",
+    CODEX_DANGEROUS_FLAG,
     "-m",
     model,
     "-c",
@@ -336,17 +520,12 @@ const runReadyForDevRouter = (
     "-",
   ];
 
-  console.log(`Routing issue #${issue.number}`);
+  console.log(`Planner selected ${selectedIssues.length} issue(s).`);
+  for (const issue of selectedIssues) {
+    console.log(`  - #${issue.number}: ${issue.title}`);
+  }
   console.log(`  model:    ${model}`);
   console.log(`  thinking: ${thinking}`);
-  console.log(`  url:      ${issue.url}`);
-
-  if (asBool(options.dry_run)) {
-    console.log("");
-    console.log("Dry run command:");
-    console.log(`  codex ${codexArgs.join(" ")}`);
-    return 0;
-  }
 
   const result = spawnSync("codex", codexArgs, {
     cwd: process.cwd(),

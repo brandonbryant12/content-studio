@@ -20,6 +20,24 @@ Decision label policy:
 - Every evaluated issue must have exactly one decision label: `ready-for-dev`, `human-eval-needed`, or `rejected`.
 - Remove stale decision labels before applying a new decision label.
 
+Model + thinking routing label policy:
+- Allowed model labels:
+  - `model:gpt-5.3-codex`
+  - `model:gpt-5.3-codex-spark`
+- Allowed thinking labels:
+  - `thinking:low`
+  - `thinking:medium`
+  - `thinking:high`
+  - `thinking:xhigh`
+- For every issue marked `ready-for-dev`, ensure exactly one `model:*` and one `thinking:*` label from the allowed sets.
+- Remove stale `model:*` and `thinking:*` labels before applying the selected pair.
+- If decision is not `ready-for-dev`, remove any existing `model:*` and `thinking:*` labels so routing metadata only exists for executable issues.
+- Assignment guidance:
+  - tiny localized low-risk changes: prefer `model:gpt-5.3-codex-spark` with `thinking:medium`
+  - most bounded implementation slices: prefer `model:gpt-5.3-codex` with `thinking:high`
+  - ambiguous/high-impact/risky slices: use `model:gpt-5.3-codex` with `thinking:xhigh`
+  - use `thinking:low` only when scope is truly trivial and evidence is unambiguous
+
 Strict readiness rubric:
 - Mark `ready-for-dev` only when all conditions are true:
   1. Problem statement targets current user pain for normal users in existing Content Studio flows.

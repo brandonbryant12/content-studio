@@ -4,7 +4,7 @@
     {
       "id": "ready-for-dev-executor",
       "name": "Ready-for-Dev Executor",
-      "description": "Implements approved ready-for-dev issues using issue label model/thinking routing.",
+      "description": "Implements approved ready-for-dev issues using a two-step codex planner/executor flow with label-constrained model/thinking routing.",
       "defaultModel": "gpt-5.3-codex",
       "defaultThinking": "high",
       "strategy": "auto",
@@ -46,6 +46,23 @@
       "defaultModel": "gpt-5.3-codex",
       "defaultThinking": "xhigh",
       "strategy": "periodic-scans",
+      "labelingContext": {
+        "modelLabels": [
+          "model:gpt-5.3-codex",
+          "model:gpt-5.3-codex-spark"
+        ],
+        "thinkingLabels": [
+          "thinking:low",
+          "thinking:medium",
+          "thinking:high",
+          "thinking:xhigh"
+        ],
+        "decisionLabels": [
+          "ready-for-dev",
+          "human-eval-needed",
+          "rejected"
+        ]
+      },
       "args": [
         {
           "name": "dry-run",

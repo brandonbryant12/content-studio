@@ -21,7 +21,9 @@ Registry source of truth:
 1. `ready-for-dev-executor`
 - Purpose: implement `ready-for-dev` issues.
 - Strategy: `auto` (routed by issue complexity/surface).
-- Runner: native Effect TypeScript router (issue selection + model/thinking routing in CLI).
+- Runner: native Effect TypeScript two-stage router:
+  - codex planner call selects a coherent issue bundle + model/thinking
+  - codex execution call implements the selected bundle
 - Args: `--issue`, `--dry-run`, `--model`, `--thinking`
 
 2. `issue-evaluator`

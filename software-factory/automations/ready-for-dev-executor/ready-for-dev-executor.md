@@ -22,6 +22,9 @@ Scope and approval:
 
 Selection and bounded aggregation (`1..N` issues per run):
 - Build candidate set from actionable open issues labeled `ready-for-dev`, ordered by issue number ascending.
+- Operation-level execution is two-stage:
+  1. planner call selects a coherent bundle and a single model/thinking profile
+  2. executor call implements only that selected bundle
 - Select at least 1 issue when actionable candidates exist.
 - N is dynamic and must stay bounded by coherent scope: default target is 1-3 issues; allow up to 5 only when issues are small, tightly related, and safely deliverable together in one PR.
 - Use two-pass issue selection to reduce overhead:

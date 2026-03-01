@@ -100,6 +100,33 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-now-uses-codex-planner-plus-executor-with-bypass-f",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev now uses codex planner plus executor with bypass flag",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "software-factory",
+      "ready-for-dev",
+      "issue-routing",
+      "model-routing",
+      "thinking-routing",
+      "automation",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-feature-delivery-rename-agent-engine-to-software-factory-and-standardize-trigger-",
     "date": "2026-03-01",
     "month": "2026-03",
