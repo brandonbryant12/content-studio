@@ -32,6 +32,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-architecture-adr-guard-extracted-control-plane-registry-and-doctor-services",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Extracted control-plane registry and doctor services",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "software-factory",
+      "effect-cli",
+      "modularization"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-normalize-utility-script-exit-contracts-to-explicit-status-codes",
     "date": "2026-03-01",
     "month": "2026-03",

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { promises as fs } from "node:fs";
 import path from "node:path";
 import { Command, Options } from "@effect/cli";
 import { NodeContext } from "@effect/platform-node";
@@ -11,56 +10,34 @@ import {
   ExternalToolError,
   UnknownTopLevelCommandError,
   PlannerOutputError,
-  RegistryLookupError,
   RoutingConstraintError,
   RunnerConfigurationError,
   toCliExecutionError,
 } from "./errors";
+import { runDoctor } from "./control-plane-doctor";
+import {
+  CODEX_DANGEROUS_FLAG,
+  PLANNER_MODEL,
+  PLANNER_THINKING,
+  VALID_MODELS,
+  VALID_THINKING,
+  type Operation,
+  type OperationRunInput,
+  type OperationRunOptions,
+  type TriggerFireInput,
+} from "./control-plane-types";
+import {
+  explainOperation,
+  explainTrigger,
+  getOperationOrThrow,
+  getTriggerOrThrow,
+  listOperations,
+  listTriggers,
+} from "./control-plane-registry";
 import { runUtilityCommandEffect, type UtilityCommand } from "./utility-command-handlers";
 import { UTILITY_USAGE_LINES } from "./utility-command-manifest";
 import { runCommand, runStreamingCommand } from "../lib/command";
 import { runScript } from "../lib/effect-script";
-
-type Runner =
-  | {
-      type: "ready-for-dev-router";
-      playbookPath: string;
-    }
-  | {
-      type: "codex-playbook";
-      playbookPath: string;
-    };
-
-type OperationArg = {
-  name: string;
-  type: "string" | "number" | "boolean";
-  required: boolean;
-  description: string;
-};
-
-type Operation = {
-  id: string;
-  name: string;
-  description: string;
-  defaultModel: string;
-  defaultThinking: "low" | "medium" | "high" | "xhigh";
-  strategy: string;
-  args: OperationArg[];
-  labelingContext?: {
-    modelLabels?: string[];
-    thinkingLabels?: string[];
-    decisionLabels?: string[];
-  };
-  runner: Runner;
-};
-
-type Trigger = {
-  id: string;
-  name: string;
-  operationId: string;
-  rrule: string;
-  args: Record<string, string>;
-};
 
 type GhIssueLabel = {
   name: string;
@@ -87,29 +64,6 @@ type ReadyForDevPlan = {
   thinking: string;
   rationale?: string;
 };
-
-type OperationRunOptions = {
-  issue?: string;
-  model?: string;
-  thinking?: string;
-  dryRun: boolean;
-};
-
-type OperationRunInput = OperationRunOptions & {
-  operationId: string;
-};
-
-type TriggerFireInput = OperationRunOptions & {
-  triggerId: string;
-};
-
-const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
-const TRIGGERS_PATH = path.join("software-factory", "triggers", "registry.json");
-const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
-const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
-const PLANNER_MODEL = "gpt-5.3-codex";
-const PLANNER_THINKING = "xhigh";
-const CODEX_DANGEROUS_FLAG = "--dangerously-bypass-approvals-and-sandbox";
 const ROOT_COMMAND_NAMES = new Set([
   "skills",
   "workflows",
@@ -288,39 +242,6 @@ const printCompactHelp = (argv: string[]): boolean => {
   }
 
   return false;
-};
-
-const readJson = async <T>(filePath: string): Promise<T> => {
-  const raw = await fs.readFile(filePath, "utf8");
-  return JSON.parse(raw) as T;
-};
-
-const readOperations = async (): Promise<Operation[]> => {
-  const parsed = await readJson<{ operations: Operation[] }>(OPERATIONS_PATH);
-  return parsed.operations;
-};
-
-const readTriggers = async (): Promise<Trigger[]> => {
-  const parsed = await readJson<{ triggers: Trigger[] }>(TRIGGERS_PATH);
-  return parsed.triggers;
-};
-
-const getOperationOrThrow = async (operationId: string): Promise<Operation> => {
-  const operations = await readOperations();
-  const operation = operations.find((entry) => entry.id === operationId);
-  if (!operation) {
-    throw new RegistryLookupError({ entity: "operation", id: operationId });
-  }
-  return operation;
-};
-
-const getTriggerOrThrow = async (triggerId: string): Promise<Trigger> => {
-  const triggers = await readTriggers();
-  const trigger = triggers.find((entry) => entry.id === triggerId);
-  if (!trigger) {
-    throw new RegistryLookupError({ entity: "trigger", id: triggerId });
-  }
-  return trigger;
 };
 
 const ensureThinking = (value: string | undefined, fallback: string): string => {
@@ -789,103 +710,6 @@ const runOperation = async (
   });
 };
 
-const listOperations = async (json: boolean): Promise<void> => {
-  const operations = await readOperations();
-  if (json) {
-    console.log(JSON.stringify(operations, null, 2));
-    return;
-  }
-
-  console.log("Operations");
-  for (const operation of operations) {
-    const args = operation.args.map((arg) => `--${arg.name}`).join(", ");
-    console.log(
-      `- ${operation.id} (${operation.name}) | strategy=${operation.strategy} | default=${operation.defaultModel}/${operation.defaultThinking}`,
-    );
-    console.log(`  description: ${operation.description}`);
-    console.log(`  args: ${args || "(none)"}`);
-  }
-};
-
-const explainOperation = async (operationId: string, json: boolean): Promise<void> => {
-  const [operation, triggers] = await Promise.all([getOperationOrThrow(operationId), readTriggers()]);
-  const linkedTriggers = triggers.filter((trigger) => trigger.operationId === operation.id);
-
-  if (json) {
-    console.log(JSON.stringify({ operation, triggers: linkedTriggers }, null, 2));
-    return;
-  }
-
-  console.log(`Operation ${operation.id}`);
-  console.log(`  name: ${operation.name}`);
-  console.log(`  purpose: ${operation.description}`);
-  console.log(`  strategy: ${operation.strategy}`);
-  console.log(`  defaults: ${operation.defaultModel}/${operation.defaultThinking}`);
-  console.log(`  runner: ${operation.runner.type}`);
-  console.log(`  playbook: ${operation.runner.playbookPath}`);
-
-  if (operation.args.length === 0) {
-    console.log("  args: (none)");
-  } else {
-    console.log("  args:");
-    for (const arg of operation.args) {
-      const required = arg.required ? "required" : "optional";
-      console.log(`    --${arg.name} (${arg.type}, ${required})`);
-      console.log(`      ${arg.description}`);
-    }
-  }
-
-  if (linkedTriggers.length === 0) {
-    console.log("  triggers: (none)");
-    return;
-  }
-
-  console.log("  triggers:");
-  for (const trigger of linkedTriggers) {
-    console.log(`    - ${trigger.id} (${trigger.rrule})`);
-  }
-};
-
-const listTriggers = async (json: boolean): Promise<void> => {
-  const triggers = await readTriggers();
-  if (json) {
-    console.log(JSON.stringify(triggers, null, 2));
-    return;
-  }
-
-  console.log("Triggers");
-  for (const trigger of triggers) {
-    console.log(`- ${trigger.id} (${trigger.name}) -> ${trigger.operationId}`);
-    console.log(`  schedule: ${trigger.rrule}`);
-  }
-};
-
-const explainTrigger = async (triggerId: string, json: boolean): Promise<void> => {
-  const trigger = await getTriggerOrThrow(triggerId);
-  const operation = await getOperationOrThrow(trigger.operationId);
-
-  if (json) {
-    console.log(JSON.stringify({ trigger, operation }, null, 2));
-    return;
-  }
-
-  console.log(`Trigger ${trigger.id}`);
-  console.log(`  name: ${trigger.name}`);
-  console.log(`  schedule: ${trigger.rrule}`);
-  console.log(`  operation: ${trigger.operationId}`);
-  console.log(`  operation strategy: ${operation.strategy}`);
-  console.log(`  operation defaults: ${operation.defaultModel}/${operation.defaultThinking}`);
-  console.log(`  operation runner: ${operation.runner.type}`);
-  if (Object.keys(trigger.args).length === 0) {
-    console.log("  trigger args: (none)");
-  } else {
-    console.log("  trigger args:");
-    for (const [key, value] of Object.entries(trigger.args)) {
-      console.log(`    --${key}=${value}`);
-    }
-  }
-};
-
 const parseBooleanTriggerArg = (key: string, value: string): boolean => {
   const normalized = value.trim().toLowerCase();
   if (normalized === "true") {
@@ -951,81 +775,6 @@ const fireTrigger = async ({
   };
 
   return runOperation(trigger.operationId, mergedOptions);
-};
-
-const runDoctor = async (): Promise<number> => {
-  const checks: Array<{ name: string; ok: boolean; details: string }> = [];
-
-  const paths = [OPERATIONS_PATH, TRIGGERS_PATH];
-  for (const candidate of paths) {
-    try {
-      await fs.access(candidate);
-      checks.push({ name: candidate, ok: true, details: "found" });
-    } catch {
-      checks.push({ name: candidate, ok: false, details: "missing" });
-    }
-  }
-
-  const codexVersion = await runCommand("codex", ["--version"], {
-    cwd: process.cwd(),
-    allowFailure: true,
-  });
-  checks.push({
-    name: "codex --version",
-    ok: codexVersion.status === 0,
-    details: (codexVersion.stdout || codexVersion.stderr || "").trim(),
-  });
-
-  const ghStatus = await runCommand("gh", ["auth", "status"], {
-    cwd: process.cwd(),
-    allowFailure: true,
-  });
-  checks.push({
-    name: "gh auth status",
-    ok: ghStatus.status === 0,
-    details: ((ghStatus.stdout || ghStatus.stderr) || "").trim().split("\n")[0] || "",
-  });
-
-  let hasMissingRouting = false;
-  const routingCheck = await runCommand(
-    "gh",
-    [
-      "issue",
-      "list",
-      "--state",
-      "open",
-      "--label",
-      "ready-for-dev",
-      "--limit",
-      "200",
-      "--json",
-      "number,labels",
-      "--jq",
-      '[.[] | {n:.number,m:([.labels[].name|select(startswith("model:"))]|length),t:([.labels[].name|select(startswith("thinking:"))]|length)} | select(.m!=1 or .t!=1)] | length',
-    ],
-    { cwd: process.cwd(), allowFailure: true },
-  );
-  if (routingCheck.status === 0) {
-    const count = Number.parseInt((routingCheck.stdout || "0").trim(), 10);
-    hasMissingRouting = Number.isFinite(count) && count > 0;
-    checks.push({
-      name: "ready-for-dev routing labels",
-      ok: !hasMissingRouting,
-      details: hasMissingRouting ? `${count} issues missing model/thinking labels` : "ok",
-    });
-  } else {
-    checks.push({
-      name: "ready-for-dev routing labels",
-      ok: false,
-      details: (routingCheck.stderr || routingCheck.stdout || "").trim(),
-    });
-  }
-
-  for (const check of checks) {
-    console.log(`${check.ok ? "OK" : "FAIL"}  ${check.name}${check.details ? ` - ${check.details}` : ""}`);
-  }
-
-  return checks.every((check) => check.ok) ? 0 : 1;
 };
 
 const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
