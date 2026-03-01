@@ -82,6 +82,21 @@ type ReadyForDevPlan = {
   rationale?: string;
 };
 
+type OperationRunOptions = {
+  issue?: string;
+  model?: string;
+  thinking?: string;
+  dryRun: boolean;
+};
+
+type OperationRunInput = OperationRunOptions & {
+  operationId: string;
+};
+
+type TriggerFireInput = OperationRunOptions & {
+  triggerId: string;
+};
+
 const OPERATIONS_PATH = path.join("software-factory", "operations", "registry.json");
 const TRIGGERS_PATH = path.join("software-factory", "triggers", "registry.json");
 const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
@@ -155,8 +170,6 @@ const TRIGGER_HELP_ROWS = [
   ["explain", "Describe one trigger and linked operation."],
   ["fire", "Fire one trigger with optional overrides."],
 ] as const;
-
-const asBool = (raw: string | undefined): boolean => raw === "true";
 
 const formatHelpRows = (rows: readonly (readonly [string, string])[]): string[] => {
   return rows.map(([command, description]) => `  ${command}  ${description}`);
@@ -338,7 +351,7 @@ const readOptionalThinkingOverride = (value: string | undefined): string | undef
 
 const runCodexPlaybook = async (
   operation: Operation,
-  options: Record<string, string>,
+  options: OperationRunOptions,
 ): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "codex-playbook") {
@@ -392,7 +405,7 @@ const runCodexPlaybook = async (
     "-",
   ];
 
-  if (asBool(options.dry_run)) {
+  if (options.dryRun) {
     console.log(`playbook: ${runner.playbookPath}`);
     console.log(`command: codex ${codexArgs.join(" ")}`);
     console.log("");
@@ -561,7 +574,7 @@ const ensureIssueRoutingCompatibility = (
 
 const runReadyForDevRouter = async (
   operation: Operation,
-  options: Record<string, string>,
+  options: OperationRunOptions,
 ): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "ready-for-dev-router") {
@@ -617,7 +630,7 @@ const runReadyForDevRouter = async (
     "-",
   ];
 
-  if (asBool(options.dry_run)) {
+  if (options.dryRun) {
     if (modelOverride) {
       console.log(`Execution model override: ${modelOverride}`);
     }
@@ -731,15 +744,15 @@ const runReadyForDevRouter = async (
 
 const runOperation = async (
   operationId: string,
-  rawOptions: Record<string, string>,
+  options: OperationRunOptions,
 ): Promise<number> => {
   const operation = await getOperationOrThrow(operationId);
 
   if (operation.runner.type === "ready-for-dev-router") {
-    return await runReadyForDevRouter(operation, rawOptions);
+    return await runReadyForDevRouter(operation, options);
   }
   if (operation.runner.type === "codex-playbook") {
-    return await runCodexPlaybook(operation, rawOptions);
+    return await runCodexPlaybook(operation, options);
   }
   throw new Error(`Unsupported runner type for operation ${operation.id}.`);
 };
@@ -841,18 +854,69 @@ const explainTrigger = async (triggerId: string, json: boolean): Promise<void> =
   }
 };
 
-const fireTrigger = async (
-  triggerId: string,
-  overrides: Record<string, string>,
-): Promise<number> => {
-  const trigger = await getTriggerOrThrow(triggerId);
+const parseBooleanTriggerArg = (key: string, value: string): boolean => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true") {
+    return true;
+  }
+  if (normalized === "false") {
+    return false;
+  }
+  throw new Error(`Invalid trigger arg '${key}=${value}'. Expected true or false.`);
+};
 
-  const mergedArgs: Record<string, string> = {
-    ...trigger.args,
-    ...overrides,
+const parseTriggerOperationOverrides = (
+  args: Record<string, string>,
+): Partial<OperationRunOptions> => {
+  const parsed: Partial<OperationRunOptions> = {};
+
+  for (const [key, rawValue] of Object.entries(args)) {
+    const value = rawValue.trim();
+    if (!value) {
+      continue;
+    }
+
+    switch (key) {
+      case "issue":
+        parsed.issue = value;
+        break;
+      case "model":
+        parsed.model = value;
+        break;
+      case "thinking":
+        parsed.thinking = value;
+        break;
+      case "dry_run":
+        parsed.dryRun = parseBooleanTriggerArg(key, value);
+        break;
+      default:
+        throw new Error(
+          `Unsupported trigger arg '${key}' on trigger registry. Allowed keys: issue, model, thinking, dry_run.`,
+        );
+    }
+  }
+
+  return parsed;
+};
+
+const fireTrigger = async ({
+  triggerId,
+  issue,
+  model,
+  thinking,
+  dryRun,
+}: TriggerFireInput): Promise<number> => {
+  const trigger = await getTriggerOrThrow(triggerId);
+  const triggerOverrides = parseTriggerOperationOverrides(trigger.args);
+
+  const mergedOptions: OperationRunOptions = {
+    issue: issue ?? triggerOverrides.issue,
+    model: model ?? triggerOverrides.model,
+    thinking: thinking ?? triggerOverrides.thinking,
+    dryRun: dryRun || triggerOverrides.dryRun === true,
   };
 
-  return runOperation(trigger.operationId, mergedArgs);
+  return runOperation(trigger.operationId, mergedOptions);
 };
 
 const runDoctor = async (): Promise<number> => {
@@ -949,6 +1013,42 @@ const executeUtilityCommand = (
       toCliExecutionError(`utility command ${command.key}`, error),
     ),
   );
+
+const executeOperationRun = (
+  input: OperationRunInput,
+): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
+  Effect.tryPromise({
+    try: async () => {
+      const status = await runOperation(input.operationId, {
+        issue: input.issue,
+        model: input.model,
+        thinking: input.thinking,
+        dryRun: input.dryRun,
+      });
+      applyExitCode(status);
+    },
+    catch: (error) => toCliExecutionError("operation run", error),
+  });
+
+const executeTriggerFire = (
+  input: TriggerFireInput,
+): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
+  Effect.tryPromise({
+    try: async () => {
+      const status = await fireTrigger(input);
+      applyExitCode(status);
+    },
+    catch: (error) => toCliExecutionError("trigger fire", error),
+  });
+
+const executeDoctor = (): Effect.Effect<void, ReturnType<typeof toCliExecutionError>> =>
+  Effect.tryPromise({
+    try: async () => {
+      const status = await runDoctor();
+      applyExitCode(status);
+    },
+    catch: (error) => toCliExecutionError("doctor", error),
+  });
 
 const operationIdOption = Options.text("operation-id").pipe(
   Options.withDescription("Registered operation id."),
@@ -1330,31 +1430,12 @@ const operationRunCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ operation_id, issue, model, thinking, dry_run }) =>
-    Effect.tryPromise({
-      try: async () => {
-        const overrides: Record<string, string> = {};
-
-        const issueValue = optionToUndefined(issue);
-        const modelValue = optionToUndefined(model);
-        const thinkingValue = optionToUndefined(thinking);
-
-        if (issueValue !== undefined) {
-          overrides.issue = issueValue;
-        }
-        if (modelValue !== undefined) {
-          overrides.model = modelValue;
-        }
-        if (thinkingValue !== undefined) {
-          overrides.thinking = thinkingValue;
-        }
-        if (dry_run) {
-          overrides.dry_run = "true";
-        }
-
-        const status = await runOperation(operation_id, overrides);
-        applyExitCode(status);
-      },
-      catch: (error) => toCliExecutionError("operation run", error),
+    executeOperationRun({
+      operationId: operation_id,
+      issue: optionToUndefined(issue),
+      model: optionToUndefined(model),
+      thinking: optionToUndefined(thinking),
+      dryRun: dry_run,
     }),
 ).pipe(Command.withDescription("Run one operation directly."));
 
@@ -1400,31 +1481,12 @@ const triggerFireCommand = Command.make(
     dry_run: dryRunOption,
   },
   ({ trigger_id, issue, model, thinking, dry_run }) =>
-    Effect.tryPromise({
-      try: async () => {
-        const overrides: Record<string, string> = {};
-
-        const issueValue = optionToUndefined(issue);
-        const modelValue = optionToUndefined(model);
-        const thinkingValue = optionToUndefined(thinking);
-
-        if (issueValue !== undefined) {
-          overrides.issue = issueValue;
-        }
-        if (modelValue !== undefined) {
-          overrides.model = modelValue;
-        }
-        if (thinkingValue !== undefined) {
-          overrides.thinking = thinkingValue;
-        }
-        if (dry_run) {
-          overrides.dry_run = "true";
-        }
-
-        const status = await fireTrigger(trigger_id, overrides);
-        applyExitCode(status);
-      },
-      catch: (error) => toCliExecutionError("trigger fire", error),
+    executeTriggerFire({
+      triggerId: trigger_id,
+      issue: optionToUndefined(issue),
+      model: optionToUndefined(model),
+      thinking: optionToUndefined(thinking),
+      dryRun: dry_run,
     }),
 ).pipe(Command.withDescription("Fire one trigger with optional overrides."));
 
@@ -1440,14 +1502,7 @@ const triggerCommand = Command.make("trigger", {}).pipe(
 const doctorCommand = Command.make(
   "doctor",
   {},
-  () =>
-    Effect.tryPromise({
-      try: async () => {
-        const status = await runDoctor();
-        applyExitCode(status);
-      },
-      catch: (error) => toCliExecutionError("doctor", error),
-    }),
+  () => executeDoctor(),
 ).pipe(Command.withDescription("Run software-factory environment diagnostics."));
 
 const cli = Command.make("software-factory", {}).pipe(

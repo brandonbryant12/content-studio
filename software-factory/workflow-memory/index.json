@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-01-architecture-adr-guard-effect-native-cli-error-and-execution-hardening",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Effect-native CLI error and execution hardening",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "software-factory",
+      "effect-cli",
+      "cli-architecture"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-normalize-utility-script-exit-contracts-to-explicit-status-codes",
     "date": "2026-03-01",
     "month": "2026-03",
@@ -30,6 +46,22 @@
     "severity": "low",
     "status": "open",
     "tags": [],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-01-architecture-adr-guard-typed-operation-and-trigger-run-inputs",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Typed operation and trigger run inputs",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "software-factory",
+      "effect-cli",
+      "typed-inputs"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {
