@@ -26,6 +26,7 @@ export type ScriptGuardrailIssue = {
     | 'missing-run-script-call'
     | 'entry-script-exit-side-effect'
     | 'legacy-argv-parser'
+    | 'factory-throw-new-error'
     | 'non-root-process-argv'
     | 'non-root-run-script'
     | 'untracked-entry-script'
@@ -248,6 +249,18 @@ export const checkScriptGuardrails = async (
         code: 'legacy-argv-parser',
         path: sourcePath,
         message: 'Legacy parseArgs helper is not allowed. Parse CLI input only at the root @effect/cli command layer.',
+      });
+    }
+
+    if (
+      sourcePath.startsWith('software-factory/scripts/factory/') &&
+      /\bthrow\s+new\s+Error\s*\(/.test(source)
+    ) {
+      issues.push({
+        code: 'factory-throw-new-error',
+        path: sourcePath,
+        message:
+          'Factory command modules must use tagged domain errors, not throw new Error(...).',
       });
     }
 

@@ -11,6 +11,55 @@ export class UnknownTopLevelCommandError extends Data.TaggedError("UnknownTopLev
   }
 }
 
+export class CliInputError extends Data.TaggedError("CliInputError")<{
+  reason: string;
+}> {
+  get message(): string {
+    return this.reason;
+  }
+}
+
+export class RegistryLookupError extends Data.TaggedError("RegistryLookupError")<{
+  entity: "operation" | "trigger";
+  id: string;
+}> {
+  get message(): string {
+    return `Unknown ${this.entity}: ${this.id}`;
+  }
+}
+
+export class RunnerConfigurationError extends Data.TaggedError("RunnerConfigurationError")<{
+  reason: string;
+}> {
+  get message(): string {
+    return this.reason;
+  }
+}
+
+export class ExternalToolError extends Data.TaggedError("ExternalToolError")<{
+  reason: string;
+}> {
+  get message(): string {
+    return this.reason;
+  }
+}
+
+export class PlannerOutputError extends Data.TaggedError("PlannerOutputError")<{
+  reason: string;
+}> {
+  get message(): string {
+    return this.reason;
+  }
+}
+
+export class RoutingConstraintError extends Data.TaggedError("RoutingConstraintError")<{
+  reason: string;
+}> {
+  get message(): string {
+    return this.reason;
+  }
+}
+
 export class UtilityCommandExecutionError extends Data.TaggedError("UtilityCommandExecutionError")<{
   command: string;
   reason: string;

@@ -7,7 +7,13 @@ import { NodeContext } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import {
+  CliInputError,
+  ExternalToolError,
   UnknownTopLevelCommandError,
+  PlannerOutputError,
+  RegistryLookupError,
+  RoutingConstraintError,
+  RunnerConfigurationError,
   toCliExecutionError,
 } from "./errors";
 import { runUtilityCommandEffect, type UtilityCommand } from "./utility-command-handlers";
@@ -303,7 +309,7 @@ const getOperationOrThrow = async (operationId: string): Promise<Operation> => {
   const operations = await readOperations();
   const operation = operations.find((entry) => entry.id === operationId);
   if (!operation) {
-    throw new Error(`Unknown operation: ${operationId}`);
+    throw new RegistryLookupError({ entity: "operation", id: operationId });
   }
   return operation;
 };
@@ -312,7 +318,7 @@ const getTriggerOrThrow = async (triggerId: string): Promise<Trigger> => {
   const triggers = await readTriggers();
   const trigger = triggers.find((entry) => entry.id === triggerId);
   if (!trigger) {
-    throw new Error(`Unknown trigger: ${triggerId}`);
+    throw new RegistryLookupError({ entity: "trigger", id: triggerId });
   }
   return trigger;
 };
@@ -320,7 +326,9 @@ const getTriggerOrThrow = async (triggerId: string): Promise<Trigger> => {
 const ensureThinking = (value: string | undefined, fallback: string): string => {
   const resolved = (value ?? fallback).trim();
   if (!VALID_THINKING.has(resolved)) {
-    throw new Error(`Invalid thinking value: ${resolved}. Expected low|medium|high|xhigh.`);
+    throw new CliInputError({
+      reason: `Invalid thinking value: ${resolved}. Expected low|medium|high|xhigh.`,
+    });
   }
   return resolved;
 };
@@ -328,9 +336,9 @@ const ensureThinking = (value: string | undefined, fallback: string): string => 
 const ensureModel = (value: string | undefined, fallback: string): string => {
   const resolved = (value ?? fallback).trim();
   if (!VALID_MODELS.has(resolved)) {
-    throw new Error(
-      `Unsupported execution model '${resolved}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
-    );
+    throw new CliInputError({
+      reason: `Unsupported execution model '${resolved}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
+    });
   }
   return resolved;
 };
@@ -355,7 +363,9 @@ const runCodexPlaybook = async (
 ): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "codex-playbook") {
-    throw new Error(`Operation ${operation.id} is not configured for codex-playbook runner.`);
+    throw new RunnerConfigurationError({
+      reason: `Operation ${operation.id} is not configured for codex-playbook runner.`,
+    });
   }
 
   const model = ensureModel(options.model, operation.defaultModel);
@@ -429,12 +439,16 @@ const runGhJson = async <T>(args: string[], errorContext: string): Promise<T> =>
   });
   if (result.status !== 0) {
     const details = (result.stderr || result.stdout || "").trim();
-    throw new Error(`${errorContext}. ${details}`);
+    throw new ExternalToolError({
+      reason: `${errorContext}. ${details}`,
+    });
   }
 
   const stdout = (result.stdout || "").trim();
   if (!stdout) {
-    throw new Error(`${errorContext}. Empty response from gh.`);
+    throw new ExternalToolError({
+      reason: `${errorContext}. Empty response from gh.`,
+    });
   }
   return JSON.parse(stdout) as T;
 };
@@ -464,7 +478,7 @@ const listReadyForDevCandidates = async (
   }
   const issueNumber = Number.parseInt(explicitIssue, 10);
   if (!Number.isFinite(issueNumber)) {
-    throw new Error(`Invalid --issue value: ${explicitIssue}`);
+    throw new CliInputError({ reason: `Invalid --issue value: ${explicitIssue}` });
   }
   return sorted.filter((issue) => issue.number === issueNumber);
 };
@@ -491,7 +505,9 @@ const extractJsonObject = (raw: string): string => {
     return trimmed.slice(start, end + 1);
   }
 
-  throw new Error("Planner output did not contain a JSON object.");
+  throw new PlannerOutputError({
+    reason: "Planner output did not contain a JSON object.",
+  });
 };
 
 const parseReadyForDevPlan = (raw: string): ReadyForDevPlan => {
@@ -505,25 +521,29 @@ const parseReadyForDevPlan = (raw: string): ReadyForDevPlan => {
     : [];
 
   if (selectedIssues.length === 0) {
-    throw new Error("Planner returned no selectedIssues.");
+    throw new PlannerOutputError({
+      reason: "Planner returned no selectedIssues.",
+    });
   }
 
   const uniqueIssues = Array.from(new Set(selectedIssues));
   if (uniqueIssues.length > 5) {
-    throw new Error(`Planner selected too many issues (${uniqueIssues.length}); max is 5.`);
+    throw new PlannerOutputError({
+      reason: `Planner selected too many issues (${uniqueIssues.length}); max is 5.`,
+    });
   }
 
   const model = typeof parsed.model === "string" ? parsed.model.trim() : "";
   const thinking = typeof parsed.thinking === "string" ? parsed.thinking.trim() : "";
   if (!VALID_MODELS.has(model)) {
-    throw new Error(
-      `Planner returned unsupported model '${model}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
-    );
+    throw new PlannerOutputError({
+      reason: `Planner returned unsupported model '${model}'. Allowed: ${Array.from(VALID_MODELS).join(", ")}.`,
+    });
   }
   if (!VALID_THINKING.has(thinking)) {
-    throw new Error(
-      `Planner returned unsupported thinking '${thinking}'. Allowed: ${Array.from(VALID_THINKING).join(", ")}.`,
-    );
+    throw new PlannerOutputError({
+      reason: `Planner returned unsupported thinking '${thinking}'. Allowed: ${Array.from(VALID_THINKING).join(", ")}.`,
+    });
   }
 
   return {
@@ -548,26 +568,28 @@ const ensureIssueRoutingCompatibility = (
       .filter((name) => name.startsWith("thinking:"));
 
     if (modelLabels.length > 1) {
-      throw new Error(`Issue #${issue.number} has multiple model labels: ${modelLabels.join(", ")}.`);
+      throw new RoutingConstraintError({
+        reason: `Issue #${issue.number} has multiple model labels: ${modelLabels.join(", ")}.`,
+      });
     }
     if (thinkingLabels.length > 1) {
-      throw new Error(
-        `Issue #${issue.number} has multiple thinking labels: ${thinkingLabels.join(", ")}.`,
-      );
+      throw new RoutingConstraintError({
+        reason: `Issue #${issue.number} has multiple thinking labels: ${thinkingLabels.join(", ")}.`,
+      });
     }
 
     const issueModel = modelLabels[0]?.replace(/^model:/, "").trim();
     const issueThinking = thinkingLabels[0]?.replace(/^thinking:/, "").trim();
 
     if (issueModel && issueModel !== model) {
-      throw new Error(
-        `Planner/execution model mismatch for issue #${issue.number}: issue label model:${issueModel} vs selected model:${model}.`,
-      );
+      throw new RoutingConstraintError({
+        reason: `Planner/execution model mismatch for issue #${issue.number}: issue label model:${issueModel} vs selected model:${model}.`,
+      });
     }
     if (issueThinking && issueThinking !== thinking) {
-      throw new Error(
-        `Planner/execution thinking mismatch for issue #${issue.number}: issue label thinking:${issueThinking} vs selected thinking:${thinking}.`,
-      );
+      throw new RoutingConstraintError({
+        reason: `Planner/execution thinking mismatch for issue #${issue.number}: issue label thinking:${issueThinking} vs selected thinking:${thinking}.`,
+      });
     }
   }
 };
@@ -578,9 +600,9 @@ const runReadyForDevRouter = async (
 ): Promise<number> => {
   const runner = operation.runner;
   if (runner.type !== "ready-for-dev-router") {
-    throw new Error(
-      `Operation ${operation.id} is not configured for ready-for-dev-router runner.`,
-    );
+    throw new RunnerConfigurationError({
+      reason: `Operation ${operation.id} is not configured for ready-for-dev-router runner.`,
+    });
   }
 
   const candidates = await listReadyForDevCandidates(options.issue?.trim());
@@ -655,7 +677,9 @@ const runReadyForDevRouter = async (
   });
   if (plannerResult.status !== 0) {
     const details = (plannerResult.stderr || plannerResult.stdout || "").trim();
-    throw new Error(`Ready-for-dev planner call failed. ${details}`);
+    throw new ExternalToolError({
+      reason: `Ready-for-dev planner call failed. ${details}`,
+    });
   }
 
   const plan = parseReadyForDevPlan(plannerResult.stdout || "");
@@ -663,7 +687,9 @@ const runReadyForDevRouter = async (
   const selectedIssues = plan.selectedIssues.map((issueNumber) => {
     const issue = candidateMap.get(issueNumber);
     if (!issue) {
-      throw new Error(`Planner selected issue #${issueNumber}, which is not in candidate set.`);
+      throw new PlannerOutputError({
+        reason: `Planner selected issue #${issueNumber}, which is not in candidate set.`,
+      });
     }
     return issue;
   });
@@ -684,11 +710,15 @@ const runReadyForDevRouter = async (
       `Failed to re-check issue #${selected.number}`,
     );
     if (issueView.state !== "OPEN") {
-      throw new Error(`Issue #${selected.number} is no longer open (state=${issueView.state}).`);
+      throw new RoutingConstraintError({
+        reason: `Issue #${selected.number} is no longer open (state=${issueView.state}).`,
+      });
     }
     const hasReadyLabel = issueView.labels.some((label) => label.name === "ready-for-dev");
     if (!hasReadyLabel) {
-      throw new Error(`Issue #${selected.number} no longer has ready-for-dev label.`);
+      throw new RoutingConstraintError({
+        reason: `Issue #${selected.number} no longer has ready-for-dev label.`,
+      });
     }
   }
 
@@ -754,7 +784,9 @@ const runOperation = async (
   if (operation.runner.type === "codex-playbook") {
     return await runCodexPlaybook(operation, options);
   }
-  throw new Error(`Unsupported runner type for operation ${operation.id}.`);
+  throw new RunnerConfigurationError({
+    reason: `Unsupported runner type for operation ${operation.id}.`,
+  });
 };
 
 const listOperations = async (json: boolean): Promise<void> => {
@@ -862,7 +894,9 @@ const parseBooleanTriggerArg = (key: string, value: string): boolean => {
   if (normalized === "false") {
     return false;
   }
-  throw new Error(`Invalid trigger arg '${key}=${value}'. Expected true or false.`);
+  throw new CliInputError({
+    reason: `Invalid trigger arg '${key}=${value}'. Expected true or false.`,
+  });
 };
 
 const parseTriggerOperationOverrides = (
@@ -890,9 +924,9 @@ const parseTriggerOperationOverrides = (
         parsed.dryRun = parseBooleanTriggerArg(key, value);
         break;
       default:
-        throw new Error(
-          `Unsupported trigger arg '${key}' on trigger registry. Allowed keys: issue, model, thinking, dry_run.`,
-        );
+        throw new CliInputError({
+          reason: `Unsupported trigger arg '${key}' on trigger registry. Allowed keys: issue, model, thinking, dry_run.`,
+        });
     }
   }
 

@@ -49,6 +49,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-architecture-adr-guard-tagged-domain-errors-enforced-in-factory-control-plane",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Tagged domain errors enforced in factory control plane",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "software-factory",
+      "effect-cli",
+      "typed-errors",
+      "guardrails"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-typed-operation-and-trigger-run-inputs",
     "date": "2026-03-01",
     "month": "2026-03",
