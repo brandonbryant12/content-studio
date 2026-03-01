@@ -55,6 +55,9 @@ export class TTSError extends Schema.TaggedError<TTSError>()('TTSError', {
   static readonly httpCode = 'SERVICE_UNAVAILABLE' as const;
   static readonly httpMessage = 'Text-to-speech service unavailable';
   static readonly logLevel = 'error' as const;
+  static getData(e: TTSError) {
+    return { message: e.message };
+  }
 }
 
 /**
@@ -70,6 +73,9 @@ export class TTSQuotaExceededError extends Schema.TaggedError<TTSQuotaExceededEr
   static readonly httpCode = 'RATE_LIMITED' as const;
   static readonly httpMessage = 'TTS quota exceeded';
   static readonly logLevel = 'warn' as const;
+  static getData(e: TTSQuotaExceededError) {
+    return { message: e.message };
+  }
 }
 
 /**
@@ -108,6 +114,9 @@ export class AudioError extends Schema.TaggedError<AudioError>()('AudioError', {
   static readonly httpCode = 'INTERNAL_ERROR' as const;
   static readonly httpMessage = 'Audio processing failed';
   static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: AudioError) {
+    return { message: e.message };
+  }
 }
 
 /**
@@ -188,6 +197,9 @@ export class ImageGenContentFilteredError extends Schema.TaggedError<ImageGenCon
   static readonly httpMessage =
     'Image could not be generated. Please adjust your prompt and try again.';
   static readonly logLevel = 'silent' as const;
+  static getData(e: ImageGenContentFilteredError) {
+    return e.prompt ? { prompt: e.prompt } : {};
+  }
 }
 
 // =============================================================================
@@ -208,6 +220,9 @@ export class ResearchError extends Schema.TaggedError<ResearchError>()(
   static readonly httpCode = 'RESEARCH_ERROR' as const;
   static readonly httpMessage = (e: ResearchError) => e.message;
   static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: ResearchError) {
+    return { message: e.message };
+  }
 }
 
 /**

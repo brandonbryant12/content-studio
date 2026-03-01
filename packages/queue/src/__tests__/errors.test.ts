@@ -31,6 +31,13 @@ describe('queue errors', () => {
       expect(QueueError.httpMessage).toBe('Job queue operation failed');
       expect(QueueError.logLevel).toBe('error-with-stack');
     });
+
+    it('getData returns message', () => {
+      const error = new QueueError({ message: 'Queue operation failed' });
+      expect(QueueError.getData(error)).toEqual({
+        message: 'Queue operation failed',
+      });
+    });
   });
 
   describe('JobNotFoundError', () => {

@@ -27,6 +27,13 @@ describe('storage errors', () => {
       expect(StorageError.httpMessage).toBe('Storage operation failed');
       expect(StorageError.logLevel).toBe('error-with-stack');
     });
+
+    it('getData returns message', () => {
+      const error = new StorageError({ message: 'Storage operation failed' });
+      expect(StorageError.getData(error)).toEqual({
+        message: 'Storage operation failed',
+      });
+    });
   });
 
   describe('StorageNotFoundError', () => {
