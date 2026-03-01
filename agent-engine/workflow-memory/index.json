@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-03-01-feature-delivery-migrate-packages-ui-to-unified-radix-ui-package-249",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Migrate packages/ui to unified radix-ui package (#249)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "radix-ui",
+      "dependency-migration",
+      "packages-ui",
+      "ready-for-dev-executor",
+      "skill:codebase-nav",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.7,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-frontend-react-tanstack-router-query-sh",
     "date": "2026-03-01",
     "month": "2026-03",
