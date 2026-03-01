@@ -114,6 +114,11 @@ describe('errors', () => {
       expect(DbError.httpMessage).toBe('Database operation failed');
       expect(DbError.logLevel).toBe('error-with-stack');
     });
+
+    it('exposes getData with message', () => {
+      const error = new DbError({ message: 'Query failed' });
+      expect(DbError.getData(error)).toEqual({ message: 'Query failed' });
+    });
   });
 
   describe('ConstraintViolationError', () => {
@@ -154,6 +159,13 @@ describe('errors', () => {
         'Database temporarily unavailable, please retry',
       );
       expect(DeadlockError.logLevel).toBe('error');
+    });
+
+    it('exposes getData with message', () => {
+      const error = new DeadlockError({ message: 'Deadlock detected' });
+      expect(DeadlockError.getData(error)).toEqual({
+        message: 'Deadlock detected',
+      });
     });
   });
 

@@ -8,6 +8,9 @@ export class QueueError extends Schema.TaggedError<QueueError>()('QueueError', {
   static readonly httpCode = 'INTERNAL_ERROR' as const;
   static readonly httpMessage = 'Job queue operation failed';
   static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: QueueError) {
+    return { message: e.message };
+  }
 }
 
 export class JobNotFoundError extends Schema.TaggedError<JobNotFoundError>()(

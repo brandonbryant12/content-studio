@@ -12,4 +12,7 @@ export class ActivityLogNotFound extends Schema.TaggedError<ActivityLogNotFound>
   static readonly httpMessage = (e: ActivityLogNotFound) =>
     e.message ?? `Activity log ${e.id} not found`;
   static readonly logLevel = 'silent' as const;
+  static getData(e: ActivityLogNotFound) {
+    return { activityLogId: e.id };
+  }
 }

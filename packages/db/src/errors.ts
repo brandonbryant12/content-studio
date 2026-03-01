@@ -69,6 +69,9 @@ export class DbError extends Schema.TaggedError<DbError>()('DbError', {
   static readonly httpCode = 'INTERNAL_ERROR' as const;
   static readonly httpMessage = 'Database operation failed';
   static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: DbError) {
+    return { message: e.message };
+  }
 }
 
 /** PostgreSQL error codes: 23xxx */
@@ -103,6 +106,9 @@ export class DeadlockError extends Schema.TaggedError<DeadlockError>()(
   static readonly httpMessage =
     'Database temporarily unavailable, please retry';
   static readonly logLevel = 'error' as const;
+  static getData(e: DeadlockError) {
+    return { message: e.message };
+  }
 }
 
 /** PostgreSQL error codes: 08xxx */

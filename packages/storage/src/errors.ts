@@ -11,6 +11,9 @@ export class StorageError extends Schema.TaggedError<StorageError>()(
   static readonly httpCode = 'INTERNAL_ERROR' as const;
   static readonly httpMessage = 'Storage operation failed';
   static readonly logLevel = 'error-with-stack' as const;
+  static getData(e: StorageError) {
+    return { message: e.message };
+  }
 }
 
 export class StorageNotFoundError extends Schema.TaggedError<StorageNotFoundError>()(
