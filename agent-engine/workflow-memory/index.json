@@ -46,6 +46,30 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-01-feature-delivery-ready-for-dev-251-merged-with-chat-accessibility-fix",
+    "date": "2026-03-01",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ready-for-dev #251 merged with chat accessibility fix",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:251",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "skill:test-surface-steward",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-function:working",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.86,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-reposi",
     "date": "2026-03-01",
     "month": "2026-03",
