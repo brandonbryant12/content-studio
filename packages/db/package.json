@@ -57,6 +57,7 @@
     "migrate": "pnpm env:run drizzle-kit migrate",
     "generate": "pnpm env:run drizzle-kit generate",
     "studio": "pnpm env:run drizzle-kit studio",
+    "test": "vitest run",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },
   "prettier": "@repo/prettier-config",
