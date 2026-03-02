@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type {
   JobCompletionEvent,
@@ -98,6 +99,17 @@ vi.mock('@/clients/apiClient', () => ({
     },
   },
 }));
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+const setPathname = (pathname: string) => {
+  window.history.replaceState({}, '', pathname);
+};
 
 describe('SSE Handlers', () => {
   let queryClient: QueryClient;
@@ -199,6 +211,77 @@ describe('SSE Handlers', () => {
       handleJobCompletion(event, queryClient);
 
       expect(invalidateSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('notifies on generate-audio job completion', async () => {
+      const fetchSpy = vi
+        .spyOn(queryClient, 'fetchQuery')
+        .mockResolvedValue({ title: 'Audio Regen' });
+
+      handleJobCompletion(
+        {
+          type: 'job_completion',
+          jobId: 'job-123',
+          jobType: 'generate-audio',
+          status: 'completed',
+          podcastId: 'podcast-456',
+        },
+        queryClient,
+      );
+
+      await Promise.resolve();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(toast.success).toHaveBeenCalledWith('Podcast "Audio Regen" is ready', {});
+    });
+
+    it('notifies on generate-script job failure with error', async () => {
+      const fetchSpy = vi
+        .spyOn(queryClient, 'fetchQuery')
+        .mockResolvedValue({ title: 'Script Pass' });
+
+      handleJobCompletion(
+        {
+          type: 'job_completion',
+          jobId: 'job-124',
+          jobType: 'generate-script',
+          status: 'failed',
+          podcastId: 'podcast-456',
+          error: 'Script step failed',
+        },
+        queryClient,
+      );
+
+      await Promise.resolve();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith(
+        'Script step failed',
+        {},
+      );
+    });
+
+    it('suppresses notifications when user is already viewing the podcast', async () => {
+      setPathname('/podcasts/podcast-456');
+      vi.spyOn(queryClient, 'fetchQuery').mockResolvedValue({
+        title: 'Active Podcast',
+      });
+
+      handleJobCompletion(
+        {
+          type: 'job_completion',
+          jobId: 'job-125',
+          jobType: 'generate-audio',
+          status: 'completed',
+          podcastId: 'podcast-456',
+        },
+        queryClient,
+      );
+
+      await Promise.resolve();
+
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
     });
   });
 
