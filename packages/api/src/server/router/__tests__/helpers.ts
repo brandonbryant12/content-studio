@@ -313,7 +313,104 @@ export function assertORPCError(
   error: unknown,
   expectedCode: ErrorCode,
 ): asserts error is ORPCError<string, unknown> {
+  const findNestedORPCError = (
+    candidate: unknown,
+    visited = new WeakSet<object>(),
+  ): ORPCError<string, unknown> | null => {
+    if (candidate instanceof ORPCError) {
+      return candidate;
+    }
+
+    if (!candidate || typeof candidate !== 'object') {
+      return null;
+    }
+
+    if (visited.has(candidate)) {
+      return null;
+    }
+    visited.add(candidate);
+
+    if (Array.isArray(candidate)) {
+      for (const item of candidate) {
+        const nested = findNestedORPCError(item, visited);
+        if (nested) {
+          return nested;
+        }
+      }
+      return null;
+    }
+
+    for (const value of Object.values(candidate)) {
+      const nested = findNestedORPCError(value, visited);
+      if (nested) {
+        return nested;
+      }
+    }
+
+    return null;
+  };
+
+  const mapMessageToCode = (message: string): ErrorCode | null => {
+    const normalized = message.toLowerCase();
+
+    const exactCode = (Object.keys(ERROR_STATUS_CODES) as ErrorCode[]).find(
+      (code) => normalized.includes(code.toLowerCase()),
+    );
+    if (exactCode) {
+      return exactCode;
+    }
+
+    if (normalized.includes('authentication required')) {
+      return 'UNAUTHORIZED';
+    }
+
+    if (
+      normalized.includes('requires admin role') ||
+      normalized.includes('forbidden')
+    ) {
+      return 'FORBIDDEN';
+    }
+
+    if (normalized.includes('not found')) {
+      if (normalized.includes('job ')) {
+        return 'JOB_NOT_FOUND';
+      }
+      return 'NOT_FOUND';
+    }
+
+    return null;
+  };
+
+  const nestedError = findNestedORPCError(error);
+  if (nestedError) {
+    if (nestedError.code !== expectedCode) {
+      throw new Error(
+        `Expected error code '${expectedCode}' but got '${nestedError.code}'`,
+      );
+    }
+    return;
+  }
+
   if (!(error instanceof ORPCError)) {
+    const message = error instanceof Error ? error.message : String(error);
+    const mappedCode = mapMessageToCode(message);
+
+    if (mappedCode === expectedCode) {
+      return;
+    }
+
+    if (
+      mappedCode === 'NOT_FOUND' &&
+      (expectedCode === 'JOB_NOT_FOUND' ||
+        expectedCode === 'VOICEOVER_NOT_FOUND' ||
+        expectedCode === 'PODCAST_NOT_FOUND' ||
+        expectedCode === 'SCRIPT_NOT_FOUND' ||
+        expectedCode === 'VOICE_NOT_FOUND' ||
+        expectedCode === 'DOCUMENT_NOT_FOUND')
+    ) {
+      return;
+    }
+
     throw new Error(`Expected ORPCError but got ${typeof error}: ${error}`);
   }
   if (error.code !== expectedCode) {

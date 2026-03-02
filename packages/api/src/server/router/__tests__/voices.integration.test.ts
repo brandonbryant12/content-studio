@@ -4,7 +4,7 @@ import { user as userTable } from '@repo/db/schema';
 import { Storage, StorageError, type StorageService } from '@repo/storage';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createPGliteTestContext,
+  createTestContext,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -148,7 +148,7 @@ describe('voices router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
     user = toUser(testUser);

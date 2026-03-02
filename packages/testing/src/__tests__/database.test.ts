@@ -1,24 +1,32 @@
 import { user as userTable, document as documentTable } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
-import { createPGliteTestContext, type TestContext } from '../setup';
+import { createTestContext, type TestContext } from '../setup';
+import { stopPostgresContainer } from '../testcontainers';
 
-describe('PGlite test context', () => {
-  let ctx: TestContext;
+describe('database test context', () => {
+  let ctx: TestContext | null = null;
 
   afterEach(async () => {
-    await ctx.rollback();
+    if (ctx) {
+      await ctx.rollback();
+      ctx = null;
+    }
+  });
+
+  afterAll(async () => {
+    await stopPostgresContainer();
   });
 
   it('creates a working database context', async () => {
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     expect(ctx.db).toBeDefined();
     expect(ctx.dbLayer).toBeDefined();
   });
 
   it('supports insert and query operations', async () => {
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     const now = new Date();
 
     await ctx.db.insert(userTable).values({
@@ -40,14 +48,14 @@ describe('PGlite test context', () => {
   });
 
   it('isolates data between tests via rollback', async () => {
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
 
     const users = await ctx.db.select().from(userTable);
     expect(users).toHaveLength(0);
   });
 
-  it('supports foreign keys and JSONB (representative integration scenario)', async () => {
-    ctx = await createPGliteTestContext();
+  it('supports foreign keys and JSONB', async () => {
+    ctx = await createTestContext();
     const now = new Date();
 
     await ctx.db.insert(userTable).values({

@@ -33,7 +33,7 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": [".coverage/**"],
+      "outputs": [],
       "env": ["DB_POSTGRES_URL"]
     },
     "test:invariants": {

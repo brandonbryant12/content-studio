@@ -12,7 +12,7 @@ import { ActivityLogRepoLive, VoiceoverRepoLive } from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createPGliteTestContext,
+  createTestContext,
   createTestUser,
   createTestVoiceover,
   resetAllFactories,
@@ -230,7 +230,7 @@ describe('voiceover router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
     user = toUser(testUser);

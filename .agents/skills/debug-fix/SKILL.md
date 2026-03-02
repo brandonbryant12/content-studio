@@ -20,7 +20,7 @@ Run the smallest failing target first.
 - Invariant test:
   - `pnpm test:invariants`
 
-Router/workflow integration tests use PGlite (in-process) — no Docker or DB setup required.
+Router/workflow integration tests use PostgreSQL Testcontainers (Docker required). Vitest global setup starts the container automatically.
 
 ## 2) Narrow by Evidence
 

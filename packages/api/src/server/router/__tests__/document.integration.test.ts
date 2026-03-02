@@ -9,7 +9,7 @@ import {
 import { ActivityLogRepoLive, DocumentRepoLive } from '@repo/media';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createPGliteTestContext,
+  createTestContext,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -184,7 +184,7 @@ describe('document router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     runtime = createTestRuntime(ctx);
     testUser = createTestUser();
     user = toUser(testUser);

@@ -36,7 +36,7 @@ import {
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createPGliteTestContext,
+  createTestContext,
   createTestUser,
   createTestDocument,
   createTestPodcast,
@@ -153,7 +153,7 @@ describe('podcast job workflow', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     runtime = createWorkflowRuntime(ctx);
     testUser = createTestUser();
     user = {
