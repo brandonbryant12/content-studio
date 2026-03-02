@@ -1,10 +1,15 @@
 import { ChatBubbleIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { UIMessage } from 'ai';
 import { ChatThread } from '@/shared/components/chat-thread';
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
+import {
+  getMessageText,
+  stripChatControlTokens,
+} from '@/shared/lib/chat-control';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
@@ -22,6 +27,8 @@ interface WritingAssistantPanelProps {
   error: Error | undefined;
   onSendMessage: (text: string) => void;
   onReset: () => void;
+  onAppendToManuscript: (text: string) => void;
+  onReplaceManuscript: (text: string) => void;
 }
 
 export function WritingAssistantPanel({
@@ -30,11 +37,26 @@ export function WritingAssistantPanel({
   error,
   onSendMessage,
   onReset,
+  onAppendToManuscript,
+  onReplaceManuscript,
 }: WritingAssistantPanelProps) {
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
   const composer = useChatComposer({
     isDisabled: isStreaming,
     onSendMessage,
   });
+
+  const latestAssistantText = useMemo(() => {
+    const latestAssistantMessage = [...messages]
+      .reverse()
+      .find((message) => message.role === 'assistant');
+
+    if (!latestAssistantMessage) return '';
+    return stripChatControlTokens(getMessageText(latestAssistantMessage)).trim();
+  }, [messages]);
+
+  const canApplyLatestResponse =
+    latestAssistantText.length > 0 && !isStreaming;
 
   const handleExampleClick = useCallback(
     (prompt: string) => {
@@ -43,6 +65,21 @@ export function WritingAssistantPanel({
     },
     [isStreaming, onSendMessage],
   );
+
+  const handleAppendToManuscript = useCallback(() => {
+    if (!canApplyLatestResponse) return;
+    onAppendToManuscript(latestAssistantText);
+  }, [canApplyLatestResponse, latestAssistantText, onAppendToManuscript]);
+
+  const handleRequestReplace = useCallback(() => {
+    if (!canApplyLatestResponse) return;
+    setReplaceConfirmOpen(true);
+  }, [canApplyLatestResponse]);
+
+  const handleConfirmReplace = useCallback(() => {
+    onReplaceManuscript(latestAssistantText);
+    setReplaceConfirmOpen(false);
+  }, [latestAssistantText, onReplaceManuscript]);
 
   return (
     <section className="flex flex-1 min-h-[420px] lg:min-h-0 flex-col bg-card/40">
@@ -101,6 +138,34 @@ export function WritingAssistantPanel({
         }
       />
 
+      {latestAssistantText && (
+        <div className="border-t border-border px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            Apply latest assistant response to manuscript:
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={!canApplyLatestResponse}
+              onClick={handleAppendToManuscript}
+            >
+              Append to Manuscript
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={!canApplyLatestResponse}
+              onClick={handleRequestReplace}
+            >
+              Replace Manuscript
+            </Button>
+          </div>
+        </div>
+      )}
+
       <form
         onSubmit={composer.handleSubmit}
         className="border-t border-border p-3 flex items-end gap-2"
@@ -126,6 +191,16 @@ export function WritingAssistantPanel({
           <PaperPlaneIcon className="w-4 h-4" />
         </Button>
       </form>
+
+      <ConfirmationDialog
+        open={replaceConfirmOpen}
+        onOpenChange={setReplaceConfirmOpen}
+        title="Replace manuscript?"
+        description="This will overwrite your current manuscript text with the latest assistant response."
+        confirmText="Replace manuscript"
+        variant="destructive"
+        onConfirm={handleConfirmReplace}
+      />
     </section>
   );
 }
