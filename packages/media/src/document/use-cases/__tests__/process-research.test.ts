@@ -19,7 +19,7 @@ import {
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { type DocumentRepoService } from '../../repos';
-import { processResearch } from '../process-research';
+import { processResearch, ResearchTimeoutError } from '../process-research';
 
 // =============================================================================
 // Test Helpers
@@ -291,6 +291,90 @@ describe('processResearch', () => {
         const c = config as { researchStatus?: string };
         expect(c.researchStatus).not.toBe('in_progress');
       }
+    });
+  });
+
+  describe('timeout ownership', () => {
+    it('returns a media-owned timeout error with document-scoped data when polling expires', async () => {
+      const configUpdates: Array<{ id: string; config: unknown }> = [];
+      const statusUpdates: Array<{ id: string; status: string; reason?: string }> =
+        [];
+      const doc = createTestDocument({
+        source: 'research',
+        status: 'processing',
+        researchConfig: { query: 'timeout query' },
+      });
+
+      const sleepSpy = vi
+        .spyOn(Effect, 'sleep')
+        .mockImplementation(() => Effect.void);
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo(),
+        createMockQueue(),
+        mockDocRepo({
+          findById: () => Effect.succeed(doc),
+          updateStatus: (id, status, statusReason) =>
+            Effect.sync(() => {
+              statusUpdates.push({ id, status, reason: statusReason });
+              return doc;
+            }),
+          updateResearchConfig: (id, config) =>
+            Effect.sync(() => {
+              configUpdates.push({ id, config });
+              return doc;
+            }),
+        }),
+        createMockActivityLogRepo(),
+        createMockDeepResearch({
+          startResearch: () => Effect.succeed({ interactionId: 'op-timeout' }),
+          getResult: () => Effect.succeed(null),
+        }),
+        createMockStorage(),
+        mockOutlineLLM(),
+      );
+
+      const exit = await Effect.runPromiseExit(
+        withTestUser(testUser)(
+          processResearch({ documentId: doc.id, query: 'timeout query' }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+      sleepSpy.mockRestore();
+
+      expect(exit._tag).toBe('Failure');
+      if (exit._tag === 'Failure') {
+        expect(exit.cause._tag).toBe('Fail');
+        if (exit.cause._tag === 'Fail') {
+          expect(exit.cause.error).toMatchObject({
+            _tag: 'ResearchTimeoutError',
+            documentId: doc.id,
+            interactionId: 'op-timeout',
+          });
+        }
+      }
+
+      expect(ResearchTimeoutError.httpCode).toBe('DOCUMENT_RESEARCH_TIMEOUT');
+      expect(configUpdates).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: doc.id,
+            config: expect.objectContaining({
+              researchStatus: 'failed',
+              operationId: 'op-timeout',
+            }),
+          }),
+        ]),
+      );
+      expect(statusUpdates).toContainEqual(
+        expect.objectContaining({
+          id: doc.id,
+          status: 'failed',
+          reason: 'Research timed out after 60 minutes',
+        }),
+      );
     });
   });
 

@@ -225,23 +225,6 @@ export class ResearchError extends Schema.TaggedError<ResearchError>()(
   }
 }
 
-/**
- * Research operation timed out.
- */
-export class ResearchTimeoutError extends Schema.TaggedError<ResearchTimeoutError>()(
-  'ResearchTimeoutError',
-  {
-    operationId: Schema.String,
-    message: Schema.optional(Schema.String),
-  },
-) {
-  static readonly httpStatus = 504 as const;
-  static readonly httpCode = 'RESEARCH_TIMEOUT' as const;
-  static readonly httpMessage = (e: ResearchTimeoutError) =>
-    e.message ?? 'Research operation timed out';
-  static readonly logLevel = 'warn' as const;
-}
-
 // =============================================================================
 // Error Union Types
 // =============================================================================
@@ -260,5 +243,4 @@ export type AIError =
   | ImageGenError
   | ImageGenRateLimitError
   | ImageGenContentFilteredError
-  | ResearchError
-  | ResearchTimeoutError;
+  | ResearchError;
