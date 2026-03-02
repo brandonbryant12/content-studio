@@ -70,7 +70,7 @@ Runtime preflight for code tasks:
   - run all remaining Node/pnpm preflight and gate commands through the same `zsh -lic` pattern in this run
   - if check fails, capture diagnostics and stop: `echo $SHELL`, `which node`, `node -v`, `which pnpm`, `pnpm -v`, `which corepack`, `corepack --version`
 3) Workspace bootstrap fast-path: run `zsh -lic 'cd "$PWD" && pnpm install --frozen-lockfile --prefer-offline'` with the same network/corruption recovery strategy as other code-writing lanes.
-4) Container runtime fast-path: run `docker info --format '{{.ServerVersion}}'` with the same context/socket recovery strategy as other code-writing lanes.
+4) Container runtime: no Docker preflight is required for this repository. Integration/workflow tests use in-process PGlite, so skip container runtime checks.
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
   - treat dirty workflow-memory paths as expected automation artifacts, not blockers:

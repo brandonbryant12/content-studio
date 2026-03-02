@@ -84,13 +84,7 @@ Runtime preflight for code tasks:
   - if still failing, retry with `npm_config_registry=https://registry.npmjs.com pnpm install --frozen-lockfile`
   - if dependency-state corruption is indicated, remove node_modules once and retry install
   - if still failing, capture diagnostics and stop: `node -v`, `pnpm -v`, `npm -v`, `nslookup registry.npmjs.org`, `curl -I https://registry.npmjs.org/`
-4) Container runtime fast-path: run `docker info >/dev/null`. If it fails (especially permission denied on `/var/run/docker.sock`), run this recovery sequence before stopping:
-  - `docker context ls`
-  - if available, `docker context use desktop-linux`, then retry `docker info >/dev/null`
-  - if still failing, `export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`, then retry `docker info >/dev/null`
-  - if still failing, `export DOCKER_HOST=unix:///var/run/docker.sock`, then retry `docker info >/dev/null`
-  - if still failing, capture diagnostics: `whoami`, `id`, `docker context ls`, `ls -l /var/run/docker.sock`, `ls -l $HOME/.docker/run/docker.sock`
-  - continue only for issue scopes that do not require Docker services (for example, pure frontend/client/cache changes); otherwise stop and report blocker
+4) Container runtime: no Docker preflight is required for this repository. Integration/workflow tests use in-process PGlite, so skip container runtime checks.
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
   - treat dirty workflow-memory paths as expected automation artifacts, not blockers:
@@ -129,7 +123,7 @@ Run each gate via `zsh -lic 'cd "$WORKTREE_DIR" && <gate-command>'`.
 - `pnpm build`
 
 Delivery behavior:
-- If any gate fails, do not open/merge PR. Post concise failure details and next action on the primary issue, then record memory. For preflight failures (GitHub API, Docker, or npm/network), include the captured diagnostics in issue comments.
+- If any gate fails, do not open/merge PR. Post concise failure details and next action on the primary issue, then record memory. For preflight failures (GitHub API or npm/network), include the captured diagnostics in issue comments.
 - If all gates pass, commit with a conventional message referencing the primary issue, push, and open one PR to main that:
   - uses closing/linking keywords for the issues addressed (`Fixes #...` for fully resolved issues, `Refs #...` for partials)
   - MUST include `Fixes #<primary-issue-number>` for the primary issue when the run intent is full resolution
