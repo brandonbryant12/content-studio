@@ -24,6 +24,35 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-bundled-262-263-264-silent-failure-fixes",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: bundled #262/#263/#264 silent-failure fixes",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "ready-for-dev-executor",
+      "feature-delivery",
+      "skill:feature-delivery",
+      "issue:262",
+      "issue:263",
+      "issue:264",
+      "memory",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "recency": 1,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
