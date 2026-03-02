@@ -58,7 +58,7 @@ Selection and bounded aggregation (`1..N` issues per run):
 - If no actionable issue remains after screening, end run with a concise no-op summary and memory entry (no branch/PR).
 
 Workflow routing contract (must use correct workflow per selected issue):
-- For each selected issue, assign a primary workflow and companion skills before coding using [`software-factory/workflows/README.md`](../../workflows/README.md):
+- For each selected issue, assign a primary workflow and companion skills before coding using [`software-factory/workflows/README.md`](../../software-factory/workflows/README.md):
   - `Feature Delivery` for product/backend/frontend implementation work
   - `Architecture + ADR Guard` for boundary/runtime/layer/authz/observability architecture-impacting work
   - `Self-Improvement` for harness/workflow-memory/skills/automation-loop improvements
@@ -106,8 +106,8 @@ Branching and implementation contract:
   - `export WORKTREE_BRANCH WORKTREE_DIR`
   - `cd "$WORKTREE_DIR"`
 - Implement the selected issue set and any conservatively bundled related issues only in `"$WORKTREE_DIR"`.
-- Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
-- If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) with:
+- Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../AGENTS.md) guardrails.
+- If any implemented issue in the bundle contains a Research Trace or external paper links, append a log entry to [`research/implemented-ideas.md`](../../research/implemented-ideas.md) with:
   - date
   - issue and PR links
   - paper link(s)

@@ -33,7 +33,7 @@ Memory-driven focus protocol:
 Research protocol:
 - Prioritize official and primary sources plus recent release notes.
 - Prioritize this stack for external research: Gemini, Google AI Studio, Vertex AI, and Google Cloud AI platform updates relevant to practical product improvements.
-- Compare findings against [`docs/master-spec.md`](../../../docs/master-spec.md), generated product surfaces in [`docs/spec/generated/`](../../../docs/spec/generated/), [`AGENTS.md`](../../../AGENTS.md), [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md), and recent workflow memory.
+- Compare findings against [`docs/master-spec.md`](../../docs/master-spec.md), generated product surfaces in [`docs/spec/generated/`](../../docs/spec/generated/), [`AGENTS.md`](../../AGENTS.md), [`software-factory/workflows/README.md`](../../software-factory/workflows/README.md), and recent workflow memory.
 - Produce 3-6 ranked product opportunities with impact, effort, confidence, and concrete repository evidence.
 - For each candidate opportunity, run a prior-idea debate against related previous product-vision issues:
   - Keep: the prior thesis still holds with stronger/new evidence.
@@ -71,7 +71,7 @@ Issue policy:
   - Source link(s)
   - Key idea(s) selected for this repo
   - Planned adaptation in this codebase (not generic advice)
-  - Requirement that implementers append [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) when shipped
+  - Requirement that implementers append [`research/implemented-ideas.md`](../../research/implemented-ideas.md) when shipped
 - Add labels `product-vision` and `codex-automation` when available.
 - Do not add `ready-for-dev` from this automation; only humans apply that label when an issue is approved for implementation.
 

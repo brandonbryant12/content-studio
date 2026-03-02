@@ -53,7 +53,7 @@ Recurrence-to-prevention rule:
 - If recurring finding class is detected and no prevention artifact is included, do not auto-merge.
 
 Workflow routing contract (must use correct workflow before coding):
-- Route each selected fix to a primary workflow using [`software-factory/workflows/README.md`](../../workflows/README.md):
+- Route each selected fix to a primary workflow using [`software-factory/workflows/README.md`](../../software-factory/workflows/README.md):
   - `Feature Delivery` for product/backend/frontend implementation work
   - `Architecture + ADR Guard` for boundary/runtime/layer/authz/observability architecture-impacting work
   - `Self-Improvement` for harness/workflow-memory/skills/automation-loop improvements
@@ -90,7 +90,7 @@ Branching, validation, and delivery:
   - `mkdir -p "$REPO_ROOT/.codex-worktrees"`
   - `git worktree add -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" origin/main`
   - `cd "$WORKTREE_DIR"`
-- Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../../AGENTS.md) guardrails.
+- Read relevant docs in docs/ before edits and follow [`AGENTS.md`](../../AGENTS.md) guardrails.
 - Required validation gates, in order (run via `zsh -lic 'cd "$WORKTREE_DIR" && <gate-command>'`):
   - `pnpm typecheck`
   - `pnpm lint`

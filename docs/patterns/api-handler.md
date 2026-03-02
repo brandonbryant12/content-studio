@@ -1,6 +1,6 @@
 # API Handler Pattern
 
-> Merged from [`router-handler.md`](router-handler.md) and [`serialization.md`](serialization.md).
+> Canonical API handler guidance for routing + serialization lives in this document.
 
 ```mermaid
 sequenceDiagram

@@ -25,3 +25,11 @@ All new code reviews and feature work should reference [`docs/`](./) standards.
 - [`docs/testing/`](./testing/) - testing strategy and required coverage by change type
 - [`README.md`](../README.md) - local development and test environment setup
 - [`docs/master-spec.md`](./master-spec.md) - canonical, PR-governed master application specification
+
+## Link Guardrail
+
+Run `pnpm scripts:lint` before submitting docs/playbook changes. It validates local markdown links in:
+
+- `docs/**/*.md`
+- `automations/**/*.md`
+- `software-factory/workflows/**/*.md`
