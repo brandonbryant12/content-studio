@@ -15,6 +15,21 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-architecture-adr-guard-ready-for-dev-executor-restore-web-api-boundary-for-issue-312",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Ready-for-dev-executor: restore web->api boundary for issue #312",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-fix-ts2775-assertion-helper-blocking-typecheck-lint",
     "date": "2026-03-02",
     "month": "2026-03",
