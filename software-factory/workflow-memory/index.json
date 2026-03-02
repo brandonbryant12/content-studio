@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-03-02-architecture-adr-guard-telemetry-lifecycle-docs-aligned-to-runtime-contract",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Telemetry lifecycle docs aligned to runtime contract",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "ready-for-dev-executor",
+      "issue-278",
+      "observability",
+      "telemetry",
+      "docs"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-294-blocked-by-full-suite-cli-test-timeouts",
     "date": "2026-03-02",
     "month": "2026-03",
@@ -21,6 +38,26 @@
     "importance": 0.76,
     "recency": 0.99,
     "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-bundle-blocked-by-typecheck-env-drift",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev bundle blocked by typecheck env drift",
+    "severity": "high",
+    "status": "blocked",
+    "tags": [
+      "ready-for-dev-executor",
+      "issue-277",
+      "issue-278",
+      "validation",
+      "typecheck",
+      "capability:tool-use",
+      "capability:instruction-following",
+      "failure:env-drift"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {
