@@ -112,13 +112,21 @@ export function DocumentContentReader({
 }
 
 export function DocumentProcessingState({ source }: { source: string }) {
+  const statusText =
+    source === 'research'
+      ? 'Document research is in progress and may take a few minutes'
+      : 'Document processing is in progress';
+
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="flex flex-col items-center justify-center py-20 gap-4"
+    >
       <Spinner className="w-8 h-8" />
       <p className="text-muted-foreground text-sm">
-        {source === 'research'
-          ? 'Researching — this may take a few minutes...'
-          : 'Processing content...'}
+        {statusText}
       </p>
     </div>
   );
@@ -139,9 +147,17 @@ export function DocumentFailedState({
     errorMessage,
     'Processing failed. Please retry.',
   );
+  const statusText = isRetrying
+    ? 'Retrying document processing'
+    : failureMessage ?? 'Processing failed';
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="flex flex-col items-center justify-center py-20 gap-4"
+    >
       <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
         <svg
           className="w-6 h-6 text-red-600 dark:text-red-400"
@@ -159,7 +175,7 @@ export function DocumentFailedState({
         </svg>
       </div>
       <p className="text-muted-foreground text-sm text-center max-w-md">
-        {failureMessage ?? 'Processing failed'}
+        {statusText}
       </p>
       <Button
         variant="outline"
