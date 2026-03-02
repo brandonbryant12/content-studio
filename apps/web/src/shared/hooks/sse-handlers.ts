@@ -136,8 +136,15 @@ export function handleJobCompletion(
       break;
   }
 
-  // Notify on final completion (generate-podcast covers full pipeline)
-  if (jobType === 'generate-podcast' && podcastId) {
+  // Notify on final completion:
+  // - generate-podcast covers full pipeline
+  // - generate-script and generate-audio cover explicit partial regenerations
+  if (
+    (jobType === 'generate-podcast' ||
+      jobType === 'generate-script' ||
+      jobType === 'generate-audio') &&
+    podcastId
+  ) {
     const notify = (title?: string) =>
       notifyJobCompletion({
         entityType: 'podcast',
