@@ -36,6 +36,9 @@
       "outputs": [".coverage/**"],
       "env": ["DB_POSTGRES_URL"]
     },
+    "test:invariants": {
+      "dependsOn": ["^build"]
+    },
     "test:watch": {
       "dependsOn": ["^build"],
       "cache": false,

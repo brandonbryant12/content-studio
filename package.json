@@ -24,7 +24,7 @@
     "start": "turbo run start",
     "test": "turbo run test --continue --filter='./packages/*' --filter='./apps/*' --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}",
     "test:scripts": "vitest run --config software-factory/scripts/vitest.config.ts",
-    "test:invariants": "vitest run packages/media/src/shared/__tests__/safety-invariants.test.ts packages/api/src/server/__tests__/effect-handler.invariants.test.ts packages/api/src/server/__tests__/error-assertions.invariants.test.ts packages/api/src/server/__tests__/chat-handler.invariants.test.ts packages/testing/src/__tests__/docs-invariants.test.ts",
+    "test:invariants": "turbo run test:invariants --continue --filter=@repo/media --filter=@repo/api --filter=@repo/testing --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:coverage:api": "pnpm --filter @repo/api test:coverage",

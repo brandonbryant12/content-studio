@@ -39,6 +39,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --max-warnings=0",
     "test": "vitest run",
+    "test:invariants": "vitest run src/shared/__tests__/safety-invariants.test.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --build --noEmit --emitDeclarationOnly false"
   },
