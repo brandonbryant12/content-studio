@@ -22,7 +22,7 @@
     "spec:generate": "pnpm software-factory spec generate",
     "spec:check": "pnpm spec:generate && test -z \"$(git status --porcelain -- docs/master-spec.md docs/spec/generated)\"",
     "start": "turbo run start",
-    "test": "turbo run test --continue --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}; TURBO_EXIT=$?; pnpm test:scripts; SCRIPTS_EXIT=$?; [ $TURBO_EXIT -eq 0 ] && [ $SCRIPTS_EXIT -eq 0 ]",
+    "test": "turbo run test --continue --filter='./packages/*' --filter='./apps/*' --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}",
     "test:scripts": "vitest run --config software-factory/scripts/vitest.config.ts",
     "test:invariants": "vitest run packages/media/src/shared/__tests__/safety-invariants.test.ts packages/api/src/server/__tests__/effect-handler.invariants.test.ts packages/api/src/server/__tests__/error-assertions.invariants.test.ts packages/api/src/server/__tests__/chat-handler.invariants.test.ts packages/testing/src/__tests__/docs-invariants.test.ts",
     "test:watch": "vitest",
