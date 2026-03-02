@@ -70,6 +70,21 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-preserve-failed-state-unsaved-podcast-ret",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: preserve failed-state unsaved podcast retry flow",
+    "severity": "medium",
+    "status": "merged",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor",
+      "issue:299"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-executor-run-issue-310",
     "date": "2026-03-02",
     "month": "2026-03",
