@@ -53,6 +53,36 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-periodic-scans-best-practice-researcher-architecture-boundaries-web-to-db-bound",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: architecture-boundaries — web-to-db boundary drift and missing package import-direction guardrails",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:architecture-boundaries",
+      "tool:gh",
+      "tool:web-search",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-function:episodic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "confidence": 0.91,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-automation-playbook-link-drift",
     "date": "2026-03-02",
     "month": "2026-03",
