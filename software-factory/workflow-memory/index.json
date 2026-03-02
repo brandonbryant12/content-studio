@@ -100,6 +100,20 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-implemented-voiceover-assistant-manuscrip",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: implemented voiceover assistant manuscript apply actions (#307)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-executor-merged-324-325-reliability-hardening",
     "date": "2026-03-02",
     "month": "2026-03",
