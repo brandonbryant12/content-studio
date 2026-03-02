@@ -1,5 +1,20 @@
 [
   {
+    "id": "2026-03-02-architecture-adr-guard-ready-for-dev-executor-merged-observability-tracing-fixes-327-32",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "ready-for-dev-executor: merged observability tracing fixes (#327/#328)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-fix-ts2775-assertion-helper-blocking-typecheck-lint",
     "date": "2026-03-02",
     "month": "2026-03",
