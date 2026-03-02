@@ -53,6 +53,34 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-self-improvement-sanity-check-markdown-link-guardrail-blocked-by-main-typecheck-ts2775",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Sanity-check: markdown link guardrail + playbook link repairs blocked by main typecheck regression",
+    "severity": "medium",
+    "status": "blocked",
+    "tags": [
+      "automation",
+      "sanity-check",
+      "self-improvement",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:workflow-automation-registry-drift",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.86,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
