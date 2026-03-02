@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-294-blocked-at-pnpm-test-gate",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor #294 blocked at pnpm test gate",
+    "severity": "high",
+    "status": "blocked",
+    "tags": [
+      "ready-for-dev-executor",
+      "issue-294",
+      "gate-failure",
+      "feature-delivery"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
