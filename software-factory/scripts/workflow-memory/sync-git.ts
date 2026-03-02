@@ -16,6 +16,8 @@ const MEMORY_PATHS = [EVENTS_PATH, INDEX_PATH, SUMMARIES_PATH] as const;
 const DEFAULT_REMOTE = "origin";
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_COMMIT_MESSAGE = "chore(workflow-memory): append automation memory";
+const MEMORY_SYNC_REBASE_STASH_MESSAGE = "workflow-memory:sync temporary stash for rebase";
+const WORKSPACE_CLEAN_BYPASS_ENV = "SKIP_WORKSPACE_CLEAN_CHECK";
 
 export type WorkflowMemorySyncOptions = {
   remote?: string;
@@ -146,9 +148,10 @@ function parseEventLine(rawLine: string): EventRecord | null {
 async function runCommand(
   command: string,
   args: string[],
-  options: { allowFailure?: boolean } = {},
+  options: { allowFailure?: boolean; env?: Record<string, string> } = {},
 ): Promise<CommandResult> {
   const allowFailure = options.allowFailure ?? false;
+  const extraEnv = options.env ?? {};
 
   try {
     const result = await execFile(command, args, {
@@ -157,6 +160,7 @@ async function runCommand(
       maxBuffer: 10 * 1024 * 1024,
       env: {
         ...process.env,
+        ...extraEnv,
         GIT_EDITOR: process.env.GIT_EDITOR ?? "true",
       },
     });
@@ -460,6 +464,82 @@ async function stageMemoryChanges(): Promise<void> {
   await runCommand("git", ["add", "--", ...MEMORY_PATHS]);
 }
 
+async function hasWorkingTreeChanges(): Promise<boolean> {
+  const result = await runCommand("git", ["status", "--porcelain"]);
+  return result.stdout.trim().length > 0;
+}
+
+async function readStashHead(): Promise<string | undefined> {
+  const result = await runCommand("git", ["rev-parse", "--verify", "refs/stash"], {
+    allowFailure: true,
+  });
+  if (result.code !== 0) {
+    return undefined;
+  }
+  const ref = result.stdout.trim();
+  return ref.length > 0 ? ref : undefined;
+}
+
+async function stashWorkingTreeForRebase(): Promise<string | undefined> {
+  if (!(await hasWorkingTreeChanges())) {
+    return undefined;
+  }
+
+  const before = await readStashHead();
+  const stashResult = await runCommand(
+    "git",
+    ["stash", "push", "--include-untracked", "--message", MEMORY_SYNC_REBASE_STASH_MESSAGE],
+    { allowFailure: true },
+  );
+  if (stashResult.code !== 0) {
+    throw new Error(
+      `Unable to stash local workspace changes before workflow-memory rebase:\n${combineOutput(stashResult)}`,
+    );
+  }
+
+  const after = await readStashHead();
+  if (!after || after === before) {
+    return undefined;
+  }
+  return after;
+}
+
+async function resolveStashSelector(stashObjectId: string): Promise<string | undefined> {
+  const result = await runCommand("git", ["stash", "list", "--format=%H%x09%gd"]);
+  const needle = stashObjectId.trim();
+  for (const line of result.stdout.split(/\r?\n/)) {
+    const [objectId, selector] = line.trim().split("\t");
+    if (objectId === needle && selector) {
+      return selector;
+    }
+  }
+  return undefined;
+}
+
+async function restoreStashedWorkingTree(stashRef: string | undefined): Promise<void> {
+  if (!stashRef) {
+    return;
+  }
+
+  const stashSelector = await resolveStashSelector(stashRef);
+  if (!stashSelector) {
+    throw new Error(
+      `Unable to locate stashed workspace changes after workflow-memory rebase (stash ${stashRef})`,
+    );
+  }
+
+  const popResult = await runCommand("git", ["stash", "pop", "--index", stashSelector], {
+    allowFailure: true,
+  });
+  if (popResult.code === 0) {
+    return;
+  }
+
+  throw new Error(
+    `Unable to restore stashed workspace changes after workflow-memory rebase:\n${combineOutput(popResult)}`,
+  );
+}
+
 async function hasStagedMemoryChanges(): Promise<boolean> {
   const result = await runCommand(
     "git",
@@ -510,7 +590,12 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
     const pushResult = await runCommand(
       "git",
       ["push", remote, `HEAD:${branch}`],
-      { allowFailure: true },
+      {
+        allowFailure: true,
+        env: {
+          [WORKSPACE_CLEAN_BYPASS_ENV]: "1",
+        },
+      },
     );
 
     if (pushResult.code === 0) {
@@ -532,8 +617,13 @@ async function pushWithRetry(remote: string, branch: string, maxAttempts: number
     console.log(
       `Push rejected by concurrent updates (attempt ${attempt}/${maxAttempts}). Rebasing and retrying...`,
     );
-    await fetchBranch(remote, branch);
-    await rebaseOnto(`${remote}/${branch}`);
+    const stashedRef = await stashWorkingTreeForRebase();
+    try {
+      await fetchBranch(remote, branch);
+      await rebaseOnto(`${remote}/${branch}`);
+    } finally {
+      await restoreStashedWorkingTree(stashedRef);
+    }
   }
 }
 

@@ -19,6 +19,34 @@ const READY_FOR_DEV_OPERATION: Operation = {
   },
 };
 
+const ADVISORY_RESEARCH_OPERATION: Operation = {
+  id: "best-practice-researcher",
+  name: "Best Practice Researcher",
+  description: "Test operation",
+  defaultModel: "gpt-5.3-codex",
+  defaultThinking: "high",
+  strategy: "periodic-scans",
+  args: [],
+  runner: {
+    type: "codex-playbook",
+    playbookPath: "automations/best-practice-researcher/best-practice-researcher.md",
+  },
+};
+
+const NON_ADVISORY_CODEX_OPERATION: Operation = {
+  id: "sanity-check",
+  name: "Sanity Check",
+  description: "Test operation",
+  defaultModel: "gpt-5.3-codex",
+  defaultThinking: "xhigh",
+  strategy: "periodic-scans",
+  args: [],
+  runner: {
+    type: "codex-playbook",
+    playbookPath: "automations/sanity-check/sanity-check.md",
+  },
+};
+
 describe("ready-for-dev router planner parsing", () => {
   it("accepts planner model/thinking values when returned as label-prefixed tokens", async () => {
     const streamedArgs: string[][] = [];
@@ -263,5 +291,100 @@ describe("ready-for-dev router planner parsing", () => {
       expect(result.left._tag).toBe("ExternalToolError");
       expect(result.left.reason).toBe("Issue-evaluator refresh failed with status 23.");
     }
+  });
+});
+
+describe("codex-playbook advisory prompt profile", () => {
+  it("injects advisory runtime constraints for researcher operations", async () => {
+    const streamedInputs: string[] = [];
+
+    const processLayer = Layer.succeed(CliProcess, {
+      run: () =>
+        Effect.sync(() => {
+          throw new Error("Unexpected run invocation");
+        }),
+      runStreaming: (_command: string, _args: string[], options) =>
+        Effect.sync(() => {
+          streamedInputs.push(options?.input ?? "");
+          return { status: 0, stdout: "", stderr: "" };
+        }),
+    });
+
+    const consoleLayer = Layer.succeed(CliConsole, {
+      log: () => Effect.void,
+      error: () => Effect.void,
+    });
+
+    const configLayer = Layer.succeed(CliConfig, {
+      cwd: "/tmp/content-studio",
+      operationsPath: "software-factory/operations/registry.json",
+      operationsSchemaPath: "software-factory/operations/registry.schema.json",
+    });
+
+    const result = await Effect.runPromise(
+      runOperation({
+        operation: ADVISORY_RESEARCH_OPERATION,
+        args: {},
+      }).pipe(
+        Effect.provide(Layer.mergeAll(processLayer, consoleLayer, configLayer)),
+        Effect.either,
+      ),
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right).toBe(0);
+    }
+
+    expect(streamedInputs).toHaveLength(1);
+    expect(streamedInputs[0]).toContain("Advisory-lane runtime profile:");
+    expect(streamedInputs[0]).toContain("do not create a dedicated git worktree");
+    expect(streamedInputs[0]).toContain("Do not require a clean workspace for advisory runs.");
+    expect(streamedInputs[0]).toContain("Always append workflow memory for the run");
+  });
+
+  it("does not inject advisory runtime constraints for non-advisory codex operations", async () => {
+    const streamedInputs: string[] = [];
+
+    const processLayer = Layer.succeed(CliProcess, {
+      run: () =>
+        Effect.sync(() => {
+          throw new Error("Unexpected run invocation");
+        }),
+      runStreaming: (_command: string, _args: string[], options) =>
+        Effect.sync(() => {
+          streamedInputs.push(options?.input ?? "");
+          return { status: 0, stdout: "", stderr: "" };
+        }),
+    });
+
+    const consoleLayer = Layer.succeed(CliConsole, {
+      log: () => Effect.void,
+      error: () => Effect.void,
+    });
+
+    const configLayer = Layer.succeed(CliConfig, {
+      cwd: "/tmp/content-studio",
+      operationsPath: "software-factory/operations/registry.json",
+      operationsSchemaPath: "software-factory/operations/registry.schema.json",
+    });
+
+    const result = await Effect.runPromise(
+      runOperation({
+        operation: NON_ADVISORY_CODEX_OPERATION,
+        args: {},
+      }).pipe(
+        Effect.provide(Layer.mergeAll(processLayer, consoleLayer, configLayer)),
+        Effect.either,
+      ),
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right).toBe(0);
+    }
+
+    expect(streamedInputs).toHaveLength(1);
+    expect(streamedInputs[0]).not.toContain("Advisory-lane runtime profile:");
   });
 });
