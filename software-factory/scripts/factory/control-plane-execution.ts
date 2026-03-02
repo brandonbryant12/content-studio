@@ -460,6 +460,18 @@ const runCodexPlaybook = (
         "- If memory sync cannot complete due to non-memory conflicts, stop and report blocker details without changing non-memory files.",
       );
     }
+    if (operation.id === "issue-evaluator") {
+      promptLines.push(
+        "",
+        "Issue-evaluator label hygiene contract:",
+        "- Ensure every evaluated issue has exactly one decision label among `ready-for-dev`, `human-eval-needed`, `rejected`.",
+        "- If an issue carries both `ready-for-dev` and `human-eval-needed`, remove `human-eval-needed` when final decision is `ready-for-dev`.",
+        "- For every issue that ends with `ready-for-dev`, ensure exactly one allowed `model:*` label and one allowed `thinking:*` label, even when decision label is unchanged.",
+        "- If a `ready-for-dev` issue is missing routing labels, determine and apply the model/thinking pair in this run.",
+        "- If final decision is not `ready-for-dev`, remove any `model:*` and `thinking:*` labels.",
+        "- Use deterministic final-state label writes (single `gh api ... issues/<number> -X PATCH -f labels[]=...` per issue) instead of long chained add/remove edits.",
+      );
+    }
     const prompt = `${promptLines.join("\n")}\n`;
 
     const codexArgs = [

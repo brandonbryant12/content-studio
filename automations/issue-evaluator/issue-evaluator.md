@@ -5,9 +5,13 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: issue triage gate that decides which open issues are truly implementation-ready for normal users right now. Bias toward low-complexity, high-signal work on existing product surfaces. Avoid approving speculative platform rewrites or enterprise-heavy initiatives without explicit human direction. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: issue triage gate that decides which open issues are truly implementation-ready for normal users right now. Bias toward low-complexity, high-signal work on existing product surfaces. Avoid approving speculative platform rewrites or enterprise-heavy initiatives without explicit human direction. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
-Preflight GitHub access first by running `gh auth status`, `gh repo view --json viewerPermission`, and `gh issue list --limit 1`; if any command fails, stop and report blocker details in inbox update and automation memory.
+Run workflow-memory runtime preflight before lane actions:
+- `pnpm workflow-memory:preflight --bootstrap`
+- Preflight output must include memory path and runtime readiness status before any workflow-memory read/write command.
+
+Skip standalone GitHub preflight commands. Start the lane workflow directly and handle any `gh` auth/permission failures at the command that needs GitHub access, recording blocker details in run output and workflow memory.
 
 GitHub interaction policy: use `gh` CLI for all GitHub interactions in this run (issue/PR search/read/write, comments, labels, reactions, and metadata). Do not use browser/manual edits or non-`gh` GitHub clients.
 
@@ -19,6 +23,8 @@ Decision label policy:
 - Evaluate all open issues except those explicitly marked `require-human`; leave `require-human` issues untouched.
 - Every evaluated issue must have exactly one decision label: `ready-for-dev`, `human-eval-needed`, or `rejected`.
 - Remove stale decision labels before applying a new decision label.
+- If an issue has both `ready-for-dev` and `human-eval-needed`, treat `human-eval-needed` as stale for a `ready-for-dev` outcome and remove it so only one decision label remains.
+- Label mutation reliability rule: write the exact final label set per issue using one deterministic `gh api repos/<owner>/<repo>/issues/<number> -X PATCH -f labels[]=...` call. Do not rely on long `gh issue edit --remove-label/--add-label` chains for bulk label normalization.
 
 Model + thinking routing label policy:
 - Allowed model labels:
@@ -31,7 +37,12 @@ Model + thinking routing label policy:
   - `thinking:xhigh`
 - For every issue marked `ready-for-dev`, ensure exactly one `model:*` and one `thinking:*` label from the allowed sets.
 - Remove stale `model:*` and `thinking:*` labels before applying the selected pair.
+- If an issue already has `ready-for-dev` but is missing either routing label, determine the correct model/thinking pair and apply it in the same run even when the decision label does not change.
 - If decision is not `ready-for-dev`, remove any existing `model:*` and `thinking:*` labels so routing metadata only exists for executable issues.
+- After label writes, verify each evaluated issue has:
+  - exactly one decision label
+  - exactly one `model:*` and one `thinking:*` label iff decision is `ready-for-dev`
+  - zero routing labels when decision is not `ready-for-dev`
 - Assignment guidance:
   - tiny localized low-risk changes: prefer `model:gpt-5.3-codex-spark` with `thinking:medium`
   - most bounded implementation slices: prefer `model:gpt-5.3-codex` with `thinking:high`
@@ -81,3 +92,4 @@ Memory logging contract (required every run, including no-op):
 - Commit and push memory append artifacts after each run:
   - `pnpm workflow-memory:sync --message "chore(workflow-memory): issue-evaluator run memory"`
 - If `workflow-memory:sync` reports non-fast-forward, allow it to auto-rebase append-only memory files and retry; only stop when conflicts include non-memory paths.
+- Advisory runs must tolerate dirty workspaces: keep memory persistence append-only, do not run workspace-clean guardrails, and never modify non-memory files while recovering memory sync failures.

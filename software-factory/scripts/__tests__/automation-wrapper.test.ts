@@ -20,7 +20,7 @@ const readLogLines = async (logPath: string): Promise<string[]> => {
 };
 
 describe("automation wrapper profiles", () => {
-  it("uses advisory profile bootstrap for researcher lanes", async () => {
+  it("uses advisory profile bootstrap for issue evaluator", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "automation-wrapper-advisory-"));
     const logPath = path.join(tempRoot, "wrapper.log");
     const binDir = path.join(tempRoot, "bin");
@@ -65,7 +65,7 @@ echo "check-workspace:$*" >> "$WRAPPER_LOG"
 `,
       );
 
-      const result = spawnSync("bash", [wrapperPath, "best-practice-researcher"], {
+      const result = spawnSync("bash", [wrapperPath, "issue-evaluator"], {
         cwd: tempRoot,
         encoding: "utf8",
         env: {
@@ -80,7 +80,7 @@ echo "check-workspace:$*" >> "$WRAPPER_LOG"
       const lines = await readLogLines(logPath);
       const joined = lines.join("\n");
       expect(joined).toContain("pnpm workflow-memory:preflight --bootstrap");
-      expect(joined).toContain("pnpm software-factory operation run \"best-practice-researcher\"");
+      expect(joined).toContain("pnpm software-factory operation run \"issue-evaluator\"");
       expect(joined).not.toContain("check-workspace:");
       expect(joined).not.toContain("pnpm install --frozen-lockfile --prefer-offline");
       expect(joined).not.toContain("pnpm software-factory doctor");

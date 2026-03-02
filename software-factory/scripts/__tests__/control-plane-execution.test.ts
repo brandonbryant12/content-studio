@@ -33,6 +33,25 @@ const ADVISORY_RESEARCH_OPERATION: Operation = {
   },
 };
 
+const ISSUE_EVALUATOR_OPERATION: Operation = {
+  id: "issue-evaluator",
+  name: "Issue Evaluator",
+  description: "Test operation",
+  defaultModel: "gpt-5.3-codex",
+  defaultThinking: "xhigh",
+  strategy: "periodic-scans",
+  args: [],
+  labelingContext: {
+    modelLabels: ["model:gpt-5.3-codex", "model:gpt-5.3-codex-spark"],
+    thinkingLabels: ["thinking:low", "thinking:medium", "thinking:high", "thinking:xhigh"],
+    decisionLabels: ["ready-for-dev", "human-eval-needed", "rejected"],
+  },
+  runner: {
+    type: "codex-playbook",
+    playbookPath: "automations/issue-evaluator/issue-evaluator.md",
+  },
+};
+
 const NON_ADVISORY_CODEX_OPERATION: Operation = {
   id: "sanity-check",
   name: "Sanity Check",
@@ -386,5 +405,58 @@ describe("codex-playbook advisory prompt profile", () => {
 
     expect(streamedInputs).toHaveLength(1);
     expect(streamedInputs[0]).not.toContain("Advisory-lane runtime profile:");
+  });
+
+  it("injects issue-evaluator label hygiene contract and xhigh defaults", async () => {
+    const streamedInputs: string[] = [];
+    const streamedArgs: string[][] = [];
+
+    const processLayer = Layer.succeed(CliProcess, {
+      run: () =>
+        Effect.sync(() => {
+          throw new Error("Unexpected run invocation");
+        }),
+      runStreaming: (command: string, args: string[], options) =>
+        Effect.sync(() => {
+          streamedArgs.push([command, ...args]);
+          streamedInputs.push(options?.input ?? "");
+          return { status: 0, stdout: "", stderr: "" };
+        }),
+    });
+
+    const consoleLayer = Layer.succeed(CliConsole, {
+      log: () => Effect.void,
+      error: () => Effect.void,
+    });
+
+    const configLayer = Layer.succeed(CliConfig, {
+      cwd: "/tmp/content-studio",
+      operationsPath: "software-factory/operations/registry.json",
+      operationsSchemaPath: "software-factory/operations/registry.schema.json",
+    });
+
+    const result = await Effect.runPromise(
+      runOperation({
+        operation: ISSUE_EVALUATOR_OPERATION,
+        args: {},
+      }).pipe(
+        Effect.provide(Layer.mergeAll(processLayer, consoleLayer, configLayer)),
+        Effect.either,
+      ),
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right).toBe(0);
+    }
+
+    expect(streamedArgs).toHaveLength(1);
+    expect(streamedArgs[0]).toContain("gpt-5.3-codex");
+    expect(streamedArgs[0]).toContain('model_reasoning_effort="xhigh"');
+    expect(streamedInputs).toHaveLength(1);
+    expect(streamedInputs[0]).toContain("Issue-evaluator label hygiene contract:");
+    expect(streamedInputs[0]).toContain("remove `human-eval-needed`");
+    expect(streamedInputs[0]).toContain("missing routing labels");
+    expect(streamedInputs[0]).toContain("deterministic final-state label writes");
   });
 });
