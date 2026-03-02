@@ -1,5 +1,32 @@
 [
   {
+    "id": "2026-03-02-architecture-adr-guard-ready-for-dev-executor-bundle-277-278-span-identity-typing-and-t",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "ready-for-dev-executor bundle #277+#278: span identity typing and telemetry docs lifecycle alignment",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "ready-for-dev-executor",
+      "architecture-adr-guard",
+      "memory",
+      "workflow-memory",
+      "issue:277",
+      "issue:278",
+      "pr:302",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-294-blocked-by-full-suite-cli-test-timeouts",
     "date": "2026-03-02",
     "month": "2026-03",
