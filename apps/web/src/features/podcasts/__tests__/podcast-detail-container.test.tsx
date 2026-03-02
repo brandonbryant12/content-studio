@@ -8,7 +8,11 @@ import { usePodcastActions } from '../hooks/use-podcast-actions';
 import { usePodcastSettings } from '../hooks/use-podcast-settings';
 import { useScriptEditor } from '../hooks/use-script-editor';
 import { isSetupMode } from '../lib/status';
-import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
+import {
+  useKeyboardShortcut,
+  useNavigationBlock,
+  useSessionGuard,
+} from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { act, render, waitFor } from '@/test-utils';
 
@@ -211,6 +215,42 @@ describe('PodcastDetailContainer', () => {
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: false,
     });
+  });
+
+  it('enables save shortcut in failed state with unsaved changes', () => {
+    const handleSave = vi.fn();
+    vi.mocked(usePodcast).mockReturnValue({
+      data: {
+        id: 'podcast-1',
+        title: 'Test Podcast',
+        status: 'failed',
+        segments: [],
+        documents: [],
+        approvedBy: null,
+        audioUrl: null,
+        duration: null,
+        updatedAt: '2026-02-20T14:00:00.000Z',
+      },
+    } as never);
+    vi.mocked(usePodcastActions).mockReturnValue(
+      createMockActions({ hasAnyChanges: true, handleSave }) as never,
+    );
+
+    render(<PodcastDetailContainer podcastId="podcast-1" />);
+
+    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
+    const shortcutConfig = shortcutCalls[shortcutCalls.length - 1]?.[0] as
+      | {
+          enabled?: boolean;
+          onTrigger?: () => void;
+        }
+      | undefined;
+
+    expect(shortcutConfig?.enabled).toBe(true);
+    act(() => {
+      shortcutConfig?.onTrigger?.();
+    });
+    expect(handleSave).toHaveBeenCalledTimes(1);
   });
 
   it('uses smart filename when exporting audio', () => {

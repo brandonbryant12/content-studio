@@ -34,7 +34,9 @@ export function GlobalActionBar({
   errorMessage,
 }: GlobalActionBarProps) {
   const hasAudio = !!audioUrl;
-  const showChangesState = hasChanges && status === VersionStatus.READY;
+  const showChangesState =
+    hasChanges &&
+    (status === VersionStatus.READY || status === VersionStatus.FAILED);
 
   const getStatusMessage = () => {
     if (isGenerating) {
