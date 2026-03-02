@@ -22,6 +22,12 @@
           "description": "Resolve and print routing without launching codex."
         },
         {
+          "name": "max-runs",
+          "type": "number",
+          "required": false,
+          "description": "Maximum ready-for-dev execution passes for this invocation (default: 1). Stops early when no ready-for-dev issues remain."
+        },
+        {
           "name": "model",
           "type": "string",
           "required": false,

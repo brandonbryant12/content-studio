@@ -24,7 +24,7 @@ Registry source of truth:
 - Runner: native Effect TypeScript two-stage router:
   - codex planner call selects a coherent issue bundle + model/thinking
   - codex execution call implements the selected bundle
-- Args: `--issue`, `--dry-run`, `--model`, `--thinking`
+- Args: `--issue`, `--dry-run`, `--max-runs`, `--model`, `--thinking`
 
 2. `issue-evaluator`
 - Purpose: apply decision labels to open issues.
@@ -62,4 +62,4 @@ Registry source of truth:
 - Use `pnpm software-factory operation explain --operation-id <id>` to inspect runner, defaults, and args.
 - `operation run` subcommands are generated from the registry descriptors. Adding/changing args in `registry.json` updates the CLI surface automatically.
 - Use `pnpm software-factory operation run <id> --dry-run` to inspect resolved launch commands.
-- Use `pnpm software-factory operation run ready-for-dev-executor` for a single routed execution (no internal loop).
+- Use `pnpm software-factory operation run ready-for-dev-executor --max-runs <n>` to allow up to `n` routed executions; it exits early when no `ready-for-dev` issues remain.

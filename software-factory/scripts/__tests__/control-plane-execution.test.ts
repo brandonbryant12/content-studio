@@ -311,6 +311,147 @@ describe("ready-for-dev router planner parsing", () => {
       expect(result.left.reason).toBe("Issue-evaluator refresh failed with status 23.");
     }
   });
+
+  it("supports --max-runs and exits early when ready-for-dev issues are exhausted", async () => {
+    let listCallCount = 0;
+    let plannerCallCount = 0;
+    let executionCallCount = 0;
+    const logLines: string[] = [];
+
+    const processLayer = Layer.succeed(CliProcess, {
+      run: (command: string, args: string[]) =>
+        Effect.sync(() => {
+          if (command === "gh" && args[0] === "issue" && args[1] === "list") {
+            listCallCount += 1;
+            if (listCallCount === 1) {
+              return {
+                status: 0,
+                stdout: JSON.stringify([
+                  {
+                    number: 42,
+                    title: "First ready issue",
+                    url: "https://github.com/example/repo/issues/42",
+                    labels: [{ name: "ready-for-dev" }],
+                  },
+                ]),
+                stderr: "",
+              };
+            }
+            if (listCallCount === 2) {
+              return {
+                status: 0,
+                stdout: JSON.stringify([
+                  {
+                    number: 43,
+                    title: "Second ready issue",
+                    url: "https://github.com/example/repo/issues/43",
+                    labels: [{ name: "ready-for-dev" }],
+                  },
+                ]),
+                stderr: "",
+              };
+            }
+            return { status: 0, stdout: "[]", stderr: "" };
+          }
+
+          if (command === "codex" && args[0] === "exec") {
+            plannerCallCount += 1;
+            if (plannerCallCount === 1) {
+              return {
+                status: 0,
+                stdout:
+                  '{"selectedIssues":[42],"model":"gpt-5.3-codex","thinking":"high","rationale":"first issue"}',
+                stderr: "",
+              };
+            }
+            return {
+              status: 0,
+              stdout:
+                '{"selectedIssues":[43],"model":"gpt-5.3-codex","thinking":"high","rationale":"second issue"}',
+              stderr: "",
+            };
+          }
+
+          if (
+            command === "gh" &&
+            args[0] === "issue" &&
+            args[1] === "view" &&
+            args[2] === "42"
+          ) {
+            return {
+              status: 0,
+              stdout: JSON.stringify({
+                number: 42,
+                state: "OPEN",
+                labels: [{ name: "ready-for-dev" }],
+              }),
+              stderr: "",
+            };
+          }
+
+          if (
+            command === "gh" &&
+            args[0] === "issue" &&
+            args[1] === "view" &&
+            args[2] === "43"
+          ) {
+            return {
+              status: 0,
+              stdout: JSON.stringify({
+                number: 43,
+                state: "OPEN",
+                labels: [{ name: "ready-for-dev" }],
+              }),
+              stderr: "",
+            };
+          }
+
+          throw new Error(`Unexpected run command: ${command} ${args.join(" ")}`);
+        }),
+      runStreaming: () =>
+        Effect.sync(() => {
+          executionCallCount += 1;
+          return { status: 0, stdout: "", stderr: "" };
+        }),
+    });
+
+    const consoleLayer = Layer.succeed(CliConsole, {
+      log: (message: string) =>
+        Effect.sync(() => {
+          logLines.push(message);
+        }),
+      error: () => Effect.void,
+    });
+
+    const configLayer = Layer.succeed(CliConfig, {
+      cwd: "/tmp/content-studio",
+      operationsPath: "software-factory/operations/registry.json",
+      operationsSchemaPath: "software-factory/operations/registry.schema.json",
+    });
+
+    const result = await Effect.runPromise(
+      runOperation({
+        operation: READY_FOR_DEV_OPERATION,
+        args: { "max-runs": 5 },
+      }).pipe(
+        Effect.provide(Layer.mergeAll(processLayer, consoleLayer, configLayer)),
+        Effect.either,
+      ),
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right).toBe(0);
+    }
+    expect(plannerCallCount).toBe(2);
+    expect(executionCallCount).toBe(2);
+    expect(listCallCount).toBe(3);
+    expect(
+      logLines.some((line) =>
+        line.includes("No open issues with label ready-for-dev. Exiting after 2 run(s)."),
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("codex-playbook advisory prompt profile", () => {

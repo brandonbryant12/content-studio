@@ -121,6 +121,44 @@ const readBooleanArg = (args: OperationRunArgs, key: string): boolean => {
   return value === true;
 };
 
+const readPositiveIntegerArg = (
+  args: OperationRunArgs,
+  key: string,
+  fallback: number,
+): Effect.Effect<number, CliInputError> => {
+  const value = readArg(args, key);
+  if (value === undefined) {
+    return Effect.succeed(fallback);
+  }
+  if (typeof value === "number") {
+    if (Number.isInteger(value) && value > 0) {
+      return Effect.succeed(value);
+    }
+    return Effect.fail(
+      new CliInputError({
+        reason: `Invalid --${key} value: ${String(value)}. Expected a positive integer.`,
+      }),
+    );
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    const parsed = Number.parseInt(trimmed, 10);
+    if (trimmed.length > 0 && Number.isInteger(parsed) && parsed > 0) {
+      return Effect.succeed(parsed);
+    }
+    return Effect.fail(
+      new CliInputError({
+        reason: `Invalid --${key} value: ${value}. Expected a positive integer.`,
+      }),
+    );
+  }
+  return Effect.fail(
+    new CliInputError({
+      reason: `Invalid --${key} value. Expected a positive integer.`,
+    }),
+  );
+};
+
 const ensureThinking = (
   value: string | undefined,
   fallback: string,
@@ -534,224 +572,249 @@ const runReadyForDevRouter = (
 
     const explicitIssue = readStringArg(args, "issue");
     const dryRun = readBooleanArg(args, "dry-run");
-    let candidates = yield* listReadyForDevCandidates(explicitIssue);
-    if (candidates.length === 0 && !explicitIssue && !dryRun) {
-      yield* cliConsole.log(
-        "No open issues with label ready-for-dev. Running issue-evaluator once to refresh labels.",
-      );
-      const refreshStatus = yield* runCodexPlaybook(ISSUE_EVALUATOR_FALLBACK_OPERATION, {});
-      if (refreshStatus !== 0) {
-        return yield* Effect.fail(
-          new ExternalToolError({
-            reason: `Issue-evaluator refresh failed with status ${refreshStatus}.`,
-          }),
-        );
-      }
-      candidates = yield* listReadyForDevCandidates(undefined);
-    }
-
-    if (candidates.length === 0) {
-      if (explicitIssue) {
-        yield* cliConsole.log(
-          `No open issues with label ready-for-dev matching --issue ${explicitIssue}.`,
-        );
-      } else {
-        yield* cliConsole.log("No open issues with label ready-for-dev.");
-      }
-      return 0;
-    }
+    const maxRuns = yield* readPositiveIntegerArg(args, "max-runs", 1);
+    let issueEvaluatorRefreshUsed = false;
 
     const modelOverride = yield* readOptionalModelOverride(readStringArg(args, "model"));
     const thinkingOverride = yield* readOptionalThinkingOverride(readStringArg(args, "thinking"));
 
-    const plannerPrompt = [
-      "You are selecting a coherent ready-for-dev implementation bundle.",
-      "Select 1 to 5 issues that are tightly related and can be implemented together in one PR.",
-      "All selected issues must use the same model and thinking profile.",
-      "Allowed model labels: model:gpt-5.3-codex, model:gpt-5.3-codex-spark",
-      "Allowed thinking labels: thinking:low, thinking:medium, thinking:high, thinking:xhigh",
-      "Use issue labels as hard routing constraints when present.",
-      "If a selected issue has model/thinking labels, selected model/thinking must match them.",
-      "Prefer conservative bundles (smaller is better) when uncertain.",
-      "Return ONLY a single JSON object with this exact shape:",
-      "{\"selectedIssues\":[<issue numbers>],\"model\":\"<model id>\",\"thinking\":\"<thinking level>\",\"rationale\":\"<short reason>\"}",
-      "",
-      "Candidates JSON:",
-      JSON.stringify(
-        candidates.map((issue) => ({
-          number: issue.number,
-          title: issue.title,
-          url: issue.url,
-          labels: issue.labels.map((label) => label.name),
-        })),
-        null,
-        2,
-      ),
-      "",
-    ].join("\n");
-
-    const plannerArgs = [
-      "exec",
-      CODEX_DANGEROUS_FLAG,
-      "-m",
-      PLANNER_MODEL,
-      "-c",
-      `model_reasoning_effort="${PLANNER_THINKING}"`,
-      "-C",
-      config.cwd,
-      "-",
-    ];
-
-    if (dryRun) {
-      if (modelOverride) {
-        yield* cliConsole.log(`Execution model override: ${modelOverride}`);
+    for (let runIndex = 1; runIndex <= maxRuns; runIndex += 1) {
+      let candidates = yield* listReadyForDevCandidates(explicitIssue);
+      if (
+        candidates.length === 0 &&
+        runIndex === 1 &&
+        !explicitIssue &&
+        !dryRun &&
+        !issueEvaluatorRefreshUsed
+      ) {
+        yield* cliConsole.log(
+          "No open issues with label ready-for-dev. Running issue-evaluator once to refresh labels.",
+        );
+        const refreshStatus = yield* runCodexPlaybook(ISSUE_EVALUATOR_FALLBACK_OPERATION, {});
+        if (refreshStatus !== 0) {
+          return yield* Effect.fail(
+            new ExternalToolError({
+              reason: `Issue-evaluator refresh failed with status ${refreshStatus}.`,
+            }),
+          );
+        }
+        issueEvaluatorRefreshUsed = true;
+        candidates = yield* listReadyForDevCandidates(undefined);
       }
-      if (thinkingOverride) {
-        yield* cliConsole.log(`Execution thinking override: ${thinkingOverride}`);
+
+      if (candidates.length === 0) {
+        if (explicitIssue) {
+          yield* cliConsole.log(
+            `No open issues with label ready-for-dev matching --issue ${explicitIssue}.`,
+          );
+        } else if (runIndex > 1) {
+          yield* cliConsole.log(
+            `No open issues with label ready-for-dev. Exiting after ${runIndex - 1} run(s).`,
+          );
+        } else {
+          yield* cliConsole.log("No open issues with label ready-for-dev.");
+        }
+        return 0;
       }
-      yield* cliConsole.log(`Planner candidates: ${candidates.length}`);
-      yield* cliConsole.log("Planner dry run command:");
-      yield* cliConsole.log(`  codex ${plannerArgs.join(" ")}`);
-      yield* cliConsole.log("");
-      yield* cliConsole.log("Execution dry run command template:");
-      yield* cliConsole.log(
-        `  codex exec ${CODEX_DANGEROUS_FLAG} -m <model-from-planner> -c model_reasoning_effort="<thinking-from-planner>" -C ${config.cwd} -`,
+
+      const plannerPrompt = [
+        "You are selecting a coherent ready-for-dev implementation bundle.",
+        "Select 1 to 5 issues that are tightly related and can be implemented together in one PR.",
+        "All selected issues must use the same model and thinking profile.",
+        "Allowed model labels: model:gpt-5.3-codex, model:gpt-5.3-codex-spark",
+        "Allowed thinking labels: thinking:low, thinking:medium, thinking:high, thinking:xhigh",
+        "Use issue labels as hard routing constraints when present.",
+        "If a selected issue has model/thinking labels, selected model/thinking must match them.",
+        "Prefer conservative bundles (smaller is better) when uncertain.",
+        "Return ONLY a single JSON object with this exact shape:",
+        "{\"selectedIssues\":[<issue numbers>],\"model\":\"<model id>\",\"thinking\":\"<thinking level>\",\"rationale\":\"<short reason>\"}",
+        "",
+        "Candidates JSON:",
+        JSON.stringify(
+          candidates.map((issue) => ({
+            number: issue.number,
+            title: issue.title,
+            url: issue.url,
+            labels: issue.labels.map((label) => label.name),
+          })),
+          null,
+          2,
+        ),
+        "",
+      ].join("\n");
+
+      const plannerArgs = [
+        "exec",
+        CODEX_DANGEROUS_FLAG,
+        "-m",
+        PLANNER_MODEL,
+        "-c",
+        `model_reasoning_effort="${PLANNER_THINKING}"`,
+        "-C",
+        config.cwd,
+        "-",
+      ];
+
+      if (dryRun) {
+        if (modelOverride) {
+          yield* cliConsole.log(`Execution model override: ${modelOverride}`);
+        }
+        if (thinkingOverride) {
+          yield* cliConsole.log(`Execution thinking override: ${thinkingOverride}`);
+        }
+        yield* cliConsole.log(`Max runs: ${maxRuns}`);
+        yield* cliConsole.log(`Planner candidates: ${candidates.length}`);
+        yield* cliConsole.log("Planner dry run command:");
+        yield* cliConsole.log(`  codex ${plannerArgs.join(" ")}`);
+        yield* cliConsole.log("");
+        yield* cliConsole.log("Execution dry run command template:");
+        yield* cliConsole.log(
+          `  codex exec ${CODEX_DANGEROUS_FLAG} -m <model-from-planner> -c model_reasoning_effort="<thinking-from-planner>" -C ${config.cwd} -`,
+        );
+        return 0;
+      }
+
+      const plannerResult = yield* processService.run("codex", plannerArgs, {
+        cwd: config.cwd,
+        input: plannerPrompt,
+        allowFailure: true,
+        timeoutMs: READY_FOR_DEV_PLANNER_TIMEOUT_MS,
+      }).pipe(
+        Effect.mapError(
+          (error) =>
+            new ExternalToolError({
+              reason: `Ready-for-dev planner call failed: ${unknownErrorMessage(error)}`,
+            }),
+        ),
       );
-      return 0;
-    }
-
-    const plannerResult = yield* processService.run("codex", plannerArgs, {
-      cwd: config.cwd,
-      input: plannerPrompt,
-      allowFailure: true,
-      timeoutMs: READY_FOR_DEV_PLANNER_TIMEOUT_MS,
-    }).pipe(
-      Effect.mapError(
-        (error) =>
+      if (plannerResult.status !== 0) {
+        const details = (plannerResult.stderr || plannerResult.stdout || "").trim();
+        return yield* Effect.fail(
           new ExternalToolError({
-            reason: `Ready-for-dev planner call failed: ${unknownErrorMessage(error)}`,
+            reason: `Ready-for-dev planner call failed. ${details}`,
           }),
-      ),
-    );
-    if (plannerResult.status !== 0) {
-      const details = (plannerResult.stderr || plannerResult.stdout || "").trim();
-      return yield* Effect.fail(
-        new ExternalToolError({
-          reason: `Ready-for-dev planner call failed. ${details}`,
-        }),
+        );
+      }
+
+      const plan = yield* parseReadyForDevPlan(plannerResult.stdout || "");
+      const candidateMap = new Map<number, GhIssueCandidate>(candidates.map((issue) => [issue.number, issue]));
+      const selectedIssues: GhIssueCandidate[] = [];
+
+      for (const issueNumber of plan.selectedIssues) {
+        const issue = candidateMap.get(issueNumber);
+        if (!issue) {
+          return yield* Effect.fail(
+            new PolicyViolationError({
+              reason: `Planner selected issue #${issueNumber}, which is not in candidate set.`,
+            }),
+          );
+        }
+        selectedIssues.push(issue);
+      }
+
+      const model = yield* (modelOverride
+        ? Effect.succeed(modelOverride)
+        : ensureModel(plan.model, ""));
+      const thinking = yield* (thinkingOverride
+        ? Effect.succeed(thinkingOverride)
+        : ensureThinking(plan.thinking, ""));
+      yield* ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
+
+      for (const selected of selectedIssues) {
+        const issueView = yield* runGhJson<GhIssueView>(
+          [
+            "issue",
+            "view",
+            String(selected.number),
+            "--json",
+            "number,state,labels",
+          ],
+          `Failed to re-check issue #${selected.number}`,
+        );
+        if (issueView.state !== "OPEN") {
+          return yield* Effect.fail(
+            new PolicyViolationError({
+              reason: `Issue #${selected.number} is no longer open (state=${issueView.state}).`,
+            }),
+          );
+        }
+        const hasReadyLabel = issueView.labels.some((label) => label.name === "ready-for-dev");
+        if (!hasReadyLabel) {
+          return yield* Effect.fail(
+            new PolicyViolationError({
+              reason: `Issue #${selected.number} no longer has ready-for-dev label.`,
+            }),
+          );
+        }
+      }
+
+      const prompt = [
+        "Execute one full `ready-for-dev-executor` run for the selected issue bundle only.",
+        "",
+        "Selected issues:",
+        ...selectedIssues.map(
+          (issue) => `- #${issue.number}: ${issue.title} (${issue.url})`,
+        ),
+        "",
+        "Execution routing:",
+        `- model: ${model}`,
+        `- thinking: ${thinking}`,
+        `- planner rationale: ${plan.rationale || "n/a"}`,
+        "",
+        "Execution contract:",
+        `- Read and follow \`${runner.playbookPath}\`.`,
+        "- Treat the selected issue list above as the only actionable candidates for this run.",
+        "- If any selected issue is no longer actionable, stop with a concise no-op report.",
+        "- Do not add additional unlisted product issues to scope in this run.",
+        "- Prerequisite unblockers are allowed only when a required gate is blocked by a pre-existing regression; keep unblockers minimal and explicitly document them.",
+        "- Complete implementation + validation + delivery workflow exactly as the playbook requires.",
+        "- Keep one PR max for this run.",
+        "",
+      ].join("\n");
+
+      const codexArgs = [
+        "exec",
+        CODEX_DANGEROUS_FLAG,
+        "-m",
+        model,
+        "-c",
+        `model_reasoning_effort="${thinking}"`,
+        "-C",
+        config.cwd,
+        "-",
+      ];
+
+      yield* cliConsole.log(`Run ${runIndex}/${maxRuns}: planner selected ${selectedIssues.length} issue(s).`);
+      for (const issue of selectedIssues) {
+        yield* cliConsole.log(`  - #${issue.number}: ${issue.title}`);
+      }
+      yield* cliConsole.log(`  model:    ${model}`);
+      yield* cliConsole.log(`  thinking: ${thinking}`);
+
+      const result = yield* processService.runStreaming("codex", codexArgs, {
+        cwd: config.cwd,
+        input: prompt,
+        allowFailure: true,
+        timeoutMs: READY_FOR_DEV_EXECUTOR_TIMEOUT_MS,
+      }).pipe(
+        Effect.mapError(
+          (error) =>
+            new ExternalToolError({
+              reason: `Failed to execute ready-for-dev bundle: ${unknownErrorMessage(error)}`,
+            }),
+        ),
       );
-    }
 
-    const plan = yield* parseReadyForDevPlan(plannerResult.stdout || "");
-    const candidateMap = new Map<number, GhIssueCandidate>(candidates.map((issue) => [issue.number, issue]));
-    const selectedIssues: GhIssueCandidate[] = [];
-
-    for (const issueNumber of plan.selectedIssues) {
-      const issue = candidateMap.get(issueNumber);
-      if (!issue) {
-        return yield* Effect.fail(
-          new PolicyViolationError({
-            reason: `Planner selected issue #${issueNumber}, which is not in candidate set.`,
-          }),
-        );
+      if (result.status !== 0) {
+        return result.status;
       }
-      selectedIssues.push(issue);
-    }
 
-    const model = yield* (modelOverride
-      ? Effect.succeed(modelOverride)
-      : ensureModel(plan.model, ""));
-    const thinking = yield* (thinkingOverride
-      ? Effect.succeed(thinkingOverride)
-      : ensureThinking(plan.thinking, ""));
-    yield* ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
-
-    for (const selected of selectedIssues) {
-      const issueView = yield* runGhJson<GhIssueView>(
-        [
-          "issue",
-          "view",
-          String(selected.number),
-          "--json",
-          "number,state,labels",
-        ],
-        `Failed to re-check issue #${selected.number}`,
-      );
-      if (issueView.state !== "OPEN") {
-        return yield* Effect.fail(
-          new PolicyViolationError({
-            reason: `Issue #${selected.number} is no longer open (state=${issueView.state}).`,
-          }),
-        );
-      }
-      const hasReadyLabel = issueView.labels.some((label) => label.name === "ready-for-dev");
-      if (!hasReadyLabel) {
-        return yield* Effect.fail(
-          new PolicyViolationError({
-            reason: `Issue #${selected.number} no longer has ready-for-dev label.`,
-          }),
-        );
+      if (explicitIssue) {
+        return 0;
       }
     }
 
-    const prompt = [
-      "Execute one full `ready-for-dev-executor` run for the selected issue bundle only.",
-      "",
-      "Selected issues:",
-      ...selectedIssues.map(
-        (issue) => `- #${issue.number}: ${issue.title} (${issue.url})`,
-      ),
-      "",
-      "Execution routing:",
-      `- model: ${model}`,
-      `- thinking: ${thinking}`,
-      `- planner rationale: ${plan.rationale || "n/a"}`,
-      "",
-      "Execution contract:",
-      `- Read and follow \`${runner.playbookPath}\`.`,
-      "- Treat the selected issue list above as the only actionable candidates for this run.",
-      "- If any selected issue is no longer actionable, stop with a concise no-op report.",
-      "- Do not add additional unlisted product issues to scope in this run.",
-      "- Prerequisite unblockers are allowed only when a required gate is blocked by a pre-existing regression; keep unblockers minimal and explicitly document them.",
-      "- Complete implementation + validation + delivery workflow exactly as the playbook requires.",
-      "- Keep one PR max for this run.",
-      "",
-    ].join("\n");
-
-    const codexArgs = [
-      "exec",
-      CODEX_DANGEROUS_FLAG,
-      "-m",
-      model,
-      "-c",
-      `model_reasoning_effort="${thinking}"`,
-      "-C",
-      config.cwd,
-      "-",
-    ];
-
-    yield* cliConsole.log(`Planner selected ${selectedIssues.length} issue(s).`);
-    for (const issue of selectedIssues) {
-      yield* cliConsole.log(`  - #${issue.number}: ${issue.title}`);
-    }
-    yield* cliConsole.log(`  model:    ${model}`);
-    yield* cliConsole.log(`  thinking: ${thinking}`);
-
-    const result = yield* processService.runStreaming("codex", codexArgs, {
-      cwd: config.cwd,
-      input: prompt,
-      allowFailure: true,
-      timeoutMs: READY_FOR_DEV_EXECUTOR_TIMEOUT_MS,
-    }).pipe(
-      Effect.mapError(
-        (error) =>
-          new ExternalToolError({
-            reason: `Failed to execute ready-for-dev bundle: ${unknownErrorMessage(error)}`,
-          }),
-      ),
-    );
-
-    return result.status;
+    return 0;
   });
 
 export const runOperation = (

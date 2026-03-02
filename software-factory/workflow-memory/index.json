@@ -118,6 +118,20 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-supports-max-runs-with-early-queue-exhaus",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev executor supports --max-runs with early queue exhaustion exit",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-periodic-scans-best-practice-researcher-ai-sdk-and-provider-integration-provide",
     "date": "2026-03-02",
     "month": "2026-03",
