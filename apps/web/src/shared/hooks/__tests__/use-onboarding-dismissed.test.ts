@@ -22,7 +22,8 @@ describe('useOnboardingDismissed', () => {
     const originalLocalStorage = globalThis.localStorage;
     const setItemSpy = vi.fn();
     const patchedLocalStorage = {
-      ...(typeof originalLocalStorage === 'object' && originalLocalStorage !== null
+      ...(typeof originalLocalStorage === 'object' &&
+      originalLocalStorage !== null
         ? originalLocalStorage
         : {}),
       setItem: setItemSpy,

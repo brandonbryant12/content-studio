@@ -69,7 +69,10 @@ describe('useRetryProcessing', () => {
 
     const mutationOptions = mutationOptionsSpy.mock.calls[0]?.[0] as
       | {
-          onSuccess?: (document: { id: string }, variables: { id: string }) => void;
+          onSuccess?: (
+            document: { id: string },
+            variables: { id: string },
+          ) => void;
         }
       | undefined;
     expect(mutationOptions?.onSuccess).toBeTypeOf('function');

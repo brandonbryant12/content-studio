@@ -309,10 +309,10 @@ export const createMockErrors = (): MockErrorFactory => {
  * }
  * ```
  */
-export const assertORPCError = (
+export function assertORPCError(
   error: unknown,
   expectedCode: ErrorCode,
-): asserts error is ORPCError<string, unknown> => {
+): asserts error is ORPCError<string, unknown> {
   if (!(error instanceof ORPCError)) {
     throw new Error(`Expected ORPCError but got ${typeof error}: ${error}`);
   }
@@ -321,7 +321,7 @@ export const assertORPCError = (
       `Expected error code '${expectedCode}' but got '${error.code}'`,
     );
   }
-};
+}
 
 /**
  * Create a test server runtime from a set of layers.

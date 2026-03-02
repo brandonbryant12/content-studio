@@ -6,7 +6,14 @@ import {
   type Document,
   type DocumentId,
 } from '@repo/db/schema';
-import { and, count as drizzleCount, desc, eq, inArray, sql } from 'drizzle-orm';
+import {
+  and,
+  count as drizzleCount,
+  desc,
+  eq,
+  inArray,
+  sql,
+} from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { PodcastWithDocuments, PodcastRepoService } from './podcast-repo';
 import { DocumentNotFound, PodcastNotFound } from '../../errors';

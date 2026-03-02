@@ -1,7 +1,8 @@
 export const INSTRUCTION_PRESETS = [
   {
     label: 'Conversational',
-    value: 'Keep the tone casual and conversational, like two friends chatting.',
+    value:
+      'Keep the tone casual and conversational, like two friends chatting.',
   },
   {
     label: 'Key takeaways',

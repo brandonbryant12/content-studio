@@ -185,9 +185,7 @@ export function PodcastSettings({
     return matchingPreset?.label ?? null;
   }, [settings.instructions]);
 
-  const handlePresetClick = (
-    preset: (typeof INSTRUCTION_PRESETS)[number],
-  ) => {
+  const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
     if (activePreset === preset.label) {
       settings.setInstructions('');
       return;

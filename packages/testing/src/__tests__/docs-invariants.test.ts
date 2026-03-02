@@ -44,10 +44,10 @@ const extractInvariantFiles = (
   return tokens
     .filter(
       (token) =>
-      token.endsWith('.test.ts') ||
-      token.endsWith('.test.tsx') ||
-      token.endsWith('.integration.test.ts') ||
-      token.endsWith('.integration.test.tsx'),
+        token.endsWith('.test.ts') ||
+        token.endsWith('.test.tsx') ||
+        token.endsWith('.integration.test.ts') ||
+        token.endsWith('.integration.test.tsx'),
     )
     .map((token) => normalizeInvariantFilePath(token, packageDir));
 };
@@ -61,7 +61,9 @@ const getWorkspacePackageJsonPaths = (): string[] => {
       continue;
     }
 
-    for (const entry of fs.readdirSync(workspaceRootPath, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(workspaceRootPath, {
+      withFileTypes: true,
+    })) {
       if (!entry.isDirectory()) {
         continue;
       }
@@ -85,16 +87,18 @@ describe('invariant docs sync', () => {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     const rootScript = packageJson?.scripts?.['test:invariants'];
 
-    expect(rootScript, 'Missing test:invariants script in package.json').toBeTypeOf(
-      'string',
-    );
+    expect(
+      rootScript,
+      'Missing test:invariants script in package.json',
+    ).toBeTypeOf('string');
 
     const packageInvariantFiles = getWorkspacePackageJsonPaths().flatMap(
       (workspacePackageJsonPath) => {
         const workspacePackageJson = JSON.parse(
           fs.readFileSync(workspacePackageJsonPath, 'utf-8'),
         );
-        const invariantScript = workspacePackageJson?.scripts?.['test:invariants'];
+        const invariantScript =
+          workspacePackageJson?.scripts?.['test:invariants'];
 
         if (typeof invariantScript !== 'string') {
           return [];
@@ -131,9 +135,7 @@ describe('invariant docs sync', () => {
     expect(datadogDoc).toContain('createServerRuntime(');
     expect(datadogDoc).toContain('telemetryConfig');
     expect(datadogDoc).toContain('runtime.dispose()');
-    expect(datadogDoc).toContain(
-      './observability.md#runtime-wiring-pattern',
-    );
+    expect(datadogDoc).toContain('./observability.md#runtime-wiring-pattern');
     expect(datadogDoc).not.toMatch(
       /call\s+`?initTelemetry\(\)`?\s+at\s+startup/i,
     );

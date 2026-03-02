@@ -286,13 +286,13 @@ describe('podcast router', () => {
       // Act & Assert
       await expectHandlerErrorCode(
         () =>
-            handlers.list({
-              context,
-              input: { limit: 10, offset: 0 },
-              errors,
-            }),
-          'UNAUTHORIZED',
-        );
+          handlers.list({
+            context,
+            input: { limit: 10, offset: 0 },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('returns empty array when no podcasts exist', async () => {
@@ -463,13 +463,13 @@ describe('podcast router', () => {
       // Act & Assert
       await expectHandlerErrorCode(
         () =>
-            handlers.get({
-              context,
-              input: { id: podcast.id },
-              errors,
-            }),
-          'UNAUTHORIZED',
-        );
+          handlers.get({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('returns podcast when found', async () => {
@@ -599,13 +599,13 @@ describe('podcast router', () => {
       // Act & Assert
       await expectHandlerErrorCode(
         () =>
-            handlers.create({
-              context,
-              input: { title: 'New Podcast', format: 'conversation' as const },
-              errors,
-            }),
-          'UNAUTHORIZED',
-        );
+          handlers.create({
+            context,
+            input: { title: 'New Podcast', format: 'conversation' as const },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('creates podcast with title and format', async () => {
@@ -769,13 +769,13 @@ describe('podcast router', () => {
       // Act & Assert
       await expectHandlerErrorCode(
         () =>
-            handlers.update({
-              context,
-              input: { id: podcast.id, title: 'Updated' },
-              errors,
-            }),
-          'UNAUTHORIZED',
-        );
+          handlers.update({
+            context,
+            input: { id: podcast.id, title: 'Updated' },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('updates podcast title', async () => {
@@ -989,13 +989,13 @@ describe('podcast router', () => {
       // Act & Assert
       await expectHandlerErrorCode(
         () =>
-            handlers.delete({
-              context,
-              input: { id: podcast.id },
-              errors,
-            }),
-          'UNAUTHORIZED',
-        );
+          handlers.delete({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('deletes podcast successfully', async () => {

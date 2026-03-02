@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { UIMessage } from 'ai';
 import { ChatMessage } from './chat-message';
-import { getMessageText, stripChatControlTokens } from '@/shared/lib/chat-control';
+import {
+  getMessageText,
+  stripChatControlTokens,
+} from '@/shared/lib/chat-control';
 import { isStreamingAssistantMessage } from '@/shared/lib/chat-streaming';
 
 interface ChatThreadProps {
@@ -24,7 +27,8 @@ export function ChatThread({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const latestAssistantMessage = useMemo(
-    () => [...messages].reverse().find((message) => message.role === 'assistant'),
+    () =>
+      [...messages].reverse().find((message) => message.role === 'assistant'),
     [messages],
   );
   const latestAssistantText = latestAssistantMessage

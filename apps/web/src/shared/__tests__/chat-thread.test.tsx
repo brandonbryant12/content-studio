@@ -5,9 +5,7 @@ import { render, screen } from '@/test-utils';
 
 const emptyState = <p>No messages yet</p>;
 
-const assistantMessage = (
-  text: string,
-): UIMessage => ({
+const assistantMessage = (text: string): UIMessage => ({
   id: 'assistant-1',
   role: 'assistant',
   parts: [{ type: 'text', text }],
@@ -39,7 +37,11 @@ describe('ChatThread', () => {
     ).not.toBeInTheDocument();
 
     rerender(
-      <ChatThread messages={[message]} isStreaming={false} emptyState={emptyState} />,
+      <ChatThread
+        messages={[message]}
+        isStreaming={false}
+        emptyState={emptyState}
+      />,
     );
 
     expect(

@@ -263,9 +263,9 @@ describe('getGenerationFailureMessage', () => {
   });
 
   it('falls back to safe copy for unknown backend/provider text', () => {
-    expect(getGenerationFailureMessage('Provider timeout in tts.synthesize')).toBe(
-      'Generation failed. Please retry.',
-    );
+    expect(
+      getGenerationFailureMessage('Provider timeout in tts.synthesize'),
+    ).toBe('Generation failed. Please retry.');
   });
 
   it('supports custom fallback copy', () => {
