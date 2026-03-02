@@ -53,6 +53,31 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-run-for-274-merged-with-bounded-transient",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor run for #274 merged with bounded transient retries",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "ready-for-dev-executor",
+      "feature-delivery",
+      "issue-274",
+      "workflow-memory",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:write",
+      "memory-dynamics:retrieve"
+    ],
+    "importance": 0.86,
+    "recency": 1,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
