@@ -1,5 +1,6 @@
 import {
   CheckIcon,
+  ExclamationTriangleIcon,
   LightningBoltIcon,
   ReloadIcon,
 } from '@radix-ui/react-icons';
@@ -125,6 +126,13 @@ export function ActionBar({
     );
   }
 
+  const statusIcon =
+    status === VoiceoverStatus.READY ? (
+      <CheckIcon className="w-4 h-4" />
+    ) : status === VoiceoverStatus.FAILED ? (
+      <ExclamationTriangleIcon className="w-4 h-4" />
+    ) : null;
+
   const statusLabel =
     status === VoiceoverStatus.READY
       ? GENERATION_LABELS.statusReady
@@ -138,7 +146,7 @@ export function ActionBar({
       <div className="global-action-bar" role="status" aria-live="polite">
         <div className="global-action-bar-content">
           <div className="global-action-bar-status ready">
-            <CheckIcon className="w-4 h-4" />
+            {statusIcon}
             <span className="global-action-bar-status-text">{statusLabel}</span>
           </div>
           <div className="global-action-bar-actions">

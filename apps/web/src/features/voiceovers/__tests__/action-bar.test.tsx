@@ -14,6 +14,13 @@ vi.mock('@repo/ui/components/spinner', () => ({
   ),
 }));
 
+vi.mock('@radix-ui/react-icons', () => ({
+  CheckIcon: () => <span data-testid="check-icon" />,
+  ExclamationTriangleIcon: () => <span data-testid="error-icon" />,
+  LightningBoltIcon: () => <span data-testid="lightning-bolt-icon" />,
+  ReloadIcon: () => <span data-testid="reload-icon" />,
+}));
+
 // Mock the Button component
 vi.mock('@repo/ui/components/button', () => ({
   Button: ({
@@ -364,6 +371,8 @@ describe('ActionBar', () => {
       );
 
       expect(screen.getByText('Draft')).toBeInTheDocument();
+      expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('error-icon')).not.toBeInTheDocument();
     });
 
     it('does not show Generate Audio button', () => {
@@ -395,6 +404,8 @@ describe('ActionBar', () => {
       );
 
       expect(screen.getByText('Ready')).toBeInTheDocument();
+      expect(screen.getByTestId('check-icon')).toBeInTheDocument();
+      expect(screen.queryByTestId('error-icon')).not.toBeInTheDocument();
     });
 
     it('does not show action buttons', () => {
@@ -423,6 +434,8 @@ describe('ActionBar', () => {
       );
 
       expect(screen.getByText('Generation failed')).toBeInTheDocument();
+      expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+      expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument();
     });
 
     it('shows Retry button', () => {
