@@ -70,6 +70,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-merged-voiceover-save-draft-inline-title-",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor merged voiceover save-draft + inline title editing",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:intake-triage",
+      "skill:tanstack-vite",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-executor-preserve-failed-state-unsaved-podcast-ret",
     "date": "2026-03-02",
     "month": "2026-03",
