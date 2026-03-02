@@ -84,7 +84,7 @@ Runtime preflight for code tasks:
   - if still failing, retry with `npm_config_registry=https://registry.npmjs.com pnpm install --frozen-lockfile`
   - if dependency-state corruption is indicated, remove node_modules once and retry install
   - if still failing, capture diagnostics and stop: `node -v`, `pnpm -v`, `npm -v`, `nslookup registry.npmjs.org`, `curl -I https://registry.npmjs.org/`
-4) Container runtime: no Docker preflight is required for this repository. Integration/workflow tests use in-process PGlite, so skip container runtime checks.
+4) Container runtime: Docker preflight is required for this repository. Integration/workflow tests use PostgreSQL Testcontainers.
 5) Worktree cleanliness policy before branching:
   - run `git status --porcelain` and inspect dirty paths
   - treat dirty workflow-memory paths as expected automation artifacts, not blockers:

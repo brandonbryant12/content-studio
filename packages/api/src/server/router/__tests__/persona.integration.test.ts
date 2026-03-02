@@ -4,7 +4,7 @@ import { user as userTable } from '@repo/db/schema';
 import { PersonaRepoLive } from '@repo/media';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
-  createPGliteTestContext,
+  createTestContext,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -113,7 +113,7 @@ describe('persona router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     const testUser = createTestUser();
     user = toUser(testUser);
     await insertTestUser(ctx, testUser);

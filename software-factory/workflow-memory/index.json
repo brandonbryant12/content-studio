@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-03-02-feature-delivery-fix-ts2775-assertion-helper-blocking-typecheck-lint",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Fix TS2775 assertion helper blocking typecheck/lint",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "skill:debug-fix",
+      "typecheck",
+      "lint",
+      "api-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-feature-delivery-ready-for-dev-294-blocked-by-full-suite-cli-test-timeouts",
     "date": "2026-03-02",
     "month": "2026-03",

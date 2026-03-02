@@ -8,13 +8,10 @@ Automations are external scheduler wrappers. They live at repository root and in
 automation.toml schedule
       |
       v
-pnpm install
+run-operation-wrapper.sh <operation-id>
       |
       v
-pnpm software-factory doctor
-      |
-      v
-pnpm software-factory operation run <id>
+workspace clean check + install + workflow-memory preflight + doctor + operation run
       |
       v
 operation runner + playbook execution
@@ -23,7 +20,7 @@ operation runner + playbook execution
 ## Rules
 
 1. Wrappers do not implement delivery logic.
-2. Wrappers bootstrap dependencies and runtime checks before `operation run`.
+2. Wrappers call [`run-operation-wrapper.sh`](./run-operation-wrapper.sh) for deterministic bootstrap and workspace hygiene before `operation run`.
 3. Operation IDs are the automation contract key.
 4. Playbooks (`*.md`) are source of truth for behavior.
 

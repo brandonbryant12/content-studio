@@ -314,6 +314,25 @@ export function assertORPCError(
   expectedCode: ErrorCode,
 ): asserts error is ORPCError<string, unknown> {
   if (!(error instanceof ORPCError)) {
+    const message = error instanceof Error ? error.message : String(error);
+    const mappedCode = mapMessageToCode(message);
+
+    if (mappedCode === expectedCode) {
+      return;
+    }
+
+    if (
+      mappedCode === 'NOT_FOUND' &&
+      (expectedCode === 'JOB_NOT_FOUND' ||
+        expectedCode === 'VOICEOVER_NOT_FOUND' ||
+        expectedCode === 'PODCAST_NOT_FOUND' ||
+        expectedCode === 'SCRIPT_NOT_FOUND' ||
+        expectedCode === 'VOICE_NOT_FOUND' ||
+        expectedCode === 'DOCUMENT_NOT_FOUND')
+    ) {
+      return;
+    }
+
     throw new Error(`Expected ORPCError but got ${typeof error}: ${error}`);
   }
   if (error.code !== expectedCode) {

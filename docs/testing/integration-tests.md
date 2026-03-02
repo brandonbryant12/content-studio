@@ -8,7 +8,7 @@ graph LR
   UC --> MockRepo[Mock Repos via DB]
   UC --> MockAI[MockLLM / MockTTS]
   UC --> MockStorage[In-Memory Storage]
-  MockRepo --> TestDB[(PGlite In-Process)]
+  MockRepo --> TestDB[(Postgres Testcontainer)]
 ```
 
 ## Golden Principles
@@ -25,7 +25,7 @@ graph LR
 4. Update the integration test runtime when adding new services.
 <!-- enforced-by: manual-review -->
 
-5. Use `ctx.cleanup()` consistently in `afterEach`.
+5. Use `ctx.rollback()` consistently in `afterEach`.
 <!-- enforced-by: manual-review -->
 
 ## File Location
@@ -40,20 +40,20 @@ See: `packages/api/src/server/router/__tests__/document.integration.test.ts`
 
 ## Prerequisites
 
-No Docker required. Integration tests use PGlite — an in-process WASM PostgreSQL build.
+Docker is required. Integration tests use a PostgreSQL Testcontainer.
 
 ```bash
-pnpm --filter @repo/api test   # Just works — no setup needed
+pnpm --filter @repo/api test
 ```
 
-The first call pushes the Drizzle schema and snapshots the datadir (~1s); subsequent calls restore from the snapshot (~200ms).
+`@repo/api` Vitest global setup starts one PostgreSQL container, pushes the Drizzle schema, and sets `TEST_POSTGRES_URL` for test workers.
 
 ## Test Dependencies
 
 | Dependency | Source | Purpose |
 |---|---|---|
-| Test Database (PGlite) | `@electric-sql/pglite` | In-process WASM PostgreSQL (no Docker) |
-| `createPGliteTestContext` | `@repo/testing` | DB connection + snapshot isolation |
+| Test Database (PostgreSQL) | `@testcontainers/postgresql` | Real PostgreSQL in Docker |
+| `createTestContext` | `@repo/testing` | DB connection + transaction rollback isolation |
 | `createTestUser` / `toUser` | `@repo/testing` | Test user factory |
 | `createInMemoryStorage` | `@repo/storage/testing` | In-memory S3-compatible storage |
 | `MockLLMLive` / `MockTTSLive` | `@repo/ai/testing` | Mock AI service layers |
@@ -73,7 +73,7 @@ describe('{domain} router', () => {
 
   beforeEach(async () => {
     resetAllFactories();
-    ctx = await createPGliteTestContext();
+    ctx = await createTestContext();
     runtime = createTestRuntime(ctx);
     const testUser = createTestUser();
     user = toUser(testUser);
@@ -81,7 +81,7 @@ describe('{domain} router', () => {
   });
 
   afterEach(async () => {
-    await ctx.cleanup();
+    await ctx.rollback();
   });
 
   describe('{domain}.get', () => {
@@ -166,16 +166,12 @@ describe('{Domain} Router Integration', () => {
 | `packages/api/src/server/router/__tests__/voiceover.integration.test.ts` | Voiceovers |
 | `packages/api/src/server/router/__tests__/voices.integration.test.ts` | Voices |
 
-## How PGlite Works
+## How Testcontainers Works
 
-[PGlite](https://pglite.dev/) is a WASM build of PostgreSQL that runs in-process with Node.js. It eliminates the Docker dependency for integration tests.
+Integration tests use `@testcontainers/postgresql` with PostgreSQL 16.
 
-1. First call: creates an in-memory PGlite instance, pushes the Drizzle schema via `drizzle-kit/api`, and snapshots the datadir
-2. Subsequent calls: restore from the cached snapshot (~200ms)
-3. `rollback()` closes the PGlite instance, discarding all changes
+1. Global setup starts one container and pushes schema via `drizzle-kit/api`
+2. `createTestContext()` opens a dedicated connection and starts `BEGIN`
+3. `rollback()` runs `ROLLBACK`, then releases the connection
 
-### Compatibility
-
-- PGlite ships PostgreSQL 16.x
-- JSONB, foreign keys, enums, indexes, `FOR UPDATE SKIP LOCKED` all work
-- `drizzle-orm/pglite` driver is officially supported
+This keeps each test isolated while exercising real PostgreSQL behavior.

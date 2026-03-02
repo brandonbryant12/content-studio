@@ -3,13 +3,12 @@ id = "product-owner-reviewer"
 name = "Product Owner Reviewer"
 prompt = '''Use gpt-5.3-codex with reasoning effort medium.
 
-Run these commands from repository root:
-`pnpm install`
-`pnpm software-factory doctor`
-`pnpm software-factory operation run product-owner-reviewer`
+Run this command from repository root:
+`./automations/run-operation-wrapper.sh product-owner-reviewer`
 
 Contract:
 - This wrapper is automation-only.
+- The wrapper command enforces workspace hygiene and deterministic bootstrap before operation execution.
 - Do not re-implement routing/execution logic in this prompt.
 - The Software Factory CLI is source of truth for operation selection, model/thinking routing, and launch behavior.
 - Return a concise summary with routed operation, command status, and no-op reason if any.'''
