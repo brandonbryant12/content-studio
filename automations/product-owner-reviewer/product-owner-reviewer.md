@@ -5,7 +5,11 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Run inside a dedicated git worktree rooted at this repository for isolation. Role: day-to-day product-owner lane focused on coherent user journeys, UX clarity, and cross-feature storytelling for Content Studio. Keep this lane strictly focused on making Content Studio better for daily users; reject generic UX advice that does not materially improve this product. Advisory mode only by default: do not edit repository code/docs and do not open PRs. Exception: commit/push workflow-memory append artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: day-to-day product-owner lane focused on coherent user journeys, UX clarity, and cross-feature storytelling for Content Studio. Keep this lane strictly focused on making Content Studio better for daily users; reject generic UX advice that does not materially improve this product. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+
+Run workflow-memory runtime preflight before lane actions:
+- `pnpm workflow-memory:preflight --bootstrap`
+- Preflight output must include memory path and runtime readiness status before any workflow-memory read/write command.
 
 Skip standalone GitHub preflight commands. Start the lane workflow directly and handle any `gh` auth/permission failures at the actual command that needs GitHub access, recording blocker details in inbox update and automation memory.
 
@@ -83,3 +87,4 @@ Memory logging contract (required every run, including no-op):
 - Commit and push memory append artifacts after each run:
   - `pnpm workflow-memory:sync --message "chore(workflow-memory): product-owner-reviewer run memory"`
 - If `workflow-memory:sync` reports non-fast-forward, allow it to auto-rebase append-only memory files and retry; only stop when conflicts include non-memory paths.
+- Advisory runs must tolerate dirty workspaces: keep memory persistence append-only, do not run workspace-clean guardrails, and never modify non-memory files while recovering memory sync failures.

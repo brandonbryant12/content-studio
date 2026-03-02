@@ -94,6 +94,13 @@ const ISSUE_EVALUATOR_FALLBACK_OPERATION: Operation = {
     playbookPath: "automations/issue-evaluator/issue-evaluator.md",
   },
 };
+const ADVISORY_LANE_OPERATION_IDS = new Set([
+  "issue-evaluator",
+  "best-practice-researcher",
+  "software-factory-researcher",
+  "product-vision-researcher",
+  "product-owner-reviewer",
+]);
 
 const readArg = (args: OperationRunArgs, key: string): string | number | boolean | undefined =>
   Object.prototype.hasOwnProperty.call(args, key) ? args[key] : undefined;
@@ -440,6 +447,18 @@ const runCodexPlaybook = (
     }
     if (issue) {
       promptLines.push(`- Focus issue: #${issue}`);
+    }
+    if (ADVISORY_LANE_OPERATION_IDS.has(operation.id)) {
+      promptLines.push(
+        "",
+        "Advisory-lane runtime profile:",
+        "- Run directly from the current repository checkout; do not create a dedicated git worktree.",
+        "- Do not run workspace bootstrap or delivery gates (`pnpm install`, `typecheck`, `lint`, `test*`, `build`, Docker preflights) unless a human explicitly overrides into code-writing mode.",
+        "- Do not require a clean workspace for advisory runs.",
+        "- Always append workflow memory for the run and execute `workflow-memory:sync`.",
+        "- If `workflow-memory:sync` reports non-fast-forward updates, allow append-only auto-rebase retries.",
+        "- If memory sync cannot complete due to non-memory conflicts, stop and report blocker details without changing non-memory files.",
+      );
     }
     const prompt = `${promptLines.join("\n")}\n`;
 

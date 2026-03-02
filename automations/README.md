@@ -11,16 +11,25 @@ automation.toml schedule
 run-operation-wrapper.sh <operation-id>
       |
       v
-workspace clean check + install + workflow-memory preflight + doctor + operation run
+profiled bootstrap + operation run
       |
       v
 operation runner + playbook execution
 ```
 
+Wrapper profiles:
+- advisory lanes (`issue-evaluator`, `best-practice-researcher`, `software-factory-researcher`, `product-vision-researcher`, `product-owner-reviewer`):
+  - skip workspace-clean check
+  - skip unconditional `pnpm install`
+  - skip `pnpm software-factory doctor`
+  - run `pnpm workflow-memory:preflight --bootstrap`, then operation
+- implementation lanes (for example `ready-for-dev-executor`, `sanity-check`):
+  - workspace clean check + install + workflow-memory preflight + doctor + operation run
+
 ## Rules
 
 1. Wrappers do not implement delivery logic.
-2. Wrappers call [`run-operation-wrapper.sh`](./run-operation-wrapper.sh) for deterministic bootstrap and workspace hygiene before `operation run`.
+2. Wrappers call [`run-operation-wrapper.sh`](./run-operation-wrapper.sh) for deterministic, profile-aware bootstrap before `operation run`.
 3. Operation IDs are the automation contract key.
 4. Playbooks (`*.md`) are source of truth for behavior.
 5. Code-writing lanes should use CI test profile gates in worktrees (`pnpm test:ci`) rather than the interactive local profile.
