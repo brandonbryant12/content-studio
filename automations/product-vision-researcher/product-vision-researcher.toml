@@ -13,7 +13,7 @@ Contract:
 - The Software Factory CLI is source of truth for operation selection, model/thinking routing, and launch behavior.
 - Return a concise summary with routed operation, command status, and no-op reason if any.'''
 status = "ACTIVE"
-rrule = "RRULE:FREQ=HOURLY;INTERVAL=12;BYMINUTE=5;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+rrule = "RRULE:FREQ=HOURLY;INTERVAL=8;BYHOUR=4,12,20;BYMINUTE=30;BYDAY=SU,MO,TU,WE,TH,FR,SA"
 cwds = ["$REPO_ROOT"]
 created_at = 1771810862000
 updated_at = 1771810862000
