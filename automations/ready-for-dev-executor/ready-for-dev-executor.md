@@ -157,12 +157,15 @@ Delivery behavior:
   - verify primary issue has a closing keyword (`Fixes #<primary-issue-number>` or `Closes #<primary-issue-number>`)
   - verify each bundled issue line in Aggregated Issues matches intent (`Fixes #...` for fully resolved, `Refs #...` for partial)
   - if linkage check fails, do not merge; update PR body or post a blocking comment, then record memory
-  Then add labels codex and codex-automation when available and merge with squash. Use worktree-safe cleanup ordering:
+  Then add automation labels only when they exist in the repository and merge with squash. Use worktree-safe cleanup ordering:
+  - discover available labels once (`gh label list --json name --jq '.[].name'`) and apply only existing labels from the desired set (`codex`, `codex-automation`)
+  - if a desired label is absent, skip it without failing the run
   - prefer `gh pr merge --squash` (without `--delete-branch`) to avoid checked-out branch deletion failures in worktree contexts
   - verify merge completion via `gh pr view --json state,mergedAt,url`
   - remove worktree first: `git worktree remove "$WORKTREE_DIR"`
   - then delete local branch pointer if present: `git branch -D "$WORKTREE_BRANCH"`
   - then delete remote branch pointer if still present (best effort)
+  - if remote branch deletion fails only because the workspace-clean pre-push hook sees unrelated dirty files in primary checkout, retry once with `SKIP_WORKSPACE_CLEAN_CHECK=1 git push origin --delete "$WORKTREE_BRANCH"` and continue
   - if merge command exits non-zero but PR state is `MERGED`, treat as successful merge and continue cleanup
 - After merge, verify closure/linkage for all issues referenced by the PR; if any expected closure did not occur, post corrective issue comment and open a follow-up issue for linkage failure.
 
@@ -171,10 +174,12 @@ with selected issue set, bundled issue count, workflow routing summary, branch,
 PR URL, merge result, branch cleanup result, and closure verification. Hard
 limit: one PR per run.
 - append at least one structured event:
-  - `pnpm workflow-memory:add-entry --workflow "<Core Workflow>" ...`
+  - use full required flags, including `--follow-up` and `--owner`:
+    - `pnpm workflow-memory:add-entry --workflow "<Core Workflow>" --title "<title>" --trigger "<trigger>" --finding "<finding>" --evidence "<evidence>" --follow-up "<follow-up>" --owner "codex" --status "<status>" --tags "skill:feature-delivery,automation:ready-for-dev-executor"`
   - valid core workflow values: `Feature Delivery`, `Architecture + ADR Guard`, `Self-Improvement`, `Periodic Scans`, `Docs + Knowledge Drift`
   - pass tags as a single comma-separated value (`--tags "skill:feature-delivery,automation:ready-for-dev-executor"`)
-  - if using scenario flags, `--scenario-verdict` must be exactly `pass` or `fail`
+  - scenario flags are all-or-nothing: either omit all `--scenario-*` flags, or include at least `--scenario-skill`, `--scenario-check`, and `--scenario-verdict`
+  - when present, `--scenario-verdict` must be exactly `pass` or `fail`
 - commit and push memory append artifacts after each run:
   - `pnpm workflow-memory:sync --message "chore(workflow-memory): ready-for-dev-executor run memory"`
 - if `workflow-memory:sync` reports non-fast-forward, allow it to auto-rebase
