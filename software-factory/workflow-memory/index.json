@@ -53,6 +53,38 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-periodic-scans-product-owner-reviewer-approval-retry-state-communication-podcast-failed-retry-edits",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: approval/review/retry state communication — podcast failed retry edit loss, podcast completion toast coverage, document live status parity",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:micro",
+      "trajectory:domain:approval-review-retry",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:rg",
+      "tool:jq",
+      "tool:sed",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.91,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
