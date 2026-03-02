@@ -469,6 +469,8 @@ const runCodexPlaybook = (
         "- For every issue that ends with `ready-for-dev`, ensure exactly one allowed `model:*` label and one allowed `thinking:*` label, even when decision label is unchanged.",
         "- If a `ready-for-dev` issue is missing routing labels, determine and apply the model/thinking pair in this run.",
         "- If final decision is not `ready-for-dev`, remove any `model:*` and `thinking:*` labels.",
+        "- Prefer decision stability: do not demote already-`ready-for-dev` issues unless concrete new blocker evidence is identified.",
+        "- Apply run-level approval caps to new promotions only; existing compliant `ready-for-dev` issues remain ready unless blocked.",
         "- Use deterministic final-state label writes (single `gh api ... issues/<number> -X PATCH -f labels[]=...` per issue) instead of long chained add/remove edits.",
       );
     }

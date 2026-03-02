@@ -457,6 +457,8 @@ describe("codex-playbook advisory prompt profile", () => {
     expect(streamedInputs[0]).toContain("Issue-evaluator label hygiene contract:");
     expect(streamedInputs[0]).toContain("remove `human-eval-needed`");
     expect(streamedInputs[0]).toContain("missing routing labels");
+    expect(streamedInputs[0]).toContain("Prefer decision stability");
+    expect(streamedInputs[0]).toContain("caps to new promotions only");
     expect(streamedInputs[0]).toContain("deterministic final-state label writes");
   });
 });

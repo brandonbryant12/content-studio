@@ -64,9 +64,15 @@ Strict readiness rubric:
   - recommendation seems directionally useful but needs scope reduction
 - Mark `rejected` when clearly out-of-scope, duplicate-without-new-signal, or complexity cost is unjustified relative to user value.
 
+Decision stability guard (anti-churn):
+- Preserve existing `ready-for-dev` decisions by default when issue scope and acceptance criteria remain actionable.
+- Do not demote an already-`ready-for-dev` issue to `human-eval-needed` unless there is concrete new blocker evidence (for example: requirements drift, hidden architecture dependency, missing/invalid acceptance criteria discovered after approval, issue already resolved/superseded).
+- When a demotion from `ready-for-dev` occurs, include explicit blocker evidence in the issue comment and memory entry.
+
 Run-level calibration guards:
-- Default to conservative approvals: cap automated `ready-for-dev` decisions at 3 issues per run.
-- If more than 3 issues appear to qualify, keep the top 3 by immediate user impact and set remaining candidates to `human-eval-needed` with a sequencing note.
+- Default approval cap for newly promoted issues: up to 6 net-new `ready-for-dev` decisions per run.
+- Apply the cap only to new promotions in the current run; existing compliant `ready-for-dev` issues do not consume this cap.
+- If more than 6 new issues appear to qualify, keep the top 6 by immediate user impact and set remaining candidates to `human-eval-needed` with a sequencing note.
 - If a run produces an unusually high approval rate, add a memory note describing why and how it was bounded.
 
 Issue comment contract:
