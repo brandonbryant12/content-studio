@@ -106,9 +106,13 @@ See [`docs/patterns/safety-primitives.md`](./safety-primitives.md).
 
 Use cases access data through repos, never via direct DB imports. If a repo method is missing, add it to the repo.
 
-### 8. Propagate Errors <!-- enforced-by: manual-review -->
+### 8. Propagate Errors <!-- enforced-by: eslint, invariant-test -->
 
 Never swallow errors with `Effect.catchAll(() => Effect.succeed(null))`. Propagate or handle explicitly.
+
+For intentional best-effort side effects (for example, activity logging), use
+`runBestEffortSideEffect(...)` from `packages/media/src/shared/best-effort-side-effect.ts`
+so failures are logged and scoped without masking the main flow.
 
 ### 8a. Never Throw Inside `Effect.gen` <!-- enforced-by: eslint -->
 

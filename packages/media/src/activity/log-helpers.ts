@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
+import { runBestEffortSideEffect } from '../shared';
 import { ActivityLogRepo } from './repos/activity-log-repo';
 import { logActivity } from './use-cases/log-activity';
 
@@ -15,24 +16,32 @@ export const logEntityActivity = (
   entityTitle?: string | null,
   metadata?: Record<string, JsonValue> | null,
 ) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    yield* logActivity({
-      userId: user.id,
-      action,
-      entityType,
-      entityId,
-      entityTitle,
-      metadata,
-    });
-  }).pipe(
-    Effect.catchAll(() => Effect.void),
-    Effect.withSpan('logEntityActivity', {
+  runBestEffortSideEffect(
+    Effect.gen(function* () {
+      const user = yield* getCurrentUser;
+      yield* logActivity({
+        userId: user.id,
+        action,
+        entityType,
+        entityId,
+        entityTitle,
+        metadata,
+      });
+    }).pipe(
+      Effect.withSpan('logEntityActivity', {
+        attributes: {
+          'activity.action': action,
+          'activity.entityType': entityType,
+        },
+      }),
+    ),
+    {
+      operation: 'activity.logEntityActivity',
       attributes: {
         'activity.action': action,
         'activity.entityType': entityType,
       },
-    }),
+    },
   );
 
 /**
@@ -40,12 +49,17 @@ export const logEntityActivity = (
  * Failures are silently swallowed so syncing never breaks the main flow.
  */
 export const syncEntityTitle = (entityId: string, title: string) =>
-  Effect.gen(function* () {
-    const repo = yield* ActivityLogRepo;
-    yield* repo.updateEntityTitle(entityId, title);
-  }).pipe(
-    Effect.catchAll(() => Effect.void),
-    Effect.withSpan('syncEntityTitle', {
+  runBestEffortSideEffect(
+    Effect.gen(function* () {
+      const repo = yield* ActivityLogRepo;
+      yield* repo.updateEntityTitle(entityId, title);
+    }).pipe(
+      Effect.withSpan('syncEntityTitle', {
+        attributes: { 'activity.entityId': entityId },
+      }),
+    ),
+    {
+      operation: 'activity.syncEntityTitle',
       attributes: { 'activity.entityId': entityId },
-    }),
+    },
   );

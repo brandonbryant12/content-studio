@@ -39,7 +39,4 @@ export const generateAvatar = (input: GenerateAvatarInput) =>
     yield* storage.upload(storageKey, imageData, mimeType);
 
     yield* personaRepo.update(p.id, { avatarStorageKey: storageKey });
-  }).pipe(
-    Effect.catchAll(() => Effect.void),
-    withUseCaseSpan('useCase.generateAvatar'),
-  );
+  }).pipe(withUseCaseSpan('useCase.generateAvatar'));

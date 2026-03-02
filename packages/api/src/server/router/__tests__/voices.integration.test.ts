@@ -1,6 +1,7 @@
 import { createMockTTS, MOCK_VOICES, MockLLMLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { user as userTable } from '@repo/db/schema';
+import { Storage, StorageError, type StorageService } from '@repo/storage';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createPGliteTestContext,
@@ -9,7 +10,7 @@ import {
   toUser,
   type TestContext,
 } from '@repo/testing';
-import { Layer } from 'effect';
+import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
@@ -94,12 +95,17 @@ const handlers = {
 /**
  * Create a minimal test runtime with TTS service for voice operations.
  */
+interface RuntimeOverrides {
+  ttsOptions?: Parameters<typeof createMockTTS>[0];
+  storageLayer?: Layer.Layer<Storage>;
+}
+
 const createTestRuntime = (
   ctx: TestContext,
-  ttsOptions?: Parameters<typeof createMockTTS>[0],
+  overrides: RuntimeOverrides = {},
 ): ServerRuntime => {
-  const mockTTSLayer = createMockTTS(ttsOptions);
-  const inMemoryStorage = createInMemoryStorage();
+  const mockTTSLayer = createMockTTS(overrides.ttsOptions);
+  const storageLayer = overrides.storageLayer ?? createInMemoryStorage().layer;
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
 
   const allLayers = Layer.mergeAll(
@@ -107,7 +113,7 @@ const createTestRuntime = (
     mockTTSLayer,
     MockLLMLive,
     policyLayer,
-    inMemoryStorage.layer,
+    storageLayer,
   );
 
   return createTestServerRuntime(allLayers);
@@ -222,7 +228,9 @@ describe('voices router', () => {
           description: 'A female voice',
         },
       ];
-      const customRuntime = createTestRuntime(ctx, { voices: customVoices });
+      const customRuntime = createTestRuntime(ctx, {
+        ttsOptions: { voices: customVoices },
+      });
       const context = createMockContext(customRuntime, user);
 
       // Act
@@ -235,6 +243,29 @@ describe('voices router', () => {
       expect(result).toHaveLength(2);
       expect(result.find((v) => v.gender === 'male')).toBeDefined();
       expect(result.find((v) => v.gender === 'female')).toBeDefined();
+    });
+
+    it('fails when preview metadata storage lookup errors', async () => {
+      const failingStorage: StorageService = {
+        upload: () => Effect.die('Not implemented'),
+        download: () => Effect.die('Not implemented'),
+        delete: () => Effect.die('Not implemented'),
+        getUrl: () => Effect.die('Not implemented'),
+        exists: () =>
+          Effect.fail(new StorageError({ message: 'Connection failed' })),
+      };
+      const customRuntime = createTestRuntime(ctx, {
+        storageLayer: Layer.succeed(Storage, failingStorage),
+      });
+      const context = createMockContext(customRuntime, user);
+
+      await expectErrorWithMessage(
+        handlers.list({
+          context,
+          errors,
+        }),
+        /INTERNAL_ERROR|Storage operation failed|Connection failed/i,
+      );
     });
   });
 
@@ -346,7 +377,7 @@ describe('voices router', () => {
     it('handles TTS service errors gracefully', async () => {
       // Arrange - create runtime that simulates TTS errors
       const errorRuntime = createTestRuntime(ctx, {
-        errorMessage: 'TTS service unavailable',
+        ttsOptions: { errorMessage: 'TTS service unavailable' },
       });
       const context = createMockContext(errorRuntime, user);
       const input = { voiceId: 'Charon' };

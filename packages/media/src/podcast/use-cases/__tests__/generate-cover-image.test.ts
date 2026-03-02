@@ -59,4 +59,35 @@ describe('generateCoverImage', () => {
     const [, data] = updateSpy.mock.calls[0]!;
     expect(data.coverImageStorageKey).toBe(`podcasts/${podcast.id}/cover.png`);
   });
+
+  it('propagates image generation failures', async () => {
+    const podcast = {
+      ...createTestPodcast(),
+      documents: [],
+    } satisfies PodcastWithDocuments;
+
+    const repo = createMockPodcastRepo({
+      findById: () => Effect.succeed(podcast),
+    });
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockImageGen({ shouldRejectContent: true }),
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+    );
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(testUser)(
+        generateCoverImage({ podcastId: podcast.id }).pipe(
+          Effect.provide(layers),
+        ),
+      ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+      expect(result.cause.error._tag).toBe('ImageGenError');
+    }
+  });
 });

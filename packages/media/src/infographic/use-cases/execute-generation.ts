@@ -9,7 +9,11 @@ import { InfographicStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { syncEntityTitle } from '../../activity';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  runBestEffortSideEffect,
+  withUseCaseSpan,
+} from '../../shared';
 import { buildInfographicPrompt } from '../prompts';
 import { InfographicRepo } from '../repos';
 import {
@@ -166,13 +170,17 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
       Effect.gen(function* () {
         yield* Effect.logWarning(`Content filtered: ${err.message}`);
         const repo = yield* InfographicRepo;
-        yield* repo
-          .update(input.infographicId, {
+        yield* runBestEffortSideEffect(
+          repo.update(input.infographicId, {
             status: InfographicStatus.FAILED,
             errorMessage:
               'Your infographic could not be generated. Please adjust your prompt and try again.',
-          })
-          .pipe(Effect.catchAll(() => Effect.void));
+          }),
+          {
+            operation: 'infographic.markFailedAfterContentFilter',
+            attributes: { 'infographic.id': input.infographicId },
+          },
+        );
         return yield* Effect.fail(err);
       }),
     ),
@@ -182,12 +190,16 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
           `Infographic generation failed: ${String(error)}`,
         );
         const repo = yield* InfographicRepo;
-        yield* repo
-          .update(input.infographicId, {
+        yield* runBestEffortSideEffect(
+          repo.update(input.infographicId, {
             status: InfographicStatus.FAILED,
             errorMessage: 'Generation failed. Please try again.',
-          })
-          .pipe(Effect.catchAll(() => Effect.void));
+          }),
+          {
+            operation: 'infographic.markFailedAfterUnexpectedError',
+            attributes: { 'infographic.id': input.infographicId },
+          },
+        );
         return yield* Effect.fail(error);
       }),
     ),

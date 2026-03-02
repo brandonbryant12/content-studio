@@ -18,14 +18,40 @@ export interface VoiceWithPreview extends VoiceInfo {
 // Helpers
 // =============================================================================
 
-const resolvePreviewUrl = (voiceId: string) =>
-  Effect.gen(function* () {
+const getErrorTag = (error: unknown): string => {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    '_tag' in error &&
+    typeof error._tag === 'string'
+  ) {
+    return error._tag;
+  }
+  return 'UnknownError';
+};
+
+const resolvePreviewUrl = (voiceId: string) => {
+  const key = `voice-previews/${voiceId}.wav`;
+
+  return Effect.gen(function* () {
     const storage = yield* Storage;
-    const key = `voice-previews/${voiceId}.wav`;
     const exists = yield* storage.exists(key);
     if (!exists) return null;
     return yield* storage.getUrl(key);
-  }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+  }).pipe(
+    Effect.tapError((error) =>
+      Effect.logWarning(
+        `Voice preview metadata lookup failed for ${voiceId} [errorTag:${getErrorTag(error)}]`,
+      ),
+    ),
+    Effect.withSpan('tts.resolveVoicePreviewUrl', {
+      attributes: {
+        'voice.id': voiceId,
+        'storage.key': key,
+      },
+    }),
+  );
+};
 
 // =============================================================================
 // Use Case

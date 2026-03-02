@@ -1,5 +1,5 @@
 import { it } from '@effect/vitest';
-import { Storage, type StorageService } from '@repo/storage';
+import { Storage, StorageError, type StorageService } from '@repo/storage';
 import { Effect, Layer } from 'effect';
 import { describe, expect } from 'vitest';
 import { TTS, type TTSService, VOICES } from '../../index';
@@ -101,14 +101,17 @@ describe('listVoicesWithPreviews', () => {
     ),
   );
 
-  it.effect('gracefully handles storage errors for individual voices', () =>
+  it.effect('fails when storage errors occur during preview metadata lookup', () =>
     Effect.gen(function* () {
-      const result = yield* listVoicesWithPreviews({});
+      const result = yield* listVoicesWithPreviews({}).pipe(Effect.either);
 
-      // Even though storage.exists throws, resolvePreviewUrl catches it
-      // and returns null, so all voices should have null previewUrl
-      expect(result).toHaveLength(VOICES.length);
-      expect(result.every((v) => v.previewUrl === null)).toBe(true);
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left._tag).toBe('StorageError');
+        expect((result.left as StorageError).message).toBe(
+          'Connection failed',
+        );
+      }
     }).pipe(
       Effect.provide(
         Layer.merge(
@@ -118,10 +121,7 @@ describe('listVoicesWithPreviews', () => {
             download: () => Effect.die('Not implemented'),
             delete: () => Effect.die('Not implemented'),
             exists: () =>
-              Effect.fail({
-                _tag: 'StorageError',
-                message: 'Connection failed',
-              } as never),
+              Effect.fail(new StorageError({ message: 'Connection failed' })),
             getUrl: () => Effect.die('Not implemented'),
           }),
         ),

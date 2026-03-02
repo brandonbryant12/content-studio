@@ -50,7 +50,4 @@ export const generateCoverImage = (input: GenerateCoverImageInput) =>
     yield* storage.upload(storageKey, imageData, mimeType);
 
     yield* podcastRepo.update(podcast.id, { coverImageStorageKey: storageKey });
-  }).pipe(
-    Effect.catchAll(() => Effect.void),
-    withUseCaseSpan('useCase.generateCoverImage'),
-  );
+  }).pipe(withUseCaseSpan('useCase.generateCoverImage'));
