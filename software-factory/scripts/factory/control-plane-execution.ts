@@ -76,6 +76,24 @@ const READY_FOR_DEV_EXECUTOR_TIMEOUT_MS = resolveTimeoutMs(
   "SOFTWARE_FACTORY_READY_FOR_DEV_EXECUTOR_TIMEOUT_MS",
   DEFAULT_READY_FOR_DEV_EXECUTOR_TIMEOUT_MS,
 );
+const ISSUE_EVALUATOR_FALLBACK_OPERATION: Operation = {
+  id: "issue-evaluator",
+  name: "Issue Evaluator",
+  description: "Evaluates open issues and applies ready-for-dev, human-eval-needed, or rejected decisions.",
+  defaultModel: "gpt-5.3-codex",
+  defaultThinking: "xhigh",
+  strategy: "periodic-scans",
+  args: [],
+  labelingContext: {
+    modelLabels: ["model:gpt-5.3-codex", "model:gpt-5.3-codex-spark"],
+    thinkingLabels: ["thinking:low", "thinking:medium", "thinking:high", "thinking:xhigh"],
+    decisionLabels: ["ready-for-dev", "human-eval-needed", "rejected"],
+  },
+  runner: {
+    type: "codex-playbook",
+    playbookPath: "automations/issue-evaluator/issue-evaluator.md",
+  },
+};
 
 const readArg = (args: OperationRunArgs, key: string): string | number | boolean | undefined =>
   Object.prototype.hasOwnProperty.call(args, key) ? args[key] : undefined;
@@ -481,15 +499,37 @@ const runReadyForDevRouter = (
       );
     }
 
-    const candidates = yield* listReadyForDevCandidates(readStringArg(args, "issue"));
+    const explicitIssue = readStringArg(args, "issue");
+    const dryRun = readBooleanArg(args, "dry-run");
+    let candidates = yield* listReadyForDevCandidates(explicitIssue);
+    if (candidates.length === 0 && !explicitIssue && !dryRun) {
+      yield* cliConsole.log(
+        "No open issues with label ready-for-dev. Running issue-evaluator once to refresh labels.",
+      );
+      const refreshStatus = yield* runCodexPlaybook(ISSUE_EVALUATOR_FALLBACK_OPERATION, {});
+      if (refreshStatus !== 0) {
+        return yield* Effect.fail(
+          new ExternalToolError({
+            reason: `Issue-evaluator refresh failed with status ${refreshStatus}.`,
+          }),
+        );
+      }
+      candidates = yield* listReadyForDevCandidates(undefined);
+    }
+
     if (candidates.length === 0) {
-      yield* cliConsole.log("No open issues with label ready-for-dev.");
+      if (explicitIssue) {
+        yield* cliConsole.log(
+          `No open issues with label ready-for-dev matching --issue ${explicitIssue}.`,
+        );
+      } else {
+        yield* cliConsole.log("No open issues with label ready-for-dev.");
+      }
       return 0;
     }
 
     const modelOverride = yield* readOptionalModelOverride(readStringArg(args, "model"));
     const thinkingOverride = yield* readOptionalThinkingOverride(readStringArg(args, "thinking"));
-    const dryRun = readBooleanArg(args, "dry-run");
 
     const plannerPrompt = [
       "You are selecting a coherent ready-for-dev implementation bundle.",

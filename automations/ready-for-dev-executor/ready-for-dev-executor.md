@@ -26,6 +26,7 @@ Scope and approval:
 
 Selection and bounded aggregation (`1..N` issues per run):
 - Build candidate set from actionable open issues labeled `ready-for-dev`, ordered by issue number ascending.
+- If the initial candidate set is empty and no explicit issue override is provided, run one `issue-evaluator` pass to refresh decision labels, then re-check candidates before ending as a no-op.
 - Operation-level execution is two-stage:
   1. planner call selects a coherent bundle and a single model/thinking profile
   2. executor call implements only that selected bundle
