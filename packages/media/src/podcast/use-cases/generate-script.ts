@@ -7,6 +7,7 @@ import { getDocumentContent } from '../../document';
 import { loadPersonaByIdSafe } from '../../persona';
 import {
   annotateUseCaseSpan,
+  runBestEffortSideEffect,
   runSchemaContractWithRetries,
   withUseCaseSpan,
 } from '../../shared';
@@ -148,27 +149,35 @@ export const generateScript = (input: GenerateScriptInput) =>
           temperature: 0.7,
         }),
       onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
-        logActivity({
-          userId: user.id,
-          action: willRetry
-            ? 'schema-validation-retry'
-            : 'schema-validation-failed',
-          entityType: 'podcast',
-          entityId: podcast.id,
-          entityTitle: podcast.title,
-          metadata: {
-            contract: 'podcast.script',
-            attempt,
-            maxAttempts,
-            errorTag:
-              typeof error === 'object' &&
-              error !== null &&
-              '_tag' in error &&
-              typeof error._tag === 'string'
-                ? error._tag
-                : 'UnknownError',
+        runBestEffortSideEffect(
+          logActivity({
+            userId: user.id,
+            action: willRetry
+              ? 'schema-validation-retry'
+              : 'schema-validation-failed',
+            entityType: 'podcast',
+            entityId: podcast.id,
+            entityTitle: podcast.title,
+            metadata: {
+              contract: 'podcast.script',
+              attempt,
+              maxAttempts,
+              errorTag:
+                typeof error === 'object' &&
+                error !== null &&
+                '_tag' in error &&
+                typeof error._tag === 'string'
+                  ? error._tag
+                  : 'UnknownError',
+            },
+          }),
+          {
+            operation: 'podcast.schemaValidationActivityLog',
+            attributes: {
+              'podcast.id': podcast.id,
+            },
           },
-        }).pipe(Effect.catchAll(() => Effect.void)),
+        ),
     });
 
     const segments = llmResult.object.segments.map((s, i) => ({

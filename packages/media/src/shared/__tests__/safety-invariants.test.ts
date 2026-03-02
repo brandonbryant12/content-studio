@@ -44,6 +44,26 @@ const read = (relativePath: string): string =>
   fs.readFileSync(path.join(srcRoot, relativePath), 'utf-8');
 
 describe('safety invariants', () => {
+  it('forbids blanket catchAll null/void fallbacks in media use-cases', () => {
+    const files = collectUseCaseFiles(srcRoot);
+    const offenders = files.filter((file) => {
+      const source = fs.readFileSync(file, 'utf-8');
+      const swallowsVoid = /Effect\.catchAll\(\(\)\s*=>\s*Effect\.void\)/m.test(
+        source,
+      );
+      const swallowsNull =
+        /Effect\.catchAll\(\(\)\s*=>\s*Effect\.succeed\(null\)\)/m.test(
+          source,
+        );
+      return swallowsVoid || swallowsNull;
+    });
+
+    expect(
+      offenders.map((file) => path.relative(srcRoot, file)),
+      'Use runBestEffortSideEffect(...) for intentional best-effort side effects; otherwise propagate failures.',
+    ).toEqual([]);
+  });
+
   it('forbids direct queue.getJob usage in media use-cases', () => {
     const files = collectUseCaseFiles(srcRoot);
     const offenders = files.filter((file) =>

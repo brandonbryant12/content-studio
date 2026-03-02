@@ -13,6 +13,7 @@ import { startGeneration } from '../../podcast/use-cases/start-generation';
 import {
   annotateUseCaseSpan,
   formatUnknownError,
+  runBestEffortSideEffect,
   runSchemaContractWithRetries,
   withUseCaseSpan,
 } from '../../shared';
@@ -180,27 +181,35 @@ export const processResearch = (input: ProcessResearchInput) =>
           temperature: 0.2,
         }),
       onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
-        logActivity({
-          userId: doc.createdBy,
-          action: willRetry
-            ? 'schema-validation-retry'
-            : 'schema-validation-failed',
-          entityType: 'document',
-          entityId: doc.id,
-          entityTitle: doc.title,
-          metadata: {
-            contract: 'document.outline',
-            attempt,
-            maxAttempts,
-            errorTag:
-              typeof error === 'object' &&
-              error !== null &&
-              '_tag' in error &&
-              typeof error._tag === 'string'
-                ? error._tag
-                : 'UnknownError',
+        runBestEffortSideEffect(
+          logActivity({
+            userId: doc.createdBy,
+            action: willRetry
+              ? 'schema-validation-retry'
+              : 'schema-validation-failed',
+            entityType: 'document',
+            entityId: doc.id,
+            entityTitle: doc.title,
+            metadata: {
+              contract: 'document.outline',
+              attempt,
+              maxAttempts,
+              errorTag:
+                typeof error === 'object' &&
+                error !== null &&
+                '_tag' in error &&
+                typeof error._tag === 'string'
+                  ? error._tag
+                  : 'UnknownError',
+            },
+          }),
+          {
+            operation: 'document.schemaValidationActivityLog',
+            attributes: {
+              'document.id': doc.id,
+            },
           },
-        }).pipe(Effect.catchAll(() => Effect.void)),
+        ),
     });
 
     // 4. Upload content to storage

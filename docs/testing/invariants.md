@@ -20,6 +20,7 @@ Required for all agent-authored backend changes.
 
 | Rule | What It Prevents |
 |---|---|
+| No blanket `Effect.catchAll(() => Effect.void/null)` in media use-cases | Silent production failures masked as success |
 | No direct `queue.getJob(...)` in use cases | Bypassing ownership checks |
 | No direct `queue.enqueue(...)` in use cases | Bypassing transactional state+enqueue |
 | `get-job` use cases must use `getOwnedJobOrNotFound(...)` | Unauthorized job access |

@@ -64,4 +64,34 @@ describe('generateAvatar', () => {
     const [, data] = updateSpy.mock.calls[0]!;
     expect(data.avatarStorageKey).toBe(`personas/${persona.id}/avatar.png`);
   });
+
+  it('propagates image generation failures', async () => {
+    const user = createTestUser();
+    const persona = createPersonaRecord({ createdBy: user.id });
+
+    const repo = createMockPersonaRepo({
+      findByIdForUser: () => Effect.succeed(persona),
+    });
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockImageGen({ shouldRejectContent: true }),
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+    );
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(user)(
+        generateAvatar({ personaId: persona.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+      expect(result.cause.error._tag).toBe('ImageGenError');
+      expect(
+        (result.cause.error as { message: string }).message,
+      ).toContain('Content was filtered');
+    }
+  });
 });
