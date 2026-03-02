@@ -36,6 +36,8 @@ import podcastRouter from '../podcast';
 import {
   createMockContext,
   createMockErrors,
+  assertORPCError,
+  type ErrorCode,
   createTestServerRuntime,
 } from './helpers';
 
@@ -59,6 +61,19 @@ const callHandler = <T>(
   args: { context: unknown; input: unknown; errors: unknown },
 ): Promise<T> => {
   return procedure['~orpc'].handler(args) as Promise<T>;
+};
+
+const expectHandlerErrorCode = async (
+  operation: () => Promise<unknown>,
+  expectedCode: ErrorCode,
+) => {
+  try {
+    await operation();
+  } catch (error) {
+    assertORPCError(error, expectedCode);
+    return;
+  }
+  throw new Error(`Expected error '${expectedCode}', but operation resolved`);
 };
 
 const expectIsoTimestamp = (value: string) => {
@@ -269,13 +284,15 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, null);
 
       // Act & Assert
-      await expect(
-        handlers.list({
-          context,
-          input: { limit: 10, offset: 0 },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+            handlers.list({
+              context,
+              input: { limit: 10, offset: 0 },
+              errors,
+            }),
+          'UNAUTHORIZED',
+        );
     });
 
     it('returns empty array when no podcasts exist', async () => {
@@ -444,13 +461,15 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.get({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+            handlers.get({
+              context,
+              input: { id: podcast.id },
+              errors,
+            }),
+          'UNAUTHORIZED',
+        );
     });
 
     it('returns podcast when found', async () => {
@@ -478,14 +497,16 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentId = 'pod_nonexistent123';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR due to unhandled PodcastNotFound)
-      await expect(
-        handlers.get({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it("rejects access to another user's podcast (ownership check)", async () => {
@@ -499,13 +520,15 @@ describe('podcast router', () => {
       // Act & Assert - non-owner cannot access
       const context = createMockContext(runtime, user);
 
-      await expect(
-        handlers.get({
-          context,
-          input: { id: otherPodcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when accessing another user podcast', async () => {
@@ -520,13 +543,15 @@ describe('podcast router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.get({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns podcast in serialized full format with documents and status', async () => {
@@ -572,13 +597,15 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, null);
 
       // Act & Assert
-      await expect(
-        handlers.create({
-          context,
-          input: { title: 'New Podcast', format: 'conversation' as const },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+            handlers.create({
+              context,
+              input: { title: 'New Podcast', format: 'conversation' as const },
+              errors,
+            }),
+          'UNAUTHORIZED',
+        );
     });
 
     it('creates podcast with title and format', async () => {
@@ -740,13 +767,15 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.update({
-          context,
-          input: { id: podcast.id, title: 'Updated' },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+            handlers.update({
+              context,
+              input: { id: podcast.id, title: 'Updated' },
+              errors,
+            }),
+          'UNAUTHORIZED',
+        );
     });
 
     it('updates podcast title', async () => {
@@ -864,14 +893,16 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentId = 'pod_00000000000000';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR due to unhandled PodcastNotFound)
-      await expect(
-        handlers.update({
-          context,
-          input: { id: nonExistentId, title: 'Should Fail' },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: nonExistentId, title: 'Should Fail' },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it("rejects updating another user's podcast (ownership check)", async () => {
@@ -885,13 +916,15 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot update
-      await expect(
-        handlers.update({
-          context,
-          input: { id: otherPodcast.id, title: 'Updated Title' },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: otherPodcast.id, title: 'Updated Title' },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when updating another user podcast', async () => {
@@ -906,13 +939,15 @@ describe('podcast router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.update({
-          context,
-          input: { id: podcast.id, title: 'Admin Updated' },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: podcast.id, title: 'Admin Updated' },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('persists updates to database', async () => {
@@ -952,13 +987,15 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+            handlers.delete({
+              context,
+              input: { id: podcast.id },
+              errors,
+            }),
+          'UNAUTHORIZED',
+        );
     });
 
     it('deletes podcast successfully', async () => {
@@ -982,14 +1019,16 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentId = 'pod_00000000000000';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR due to unhandled PodcastNotFound)
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it("rejects deleting another user's podcast (ownership check)", async () => {
@@ -1001,13 +1040,15 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot delete
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: otherPodcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('verifies podcast is actually removed from database after delete', async () => {
@@ -1047,13 +1088,15 @@ describe('podcast router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('cannot delete same podcast twice', async () => {
@@ -1068,14 +1111,16 @@ describe('podcast router', () => {
         errors,
       });
 
-      // Act & Assert - second delete fails (throws error, currently INTERNAL_ERROR)
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - second delete fails (throws error with expected protocol code)
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
   });
 
@@ -1090,13 +1135,15 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('creates a generation job for the podcast', async () => {
@@ -1146,14 +1193,16 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentId = 'pod_nonexistent123';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR)
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it("rejects generating another user's podcast (ownership check)", async () => {
@@ -1165,13 +1214,15 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot generate
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: otherPodcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when generating another user podcast', async () => {
@@ -1184,13 +1235,15 @@ describe('podcast router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('passes prompt instructions to the job payload', async () => {
@@ -1261,14 +1314,16 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentJobId = 'job_nonexistent123';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR)
-      await expect(
-        handlers.getJob({
-          context,
-          input: { jobId: nonExistentJobId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.getJob({
+            context,
+            input: { jobId: nonExistentJobId },
+            errors,
+          }),
+        'JOB_NOT_FOUND',
+      );
     });
 
     it('returns job in serialized format with ISO dates', async () => {
@@ -1361,16 +1416,18 @@ describe('podcast router', () => {
       });
 
       // Act & Assert
-      await expect(
-        handlers.saveChanges({
-          context,
-          input: {
-            id: podcast.id,
-            segments: [{ speaker: 'host', line: 'Test', index: 0 }],
-          },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: podcast.id,
+              segments: [{ speaker: 'host', line: 'Test', index: 0 }],
+            },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('saves segment changes and queues audio regeneration', async () => {
@@ -1431,17 +1488,19 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
       const nonExistentId = 'pod_nonexistent123';
 
-      // Act & Assert - throws error (currently INTERNAL_ERROR)
-      await expect(
-        handlers.saveChanges({
-          context,
-          input: {
-            id: nonExistentId,
-            segments: [{ speaker: 'host', line: 'Test', index: 0 }],
-          },
-          errors,
-        }),
-      ).rejects.toThrow();
+      // Act & Assert - throws error with expected protocol code
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: nonExistentId,
+              segments: [{ speaker: 'host', line: 'Test', index: 0 }],
+            },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it("rejects saving changes to another user's podcast (ownership check)", async () => {
@@ -1456,16 +1515,18 @@ describe('podcast router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot save changes
-      await expect(
-        handlers.saveChanges({
-          context,
-          input: {
-            id: otherPodcast.id,
-            segments: [{ speaker: 'host', line: 'New line', index: 0 }],
-          },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: otherPodcast.id,
+              segments: [{ speaker: 'host', line: 'New line', index: 0 }],
+            },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when saving another user podcast', async () => {
@@ -1481,16 +1542,18 @@ describe('podcast router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.saveChanges({
-          context,
-          input: {
-            id: podcast.id,
-            segments: [{ speaker: 'host', line: 'Admin edit', index: 0 }],
-          },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: podcast.id,
+              segments: [{ speaker: 'host', line: 'Admin edit', index: 0 }],
+            },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
 
     it('returns existing pending job for idempotency', async () => {
@@ -1561,13 +1624,15 @@ describe('podcast router', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.approve({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.approve({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('allows admin to approve a podcast', async () => {
@@ -1609,13 +1674,15 @@ describe('podcast router', () => {
       const strangerUser = toUser(strangerTestUser);
       const context = createMockContext(runtime, strangerUser);
 
-      await expect(
-        handlers.approve({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('admin role');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.approve({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'FORBIDDEN',
+      );
     });
   });
 
@@ -1633,13 +1700,15 @@ describe('podcast router', () => {
       });
 
       // Act & Assert
-      await expect(
-        handlers.revokeApproval({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.revokeApproval({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('allows admin to revoke approval', async () => {
@@ -1683,13 +1752,15 @@ describe('podcast router', () => {
       const strangerUser = toUser(strangerTestUser);
       const context = createMockContext(runtime, strangerUser);
 
-      await expect(
-        handlers.revokeApproval({
-          context,
-          input: { id: podcast.id },
-          errors,
-        }),
-      ).rejects.toThrow('admin role');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.revokeApproval({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'FORBIDDEN',
+      );
     });
   });
 });
