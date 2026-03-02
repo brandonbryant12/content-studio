@@ -1,6 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Schedule } from 'effect';
 import { ResearchError } from '../../errors';
+import {
+  GoogleApiError,
+  getGoogleApiErrorDetails,
+  isGoogleRateLimit,
+} from '../../google/error-parser';
 import { DEEP_RESEARCH_MODEL } from '../../models';
 import {
   DeepResearch,
@@ -27,6 +32,105 @@ interface OutputBlock {
   }>;
   result?: Array<{ title?: string; url?: string; rendered_content?: string }>;
 }
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+const RETRYABLE_STATUS_NAMES = new Set([
+  'RESOURCE_EXHAUSTED',
+  'UNAVAILABLE',
+  'DEADLINE_EXCEEDED',
+  'INTERNAL',
+  'ABORTED',
+]);
+const RETRYABLE_NETWORK_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'ECONNABORTED',
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_HEADERS_TIMEOUT',
+  'UND_ERR_SOCKET',
+]);
+
+function getStringField(value: unknown, field: string): string | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  const maybeValue = (value as Record<string, unknown>)[field];
+  return typeof maybeValue === 'string' ? maybeValue : undefined;
+}
+
+function getNumberField(value: unknown, field: string): number | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  const maybeValue = (value as Record<string, unknown>)[field];
+  return typeof maybeValue === 'number' ? maybeValue : undefined;
+}
+
+function isTransientResearchCause(cause: unknown): boolean {
+  const details = getGoogleApiErrorDetails(cause);
+  const statusCode =
+    cause instanceof GoogleApiError
+      ? cause.statusCode
+      : getNumberField(cause, 'statusCode') ?? getNumberField(cause, 'status');
+
+  if (
+    (statusCode !== undefined && RETRYABLE_STATUS_CODES.has(statusCode)) ||
+    isGoogleRateLimit(details, statusCode)
+  ) {
+    return true;
+  }
+
+  const statusName = (
+    details?.status ?? getStringField(cause, 'status')
+  )?.toUpperCase();
+  if (statusName && RETRYABLE_STATUS_NAMES.has(statusName)) {
+    return true;
+  }
+
+  const networkCode = getStringField(cause, 'code')?.toUpperCase();
+  if (networkCode && RETRYABLE_NETWORK_CODES.has(networkCode)) {
+    return true;
+  }
+
+  const message = (
+    details?.message ??
+    (cause instanceof Error ? cause.message : getStringField(cause, 'message'))
+  )?.toLowerCase();
+  if (!message) {
+    return false;
+  }
+
+  return (
+    message.includes('429') ||
+    message.includes('500') ||
+    message.includes('502') ||
+    message.includes('503') ||
+    message.includes('504') ||
+    message.includes('rate limit') ||
+    message.includes('resource exhausted') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('timeout') ||
+    message.includes('timed out') ||
+    message.includes('network') ||
+    message.includes('socket hang up')
+  );
+}
+
+const retryTransientResearch = <A, R>(
+  effect: Effect.Effect<A, ResearchError, R>,
+): Effect.Effect<A, ResearchError, R> =>
+  effect.pipe(
+    Effect.retry({
+      times: 2,
+      schedule: Schedule.exponential('500 millis'),
+      while: (error) => isTransientResearchCause(error.cause),
+    }),
+  );
 
 /** Extract text content from typed content blocks. */
 function extractContent(outputs: readonly OutputBlock[]): string {
@@ -98,6 +202,7 @@ const makeGoogleDeepResearchService = (
             cause: error,
           }),
       }).pipe(
+        retryTransientResearch,
         Effect.withSpan('deepResearch.startResearch', {
           attributes: { 'research.provider': 'google' },
         }),
@@ -115,7 +220,7 @@ const makeGoogleDeepResearchService = (
                   : 'Failed to get research result',
               cause: error,
             }),
-        });
+        }).pipe(retryTransientResearch);
 
         if (interaction.status === 'failed') {
           return yield* new ResearchError({
