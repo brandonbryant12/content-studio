@@ -171,7 +171,13 @@ export function VoiceoverDetailContainer({
       voiceover={voiceover}
       settings={settings}
       displayAudio={displayAudio}
-      assistantPanel={<WritingAssistantContainer voiceoverId={voiceoverId} />}
+      assistantPanel={
+        <WritingAssistantContainer
+          voiceoverId={voiceoverId}
+          manuscriptText={settings.text}
+          onSetManuscriptText={settings.setText}
+        />
+      }
       workbenchState={workbenchState}
       approvalState={approvalState}
       onSave={handleSave}
