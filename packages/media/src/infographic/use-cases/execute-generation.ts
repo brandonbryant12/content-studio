@@ -81,7 +81,10 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const infographic = yield* repo.findByIdForUser(infographicId, user.id);
 
     const existingVersions = yield* repo.listVersions(infographicId);
-    const latestVersion = existingVersions.at(-1) ?? null;
+    const latestVersion =
+      existingVersions.length > 0
+        ? existingVersions[existingVersions.length - 1]
+        : null;
     const originalQueryPrompt = selectOriginalTitlePrompt({
       currentPrompt: infographic.prompt ?? null,
       existingVersions,

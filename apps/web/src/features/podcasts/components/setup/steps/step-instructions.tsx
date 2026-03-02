@@ -1,39 +1,8 @@
 import { useState } from 'react';
-
-const PRESETS = [
-  {
-    label: 'Conversational',
-    value:
-      'Keep the tone casual and conversational, like two friends chatting.',
-  },
-  {
-    label: 'Key takeaways',
-    value:
-      'Focus on extracting and highlighting the key takeaways and main insights.',
-  },
-  {
-    label: 'Educational',
-    value:
-      'Make it educational and informative, explaining concepts clearly for beginners.',
-  },
-  {
-    label: 'Add humor',
-    value:
-      'Include light humor and make the discussion entertaining and engaging.',
-  },
-  {
-    label: 'Deep dive',
-    value:
-      'Go in-depth on the topic, exploring nuances and providing detailed analysis.',
-  },
-  {
-    label: 'Quick summary',
-    value:
-      'Keep it concise and to the point, covering only the essential information.',
-  },
-];
-
-const MAX_CHARS = 1000;
+import {
+  INSTRUCTION_CHAR_LIMIT,
+  INSTRUCTION_PRESETS,
+} from '@/features/podcasts/lib/instruction-presets';
 
 interface StepInstructionsProps {
   instructions: string;
@@ -46,7 +15,9 @@ export function StepInstructions({
 }: StepInstructionsProps) {
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  const handlePresetClick = (preset: (typeof PRESETS)[number]) => {
+  const handlePresetClick = (
+    preset: (typeof INSTRUCTION_PRESETS)[number],
+) => {
     if (activePreset === preset.label) {
       // Deselect preset
       setActivePreset(null);
@@ -60,9 +31,9 @@ export function StepInstructions({
 
   const handleTextChange = (value: string) => {
     // If user manually edits, clear preset selection
-    const matchingPreset = PRESETS.find((p) => p.value === value);
+    const matchingPreset = INSTRUCTION_PRESETS.find((p) => p.value === value);
     setActivePreset(matchingPreset?.label ?? null);
-    onInstructionsChange(value.slice(0, MAX_CHARS));
+    onInstructionsChange(value.slice(0, INSTRUCTION_CHAR_LIMIT));
   };
 
   return (
@@ -77,7 +48,7 @@ export function StepInstructions({
 
       {/* Preset buttons */}
       <div className="setup-preset-group">
-        {PRESETS.map((preset) => (
+        {INSTRUCTION_PRESETS.map((preset) => (
           <button
             key={preset.label}
             type="button"
@@ -100,7 +71,7 @@ export function StepInstructions({
           aria-label="Custom instructions for podcast generation"
         />
         <p className="setup-char-count">
-          {instructions.length} / {MAX_CHARS}
+          {instructions.length} / {INSTRUCTION_CHAR_LIMIT}
         </p>
       </div>
 

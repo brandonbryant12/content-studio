@@ -11,6 +11,7 @@ type ProcessOptions = {
   env?: NodeJS.ProcessEnv;
   input?: string;
   allowFailure?: boolean;
+  timeoutMs?: number;
 };
 
 export class CliFileSystem extends Context.Tag("software-factory/CliFileSystem")<

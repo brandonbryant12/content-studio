@@ -12,6 +12,7 @@ type CommandOptions = {
   env?: NodeJS.ProcessEnv;
   input?: string;
   allowFailure?: boolean;
+  timeoutMs?: number;
 };
 
 const toError = (error: unknown): Error =>
@@ -42,8 +43,23 @@ const runSpawn = async (
 
     let stdout = "";
     let stderr = "";
+    let timedOut = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    let killHandle: ReturnType<typeof setTimeout> | undefined;
 
-    child.on("error", (error) => reject(error));
+    const clearTimers = () => {
+      if (timeoutHandle !== undefined) {
+        clearTimeout(timeoutHandle);
+      }
+      if (killHandle !== undefined) {
+        clearTimeout(killHandle);
+      }
+    };
+
+    child.on("error", (error) => {
+      clearTimers();
+      reject(error);
+    });
 
     if (options.stdoutMode === "pipe") {
       child.stdout?.on("data", (chunk) => {
@@ -61,9 +77,32 @@ const runSpawn = async (
     }
     child.stdin?.end();
 
+    if (typeof options.timeoutMs === "number" && options.timeoutMs > 0) {
+      timeoutHandle = setTimeout(() => {
+        timedOut = true;
+        const timeoutMessage = `Command timed out after ${options.timeoutMs}ms`;
+        stderr = stderr.length > 0 ? `${stderr}\n${timeoutMessage}` : timeoutMessage;
+
+        try {
+          child.kill("SIGTERM");
+        } catch {
+          // No-op: child may have already exited between timeout tick and kill.
+        }
+
+        killHandle = setTimeout(() => {
+          try {
+            child.kill("SIGKILL");
+          } catch {
+            // No-op: child may already be gone.
+          }
+        }, 5000);
+      }, options.timeoutMs);
+    }
+
     child.on("close", (code) => {
+      clearTimers();
       resolve({
-        status: code ?? 1,
+        status: timedOut ? 124 : (code ?? 1),
         stdout,
         stderr,
       });
