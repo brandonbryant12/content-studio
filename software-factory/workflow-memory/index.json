@@ -53,6 +53,36 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-mock-factory-g",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: docs-and-guardrail-drift — mock-factory guidance drift, markdown-link drift dedupe",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:macro",
+      "trajectory:domain:docs-and-guardrail-drift",
+      "tool:gh",
+      "tool:rg",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
