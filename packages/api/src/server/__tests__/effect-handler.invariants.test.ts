@@ -1,5 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { handleTaggedError, type ErrorFactory } from '../effect-handler';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(currentDir, '..', '..', '..', '..', '..');
+const effectHandlerPath = path.join(
+  repoRoot,
+  'packages/api/src/server/effect-handler.ts',
+);
+const readEffectHandler = () => fs.readFileSync(effectHandlerPath, 'utf-8');
 
 const createFactory = (code: string) => (options: unknown) => ({
   code,
@@ -67,5 +78,20 @@ describe('effect-handler fallback invariants', () => {
     });
 
     expect(thrown).toMatchObject({ code: 'UNPROCESSABLE_CONTENT' });
+  });
+
+  it('annotates the active span with request.id when provided', () => {
+    const source = readEffectHandler();
+
+    expect(source).toContain(
+      "Effect.annotateCurrentSpan('request.id', options.requestId);",
+    );
+  });
+
+  it('keeps stream handlers routed through handleEffectWithProtocol', () => {
+    const source = readEffectHandler();
+
+    expect(source).toContain('handleEffectWithProtocol(');
+    expect(source).toContain('handleEffectStreamWithProtocol');
   });
 });
