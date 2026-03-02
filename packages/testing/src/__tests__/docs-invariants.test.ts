@@ -8,6 +8,11 @@ const repoRoot = path.resolve(currentDir, '..', '..', '..', '..');
 
 const packageJsonPath = path.join(repoRoot, 'package.json');
 const docsPath = path.join(repoRoot, 'docs/testing/invariants.md');
+const datadogDocPath = path.join(repoRoot, 'docs/architecture/datadog.md');
+const observabilityDocPath = path.join(
+  repoRoot,
+  'docs/architecture/observability.md',
+);
 const workspaceRoots = ['apps', 'packages', 'tools'] as const;
 
 const normalizeInvariantFilePath = (
@@ -116,5 +121,24 @@ describe('invariant docs sync', () => {
       missing,
       'Invariant docs must list every test:invariants file path.',
     ).toEqual([]);
+  });
+
+  it('keeps Datadog telemetry lifecycle docs aligned with runtime contract', () => {
+    const datadogDoc = fs.readFileSync(datadogDocPath, 'utf-8');
+    const observabilityDoc = fs.readFileSync(observabilityDocPath, 'utf-8');
+
+    expect(observabilityDoc).toContain('Runtime Wiring Pattern');
+    expect(datadogDoc).toContain('createServerRuntime(');
+    expect(datadogDoc).toContain('telemetryConfig');
+    expect(datadogDoc).toContain('runtime.dispose()');
+    expect(datadogDoc).toContain(
+      './observability.md#runtime-wiring-pattern',
+    );
+    expect(datadogDoc).not.toMatch(
+      /call\s+`?initTelemetry\(\)`?\s+at\s+startup/i,
+    );
+    expect(datadogDoc).not.toMatch(
+      /`?shutdownTelemetry\(\)`?\s+during\s+graceful\s+shutdown/i,
+    );
   });
 });

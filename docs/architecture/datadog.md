@@ -11,11 +11,14 @@ Content Studio exports traces to Datadog via the OpenTelemetry Protocol (OTLP). 
 └──────────────┘               └──────────────────┘          └─────────┘
 ```
 
-1. `initTelemetry()` creates a `NodeTracerProvider` with a `BatchSpanProcessor` backed by `OTLPTraceExporter` (HTTP).
-2. The exporter sends trace data to the configured endpoint — typically a Datadog Agent running OTLP ingest.
-3. The Datadog Agent forwards traces to Datadog's intake API.
+1. Each backend app (`apps/server`, `apps/worker`) parses telemetry env vars in `env.ts`.
+2. The app passes `telemetryConfig` to `createServerRuntime(...)`.
+3. The `TelemetryLive` Effect layer creates and registers `NodeTracerProvider` + `BatchSpanProcessor` + `OTLPTraceExporter`.
+4. The exporter sends trace data to the configured endpoint — typically a Datadog Agent running OTLP ingest.
+5. During graceful shutdown, each app calls `runtime.dispose()`, which runs layer finalizers and flushes/shuts down telemetry.
 
-Both `apps/server` and `apps/worker` call `initTelemetry()` at startup and `shutdownTelemetry()` during graceful shutdown to flush remaining spans.
+Canonical lifecycle contract: [`docs/architecture/observability.md` — Runtime Wiring Pattern](./observability.md#runtime-wiring-pattern).
+No imperative `initTelemetry()` / `shutdownTelemetry()` calls are used in the current runtime.
 
 ## Deployment Options
 
