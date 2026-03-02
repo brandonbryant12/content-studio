@@ -174,6 +174,7 @@ export function VoiceoverDetailContainer({
       assistantPanel={<WritingAssistantContainer voiceoverId={voiceoverId} />}
       workbenchState={workbenchState}
       approvalState={approvalState}
+      onSave={handleSave}
       onGenerate={actions.handleGenerate}
       onDelete={actions.handleDelete}
       onApprove={handleApprove}

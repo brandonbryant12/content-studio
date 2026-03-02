@@ -1,4 +1,9 @@
-import { ArrowLeftIcon, DownloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  ArrowLeftIcon,
+  DownloadIcon,
+  Pencil1Icon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
@@ -6,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
+import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { useState, useCallback, type ReactNode } from 'react';
@@ -20,6 +26,10 @@ type VoiceoverFull = RouterOutput['voiceovers']['get'];
 
 interface WorkbenchLayoutProps {
   voiceover: VoiceoverFull;
+  title: string;
+  onTitleChange: (title: string) => void;
+  hasTitleChanges: boolean;
+  isTitleDisabled: boolean;
   children: ReactNode;
   rightPanel?: ReactNode;
   actionBar?: ReactNode;
@@ -39,6 +49,10 @@ interface WorkbenchLayoutProps {
 
 export function WorkbenchLayout({
   voiceover,
+  title,
+  onTitleChange,
+  hasTitleChanges,
+  isTitleDisabled,
   children,
   rightPanel,
   actionBar,
@@ -90,8 +104,23 @@ export function WorkbenchLayout({
               {/* Voiceover icon and title */}
               <div className="workbench-title-group">
                 <VoiceoverIcon status={voiceover.status} />
-                <div className="min-w-0">
-                  <h1 className="workbench-title">{voiceover.title}</h1>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={title}
+                      onChange={(event) => onTitleChange(event.target.value)}
+                      className="workbench-title-input"
+                      aria-label="Voiceover title"
+                      disabled={isTitleDisabled}
+                    />
+                    {hasTitleChanges && (
+                      <Pencil1Icon
+                        data-testid="pencil-indicator"
+                        className="w-3.5 h-3.5 text-primary shrink-0"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 

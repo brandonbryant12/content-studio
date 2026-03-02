@@ -16,6 +16,7 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
+  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -27,6 +28,7 @@ export function ActionBar({
   hasChanges,
   hasText,
   isSaving,
+  onSave,
   onGenerate,
   disabled,
 }: ActionBarProps) {
@@ -63,8 +65,8 @@ export function ActionBar({
     );
   }
 
-  // Has changes + hasText: show "Save & Generate" or "Save & Regenerate" button
-  if (hasChanges && hasText) {
+  // Has changes: always expose explicit save action. Generate is separate.
+  if (hasChanges) {
     return (
       <>
         {failurePanel}
@@ -77,11 +79,15 @@ export function ActionBar({
               </span>
             </div>
             <div className="global-action-bar-actions">
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Cmd/Ctrl+S
+              </span>
               <Button
                 size="sm"
-                onClick={onGenerate}
+                variant="outline"
+                onClick={onSave}
                 disabled={isSaving || disabled}
-                className="global-action-bar-btn-primary"
+                className="global-action-bar-btn-secondary"
               >
                 {isSaving ? (
                   <>
@@ -89,12 +95,29 @@ export function ActionBar({
                     {GENERATION_LABELS.saving}
                   </>
                 ) : (
-                  <>
-                    <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                    {GENERATION_LABELS.saveAndRegenerate}
-                  </>
+                  'Save Draft'
                 )}
               </Button>
+              {hasText && (
+                <Button
+                  size="sm"
+                  onClick={onGenerate}
+                  disabled={isSaving || disabled}
+                  className="global-action-bar-btn-primary"
+                >
+                  {isSaving ? (
+                    <>
+                      <Spinner className="w-3.5 h-3.5 mr-1.5" />
+                      {GENERATION_LABELS.saving}
+                    </>
+                  ) : (
+                    <>
+                      <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
+                      {GENERATION_LABELS.saveAndRegenerate}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>

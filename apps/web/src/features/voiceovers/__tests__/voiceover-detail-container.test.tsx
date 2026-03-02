@@ -108,10 +108,13 @@ describe('VoiceoverDetailContainer', () => {
     } as never);
 
     vi.mocked(useVoiceoverSettings).mockReturnValue({
+      title: 'Test Voiceover',
       text: 'Hello world',
       voice: 'Charon',
+      setTitle: vi.fn(),
       setText: vi.fn(),
       setVoice: vi.fn(),
+      hasTitleChanges: false,
       hasChanges: false,
       isSaving: false,
       saveSettings: vi.fn(),
@@ -196,10 +199,13 @@ describe('VoiceoverDetailContainer', () => {
   it('maps Cmd+S to save (not generate)', () => {
     const saveSettings = vi.fn().mockResolvedValue(undefined);
     vi.mocked(useVoiceoverSettings).mockReturnValue({
+      title: 'Test Voiceover',
       text: 'Hello world',
       voice: 'Charon',
+      setTitle: vi.fn(),
       setText: vi.fn(),
       setVoice: vi.fn(),
+      hasTitleChanges: false,
       hasChanges: true,
       isSaving: false,
       saveSettings,

@@ -47,6 +47,7 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
+  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -60,6 +61,7 @@ function createDefaultProps(
     hasChanges: false,
     hasText: true,
     isSaving: false,
+    onSave: vi.fn(),
     onGenerate: vi.fn(),
     ...overrides,
   };
@@ -96,7 +98,23 @@ describe('ActionBar', () => {
       expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
     });
 
-    it('shows Save & Regenerate button', () => {
+    it('shows Save Draft button', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: true,
+            hasText: true,
+            status: VoiceoverStatus.READY,
+          })}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /save draft/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('shows Save & Regenerate button when text is present', () => {
       render(
         <ActionBar
           {...createDefaultProps({
@@ -110,6 +128,23 @@ describe('ActionBar', () => {
       expect(
         screen.getByRole('button', { name: /save & regenerate/i }),
       ).toBeInTheDocument();
+    });
+
+    it('calls onSave when Save Draft clicked', () => {
+      const onSave = vi.fn();
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: true,
+            hasText: true,
+            status: VoiceoverStatus.READY,
+            onSave,
+          })}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /save draft/i }));
+      expect(onSave).toHaveBeenCalled();
     });
 
     it('calls onGenerate when Save & Regenerate clicked', () => {
@@ -129,6 +164,23 @@ describe('ActionBar', () => {
         screen.getByRole('button', { name: /save & regenerate/i }),
       );
       expect(onGenerate).toHaveBeenCalled();
+    });
+
+    it('disables Save Draft button while saving', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: true,
+            hasText: true,
+            status: VoiceoverStatus.READY,
+            isSaving: true,
+          })}
+        />,
+      );
+
+      expect(
+        screen.getAllByRole('button', { name: /saving/i })[0],
+      ).toBeDisabled();
     });
 
     it('disables Save & Regenerate button while saving', () => {
@@ -143,7 +195,11 @@ describe('ActionBar', () => {
         />,
       );
 
-      expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
+      const savingButtons = screen.getAllByRole('button', { name: /saving/i });
+      expect(savingButtons).toHaveLength(2);
+      expect(savingButtons.every((button) => button.hasAttribute('disabled'))).toBe(
+        true,
+      );
     });
 
     it('shows saving spinner when saving', () => {
@@ -158,13 +214,13 @@ describe('ActionBar', () => {
         />,
       );
 
-      expect(screen.getByText('Saving...')).toBeInTheDocument();
-      expect(screen.getByTestId('spinner')).toBeInTheDocument();
+      expect(screen.getAllByText('Saving...')).toHaveLength(2);
+      expect(screen.getAllByTestId('spinner')).toHaveLength(2);
     });
   });
 
   describe('with unsaved changes and hasText (drafting)', () => {
-    it('shows Save & Regenerate button', () => {
+    it('shows Save Draft and Save & Regenerate buttons', () => {
       render(
         <ActionBar
           {...createDefaultProps({
@@ -175,6 +231,9 @@ describe('ActionBar', () => {
         />,
       );
 
+      expect(
+        screen.getByRole('button', { name: /save draft/i }),
+      ).toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: /save & regenerate/i }),
       ).toBeInTheDocument();
@@ -199,7 +258,7 @@ describe('ActionBar', () => {
       expect(onGenerate).toHaveBeenCalled();
     });
 
-    it('disables Save & Regenerate while saving', () => {
+    it('disables both save and regenerate while saving', () => {
       render(
         <ActionBar
           {...createDefaultProps({
@@ -211,7 +270,32 @@ describe('ActionBar', () => {
         />,
       );
 
-      expect(screen.getByRole('button')).toBeDisabled();
+      const savingButtons = screen.getAllByRole('button', { name: /saving/i });
+      expect(savingButtons).toHaveLength(2);
+      expect(savingButtons.every((button) => button.hasAttribute('disabled'))).toBe(
+        true,
+      );
+    });
+  });
+
+  describe('with unsaved changes but no text', () => {
+    it('shows Save Draft button without regenerate button', () => {
+      render(
+        <ActionBar
+          {...createDefaultProps({
+            hasChanges: true,
+            hasText: false,
+            status: VoiceoverStatus.DRAFTING,
+          })}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /save draft/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /save & regenerate/i }),
+      ).not.toBeInTheDocument();
     });
   });
 

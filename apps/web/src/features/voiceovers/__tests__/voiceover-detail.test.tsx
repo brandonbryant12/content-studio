@@ -134,10 +134,13 @@ function createMockSettings(
   overrides: Partial<UseVoiceoverSettingsReturn> = {},
 ): UseVoiceoverSettingsReturn {
   return {
+    title: 'Test Voiceover',
     text: 'Test voiceover text',
     voice: 'Charon',
+    setTitle: vi.fn(),
     setText: vi.fn(),
     setVoice: vi.fn(),
+    hasTitleChanges: false,
     hasChanges: false,
     isSaving: false,
     saveSettings: vi.fn().mockResolvedValue(undefined),
@@ -183,6 +186,7 @@ function createDefaultProps(
     displayAudio: null,
     workbenchState,
     approvalState,
+    onSave: vi.fn(),
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
     onApprove: vi.fn(),
