@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
 import { DeepResearch } from '../service';
 import { GoogleDeepResearchLive } from './google';
 
@@ -64,6 +65,10 @@ describe('GoogleDeepResearchLive', () => {
 
     expect(result).toEqual({ interactionId: 'interaction-1' });
     expect(mockCreateInteraction).toHaveBeenCalledTimes(2);
+    const [, requestOptions] = mockCreateInteraction.mock.calls[0] ?? [];
+    expect(requestOptions.timeout).toBe(PROVIDER_TIMEOUTS_MS.deepResearchStart);
+    expect(requestOptions.maxRetries).toBe(0);
+    expect(requestOptions.signal).toBeDefined();
   });
 
   it('retries getResult on transient network transport errors', async () => {
@@ -77,6 +82,11 @@ describe('GoogleDeepResearchLive', () => {
 
     expect(result).toBeNull();
     expect(mockGetInteraction).toHaveBeenCalledTimes(2);
+    const [, requestParams, requestOptions] = mockGetInteraction.mock.calls[0] ?? [];
+    expect(requestParams).toEqual({});
+    expect(requestOptions.timeout).toBe(PROVIDER_TIMEOUTS_MS.deepResearchGet);
+    expect(requestOptions.maxRetries).toBe(0);
+    expect(requestOptions.signal).toBeDefined();
   });
 
   it('fails fast for non-transient startResearch errors', async () => {
@@ -111,5 +121,21 @@ describe('GoogleDeepResearchLive', () => {
       }
     }
     expect(mockGetInteraction).toHaveBeenCalledTimes(3);
+  });
+
+  it('maps timeout failures to typed ResearchError', async () => {
+    mockCreateInteraction.mockRejectedValue(
+      new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+    );
+
+    const exit = await runStartResearchExit('timeout');
+    expect(exit._tag).toBe('Failure');
+    if (exit._tag === 'Failure') {
+      expect(exit.cause._tag).toBe('Fail');
+      if (exit.cause._tag === 'Fail') {
+        expect(exit.cause.error._tag).toBe('ResearchError');
+      }
+    }
+    expect(mockCreateInteraction).toHaveBeenCalledTimes(3);
   });
 });

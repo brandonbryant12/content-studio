@@ -7,6 +7,7 @@ import {
   isGoogleRateLimit,
 } from '../../google/error-parser';
 import { DEEP_RESEARCH_MODEL } from '../../models';
+import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
 import {
   DeepResearch,
   type DeepResearchService,
@@ -190,6 +191,11 @@ const makeGoogleDeepResearchService = (
             agent_config: {
               type: 'deep-research',
             },
+          }, {
+            // Per-attempt timeout budget: Effect retry starts a fresh request.
+            timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
+            maxRetries: 0,
+            signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.deepResearchStart),
           });
 
           return { interactionId: interaction.id };
@@ -212,7 +218,13 @@ const makeGoogleDeepResearchService = (
     getResult: (interactionId: string) =>
       Effect.gen(function* () {
         const interaction = yield* Effect.tryPromise({
-          try: () => genAI.interactions.get(interactionId),
+          try: () =>
+            genAI.interactions.get(interactionId, {}, {
+              // Per-attempt timeout budget: Effect retry starts a fresh request.
+              timeout: PROVIDER_TIMEOUTS_MS.deepResearchGet,
+              maxRetries: 0,
+              signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.deepResearchGet),
+            }),
           catch: (error) =>
             new ResearchError({
               message:

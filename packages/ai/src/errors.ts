@@ -10,6 +10,9 @@ import { Schema } from 'effect';
 export class LLMError extends Schema.TaggedError<LLMError>()('LLMError', {
   message: Schema.String,
   model: Schema.optional(Schema.String),
+  statusCode: Schema.optional(Schema.Number),
+  errorCode: Schema.optional(Schema.String),
+  isRetryable: Schema.optional(Schema.Boolean),
   cause: Schema.optional(Schema.Unknown),
 }) {
   static readonly httpStatus = 502 as const;

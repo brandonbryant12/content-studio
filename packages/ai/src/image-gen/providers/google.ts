@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
 import { IMAGE_GEN_MODEL } from '../../models';
 import { retryTransientProvider } from '../../provider-retry';
+import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
 import { mapError } from '../map-error';
 import {
   ImageGen,
@@ -64,6 +65,9 @@ const makeGoogleImageGenService = (
             contents,
             config: {
               responseModalities: ['IMAGE', 'TEXT'],
+              // Per-attempt timeout budget: retries re-run generateContent.
+              httpOptions: { timeout: PROVIDER_TIMEOUTS_MS.imageGenerate },
+              abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.imageGenerate),
             },
           });
 
