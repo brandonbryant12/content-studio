@@ -41,7 +41,10 @@ import {
   useNavigationBlock,
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { getErrorMessage, getGenerationFailureMessage } from '@/shared/lib/errors';
+import {
+  getErrorMessage,
+  getGenerationFailureMessage,
+} from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 

@@ -89,9 +89,9 @@ describe('generateAvatar', () => {
     expect(result._tag).toBe('Failure');
     if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
       expect(result.cause.error._tag).toBe('ImageGenError');
-      expect(
-        (result.cause.error as { message: string }).message,
-      ).toContain('Content was filtered');
+      expect((result.cause.error as { message: string }).message).toContain(
+        'Content was filtered',
+      );
     }
   });
 });

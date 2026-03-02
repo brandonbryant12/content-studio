@@ -55,7 +55,9 @@ describe('GoogleDeepResearchLive', () => {
 
   it('retries startResearch on transient 429 errors and succeeds', async () => {
     mockCreateInteraction
-      .mockRejectedValueOnce(Object.assign(new Error('HTTP 429'), { status: 429 }))
+      .mockRejectedValueOnce(
+        Object.assign(new Error('HTTP 429'), { status: 429 }),
+      )
       .mockResolvedValueOnce({ id: 'interaction-1' });
 
     const result = await runStartResearch('retry transient');

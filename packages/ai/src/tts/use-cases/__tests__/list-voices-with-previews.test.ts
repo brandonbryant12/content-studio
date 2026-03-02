@@ -101,31 +101,33 @@ describe('listVoicesWithPreviews', () => {
     ),
   );
 
-  it.effect('fails when storage errors occur during preview metadata lookup', () =>
-    Effect.gen(function* () {
-      const result = yield* listVoicesWithPreviews({}).pipe(Effect.either);
+  it.effect(
+    'fails when storage errors occur during preview metadata lookup',
+    () =>
+      Effect.gen(function* () {
+        const result = yield* listVoicesWithPreviews({}).pipe(Effect.either);
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left._tag).toBe('StorageError');
-        expect((result.left as StorageError).message).toBe(
-          'Connection failed',
-        );
-      }
-    }).pipe(
-      Effect.provide(
-        Layer.merge(
-          Layer.succeed(TTS, createMockTTSService()),
-          Layer.succeed(Storage, {
-            upload: () => Effect.die('Not implemented'),
-            download: () => Effect.die('Not implemented'),
-            delete: () => Effect.die('Not implemented'),
-            exists: () =>
-              Effect.fail(new StorageError({ message: 'Connection failed' })),
-            getUrl: () => Effect.die('Not implemented'),
-          }),
+        expect(result._tag).toBe('Left');
+        if (result._tag === 'Left') {
+          expect(result.left._tag).toBe('StorageError');
+          expect((result.left as StorageError).message).toBe(
+            'Connection failed',
+          );
+        }
+      }).pipe(
+        Effect.provide(
+          Layer.merge(
+            Layer.succeed(TTS, createMockTTSService()),
+            Layer.succeed(Storage, {
+              upload: () => Effect.die('Not implemented'),
+              download: () => Effect.die('Not implemented'),
+              delete: () => Effect.die('Not implemented'),
+              exists: () =>
+                Effect.fail(new StorageError({ message: 'Connection failed' })),
+              getUrl: () => Effect.die('Not implemented'),
+            }),
+          ),
         ),
       ),
-    ),
   );
 });

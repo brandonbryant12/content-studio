@@ -17,13 +17,12 @@ const {
   downloadFromUrlSpy,
   downloadTextFileSpy,
   confirmationDialogSpy,
-} =
-  vi.hoisted(() => ({
-    podcastDetailSpy: vi.fn(),
-    downloadFromUrlSpy: vi.fn(),
-    downloadTextFileSpy: vi.fn(),
-    confirmationDialogSpy: vi.fn(),
-  }));
+} = vi.hoisted(() => ({
+  podcastDetailSpy: vi.fn(),
+  downloadFromUrlSpy: vi.fn(),
+  downloadTextFileSpy: vi.fn(),
+  confirmationDialogSpy: vi.fn(),
+}));
 
 vi.mock('../hooks/use-podcast', () => ({
   usePodcast: vi.fn(),
@@ -288,21 +287,7 @@ describe('PodcastDetailContainer', () => {
     expect(handleSave).not.toHaveBeenCalled();
 
     await waitFor(() => {
-      const confirmationCall =
-        confirmationDialogSpy.mock.calls[
-          confirmationDialogSpy.mock.calls.length - 1
-        ]?.[0] as
-          | {
-              open?: boolean;
-              title?: string;
-              onConfirm?: () => void;
-            }
-          | undefined;
-      expect(confirmationCall?.open).toBe(true);
-    });
-
-    const confirmationCall =
-      confirmationDialogSpy.mock.calls[
+      const confirmationCall = confirmationDialogSpy.mock.calls[
         confirmationDialogSpy.mock.calls.length - 1
       ]?.[0] as
         | {
@@ -311,6 +296,18 @@ describe('PodcastDetailContainer', () => {
             onConfirm?: () => void;
           }
         | undefined;
+      expect(confirmationCall?.open).toBe(true);
+    });
+
+    const confirmationCall = confirmationDialogSpy.mock.calls[
+      confirmationDialogSpy.mock.calls.length - 1
+    ]?.[0] as
+      | {
+          open?: boolean;
+          title?: string;
+          onConfirm?: () => void;
+        }
+      | undefined;
 
     expect(confirmationCall?.title).toBe('Regenerate podcast from scratch?');
     confirmationCall?.onConfirm?.();

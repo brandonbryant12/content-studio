@@ -15,9 +15,7 @@ export function StepInstructions({
 }: StepInstructionsProps) {
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  const handlePresetClick = (
-    preset: (typeof INSTRUCTION_PRESETS)[number],
-) => {
+  const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
     if (activePreset === preset.label) {
       // Deselect preset
       setActivePreset(null);

@@ -76,7 +76,8 @@ function isTransientResearchCause(cause: unknown): boolean {
   const statusCode =
     cause instanceof GoogleApiError
       ? cause.statusCode
-      : getNumberField(cause, 'statusCode') ?? getNumberField(cause, 'status');
+      : (getNumberField(cause, 'statusCode') ??
+        getNumberField(cause, 'status'));
 
   if (
     (statusCode !== undefined && RETRYABLE_STATUS_CODES.has(statusCode)) ||

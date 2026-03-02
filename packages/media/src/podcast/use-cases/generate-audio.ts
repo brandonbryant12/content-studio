@@ -108,7 +108,8 @@ export const generateAudio = (input: GenerateAudioInput) =>
       { concurrency: 2 },
     );
 
-    if (hostPersonaResult) hostPersonaName = hostPersonaResult.name.toLowerCase();
+    if (hostPersonaResult)
+      hostPersonaName = hostPersonaResult.name.toLowerCase();
     if (coHostPersonaResult) {
       coHostPersonaName = coHostPersonaResult.name.toLowerCase();
     }

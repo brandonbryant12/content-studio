@@ -63,7 +63,10 @@ const handlers = {
       args,
     ),
   get: (args: HandlerArgs): Promise<PersonaOutput> =>
-    callHandler<PersonaOutput>(personaRouter.get as unknown as ORPCProcedure, args),
+    callHandler<PersonaOutput>(
+      personaRouter.get as unknown as ORPCProcedure,
+      args,
+    ),
   generateAvatar: (args: HandlerArgs): Promise<Record<string, never>> =>
     callHandler<Record<string, never>>(
       personaRouter.generateAvatar as unknown as ORPCProcedure,

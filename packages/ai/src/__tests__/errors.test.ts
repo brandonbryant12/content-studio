@@ -44,6 +44,8 @@ describe('ai errors getData', () => {
 
   it('ResearchError exposes message', () => {
     const error = new ResearchError({ message: 'research failed' });
-    expect(ResearchError.getData(error)).toEqual({ message: 'research failed' });
+    expect(ResearchError.getData(error)).toEqual({
+      message: 'research failed',
+    });
   });
 });

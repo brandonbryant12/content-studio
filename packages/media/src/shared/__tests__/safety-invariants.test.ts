@@ -52,9 +52,7 @@ describe('safety invariants', () => {
         source,
       );
       const swallowsNull =
-        /Effect\.catchAll\(\(\)\s*=>\s*Effect\.succeed\(null\)\)/m.test(
-          source,
-        );
+        /Effect\.catchAll\(\(\)\s*=>\s*Effect\.succeed\(null\)\)/m.test(source);
       return swallowsVoid || swallowsNull;
     });
 
