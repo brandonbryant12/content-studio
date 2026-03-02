@@ -118,6 +118,37 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-periodic-scans-best-practice-researcher-ai-sdk-and-provider-integration-provide",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: ai-sdk-and-provider-integration — provider timeout budgets + transient-only LLM retries",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation",
+      "best-practice-researcher",
+      "periodic-scans",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:meso",
+      "trajectory:domain:ai-sdk-and-provider-integration",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.89,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-enforced-by-es",
     "date": "2026-03-02",
     "month": "2026-03",
