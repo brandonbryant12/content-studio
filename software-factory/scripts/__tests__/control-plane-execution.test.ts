@@ -22,6 +22,7 @@ const READY_FOR_DEV_OPERATION: Operation = {
 describe("ready-for-dev router planner parsing", () => {
   it("accepts planner model/thinking values when returned as label-prefixed tokens", async () => {
     const streamedArgs: string[][] = [];
+    const streamedInputs: string[] = [];
     const processLayer = Layer.succeed(CliProcess, {
       run: (command: string, args: string[]) =>
         Effect.sync(() => {
@@ -76,9 +77,10 @@ describe("ready-for-dev router planner parsing", () => {
 
           throw new Error(`Unexpected run command: ${command} ${args.join(" ")}`);
         }),
-      runStreaming: (command: string, args: string[]) =>
+      runStreaming: (command: string, args: string[], options) =>
         Effect.sync(() => {
           streamedArgs.push([command, ...args]);
+          streamedInputs.push(options?.input ?? "");
           return { status: 0, stdout: "", stderr: "" };
         }),
     });
@@ -112,5 +114,8 @@ describe("ready-for-dev router planner parsing", () => {
     expect(streamedArgs.length).toBe(1);
     expect(streamedArgs[0]).toContain("gpt-5.3-codex-spark");
     expect(streamedArgs[0]).toContain('model_reasoning_effort="medium"');
+    expect(streamedInputs[0]).toContain(
+      "Prerequisite unblockers are allowed only when a required gate is blocked by a pre-existing regression",
+    );
   });
 });
