@@ -114,6 +114,12 @@ export type ErrorCode =
   | 'DOCUMENT_TOO_LARGE'
   | 'DOCUMENT_PARSE_ERROR'
   | 'UNSUPPORTED_FORMAT'
+  | 'INVALID_VOICEOVER_AUDIO_GENERATION'
+  | 'INVALID_SAVE'
+  | 'PODCAST_NOT_FOUND'
+  | 'SCRIPT_NOT_FOUND'
+  | 'VOICEOVER_NOT_FOUND'
+  | 'JOB_NOT_FOUND'
   | 'VOICE_NOT_FOUND'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
@@ -144,6 +150,26 @@ export interface MockErrorFactory {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
+  INVALID_VOICEOVER_AUDIO_GENERATION: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  INVALID_SAVE: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  PODCAST_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  SCRIPT_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  VOICEOVER_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
   VOICE_NOT_FOUND: (opts: {
     message: string;
     data?: unknown;
@@ -161,6 +187,10 @@ export interface MockErrorFactory {
     data?: unknown;
   }) => ORPCError<string, unknown>;
   INTERNAL_ERROR: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  JOB_NOT_FOUND: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
@@ -190,6 +220,11 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   DOCUMENT_TOO_LARGE: 413,
   DOCUMENT_PARSE_ERROR: 422,
   UNSUPPORTED_FORMAT: 415,
+  INVALID_VOICEOVER_AUDIO_GENERATION: 400,
+  INVALID_SAVE: 409,
+  PODCAST_NOT_FOUND: 404,
+  SCRIPT_NOT_FOUND: 404,
+  VOICEOVER_NOT_FOUND: 404,
   VOICE_NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
@@ -199,6 +234,7 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   BAD_REQUEST: 400,
   SERVICE_UNAVAILABLE: 502,
   RATE_LIMITED: 429,
+  JOB_NOT_FOUND: 404,
 };
 
 /**
@@ -240,6 +276,13 @@ export const createMockErrors = (): MockErrorFactory => {
     DOCUMENT_TOO_LARGE: createErrorFactory('DOCUMENT_TOO_LARGE'),
     DOCUMENT_PARSE_ERROR: createErrorFactory('DOCUMENT_PARSE_ERROR'),
     UNSUPPORTED_FORMAT: createErrorFactory('UNSUPPORTED_FORMAT'),
+    INVALID_VOICEOVER_AUDIO_GENERATION: createErrorFactory(
+      'INVALID_VOICEOVER_AUDIO_GENERATION',
+    ),
+    INVALID_SAVE: createErrorFactory('INVALID_SAVE'),
+    PODCAST_NOT_FOUND: createErrorFactory('PODCAST_NOT_FOUND'),
+    SCRIPT_NOT_FOUND: createErrorFactory('SCRIPT_NOT_FOUND'),
+    VOICEOVER_NOT_FOUND: createErrorFactory('VOICEOVER_NOT_FOUND'),
     VOICE_NOT_FOUND: createErrorFactory('VOICE_NOT_FOUND'),
     UNAUTHORIZED: createErrorFactory('UNAUTHORIZED'),
     FORBIDDEN: createErrorFactory('FORBIDDEN'),
@@ -249,6 +292,7 @@ export const createMockErrors = (): MockErrorFactory => {
     BAD_REQUEST: createErrorFactory('BAD_REQUEST'),
     SERVICE_UNAVAILABLE: createErrorFactory('SERVICE_UNAVAILABLE'),
     RATE_LIMITED: createErrorFactory('RATE_LIMITED'),
+    JOB_NOT_FOUND: createErrorFactory('JOB_NOT_FOUND'),
   };
 };
 

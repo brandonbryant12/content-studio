@@ -27,6 +27,8 @@ import voiceoverRouter from '../voiceover';
 import {
   createMockContext,
   createMockErrors,
+  assertORPCError,
+  type ErrorCode,
   createTestServerRuntime,
 } from './helpers';
 
@@ -50,6 +52,19 @@ const callHandler = <T>(
   args: { context: unknown; input: unknown; errors: unknown },
 ): Promise<T> => {
   return procedure['~orpc'].handler(args) as Promise<T>;
+};
+
+const expectHandlerErrorCode = async (
+  operation: () => Promise<unknown>,
+  expectedCode: ErrorCode,
+) => {
+  try {
+    await operation();
+  } catch (error) {
+    assertORPCError(error, expectedCode);
+    return;
+  }
+  throw new Error(`Expected error '${expectedCode}', but operation resolved`);
 };
 
 const expectIsoTimestamp = (value: string) => {
@@ -236,13 +251,15 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, null);
 
       // Act & Assert
-      await expect(
-        handlers.list({
-          context,
-          input: { limit: 10, offset: 0 },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.list({
+            context,
+            input: { limit: 10, offset: 0 },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('returns empty array when no voiceovers exist', async () => {
@@ -435,13 +452,15 @@ describe('voiceover router', () => {
       const nonExistentId = 'voc_nonexistent123' as VoiceoverId;
 
       // Act & Assert
-      await expect(
-        handlers.get({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it("rejects access to another user's voiceover (ownership check)", async () => {
@@ -455,13 +474,15 @@ describe('voiceover router', () => {
       // Act & Assert - non-owner cannot access
       const context = createMockContext(runtime, user);
 
-      await expect(
-        handlers.get({
-          context,
-          input: { id: otherVoiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: otherVoiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when accessing another user voiceover', async () => {
@@ -476,13 +497,15 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.get({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('returns voiceover in serialized format', async () => {
@@ -524,13 +547,15 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, null);
 
       // Act & Assert
-      await expect(
-        handlers.create({
-          context,
-          input: { title: 'New Voiceover' },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.create({
+            context,
+            input: { title: 'New Voiceover' },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('creates voiceover with title', async () => {
@@ -614,13 +639,15 @@ describe('voiceover router', () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.update({
-          context,
-          input: { id: voiceover.id, title: 'Updated' },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: voiceover.id, title: 'Updated' },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('updates voiceover title', async () => {
@@ -741,13 +768,15 @@ describe('voiceover router', () => {
       const nonExistentId = 'voc_00000000000000' as VoiceoverId;
 
       // Act & Assert
-      await expect(
-        handlers.update({
-          context,
-          input: { id: nonExistentId, title: 'Should Fail' },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: nonExistentId, title: 'Should Fail' },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it("rejects updating another user's voiceover (ownership check)", async () => {
@@ -761,13 +790,15 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot update
-      await expect(
-        handlers.update({
-          context,
-          input: { id: otherVoiceover.id, title: 'Updated Title' },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: otherVoiceover.id, title: 'Updated Title' },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when updating another user voiceover', async () => {
@@ -782,13 +813,15 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.update({
-          context,
-          input: { id: voiceover.id, title: 'Admin Updated' },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: voiceover.id, title: 'Admin Updated' },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('persists updates to database', async () => {
@@ -828,13 +861,15 @@ describe('voiceover router', () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('deletes voiceover successfully', async () => {
@@ -859,13 +894,15 @@ describe('voiceover router', () => {
       const nonExistentId = 'voc_00000000000000' as VoiceoverId;
 
       // Act & Assert
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it("rejects deleting another user's voiceover (ownership check)", async () => {
@@ -877,13 +914,15 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot delete
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: otherVoiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: otherVoiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when deleting another user voiceover', async () => {
@@ -896,13 +935,15 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('verifies voiceover is actually removed from database after delete', async () => {
@@ -945,13 +986,15 @@ describe('voiceover router', () => {
       });
 
       // Act & Assert - second delete fails
-      await expect(
-        handlers.delete({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.delete({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
   });
 
@@ -969,13 +1012,15 @@ describe('voiceover router', () => {
       });
 
       // Act & Assert
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('creates a generation job for the voiceover', async () => {
@@ -1032,13 +1077,15 @@ describe('voiceover router', () => {
       const nonExistentId = 'voc_nonexistent123' as VoiceoverId;
 
       // Act & Assert
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: nonExistentId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: nonExistentId },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it("rejects generating another user's voiceover (ownership check)", async () => {
@@ -1053,13 +1100,15 @@ describe('voiceover router', () => {
       const context = createMockContext(runtime, user);
 
       // Act & Assert - non-owner cannot generate
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: otherVoiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: otherVoiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
 
     it('returns Not Found for admin when generating another user voiceover', async () => {
@@ -1075,13 +1124,15 @@ describe('voiceover router', () => {
       const adminUser = toUser(adminTestUser);
       const context = createMockContext(runtime, adminUser);
 
-      await expect(
-        handlers.generate({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('Not Found');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
   });
 
@@ -1126,13 +1177,15 @@ describe('voiceover router', () => {
       const nonExistentJobId = 'job_nonexistent123';
 
       // Act & Assert
-      await expect(
-        handlers.getJob({
-          context,
-          input: { jobId: nonExistentJobId },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.getJob({
+            context,
+            input: { jobId: nonExistentJobId },
+            errors,
+          }),
+        'JOB_NOT_FOUND',
+      );
     });
 
     it('returns job in serialized format with ISO dates', async () => {
@@ -1220,13 +1273,15 @@ describe('voiceover router', () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
 
       // Act & Assert
-      await expect(
-        handlers.approve({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.approve({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('allows admin to approve a voiceover', async () => {
@@ -1267,13 +1322,15 @@ describe('voiceover router', () => {
       const strangerUser = toUser(strangerTestUser);
       const context = createMockContext(runtime, strangerUser);
 
-      await expect(
-        handlers.approve({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('admin role');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.approve({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'FORBIDDEN',
+      );
     });
   });
 
@@ -1291,13 +1348,15 @@ describe('voiceover router', () => {
       });
 
       // Act & Assert
-      await expect(
-        handlers.revokeApproval({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow();
+      await expectHandlerErrorCode(
+        () =>
+          handlers.revokeApproval({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'UNAUTHORIZED',
+      );
     });
 
     it('allows admin to revoke approval', async () => {
@@ -1341,13 +1400,15 @@ describe('voiceover router', () => {
       const strangerUser = toUser(strangerTestUser);
       const context = createMockContext(runtime, strangerUser);
 
-      await expect(
-        handlers.revokeApproval({
-          context,
-          input: { id: voiceover.id },
-          errors,
-        }),
-      ).rejects.toThrow('admin role');
+      await expectHandlerErrorCode(
+        () =>
+          handlers.revokeApproval({
+            context,
+            input: { id: voiceover.id },
+            errors,
+          }),
+        'FORBIDDEN',
+      );
     });
   });
 });
