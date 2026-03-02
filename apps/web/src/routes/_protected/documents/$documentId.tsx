@@ -1,4 +1,4 @@
-import { DocumentStatus } from '@repo/db/schema';
+import { DocumentStatus } from '@repo/api/contracts';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';

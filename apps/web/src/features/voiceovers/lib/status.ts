@@ -1,4 +1,4 @@
-import { VoiceoverStatus } from '@repo/db/schema';
+import { VoiceoverStatus } from '@repo/api/contracts';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
 export { VoiceoverStatus };

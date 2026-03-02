@@ -1,4 +1,4 @@
-import { VersionStatus } from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastQueryKey } from './use-podcast';
 import { apiClient } from '@/clients/apiClient';

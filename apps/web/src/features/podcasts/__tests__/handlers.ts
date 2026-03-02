@@ -1,7 +1,7 @@
 // features/podcasts/__tests__/handlers.ts
 // MSW handlers for podcast endpoint tests
 
-import { VersionStatus } from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import { http, HttpResponse } from 'msw';
 import type { PodcastListItem } from '../components/podcast-item';
 

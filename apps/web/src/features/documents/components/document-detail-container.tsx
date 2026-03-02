@@ -1,6 +1,6 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
-import { DocumentStatus } from '@repo/db/schema';
+import { DocumentStatus } from '@repo/api/contracts';
 import { useCallback, useState } from 'react';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';

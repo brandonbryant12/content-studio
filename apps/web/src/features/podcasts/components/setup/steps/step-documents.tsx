@@ -7,7 +7,7 @@ import {
   CheckCircledIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
-import { DocumentStatus } from '@repo/db/schema';
+import { DocumentStatus } from '@repo/api/contracts';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import {

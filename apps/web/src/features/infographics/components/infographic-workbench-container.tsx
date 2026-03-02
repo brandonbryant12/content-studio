@@ -4,7 +4,7 @@ import {
   ReloadIcon,
   TrashIcon,
 } from '@radix-ui/react-icons';
-import { InfographicStatus } from '@repo/db/schema';
+import { InfographicStatus } from '@repo/api/contracts';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
