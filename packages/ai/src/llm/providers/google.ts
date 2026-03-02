@@ -2,7 +2,8 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject, jsonSchema } from 'ai';
 import { Effect, Layer, JSONSchema, Schedule } from 'effect';
 import { LLM_MODEL } from '../../models';
-import { mapError } from '../map-error';
+import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { mapError, shouldRetryLLMError } from '../map-error';
 import {
   LLM,
   type LLMService,
@@ -60,6 +61,8 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             temperature: options.temperature ?? 0.7,
             // Keep retries in Effect.retry to avoid double-retry with AI SDK defaults.
             maxRetries: 0,
+            // Per-attempt timeout budget: each Effect retry re-runs this call.
+            abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.llmGenerate),
             experimental_repairText: async ({ text }) =>
               stripMarkdownCodeFence(text),
           });
@@ -78,11 +81,12 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
         },
         catch: mapError,
       }).pipe(
-        // Retry transient LLM errors (e.g. response parsing failures) up to 2 times
+        // Retry only transient LLM errors (status/network/parse-repair classes).
         Effect.retry({
           times: 2,
           schedule: Schedule.exponential('500 millis'),
-          while: (error) => error._tag === 'LLMError',
+          while: (error) =>
+            error._tag === 'LLMError' && shouldRetryLLMError(error),
         }),
         Effect.withSpan('llm.generate', {
           attributes: { 'llm.provider': 'google', 'llm.model': modelId },

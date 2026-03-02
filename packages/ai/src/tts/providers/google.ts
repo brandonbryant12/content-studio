@@ -5,6 +5,7 @@ import {
 } from '../../google/error-parser';
 import { TTS_MODEL } from '../../models';
 import { retryTransientProvider } from '../../provider-retry';
+import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
 import {
@@ -52,6 +53,8 @@ async function callGeminiTTS(
         'x-goog-api-key': apiKey,
       },
       body: JSON.stringify(body),
+      // Per-attempt timeout budget: retries call this function again.
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.ttsGenerate),
     },
   );
 

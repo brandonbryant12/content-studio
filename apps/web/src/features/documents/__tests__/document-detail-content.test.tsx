@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@/test-utils';
 import {
   DocumentFailedState,
   DocumentProcessingState,
 } from '../components/document-detail-content';
+import { render, screen } from '@/test-utils';
 
 vi.mock('@repo/ui/components/spinner', () => ({
   Spinner: ({ className }: { className?: string }) => (
@@ -65,7 +65,9 @@ describe('DocumentFailedState', () => {
 
     const liveStatus = screen.getByRole('status');
     expect(liveStatus).toHaveAttribute('aria-live', 'polite');
-    expect(screen.getByText('Retrying document processing')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Retrying document processing'),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Processing failed')).toBeInTheDocument();
   });
 });
