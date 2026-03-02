@@ -4,7 +4,13 @@ import { useOnboardingDismissed } from '../use-onboarding-dismissed';
 
 describe('useOnboardingDismissed', () => {
   beforeEach(() => {
-    localStorage.clear();
+    if (typeof localStorage.removeItem === 'function') {
+      localStorage.removeItem('onboarding-dismissed');
+      return;
+    }
+    if (typeof localStorage.clear === 'function') {
+      localStorage.clear();
+    }
   });
 
   it('defaults to not dismissed', () => {
@@ -13,6 +19,18 @@ describe('useOnboardingDismissed', () => {
   });
 
   it('dismiss() sets isDismissed to true and persists to localStorage', () => {
+    const originalLocalStorage = globalThis.localStorage;
+    const setItemSpy = vi.fn();
+    const patchedLocalStorage = {
+      ...(typeof originalLocalStorage === 'object' && originalLocalStorage !== null
+        ? originalLocalStorage
+        : {}),
+      setItem: setItemSpy,
+    };
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: patchedLocalStorage,
+    });
     const { result } = renderHook(() => useOnboardingDismissed());
 
     act(() => {
@@ -20,7 +38,11 @@ describe('useOnboardingDismissed', () => {
     });
 
     expect(result.current.isDismissed).toBe(true);
-    expect(localStorage.getItem('onboarding-dismissed')).toBe('true');
+    expect(setItemSpy).toHaveBeenCalledWith('onboarding-dismissed', 'true');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: originalLocalStorage,
+    });
   });
 
   it('handles localStorage errors gracefully', () => {

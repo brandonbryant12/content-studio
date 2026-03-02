@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getErrorMessage } from './errors';
+import { getErrorMessage, getGenerationFailureMessage } from './errors';
 
 describe('getErrorMessage', () => {
   describe('non-defined errors', () => {
@@ -242,5 +242,38 @@ describe('getErrorMessage', () => {
       };
       expect(getErrorMessage(error, 'Failed')).toBe('A new error occurred');
     });
+  });
+});
+
+describe('getGenerationFailureMessage', () => {
+  it('returns null for nullish values', () => {
+    expect(getGenerationFailureMessage(null)).toBeNull();
+    expect(getGenerationFailureMessage(undefined)).toBeNull();
+  });
+
+  it('returns null for blank strings', () => {
+    expect(getGenerationFailureMessage('')).toBeNull();
+    expect(getGenerationFailureMessage('   ')).toBeNull();
+  });
+
+  it('trims and returns non-empty values', () => {
+    expect(
+      getGenerationFailureMessage('  Generation failed. Please try again.  '),
+    ).toBe('Generation failed. Please try again.');
+  });
+
+  it('falls back to safe copy for unknown backend/provider text', () => {
+    expect(getGenerationFailureMessage('Provider timeout in tts.synthesize')).toBe(
+      'Generation failed. Please retry.',
+    );
+  });
+
+  it('supports custom fallback copy', () => {
+    expect(
+      getGenerationFailureMessage(
+        'Unhandled provider 502 upstream',
+        'Processing failed. Please retry.',
+      ),
+    ).toBe('Processing failed. Please retry.');
   });
 });

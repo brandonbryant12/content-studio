@@ -41,7 +41,7 @@ import {
   useNavigationBlock,
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { getErrorMessage } from '@/shared/lib/errors';
+import { getErrorMessage, getGenerationFailureMessage } from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
@@ -204,6 +204,10 @@ function ControlsSidebar({
   hasPrompt,
   onGenerate,
 }: ControlsSidebarProps) {
+  const failureMessage = !actions.isGenerating
+    ? getGenerationFailureMessage(infographic.errorMessage)
+    : null;
+
   return (
     <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto overscroll-y-contain">
@@ -269,12 +273,12 @@ function ControlsSidebar({
       </div>
 
       <div className="shrink-0 border-t border-border p-4 space-y-3">
-        {infographic.errorMessage && !actions.isGenerating && (
+        {failureMessage && (
           <div
             className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
             role="alert"
           >
-            {infographic.errorMessage}
+            {failureMessage}
           </div>
         )}
         <div role="status" aria-live="polite">

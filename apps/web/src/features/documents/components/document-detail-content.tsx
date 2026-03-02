@@ -1,6 +1,7 @@
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { ReactNode } from 'react';
+import { getGenerationFailureMessage } from '@/shared/lib/errors';
 
 interface SearchMatch {
   paragraphIndex: number;
@@ -134,6 +135,11 @@ export function DocumentFailedState({
   onRetry,
   isRetrying,
 }: DocumentFailedStateProps) {
+  const failureMessage = getGenerationFailureMessage(
+    errorMessage,
+    'Processing failed. Please retry.',
+  );
+
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
@@ -153,7 +159,7 @@ export function DocumentFailedState({
         </svg>
       </div>
       <p className="text-muted-foreground text-sm text-center max-w-md">
-        {errorMessage || 'Processing failed'}
+        {failureMessage ?? 'Processing failed'}
       </p>
       <Button
         variant="outline"
