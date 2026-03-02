@@ -86,3 +86,38 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
       return error.message;
   }
 };
+
+const SAFE_GENERATION_ERROR_PATTERNS = [
+  /^Generation failed(?:\.[\s\S]*)?$/i,
+  /^Processing failed(?:\.[\s\S]*)?$/i,
+  /^Too many requests\.[\s\S]*$/i,
+  /^AI service is temporarily unavailable\.[\s\S]*$/i,
+  /^Document not found\.[\s\S]*$/i,
+  /^Podcast not found\.[\s\S]*$/i,
+  /^Script not found\.[\s\S]*$/i,
+  /^Job not found\.[\s\S]*$/i,
+  /^Failed to parse [\s\S]+\.$/i,
+  /^Invalid value for [\s\S]+$/i,
+  /^This podcast is already being generated\.[\s\S]*$/i,
+  /^Your infographic could not be generated\.[\s\S]*$/i,
+] as const;
+
+export const getGenerationFailureMessage = (
+  errorMessage: string | null | undefined,
+  fallback = 'Generation failed. Please retry.',
+): string | null => {
+  if (typeof errorMessage !== 'string') {
+    return null;
+  }
+
+  const normalizedMessage = errorMessage.trim();
+  if (normalizedMessage.length === 0) {
+    return null;
+  }
+
+  return SAFE_GENERATION_ERROR_PATTERNS.some((pattern) =>
+    pattern.test(normalizedMessage),
+  )
+    ? normalizedMessage
+    : fallback;
+};

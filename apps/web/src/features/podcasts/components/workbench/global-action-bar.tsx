@@ -7,6 +7,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VersionStatus, type VersionStatusType } from '../../lib/status';
 import { AudioPlayer } from '../audio-player';
+import { getGenerationFailureMessage } from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 
 interface GlobalActionBarProps {
@@ -110,20 +111,19 @@ export function GlobalActionBar({
     return null;
   };
 
-  const showError =
-    !isGenerating &&
-    status === VersionStatus.FAILED &&
-    typeof errorMessage === 'string' &&
-    errorMessage.trim().length > 0;
+  const failureMessage =
+    !isGenerating && status === VersionStatus.FAILED
+      ? getGenerationFailureMessage(errorMessage)
+      : null;
 
   return (
     <>
-      {showError && (
+      {failureMessage && (
         <div
           className="mx-4 mb-3 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           role="alert"
         >
-          {errorMessage}
+          {failureMessage}
         </div>
       )}
       <div className={`action-bar-v2 ${showChangesState ? 'has-changes' : ''}`}>

@@ -372,7 +372,7 @@ describe('ActionBar', () => {
       expect(onGenerate).toHaveBeenCalled();
     });
 
-    it('shows failure details when error message exists', () => {
+    it('maps unknown failure details to safe retry copy', () => {
       render(
         <ActionBar
           {...createDefaultProps({
@@ -384,7 +384,7 @@ describe('ActionBar', () => {
       );
 
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'TTS provider timeout',
+        'Generation failed. Please retry.',
       );
     });
 

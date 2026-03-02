@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 const CLI_PATH = "software-factory/scripts/factory/software-factory.ts";
+const CLI_TEST_TIMEOUT_MS = 90_000;
 
 const runCli = (args: string[]) => {
   const result = spawnSync("pnpm", ["exec", "tsx", CLI_PATH, ...args], {
@@ -16,7 +17,7 @@ const runCli = (args: string[]) => {
   };
 };
 
-describe("software-factory cli", () => {
+describe.sequential("software-factory cli", { timeout: CLI_TEST_TIMEOUT_MS }, () => {
   it("prints compact help from the root command", () => {
     const result = runCli(["--help"]);
 

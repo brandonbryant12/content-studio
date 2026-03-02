@@ -6,7 +6,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VoiceoverStatus, type VoiceoverStatusType } from '../../lib/status';
-import { getErrorMessage } from '@/shared/lib/errors';
+import { getGenerationFailureMessage } from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 
 interface ActionBarProps {
@@ -31,14 +31,8 @@ export function ActionBar({
   disabled,
 }: ActionBarProps) {
   const failureMessage =
-    !isGenerating &&
-    status === VoiceoverStatus.FAILED &&
-    typeof errorMessage === 'string' &&
-    errorMessage.trim().length > 0
-      ? getErrorMessage(
-          { message: errorMessage },
-          'Generation failed. Please retry.',
-        )
+    !isGenerating && status === VoiceoverStatus.FAILED
+      ? getGenerationFailureMessage(errorMessage)
       : null;
 
   const failurePanel = failureMessage ? (
