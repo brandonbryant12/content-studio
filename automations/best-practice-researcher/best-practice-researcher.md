@@ -50,7 +50,7 @@ Random-walk protocol:
 Research protocol:
 - Prioritize official and primary sources plus recent release notes.
 - Prioritize this stack: Drizzle, Effect TS, oRPC, Hono, TanStack Router/Query/Form, React, shadcn/ui, OpenTelemetry, AI SDK, Turborepo, pnpm, and repository CI configuration.
-- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md), [`software-factory/workflow-memory/guardrails.md`](../../../software-factory/workflow-memory/guardrails.md), docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, relevant repository-level config, and representative code.
+- Compare findings against [`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md), [`software-factory/workflows/README.md`](../../software-factory/workflows/README.md), [`software-factory/workflow-memory/guardrails.md`](../../software-factory/workflow-memory/guardrails.md), docs/patterns/*.md, docs/frontend/*.md, docs/testing/*.md, relevant repository-level config, and representative code.
 - Produce 2-4 ranked recommendations by default (expand to 5-6 only when multiple independent high-signal findings exist) with impact, effort, confidence, and concrete repo evidence.
 - Apply materiality checks: "Do we need this now?" and "What measurable system-level difference does this create?" Drop low-signal ideas.
 
@@ -73,7 +73,7 @@ Issue policy:
   - Paper link(s)
   - Key paper idea(s) selected for this repo
   - Planned adaptation in this codebase (not generic advice)
-  - Requirement that implementers append [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) when shipped
+  - Requirement that implementers append [`research/implemented-ideas.md`](../../research/implemented-ideas.md) when shipped
 - Add labels `best-practice-researcher` and `codex-automation` when available.
 - Do not add `ready-for-dev` from this automation; only humans apply that label when an issue is approved for implementation.
 - Do not add `self-improvement` from this automation.

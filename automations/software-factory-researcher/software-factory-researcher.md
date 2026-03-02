@@ -54,7 +54,7 @@ Research protocol:
   - workflow-memory taxonomy, coverage, retrieval quality
   - scripts/guardrails and generation pipelines
   - complexity, redundancy, broken contracts, and operational friction
-- Compare findings against [`AGENTS.md`](../../../AGENTS.md), [`CLAUDE.md`](../../../CLAUDE.md), [`software-factory/workflows/README.md`](../../../software-factory/workflows/README.md), `software-factory/workflow-memory/*`, `.agents/skills/*`, and relevant `software-factory/scripts/*` code.
+- Compare findings against [`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md), [`software-factory/workflows/README.md`](../../software-factory/workflows/README.md), `software-factory/workflow-memory/*`, `.agents/skills/*`, and relevant `software-factory/scripts/*` code.
 - Produce 2-4 ranked recommendations by default (expand to 5-6 only when multiple independent high-signal findings exist) with impact, effort, confidence, and concrete repo evidence.
 - Apply materiality checks: "Do we need this now?" and "What measurable system-level difference does this create?" Drop low-signal ideas.
 - Prioritize recommendations that improve software-factory quality and maintainability, including:
@@ -89,7 +89,7 @@ Issue policy:
   - Paper link(s)
   - Key harness/memory/workflow idea(s) selected for this repo
   - Planned adaptation in this codebase (not generic advice)
-  - Requirement that implementers append [`research/implemented-ideas.md`](../../../research/implemented-ideas.md) when shipped
+  - Requirement that implementers append [`research/implemented-ideas.md`](../../research/implemented-ideas.md) when shipped
 
 Append concise run memory including:
 - walk mode

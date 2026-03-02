@@ -16,6 +16,9 @@ export const REQUIRED_PACKAGE_SCRIPTS: Record<string, string> = {
 const ENTRY_DIRECTORIES = ['factory', 'skills', 'workflow-memory', 'workflows', 'guardrails', 'spec'] as const;
 const RUN_SCRIPT_MAIN_RE = /^\s*runScript\(main\);\s*$/m;
 const ENTRY_EXIT_SIDE_EFFECT_RE = /\bprocess\.exitCode\s*=/;
+const MARKDOWN_SCAN_ROOTS = ['automations', 'docs', 'software-factory/workflows'] as const;
+const MARKDOWN_LINK_RE = /\[[^\]]*]\(([^)]+)\)/g;
+const URL_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 const ROOT_ENTRY_SCRIPT = 'software-factory/scripts/factory/software-factory.ts';
 const EFFECT_RUN_PROMISE_ALLOWLIST = new Set<string>([
   ROOT_ENTRY_SCRIPT,
@@ -60,7 +63,8 @@ export type ScriptGuardrailIssue = {
     | 'command-throw-new-error'
     | 'non-root-effect-run-promise'
     | 'operation-registry-drift'
-    | 'utility-command-manifest-drift';
+    | 'utility-command-manifest-drift'
+    | 'missing-markdown-link-target';
   message: string;
   path?: string;
 };
@@ -165,6 +169,120 @@ const collectTypeScriptSources = async (rootDir: string): Promise<string[]> => {
   return results.sort();
 };
 
+const collectMarkdownSources = async (rootDir: string): Promise<string[]> => {
+  const results: string[] = [];
+
+  const walk = async (directory: string): Promise<void> => {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolutePath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        results.push(normalizePath(path.relative(rootDir, absolutePath)));
+      }
+    }
+  };
+
+  for (const scanRoot of MARKDOWN_SCAN_ROOTS) {
+    const absoluteRoot = path.join(rootDir, scanRoot);
+    try {
+      await walk(absoluteRoot);
+    } catch (error) {
+      if (error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  return results.sort();
+};
+
+const normalizeMarkdownLinkTarget = (rawTarget: string): string | null => {
+  const trimmed = rawTarget.trim();
+  if (trimmed.length === 0 || trimmed.startsWith('#')) {
+    return null;
+  }
+
+  const unwrapped =
+    trimmed.startsWith('<') && trimmed.endsWith('>') ? trimmed.slice(1, -1).trim() : trimmed;
+  if (unwrapped.length === 0 || URL_SCHEME_RE.test(unwrapped)) {
+    return null;
+  }
+
+  const withoutSuffix = unwrapped.split('#')[0]?.split('?')[0]?.trim() ?? '';
+  if (withoutSuffix.length === 0 || URL_SCHEME_RE.test(withoutSuffix)) {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(withoutSuffix);
+  } catch {
+    return withoutSuffix;
+  }
+};
+
+const resolveMarkdownLinkTarget = (
+  rootDir: string,
+  sourcePath: string,
+  rawTarget: string,
+): string | null => {
+  const normalized = normalizeMarkdownLinkTarget(rawTarget);
+  if (!normalized) {
+    return null;
+  }
+
+  if (path.isAbsolute(normalized)) {
+    return normalizePath(path.join(rootDir, normalized.slice(1)));
+  }
+
+  return normalizePath(path.resolve(rootDir, path.dirname(sourcePath), normalized));
+};
+
+export const findMissingMarkdownLinkTargets = async (
+  rootDir = process.cwd(),
+): Promise<ScriptGuardrailIssue[]> => {
+  const issues: ScriptGuardrailIssue[] = [];
+  const markdownSources = await collectMarkdownSources(rootDir);
+
+  for (const sourcePath of markdownSources) {
+    const source = await fs.readFile(path.join(rootDir, sourcePath), 'utf8');
+    MARKDOWN_LINK_RE.lastIndex = 0;
+
+    for (const match of source.matchAll(MARKDOWN_LINK_RE)) {
+      const rawTarget = match[1]?.trim();
+      if (!rawTarget) {
+        continue;
+      }
+
+      const resolvedTarget = resolveMarkdownLinkTarget(rootDir, sourcePath, rawTarget);
+      if (!resolvedTarget) {
+        continue;
+      }
+
+      try {
+        await fs.access(resolvedTarget);
+      } catch (error) {
+        if (error && (error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error;
+        }
+        issues.push({
+          code: 'missing-markdown-link-target',
+          path: sourcePath,
+          message: `Unresolved markdown target '${rawTarget}' -> '${normalizePath(path.relative(rootDir, resolvedTarget))}'.`,
+        });
+      }
+    }
+  }
+
+  return issues;
+};
+
 const checkEntryFileContracts = async (
   rootDir: string,
   repoPath: string,
@@ -245,6 +363,8 @@ export const checkScriptGuardrails = async (
       });
     }
   }
+
+  issues.push(...(await findMissingMarkdownLinkTargets(rootDir)));
 
   for (const entryPath of ENTRY_SCRIPT_PATHS) {
     const entryIssues = await checkEntryFileContracts(rootDir, entryPath);

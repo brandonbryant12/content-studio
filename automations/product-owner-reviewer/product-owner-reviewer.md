@@ -34,7 +34,7 @@ Memory-driven review protocol:
 5. If the last 3 runs skipped end-to-end journey checks, force an end-to-end journey check in this run.
 
 Review protocol:
-- Compare current UX and interaction patterns against [`docs/frontend/project-structure.md`](../../../docs/frontend/project-structure.md), [`docs/frontend/components.md`](../../../docs/frontend/components.md), [`docs/frontend/error-handling.md`](../../../docs/frontend/error-handling.md), [`docs/master-spec.md`](../../../docs/master-spec.md), and current route/component evidence.
+- Compare current UX and interaction patterns against [`docs/frontend/project-structure.md`](../../docs/frontend/project-structure.md), [`docs/frontend/components.md`](../../docs/frontend/components.md), [`docs/frontend/error-handling.md`](../../docs/frontend/error-handling.md), [`docs/master-spec.md`](../../docs/master-spec.md), and current route/component evidence.
 - Evaluate whether flows tell a coherent product story for normal users creating content with AI.
 - When scanning chat/assistant surfaces, explicitly validate:
   - Deep research chat can transform a raw first query into a concrete, high-signal research brief with minimal friction.
