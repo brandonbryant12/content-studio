@@ -341,6 +341,32 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-periodic-scans-issue-evaluator-run-stable-decisions-label-hygiene-verified",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Issue-evaluator run: stable decisions, label hygiene verified",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "issue-evaluator",
+      "memory",
+      "workflow-memory",
+      "tool:gh",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:jq",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-self-improvement-sanity-check-markdown-link-guardrail-blocked-by-main-typecheck-ts2775",
     "date": "2026-03-02",
     "month": "2026-03",
