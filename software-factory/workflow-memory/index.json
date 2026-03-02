@@ -132,6 +132,20 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-run-status-icon-semantics-document-live-announceme",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev run: status icon semantics + document live announcements",
+    "severity": "medium",
+    "status": "pass",
+    "tags": [
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-periodic-scans-best-practice-researcher-ai-sdk-and-provider-integration-provide",
     "date": "2026-03-02",
     "month": "2026-03",
