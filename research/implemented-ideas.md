@@ -21,6 +21,22 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-03-02 - Bounded Transient Retries for DeepResearch Interactions
+- Issue: https://github.com/brandonbryant12/content-studio/issues/274
+- PR: TBD (created by ready-for-dev-executor run on 2026-03-02)
+- Paper link(s):
+  - https://cloud.google.com/iam/docs/retry-strategy
+  - https://googleapis.github.io/js-genai/release_docs/classes/models.Models.html
+- Adopted idea(s):
+  - Apply bounded exponential backoff retries only for transient failure classes (429/5xx/network transport).
+  - Keep non-transient failures fail-fast to avoid masking invalid requests.
+- Implementation summary:
+  - Added explicit transient-cause classification in DeepResearch Google provider and applied bounded retries around `interactions.create` and `interactions.get`.
+  - Added provider tests covering transient retry decisions and max-attempt behavior.
+- Code references:
+  - [`packages/ai/src/research/providers/google.ts`](../packages/ai/src/research/providers/google.ts)
+  - [`packages/ai/src/research/providers/google.test.ts`](../packages/ai/src/research/providers/google.test.ts)
+
 ### 2026-03-01 - Telemetry Lifecycle Guardrail and No-Endpoint Contract Alignment
 - Issue: https://github.com/brandonbryant12/content-studio/issues/271, https://github.com/brandonbryant12/content-studio/issues/272
 - PR: TBD (created by ready-for-dev-executor run on 2026-03-01)
