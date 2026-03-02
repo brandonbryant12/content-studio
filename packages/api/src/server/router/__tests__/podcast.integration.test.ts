@@ -69,7 +69,7 @@ const expectHandlerErrorCode = async (
 ) => {
   try {
     await operation();
-  } catch (error) {
+  } catch (error: unknown) {
     assertORPCError(error, expectedCode);
     return;
   }

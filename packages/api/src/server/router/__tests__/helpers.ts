@@ -237,6 +237,37 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   JOB_NOT_FOUND: 404,
 };
 
+const mapMessageToCode = (message: string): ErrorCode | null => {
+  const normalized = message.toLowerCase();
+
+  const exactCode = (Object.keys(ERROR_STATUS_CODES) as ErrorCode[]).find((code) =>
+    normalized.includes(code.toLowerCase())
+  );
+  if (exactCode) {
+    return exactCode;
+  }
+
+  if (normalized.includes('authentication required')) {
+    return 'UNAUTHORIZED';
+  }
+
+  if (
+    normalized.includes('requires admin role') ||
+    normalized.includes('forbidden')
+  ) {
+    return 'FORBIDDEN';
+  }
+
+  if (normalized.includes('not found')) {
+    if (normalized.includes('job ')) {
+      return 'JOB_NOT_FOUND';
+    }
+    return 'NOT_FOUND';
+  }
+
+  return null;
+};
+
 /**
  * Create a mock error factory for testing oRPC handlers.
  *
