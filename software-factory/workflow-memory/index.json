@@ -53,6 +53,21 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-issue-310",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: issue #310",
+    "severity": "medium",
+    "status": "failed",
+    "tags": [
+      "ready-for-dev",
+      "issue:310",
+      "testing-blocker"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
