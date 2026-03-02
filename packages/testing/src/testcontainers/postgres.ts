@@ -11,6 +11,35 @@ let container: StartedPostgreSqlContainer | null = null;
 let startupPromise: Promise<StartedPostgreSqlContainer> | null = null;
 let schemaReadyPromise: Promise<void> | null = null;
 let shutdownHooksRegistered = false;
+const sharedPools = new Map<string, pg.Pool>();
+
+const shouldReuseContainer =
+  // eslint-disable-next-line no-restricted-properties -- test infrastructure reads env switches
+  process.env.TESTCONTAINERS_REUSE_ENABLE === 'true';
+
+const getPoolKey = (connectionString: string, max: number): string =>
+  `${connectionString}::${max}`;
+
+export const getSharedTestPool = (
+  connectionString: string,
+  max: number,
+): pg.Pool => {
+  const key = getPoolKey(connectionString, max);
+  const existing = sharedPools.get(key);
+  if (existing) {
+    return existing;
+  }
+
+  const pool = new pg.Pool({ connectionString, max });
+  sharedPools.set(key, pool);
+  return pool;
+};
+
+const closeSharedTestPools = async (): Promise<void> => {
+  const pools = Array.from(sharedPools.values());
+  sharedPools.clear();
+  await Promise.allSettled(pools.map((pool) => pool.end()));
+};
 
 const registerShutdownHooks = () => {
   if (shutdownHooksRegistered) {
@@ -34,10 +63,16 @@ const ensureContainer = async (): Promise<StartedPostgreSqlContainer> => {
   }
 
   if (!startupPromise) {
-    startupPromise = new PostgreSqlContainer('postgres:16-alpine')
+    const baseContainer = new PostgreSqlContainer('postgres:16-alpine')
       .withDatabase('content_studio_test')
       .withUsername('test')
-      .withPassword('test')
+      .withPassword('test');
+
+    const configuredContainer = shouldReuseContainer
+      ? baseContainer.withReuse()
+      : baseContainer;
+
+    startupPromise = configuredContainer
       .start()
       .then((startedContainer) => {
         container = startedContainer;
@@ -89,6 +124,8 @@ export const getTestConnectionString = async (): Promise<string> => {
 export const isContainerRunning = (): boolean => container !== null;
 
 export const stopPostgresContainer = async (): Promise<void> => {
+  await closeSharedTestPools();
+
   const activeContainer =
     container ??
     (startupPromise ? await startupPromise.catch(() => null) : null);
@@ -98,6 +135,10 @@ export const stopPostgresContainer = async (): Promise<void> => {
   schemaReadyPromise = null;
 
   if (!activeContainer) {
+    return;
+  }
+
+  if (shouldReuseContainer) {
     return;
   }
 

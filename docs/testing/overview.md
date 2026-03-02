@@ -69,3 +69,46 @@ graph TD
 | Frontend | `apps/web/src/features/{domain}/__tests__/*.test.ts(x)` |
 | Live | `packages/{ai,storage}/src/__tests__/live/*.live.test.ts` |
 | E2E | `apps/web/e2e/*.spec.ts` |
+
+## Test Profiles
+
+- `pnpm test:local`:
+  - Starts one shared PostgreSQL Testcontainer for the monorepo run.
+  - Defaults to laptop-friendly concurrency/worker limits.
+  - Best for interactive local development and repeated worktree runs.
+- `pnpm test:ci`:
+  - Starts one shared PostgreSQL Testcontainer for the monorepo run.
+  - Defaults to higher throughput values intended for CI runners.
+  - Best for automation lanes and pre-merge confidence checks.
+- `pnpm test`:
+  - Auto-selects profile by environment (`CI` => CI profile, otherwise local profile).
+- `pnpm test:unit`:
+  - Fast unit-focused gate (excludes `@repo/api` integration/workflow suite).
+  - Use during feature iteration before running full profile tests.
+
+For profile and `pnpm test` runs, you can tune concurrency without editing code:
+
+- `TURBO_TEST_CONCURRENCY` controls package/app-level parallelism in Turbo (default: `50%`)
+- `VITEST_MAX_WORKERS` controls per-package Vitest workers (default: `50%`)
+- `VITEST_MAX_WORKERS_API` caps API worker count (default: `35%` local, `50%` CI)
+- `VITEST_MAX_WORKERS_MEDIA` caps Media worker count (default: `35%` local, `50%` CI)
+- `VITEST_MAX_WORKERS_WEB` caps Web worker count (default: `40%` local, `60%` CI)
+
+Examples:
+
+```bash
+# Explicit local profile
+pnpm test:local
+
+# Explicit CI profile
+pnpm test:ci
+
+# Unit-focused quick loop
+pnpm test:unit
+
+# Cooler laptop profile override
+TURBO_TEST_CONCURRENCY=35% VITEST_MAX_WORKERS=35% pnpm test:local
+
+# Faster CI runner override
+TURBO_TEST_CONCURRENCY=100% VITEST_MAX_WORKERS=100% pnpm test:ci
+```

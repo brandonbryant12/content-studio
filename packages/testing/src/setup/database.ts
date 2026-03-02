@@ -6,7 +6,10 @@ import pg from 'pg';
 
 import type { DatabaseInstance } from '@repo/db/client';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { getTestConnectionString } from '../testcontainers/postgres';
+import {
+  getSharedTestPool,
+  getTestConnectionString,
+} from '../testcontainers/postgres';
 
 /**
  * Drizzle instance with our schema but without the $client: Pool constraint.
@@ -21,6 +24,7 @@ export interface TestDatabaseConfig {
 
 const TEST_DB_FALLBACK_URL =
   'postgres://test:test@localhost:5433/content_studio_test';
+const TEST_CONTEXT_POOL_MAX = 20;
 
 export const DEFAULT_TEST_CONNECTION =
   // eslint-disable-next-line no-restricted-properties -- test infrastructure, not production code
@@ -85,7 +89,7 @@ export async function createTestContext(
 ): Promise<TestContext> {
   const connectionString = await resolveConnectionString(config);
 
-  const pool = new pg.Pool({ connectionString, max: 1 });
+  const pool = getSharedTestPool(connectionString, TEST_CONTEXT_POOL_MAX);
   const client = await pool.connect();
   await client.query('BEGIN');
 
@@ -100,7 +104,6 @@ export async function createTestContext(
         await client.query('ROLLBACK');
       } finally {
         client.release();
-        await pool.end();
       }
     },
   };

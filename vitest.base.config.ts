@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 const packagesRoot = path.resolve(__dirname, 'packages');
+const vitestMaxWorkers = process.env.VITEST_MAX_WORKERS ?? '50%';
 
 export default defineConfig({
   test: {
@@ -20,6 +21,7 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     testTimeout: 30000,
+    maxWorkers: vitestMaxWorkers,
   },
   resolve: {
     alias: {

@@ -1,5 +1,5 @@
-import { extract } from '@extractus/article-extractor';
 import { Effect, Layer } from 'effect';
+import type { extract as articleExtractorExtract } from '@extractus/article-extractor';
 import { UrlFetchError } from '../../errors';
 import { calculateWordCount } from '../../shared';
 import {
@@ -10,6 +10,20 @@ import {
 
 const FETCH_TIMEOUT_MS = 30_000;
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024; // 5MB
+
+type ExtractFn = typeof articleExtractorExtract;
+
+let extractFnPromise: Promise<ExtractFn> | null = null;
+
+const getExtractor = async (): Promise<ExtractFn> => {
+  if (!extractFnPromise) {
+    // eslint-disable-next-line no-restricted-syntax -- lazy-load avoids eager cross-fetch startup in unrelated test/runtime paths
+    extractFnPromise = import('@extractus/article-extractor').then(
+      (module) => module.extract,
+    );
+  }
+  return extractFnPromise;
+};
 
 const make: UrlScraperService = {
   fetchAndExtract: (
@@ -30,6 +44,7 @@ const make: UrlScraperService = {
           size: MAX_RESPONSE_SIZE,
         };
 
+        const extract = await getExtractor();
         const article = await extract(url, {}, fetchOptions);
 
         if (!article || !article.content) {

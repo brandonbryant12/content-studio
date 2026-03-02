@@ -95,7 +95,7 @@ Branching, validation, and delivery:
   - `pnpm typecheck`
   - `pnpm lint`
   - `pnpm test:invariants`
-  - `pnpm test`
+  - `pnpm test:ci`
   - `pnpm build`
 - On gate failure: do not merge; open/update issue with blocker evidence and append memory.
 - On gate success: commit, push, open one PR, and auto-merge with squash when linkage checks pass and recurrence-prevention requirements are met. Delete merged branch, then clean up the git worktree with `git worktree remove "$WORKTREE_DIR"` and delete any remaining local branch pointer for `"$WORKTREE_BRANCH"`.

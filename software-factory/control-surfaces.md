@@ -16,7 +16,7 @@ It maps each surface to its canonical location, enforcement path, and output evi
 | Skill system | `.agents/skills/*/SKILL.md` | `software-factory/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Valid canonical skills + symlink mirrors |
 | Lint rules | `tools/eslint/base.js`, `tools/eslint/custom-rules.js`, package eslint configs | `pnpm lint` | Static rule pass/fail |
 | Invariant tests | `packages/media/src/shared/__tests__/safety-invariants.test.ts`, `packages/api/src/server/__tests__/*invariants.test.ts` | `pnpm test:invariants` | Policy invariants pass/fail |
-| Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test`, `pnpm build` | Full build and runtime confidence |
+| Workspace quality gates | `package.json` scripts, `turbo.json`, `vitest.config.ts` | `pnpm typecheck`, `pnpm test:unit` (fast loop), `pnpm test:local` (developer full), `pnpm test:ci` (automation/CI), `pnpm build` | Full build and runtime confidence |
 | Workflow memory | `software-factory/workflow-memory/*`, `software-factory/scripts/workflow-memory/*.ts` | Add/retrieve/coverage/scenario scripts | Durable event logs + index + summaries |
 | Automation wrappers | `automations/*/*.md`, `automations/*/*.toml` | Automation contracts + CLI delegation checks | Automated issue/PR execution trails |
 | CI/CD pipelines | `Jenkinsfile`, `jenkins/*.groovy` | Jenkins job gates | Branch/main/nightly/weekly quality reports |

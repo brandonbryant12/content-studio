@@ -34,7 +34,15 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": [],
-      "env": ["DB_POSTGRES_URL"]
+      "env": [
+        "DB_POSTGRES_URL",
+        "TESTCONTAINERS_REUSE_ENABLE",
+        "VITEST_MAX_WORKERS",
+        "VITEST_MAX_WORKERS_API",
+        "VITEST_MAX_WORKERS_MEDIA",
+        "VITEST_MAX_WORKERS_WEB",
+        "TURBO_TEST_CONCURRENCY"
+      ]
     },
     "test:invariants": {
       "dependsOn": ["^build"]
@@ -47,7 +55,15 @@
     "test:integration": {
       "dependsOn": ["^build"],
       "outputs": [".coverage/**"],
-      "env": ["TEST_POSTGRES_URL"],
+      "env": [
+        "TEST_POSTGRES_URL",
+        "TESTCONTAINERS_REUSE_ENABLE",
+        "VITEST_MAX_WORKERS",
+        "VITEST_MAX_WORKERS_API",
+        "VITEST_MAX_WORKERS_MEDIA",
+        "VITEST_MAX_WORKERS_WEB",
+        "TURBO_TEST_CONCURRENCY"
+      ],
       "cache": false
     },
     "test:e2e": {
@@ -99,5 +115,11 @@
     "HTTP_PROXY",
     "NO_PROXY"
   ],
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event", "DEV"]
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "npm_lifecycle_event",
+    "DEV",
+    "TEST_POSTGRES_URL"
+  ]
 }

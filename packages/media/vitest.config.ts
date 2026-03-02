@@ -1,6 +1,13 @@
 import { defineProject, mergeConfig } from 'vitest/config';
 import baseConfig from '../../vitest.base.config';
 
+const mediaMaxWorkers =
+  // eslint-disable-next-line no-restricted-properties -- test config accepts env overrides for worker caps
+  process.env.VITEST_MAX_WORKERS_MEDIA ??
+  // eslint-disable-next-line no-restricted-properties -- test config accepts env overrides for worker caps
+  process.env.VITEST_MAX_WORKERS ??
+  '35%';
+
 export default mergeConfig(
   baseConfig,
   defineProject({
@@ -8,15 +15,10 @@ export default mergeConfig(
       name: '@repo/media',
       // Include test files in subdirectories
       include: ['src/**/*.test.ts'],
-      // Use existing test database at localhost:5433 (started via docker compose)
-      // Tests use transaction rollback for isolation
-      env: {
-        TEST_POSTGRES_URL:
-          'postgresql://test:test@localhost:5433/content_studio_test',
-      },
       // Increase timeout for database operations
       testTimeout: 30000,
       hookTimeout: 60000,
+      maxWorkers: mediaMaxWorkers,
     },
   }),
 );

@@ -6,6 +6,8 @@ import baseConfig from '../../vitest.base.config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const packagesRoot = path.resolve(__dirname, '../../packages');
+const webMaxWorkers =
+  process.env.VITEST_MAX_WORKERS_WEB ?? process.env.VITEST_MAX_WORKERS ?? '40%';
 
 export default mergeConfig(
   baseConfig,
@@ -15,6 +17,7 @@ export default mergeConfig(
       include: ['src/**/*.test.{ts,tsx}'],
       environment: 'jsdom',
       setupFiles: ['./src/test-utils/setup.ts'],
+      maxWorkers: webMaxWorkers,
     },
     resolve: {
       alias: {

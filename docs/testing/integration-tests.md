@@ -48,6 +48,24 @@ pnpm --filter @repo/api test
 
 `@repo/api` Vitest global setup starts one PostgreSQL container, pushes the Drizzle schema, and sets `TEST_POSTGRES_URL` for test workers.
 
+For full monorepo test runs, use root profile scripts:
+
+```bash
+# local development profile
+pnpm test:local
+
+# automation/CI profile
+pnpm test:ci
+```
+
+Both profiles start one shared PostgreSQL Testcontainer for the full run and pass `TEST_POSTGRES_URL` to package test tasks.
+
+Optional local speed-up across repeated runs:
+
+```bash
+TESTCONTAINERS_REUSE_ENABLE=true pnpm --filter @repo/api test
+```
+
 ## Test Dependencies
 
 | Dependency | Source | Purpose |

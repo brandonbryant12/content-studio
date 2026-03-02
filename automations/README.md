@@ -23,6 +23,7 @@ operation runner + playbook execution
 2. Wrappers call [`run-operation-wrapper.sh`](./run-operation-wrapper.sh) for deterministic bootstrap and workspace hygiene before `operation run`.
 3. Operation IDs are the automation contract key.
 4. Playbooks (`*.md`) are source of truth for behavior.
+5. Code-writing lanes should use CI test profile gates in worktrees (`pnpm test:ci`) rather than the interactive local profile.
 
 ## Source Of Truth
 

@@ -118,8 +118,14 @@ Validation gates (required, in order):
 Run each gate via `zsh -lic 'cd "$WORKTREE_DIR" && <gate-command>'`.
 - `pnpm typecheck`
 - `pnpm lint`
-- `pnpm test:invariants`
-- `pnpm test`
+- `pnpm test:invariants` (required when backend/shared domain code changes)
+- Targeted tests (always required):
+  - prefer workspace-targeted commands first (for example `pnpm --filter <workspace> test`)
+  - use `pnpm test:unit` for non-`@repo/api` iteration loops
+- `pnpm test:ci` (required when any of the following are true):
+  - 2+ workspaces are modified
+  - shared test/tooling changed (`package.json`, `turbo.json`, `vitest*.config.ts`, `packages/testing/**`, `scripts/testing/**`)
+  - API/server/worker runtime surfaces changed (`packages/api/**`, `apps/server/**`, `apps/worker/**`)
 - `pnpm build`
 
 Delivery behavior:

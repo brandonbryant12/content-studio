@@ -59,7 +59,7 @@ flowchart TD
 | Strategy catalog | `software-factory/workflows/registry.json`, `software-factory/workflows/*/README.md` | `pnpm workflows:generate`, docs review | Generated catalog + per-strategy pages |
 | Operation catalog | `software-factory/operations/registry.json` | `pnpm software-factory operation list` | Runnable operation inventory + args |
 | Skill system | `.agents/skills/*/SKILL.md` | `software-factory/scripts/sync-skills.sh`, `pnpm skills:check:strict` | Canonical skills + synced mirrors |
-| Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test`, `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
+| Static/dynamic guardrails | `tools/eslint/*`, invariant tests, package tests | `pnpm lint`, `pnpm test:invariants`, `pnpm test:unit` (fast loop), `pnpm test:local` (developer), `pnpm test:ci` (automation/CI), `pnpm typecheck`, `pnpm build` | CI/test logs + invariant pass/fail |
 | Workflow memory | `software-factory/workflow-memory/*` | `software-factory/scripts/workflow-memory/*.ts`, coverage checks | JSONL events + index + summaries |
 | Automation lanes | `automations/*/*.md` + `automations/*/*.toml` | Playbook contracts + lane-specific gate checklists | Issues/PRs + run summaries + memory events |
 
@@ -69,7 +69,7 @@ flowchart TD
 2. Align behavior with [`docs/master-spec.md`](../docs/master-spec.md) and standards docs.
 3. Execute via operation -> strategy -> skills.
 4. Run gate ladder:
-`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:invariants`, `pnpm build`
+`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` (or workspace-targeted tests), `pnpm test:local` (or `pnpm test:ci` in automation), `pnpm test:invariants`, `pnpm build`
 and `pnpm spec:check` when behavior/spec surface changes.
 5. Run pre-merge risk/coverage checks (`pr-risk-review`, `test-surface-steward` as needed).
 6. Persist workflow memory entries for each workflow used.

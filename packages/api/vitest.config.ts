@@ -1,6 +1,9 @@
 import { defineProject, mergeConfig } from 'vitest/config';
 import baseConfig from '../../vitest.base.config';
 
+const apiMaxWorkers =
+  process.env.VITEST_MAX_WORKERS_API ?? process.env.VITEST_MAX_WORKERS ?? '35%';
+
 export default mergeConfig(
   baseConfig,
   defineProject({
@@ -13,6 +16,7 @@ export default mergeConfig(
       // Increase timeout for database operations
       testTimeout: 30000,
       hookTimeout: 60000,
+      maxWorkers: apiMaxWorkers,
     },
   }),
 );
