@@ -81,11 +81,24 @@ export const formatUnknownError = (error: unknown): string => {
   return String(error);
 };
 
-export interface UseCaseSpanInput {
+interface UseCaseSpanBaseInput {
   resourceId: string;
-  userId?: string;
   attributes?: Record<string, string | number | boolean | null | undefined>;
 }
+
+interface UseCaseSpanWithExplicitUser extends UseCaseSpanBaseInput {
+  userId: string;
+  useRequestContextUser?: false | undefined;
+}
+
+interface UseCaseSpanWithRequestContextUser extends UseCaseSpanBaseInput {
+  useRequestContextUser: true;
+  userId?: never;
+}
+
+export type UseCaseSpanInput =
+  | UseCaseSpanWithExplicitUser
+  | UseCaseSpanWithRequestContextUser;
 
 const normalizeSpanAttributes = (
   attributes: Record<string, string | number | boolean | null | undefined>,
@@ -99,7 +112,9 @@ const normalizeSpanAttributes = (
  */
 export const annotateUseCaseSpan = (input: UseCaseSpanInput) =>
   Effect.gen(function* () {
-    const userId = input.userId ?? (yield* getCurrentUser).id;
+    const userId =
+      'userId' in input ? input.userId : (yield* getCurrentUser).id;
+
     const attributes = normalizeSpanAttributes({
       'user.id': userId,
       'resource.id': input.resourceId,
