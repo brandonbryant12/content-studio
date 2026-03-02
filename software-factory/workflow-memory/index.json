@@ -1,5 +1,28 @@
 [
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-executor-262-263-failure-propagation-bundle-blocke",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev-executor: #262 + #263 failure-propagation bundle blocked at pnpm test",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:262",
+      "issue:263",
+      "selection:bundle",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.71,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
