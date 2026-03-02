@@ -39,6 +39,7 @@ export interface VoiceoverDetailProps {
   assistantPanel?: ReactNode;
   workbenchState: VoiceoverWorkbenchState;
   approvalState: VoiceoverApprovalState;
+  onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
   onApprove: () => void;
@@ -57,6 +58,7 @@ export function VoiceoverDetail({
   assistantPanel,
   workbenchState,
   approvalState,
+  onSave,
   onGenerate,
   onDelete,
   onApprove,
@@ -80,6 +82,10 @@ export function VoiceoverDetail({
   return (
     <WorkbenchLayout
       voiceover={voiceover}
+      title={settings.title}
+      onTitleChange={settings.setTitle}
+      hasTitleChanges={settings.hasTitleChanges}
+      isTitleDisabled={isGenerating}
       onDelete={onDelete}
       isDeleting={isDeleting}
       isApproved={isApproved}
@@ -101,6 +107,7 @@ export function VoiceoverDetail({
           hasChanges={hasChanges}
           hasText={hasText}
           isSaving={isSaving}
+          onSave={onSave}
           onGenerate={onGenerate}
         />
       }

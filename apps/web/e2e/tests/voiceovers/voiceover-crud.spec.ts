@@ -132,7 +132,7 @@ authenticatedTest.describe('Voiceover CRUD Operations', () => {
 
         // Should be on the voiceover detail page
         await expect(page).toHaveURL(/\/voiceovers\/.+/);
-        await expect(voiceoversPage.getWorkbenchTitle()).toContainText(
+        await expect(voiceoversPage.getWorkbenchTitle()).toHaveValue(
           'E2E Test Voiceover',
         );
       },
@@ -245,7 +245,7 @@ authenticatedTest.describe('Voiceover CRUD Operations', () => {
 
         // Should still be on the detail page
         await expect(page).toHaveURL(/\/voiceovers\/.+/);
-        await expect(voiceoversPage.getWorkbenchTitle()).toContainText(
+        await expect(voiceoversPage.getWorkbenchTitle()).toHaveValue(
           'Cancel Delete Test',
         );
       },

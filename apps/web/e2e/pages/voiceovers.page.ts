@@ -144,7 +144,9 @@ export class VoiceoversPage extends BasePage {
    * Get the title element in the workbench header
    */
   getWorkbenchTitle(): Locator {
-    return this.page.locator('.workbench-title');
+    return this.page
+      .locator('.workbench-title-input')
+      .or(this.page.locator('.workbench-title'));
   }
 
   /**
@@ -240,7 +242,9 @@ export class VoiceoversPage extends BasePage {
    * Click the Save & Generate button in the action bar
    */
   async clickSaveAndGenerate(): Promise<void> {
-    const button = this.page.getByRole('button', { name: /save & generate/i });
+    const button = this.page.getByRole('button', {
+      name: /save & (re)?generate/i,
+    });
     await expect(button).toBeVisible();
     await button.click();
   }
@@ -249,7 +253,7 @@ export class VoiceoversPage extends BasePage {
    * Click the Save button in the action bar
    */
   async clickSave(): Promise<void> {
-    const button = this.page.getByRole('button', { name: /^save$/i });
+    const button = this.page.getByRole('button', { name: /save draft|save/i });
     await expect(button).toBeVisible();
     await button.click();
   }
