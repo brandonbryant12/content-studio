@@ -1,4 +1,4 @@
-import { InfographicStatus } from '@repo/db/schema';
+import { InfographicStatus } from '@repo/api/contracts';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
 export { InfographicStatus };

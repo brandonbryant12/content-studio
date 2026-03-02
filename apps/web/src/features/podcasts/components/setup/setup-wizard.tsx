@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
-import type { PodcastFullOutput } from '@repo/db/schema';
+import type { PodcastFullOutput } from '@repo/api/contracts';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
 import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { SetupFooter } from './setup-footer';

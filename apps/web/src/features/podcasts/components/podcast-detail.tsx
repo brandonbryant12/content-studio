@@ -1,4 +1,4 @@
-import { VersionStatus } from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';

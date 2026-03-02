@@ -1,14 +1,12 @@
-import {
-  VersionStatus,
-  type VersionStatus as VersionStatusType,
-} from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import type { RouterOutput } from '@repo/api/client';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
+export type VersionStatusType =
+  (typeof VersionStatus)[keyof typeof VersionStatus];
 
 export { VersionStatus };
-export type { VersionStatusType };
 
 interface StatusConfig {
   label: string;

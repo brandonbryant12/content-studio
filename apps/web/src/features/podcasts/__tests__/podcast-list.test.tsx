@@ -1,6 +1,6 @@
 // features/podcasts/__tests__/podcast-list.test.tsx
 
-import { VersionStatus } from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PodcastListItem } from '../components/podcast-item';
 import { PodcastList } from '../components/podcast-list';

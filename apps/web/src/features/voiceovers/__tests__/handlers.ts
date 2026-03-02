@@ -6,7 +6,7 @@ import type {
   VoiceoverOutput,
   VoiceoverListItemOutput,
   JobOutput,
-} from '@repo/db/schema';
+} from '@repo/api/contracts';
 
 // Base URL for API requests
 const API_BASE = '/rpc';

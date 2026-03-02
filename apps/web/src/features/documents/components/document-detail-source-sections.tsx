@@ -1,5 +1,5 @@
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { DocumentStatus } from '@repo/db/schema';
+import { DocumentStatus } from '@repo/api/contracts';
 import { type CSSProperties, useState } from 'react';
 import type { DocumentDetailDocument } from './document-detail-types';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';

@@ -1,4 +1,4 @@
-import { VersionStatus } from '@repo/db/schema';
+import { VersionStatus } from '@repo/api/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { getPodcastQueryKey } from './use-podcast';

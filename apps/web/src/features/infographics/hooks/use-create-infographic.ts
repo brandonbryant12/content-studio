@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import type { InfographicFormat, StyleProperty } from '@repo/db/schema';
+import type { InfographicFormat, StyleProperty } from '@repo/api/contracts';
 import { getInfographicListQueryKey } from './use-infographic-list';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';

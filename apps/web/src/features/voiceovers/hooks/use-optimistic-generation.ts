@@ -1,4 +1,4 @@
-import { VoiceoverStatus } from '@repo/db/schema';
+import { VoiceoverStatus } from '@repo/api/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { getVoiceoverQueryKey } from './use-voiceover';

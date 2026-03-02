@@ -1,4 +1,4 @@
-import { DocumentStatus } from '@repo/db/schema';
+import { DocumentStatus } from '@repo/api/contracts';
 import type { BadgeVariant } from '@repo/ui/components/badge';
 
 export { DocumentStatus };

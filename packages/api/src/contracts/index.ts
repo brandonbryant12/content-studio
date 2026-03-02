@@ -10,6 +10,20 @@ import voiceoverContract from './voiceovers';
 import voicesContract from './voices';
 
 export * from './events';
+export {
+  DocumentStatus,
+  InfographicStatus,
+  VersionStatus,
+  VoiceoverStatus,
+} from '@repo/db/schema';
+export type {
+  JobOutput,
+  PodcastFullOutput,
+  StyleProperty,
+  InfographicFormat,
+  VoiceoverListItemOutput,
+  VoiceoverOutput,
+} from '@repo/db/schema';
 
 /**
  * Base errors available to all routes.
