@@ -261,16 +261,20 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   options: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
+  const requestAnnotatedEffect = options.requestId
+    ? Effect.gen(function* () {
+        yield* Effect.annotateCurrentSpan('request.id', options.requestId);
+        return yield* effect;
+      })
+    : effect;
+
   const tracedEffect = options.span
-    ? effect.pipe(
+    ? requestAnnotatedEffect.pipe(
         Effect.withSpan(options.span, {
-          attributes: {
-            ...options.attributes,
-            ...(options.requestId ? { 'request.id': options.requestId } : {}),
-          },
+          attributes: options.attributes,
         }),
       )
-    : effect;
+    : requestAnnotatedEffect;
 
   const scopedEffect = user
     ? withCurrentUser(user)(tracedEffect)

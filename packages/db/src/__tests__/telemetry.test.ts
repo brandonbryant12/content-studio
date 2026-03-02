@@ -1,9 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import * as OTelInstrumentation from '@opentelemetry/instrumentation';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { Effect, ManagedRuntime } from 'effect';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MalformedOtlpHeadersError,
+  TelemetryLive,
   resolveTracesEndpoint,
   resolveTracesHeaders,
 } from '../telemetry';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('resolveTracesEndpoint', () => {
   it('returns undefined when traces endpoint is not provided', () => {
@@ -70,5 +78,45 @@ describe('resolveTracesHeaders', () => {
       expect(err).toHaveProperty('_tag', 'MalformedOtlpHeadersError');
       expect(err).toHaveProperty('malformedEntries', ['malformed', 'bad=']);
     }
+  });
+});
+
+describe('TelemetryLive lifecycle', () => {
+  it('unregisters instrumentations before provider shutdown on runtime dispose', async () => {
+    const callOrder: string[] = [];
+    const unregisterInstrumentations = vi.fn(() => {
+      callOrder.push('unregister');
+    });
+
+    const registerSpy = vi
+      .spyOn(OTelInstrumentation, 'registerInstrumentations')
+      .mockImplementation(() => unregisterInstrumentations);
+    const forceFlushSpy = vi
+      .spyOn(NodeTracerProvider.prototype, 'forceFlush')
+      .mockImplementation(async () => {
+        callOrder.push('forceFlush');
+      });
+    const shutdownSpy = vi
+      .spyOn(NodeTracerProvider.prototype, 'shutdown')
+      .mockImplementation(async () => {
+        callOrder.push('shutdown');
+      });
+
+    const runtime = ManagedRuntime.make(
+      TelemetryLive({
+        serviceName: 'test-service',
+        enabled: true,
+        otlpTracesEndpoint: 'http://localhost:4318/v1/traces',
+      }),
+    );
+
+    await runtime.runPromise(Effect.void);
+    await runtime.dispose();
+
+    expect(registerSpy).toHaveBeenCalledTimes(1);
+    expect(unregisterInstrumentations).toHaveBeenCalledTimes(1);
+    expect(forceFlushSpy).toHaveBeenCalledTimes(1);
+    expect(shutdownSpy).toHaveBeenCalledTimes(1);
+    expect(callOrder).toEqual(['unregister', 'forceFlush', 'shutdown']);
   });
 });

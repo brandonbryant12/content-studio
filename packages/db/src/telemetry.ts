@@ -140,6 +140,8 @@ export const resolveTracesHeaders = (
  * - `ORPCSpanRenamer` for procedure span naming
  * - `BatchSpanProcessor` → `OTLPTraceExporter` for trace export
  * - Global provider registration for `@orpc/otel` auto-instrumentation
+ * - Instrumentation unregister on dispose to avoid duplicate patching in
+ *   multi-runtime scenarios (tests/scripts)
  * - Effect span bridge via `@effect/opentelemetry` (all `Effect.withSpan`
  *   calls produce real OTel spans)
  * - Scoped lifecycle: provider is flushed + shut down when the Effect
@@ -184,18 +186,23 @@ export const TelemetryLive = (config: TelemetryConfig): Layer.Layer<never> => {
 
           nodeProvider.register();
 
-          registerInstrumentations({
+          const unregisterInstrumentations = registerInstrumentations({
             tracerProvider: nodeProvider,
             instrumentations: [new ORPCInstrumentation()],
           });
 
-          return nodeProvider;
+          return { nodeProvider, unregisterInstrumentations };
         }),
-        (nodeProvider) =>
-          Effect.promise(() =>
-            nodeProvider.forceFlush().then(() => nodeProvider.shutdown()),
-          ).pipe(Effect.ignoreLogged, Effect.interruptible),
-      ),
+        ({ nodeProvider, unregisterInstrumentations }) =>
+          Effect.promise(async () => {
+            try {
+              unregisterInstrumentations();
+            } finally {
+              await nodeProvider.forceFlush();
+              await nodeProvider.shutdown();
+            }
+          }).pipe(Effect.ignoreLogged, Effect.interruptible),
+      ).pipe(Effect.map(({ nodeProvider }) => nodeProvider)),
     ),
   );
 

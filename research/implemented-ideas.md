@@ -21,6 +21,26 @@ Record each shipped change that adopts an idea from an external paper.
 ## Entries
 
 <!-- Add new entries at the top of this section -->
+### 2026-03-02 - Scoped OTel Instrumentation Teardown and Handler Request Correlation
+- Issue: https://github.com/brandonbryant12/content-studio/issues/327, https://github.com/brandonbryant12/content-studio/issues/328
+- PR: TBD (created by ready-for-dev-executor run on 2026-03-02)
+- Paper link(s):
+  - https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/packages/opentelemetry-instrumentation/src/autoLoader.ts
+  - https://orpc.unnoq.com/docs/open-telemetry
+- Adopted idea(s):
+  - Treat instrumentation registration as a scoped resource with explicit unload on runtime teardown.
+  - Preserve request correlation by annotating the active handler span under auto-instrumentation flows.
+- Implementation summary:
+  - Updated `TelemetryLive` to retain the unregister callback from `registerInstrumentations` and execute it before provider flush/shutdown during runtime disposal.
+  - Updated `handleEffectWithProtocol` to always annotate `request.id` on the active span when `requestId` is available, preserving coverage for both regular and stream handlers.
+  - Added focused tests for telemetry dispose lifecycle and effect-handler request-id invariants; updated observability docs for full register/unregister/shutdown lifecycle.
+- Code references:
+  - [`packages/db/src/telemetry.ts`](../packages/db/src/telemetry.ts)
+  - [`packages/db/src/__tests__/telemetry.test.ts`](../packages/db/src/__tests__/telemetry.test.ts)
+  - [`packages/api/src/server/effect-handler.ts`](../packages/api/src/server/effect-handler.ts)
+  - [`packages/api/src/server/__tests__/effect-handler.invariants.test.ts`](../packages/api/src/server/__tests__/effect-handler.invariants.test.ts)
+  - [`docs/architecture/observability.md`](../docs/architecture/observability.md)
+
 ### 2026-03-02 - Bounded Transient Retries for DeepResearch Interactions
 - Issue: https://github.com/brandonbryant12/content-studio/issues/274
 - PR: TBD (created by ready-for-dev-executor run on 2026-03-02)
