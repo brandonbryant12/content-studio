@@ -1,5 +1,29 @@
 [
   {
+    "id": "2026-03-02-feature-delivery-ready-for-dev-294-blocked-by-full-suite-cli-test-timeouts",
+    "date": "2026-03-02",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "ready-for-dev #294 blocked by full-suite CLI test timeouts",
+    "severity": "medium",
+    "status": "blocked",
+    "tags": [
+      "automation:ready-for-dev-executor",
+      "issue:294",
+      "skill:feature-delivery",
+      "skill:intake-triage",
+      "skill:test-surface-steward",
+      "validation",
+      "tests",
+      "capability:debugging",
+      "failure:env-drift"
+    ],
+    "importance": 0.76,
+    "recency": 0.99,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-01-architecture-adr-guard-cli-integration-golden-tests-for-root-command",
     "date": "2026-03-01",
     "month": "2026-03",
