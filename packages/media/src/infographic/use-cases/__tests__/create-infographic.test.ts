@@ -1,10 +1,16 @@
-import { createTestUser, resetAllFactories } from '@repo/testing';
+import { createMockStorage } from '@repo/storage/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  resetAllFactories,
+} from '@repo/testing';
 import { withTestUser } from '@repo/testing/setup';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { InsertInfographic } from '../../repos/infographic-repo';
 import type { Infographic } from '@repo/db/schema';
 import { createMockInfographicRepo } from '../../../test-utils/mock-infographic-repo';
+import { createMockDocumentRepo } from '../../../test-utils/mock-repos';
 import { MockDbLive } from '../../../test-utils/mock-repos';
 import { createInfographic } from '../create-infographic';
 
@@ -15,6 +21,7 @@ const mockInsertFn = (data: InsertInfographic) =>
     styleProperties: data.styleProperties ?? [],
     imageStorageKey: null,
     thumbnailStorageKey: null,
+    sourceDocumentId: data.sourceDocumentId ?? null,
     errorMessage: null,
     status: data.status ?? 'draft',
     createdAt: new Date(),
@@ -30,7 +37,12 @@ describe('createInfographic', () => {
     const user = createTestUser();
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
-    const layers = Layer.mergeAll(MockDbLive, repo);
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockDocumentRepo(),
+      createMockStorage(),
+    );
 
     const result = await Effect.runPromise(
       withTestUser(user)(
@@ -52,7 +64,12 @@ describe('createInfographic', () => {
     const user = createTestUser();
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
-    const layers = Layer.mergeAll(MockDbLive, repo);
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockDocumentRepo(),
+      createMockStorage(),
+    );
 
     const result = await Effect.runPromise(
       withTestUser(user)(
@@ -79,7 +96,12 @@ describe('createInfographic', () => {
     const user = createTestUser();
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
-    const layers = Layer.mergeAll(MockDbLive, repo);
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockDocumentRepo(),
+      createMockStorage(),
+    );
 
     const result = await Effect.runPromise(
       withTestUser(user)(
@@ -102,7 +124,12 @@ describe('createInfographic', () => {
 
   it('fails when user is not authenticated', async () => {
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
-    const layers = Layer.mergeAll(MockDbLive, repo);
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      createMockDocumentRepo(),
+      createMockStorage(),
+    );
 
     const result = await Effect.runPromiseExit(
       createInfographic({
@@ -112,5 +139,58 @@ describe('createInfographic', () => {
     );
 
     expect(result._tag).toBe('Failure');
+  });
+
+  it('builds a document-derived prompt and sets sourceDocumentId when documentId is provided', async () => {
+    const user = createTestUser();
+    const sourceDocument = createTestDocument({
+      createdBy: user.id,
+      title: 'AI Market Report',
+      extractedText:
+        'AI spending is rising. Healthcare and operations are leading adoption.',
+      researchConfig: {
+        query: 'AI market trends',
+        outline: {
+          title: 'AI Market Report',
+          sections: [
+            {
+              heading: 'Spending Growth',
+              summary: 'Enterprise AI budgets expanded year over year.',
+              citations: ['https://example.com/spending'],
+            },
+          ],
+        },
+      },
+    });
+
+    const repo = createMockInfographicRepo({ insert: mockInsertFn });
+    const documentRepo = createMockDocumentRepo({
+      findByIdForUser: (id, userId) =>
+        id === sourceDocument.id && userId === user.id
+          ? Effect.succeed(sourceDocument)
+          : Effect.die('unexpected document lookup'),
+    });
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      repo,
+      documentRepo,
+      createMockStorage(),
+    );
+
+    const result = await Effect.runPromise(
+      withTestUser(user)(
+        createInfographic({
+          title: 'From document',
+          format: 'portrait',
+          documentId: sourceDocument.id,
+        }),
+      ).pipe(Effect.provide(layers)),
+    );
+
+    expect(result.sourceDocumentId).toBe(sourceDocument.id);
+    expect(result.prompt).toContain('Create an infographic that summarizes');
+    expect(result.prompt).toContain('Key points:');
+    expect(result.prompt).toContain('Spending Growth');
   });
 });

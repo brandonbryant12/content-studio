@@ -101,7 +101,7 @@ export function UploadDocumentDialog({
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
-            Upload a document to use for podcast generation. Supports TXT, PDF,
+            Upload a document to use across content types. Supports TXT, PDF,
             DOCX, and PPTX.
           </DialogDescription>
         </DialogHeader>

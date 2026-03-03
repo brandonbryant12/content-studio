@@ -41,6 +41,7 @@ export const infographicWriteMethods: Pick<
           prompt: data.prompt,
           styleProperties: data.styleProperties ?? [],
           format: data.format,
+          sourceDocumentId: data.sourceDocumentId,
           status: data.status ?? InfographicStatus.DRAFT,
           createdBy: data.createdBy,
         })

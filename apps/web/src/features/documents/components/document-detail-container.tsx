@@ -1,7 +1,10 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
 import { DocumentStatus } from '@repo/api/contracts';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
 import { useDocumentSearch } from '../hooks/use-document-search';
@@ -11,8 +14,10 @@ import {
   buildDocumentTextExport,
 } from '../lib/export';
 import { DocumentDetail } from './document-detail';
+import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
+import { getErrorMessage } from '@/shared/lib/errors';
 import { downloadTextFile, toFileSlug } from '@/shared/lib/file-download';
 
 interface DocumentDetailContainerProps {
@@ -22,6 +27,8 @@ interface DocumentDetailContainerProps {
 export function DocumentDetailContainer({
   documentId,
 }: DocumentDetailContainerProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: document } = useDocument(documentId);
 
   // Only fetch content when document is ready (hook always called, `enabled` controls fetching)
@@ -32,9 +39,46 @@ export function DocumentDetailContainer({
   const actions = useDocumentActions({ document });
   const search = useDocumentSearch(documentContent ?? '');
   const retryMutation = useRetryProcessing();
+  const createVoiceoverMutation = useMutation(
+    apiClient.voiceovers.create.mutationOptions({
+      onSuccess: (created) => {
+        queryClient.invalidateQueries({
+          queryKey: apiClient.voiceovers.list.queryOptions({ input: {} })
+            .queryKey,
+        });
+        toast.success('Voiceover created');
+        navigate({
+          to: '/voiceovers/$voiceoverId',
+          params: { voiceoverId: created.id },
+        });
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to create voiceover'));
+      },
+    }),
+  );
+  const createInfographicMutation = useMutation(
+    apiClient.infographics.create.mutationOptions({
+      onSuccess: (created) => {
+        queryClient.invalidateQueries({
+          queryKey: apiClient.infographics.list.queryOptions({ input: {} })
+            .queryKey,
+        });
+        toast.success('Infographic created');
+        navigate({
+          to: '/infographics/$infographicId',
+          params: { infographicId: created.id },
+        });
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to create infographic'));
+      },
+    }),
+  );
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const canExport = isReady && !!documentContent?.trim();
+  const canCreateFromDocument = isReady;
 
   const handleExportMarkdown = useCallback(() => {
     if (!documentContent) return;
@@ -61,6 +105,21 @@ export function DocumentDetailContainer({
     const fileName = `${toFileSlug(exportTitle, 'document')}.txt`;
     downloadTextFile(text, fileName);
   }, [actions.title, document, documentContent]);
+
+  const handleCreateVoiceover = useCallback(() => {
+    createVoiceoverMutation.mutate({
+      title: `Voiceover: ${document.title}`,
+      documentId: document.id,
+    });
+  }, [createVoiceoverMutation, document.id, document.title]);
+
+  const handleCreateInfographic = useCallback(() => {
+    createInfographicMutation.mutate({
+      title: `Infographic: ${document.title}`,
+      format: 'portrait',
+      documentId: document.id,
+    });
+  }, [createInfographicMutation, document.id, document.title]);
 
   useKeyboardShortcut({
     key: 's',
@@ -96,6 +155,11 @@ export function DocumentDetailContainer({
         onRetry={() => retryMutation.mutate({ id: documentId })}
         search={search}
         canExport={canExport}
+        canCreateFromDocument={canCreateFromDocument}
+        isCreatingVoiceover={createVoiceoverMutation.isPending}
+        isCreatingInfographic={createInfographicMutation.isPending}
+        onCreateVoiceover={handleCreateVoiceover}
+        onCreateInfographic={handleCreateInfographic}
         onExportMarkdown={handleExportMarkdown}
         onExportText={handleExportText}
       />

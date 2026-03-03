@@ -25,6 +25,10 @@ const defaultProps: ResearchChatDialogProps = {
   onDismissPreview: vi.fn(),
   autoGeneratePodcast: false,
   onAutoGeneratePodcastChange: vi.fn(),
+  autoGenerateVoiceover: false,
+  onAutoGenerateVoiceoverChange: vi.fn(),
+  autoGenerateInfographic: false,
+  onAutoGenerateInfographicChange: vi.fn(),
   followUpCount: 0,
   followUpLimit: 2,
   onKeepRefining: vi.fn(),
@@ -318,5 +322,35 @@ describe('ResearchChatDialog', () => {
     );
 
     expect(onAutoGeneratePodcastChange).toHaveBeenCalledWith(true);
+  });
+
+  it('calls onAutoGenerateVoiceoverChange when checkbox toggled', async () => {
+    const user = userEvent.setup();
+    const onAutoGenerateVoiceoverChange = vi.fn();
+
+    renderDialog({ onAutoGenerateVoiceoverChange });
+
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'Auto-generate voiceover from findings',
+      }),
+    );
+
+    expect(onAutoGenerateVoiceoverChange).toHaveBeenCalledWith(true);
+  });
+
+  it('calls onAutoGenerateInfographicChange when checkbox toggled', async () => {
+    const user = userEvent.setup();
+    const onAutoGenerateInfographicChange = vi.fn();
+
+    renderDialog({ onAutoGenerateInfographicChange });
+
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'Auto-generate infographic from findings',
+      }),
+    );
+
+    expect(onAutoGenerateInfographicChange).toHaveBeenCalledWith(true);
   });
 });

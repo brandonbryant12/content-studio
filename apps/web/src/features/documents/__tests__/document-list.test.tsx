@@ -119,7 +119,7 @@ describe('DocumentList', () => {
     expect(screen.getByText('No documents yet')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Upload your first document to start creating podcasts and voiceovers.',
+        'Upload your first document to start creating podcasts, voiceovers, and infographics.',
       ),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /add source/i })).toHaveLength(

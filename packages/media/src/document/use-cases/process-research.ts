@@ -8,6 +8,8 @@ import { DocumentOutlineSchema, DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
+import { createInfographic } from '../../infographic/use-cases/create-infographic';
+import { generateInfographic } from '../../infographic/use-cases/generate-infographic';
 import { createPodcast } from '../../podcast/use-cases/create-podcast';
 import { startGeneration } from '../../podcast/use-cases/start-generation';
 import {
@@ -17,6 +19,8 @@ import {
   runSchemaContractWithRetries,
   withUseCaseSpan,
 } from '../../shared';
+import { createVoiceover } from '../../voiceover/use-cases/create-voiceover';
+import { startVoiceoverGeneration } from '../../voiceover/use-cases/start-generation';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 
@@ -90,6 +94,10 @@ export const processResearch = (input: ProcessResearchInput) =>
       doc.researchConfig?.researchStatus === 'in_progress';
     const autoGeneratePodcast =
       doc.researchConfig?.autoGeneratePodcast === true;
+    const autoGenerateVoiceover =
+      doc.researchConfig?.autoGenerateVoiceover === true;
+    const autoGenerateInfographic =
+      doc.researchConfig?.autoGenerateInfographic === true;
 
     let interactionId: string;
     if (canResume) {
@@ -108,6 +116,8 @@ export const processResearch = (input: ProcessResearchInput) =>
         operationId: interactionId,
         researchStatus: 'in_progress',
         autoGeneratePodcast,
+        autoGenerateVoiceover,
+        autoGenerateInfographic,
       });
     }
 
@@ -136,6 +146,8 @@ export const processResearch = (input: ProcessResearchInput) =>
         operationId: interactionId,
         researchStatus: 'failed',
         autoGeneratePodcast,
+        autoGenerateVoiceover,
+        autoGenerateInfographic,
       });
       yield* documentRepo.updateStatus(
         documentId,
@@ -151,6 +163,8 @@ export const processResearch = (input: ProcessResearchInput) =>
         operationId: interactionId,
         researchStatus: 'failed',
         autoGeneratePodcast,
+        autoGenerateVoiceover,
+        autoGenerateInfographic,
       });
       yield* documentRepo.updateStatus(
         documentId,
@@ -240,6 +254,8 @@ export const processResearch = (input: ProcessResearchInput) =>
       sources: result.sources.map((s) => ({ title: s.title, url: s.url })),
       outline: outline.object,
       autoGeneratePodcast,
+      autoGenerateVoiceover,
+      autoGenerateInfographic,
     });
 
     // 8. Mark document as ready
@@ -266,6 +282,47 @@ export const processResearch = (input: ProcessResearchInput) =>
         Effect.catchAll((error) =>
           Effect.logWarning(
             `Failed to auto-generate podcast for document ${documentId}: ${formatUnknownError(error)}`,
+          ),
+        ),
+      );
+    }
+
+    if (autoGenerateVoiceover) {
+      yield* Effect.gen(function* () {
+        const voiceover = yield* createVoiceover({
+          title: `Voiceover: ${doc.title}`,
+          documentId: doc.id,
+        });
+
+        yield* startVoiceoverGeneration({ voiceoverId: voiceover.id });
+        yield* Effect.logInfo(
+          `Auto-started voiceover generation for document ${documentId}`,
+        );
+      }).pipe(
+        Effect.catchAll((error) =>
+          Effect.logWarning(
+            `Failed to auto-generate voiceover for document ${documentId}: ${formatUnknownError(error)}`,
+          ),
+        ),
+      );
+    }
+
+    if (autoGenerateInfographic) {
+      yield* Effect.gen(function* () {
+        const infographic = yield* createInfographic({
+          title: `Infographic: ${doc.title}`,
+          format: 'portrait',
+          documentId: doc.id,
+        });
+
+        yield* generateInfographic({ id: infographic.id });
+        yield* Effect.logInfo(
+          `Auto-started infographic generation for document ${documentId}`,
+        );
+      }).pipe(
+        Effect.catchAll((error) =>
+          Effect.logWarning(
+            `Failed to auto-generate infographic for document ${documentId}: ${formatUnknownError(error)}`,
           ),
         ),
       );

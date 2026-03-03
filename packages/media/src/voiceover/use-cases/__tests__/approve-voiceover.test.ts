@@ -24,6 +24,7 @@ interface CreateTestVoiceoverOptions {
   id?: VoiceoverId;
   title?: string;
   text?: string;
+  sourceDocumentId?: Voiceover['sourceDocumentId'];
   voice?: string;
   voiceName?: string | null;
   audioUrl?: string | null;
@@ -49,6 +50,7 @@ const createTestVoiceover = (
     id: options.id ?? generateVoiceoverId(),
     title: options.title ?? `Test Voiceover ${voiceoverCounter}`,
     text: options.text ?? 'Test voiceover text content.',
+    sourceDocumentId: options.sourceDocumentId ?? null,
     voice: options.voice ?? 'Charon',
     voiceName: options.voiceName ?? null,
     audioUrl: options.audioUrl ?? null,

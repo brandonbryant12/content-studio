@@ -15,7 +15,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createMockActivityLogRepo,
   createMockDocumentRepo,
+  createMockInfographicRepo,
   createMockPodcastRepo,
+  createMockVoiceoverRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { type DocumentRepoService } from '../../repos';
@@ -101,6 +103,8 @@ describe('processResearch', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo(),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
         createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(existingDoc),
@@ -153,6 +157,8 @@ describe('processResearch', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo(),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
         createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(doc),
@@ -203,6 +209,8 @@ describe('processResearch', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo(),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
         createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(doc),
@@ -254,6 +262,8 @@ describe('processResearch', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockPodcastRepo(),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
         createMockQueue(),
         mockDocRepo({
           findById: () => Effect.succeed(existingDoc),
@@ -319,6 +329,8 @@ describe('processResearch', () => {
         const layers = Layer.mergeAll(
           MockDbLive,
           createMockPodcastRepo(),
+          createMockVoiceoverRepo(),
+          createMockInfographicRepo(),
           createMockQueue(),
           mockDocRepo({
             findById: () => Effect.succeed(doc),
@@ -441,6 +453,8 @@ describe('processResearch', () => {
             }),
           clearApproval: () => Effect.succeed(podcast),
         }),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
         createMockQueue({
           findPendingJobForPodcast: () => Effect.succeed(null),
           enqueue: (type, payload, createdBy) =>

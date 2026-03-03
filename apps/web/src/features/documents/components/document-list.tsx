@@ -63,7 +63,7 @@ function EmptyState({
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Upload your first document to start creating podcasts and voiceovers.'}
+          : 'Upload your first document to start creating podcasts, voiceovers, and infographics.'}
       </p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>

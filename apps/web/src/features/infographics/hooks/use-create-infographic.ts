@@ -15,6 +15,7 @@ type CreateInfographicInput = {
   format: InfographicFormat;
   prompt?: string;
   styleProperties?: StyleProperty[];
+  documentId?: string;
   autoGenerate?: boolean;
 };
 
@@ -35,6 +36,7 @@ export function useCreateInfographic() {
           format: variables.format,
           prompt: variables.prompt,
           styleProperties: variables.styleProperties,
+          documentId: variables.documentId,
         },
         context,
       ),

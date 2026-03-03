@@ -1,8 +1,15 @@
 import { Db, type DbService } from '@repo/db/effect';
-import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
+import { createMockStorage } from '@repo/storage/testing';
+import {
+  createTestDocument,
+  createTestUser,
+  withTestUser,
+  resetAllFactories,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
+import { createMockDocumentRepo } from '../../../test-utils/mock-repos';
 import { VoiceoverRepo, type VoiceoverRepoService } from '../../repos';
 import { createVoiceover } from '../create-voiceover';
 
@@ -23,6 +30,7 @@ const createMockVoiceover = (
   voiceName: null,
   audioUrl: null,
   duration: null,
+  sourceDocumentId: null,
   status: 'drafting',
   errorMessage: null,
   approvedBy: null,
@@ -86,7 +94,12 @@ describe('createVoiceover', () => {
         );
       });
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -116,7 +129,12 @@ describe('createVoiceover', () => {
         ),
       );
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -143,7 +161,12 @@ describe('createVoiceover', () => {
         );
       });
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -170,7 +193,12 @@ describe('createVoiceover', () => {
         ),
       );
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -196,7 +224,12 @@ describe('createVoiceover', () => {
         ),
       );
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -223,7 +256,12 @@ describe('createVoiceover', () => {
         ),
       );
 
-      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+      const layers = Layer.mergeAll(
+        mockRepo,
+        createMockDocumentRepo(),
+        createMockStorage(),
+        MockDbLive,
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -235,6 +273,61 @@ describe('createVoiceover', () => {
 
       expect(result.audioUrl).toBeNull();
       expect(result.duration).toBeNull();
+    });
+
+    it('prefills text from a source document when documentId is provided', async () => {
+      const user = createTestUser({ id: 'user_test123' });
+      const sourceDocument = createTestDocument({
+        createdBy: user.id,
+        extractedText: 'Source document content for narration',
+      });
+
+      let capturedData: Parameters<VoiceoverRepoService['insert']>[0] | null =
+        null;
+
+      const mockRepo = createMockVoiceoverRepo((data) => {
+        capturedData = data;
+        return Effect.succeed(
+          createMockVoiceover({
+            title: data.title,
+            text: data.text ?? '',
+            sourceDocumentId: (data.sourceDocumentId as Voiceover['sourceDocumentId']) ?? null,
+            createdBy: data.createdBy,
+          }),
+        );
+      });
+
+      const mockDocumentRepo = createMockDocumentRepo({
+        findByIdForUser: (id, userId) =>
+          id === sourceDocument.id && userId === user.id
+            ? Effect.succeed(sourceDocument)
+            : Effect.die('unexpected document lookup'),
+      });
+
+      const layers = Layer.mergeAll(
+        mockRepo,
+        mockDocumentRepo,
+        createMockStorage(),
+        MockDbLive,
+      );
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          createVoiceover({
+            title: 'Narrate source',
+            documentId: sourceDocument.id,
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result.text).toBe('Source document content for narration');
+      expect(result.sourceDocumentId).toBe(sourceDocument.id);
+      expect(capturedData).toEqual({
+        title: 'Narrate source',
+        text: 'Source document content for narration',
+        sourceDocumentId: sourceDocument.id,
+        createdBy: user.id,
+      });
     });
   });
 });

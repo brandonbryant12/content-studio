@@ -18,6 +18,9 @@ export function ResearchChatContainer({
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
   const [autoGeneratePodcast, setAutoGeneratePodcast] = useState(false);
+  const [autoGenerateVoiceover, setAutoGenerateVoiceover] = useState(false);
+  const [autoGenerateInfographic, setAutoGenerateInfographic] =
+    useState(false);
   const [preview, setPreview] = useState<ResearchSynthesisPreview | null>(null);
 
   const startError = startResearchMutation.error ?? undefined;
@@ -26,6 +29,8 @@ export function ResearchChatContainer({
     (isOpen: boolean) => {
       if (!isOpen) {
         setAutoGeneratePodcast(false);
+        setAutoGenerateVoiceover(false);
+        setAutoGenerateInfographic(false);
         setPreview(null);
         chat.reset();
       }
@@ -55,12 +60,25 @@ export function ResearchChatContainer({
     if (!preview || startResearchMutation.isPending) return;
 
     startResearchMutation.mutate(
-      { query: preview.query, title: preview.title, autoGeneratePodcast },
+      {
+        query: preview.query,
+        title: preview.title,
+        autoGeneratePodcast,
+        autoGenerateVoiceover,
+        autoGenerateInfographic,
+      },
       {
         onSuccess: () => handleOpenChange(false),
       },
     );
-  }, [preview, startResearchMutation, autoGeneratePodcast, handleOpenChange]);
+  }, [
+    preview,
+    startResearchMutation,
+    autoGeneratePodcast,
+    autoGenerateVoiceover,
+    autoGenerateInfographic,
+    handleOpenChange,
+  ]);
 
   const handleDismissPreview = useCallback(() => {
     setPreview(null);
@@ -87,6 +105,10 @@ export function ResearchChatContainer({
       onDismissPreview={handleDismissPreview}
       autoGeneratePodcast={autoGeneratePodcast}
       onAutoGeneratePodcastChange={setAutoGeneratePodcast}
+      autoGenerateVoiceover={autoGenerateVoiceover}
+      onAutoGenerateVoiceoverChange={setAutoGenerateVoiceover}
+      autoGenerateInfographic={autoGenerateInfographic}
+      onAutoGenerateInfographicChange={setAutoGenerateInfographic}
       followUpCount={chat.followUpCount}
       followUpLimit={chat.followUpLimit}
       onKeepRefining={chat.extendFollowUps}
