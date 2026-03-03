@@ -17,14 +17,17 @@ stateDiagram-v2
 2. **Use safety primitives** for all queue operations (`enqueueJob`, `withTransactionalStateAndEnqueue`) <!-- enforced-by: eslint, invariant-test -->
 3. **Workers claim with `FOR UPDATE SKIP LOCKED`** -- prevents double-processing <!-- enforced-by: architecture -->
 4. **Idempotent start flows**: check for active job before enqueue <!-- enforced-by: manual-review -->
+5. **Redis queue notifications are optimization-only** -- enqueue publish is best-effort; heartbeat polling is fallback <!-- enforced-by: manual-review -->
 
 ## Architecture <!-- enforced-by: architecture -->
 
 `@repo/queue` enqueue writes directly to the `job` table:
 
 1. Use case calls `enqueueJob({ type, payload, userId })`
-2. Worker polls and claims with `FOR UPDATE SKIP LOCKED`
-3. Worker updates status: `processing` -> `completed` | `failed`
+2. Queue repo inserts into `job`, then best-effort publishes Redis channel `cs:queue:notify`
+3. Worker subscribes to queue notifications and wakes claim loop immediately
+4. Worker runs heartbeat fallback polling (60s default) so missed notifications never lose work
+5. Worker updates status: `processing` -> `completed` | `failed`
 
 ## Enqueue Rules
 
@@ -65,17 +68,31 @@ yield* enqueueJob({ type: 'podcast-generation', payload: { podcastId }, userId }
 
 ## Worker Claim Pattern <!-- enforced-by: architecture -->
 
-Workers claim directly from `job` using Postgres row locking:
+Workers claim directly from `job` using Postgres row locking. Claim can target one type or a set of currently-claimable types:
 
 ```sql
-SELECT * FROM job
-WHERE status = 'pending' AND type = $1
-ORDER BY created_at
-FOR UPDATE SKIP LOCKED
-LIMIT 1;
+UPDATE job
+SET status = 'processing', started_at = NOW(), updated_at = NOW()
+WHERE id = (
+  SELECT id FROM job
+  WHERE status = 'pending' AND type IN (...)
+  ORDER BY created_at
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED
+)
+RETURNING *;
 ```
 
 This guarantees exactly-one-worker-per-job even with multiple worker instances.
+
+## Concurrency Policy <!-- enforced-by: manual-review -->
+
+Worker concurrency is two-dimensional:
+
+1. global cap (`MAX_CONCURRENT_JOBS`, default `5`)
+2. per-type caps (`DEFAULT_PER_TYPE_CONCURRENCY`)
+
+Per-type caps are clamped by the global cap at runtime, so overrides cannot exceed total process capacity.
 
 ## Retry Policy <!-- enforced-by: manual-review -->
 

@@ -7,6 +7,7 @@ configureProxy();
 import { serve } from '@hono/node-server';
 import { shutdownSSEPublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
+import { shutdownQueueNotifier } from '@repo/queue';
 import { env } from './env';
 import { shutdownRateLimiters } from './middleware/rate-limit';
 import app, { db, serverRuntime } from '.';
@@ -87,6 +88,9 @@ Hono
 
       await shutdownSSEPublisher();
       console.log('SSE publisher stopped');
+
+      await shutdownQueueNotifier();
+      console.log('Queue notifier stopped');
 
       await shutdownRateLimiters();
       console.log('Rate limiter stores stopped');

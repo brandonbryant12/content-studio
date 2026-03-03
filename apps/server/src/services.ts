@@ -5,6 +5,7 @@ import {
 } from '@repo/api/server';
 import { AuthMode, createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
+import { configureQueueNotifier } from '@repo/queue';
 import { buildStorageConfig } from './config';
 import { env } from './env';
 
@@ -44,6 +45,11 @@ export const auth = createAuth({
 configureSSEPublisher({
   redisUrl: env.SERVER_REDIS_URL,
   channelPrefix: env.SSE_REDIS_CHANNEL_PREFIX,
+});
+
+configureQueueNotifier({
+  redisUrl: env.SERVER_REDIS_URL,
+  channel: env.QUEUE_NOTIFY_CHANNEL,
 });
 
 export const serverRuntime = createServerRuntime({

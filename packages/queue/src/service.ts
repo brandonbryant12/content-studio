@@ -61,6 +61,10 @@ export interface QueueService {
     type: JobType,
   ) => Effect.Effect<Job | null, QueueError>;
 
+  readonly claimNextJobByTypes?: (
+    types: readonly JobType[],
+  ) => Effect.Effect<Job | null, QueueError>;
+
   readonly deleteJob: (
     jobId: JobId,
   ) => Effect.Effect<void, QueueError | JobNotFoundError>;

@@ -122,6 +122,9 @@ export const envSchema = Schema.Struct({
   SSE_REDIS_CHANNEL_PREFIX: Schema.optionalWith(Schema.String, {
     default: () => 'cs:sse:user',
   }),
+  QUEUE_NOTIFY_CHANNEL: Schema.optionalWith(Schema.String, {
+    default: () => 'cs:queue:notify',
+  }),
 
   CORS_ORIGINS: Schema.optional(Schema.String),
 
