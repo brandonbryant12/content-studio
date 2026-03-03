@@ -30,6 +30,7 @@ export type {
 } from './types';
 
 export type {
+  ChatWritingAssistantSystemPromptInput,
   VoiceoverPreprocessUserPromptInput,
   PersonaPromptContext,
   SegmentPromptContext,

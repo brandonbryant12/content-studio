@@ -4,7 +4,10 @@ import { PROMPT_REGISTRY } from '../registry';
 const SAMPLE_INPUTS: Record<string, unknown> = {
   'chat.research.system': undefined,
   'chat.persona.system': undefined,
-  'chat.writing-assistant.system': undefined,
+  'chat.writing-assistant.system': {
+    transcript:
+      'Welcome back to the show. Today we break down practical AI workflows.',
+  },
   'chat.synthesize-persona.system': undefined,
   'chat.synthesize-research-query.system': undefined,
   'voiceover.preprocess.system': undefined,

@@ -1,6 +1,9 @@
 export { chatResearchSystemPrompt } from './chat-research-system';
 export { chatPersonaSystemPrompt } from './chat-persona-system';
-export { chatWritingAssistantSystemPrompt } from './chat-writing-assistant-system';
+export {
+  chatWritingAssistantSystemPrompt,
+  type ChatWritingAssistantSystemPromptInput,
+} from './chat-writing-assistant-system';
 export { chatSynthesizePersonaSystemPrompt } from './chat-synthesize-persona-system';
 export { chatSynthesizeResearchQuerySystemPrompt } from './chat-synthesize-research-query-system';
 

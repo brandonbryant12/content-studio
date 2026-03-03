@@ -3,10 +3,18 @@ import { WritingAssistantContainer } from '../components/workbench/writing-assis
 import { useWritingAssistantChat } from '../hooks/use-writing-assistant-chat';
 import { render, screen, userEvent } from '@/test-utils';
 
-const { useWritingAssistantChatMock, sendMessageSpy, resetSpy } = vi.hoisted(
+const {
+  useWritingAssistantChatMock,
+  sendUserMessageSpy,
+  acceptProposalSpy,
+  rejectProposalSpy,
+  resetSpy,
+} = vi.hoisted(
   () => ({
     useWritingAssistantChatMock: vi.fn(),
-    sendMessageSpy: vi.fn(),
+    sendUserMessageSpy: vi.fn(),
+    acceptProposalSpy: vi.fn(),
+    rejectProposalSpy: vi.fn(),
     resetSpy: vi.fn(),
   }),
 );
@@ -17,34 +25,33 @@ vi.mock('../hooks/use-writing-assistant-chat', () => ({
 
 vi.mock('../components/workbench/writing-assistant-panel', () => ({
   WritingAssistantPanel: ({
+    proposals,
     onSendMessage,
-    onAppendToManuscript,
-    onReplaceManuscript,
+    onAcceptProposal,
+    onRejectProposal,
     onReset,
   }: {
+    proposals: Array<{ toolCallId: string; revisedTranscript: string }>;
     onSendMessage: (text: string) => void;
-    onAppendToManuscript: (text: string) => void;
-    onReplaceManuscript: (text: string) => void;
+    onAcceptProposal: (proposal: {
+      toolCallId: string;
+      revisedTranscript: string;
+    }) => void;
+    onRejectProposal: (proposal: {
+      toolCallId: string;
+      revisedTranscript: string;
+    }) => void;
     onReset: () => void;
   }) => (
     <div>
       <button type="button" onClick={() => onSendMessage('Rewrite intro')}>
         Send Message
       </button>
-      <button
-        type="button"
-        onClick={() => onAppendToManuscript('Suggested continuation')}
-      >
-        Append
+      <button type="button" onClick={() => onAcceptProposal(proposals[0]!)}>
+        Accept
       </button>
-      <button type="button" onClick={() => onAppendToManuscript('   ')}>
-        Append Empty
-      </button>
-      <button
-        type="button"
-        onClick={() => onReplaceManuscript('  Full replacement text  ')}
-      >
-        Replace
+      <button type="button" onClick={() => onRejectProposal(proposals[0]!)}>
+        Reject
       </button>
       <button type="button" onClick={onReset}>
         Reset
@@ -59,7 +66,17 @@ describe('WritingAssistantContainer', () => {
 
     vi.mocked(useWritingAssistantChat).mockReturnValue({
       messages: [],
-      sendMessage: sendMessageSpy,
+      sendUserMessage: sendUserMessageSpy,
+      proposals: [
+        {
+          toolCallId: 'tool-1',
+          summary: 'Improved pacing in the intro.',
+          revisedTranscript: 'Updated transcript text',
+          decision: 'pending',
+        },
+      ],
+      acceptProposal: acceptProposalSpy,
+      rejectProposal: rejectProposalSpy,
       isStreaming: false,
       error: undefined,
       reset: resetSpy,
@@ -80,7 +97,7 @@ describe('WritingAssistantContainer', () => {
     expect(resetSpy).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole('button', { name: 'Send Message' }));
-    expect(sendMessageSpy).toHaveBeenCalledWith({ text: 'Rewrite intro' });
+    expect(sendUserMessageSpy).toHaveBeenCalledWith('Rewrite intro');
 
     await user.click(screen.getByRole('button', { name: 'Reset' }));
     expect(resetSpy).toHaveBeenCalledTimes(2);
@@ -93,10 +110,11 @@ describe('WritingAssistantContainer', () => {
       />,
     );
 
+    expect(useWritingAssistantChat).toHaveBeenCalledWith('Current manuscript');
     expect(resetSpy).toHaveBeenCalledTimes(3);
   });
 
-  it('appends latest assistant text to manuscript', async () => {
+  it('applies accepted proposal text to manuscript and records tool result', async () => {
     const user = userEvent.setup();
     const onSetManuscriptText = vi.fn();
 
@@ -108,14 +126,17 @@ describe('WritingAssistantContainer', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Append' }));
+    await user.click(screen.getByRole('button', { name: 'Accept' }));
 
-    expect(onSetManuscriptText).toHaveBeenCalledWith(
-      'Current manuscript\n\nSuggested continuation',
+    expect(onSetManuscriptText).toHaveBeenCalledWith('Updated transcript text');
+    expect(acceptProposalSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toolCallId: 'tool-1',
+      }),
     );
   });
 
-  it('does not append empty assistant output', async () => {
+  it('forwards rejection decisions without mutating manuscript text', async () => {
     const user = userEvent.setup();
     const onSetManuscriptText = vi.fn();
 
@@ -127,25 +148,13 @@ describe('WritingAssistantContainer', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Append Empty' }));
+    await user.click(screen.getByRole('button', { name: 'Reject' }));
 
     expect(onSetManuscriptText).not.toHaveBeenCalled();
-  });
-
-  it('replaces manuscript text with trimmed assistant output', async () => {
-    const user = userEvent.setup();
-    const onSetManuscriptText = vi.fn();
-
-    render(
-      <WritingAssistantContainer
-        voiceoverId="voiceover-1"
-        manuscriptText="Current manuscript"
-        onSetManuscriptText={onSetManuscriptText}
-      />,
+    expect(rejectProposalSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toolCallId: 'tool-1',
+      }),
     );
-
-    await user.click(screen.getByRole('button', { name: 'Replace' }));
-
-    expect(onSetManuscriptText).toHaveBeenCalledWith('Full replacement text');
   });
 });

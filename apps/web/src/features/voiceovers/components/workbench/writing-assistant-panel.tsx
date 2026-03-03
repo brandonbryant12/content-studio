@@ -1,15 +1,11 @@
 import { ChatBubbleIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { UIMessage } from 'ai';
+import type { TranscriptEditProposal } from '../../hooks/use-writing-assistant-chat';
 import { ChatThread } from '@/shared/components/chat-thread';
-import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
-import {
-  getMessageText,
-  stripChatControlTokens,
-} from '@/shared/lib/chat-control';
 import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
@@ -23,40 +19,63 @@ const EXAMPLE_PROMPTS = [
 
 interface WritingAssistantPanelProps {
   messages: UIMessage[];
+  proposals: TranscriptEditProposal[];
   isStreaming: boolean;
   error: Error | undefined;
   onSendMessage: (text: string) => void;
   onReset: () => void;
-  onAppendToManuscript: (text: string) => void;
-  onReplaceManuscript: (text: string) => void;
+  onAcceptProposal: (proposal: TranscriptEditProposal) => void;
+  onRejectProposal: (proposal: TranscriptEditProposal) => void;
+}
+
+function getDecisionBadgeClasses(decision: TranscriptEditProposal['decision']) {
+  switch (decision) {
+    case 'accepted':
+      return 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30';
+    case 'rejected':
+      return 'bg-amber-500/15 text-amber-700 border-amber-500/30';
+    case 'error':
+      return 'bg-destructive/15 text-destructive border-destructive/30';
+    default:
+      return 'bg-primary/10 text-primary border-primary/30';
+  }
+}
+
+function getDecisionLabel(decision: TranscriptEditProposal['decision']) {
+  switch (decision) {
+    case 'accepted':
+      return 'Accepted';
+    case 'rejected':
+      return 'Rejected';
+    case 'error':
+      return 'Error';
+    default:
+      return 'Pending review';
+  }
 }
 
 export function WritingAssistantPanel({
   messages,
+  proposals,
   isStreaming,
   error,
   onSendMessage,
   onReset,
-  onAppendToManuscript,
-  onReplaceManuscript,
+  onAcceptProposal,
+  onRejectProposal,
 }: WritingAssistantPanelProps) {
-  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
   const composer = useChatComposer({
     isDisabled: isStreaming,
     onSendMessage,
   });
 
-  const latestAssistantText = useMemo(() => {
-    const latestAssistantMessage = [...messages]
-      .reverse()
-      .find((message) => message.role === 'assistant');
-
-    if (!latestAssistantMessage) return '';
-    return stripChatControlTokens(getMessageText(latestAssistantMessage)).trim();
-  }, [messages]);
-
-  const canApplyLatestResponse =
-    latestAssistantText.length > 0 && !isStreaming;
+  const orderedProposals = useMemo(
+    () => [...proposals].reverse(),
+    [proposals],
+  );
+  const pendingProposalCount = orderedProposals.filter(
+    (proposal) => proposal.decision === 'pending',
+  ).length;
 
   const handleExampleClick = useCallback(
     (prompt: string) => {
@@ -65,21 +84,6 @@ export function WritingAssistantPanel({
     },
     [isStreaming, onSendMessage],
   );
-
-  const handleAppendToManuscript = useCallback(() => {
-    if (!canApplyLatestResponse) return;
-    onAppendToManuscript(latestAssistantText);
-  }, [canApplyLatestResponse, latestAssistantText, onAppendToManuscript]);
-
-  const handleRequestReplace = useCallback(() => {
-    if (!canApplyLatestResponse) return;
-    setReplaceConfirmOpen(true);
-  }, [canApplyLatestResponse]);
-
-  const handleConfirmReplace = useCallback(() => {
-    onReplaceManuscript(latestAssistantText);
-    setReplaceConfirmOpen(false);
-  }, [latestAssistantText, onReplaceManuscript]);
 
   return (
     <section className="flex flex-1 min-h-[420px] lg:min-h-0 flex-col bg-card/40">
@@ -138,31 +142,78 @@ export function WritingAssistantPanel({
         }
       />
 
-      {latestAssistantText && (
+      {orderedProposals.length > 0 && (
         <div className="border-t border-border px-4 py-3">
-          <p className="text-xs text-muted-foreground">
-            Apply latest assistant response to manuscript:
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={!canApplyLatestResponse}
-              onClick={handleAppendToManuscript}
-            >
-              Append to Manuscript
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!canApplyLatestResponse}
-              onClick={handleRequestReplace}
-            >
-              Replace Manuscript
-            </Button>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-medium text-foreground">
+              Transcript edit proposals
+            </p>
+            {pendingProposalCount > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                {pendingProposalCount} pending
+              </p>
+            )}
           </div>
+
+          <div className="mt-2 max-h-60 space-y-3 overflow-y-auto pr-1">
+            {orderedProposals.map((proposal) => (
+              <article
+                key={proposal.toolCallId}
+                className="rounded-xl border border-border bg-background/80 p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-foreground">
+                    {proposal.summary}
+                  </p>
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${getDecisionBadgeClasses(proposal.decision)}`}
+                  >
+                    {getDecisionLabel(proposal.decision)}
+                  </span>
+                </div>
+
+                <div className="mt-2 rounded-md border border-border/70 bg-muted/40 px-2.5 py-2 text-xs whitespace-pre-wrap text-muted-foreground">
+                  {proposal.revisedTranscript}
+                </div>
+
+                {proposal.reason && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {proposal.reason}
+                  </p>
+                )}
+
+                {proposal.decision === 'pending' && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isStreaming}
+                      onClick={() => onAcceptProposal(proposal)}
+                    >
+                      Accept edit
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={isStreaming}
+                      onClick={() => onRejectProposal(proposal)}
+                    >
+                      Reject edit
+                    </Button>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+
+          {pendingProposalCount > 0 && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Sending a new message without choosing will auto-reject pending
+              proposals.
+            </p>
+          )}
         </div>
       )}
 
@@ -191,16 +242,6 @@ export function WritingAssistantPanel({
           <PaperPlaneIcon className="w-4 h-4" />
         </Button>
       </form>
-
-      <ConfirmationDialog
-        open={replaceConfirmOpen}
-        onOpenChange={setReplaceConfirmOpen}
-        title="Replace manuscript?"
-        description="This will overwrite your current manuscript text with the latest assistant response."
-        confirmText="Replace manuscript"
-        variant="destructive"
-        onConfirm={handleConfirmReplace}
-      />
     </section>
   );
 }

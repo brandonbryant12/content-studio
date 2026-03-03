@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { authClient } from '@/clients/authClient';
+import { clearAuthToken } from '@/shared/lib/auth-token';
 import { getInitials } from '@/shared/lib/get-initials';
 
 export default function UserAvatar({
@@ -57,6 +58,7 @@ export default function UserAvatar({
         <DropdownMenuItem
           onClick={async () => {
             await authClient.signOut();
+            clearAuthToken();
           }}
           className="cursor-pointer"
         >

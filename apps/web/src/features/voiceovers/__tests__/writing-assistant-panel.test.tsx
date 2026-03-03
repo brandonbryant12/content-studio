@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UIMessage } from 'ai';
 import { WritingAssistantPanel } from '../components/workbench/writing-assistant-panel';
-import { render, screen, userEvent, within } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 function assistantMessage(id: string, text: string): UIMessage {
   return {
@@ -11,101 +11,129 @@ function assistantMessage(id: string, text: string): UIMessage {
   };
 }
 
+function proposal(overrides: Partial<{
+  toolCallId: string;
+  summary: string;
+  revisedTranscript: string;
+  decision: 'pending' | 'accepted' | 'rejected' | 'error';
+  reason?: string;
+}> = {}) {
+  return {
+    toolCallId: overrides.toolCallId ?? 'tool-1',
+    summary: overrides.summary ?? 'Tightened the intro for a faster hook.',
+    revisedTranscript:
+      overrides.revisedTranscript ??
+      'Welcome back. In 45 seconds, here is how your team ships AI safely.',
+    decision: overrides.decision ?? 'pending',
+    reason: overrides.reason,
+  };
+}
+
 describe('WritingAssistantPanel', () => {
-  it('appends the latest assistant response to manuscript', async () => {
+  it('lets users accept a pending transcript edit proposal', async () => {
     const user = userEvent.setup();
-    const onAppendToManuscript = vi.fn();
+    const onAcceptProposal = vi.fn();
+    const pendingProposal = proposal();
 
     render(
       <WritingAssistantPanel
-        messages={[
-          assistantMessage('a-1', 'First option'),
-          assistantMessage('a-2', 'Latest rewrite suggestion'),
-        ]}
+        messages={[assistantMessage('a-1', 'I drafted a tighter version.')]}
+        proposals={[pendingProposal]}
         isStreaming={false}
         error={undefined}
         onSendMessage={vi.fn()}
         onReset={vi.fn()}
-        onAppendToManuscript={onAppendToManuscript}
-        onReplaceManuscript={vi.fn()}
+        onAcceptProposal={onAcceptProposal}
+        onRejectProposal={vi.fn()}
       />,
     );
 
-    await user.click(
-      screen.getByRole('button', { name: 'Append to Manuscript' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Accept edit' }));
 
-    expect(onAppendToManuscript).toHaveBeenCalledWith(
-      'Latest rewrite suggestion',
-    );
+    expect(onAcceptProposal).toHaveBeenCalledWith(pendingProposal);
   });
 
-  it('requires confirmation before replacing manuscript text', async () => {
+  it('lets users reject a pending transcript edit proposal', async () => {
     const user = userEvent.setup();
-    const onReplaceManuscript = vi.fn();
+    const onRejectProposal = vi.fn();
+    const pendingProposal = proposal({ toolCallId: 'tool-2' });
 
     render(
       <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'Final draft text')]}
+        messages={[assistantMessage('a-1', 'I have an alternative draft.')]}
+        proposals={[pendingProposal]}
         isStreaming={false}
         error={undefined}
         onSendMessage={vi.fn()}
         onReset={vi.fn()}
-        onAppendToManuscript={vi.fn()}
-        onReplaceManuscript={onReplaceManuscript}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={onRejectProposal}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Replace Manuscript' }));
-    expect(onReplaceManuscript).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Reject edit' }));
 
-    const dialog = screen.getByRole('dialog');
-    await user.click(
-      within(dialog).getByRole('button', { name: 'Replace manuscript' }),
-    );
-
-    expect(onReplaceManuscript).toHaveBeenCalledWith('Final draft text');
+    expect(onRejectProposal).toHaveBeenCalledWith(pendingProposal);
   });
 
-  it('hides manuscript apply actions when there is no assistant response', () => {
+  it('shows proposal status and hides action buttons once accepted', () => {
     render(
       <WritingAssistantPanel
-        messages={[]}
+        messages={[assistantMessage('a-1', 'Applied a cleaner cadence.')]}
+        proposals={[proposal({ decision: 'accepted' })]}
         isStreaming={false}
         error={undefined}
         onSendMessage={vi.fn()}
         onReset={vi.fn()}
-        onAppendToManuscript={vi.fn()}
-        onReplaceManuscript={vi.fn()}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Accepted')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Accept edit' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reject edit' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows auto-reject guidance while proposals are pending', () => {
+    render(
+      <WritingAssistantPanel
+        messages={[assistantMessage('a-1', 'Here is a focused rewrite.')]}
+        proposals={[proposal({ toolCallId: 'tool-1' }), proposal({ toolCallId: 'tool-2' })]}
+        isStreaming={false}
+        error={undefined}
+        onSendMessage={vi.fn()}
+        onReset={vi.fn()}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={vi.fn()}
       />,
     );
 
     expect(
-      screen.queryByRole('button', { name: 'Append to Manuscript' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Replace Manuscript' }),
-    ).not.toBeInTheDocument();
+      screen.getByText(/auto-reject pending proposals/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText('2 pending')).toBeInTheDocument();
   });
 
-  it('disables manuscript apply actions while assistant is streaming', () => {
+  it('disables proposal actions while assistant is streaming', () => {
     render(
       <WritingAssistantPanel
         messages={[assistantMessage('a-1', 'Streaming draft text')]}
+        proposals={[proposal()]}
         isStreaming={true}
         error={undefined}
         onSendMessage={vi.fn()}
         onReset={vi.fn()}
-        onAppendToManuscript={vi.fn()}
-        onReplaceManuscript={vi.fn()}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={vi.fn()}
       />,
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Append to Manuscript' }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Replace Manuscript' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Accept edit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reject edit' })).toBeDisabled();
   });
 });

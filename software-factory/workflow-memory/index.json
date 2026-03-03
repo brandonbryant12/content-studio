@@ -31,6 +31,56 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-03-feature-delivery-deep-research-start-reduced-to-single-click",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Deep research start reduced to single click",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "research",
+      "regression",
+      "skill:debug-fix",
+      "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-migrate-auth-transport-to-bearer-token-flow",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Migrate auth transport to bearer token flow",
+    "severity": "high",
+    "status": "completed",
+    "tags": [
+      "feature-delivery",
+      "auth",
+      "bearer-token",
+      "eks"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-persona-creation-switched-to-single-click-create",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Persona creation switched to single-click create",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "persona",
+      "regression",
+      "skill:debug-fix",
+      "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-03-feature-delivery-ready-for-dev-executor-issue-210-delivered",
     "date": "2026-03-03",
     "month": "2026-03",
@@ -41,6 +91,22 @@
     "tags": [
       "skill:feature-delivery",
       "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-self-improvement-auth-refresh-fallback-auth-route-rate-limit-hardening",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Auth refresh fallback + auth route rate-limit hardening",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "skill:pr-risk-review",
+      "skill:code-simplifier",
+      "auth",
+      "security"
     ],
     "eventFile": "events/2026-03.jsonl"
   },

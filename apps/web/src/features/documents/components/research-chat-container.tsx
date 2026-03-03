@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import type { ResearchSynthesisPreview } from '@/shared/components/synthesis-preview-card';
 import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
@@ -18,20 +17,16 @@ export function ResearchChatContainer({
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
   const [autoGeneratePodcast, setAutoGeneratePodcast] = useState(false);
-  const [autoGenerateVoiceover, setAutoGenerateVoiceover] = useState(false);
-  const [autoGenerateInfographic, setAutoGenerateInfographic] =
-    useState(false);
-  const [preview, setPreview] = useState<ResearchSynthesisPreview | null>(null);
 
-  const startError = startResearchMutation.error ?? undefined;
+  const isStartingResearch =
+    synthesizeMutation.isPending || startResearchMutation.isPending;
+  const startError =
+    synthesizeMutation.error ?? startResearchMutation.error ?? undefined;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
         setAutoGeneratePodcast(false);
-        setAutoGenerateVoiceover(false);
-        setAutoGenerateInfographic(false);
-        setPreview(null);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -46,44 +41,27 @@ export function ResearchChatContainer({
     [chat],
   );
 
-  const handleSynthesize = useCallback(() => {
-    if (chat.messages.length === 0 || synthesizeMutation.isPending) return;
+  const handleStartResearch = useCallback(() => {
+    if (chat.messages.length === 0 || isStartingResearch) return;
 
     synthesizeMutation.mutate(chat.messages, {
-      onSuccess: (result) => {
-        setPreview(result);
+      onSuccess: ({ query, title }) => {
+        startResearchMutation.mutate(
+          { query, title, autoGeneratePodcast },
+          {
+            onSuccess: () => handleOpenChange(false),
+          },
+        );
       },
     });
-  }, [chat.messages, synthesizeMutation]);
-
-  const handleConfirmResearch = useCallback(() => {
-    if (!preview || startResearchMutation.isPending) return;
-
-    startResearchMutation.mutate(
-      {
-        query: preview.query,
-        title: preview.title,
-        autoGeneratePodcast,
-        autoGenerateVoiceover,
-        autoGenerateInfographic,
-      },
-      {
-        onSuccess: () => handleOpenChange(false),
-      },
-    );
   }, [
-    preview,
+    chat.messages,
+    isStartingResearch,
+    synthesizeMutation,
     startResearchMutation,
     autoGeneratePodcast,
-    autoGenerateVoiceover,
-    autoGenerateInfographic,
     handleOpenChange,
   ]);
-
-  const handleDismissPreview = useCallback(() => {
-    setPreview(null);
-    chat.extendFollowUps();
-  }, [chat]);
 
   return (
     <ResearchChatDialog
@@ -94,21 +72,12 @@ export function ResearchChatContainer({
       error={chat.error}
       canStartResearch={chat.canStartResearch}
       autoStartReady={chat.shouldAutoStart}
-      synthesizeError={synthesizeMutation.error ?? undefined}
       startError={startError}
       onSendMessage={handleSendMessage}
-      onSynthesize={handleSynthesize}
-      isSynthesizing={synthesizeMutation.isPending}
-      preview={preview}
-      onConfirmResearch={handleConfirmResearch}
-      isStartingResearch={startResearchMutation.isPending}
-      onDismissPreview={handleDismissPreview}
+      onStartResearch={handleStartResearch}
+      isStartingResearch={isStartingResearch}
       autoGeneratePodcast={autoGeneratePodcast}
       onAutoGeneratePodcastChange={setAutoGeneratePodcast}
-      autoGenerateVoiceover={autoGenerateVoiceover}
-      onAutoGenerateVoiceoverChange={setAutoGenerateVoiceover}
-      autoGenerateInfographic={autoGenerateInfographic}
-      onAutoGenerateInfographicChange={setAutoGenerateInfographic}
       followUpCount={chat.followUpCount}
       followUpLimit={chat.followUpLimit}
       onKeepRefining={chat.extendFollowUps}

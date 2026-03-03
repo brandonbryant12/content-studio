@@ -1,5 +1,4 @@
-import { useCallback, useState } from 'react';
-import type { PersonaSynthesisPreview } from '@/shared/components/synthesis-preview-card';
+import { useCallback } from 'react';
 import { usePersonaChat } from '../hooks/use-persona-chat';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
 import { useSynthesizePersona } from '../hooks/use-synthesize-persona';
@@ -17,14 +16,15 @@ export function PersonaChatContainer({
   const chat = usePersonaChat();
   const synthesizeMutation = useSynthesizePersona();
   const createMutation = useCreatePersona();
-  const [preview, setPreview] = useState<PersonaSynthesisPreview | null>(null);
 
-  const isCreatingPersona = createMutation.isPending;
+  const isCreatingPersona =
+    synthesizeMutation.isPending || createMutation.isPending;
+  const createError =
+    synthesizeMutation.error ?? createMutation.error ?? undefined;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        setPreview(null);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -39,39 +39,34 @@ export function PersonaChatContainer({
     [chat],
   );
 
-  const handleSynthesize = useCallback(() => {
-    if (chat.messages.length === 0 || synthesizeMutation.isPending) return;
+  const handleCreatePersona = useCallback(() => {
+    if (chat.messages.length === 0 || isCreatingPersona) return;
 
     synthesizeMutation.mutate(chat.messages, {
       onSuccess: (result) => {
-        setPreview(result);
+        createMutation.mutate(
+          {
+            name: result.name,
+            role: result.role,
+            personalityDescription: result.personalityDescription,
+            speakingStyle: result.speakingStyle,
+            exampleQuotes: [...result.exampleQuotes],
+            voiceId: result.voiceId,
+            voiceName: result.voiceName,
+          },
+          {
+            onSuccess: () => handleOpenChange(false),
+          },
+        );
       },
     });
-  }, [chat.messages, synthesizeMutation]);
-
-  const handleConfirmPersona = useCallback(() => {
-    if (!preview || isCreatingPersona) return;
-
-    createMutation.mutate(
-      {
-        name: preview.name,
-        role: preview.role,
-        personalityDescription: preview.personalityDescription,
-        speakingStyle: preview.speakingStyle,
-        exampleQuotes: [...preview.exampleQuotes],
-        voiceId: preview.voiceId,
-        voiceName: preview.voiceName,
-      },
-      {
-        onSuccess: () => handleOpenChange(false),
-      },
-    );
-  }, [preview, isCreatingPersona, createMutation, handleOpenChange]);
-
-  const handleDismissPreview = useCallback(() => {
-    setPreview(null);
-    chat.extendFollowUps();
-  }, [chat]);
+  }, [
+    chat.messages,
+    isCreatingPersona,
+    synthesizeMutation,
+    createMutation,
+    handleOpenChange,
+  ]);
 
   return (
     <PersonaChatDialog
@@ -80,17 +75,12 @@ export function PersonaChatContainer({
       messages={chat.messages}
       isStreaming={chat.isStreaming}
       error={chat.error}
-      synthesizeError={synthesizeMutation.error ?? undefined}
-      createError={createMutation.error ?? undefined}
+      createError={createError}
       canCreatePersona={chat.canCreatePersona}
       autoCreateReady={chat.shouldAutoCreate}
       onSendMessage={handleSendMessage}
-      onSynthesize={handleSynthesize}
-      isSynthesizing={synthesizeMutation.isPending}
-      preview={preview}
-      onConfirmPersona={handleConfirmPersona}
+      onCreatePersona={handleCreatePersona}
       isCreatingPersona={isCreatingPersona}
-      onDismissPreview={handleDismissPreview}
       followUpCount={chat.followUpCount}
       followUpLimit={chat.followUpLimit}
       onKeepRefining={chat.extendFollowUps}

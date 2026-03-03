@@ -6,6 +6,7 @@ import {
 import { AuthMode, createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { configureQueueNotifier } from '@repo/queue';
+import { buildAuthTrustedOrigins } from './auth-trusted-origins';
 import { buildStorageConfig } from './config';
 import { env } from './env';
 
@@ -38,6 +39,13 @@ export const auth = createAuth({
   apiPath: env.PUBLIC_SERVER_API_PATH,
   authSecret: env.SERVER_AUTH_SECRET,
   authMode: env.AUTH_MODE,
+  trustedOrigins: buildAuthTrustedOrigins({
+    publicWebUrl: env.PUBLIC_WEB_URL,
+    corsOrigins: env.CORS_ORIGINS,
+    nodeEnv: process.env.NODE_ENV,
+  }),
+  cookieSameSite: env.AUTH_COOKIE_SAME_SITE,
+  useSecureCookies: env.AUTH_COOKIE_SECURE,
   microsoftSSO: microsoftSSOConfig,
   db,
 });

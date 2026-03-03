@@ -1,6 +1,6 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { openAPI } from 'better-auth/plugins';
+import { bearer, openAPI } from 'better-auth/plugins';
 import urlJoin from 'url-join';
 import type { DatabaseInstance } from '@repo/db/client';
 import {
@@ -29,10 +29,34 @@ export interface AuthOptions {
   authSecret: string;
   authMode: AuthMode;
   db: DatabaseInstance;
+  trustedOrigins?: string[];
+  cookieSameSite?: 'lax' | 'strict' | 'none';
+  useSecureCookies?: boolean;
   microsoftSSO?: MicrosoftSSOConfig;
 }
 
 export type AuthInstance = ReturnType<typeof createAuth>;
+
+const normalizeOrigin = (value: string): string => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value;
+  }
+};
+
+export const buildTrustedOrigins = (
+  webUrl: string,
+  trustedOrigins: string[] = [],
+): string[] => {
+  const origins = new Set<string>([new URL(webUrl).origin]);
+  for (const origin of trustedOrigins) {
+    const trimmed = origin.trim();
+    if (trimmed.length === 0) continue;
+    origins.add(normalizeOrigin(trimmed));
+  }
+  return [...origins];
+};
 
 const isPasswordAuthEnabled = (authMode: AuthMode) =>
   authMode !== AuthMode.SSO_ONLY;
@@ -55,7 +79,7 @@ const MICROSOFT_SCOPES = [
 export const getBaseOptions = (db: DatabaseInstance) =>
   ({
     database: drizzleAdapter(db, { provider: 'pg' }),
-    plugins: [openAPI()],
+    plugins: [openAPI(), bearer({ requireSignature: true })],
   }) satisfies BetterAuthOptions;
 
 export const createAuth = ({
@@ -65,13 +89,16 @@ export const createAuth = ({
   db,
   authSecret,
   authMode,
+  trustedOrigins,
+  cookieSameSite,
+  useSecureCookies,
   microsoftSSO,
 }: AuthOptions) =>
   betterAuth({
     ...getBaseOptions(db),
     baseURL: urlJoin(serverUrl, apiPath, 'auth'),
     secret: authSecret,
-    trustedOrigins: [new URL(webUrl).origin],
+    trustedOrigins: buildTrustedOrigins(webUrl, trustedOrigins),
     user: {
       additionalFields: {
         role: {
@@ -86,6 +113,12 @@ export const createAuth = ({
         enabled: true,
         maxAge: 5 * 60,
       },
+    },
+    advanced: {
+      useSecureCookies,
+      defaultCookieAttributes: cookieSameSite
+        ? { sameSite: cookieSameSite }
+        : undefined,
     },
     socialProviders:
       isMicrosoftSSOEnabled(authMode) && microsoftSSO

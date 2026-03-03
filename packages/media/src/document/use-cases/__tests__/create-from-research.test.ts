@@ -164,7 +164,7 @@ describe('createFromResearch', () => {
     expect(insertData.title).toBe('Research: how to design podcasts');
   });
 
-  it('persists auto-generate flags in researchConfig when requested', async () => {
+  it('persists auto-generate podcast flag in researchConfig when requested', async () => {
     const user = createTestUser();
     const insertSpy = vi.fn();
 
@@ -191,8 +191,6 @@ describe('createFromResearch', () => {
         createFromResearch({
           query: 'how to repurpose one article for many formats',
           autoGeneratePodcast: true,
-          autoGenerateVoiceover: true,
-          autoGenerateInfographic: true,
         }).pipe(Effect.provide(layers)),
       ),
     );
@@ -201,8 +199,6 @@ describe('createFromResearch', () => {
     expect(insertSpy.mock.calls[0]?.[0].researchConfig).toEqual(
       expect.objectContaining({
         autoGeneratePodcast: true,
-        autoGenerateVoiceover: true,
-        autoGenerateInfographic: true,
       }),
     );
   });

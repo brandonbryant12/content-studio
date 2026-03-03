@@ -14,11 +14,6 @@ import type { UIMessage } from 'ai';
 import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
 import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
 import { ChatThread } from '@/shared/components/chat-thread';
-import {
-  type PersonaSynthesisPreview,
-  PersonaPreviewContent,
-  SynthesisPreviewCard,
-} from '@/shared/components/synthesis-preview-card';
 import { useChatComposer } from '@/shared/hooks/use-chat-composer';
 import {
   CHAT_INPUT_MAX_LENGTH,
@@ -37,17 +32,12 @@ interface PersonaChatDialogProps {
   messages: UIMessage[];
   isStreaming: boolean;
   error: Error | undefined;
-  synthesizeError: Error | undefined;
   createError: Error | undefined;
   canCreatePersona: boolean;
   autoCreateReady: boolean;
   onSendMessage: (text: string) => void;
-  onSynthesize: () => void;
-  isSynthesizing: boolean;
-  preview: PersonaSynthesisPreview | null;
-  onConfirmPersona: () => void;
+  onCreatePersona: () => void;
   isCreatingPersona: boolean;
-  onDismissPreview: () => void;
   followUpCount: number;
   followUpLimit: number;
   onKeepRefining: () => void;
@@ -59,23 +49,17 @@ export function PersonaChatDialog({
   messages,
   isStreaming,
   error,
-  synthesizeError,
   createError,
   canCreatePersona,
   autoCreateReady,
   onSendMessage,
-  onSynthesize,
-  isSynthesizing,
-  preview,
-  onConfirmPersona,
+  onCreatePersona,
   isCreatingPersona,
-  onDismissPreview,
   followUpCount,
   followUpLimit,
   onKeepRefining,
 }: PersonaChatDialogProps) {
-  const isInputDisabled =
-    isStreaming || isSynthesizing || isCreatingPersona || preview !== null;
+  const isInputDisabled = isStreaming || isCreatingPersona;
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
     onSendMessage,
@@ -95,7 +79,7 @@ export function PersonaChatDialog({
           <DialogTitle className="flex items-center gap-2">
             <PersonIcon className="w-5 h-5" />
             Create Persona
-            {followUpCount > 0 && !autoCreateReady && !preview && (
+            {followUpCount > 0 && !autoCreateReady && (
               <ChatProgressBadge
                 current={followUpCount}
                 total={followUpLimit}
@@ -134,64 +118,35 @@ export function PersonaChatDialog({
           }
         />
 
-        {/* Synthesis preview */}
-        {preview && (
-          <div className="px-6 py-3">
-            <SynthesisPreviewCard
-              title="Persona Preview"
-              actionLabel="Create Persona"
-              isPending={isCreatingPersona}
-              pendingLabel="Creating persona..."
-              onConfirm={onConfirmPersona}
-              onKeepRefining={onDismissPreview}
-            >
-              <PersonaPreviewContent
-                name={preview.name}
-                role={preview.role}
-                personalityDescription={preview.personalityDescription}
-                speakingStyle={preview.speakingStyle}
-                exampleQuotes={preview.exampleQuotes}
-                voiceName={preview.voiceName}
-              />
-            </SynthesisPreviewCard>
-            {createError && (
-              <p className="mt-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
-                Failed to create persona. Please try again.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Synthesize / Create controls (when no preview shown) */}
-        {!preview && canCreatePersona && (
+        {canCreatePersona && (
           <div className="border-t px-6 py-3">
             {autoCreateReady ? (
               <ChatAutoTriggerConfirmation
                 actionLabel="Create Persona"
-                isPending={isSynthesizing}
-                pendingLabel="Analyzing conversation..."
-                error={synthesizeError}
-                onConfirm={onSynthesize}
+                isPending={isCreatingPersona}
+                pendingLabel="Creating persona..."
+                error={createError}
+                onConfirm={onCreatePersona}
                 onKeepRefining={onKeepRefining}
               />
             ) : (
               <div className="space-y-2">
-                {synthesizeError && (
+                {createError && (
                   <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
-                    Failed to analyze conversation. Please try again.
+                    Failed to create persona. Please try again.
                   </p>
                 )}
                 <Button
-                  onClick={onSynthesize}
-                  disabled={isSynthesizing}
+                  onClick={onCreatePersona}
+                  disabled={isCreatingPersona}
                   className="w-full"
                 >
-                  {isSynthesizing ? (
+                  {isCreatingPersona ? (
                     <>
                       <Spinner className="w-4 h-4 mr-2" />
-                      Analyzing conversation...
+                      Creating persona...
                     </>
-                  ) : synthesizeError ? (
+                  ) : createError ? (
                     'Retry'
                   ) : (
                     'Create Persona'
@@ -211,11 +166,9 @@ export function PersonaChatDialog({
             onChange={(e) => composer.setInput(e.target.value)}
             onKeyDown={composer.handleInputKeyDown}
             placeholder={
-              preview
-                ? 'Review the persona above, then confirm or keep refining...'
-                : canCreatePersona
-                  ? 'Add more details or click Create Persona...'
-                  : 'Describe your persona idea...'
+              canCreatePersona
+                ? 'Add more details or click Create Persona...'
+                : 'Describe your persona idea...'
             }
             disabled={isInputDisabled}
             maxLength={CHAT_INPUT_MAX_LENGTH}

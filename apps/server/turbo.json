@@ -3,16 +3,37 @@
   "extends": ["//"],
   "tasks": {
     "dev": {
-      "env": ["SERVER_*", "PUBLIC_WEB_URL"],
+      "env": [
+        "SERVER_*",
+        "PUBLIC_WEB_URL",
+        "PUBLIC_SERVER_URL",
+        "CORS_ORIGINS",
+        "AUTH_COOKIE_SAME_SITE",
+        "AUTH_COOKIE_SECURE"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "persistent": true
     },
     "build": {
-      "env": ["SERVER_*", "PUBLIC_WEB_URL"],
+      "env": [
+        "SERVER_*",
+        "PUBLIC_WEB_URL",
+        "PUBLIC_SERVER_URL",
+        "CORS_ORIGINS",
+        "AUTH_COOKIE_SAME_SITE",
+        "AUTH_COOKIE_SECURE"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env"]
     },
     "start": {
-      "env": ["SERVER_*", "PUBLIC_WEB_URL"],
+      "env": [
+        "SERVER_*",
+        "PUBLIC_WEB_URL",
+        "PUBLIC_SERVER_URL",
+        "CORS_ORIGINS",
+        "AUTH_COOKIE_SAME_SITE",
+        "AUTH_COOKIE_SECURE"
+      ],
       "persistent": true
     }
   }

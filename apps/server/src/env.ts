@@ -47,6 +47,11 @@ const AuthModeSchema = Schema.Union(
   Schema.Literal('hybrid'),
   Schema.Literal('sso-only'),
 );
+const CookieSameSiteSchema = Schema.Union(
+  Schema.Literal('lax'),
+  Schema.Literal('strict'),
+  Schema.Literal('none'),
+);
 
 const CsvStringArraySchema = Schema.transform(
   Schema.String,
@@ -127,6 +132,8 @@ export const envSchema = Schema.Struct({
   }),
 
   CORS_ORIGINS: Schema.optional(Schema.String),
+  AUTH_COOKIE_SAME_SITE: Schema.optional(CookieSameSiteSchema),
+  AUTH_COOKIE_SECURE: Schema.optional(BooleanStringSchema),
 
   TELEMETRY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
     default: () => process.env.NODE_ENV === 'production',

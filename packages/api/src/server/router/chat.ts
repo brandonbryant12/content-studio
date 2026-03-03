@@ -51,7 +51,10 @@ const chatRouter = {
       handleEffectStreamWithProtocol(
         context.runtime,
         context.user,
-        streamWritingAssistantChat({ messages: input.messages }),
+        streamWritingAssistantChat({
+          messages: input.messages,
+          transcript: input.transcript,
+        }),
         errors,
         { requestId: context.requestId },
       ),

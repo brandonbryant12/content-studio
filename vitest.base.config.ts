@@ -37,6 +37,7 @@ export default defineConfig({
       '@repo/storage/testing': `${packagesRoot}/storage/src/testing/index.ts`,
       '@repo/storage': `${packagesRoot}/storage/src/index.ts`,
       '@repo/queue': `${packagesRoot}/queue/src/index.ts`,
+      '@repo/auth/client': `${packagesRoot}/auth/src/client/index.ts`,
       '@repo/auth/policy': `${packagesRoot}/auth/src/policy/index.ts`,
       '@repo/auth/server': `${packagesRoot}/auth/src/server/index.ts`,
       '@repo/auth': `${packagesRoot}/auth/src/index.ts`,

@@ -17,11 +17,8 @@
 #   - Redis:         SSE/event pub-sub
 #
 # Security notes:
-#   - All services drop Linux capabilities and block privilege escalation.
-#   - Backend services (db, redis, minio, worker) are on an internal network
-#     with no direct external access.
 #   - DB and Redis ports are exposed for local development convenience only.
-#     In production, remove or firewall these port mappings.
+#   - In production, remove or firewall these port mappings.
 
 services:
   # ------------------------------------------------------------------ #
@@ -38,20 +35,6 @@ services:
       PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
       PUBLIC_SERVER_API_PATH: /api
       PUBLIC_AUTH_MODE: "${AUTH_MODE:-dev-password}"
-    # Note: read_only is not set because the entrypoint writes /app/dist/env.js
-    # at startup to inject runtime PUBLIC_* env vars into the SPA bundle.
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-    tmpfs: [/tmp]
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     healthcheck:
       interval: 30s
       timeout: 10s
@@ -91,7 +74,7 @@ services:
       SERVER_PORT: "3036"
       PUBLIC_WEB_URL: "http://${HOST_IP:-localhost}:${WEB_PORT:-8086}"
       PUBLIC_SERVER_URL: "http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}"
-      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://${HOST_IP:-localhost}:${WEB_PORT:-8086}}"
       USE_MOCK_AI: "${USE_MOCK_AI:-true}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       # S3 / MinIO storage
@@ -107,21 +90,6 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
       OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
       OTEL_SERVICE_NAME: content-studio-server
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-    read_only: true
-    tmpfs: [/tmp]
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     healthcheck:
       interval: 10s
       timeout: 5s
@@ -171,21 +139,6 @@ services:
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}"
       OTEL_EXPORTER_OTLP_HEADERS: "${OTEL_EXPORTER_OTLP_HEADERS:-}"
       OTEL_SERVICE_NAME: content-studio-worker
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-    read_only: true
-    tmpfs: [/tmp]
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     depends_on:
       db:
         condition: service_healthy
@@ -214,24 +167,12 @@ services:
       POSTGRES_DB: content_studio
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE]
-    security_opt: [no-new-privileges:true]
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     healthcheck:
       interval: 5s
       timeout: 5s
       retries: 5
       test: ["CMD-SHELL", "pg_isready -U postgres -d content_studio"]
-    networks: [backend]
+    networks: [backend, frontend]
 
   # ------------------------------------------------------------------ #
   # Redis (SSE pub/sub)
@@ -243,21 +184,11 @@ services:
     image: ${DOCKER_REGISTRY:-docker.io}/redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      # Bind Redis host port explicitly; default exposes on all interfaces.
+      # Set REDIS_BIND_IP=127.0.0.1 to restrict to localhost.
+      - "${REDIS_BIND_IP:-0.0.0.0}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
-    cap_drop: [ALL]
-    cap_add: [SETUID, SETGID]
-    security_opt: [no-new-privileges:true]
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -275,13 +206,6 @@ services:
       dockerfile: ./packages/db/Dockerfile
     environment:
       DB_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     depends_on:
       db:
         condition: service_healthy
@@ -302,18 +226,6 @@ services:
     command: server /data --address ":9001" --console-address ":9090"
     volumes:
       - minio_data:/data
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE]
-    security_opt: [no-new-privileges:true]
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9001/minio/health/live || exit 1"]
       interval: 5s
@@ -342,13 +254,6 @@ services:
         mc mb --ignore-existing myminio/content-studio
         mc anonymous set public myminio/content-studio
         echo "MinIO bucket 'content-studio' ready"
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
     networks: [backend]
 
 networks:
@@ -356,7 +261,6 @@ networks:
     driver: bridge
   backend:
     driver: bridge
-    internal: true
 
 volumes:
   postgres_data:

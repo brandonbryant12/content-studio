@@ -41,4 +41,19 @@ describe('createCredentialedCorsPolicy', () => {
       'https://admin.example.com',
     ]);
   });
+
+  it('reflects localhost origins in local development when unset', () => {
+    const policy = createCredentialedCorsPolicy({
+      publicWebUrl: 'http://localhost:8085',
+      nodeEnv: 'development',
+    });
+
+    expect(policy.credentials).toBe(true);
+    expect(typeof policy.origin).toBe('function');
+    expect(
+      (policy.origin as (origin: string) => string | null)(
+        'http://localhost:8086',
+      ),
+    ).toBe('http://localhost:8086');
+  });
 });

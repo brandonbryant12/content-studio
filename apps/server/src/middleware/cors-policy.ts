@@ -46,7 +46,20 @@ export const createCredentialedCorsPolicy = (
     }
 
     return {
-      origin: (origin) => origin || publicWebOrigin,
+      origin: (origin) => {
+        const normalizedOrigin = normalizeOrigin(origin);
+        return isLocalOrigin(normalizedOrigin) ? normalizedOrigin : null;
+      },
+      credentials: true,
+    };
+  }
+
+  if (isLocalDevelopment && !corsOrigins) {
+    return {
+      origin: (origin) => {
+        const normalizedOrigin = normalizeOrigin(origin);
+        return isLocalOrigin(normalizedOrigin) ? normalizedOrigin : null;
+      },
       credentials: true,
     };
   }

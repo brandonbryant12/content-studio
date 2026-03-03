@@ -68,6 +68,7 @@ export default function RegisterCredentialsForm() {
       );
       if (error) {
         toast.error(getAuthErrorMessage(error, 'Unable to create account.'));
+        return;
       }
     },
   });

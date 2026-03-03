@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import type { TranscriptEditProposal } from '../../hooks/use-writing-assistant-chat';
 import { useWritingAssistantChat } from '../../hooks/use-writing-assistant-chat';
 import { WritingAssistantPanel } from './writing-assistant-panel';
 
@@ -8,21 +9,21 @@ interface WritingAssistantContainerProps {
   onSetManuscriptText: (text: string) => void;
 }
 
-function buildAppendedManuscriptText(currentText: string, assistantText: string) {
-  const nextSection = assistantText.trim();
-  if (!nextSection) return currentText;
-
-  const base = currentText.trimEnd();
-  return base.length > 0 ? `${base}\n\n${nextSection}` : nextSection;
-}
-
 export function WritingAssistantContainer({
   voiceoverId,
   manuscriptText,
   onSetManuscriptText,
 }: WritingAssistantContainerProps) {
-  const { messages, sendMessage, isStreaming, error, reset } =
-    useWritingAssistantChat();
+  const {
+    messages,
+    sendUserMessage,
+    proposals,
+    acceptProposal,
+    rejectProposal,
+    isStreaming,
+    error,
+    reset,
+  } = useWritingAssistantChat(manuscriptText);
 
   useEffect(() => {
     reset();
@@ -30,38 +31,39 @@ export function WritingAssistantContainer({
 
   const handleSendMessage = useCallback(
     (text: string) => {
-      sendMessage({ text });
+      void sendUserMessage(text);
     },
-    [sendMessage],
+    [sendUserMessage],
   );
 
-  const handleAppendToManuscript = useCallback(
-    (assistantText: string) => {
-      const nextText = buildAppendedManuscriptText(manuscriptText, assistantText);
-      if (nextText === manuscriptText) return;
-      onSetManuscriptText(nextText);
+  const handleAcceptProposal = useCallback(
+    (proposal: TranscriptEditProposal) => {
+      if (proposal.revisedTranscript !== manuscriptText) {
+        onSetManuscriptText(proposal.revisedTranscript);
+      }
+
+      void acceptProposal(proposal);
     },
-    [manuscriptText, onSetManuscriptText],
+    [acceptProposal, manuscriptText, onSetManuscriptText],
   );
 
-  const handleReplaceManuscript = useCallback(
-    (assistantText: string) => {
-      const replacementText = assistantText.trim();
-      if (!replacementText) return;
-      onSetManuscriptText(replacementText);
+  const handleRejectProposal = useCallback(
+    (proposal: TranscriptEditProposal) => {
+      void rejectProposal(proposal);
     },
-    [onSetManuscriptText],
+    [rejectProposal],
   );
 
   return (
     <WritingAssistantPanel
       messages={messages}
+      proposals={proposals}
       isStreaming={isStreaming}
       error={error}
       onSendMessage={handleSendMessage}
       onReset={reset}
-      onAppendToManuscript={handleAppendToManuscript}
-      onReplaceManuscript={handleReplaceManuscript}
+      onAcceptProposal={handleAcceptProposal}
+      onRejectProposal={handleRejectProposal}
     />
   );
 }

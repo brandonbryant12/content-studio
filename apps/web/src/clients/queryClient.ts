@@ -1,5 +1,6 @@
-import { MutationCache, QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { clearAuthToken } from '@/shared/lib/auth-token';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 interface ApiLikeError {
@@ -41,9 +42,28 @@ const retryDelay = (attempt: number, error: unknown): number => {
   return defaultRetryDelay(attempt);
 };
 
+const handleUnauthorized = (): void => {
+  clearAuthToken();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+    window.location.assign('/');
+  }
+};
+
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (isApiLikeError(error) && error.code === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
+    },
+  }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
+      if (isApiLikeError(error) && error.code === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
+
       if (mutation.options.onError) {
         return;
       }

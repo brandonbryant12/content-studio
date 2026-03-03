@@ -3,9 +3,9 @@
  * Each retry attempt gets a fresh budget because retries re-run the full effect.
  */
 export const PROVIDER_TIMEOUTS_MS = {
-  llmGenerate: 30_000,
-  ttsGenerate: 45_000,
-  imageGenerate: 45_000,
-  deepResearchStart: 60_000,
-  deepResearchGet: 30_000,
+  llmGenerate: 300_000,
+  ttsGenerate: 300_000,
+  imageGenerate: 300_000,
+  deepResearchStart: 300_000,
+  deepResearchGet: 300_000,
 } as const;

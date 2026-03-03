@@ -111,6 +111,8 @@ pnpm db:push                    # 5. Push database schema
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
 | `TRUST_PROXY` | Trust `x-forwarded-for` / `x-real-ip` for rate-limit identity | `false` |
 | `CORS_ORIGINS` | Comma-separated credentialed CORS origin allowlist (`*` only for local-dev) | `PUBLIC_WEB_URL` |
+| `AUTH_COOKIE_SAME_SITE` | Auth cookie SameSite (`lax` / `strict` / `none`) | better-auth default (`lax`) |
+| `AUTH_COOKIE_SECURE` | Force secure auth cookies (`true` / `false`) | auto (true on https) |
 | `S3_BUCKET` | S3 bucket name | -- |
 | `S3_REGION` | S3 region | -- |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |

@@ -72,6 +72,101 @@ function getNumberField(value: unknown, field: string): number | undefined {
   return typeof maybeValue === 'number' ? maybeValue : undefined;
 }
 
+function getObjectField(
+  value: unknown,
+  field: string,
+): Record<string, unknown> | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  const maybeValue = (value as Record<string, unknown>)[field];
+  if (typeof maybeValue !== 'object' || maybeValue === null) {
+    return undefined;
+  }
+
+  return maybeValue as Record<string, unknown>;
+}
+
+function getBooleanField(value: unknown, field: string): boolean | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  const maybeValue = (value as Record<string, unknown>)[field];
+  return typeof maybeValue === 'boolean' ? maybeValue : undefined;
+}
+
+function extractInteractionDiagnostics(interaction: unknown): {
+  interactionId: string | undefined;
+  status: string | undefined;
+  done: boolean | undefined;
+  createdAt: string | undefined;
+  updatedAt: string | undefined;
+  errorCode: string | undefined;
+  errorStatus: string | undefined;
+  errorMessage: string | undefined;
+} {
+  const primaryError =
+    getObjectField(interaction, 'error') ??
+    getObjectField(interaction, 'last_error') ??
+    getObjectField(interaction, 'failure');
+
+  return {
+    interactionId:
+      getStringField(interaction, 'id') ??
+      getStringField(interaction, 'name') ??
+      undefined,
+    status: getStringField(interaction, 'status'),
+    done: getBooleanField(interaction, 'done'),
+    createdAt:
+      getStringField(interaction, 'createTime') ??
+      getStringField(interaction, 'createdAt') ??
+      undefined,
+    updatedAt:
+      getStringField(interaction, 'updateTime') ??
+      getStringField(interaction, 'updatedAt') ??
+      undefined,
+    errorCode:
+      getStringField(primaryError, 'code') ??
+      getStringField(primaryError, 'reason') ??
+      undefined,
+    errorStatus:
+      getStringField(primaryError, 'status') ??
+      getStringField(primaryError, 'type') ??
+      undefined,
+    errorMessage:
+      getStringField(primaryError, 'message') ??
+      getStringField(interaction, 'errorMessage') ??
+      undefined,
+  };
+}
+
+function extractResearchErrorDiagnostics(error: ResearchError): {
+  message: string;
+  googleStatus: string | undefined;
+  googleCode: string | undefined;
+  googleMessage: string | undefined;
+  statusCode: number | undefined;
+  causeCode: string | undefined;
+} {
+  const details = getGoogleApiErrorDetails(error.cause);
+  const statusCode =
+    error.cause instanceof GoogleApiError
+      ? error.cause.statusCode
+      : (getNumberField(error.cause, 'statusCode') ??
+        getNumberField(error.cause, 'status'));
+
+  return {
+    message: error.message,
+    googleStatus: details?.status,
+    googleCode: details?.code !== undefined ? String(details.code) : undefined,
+    googleMessage: details?.message,
+    statusCode,
+    causeCode: getStringField(error.cause, 'code'),
+  };
+}
+
 function isTransientResearchCause(cause: unknown): boolean {
   const details = getGoogleApiErrorDetails(cause);
   const statusCode =
@@ -210,6 +305,13 @@ const makeGoogleDeepResearchService = (
           }),
       }).pipe(
         retryTransientResearch,
+        Effect.tapError((error) =>
+          Effect.logError({
+            event: 'deepResearch.startResearch.failed',
+            provider: 'google',
+            diagnostics: extractResearchErrorDiagnostics(error),
+          }),
+        ),
         Effect.withSpan('deepResearch.startResearch', {
           attributes: { 'research.provider': 'google' },
         }),
@@ -233,15 +335,37 @@ const makeGoogleDeepResearchService = (
                   : 'Failed to get research result',
               cause: error,
             }),
-        }).pipe(retryTransientResearch);
+        }).pipe(
+          retryTransientResearch,
+          Effect.tapError((error) =>
+            Effect.logError({
+              event: 'deepResearch.getResult.failed',
+              provider: 'google',
+              interactionId,
+              diagnostics: extractResearchErrorDiagnostics(error),
+            }),
+          ),
+        );
 
         if (interaction.status === 'failed') {
+          yield* Effect.logError({
+            event: 'deepResearch.interaction.failed',
+            provider: 'google',
+            interactionId,
+            diagnostics: extractInteractionDiagnostics(interaction),
+          });
           return yield* new ResearchError({
             message: 'Research operation failed',
           });
         }
 
         if (interaction.status === 'cancelled') {
+          yield* Effect.logWarning({
+            event: 'deepResearch.interaction.cancelled',
+            provider: 'google',
+            interactionId,
+            diagnostics: extractInteractionDiagnostics(interaction),
+          });
           return yield* new ResearchError({
             message: 'Research operation was cancelled',
           });

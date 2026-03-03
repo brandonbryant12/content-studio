@@ -11,7 +11,14 @@ const apiRateLimit = createApiRateLimit({
 });
 
 export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
-  .use(cors(credentialedCorsPolicy))
+  .use(
+    cors({
+      ...credentialedCorsPolicy,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      maxAge: 600,
+    }),
+  )
   .use(apiRateLimit)
   .all('/*', async (c, next) => {
     const { matched, response } = await api.handler(

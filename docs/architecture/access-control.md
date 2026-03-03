@@ -32,7 +32,7 @@ graph LR
 
 | Layer | Mechanism |
 |---|---|
-| HTTP | `better-auth` middleware validates session cookie on every request |
+| HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (cookie-compatible fallback remains supported) |
 | Login mode | `AUTH_MODE` selects providers: `dev-password`, `hybrid`, `sso-only` |
 | SSO role sync | In SSO modes, `databaseHooks.session.create.after` calls Microsoft Graph `transitiveMemberOf` and maps configured group IDs to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |

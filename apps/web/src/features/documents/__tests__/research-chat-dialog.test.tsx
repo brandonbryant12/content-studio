@@ -14,21 +14,12 @@ const defaultProps: ResearchChatDialogProps = {
   error: undefined,
   canStartResearch: false,
   autoStartReady: false,
-  synthesizeError: undefined,
   startError: undefined,
   onSendMessage: vi.fn(),
-  onSynthesize: vi.fn(),
-  isSynthesizing: false,
-  preview: null,
-  onConfirmResearch: vi.fn(),
+  onStartResearch: vi.fn(),
   isStartingResearch: false,
-  onDismissPreview: vi.fn(),
   autoGeneratePodcast: false,
   onAutoGeneratePodcastChange: vi.fn(),
-  autoGenerateVoiceover: false,
-  onAutoGenerateVoiceoverChange: vi.fn(),
-  autoGenerateInfographic: false,
-  onAutoGenerateInfographicChange: vi.fn(),
   followUpCount: 0,
   followUpLimit: 2,
   onKeepRefining: vi.fn(),
@@ -151,30 +142,30 @@ describe('ResearchChatDialog', () => {
     expect(screen.queryByText('Start Research')).not.toBeInTheDocument();
   });
 
-  it('calls onSynthesize when clicking Start Research', async () => {
-    const onSynthesize = vi.fn();
+  it('calls onStartResearch when clicking Start Research', async () => {
+    const onStartResearch = vi.fn();
     const user = userEvent.setup();
 
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
-      onSynthesize,
+      onStartResearch,
     });
 
     const startButton = screen.getByText('Start Research');
     await user.click(startButton);
 
-    expect(onSynthesize).toHaveBeenCalled();
+    expect(onStartResearch).toHaveBeenCalled();
   });
 
-  it('shows spinner when synthesizing', () => {
+  it('shows spinner while preparing research', () => {
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
-      isSynthesizing: true,
+      isStartingResearch: true,
     });
 
-    expect(screen.getByText('Analyzing conversation...')).toBeInTheDocument();
+    expect(screen.getByText('Preparing research...')).toBeInTheDocument();
   });
 
   it('shows error message when error is set', () => {
@@ -258,54 +249,26 @@ describe('ResearchChatDialog', () => {
     expect(screen.queryByText('Question 2 of 2')).not.toBeInTheDocument();
   });
 
-  it('shows synthesis preview card when preview is provided', () => {
+  it('shows start error message when provided', () => {
     renderDialog({
       messages: messagesFixture,
-      preview: { title: 'AI Market Trends', query: 'Analyze AI market...' },
+      canStartResearch: true,
+      startError: new Error('Failed'),
     });
 
-    expect(screen.getByText('Research Brief')).toBeInTheDocument();
-    expect(screen.getByText('AI Market Trends')).toBeInTheDocument();
-    expect(screen.getByText('Analyze AI market...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Failed to start research. Please try again.'),
+    ).toBeInTheDocument();
   });
 
-  it('calls onConfirmResearch when confirming preview', async () => {
-    const onConfirmResearch = vi.fn();
-    const user = userEvent.setup();
-
+  it('disables input while preparing research', () => {
     renderDialog({
       messages: messagesFixture,
-      preview: { title: 'AI Market Trends', query: 'Analyze AI market...' },
-      onConfirmResearch,
+      canStartResearch: true,
+      isStartingResearch: true,
     });
 
-    await user.click(screen.getByText('Start Research'));
-    expect(onConfirmResearch).toHaveBeenCalled();
-  });
-
-  it('calls onDismissPreview when clicking Keep Refining on preview', async () => {
-    const onDismissPreview = vi.fn();
-    const user = userEvent.setup();
-
-    renderDialog({
-      messages: messagesFixture,
-      preview: { title: 'AI Market Trends', query: 'Analyze AI market...' },
-      onDismissPreview,
-    });
-
-    await user.click(screen.getByText('Keep Refining'));
-    expect(onDismissPreview).toHaveBeenCalled();
-  });
-
-  it('disables input when preview is shown', () => {
-    renderDialog({
-      messages: messagesFixture,
-      preview: { title: 'AI Market Trends', query: 'Analyze AI market...' },
-    });
-
-    const input = screen.getByPlaceholderText(
-      'Review the brief above, then confirm or keep refining...',
-    );
+    const input = screen.getByLabelText('Research topic');
     expect(input).toBeDisabled();
   });
 
@@ -322,35 +285,5 @@ describe('ResearchChatDialog', () => {
     );
 
     expect(onAutoGeneratePodcastChange).toHaveBeenCalledWith(true);
-  });
-
-  it('calls onAutoGenerateVoiceoverChange when checkbox toggled', async () => {
-    const user = userEvent.setup();
-    const onAutoGenerateVoiceoverChange = vi.fn();
-
-    renderDialog({ onAutoGenerateVoiceoverChange });
-
-    await user.click(
-      screen.getByRole('checkbox', {
-        name: 'Auto-generate voiceover from findings',
-      }),
-    );
-
-    expect(onAutoGenerateVoiceoverChange).toHaveBeenCalledWith(true);
-  });
-
-  it('calls onAutoGenerateInfographicChange when checkbox toggled', async () => {
-    const user = userEvent.setup();
-    const onAutoGenerateInfographicChange = vi.fn();
-
-    renderDialog({ onAutoGenerateInfographicChange });
-
-    await user.click(
-      screen.getByRole('checkbox', {
-        name: 'Auto-generate infographic from findings',
-      }),
-    );
-
-    expect(onAutoGenerateInfographicChange).toHaveBeenCalledWith(true);
   });
 });

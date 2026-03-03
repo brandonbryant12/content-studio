@@ -52,6 +52,7 @@ export default function LoginCredentialsForm() {
       );
       if (error) {
         toast.error(getAuthErrorMessage(error, 'Unable to sign in.'));
+        return;
       }
     },
   });

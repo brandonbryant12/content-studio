@@ -119,6 +119,7 @@ export {
   type PromptComplianceMetadata,
   type PromptDefinition,
   type AnyPromptDefinition,
+  type ChatWritingAssistantSystemPromptInput,
   type VoiceoverPreprocessUserPromptInput,
   type PersonaPromptContext,
   type SegmentPromptContext,

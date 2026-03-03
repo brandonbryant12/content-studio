@@ -32,6 +32,8 @@ const testMessages: UIMessage[] = [
     parts: [{ type: 'text', text: 'Help me rewrite my intro narration.' }],
   },
 ];
+const transcript =
+  'Welcome to our show. Today we cover practical AI delivery for teams.';
 
 describe('streamWritingAssistantChat', () => {
   it.effect('calls streamText with writing assistant prompt and model', () =>
@@ -51,13 +53,24 @@ describe('streamWritingAssistantChat', () => {
 
       const result = yield* streamWritingAssistantChat({
         messages: testMessages,
+        transcript,
       });
 
-      expect(mockConvertToModelMessages).toHaveBeenCalledWith(testMessages);
+      expect(mockConvertToModelMessages).toHaveBeenCalledWith(
+        testMessages,
+        expect.objectContaining({
+          tools: expect.objectContaining({
+            proposeTranscriptEdit: expect.any(Object),
+          }),
+        }),
+      );
       expect(mockStreamText).toHaveBeenCalledWith(
         expect.objectContaining({
           model: mockModel,
           system: expect.stringContaining('voiceover narration'),
+          tools: expect.objectContaining({
+            proposeTranscriptEdit: expect.any(Object),
+          }),
           messages: mockModelMessages,
           maxOutputTokens: 1024,
           temperature: 0.7,
@@ -75,6 +88,7 @@ describe('streamWritingAssistantChat', () => {
 
       const exit = yield* streamWritingAssistantChat({
         messages: testMessages,
+        transcript,
       }).pipe(Effect.exit);
 
       expect(exit._tag).toBe('Failure');

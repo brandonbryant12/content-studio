@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ResearchChatContainer } from '../components/research-chat-container';
-import { render, screen, userEvent, waitFor } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 const {
   mockUseResearchChat,
@@ -30,52 +30,19 @@ vi.mock('../hooks/use-start-research', () => ({
 
 vi.mock('../components/research-chat-dialog', () => ({
   ResearchChatDialog: ({
-    onSynthesize,
-    onConfirmResearch,
-    onDismissPreview,
-    preview,
+    onStartResearch,
     autoGeneratePodcast,
     onAutoGeneratePodcastChange,
-    autoGenerateVoiceover,
-    onAutoGenerateVoiceoverChange,
-    autoGenerateInfographic,
-    onAutoGenerateInfographicChange,
   }: {
-    onSynthesize: () => void;
-    onConfirmResearch: () => void;
-    onDismissPreview: () => void;
-    preview: { query: string; title: string } | null;
+    onStartResearch: () => void;
     autoGeneratePodcast: boolean;
     onAutoGeneratePodcastChange: (value: boolean) => void;
-    autoGenerateVoiceover: boolean;
-    onAutoGenerateVoiceoverChange: (value: boolean) => void;
-    autoGenerateInfographic: boolean;
-    onAutoGenerateInfographicChange: (value: boolean) => void;
   }) => (
     <div>
       <button onClick={() => onAutoGeneratePodcastChange(!autoGeneratePodcast)}>
         Toggle Auto Podcast
       </button>
-      <button
-        onClick={() => onAutoGenerateVoiceoverChange(!autoGenerateVoiceover)}
-      >
-        Toggle Auto Voiceover
-      </button>
-      <button
-        onClick={() =>
-          onAutoGenerateInfographicChange(!autoGenerateInfographic)
-        }
-      >
-        Toggle Auto Infographic
-      </button>
-      <button onClick={onSynthesize}>Synthesize</button>
-      {preview && (
-        <div>
-          <p>Preview: {preview.title}</p>
-          <button onClick={onConfirmResearch}>Confirm Research</button>
-          <button onClick={onDismissPreview}>Dismiss Preview</button>
-        </div>
-      )}
+      <button onClick={onStartResearch}>Start Research</button>
     </div>
   ),
 }));
@@ -132,132 +99,57 @@ describe('ResearchChatContainer', () => {
     });
   });
 
-  it('synthesize shows preview, confirm starts research', async () => {
+  it('starts research from one click', async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
 
     render(<ResearchChatContainer open={true} onOpenChange={onOpenChange} />);
 
-    // Step 1: synthesize
-    await user.click(screen.getByRole('button', { name: 'Synthesize' }));
+    await user.click(screen.getByRole('button', { name: 'Start Research' }));
 
-    // Step 2: preview appears
-    await waitFor(() =>
-      expect(
-        screen.getByText('Preview: AI Market Analysis'),
-      ).toBeInTheDocument(),
-    );
-
-    // Step 3: confirm research
-    await user.click(screen.getByRole('button', { name: 'Confirm Research' }));
-
+    expect(synthesizeMutate).toHaveBeenCalled();
     expect(startResearchMutate).toHaveBeenCalled();
     expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
       query: 'AI market analysis',
       title: 'AI Market Analysis',
       autoGeneratePodcast: false,
-      autoGenerateVoiceover: false,
-      autoGenerateInfographic: false,
     });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it('passes auto-generate podcast flag through to start research', async () => {
     const user = userEvent.setup();
-    const onOpenChange = vi.fn();
 
-    render(<ResearchChatContainer open={true} onOpenChange={onOpenChange} />);
+    render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
 
     // Toggle checkbox first
     await user.click(
       screen.getByRole('button', { name: 'Toggle Auto Podcast' }),
     );
 
-    // Synthesize
-    await user.click(screen.getByRole('button', { name: 'Synthesize' }));
-
-    await waitFor(() =>
-      expect(
-        screen.getByText('Preview: AI Market Analysis'),
-      ).toBeInTheDocument(),
-    );
-
-    // Confirm
-    await user.click(screen.getByRole('button', { name: 'Confirm Research' }));
+    await user.click(screen.getByRole('button', { name: 'Start Research' }));
 
     expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
       query: 'AI market analysis',
       title: 'AI Market Analysis',
       autoGeneratePodcast: true,
-      autoGenerateVoiceover: false,
-      autoGenerateInfographic: false,
     });
   });
 
-  it('passes auto-generate voiceover and infographic flags through to start research', async () => {
+  it('does not trigger while synthesize is already pending', async () => {
     const user = userEvent.setup();
 
-    render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
-
-    await user.click(
-      screen.getByRole('button', { name: 'Toggle Auto Voiceover' }),
-    );
-    await user.click(
-      screen.getByRole('button', { name: 'Toggle Auto Infographic' }),
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Synthesize' }));
-    await waitFor(() =>
-      expect(
-        screen.getByText('Preview: AI Market Analysis'),
-      ).toBeInTheDocument(),
-    );
-    await user.click(screen.getByRole('button', { name: 'Confirm Research' }));
-
-    expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
-      query: 'AI market analysis',
-      title: 'AI Market Analysis',
-      autoGeneratePodcast: false,
-      autoGenerateVoiceover: true,
-      autoGenerateInfographic: true,
-    });
-  });
-
-  it('dismiss preview clears preview and extends follow-ups', async () => {
-    const user = userEvent.setup();
-    const extendFollowUps = vi.fn();
-
-    mockUseResearchChat.mockReturnValue({
-      messages: [
-        { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'x' }] },
-      ],
-      sendMessage: vi.fn(),
-      isStreaming: false,
+    mockUseSynthesizeResearch.mockReturnValue({
+      mutate: synthesizeMutate,
+      isPending: true,
       error: undefined,
-      canStartResearch: true,
-      shouldAutoStart: false,
-      followUpCount: 1,
-      followUpLimit: 2,
-      extendFollowUps,
-      reset: vi.fn(),
     });
 
     render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
 
-    // Synthesize to get preview
-    await user.click(screen.getByRole('button', { name: 'Synthesize' }));
-    await waitFor(() =>
-      expect(
-        screen.getByText('Preview: AI Market Analysis'),
-      ).toBeInTheDocument(),
-    );
+    await user.click(screen.getByRole('button', { name: 'Start Research' }));
 
-    // Dismiss preview
-    await user.click(screen.getByRole('button', { name: 'Dismiss Preview' }));
-
-    expect(extendFollowUps).toHaveBeenCalled();
-    expect(
-      screen.queryByText('Preview: AI Market Analysis'),
-    ).not.toBeInTheDocument();
+    expect(synthesizeMutate).not.toHaveBeenCalled();
+    expect(startResearchMutate).not.toHaveBeenCalled();
   });
 });

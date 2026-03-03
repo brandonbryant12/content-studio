@@ -15,8 +15,6 @@ export interface CreateFromResearchInput {
   query: string;
   title?: string;
   autoGeneratePodcast?: boolean;
-  autoGenerateVoiceover?: boolean;
-  autoGenerateInfographic?: boolean;
 }
 
 export const createFromResearch = (input: CreateFromResearchInput) =>
@@ -42,8 +40,6 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
           researchConfig: {
             query: input.query,
             autoGeneratePodcast: input.autoGeneratePodcast === true,
-            autoGenerateVoiceover: input.autoGenerateVoiceover === true,
-            autoGenerateInfographic: input.autoGenerateInfographic === true,
           },
           createdBy: user.id,
         });
