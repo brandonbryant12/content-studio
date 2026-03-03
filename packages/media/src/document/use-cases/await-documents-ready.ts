@@ -34,25 +34,36 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     if (documentIds.length === 0) return;
 
     const documentRepo = yield* DocumentRepo;
+    const failNotReady = () =>
+      Effect.fail(new DocumentsNotReadyTimeout({ documentIds }));
+    const fetchDocs = () =>
+      Effect.forEach(documentIds, (id) => documentRepo.findById(id));
+    const formatPollStatus = (
+      docs: ReadonlyArray<{ title: string; status: string }>,
+    ) => docs.map((doc) => `${doc.title}=${doc.status}`).join(', ');
 
     // Check initial status
     let attempt = 1;
-    let docs = yield* Effect.forEach(documentIds, (id) =>
-      documentRepo.findById(id),
-    );
+    let docs = yield* fetchDocs();
 
-    const primaryId = documentIds[0] ?? 'unknown';
-    const ownerId = docs[0]?.createdBy ?? 'unknown';
+    const primaryId = documentIds[0];
+    if (!primaryId) {
+      return yield* Effect.die('Expected at least one document ID');
+    }
+
+    const firstDoc = docs[0];
+    if (!firstDoc) {
+      return yield* Effect.die('Expected at least one document to be loaded');
+    }
+
     yield* annotateUseCaseSpan({
-      userId: ownerId,
+      userId: firstDoc.createdBy,
       resourceId: primaryId,
       attributes: {
         'document.ids': documentIds.join(','),
       },
     });
-    yield* Effect.logInfo(
-      `Poll attempt ${attempt}: ${docs.map((d) => `${d.title}=${d.status}`).join(', ')}`,
-    );
+    yield* Effect.logInfo(`Poll attempt ${attempt}: ${formatPollStatus(docs)}`);
 
     // If all ready, return immediately
     if (docs.every((d) => d.status === DocumentStatus.READY)) return;
@@ -60,11 +71,7 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
     // If any failed, fail immediately
     const failed = docs.find((d) => d.status === DocumentStatus.FAILED);
     if (failed) {
-      return yield* Effect.fail(
-        new DocumentsNotReadyTimeout({
-          documentIds,
-        }),
-      );
+      return yield* failNotReady();
     }
 
     // Poll until all ready
@@ -74,25 +81,19 @@ export const awaitDocumentsReady = (input: AwaitDocumentsReadyInput) =>
       elapsed += POLL_INTERVAL_MS;
       attempt += 1;
 
-      docs = yield* Effect.forEach(documentIds, (id) =>
-        documentRepo.findById(id),
-      );
+      docs = yield* fetchDocs();
 
       yield* Effect.logInfo(
-        `Poll attempt ${attempt}: ${docs.map((d) => `${d.title}=${d.status}`).join(', ')} (elapsed: ${Math.round(elapsed / 1000)}s)`,
+        `Poll attempt ${attempt}: ${formatPollStatus(docs)} (elapsed: ${Math.round(elapsed / 1000)}s)`,
       );
 
       if (docs.every((d) => d.status === DocumentStatus.READY)) return;
 
       const failedDoc = docs.find((d) => d.status === DocumentStatus.FAILED);
       if (failedDoc) {
-        return yield* Effect.fail(
-          new DocumentsNotReadyTimeout({
-            documentIds,
-          }),
-        );
+        return yield* failNotReady();
       }
     }
 
-    return yield* new DocumentsNotReadyTimeout({ documentIds });
+    return yield* failNotReady();
   }).pipe(withUseCaseSpan('useCase.awaitDocumentsReady'));

@@ -1,16 +1,39 @@
-// shared/__tests__/error-boundary.test.tsx
-
+import type { ReactNode } from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { ErrorBoundary } from '../components/error-boundary/error-boundary';
+import type { ErrorBoundaryProps } from '../components/error-boundary/types';
 import { renderWithQuery, screen, fireEvent } from '@/test-utils';
 
-// Component that throws an error when rendered
 function ThrowingComponent({ error }: { error: Error }): never {
   throw error;
 }
 
-// Suppress React's error boundary console logs during tests
 let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+function renderBoundary(
+  children: ReactNode,
+  props: Partial<ErrorBoundaryProps> = {},
+) {
+  return renderWithQuery(<ErrorBoundary {...props}>{children}</ErrorBoundary>);
+}
+
+function createRecoverableComponent(error: Error, recoveredText: string) {
+  let shouldThrow = true;
+
+  function RecoverableComponent() {
+    if (shouldThrow) {
+      throw error;
+    }
+    return <div>{recoveredText}</div>;
+  }
+
+  return {
+    RecoverableComponent,
+    recover: () => {
+      shouldThrow = false;
+    },
+  };
+}
 
 beforeEach(() => {
   consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -22,11 +45,7 @@ afterEach(() => {
 
 describe('ErrorBoundary', () => {
   it('renders children when no error occurs', () => {
-    renderWithQuery(
-      <ErrorBoundary>
-        <div>Test Content</div>
-      </ErrorBoundary>,
-    );
+    renderBoundary(<div>Test Content</div>);
 
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
@@ -34,11 +53,7 @@ describe('ErrorBoundary', () => {
   it('shows error fallback when child throws error', () => {
     const testError = new Error('Test error message');
 
-    renderWithQuery(
-      <ErrorBoundary>
-        <ThrowingComponent error={testError} />
-      </ErrorBoundary>,
-    );
+    renderBoundary(<ThrowingComponent error={testError} />);
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByText('Test error message')).toBeInTheDocument();
@@ -65,11 +80,9 @@ describe('ErrorBoundary', () => {
       );
     }
 
-    renderWithQuery(
-      <ErrorBoundary FallbackComponent={CustomFallback}>
-        <ThrowingComponent error={testError} />
-      </ErrorBoundary>,
-    );
+    renderBoundary(<ThrowingComponent error={testError} />, {
+      FallbackComponent: CustomFallback,
+    });
 
     expect(screen.getByText('Custom Error: Custom error')).toBeInTheDocument();
     expect(
@@ -81,11 +94,7 @@ describe('ErrorBoundary', () => {
     const testError = new Error('Callback test error');
     const onError = vi.fn();
 
-    renderWithQuery(
-      <ErrorBoundary onError={onError}>
-        <ThrowingComponent error={testError} />
-      </ErrorBoundary>,
-    );
+    renderBoundary(<ThrowingComponent error={testError} />, { onError });
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledWith(
@@ -99,72 +108,43 @@ describe('ErrorBoundary', () => {
   it('reset button clears error state and calls onReset', () => {
     const testError = new Error('Reset test error');
     const onReset = vi.fn();
-    let shouldThrow = true;
-
-    function ConditionalThrowingComponent() {
-      if (shouldThrow) {
-        throw testError;
-      }
-      return <div>Recovered Content</div>;
-    }
-
-    renderWithQuery(
-      <ErrorBoundary onReset={onReset}>
-        <ConditionalThrowingComponent />
-      </ErrorBoundary>,
+    const { RecoverableComponent, recover } = createRecoverableComponent(
+      testError,
+      'Recovered Content',
     );
 
-    // Error fallback should be shown
+    renderBoundary(<RecoverableComponent />, { onReset });
+
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-
-    // Set flag to not throw on next render
-    shouldThrow = false;
-
-    // Click reset button
+    recover();
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
 
-    // onReset should have been called
     expect(onReset).toHaveBeenCalledTimes(1);
-
-    // Content should now be rendered
     expect(screen.getByText('Recovered Content')).toBeInTheDocument();
   });
 
   it('changes in resetKeys triggers reset', () => {
     const testError = new Error('Reset keys test error');
     const onReset = vi.fn();
-    let shouldThrow = true;
-
-    function ConditionalThrowingComponent() {
-      if (shouldThrow) {
-        throw testError;
-      }
-      return <div>Recovered via Reset Keys</div>;
-    }
-
-    const { rerender } = renderWithQuery(
-      <ErrorBoundary onReset={onReset} resetKeys={['key1']}>
-        <ConditionalThrowingComponent />
-      </ErrorBoundary>,
+    const { RecoverableComponent, recover } = createRecoverableComponent(
+      testError,
+      'Recovered via Reset Keys',
     );
 
-    // Error fallback should be shown
+    const { rerender } = renderBoundary(<RecoverableComponent />, {
+      onReset,
+      resetKeys: ['key1'],
+    });
+
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-
-    // Set flag to not throw on next render
-    shouldThrow = false;
-
-    // Rerender with changed resetKeys
+    recover();
     rerender(
       <ErrorBoundary onReset={onReset} resetKeys={['key2']}>
-        <ConditionalThrowingComponent />
+        <RecoverableComponent />
       </ErrorBoundary>,
     );
 
-    // onReset should have been called
     expect(onReset).toHaveBeenCalledTimes(1);
-
-    // Content should now be rendered
     expect(screen.getByText('Recovered via Reset Keys')).toBeInTheDocument();
   });
 });

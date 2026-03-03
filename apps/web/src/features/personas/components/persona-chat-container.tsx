@@ -32,13 +32,6 @@ export function PersonaChatContainer({
     [onOpenChange, chat],
   );
 
-  const handleSendMessage = useCallback(
-    (text: string) => {
-      chat.sendMessage({ text });
-    },
-    [chat],
-  );
-
   const handleCreatePersona = useCallback(() => {
     if (chat.messages.length === 0 || isCreatingPersona) return;
 
@@ -46,13 +39,8 @@ export function PersonaChatContainer({
       onSuccess: (result) => {
         createMutation.mutate(
           {
-            name: result.name,
-            role: result.role,
-            personalityDescription: result.personalityDescription,
-            speakingStyle: result.speakingStyle,
+            ...result,
             exampleQuotes: [...result.exampleQuotes],
-            voiceId: result.voiceId,
-            voiceName: result.voiceName,
           },
           {
             onSuccess: () => handleOpenChange(false),
@@ -78,7 +66,7 @@ export function PersonaChatContainer({
       createError={createError}
       canCreatePersona={chat.canCreatePersona}
       autoCreateReady={chat.shouldAutoCreate}
-      onSendMessage={handleSendMessage}
+      onSendMessage={(text) => chat.sendMessage({ text })}
       onCreatePersona={handleCreatePersona}
       isCreatingPersona={isCreatingPersona}
       followUpCount={chat.followUpCount}

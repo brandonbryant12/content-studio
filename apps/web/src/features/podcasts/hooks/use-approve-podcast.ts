@@ -11,7 +11,7 @@ type Podcast = RouterOutput['podcasts']['get'];
  * Mutation to approve/revoke a podcast. Admin-only.
  * Optimistically updates `approvedBy` and `approvedAt`.
  */
-export function useApprovePodcast(podcastId: string, userId: string) {
+export function useApprovePodcast(podcastId: string, userId?: string) {
   const queryClient = useQueryClient();
   const podcastQueryKey = getPodcastQueryKey(podcastId);
 
@@ -23,7 +23,7 @@ export function useApprovePodcast(podcastId: string, userId: string) {
         const previousPodcast =
           queryClient.getQueryData<Podcast>(podcastQueryKey);
 
-        if (previousPodcast) {
+        if (previousPodcast && userId) {
           queryClient.setQueryData<Podcast>(podcastQueryKey, {
             ...previousPodcast,
             approvedBy: userId,

@@ -69,16 +69,7 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
-    const result = yield* saveChanges({
-      podcastId: input.podcastId,
-      segments: input.segments,
-      hostVoice: input.hostVoice,
-      hostVoiceName: input.hostVoiceName,
-      coHostVoice: input.coHostVoice,
-      coHostVoiceName: input.coHostVoiceName,
-      hostPersonaId: input.hostPersonaId,
-      coHostPersonaId: input.coHostPersonaId,
-    });
+    const result = yield* saveChanges(input);
 
     if (!result.hasChanges) {
       return yield* Effect.fail(

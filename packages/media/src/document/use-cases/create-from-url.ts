@@ -51,8 +51,17 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
     }
 
     // 3. Derive title from URL if not provided
-    const title = input.title || parsed.hostname + parsed.pathname;
-    let insertedDocumentId: string | null = null;
+    const title = input.title || `${parsed.hostname}${parsed.pathname}`;
+    let insertedDocumentId: string | undefined;
+    const markEnqueueFailure = (error: unknown) => {
+      if (!insertedDocumentId) return Effect.void;
+      return documentRepo.updateStatus(
+        insertedDocumentId,
+        DocumentStatus.FAILED,
+        `Failed to enqueue URL processing: ${formatUnknownError(error)}`,
+      );
+    };
+
     return yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
         const doc = yield* documentRepo.insert({
@@ -88,13 +97,6 @@ export const createFromUrl = (input: CreateFromUrlInput) =>
 
         return doc;
       }),
-      (error) =>
-        insertedDocumentId
-          ? documentRepo.updateStatus(
-              insertedDocumentId,
-              DocumentStatus.FAILED,
-              `Failed to enqueue URL processing: ${formatUnknownError(error)}`,
-            )
-          : Effect.void,
+      markEnqueueFailure,
     );
   }).pipe(withUseCaseSpan('useCase.createFromUrl'));

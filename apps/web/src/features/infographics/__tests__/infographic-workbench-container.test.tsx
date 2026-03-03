@@ -10,9 +10,8 @@ import { useNavigationBlock, useSessionGuard } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { act, fireEvent, renderWithQuery, screen, waitFor } from '@/test-utils';
 
-const { promptPanelSpy, versionHistoryStripSpy } = vi.hoisted(() => ({
+const { promptPanelSpy } = vi.hoisted(() => ({
   promptPanelSpy: vi.fn(),
-  versionHistoryStripSpy: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', () => ({
@@ -81,25 +80,21 @@ vi.mock('../components/style-section', () => ({
 }));
 
 vi.mock('../components/version-history-strip', () => ({
-  VersionHistoryStrip: (props: Record<string, unknown>) => {
-    versionHistoryStripSpy(props);
-
-    return (
-      <div data-testid="version-history-strip">
-        <button
-          type="button"
-          onClick={() => {
-            const onSelectVersion = props.onSelectVersion as
-              | ((id: string) => void)
-              | undefined;
-            onSelectVersion?.('version-1');
-          }}
-        >
-          Select version 1
-        </button>
-      </div>
-    );
-  },
+  VersionHistoryStrip: (props: Record<string, unknown>) => (
+    <div data-testid="version-history-strip">
+      <button
+        type="button"
+        onClick={() => {
+          const onSelectVersion = props.onSelectVersion as
+            | ((id: string) => void)
+            | undefined;
+          onSelectVersion?.('version-1');
+        }}
+      >
+        Select version 1
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@/shared/components/approval/approve-button', () => ({
@@ -122,6 +117,46 @@ vi.mock('@/shared/lib/storage-url', () => ({
   getStorageUrl: (key: string) => `/storage/${key}`,
 }));
 
+function createMockInfographic(
+  overrides: Partial<Record<string, unknown>> = {},
+) {
+  return {
+    id: 'infographic-1',
+    title: 'Test Infographic',
+    approvedBy: null,
+    imageStorageKey: null,
+    errorMessage: null,
+    format: 'portrait',
+    status: 'ready',
+    updatedAt: '2026-02-20T14:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function createMockSettings(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    prompt: 'Create an infographic',
+    styleProperties: [],
+    format: 'portrait',
+    setPrompt: vi.fn(),
+    setStyleProperties: vi.fn(),
+    setFormat: vi.fn(),
+    hasChanges: false,
+    isSaving: false,
+    saveSettings: vi.fn(),
+    discardChanges: vi.fn(),
+    ...overrides,
+  };
+}
+
+function createMockVersions(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    data: [],
+    isLoading: false,
+    ...overrides,
+  };
+}
+
 function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     hasChanges: false,
@@ -137,6 +172,35 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+const setInfographic = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useInfographic).mockReturnValue({
+    data: createMockInfographic(overrides),
+  } as never);
+};
+
+const setSettings = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useInfographicSettings).mockReturnValue(
+    createMockSettings(overrides) as never,
+  );
+};
+
+const setVersions = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useInfographicVersions).mockReturnValue(
+    createMockVersions(overrides) as never,
+  );
+};
+
+const setActions = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useInfographicActions).mockReturnValue(
+    createMockActions(overrides) as never,
+  );
+};
+
+const renderWorkbench = () =>
+  renderWithQuery(
+    <InfographicWorkbenchContainer infographicId="infographic-1" />,
+  );
+
 function getLastPromptPanelProps<T>(): T | undefined {
   const lastCall =
     promptPanelSpy.mock.calls[promptPanelSpy.mock.calls.length - 1];
@@ -151,92 +215,49 @@ describe('InfographicWorkbenchContainer', () => {
       user: { id: 'user-1' },
     } as never);
     vi.mocked(useIsAdmin).mockReturnValue(false);
-
-    vi.mocked(useInfographic).mockReturnValue({
-      data: {
-        id: 'infographic-1',
-        title: 'Test Infographic',
-        approvedBy: null,
-        imageStorageKey: null,
-        errorMessage: null,
-      },
-    } as never);
-
-    vi.mocked(useInfographicSettings).mockReturnValue({
-      prompt: 'Create an infographic',
-      styleProperties: [],
-      format: 'portrait',
-      setPrompt: vi.fn(),
-      setStyleProperties: vi.fn(),
-      setFormat: vi.fn(),
-      hasChanges: false,
-      isSaving: false,
-      saveSettings: vi.fn(),
-      discardChanges: vi.fn(),
-    } as never);
-
-    vi.mocked(useInfographicVersions).mockReturnValue({
-      data: [],
-      isLoading: false,
-    } as never);
-
     vi.mocked(useApproveInfographic).mockReturnValue({
       approve: { mutate: vi.fn(), isPending: false },
       revoke: { mutate: vi.fn(), isPending: false },
     } as never);
+
+    setInfographic();
+    setSettings();
+    setVersions();
+    setActions();
   });
 
-  it('blocks navigation when there are unsaved changes and no generation', () => {
-    vi.mocked(useInfographicActions).mockReturnValue(
-      createMockActions({ hasChanges: true, isGenerating: false }) as never,
-    );
-
-    renderWithQuery(
-      <InfographicWorkbenchContainer infographicId="infographic-1" />,
-    );
-
-    expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
+  it.each([
+    {
+      name: 'blocks navigation when there are unsaved changes and no generation',
+      isGenerating: false,
       shouldBlock: true,
-    });
-  });
+    },
+    {
+      name: 'does not block navigation while generation is running',
+      isGenerating: true,
+      shouldBlock: false,
+    },
+  ])('$name', ({ isGenerating, shouldBlock }) => {
+    setActions({ hasChanges: true, isGenerating });
 
-  it('does not block navigation while generation is running', () => {
-    vi.mocked(useInfographicActions).mockReturnValue(
-      createMockActions({ hasChanges: true, isGenerating: true }) as never,
-    );
-
-    renderWithQuery(
-      <InfographicWorkbenchContainer infographicId="infographic-1" />,
-    );
+    renderWorkbench();
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
-      shouldBlock: false,
+      shouldBlock,
     });
   });
 
   it('starts with a blank iteration prompt for existing images', () => {
-    vi.mocked(useInfographic).mockReturnValue({
-      data: {
-        id: 'infographic-1',
-        title: 'Test Infographic',
-        approvedBy: null,
-        imageStorageKey: 'infographics/one.png',
-        errorMessage: null,
-      },
-    } as never);
-    vi.mocked(useInfographicActions).mockReturnValue(
-      createMockActions() as never,
-    );
+    setInfographic({ imageStorageKey: 'infographics/one.png' });
 
-    renderWithQuery(
-      <InfographicWorkbenchContainer infographicId="infographic-1" />,
-    );
+    renderWorkbench();
 
-    const promptPanelProps = getLastPromptPanelProps<{
-      prompt: string;
-      isEditMode: boolean;
-    }>();
-    expect(promptPanelProps).toMatchObject({
+    expect(
+      getLastPromptPanelProps<{
+        prompt: string;
+        isEditMode: boolean;
+      }>(),
+    ).toMatchObject({
       prompt: '',
       isEditMode: true,
     });
@@ -246,28 +267,16 @@ describe('InfographicWorkbenchContainer', () => {
   });
 
   it('passes typed iteration prompt to generate action', async () => {
-    vi.mocked(useInfographic).mockReturnValue({
-      data: {
-        id: 'infographic-1',
-        title: 'Test Infographic',
-        approvedBy: null,
-        imageStorageKey: 'infographics/one.png',
-        errorMessage: null,
-      },
-    } as never);
     const actions = createMockActions();
-    vi.mocked(useInfographicActions).mockReturnValue(actions as never);
+    setInfographic({ imageStorageKey: 'infographics/one.png' });
+    setActions(actions);
 
-    renderWithQuery(
-      <InfographicWorkbenchContainer infographicId="infographic-1" />,
-    );
-
-    const initialPromptPanelProps = getLastPromptPanelProps<{
-      onPromptChange: (value: string) => void;
-    }>();
+    renderWorkbench();
 
     act(() => {
-      initialPromptPanelProps?.onPromptChange('Make the title larger');
+      getLastPromptPanelProps<{
+        onPromptChange: (value: string) => void;
+      }>()?.onPromptChange('Make the title larger');
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Save & Regenerate' }));
@@ -277,24 +286,13 @@ describe('InfographicWorkbenchContainer', () => {
     );
 
     await waitFor(() => {
-      const latestPromptPanelProps = getLastPromptPanelProps<{
-        prompt: string;
-      }>();
-      expect(latestPromptPanelProps?.prompt).toBe('');
+      expect(getLastPromptPanelProps<{ prompt: string }>()?.prompt).toBe('');
     });
   });
 
   it('shows explicit viewing/base messaging when a historical version is selected', () => {
-    vi.mocked(useInfographic).mockReturnValue({
-      data: {
-        id: 'infographic-1',
-        title: 'Test Infographic',
-        approvedBy: null,
-        imageStorageKey: 'infographics/latest.png',
-        errorMessage: null,
-      },
-    } as never);
-    vi.mocked(useInfographicVersions).mockReturnValue({
+    setInfographic({ imageStorageKey: 'infographics/latest.png' });
+    setVersions({
       data: [
         {
           id: 'version-1',
@@ -317,15 +315,9 @@ describe('InfographicWorkbenchContainer', () => {
           createdAt: '2025-01-02T00:00:00Z',
         },
       ],
-      isLoading: false,
-    } as never);
-    vi.mocked(useInfographicActions).mockReturnValue(
-      createMockActions() as never,
-    );
+    });
 
-    renderWithQuery(
-      <InfographicWorkbenchContainer infographicId="infographic-1" />,
-    );
+    renderWorkbench();
 
     fireEvent.click(screen.getByRole('button', { name: /select version 1/i }));
 

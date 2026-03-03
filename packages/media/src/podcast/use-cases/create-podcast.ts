@@ -20,14 +20,15 @@ export const createPodcast = (input: CreatePodcastInput) =>
     const podcastRepo = yield* PodcastRepo;
 
     const { documentIds, ...data } = input;
+    const sourceDocumentIds = documentIds ?? [];
 
-    if (documentIds && documentIds.length > 0) {
-      yield* podcastRepo.verifyDocumentsExist(documentIds, user.id);
+    if (sourceDocumentIds.length > 0) {
+      yield* podcastRepo.verifyDocumentsExist(sourceDocumentIds, user.id);
     }
 
     const podcast = yield* podcastRepo.insert(
       { ...data, createdBy: user.id },
-      documentIds ?? [],
+      sourceDocumentIds,
     );
     yield* annotateUseCaseSpan({
       userId: user.id,

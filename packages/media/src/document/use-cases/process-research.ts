@@ -4,7 +4,11 @@ import {
   documentOutlineUserPrompt,
   renderPrompt,
 } from '@repo/ai';
-import { DocumentOutlineSchema, DocumentStatus } from '@repo/db/schema';
+import {
+  DocumentOutlineSchema,
+  DocumentStatus,
+  type ResearchConfig,
+} from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
@@ -67,9 +71,13 @@ const MAX_POLL_DURATION_MS = 60 * 60 * 1000;
 /** Backoff: 30s for first poll, then 60s thereafter */
 const INITIAL_POLL_MS = 30_000;
 const STEADY_POLL_MS = 60_000;
+const getPollStatusLabel = <T>(result: T | null) =>
+  result === null ? 'in_progress' : 'completed';
 
-export const processResearch = (input: ProcessResearchInput) =>
-  Effect.gen(function* () {
+export const processResearch = (input: ProcessResearchInput) => {
+  let latestResearchConfig: ResearchConfig | null = null;
+
+  return Effect.gen(function* () {
     const { documentId, query } = input;
     const research = yield* DeepResearch;
     const documentRepo = yield* DocumentRepo;
@@ -82,18 +90,35 @@ export const processResearch = (input: ProcessResearchInput) =>
       resourceId: documentId,
       attributes: {
         'document.id': documentId,
-        'document.query': input.query,
+        'document.query': query,
       },
     });
+
+    const resumableOperationId = doc.researchConfig?.operationId;
     const canResume =
-      doc.researchConfig?.operationId &&
+      typeof resumableOperationId === 'string' &&
       doc.researchConfig?.researchStatus === 'in_progress';
     const autoGeneratePodcast =
       doc.researchConfig?.autoGeneratePodcast === true;
+    latestResearchConfig = doc.researchConfig
+      ? {
+          ...doc.researchConfig,
+          query,
+          autoGeneratePodcast,
+        }
+      : {
+          query,
+          autoGeneratePodcast,
+        };
 
     let interactionId: string;
     if (canResume) {
-      interactionId = doc.researchConfig!.operationId!;
+      interactionId = resumableOperationId;
+      latestResearchConfig = {
+        ...latestResearchConfig,
+        operationId: interactionId,
+        researchStatus: 'in_progress',
+      };
       yield* Effect.logInfo(
         `Resuming polling for existing operation ${interactionId}`,
       );
@@ -101,6 +126,11 @@ export const processResearch = (input: ProcessResearchInput) =>
       // Start a new research operation
       const result = yield* research.startResearch(query);
       interactionId = result.interactionId;
+      latestResearchConfig = {
+        ...latestResearchConfig,
+        operationId: interactionId,
+        researchStatus: 'in_progress',
+      };
 
       // Update document with interaction ID
       yield* documentRepo.updateResearchConfig(documentId, {
@@ -111,12 +141,27 @@ export const processResearch = (input: ProcessResearchInput) =>
       });
     }
 
+    const markResearchFailed = (reason: string) =>
+      Effect.gen(function* () {
+        yield* documentRepo.updateResearchConfig(documentId, {
+          query,
+          operationId: interactionId,
+          researchStatus: 'failed',
+          autoGeneratePodcast,
+        });
+        yield* documentRepo.updateStatus(
+          documentId,
+          DocumentStatus.FAILED,
+          reason,
+        );
+      });
+
     // 3. Poll for result: 30s first, then every 60s
     let elapsed = 0;
     let attempt = 1;
     let result = yield* research.getResult(interactionId);
     yield* Effect.logInfo(
-      `Poll attempt ${attempt}: status=${result === null ? 'in_progress' : 'completed'} (elapsed: 0s)`,
+      `Poll attempt ${attempt}: status=${getPollStatusLabel(result)} (elapsed: 0s)`,
     );
 
     while (result === null && elapsed < MAX_POLL_DURATION_MS) {
@@ -126,37 +171,17 @@ export const processResearch = (input: ProcessResearchInput) =>
       attempt += 1;
       result = yield* research.getResult(interactionId);
       yield* Effect.logInfo(
-        `Poll attempt ${attempt}: status=${result === null ? 'in_progress' : 'completed'} (elapsed: ${Math.round(elapsed / 1000)}s)`,
+        `Poll attempt ${attempt}: status=${getPollStatusLabel(result)} (elapsed: ${Math.round(elapsed / 1000)}s)`,
       );
     }
 
     if (result === null) {
-      yield* documentRepo.updateResearchConfig(documentId, {
-        query,
-        operationId: interactionId,
-        researchStatus: 'failed',
-        autoGeneratePodcast,
-      });
-      yield* documentRepo.updateStatus(
-        documentId,
-        DocumentStatus.FAILED,
-        'Research timed out after 60 minutes',
-      );
+      yield* markResearchFailed('Research timed out after 60 minutes');
       return yield* new ResearchTimeoutError({ documentId, interactionId });
     }
 
     if (!result.content.trim()) {
-      yield* documentRepo.updateResearchConfig(documentId, {
-        query,
-        operationId: interactionId,
-        researchStatus: 'failed',
-        autoGeneratePodcast,
-      });
-      yield* documentRepo.updateStatus(
-        documentId,
-        DocumentStatus.FAILED,
-        'Research completed but returned no content',
-      );
+      yield* markResearchFailed('Research completed but returned no content');
       return yield* new ResearchEmptyContentError({
         documentId,
         interactionId,
@@ -285,15 +310,26 @@ export const processResearch = (input: ProcessResearchInput) =>
       (error) =>
         Effect.gen(function* () {
           const repo = yield* DocumentRepo;
+          if (latestResearchConfig) {
+            yield* repo
+              .updateResearchConfig(input.documentId, {
+                ...latestResearchConfig,
+                researchStatus: 'failed',
+              })
+              .pipe(Effect.ignore);
+          }
+
           yield* repo
             .updateStatus(
               input.documentId,
               DocumentStatus.FAILED,
-              String(error),
+              formatUnknownError(error),
             )
             .pipe(Effect.ignore);
+
           return yield* Effect.fail(error);
         }),
     ),
     withUseCaseSpan('useCase.processResearch'),
   );
+};

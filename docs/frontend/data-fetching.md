@@ -122,6 +122,7 @@ const router = createRouter({
 | Navigation type  | Strategy                                   |
 | ---------------- | ------------------------------------------ |
 | Route navigation | `ensureQueryData` in route `loader`        |
+| Create + redirect to detail route | `setQueryData(getXQueryKey(id), created)` in mutation `onSuccess`, then `navigate` |
 | Hover prefetch   | `queryClient.prefetchQuery` on mouse enter |
 | Pagination       | Prefetch next page in `useEffect`          |
 

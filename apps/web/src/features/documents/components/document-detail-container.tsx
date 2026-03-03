@@ -15,6 +15,8 @@ import {
 } from '../lib/export';
 import { DocumentDetail } from './document-detail';
 import { apiClient } from '@/clients/apiClient';
+import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
+import { getVoiceoverListQueryKey } from '@/features/voiceovers/hooks/use-voiceover-list';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -35,16 +37,16 @@ export function DocumentDetailContainer({
   const isReady = document.status === DocumentStatus.READY;
   const { data: contentData } = useDocumentContentOptional(documentId, isReady);
   const documentContent = contentData?.content ?? null;
+  const documentContentText = documentContent ?? '';
 
   const actions = useDocumentActions({ document });
-  const search = useDocumentSearch(documentContent ?? '');
+  const search = useDocumentSearch(documentContentText);
   const retryMutation = useRetryProcessing();
   const createVoiceoverMutation = useMutation(
     apiClient.voiceovers.create.mutationOptions({
       onSuccess: (created) => {
         queryClient.invalidateQueries({
-          queryKey: apiClient.voiceovers.list.queryOptions({ input: {} })
-            .queryKey,
+          queryKey: getVoiceoverListQueryKey(),
         });
         toast.success('Voiceover created');
         navigate({
@@ -61,8 +63,7 @@ export function DocumentDetailContainer({
     apiClient.infographics.create.mutationOptions({
       onSuccess: (created) => {
         queryClient.invalidateQueries({
-          queryKey: apiClient.infographics.list.queryOptions({ input: {} })
-            .queryKey,
+          queryKey: getInfographicListQueryKey(),
         });
         toast.success('Infographic created');
         navigate({
@@ -77,8 +78,7 @@ export function DocumentDetailContainer({
   );
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const canExport = isReady && !!documentContent?.trim();
-  const canCreateFromDocument = isReady;
+  const canExport = isReady && documentContentText.trim().length > 0;
 
   const handleExportMarkdown = useCallback(() => {
     if (!documentContent) return;
@@ -105,21 +105,6 @@ export function DocumentDetailContainer({
     const fileName = `${toFileSlug(exportTitle, 'document')}.txt`;
     downloadTextFile(text, fileName);
   }, [actions.title, document, documentContent]);
-
-  const handleCreateVoiceover = useCallback(() => {
-    createVoiceoverMutation.mutate({
-      title: `Voiceover: ${document.title}`,
-      documentId: document.id,
-    });
-  }, [createVoiceoverMutation, document.id, document.title]);
-
-  const handleCreateInfographic = useCallback(() => {
-    createInfographicMutation.mutate({
-      title: `Infographic: ${document.title}`,
-      format: 'portrait',
-      documentId: document.id,
-    });
-  }, [createInfographicMutation, document.id, document.title]);
 
   useKeyboardShortcut({
     key: 's',
@@ -155,11 +140,22 @@ export function DocumentDetailContainer({
         onRetry={() => retryMutation.mutate({ id: documentId })}
         search={search}
         canExport={canExport}
-        canCreateFromDocument={canCreateFromDocument}
+        canCreateFromDocument={isReady}
         isCreatingVoiceover={createVoiceoverMutation.isPending}
         isCreatingInfographic={createInfographicMutation.isPending}
-        onCreateVoiceover={handleCreateVoiceover}
-        onCreateInfographic={handleCreateInfographic}
+        onCreateVoiceover={() =>
+          createVoiceoverMutation.mutate({
+            title: `Voiceover: ${document.title}`,
+            documentId: document.id,
+          })
+        }
+        onCreateInfographic={() =>
+          createInfographicMutation.mutate({
+            title: `Infographic: ${document.title}`,
+            format: 'portrait',
+            documentId: document.id,
+          })
+        }
         onExportMarkdown={handleExportMarkdown}
         onExportText={handleExportText}
       />

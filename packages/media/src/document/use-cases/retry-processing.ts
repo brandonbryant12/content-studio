@@ -37,41 +37,48 @@ export const retryProcessing = (input: RetryProcessingInput) =>
       return doc;
     }
 
-    // Re-enqueue the appropriate job based on source type
-    if (doc.source === 'url' && doc.sourceUrl) {
-      const sourceUrl = doc.sourceUrl;
-      yield* withTransactionalStateAndEnqueue(
-        Effect.gen(function* () {
-          yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
-          yield* enqueueJob({
+    const retryJob:
+      | {
+          type: typeof JobType.PROCESS_URL;
+          payload: ProcessUrlPayload;
+          failureLabel: 'URL';
+        }
+      | {
+          type: typeof JobType.PROCESS_RESEARCH;
+          payload: ProcessResearchPayload;
+          failureLabel: 'research';
+        }
+      | null =
+      doc.source === 'url' && doc.sourceUrl
+        ? {
             type: JobType.PROCESS_URL,
             payload: {
               documentId: doc.id,
-              url: sourceUrl,
+              url: doc.sourceUrl,
               userId: doc.createdBy,
-            } satisfies ProcessUrlPayload,
-            userId: doc.createdBy,
-          });
-        }),
-        (error) =>
-          documentRepo.updateStatus(
-            doc.id,
-            DocumentStatus.FAILED,
-            `Failed to enqueue URL retry: ${formatUnknownError(error)}`,
-          ),
-      );
-    } else if (doc.source === 'research' && doc.researchConfig) {
-      const query = doc.researchConfig.query;
+            },
+            failureLabel: 'URL',
+          }
+        : doc.source === 'research' && doc.researchConfig
+          ? {
+              type: JobType.PROCESS_RESEARCH,
+              payload: {
+                documentId: doc.id,
+                query: doc.researchConfig.query,
+                userId: doc.createdBy,
+              },
+              failureLabel: 'research',
+            }
+          : null;
+
+    // Re-enqueue when source type has a dedicated retry job.
+    if (retryJob) {
       yield* withTransactionalStateAndEnqueue(
         Effect.gen(function* () {
           yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
           yield* enqueueJob({
-            type: JobType.PROCESS_RESEARCH,
-            payload: {
-              documentId: doc.id,
-              query,
-              userId: doc.createdBy,
-            } satisfies ProcessResearchPayload,
+            type: retryJob.type,
+            payload: retryJob.payload,
             userId: doc.createdBy,
           });
         }),
@@ -79,7 +86,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
           documentRepo.updateStatus(
             doc.id,
             DocumentStatus.FAILED,
-            `Failed to enqueue research retry: ${formatUnknownError(error)}`,
+            `Failed to enqueue ${retryJob.failureLabel} retry: ${formatUnknownError(error)}`,
           ),
       );
     } else {

@@ -24,6 +24,15 @@ export interface UploadDocumentInput {
   metadata?: Record<string, JsonValue>;
 }
 
+const mergeMetadata = (
+  extractedMetadata: Record<string, JsonValue> | undefined,
+  inputMetadata: Record<string, JsonValue> | undefined,
+) => {
+  if (inputMetadata === undefined) return extractedMetadata;
+  if (extractedMetadata === undefined) return inputMetadata;
+  return { ...extractedMetadata, ...inputMetadata };
+};
+
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -51,15 +60,12 @@ export const uploadDocument = (input: UploadDocumentInput) =>
     yield* storage.upload(contentKey, data, mimeType);
 
     const wordCount = calculateWordCount(parsed.content);
-
-    const mergedMetadata =
-      input.metadata !== undefined
-        ? { ...(parsed.metadata ?? {}), ...input.metadata }
-        : parsed.metadata;
+    const title = input.title ?? parsed.title;
+    const mergedMetadata = mergeMetadata(parsed.metadata, input.metadata);
 
     const doc = yield* documentRepo
       .insert({
-        title: input.title ?? parsed.title,
+        title,
         contentKey,
         mimeType,
         wordCount,

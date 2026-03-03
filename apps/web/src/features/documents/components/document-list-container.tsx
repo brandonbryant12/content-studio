@@ -1,6 +1,5 @@
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
-import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateFromUrl } from '../hooks/use-create-from-url';
 import {
   useDocumentList,
@@ -16,8 +15,7 @@ import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
-  apiClient.documents.delete.mutationOptions().mutationFn!(input, context);
+const deleteFn = apiClient.documents.delete.mutationOptions().mutationFn!;
 
 export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');

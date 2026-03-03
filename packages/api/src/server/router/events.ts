@@ -3,6 +3,23 @@ import { protectedProcedure } from '../orpc';
 import { ssePublisher } from '../publisher';
 import { sseReplayBuffer } from '../replay-buffer';
 
+function stripSseMeta<T>(event: T): {
+  sseId: string | undefined;
+  cleanEvent: T;
+} {
+  if (!event || typeof event !== 'object') {
+    return { sseId: undefined, cleanEvent: event };
+  }
+
+  const rawEvent = event as unknown as Record<string, unknown>;
+  const { __sseId, ...cleanEvent } = rawEvent;
+
+  return {
+    sseId: typeof __sseId === 'string' ? __sseId : undefined,
+    cleanEvent: cleanEvent as unknown as T,
+  };
+}
+
 const eventsRouter = {
   subscribe: protectedProcedure.events.subscribe.handler(async function* ({
     context,
@@ -18,7 +35,7 @@ const eventsRouter = {
     yield withEventMeta({ type: 'connected' as const, userId }, { id: '0' });
 
     // 3. If resuming, replay buffered events
-    let lastSeenId = lastEventId ?? undefined;
+    let lastSeenId = lastEventId;
     if (lastSeenId) {
       const missed = sseReplayBuffer.getAfter(userId, lastSeenId);
       for (const { id, event } of missed) {
@@ -32,8 +49,7 @@ const eventsRouter = {
       if (signal?.aborted) break;
 
       // Extract the __sseId tagged by publisher
-      const raw = event as unknown as Record<string, unknown>;
-      const sseId = raw.__sseId as string | undefined;
+      const { sseId, cleanEvent } = stripSseMeta(event);
 
       // Skip if we already replayed this event
       if (sseId && lastSeenId && Number(sseId) <= Number(lastSeenId)) {
@@ -41,10 +57,9 @@ const eventsRouter = {
       }
 
       // Strip internal field and yield with event meta
-      const { __sseId: _, ...cleanEvent } = raw;
       const id = sseId ?? String(Date.now());
 
-      yield withEventMeta(cleanEvent as unknown as typeof event, { id });
+      yield withEventMeta(cleanEvent, { id });
       if (sseId) lastSeenId = sseId;
     }
   }),

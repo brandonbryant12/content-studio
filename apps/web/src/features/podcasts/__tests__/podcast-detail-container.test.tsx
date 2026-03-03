@@ -16,6 +16,8 @@ import {
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
 import { act, render, waitFor } from '@/test-utils';
 
+const PODCAST_UPDATED_AT = '2026-02-20T14:00:00.000Z';
+
 const {
   podcastDetailSpy,
   downloadFromUrlSpy,
@@ -63,8 +65,8 @@ vi.mock('../components/podcast-detail', () => ({
   },
 }));
 
-vi.mock('../components/setup-wizard-container', () => ({
-  SetupWizardContainer: () => <div data-testid="setup-wizard" />,
+vi.mock('../components/setup', () => ({
+  SetupWizard: () => <div data-testid="setup-wizard" />,
 }));
 
 vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
@@ -96,6 +98,40 @@ vi.mock('@/shared/lib/file-download', async () => {
   };
 });
 
+function createMockPodcast(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: 'podcast-1',
+    title: 'Test Podcast',
+    status: 'ready',
+    segments: [],
+    documents: [],
+    approvedBy: null,
+    audioUrl: null,
+    duration: null,
+    summary: null,
+    updatedAt: PODCAST_UPDATED_AT,
+    ...overrides,
+  };
+}
+
+function createMockScriptEditor(
+  overrides: Partial<Record<string, unknown>> = {},
+) {
+  return {
+    segments: [],
+    hasChanges: false,
+    isSaving: false,
+    updateSegment: vi.fn(),
+    addSegment: vi.fn(),
+    removeSegment: vi.fn(),
+    reorderSegments: vi.fn(),
+    saveChanges: vi.fn(),
+    discardChanges: vi.fn(),
+    resetToSegments: vi.fn(),
+    ...overrides,
+  };
+}
+
 function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     hasAnyChanges: false,
@@ -111,6 +147,27 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+const setPodcast = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(usePodcast).mockReturnValue({
+    data: createMockPodcast(overrides),
+  } as never);
+};
+
+const setScriptEditor = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useScriptEditor).mockReturnValue(
+    createMockScriptEditor(overrides) as never,
+  );
+};
+
+const setActions = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(usePodcastActions).mockReturnValue(
+    createMockActions(overrides) as never,
+  );
+};
+
+const renderContainer = () =>
+  render(<PodcastDetailContainer podcastId="podcast-1" />);
+
 function getLastPodcastDetailProps<T>(): T | undefined {
   const lastCall =
     podcastDetailSpy.mock.calls[podcastDetailSpy.mock.calls.length - 1];
@@ -125,34 +182,6 @@ describe('PodcastDetailContainer', () => {
       user: { id: 'user-1' },
     } as never);
     vi.mocked(useIsAdmin).mockReturnValue(false);
-
-    vi.mocked(usePodcast).mockReturnValue({
-      data: {
-        id: 'podcast-1',
-        title: 'Test Podcast',
-        status: 'ready',
-        segments: [],
-        documents: [],
-        approvedBy: null,
-        audioUrl: null,
-        duration: null,
-        updatedAt: '2026-02-20T14:00:00.000Z',
-      },
-    } as never);
-
-    vi.mocked(useScriptEditor).mockReturnValue({
-      segments: [],
-      hasChanges: false,
-      isSaving: false,
-      updateSegment: vi.fn(),
-      addSegment: vi.fn(),
-      removeSegment: vi.fn(),
-      reorderSegments: vi.fn(),
-      saveChanges: vi.fn(),
-      discardChanges: vi.fn(),
-      resetToSegments: vi.fn(),
-    } as never);
-
     vi.mocked(usePodcastSettings).mockReturnValue({
       hostVoice: 'Aoede',
       coHostVoice: 'Charon',
@@ -175,7 +204,6 @@ describe('PodcastDetailContainer', () => {
       saveSettings: vi.fn(),
       discardChanges: vi.fn(),
     } as never);
-
     vi.mocked(useDocumentSelection).mockReturnValue({
       documents: [],
       documentIds: [],
@@ -184,69 +212,55 @@ describe('PodcastDetailContainer', () => {
       discardChanges: vi.fn(),
       hasChanges: false,
     } as never);
-
     vi.mocked(useApprovePodcast).mockReturnValue({
       approve: { mutate: vi.fn(), isPending: false },
       revoke: { mutate: vi.fn(), isPending: false },
     } as never);
-
     vi.mocked(isSetupMode).mockReturnValue(false);
+
+    setPodcast();
+    setScriptEditor();
+    setActions();
   });
 
-  it('blocks navigation when there are unsaved changes and no generation', () => {
-    vi.mocked(usePodcastActions).mockReturnValue(
-      createMockActions({ hasAnyChanges: true, isGenerating: false }) as never,
-    );
-
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
-
-    expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
+  it.each([
+    {
+      name: 'blocks navigation when there are unsaved changes and no generation',
+      isGenerating: false,
       shouldBlock: true,
-    });
-  });
+    },
+    {
+      name: 'does not block navigation while generation is running',
+      isGenerating: true,
+      shouldBlock: false,
+    },
+  ])('$name', ({ isGenerating, shouldBlock }) => {
+    setActions({ hasAnyChanges: true, isGenerating });
 
-  it('does not block navigation while generation is running', () => {
-    vi.mocked(usePodcastActions).mockReturnValue(
-      createMockActions({ hasAnyChanges: true, isGenerating: true }) as never,
-    );
-
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
+    renderContainer();
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
-      shouldBlock: false,
+      shouldBlock,
     });
   });
 
   it('enables save shortcut in failed state with unsaved changes', () => {
     const handleSave = vi.fn();
-    vi.mocked(usePodcast).mockReturnValue({
-      data: {
-        id: 'podcast-1',
-        title: 'Test Podcast',
-        status: 'failed',
-        segments: [],
-        documents: [],
-        approvedBy: null,
-        audioUrl: null,
-        duration: null,
-        updatedAt: '2026-02-20T14:00:00.000Z',
-      },
-    } as never);
-    vi.mocked(usePodcastActions).mockReturnValue(
-      createMockActions({ hasAnyChanges: true, handleSave }) as never,
-    );
+    setPodcast({ status: 'failed' });
+    setActions({ hasAnyChanges: true, handleSave });
 
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
+    renderContainer();
 
-    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
-    const shortcutConfig = shortcutCalls[shortcutCalls.length - 1]?.[0] as
+    const shortcutConfig = vi.mocked(useKeyboardShortcut).mock.calls[
+      vi.mocked(useKeyboardShortcut).mock.calls.length - 1
+    ]?.[0] as
       | {
           enabled?: boolean;
           onTrigger?: () => void;
         }
       | undefined;
-
     expect(shortcutConfig?.enabled).toBe(true);
+
     act(() => {
       shortcutConfig?.onTrigger?.();
     });
@@ -254,25 +268,17 @@ describe('PodcastDetailContainer', () => {
   });
 
   it('uses smart filename when exporting audio', () => {
-    vi.mocked(usePodcast).mockReturnValue({
-      data: {
-        id: 'podcast-1',
-        title: 'Market Update',
-        status: 'ready',
-        segments: [],
-        documents: [],
-        approvedBy: null,
-        audioUrl: 'https://cdn.example.com/audio/final.wav?x=1',
-        duration: 120,
-        updatedAt: '2026-02-20T14:00:00.000Z',
-      },
-    } as never);
-    vi.mocked(usePodcastActions).mockReturnValue(createMockActions() as never);
+    setPodcast({
+      title: 'Market Update',
+      audioUrl: 'https://cdn.example.com/audio/final.wav?x=1',
+      duration: 120,
+    });
 
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
+    renderContainer();
 
-    const props = getLastPodcastDetailProps<{ onExportAudio?: () => void }>();
-    props?.onExportAudio?.();
+    getLastPodcastDetailProps<{
+      onExportAudio?: () => void;
+    }>()?.onExportAudio?.();
 
     expect(downloadFromUrlSpy).toHaveBeenCalledWith(
       'https://cdn.example.com/audio/final.wav?x=1',
@@ -281,24 +287,15 @@ describe('PodcastDetailContainer', () => {
   });
 
   it('uses smart filename when exporting script', () => {
-    vi.mocked(useScriptEditor).mockReturnValue({
+    setScriptEditor({
       segments: [{ speaker: 'Host', line: 'Hello', index: 0 }],
-      hasChanges: false,
-      isSaving: false,
-      updateSegment: vi.fn(),
-      addSegment: vi.fn(),
-      removeSegment: vi.fn(),
-      reorderSegments: vi.fn(),
-      saveChanges: vi.fn(),
-      discardChanges: vi.fn(),
-      resetToSegments: vi.fn(),
-    } as never);
-    vi.mocked(usePodcastActions).mockReturnValue(createMockActions() as never);
+    });
 
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
+    renderContainer();
 
-    const props = getLastPodcastDetailProps<{ onExportScript?: () => void }>();
-    props?.onExportScript?.();
+    getLastPodcastDetailProps<{
+      onExportScript?: () => void;
+    }>()?.onExportScript?.();
 
     expect(downloadTextFileSpy).toHaveBeenCalledWith(
       expect.any(String),
@@ -309,25 +306,22 @@ describe('PodcastDetailContainer', () => {
 
   it('opens confirmation dialog before full regeneration save', async () => {
     const handleSave = vi.fn();
-    vi.mocked(usePodcastActions).mockReturnValue(
-      createMockActions({
-        needsFullRegeneration: true,
-        hasAnyChanges: true,
-        handleSave,
-      }) as never,
-    );
+    setActions({
+      needsFullRegeneration: true,
+      hasAnyChanges: true,
+      handleSave,
+    });
 
-    render(<PodcastDetailContainer podcastId="podcast-1" />);
+    renderContainer();
 
-    const props = getLastPodcastDetailProps<{ onSave?: () => void }>();
     act(() => {
-      props?.onSave?.();
+      getLastPodcastDetailProps<{ onSave?: () => void }>()?.onSave?.();
     });
 
     expect(handleSave).not.toHaveBeenCalled();
 
-    await waitFor(() => {
-      const confirmationCall = confirmationDialogSpy.mock.calls[
+    const getLatestConfirmation = () =>
+      confirmationDialogSpy.mock.calls[
         confirmationDialogSpy.mock.calls.length - 1
       ]?.[0] as
         | {
@@ -336,21 +330,15 @@ describe('PodcastDetailContainer', () => {
             onConfirm?: () => void;
           }
         | undefined;
-      expect(confirmationCall?.open).toBe(true);
+
+    await waitFor(() => {
+      expect(getLatestConfirmation()?.open).toBe(true);
     });
 
-    const confirmationCall = confirmationDialogSpy.mock.calls[
-      confirmationDialogSpy.mock.calls.length - 1
-    ]?.[0] as
-      | {
-          open?: boolean;
-          title?: string;
-          onConfirm?: () => void;
-        }
-      | undefined;
+    const confirmation = getLatestConfirmation();
+    expect(confirmation?.title).toBe('Regenerate podcast from scratch?');
 
-    expect(confirmationCall?.title).toBe('Regenerate podcast from scratch?');
-    confirmationCall?.onConfirm?.();
+    confirmation?.onConfirm?.();
     expect(handleSave).toHaveBeenCalledTimes(1);
   });
 });

@@ -82,7 +82,8 @@ describe('GoogleDeepResearchLive', () => {
 
     expect(result).toBeNull();
     expect(mockGetInteraction).toHaveBeenCalledTimes(2);
-    const [, requestParams, requestOptions] = mockGetInteraction.mock.calls[0] ?? [];
+    const [, requestParams, requestOptions] =
+      mockGetInteraction.mock.calls[0] ?? [];
     expect(requestParams).toEqual({});
     expect(requestOptions.timeout).toBe(PROVIDER_TIMEOUTS_MS.deepResearchGet);
     expect(requestOptions.maxRetries).toBe(0);
@@ -125,7 +126,10 @@ describe('GoogleDeepResearchLive', () => {
 
   it('maps timeout failures to typed ResearchError', async () => {
     mockCreateInteraction.mockRejectedValue(
-      new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+      new DOMException(
+        'The operation was aborted due to timeout',
+        'TimeoutError',
+      ),
     );
 
     const exit = await runStartResearchExit('timeout');

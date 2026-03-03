@@ -88,7 +88,7 @@ const make: UrlScraperService = {
     ),
 };
 
-export const UrlScraperLive: Layer.Layer<UrlScraper> = Layer.effect(
+export const UrlScraperLive: Layer.Layer<UrlScraper> = Layer.succeed(
   UrlScraper,
-  Effect.succeed(make),
+  make,
 );

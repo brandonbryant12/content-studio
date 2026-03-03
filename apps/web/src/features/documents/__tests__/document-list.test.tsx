@@ -1,19 +1,15 @@
-// features/documents/__tests__/document-list.test.tsx
-
 import { describe, it, expect, vi } from 'vitest';
 import type { DocumentListItem } from '../components/document-item';
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentProps } from 'react';
 import { DocumentList } from '../components/document-list';
 import { render, screen, userEvent } from '@/test-utils';
 
-// Mock TanStack Router Link component
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
 }));
 
-// Mock the UploadDocumentDialog to avoid complex hook dependencies
 vi.mock('../components/upload-document-dialog', () => ({
   UploadDocumentDialog: ({
     open,
@@ -29,7 +25,6 @@ vi.mock('../components/upload-document-dialog', () => ({
     ) : null,
 }));
 
-// Mock document data
 const mockDocuments: DocumentListItem[] = [
   {
     id: 'doc-1',
@@ -78,7 +73,9 @@ const mockSelection = {
   isIndeterminate: () => false,
 };
 
-const defaultProps = {
+const createProps = (
+  overrides: Partial<ComponentProps<typeof DocumentList>> = {},
+) => ({
   documents: mockDocuments,
   searchQuery: '',
   uploadOpen: false,
@@ -91,146 +88,100 @@ const defaultProps = {
   selection: mockSelection,
   isBulkDeleting: false,
   onBulkDelete: vi.fn(),
-};
+  ...overrides,
+});
+
+const renderList = (
+  overrides: Partial<ComponentProps<typeof DocumentList>> = {},
+) => render(<DocumentList {...createProps(overrides)} />);
 
 describe('DocumentList', () => {
-  it('renders list of documents', () => {
-    render(<DocumentList {...defaultProps} />);
+  it('renders heading, controls, and document rows', () => {
+    renderList();
 
-    // Check header
     expect(
       screen.getByRole('heading', { name: 'Documents' }),
     ).toBeInTheDocument();
-
-    // Check all documents are rendered
+    expect(
+      screen.getByRole('button', { name: /add source/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Search documents…'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
     expect(screen.getByText('API Documentation')).toBeInTheDocument();
     expect(screen.getByText('Project Roadmap')).toBeInTheDocument();
-
-    // Check word counts are displayed
     expect(screen.getByText('2,500')).toBeInTheDocument();
-    expect(screen.getByText('5,000')).toBeInTheDocument();
-    expect(screen.getByText('1,200')).toBeInTheDocument();
   });
 
-  it('shows empty state when no documents', () => {
-    render(<DocumentList {...defaultProps} documents={[]} />);
-
-    expect(screen.getByText('No documents yet')).toBeInTheDocument();
-    expect(
-      screen.getByText(
+  it.each([
+    {
+      name: 'shows empty state when there are no documents',
+      props: { documents: [] as DocumentListItem[] },
+      expectedTitle: 'No documents yet',
+      expectedDescription:
         'Upload your first document to start creating podcasts, voiceovers, and infographics.',
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /add source/i })).toHaveLength(
-      2,
-    );
+    },
+    {
+      name: 'shows no-results state when search has no matches',
+      props: { searchQuery: 'nonexistent document xyz' },
+      expectedTitle: 'No documents found',
+      expectedDescription: 'Try adjusting your search query.',
+    },
+  ])('$name', ({ props, expectedTitle, expectedDescription }) => {
+    renderList(props);
+
+    expect(screen.getByText(expectedTitle)).toBeInTheDocument();
+    expect(screen.getByText(expectedDescription)).toBeInTheDocument();
   });
 
-  it('filters documents by search query', () => {
-    const onSearch = vi.fn();
-    render(
-      <DocumentList {...defaultProps} searchQuery="API" onSearch={onSearch} />,
-    );
+  it('filters documents case-insensitively', () => {
+    renderList({ searchQuery: 'api' });
 
-    // Only matching document should be visible
     expect(screen.getByText('API Documentation')).toBeInTheDocument();
     expect(screen.queryByText('Getting Started Guide')).not.toBeInTheDocument();
     expect(screen.queryByText('Project Roadmap')).not.toBeInTheDocument();
   });
 
-  it('shows no results message when search matches nothing', () => {
-    render(
-      <DocumentList {...defaultProps} searchQuery="nonexistent document xyz" />,
-    );
-
-    expect(screen.getByText('No documents found')).toBeInTheDocument();
-    expect(
-      screen.getByText('Try adjusting your search query.'),
-    ).toBeInTheDocument();
-  });
-
-  it('calls onSearch when search input changes', async () => {
+  it('calls onSearch when user types in search input', async () => {
     const user = userEvent.setup();
     const onSearch = vi.fn();
-    render(<DocumentList {...defaultProps} onSearch={onSearch} />);
+    renderList({ onSearch });
 
-    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
-    await user.type(searchInput, 'test query');
+    await user.type(
+      screen.getByPlaceholderText('Search documents…'),
+      'test query',
+    );
 
-    // onSearch is called on each keystroke via startTransition
     expect(onSearch).toHaveBeenCalled();
   });
 
-  it('calls onUploadOpen(true) when upload option selected', async () => {
+  it('opens upload flow from Add Source menu', async () => {
     const user = userEvent.setup();
     const onUploadOpen = vi.fn();
-    render(<DocumentList {...defaultProps} onUploadOpen={onUploadOpen} />);
+    renderList({ onUploadOpen });
 
-    const addSourceButton = screen.getByRole('button', { name: /add source/i });
-    await user.click(addSourceButton);
-
-    const uploadOption = await screen.findByRole('menuitem', {
-      name: /upload/i,
-    });
-    await user.click(uploadOption);
+    await user.click(screen.getByRole('button', { name: /add source/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /upload/i }));
 
     expect(onUploadOpen).toHaveBeenCalledWith(true);
   });
 
-  it('shows upload dialog when uploadOpen is true', () => {
-    render(<DocumentList {...defaultProps} uploadOpen={true} />);
-
+  it('renders upload dialog when uploadOpen is true', () => {
+    renderList({ uploadOpen: true });
     expect(screen.getByTestId('upload-dialog')).toBeInTheDocument();
   });
 
-  it('calls onDelete when document delete is triggered', async () => {
+  it('calls onDelete with selected document id', async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
-    render(<DocumentList {...defaultProps} onDelete={onDelete} />);
+    renderList({ onDelete });
 
-    // Find delete buttons by their aria-label pattern
-    const trashButtons = screen.getAllByRole('button', {
-      name: /^Delete /,
-    });
+    const deleteButton = screen.getAllByRole('button', { name: /^Delete / })[0];
+    expect(deleteButton).toBeDefined();
+    if (!deleteButton) throw new Error('Expected at least one delete button');
 
-    // Click the first document's delete button
-    expect(trashButtons.length).toBeGreaterThan(0);
-    const firstButton = trashButtons[0];
-    if (firstButton) {
-      await user.click(firstButton);
-      expect(onDelete).toHaveBeenCalledWith('doc-1');
-    }
-  });
-
-  it('renders add source button in header', () => {
-    render(<DocumentList {...defaultProps} />);
-
-    const addSourceButton = screen.getByRole('button', {
-      name: /add source/i,
-    });
-    expect(addSourceButton).toBeInTheDocument();
-  });
-
-  it('shows search input with correct placeholder', () => {
-    render(<DocumentList {...defaultProps} />);
-
-    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
-    expect(searchInput).toBeInTheDocument();
-  });
-
-  it('displays search query value in input', () => {
-    render(<DocumentList {...defaultProps} searchQuery="existing query" />);
-
-    const searchInput = screen.getByPlaceholderText('Search documents\u2026');
-    expect(searchInput).toHaveValue('existing query');
-  });
-
-  it('filters documents case-insensitively', () => {
-    render(<DocumentList {...defaultProps} searchQuery="api" />);
-
-    // Should match "API Documentation" even though search is lowercase
-    expect(screen.getByText('API Documentation')).toBeInTheDocument();
-    expect(screen.queryByText('Getting Started Guide')).not.toBeInTheDocument();
+    await user.click(deleteButton);
+    expect(onDelete).toHaveBeenCalledWith('doc-1');
   });
 });

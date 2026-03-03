@@ -32,13 +32,12 @@ export function VoiceoverDetailContainer({
   voiceoverId,
 }: VoiceoverDetailContainerProps) {
   const { user } = useSessionGuard();
-  const currentUserId = user?.id ?? '';
 
   const { data: voiceover } = useVoiceover(voiceoverId);
 
   const settings = useVoiceoverSettings({ voiceover });
 
-  const { approve, revoke } = useApproveVoiceover(voiceoverId, currentUserId);
+  const { approve, revoke } = useApproveVoiceover(voiceoverId, user?.id);
 
   const actions = useVoiceoverActions({
     voiceoverId,
@@ -48,14 +47,6 @@ export function VoiceoverDetailContainer({
 
   const isAdmin = useIsAdmin();
   const isApproved = voiceover.approvedBy !== null;
-
-  const handleApprove = useCallback(() => {
-    approve.mutate({ id: voiceoverId });
-  }, [approve, voiceoverId]);
-
-  const handleRevoke = useCallback(() => {
-    revoke.mutate({ id: voiceoverId });
-  }, [revoke, voiceoverId]);
 
   const handleSave = useCallback(async () => {
     if (!settings.hasChanges) return;
@@ -104,7 +95,8 @@ export function VoiceoverDetailContainer({
   };
 
   const canExportAudio = !!voiceover.audioUrl;
-  const canExportScript = settings.text.trim().length > 0;
+  const trimmedText = settings.text.trim();
+  const canExportScript = trimmedText.length > 0;
 
   const handleExportAudio = useCallback(() => {
     if (!voiceover.audioUrl) return;
@@ -120,7 +112,7 @@ export function VoiceoverDetailContainer({
   }, [voiceover.audioUrl, voiceover.title, voiceover.updatedAt]);
 
   const handleExportScript = useCallback(() => {
-    if (!settings.text.trim()) return;
+    if (!trimmedText) return;
 
     const script = buildVoiceoverTextExport({
       title: voiceover.title,
@@ -137,6 +129,7 @@ export function VoiceoverDetailContainer({
     });
     downloadTextFile(script, fileName);
   }, [
+    trimmedText,
     settings.text,
     settings.voice,
     voiceover.title,
@@ -145,7 +138,7 @@ export function VoiceoverDetailContainer({
   ]);
 
   const handleCopyTranscript = useCallback(async () => {
-    if (!settings.text.trim()) return;
+    if (!trimmedText) return;
 
     const transcript = buildVoiceoverTranscriptMarkdown({
       title: voiceover.title,
@@ -164,7 +157,13 @@ export function VoiceoverDetailContainer({
     } catch {
       toast.error('Failed to copy transcript');
     }
-  }, [settings.text, settings.voice, voiceover.title, voiceover.voiceName]);
+  }, [
+    trimmedText,
+    settings.text,
+    settings.voice,
+    voiceover.title,
+    voiceover.voiceName,
+  ]);
 
   return (
     <VoiceoverDetail
@@ -183,8 +182,8 @@ export function VoiceoverDetailContainer({
       onSave={handleSave}
       onGenerate={actions.handleGenerate}
       onDelete={actions.handleDelete}
-      onApprove={handleApprove}
-      onRevoke={handleRevoke}
+      onApprove={() => approve.mutate({ id: voiceoverId })}
+      onRevoke={() => revoke.mutate({ id: voiceoverId })}
       canExportAudio={canExportAudio}
       canExportScript={canExportScript}
       onExportAudio={handleExportAudio}

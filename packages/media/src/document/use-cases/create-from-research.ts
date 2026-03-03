@@ -27,7 +27,16 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
       input.title ||
       `Research: ${input.query.slice(0, 100)}${input.query.length > 100 ? '…' : ''}`;
 
-    let insertedDocumentId: string | null = null;
+    let insertedDocumentId: string | undefined;
+    const markEnqueueFailure = (error: unknown) => {
+      if (!insertedDocumentId) return Effect.void;
+      return documentRepo.updateStatus(
+        insertedDocumentId,
+        DocumentStatus.FAILED,
+        `Failed to enqueue research processing: ${formatUnknownError(error)}`,
+      );
+    };
+
     return yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
         const doc = yield* documentRepo.insert({
@@ -65,13 +74,6 @@ export const createFromResearch = (input: CreateFromResearchInput) =>
 
         return doc;
       }),
-      (error) =>
-        insertedDocumentId
-          ? documentRepo.updateStatus(
-              insertedDocumentId,
-              DocumentStatus.FAILED,
-              `Failed to enqueue research processing: ${formatUnknownError(error)}`,
-            )
-          : Effect.void,
+      markEnqueueFailure,
     );
   }).pipe(withUseCaseSpan('useCase.createFromResearch'));

@@ -35,14 +35,18 @@ export const listDocuments = (input: ListDocumentsInput) =>
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
+    const spanAttributes: Record<string, string | number> = {
+      'pagination.limit': limit,
+      'pagination.offset': offset,
+    };
+    if (input.userId) {
+      spanAttributes['filter.userId'] = input.userId;
+    }
+
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: createdBy ?? user.id,
-      attributes: {
-        ...(input.userId ? { 'filter.userId': input.userId } : {}),
-        'pagination.limit': limit,
-        'pagination.offset': offset,
-      },
+      attributes: spanAttributes,
     });
 
     const [documents, total] = yield* Effect.all(

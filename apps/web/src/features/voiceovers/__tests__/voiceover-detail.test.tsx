@@ -1,8 +1,7 @@
-// features/voiceovers/__tests__/voiceover-detail.test.tsx
-
 import { describe, it, expect, vi } from 'vitest';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
+import type { ReactNode } from 'react';
 import {
   VoiceoverDetail,
   type VoiceoverDetailProps,
@@ -12,16 +11,15 @@ import { render, screen, fireEvent } from '@/test-utils';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
-// Mock the workbench components to simplify testing
 vi.mock('../components/workbench', () => ({
   WorkbenchLayout: ({
     children,
     actionBar,
     rightPanel,
   }: {
-    children: React.ReactNode;
-    actionBar: React.ReactNode;
-    rightPanel?: React.ReactNode;
+    children: ReactNode;
+    actionBar: ReactNode;
+    rightPanel?: ReactNode;
   }) => (
     <div data-testid="workbench-layout">
       <div data-testid="action-bar-container">{actionBar}</div>
@@ -108,7 +106,6 @@ vi.mock('../components/workbench', () => ({
   ),
 }));
 
-// Mock voiceover data
 function createMockVoiceover(overrides: Partial<Voiceover> = {}): Voiceover {
   return {
     id: 'voiceover-1',
@@ -129,7 +126,6 @@ function createMockVoiceover(overrides: Partial<Voiceover> = {}): Voiceover {
   } as Voiceover;
 }
 
-// Mock settings return
 function createMockSettings(
   overrides: Partial<UseVoiceoverSettingsReturn> = {},
 ): UseVoiceoverSettingsReturn {
@@ -164,28 +160,24 @@ function createDefaultProps(
     ...restOverrides
   } = overrides;
 
-  const workbenchState = {
-    hasChanges: false,
-    hasText: true,
-    isGenerating: false,
-    isSaving: false,
-    isDeleting: false,
-    ...workbenchStateOverride,
-  };
-
-  const approvalState = {
-    isApproved: false,
-    isAdmin: false,
-    isApprovalPending: false,
-    ...approvalStateOverride,
-  };
-
   return {
     voiceover: createMockVoiceover(),
     settings: createMockSettings(),
     displayAudio: null,
-    workbenchState,
-    approvalState,
+    workbenchState: {
+      hasChanges: false,
+      hasText: true,
+      isGenerating: false,
+      isSaving: false,
+      isDeleting: false,
+      ...workbenchStateOverride,
+    },
+    approvalState: {
+      isApproved: false,
+      isAdmin: false,
+      isApprovalPending: false,
+      ...approvalStateOverride,
+    },
     onSave: vi.fn(),
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
@@ -195,237 +187,186 @@ function createDefaultProps(
   };
 }
 
+const renderVoiceoverDetail = (
+  overrides: Parameters<typeof createDefaultProps>[0] = {},
+) => render(<VoiceoverDetail {...createDefaultProps(overrides)} />);
+
+const renderNewVoiceover = (
+  overrides: Parameters<typeof createDefaultProps>[0] = {},
+) =>
+  renderVoiceoverDetail({
+    voiceover: createMockVoiceover({
+      text: '',
+      audioUrl: null,
+      status: VoiceoverStatus.DRAFTING,
+    }),
+    settings: createMockSettings({ text: '' }),
+    ...overrides,
+  });
+
 describe('VoiceoverDetail', () => {
-  it('renders text editor and voice selector', () => {
-    render(<VoiceoverDetail {...createDefaultProps()} />);
-
-    expect(screen.getByTestId('text-editor')).toBeInTheDocument();
-    expect(screen.getByTestId('voice-selector')).toBeInTheDocument();
-  });
-
-  it('passes text to text editor', () => {
-    const settings = createMockSettings({ text: 'Custom voiceover content' });
-    render(<VoiceoverDetail {...createDefaultProps({ settings })} />);
-
-    const textEditor = screen.getByTestId('text-editor');
-    expect(textEditor).toHaveValue('Custom voiceover content');
-  });
-
-  it('passes voice to voice selector', () => {
-    const settings = createMockSettings({ voice: 'Aoede' });
-    render(<VoiceoverDetail {...createDefaultProps({ settings })} />);
-
-    const voiceSelector = screen.getByTestId('voice-selector');
-    expect(voiceSelector).toHaveValue('Aoede');
-  });
-
-  it('calls setText when text editor changes', () => {
-    const setText = vi.fn();
-    const settings = createMockSettings({ setText });
-    render(<VoiceoverDetail {...createDefaultProps({ settings })} />);
-
-    const textEditor = screen.getByTestId('text-editor');
-    fireEvent.change(textEditor, { target: { value: 'Updated text' } });
-
-    expect(setText).toHaveBeenCalledWith('Updated text');
-  });
-
-  it('calls setVoice when voice selector changes', () => {
-    const setVoice = vi.fn();
-    const settings = createMockSettings({ setVoice });
-    render(<VoiceoverDetail {...createDefaultProps({ settings })} />);
-
-    const voiceSelector = screen.getByTestId('voice-selector');
-    fireEvent.change(voiceSelector, { target: { value: 'Aoede' } });
-
-    expect(setVoice).toHaveBeenCalledWith('Aoede');
-  });
-
-  it('shows audio player when audio exists', () => {
-    const displayAudio = {
-      url: 'https://example.com/audio.mp3',
-      duration: 120,
-    };
-    render(<VoiceoverDetail {...createDefaultProps({ displayAudio })} />);
-
-    expect(screen.getByText('Audio Preview')).toBeInTheDocument();
-    // Use querySelector to find audio element since role might not work directly
-    const audioElement = document.querySelector('audio');
-    expect(audioElement).toBeInTheDocument();
-    expect(audioElement).toHaveAttribute(
-      'src',
-      'https://example.com/audio.mp3',
-    );
-  });
-
-  it('does not show audio player when no audio', () => {
-    render(<VoiceoverDetail {...createDefaultProps({ displayAudio: null })} />);
-
-    expect(screen.queryByText('Audio Preview')).not.toBeInTheDocument();
-    expect(document.querySelector('audio')).not.toBeInTheDocument();
-  });
-
-  it('shows correct status in action bar', () => {
-    const voiceover = createMockVoiceover({ status: VoiceoverStatus.READY });
-    render(<VoiceoverDetail {...createDefaultProps({ voiceover })} />);
-
-    const actionBar = screen.getByTestId('action-bar');
-    expect(actionBar).toHaveAttribute('data-status', VoiceoverStatus.READY);
-  });
-
-  it('disables inputs during generation', () => {
-    render(
-      <VoiceoverDetail
-        {...createDefaultProps({
-          workbenchState: { isGenerating: true },
-        })}
-      />,
-    );
-
-    const textEditor = screen.getByTestId('text-editor');
-    const voiceSelector = screen.getByTestId('voice-selector');
-
-    expect(textEditor).toBeDisabled();
-    expect(voiceSelector).toBeDisabled();
-  });
-
-  it('enables inputs when not generating', () => {
-    render(
-      <VoiceoverDetail
-        {...createDefaultProps({
-          workbenchState: { isGenerating: false },
-        })}
-      />,
-    );
-
-    const textEditor = screen.getByTestId('text-editor');
-    const voiceSelector = screen.getByTestId('voice-selector');
-
-    expect(textEditor).not.toBeDisabled();
-    expect(voiceSelector).not.toBeDisabled();
-  });
-
-  it('passes isGenerating to action bar', () => {
-    render(
-      <VoiceoverDetail
-        {...createDefaultProps({
-          workbenchState: { isGenerating: true },
-        })}
-      />,
-    );
-
-    const actionBar = screen.getByTestId('action-bar');
-    expect(actionBar).toHaveAttribute('data-generating', 'true');
-  });
-
-  it('renders workbench layout with action bar', () => {
-    render(<VoiceoverDetail {...createDefaultProps()} />);
+  it('renders workbench layout with editor controls and action bar', () => {
+    renderVoiceoverDetail();
 
     expect(screen.getByTestId('workbench-layout')).toBeInTheDocument();
     expect(screen.getByTestId('action-bar-container')).toBeInTheDocument();
     expect(screen.getByTestId('action-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+    expect(screen.getByTestId('voice-selector')).toBeInTheDocument();
+  });
+
+  it('passes settings values to editor controls', () => {
+    const settings = createMockSettings({
+      text: 'Custom voiceover content',
+      voice: 'Aoede',
+    });
+    renderVoiceoverDetail({ settings });
+
+    expect(screen.getByTestId('text-editor')).toHaveValue(
+      'Custom voiceover content',
+    );
+    expect(screen.getByTestId('voice-selector')).toHaveValue('Aoede');
+  });
+
+  it('calls settings setters when editor controls change', () => {
+    const setText = vi.fn();
+    const setVoice = vi.fn();
+    const settings = createMockSettings({ setText, setVoice });
+    renderVoiceoverDetail({ settings });
+
+    fireEvent.change(screen.getByTestId('text-editor'), {
+      target: { value: 'Updated text' },
+    });
+    fireEvent.change(screen.getByTestId('voice-selector'), {
+      target: { value: 'Aoede' },
+    });
+
+    expect(setText).toHaveBeenCalledWith('Updated text');
+    expect(setVoice).toHaveBeenCalledWith('Aoede');
+  });
+
+  it('passes status to action bar', () => {
+    renderVoiceoverDetail({
+      voiceover: createMockVoiceover({ status: VoiceoverStatus.READY }),
+    });
+
+    expect(screen.getByTestId('action-bar')).toHaveAttribute(
+      'data-status',
+      VoiceoverStatus.READY,
+    );
+  });
+
+  it.each([
+    { isGenerating: true, expectedDisabled: true, expectedAttribute: 'true' },
+    {
+      isGenerating: false,
+      expectedDisabled: false,
+      expectedAttribute: 'false',
+    },
+  ])(
+    'updates input disabled state when isGenerating=$isGenerating',
+    ({ isGenerating, expectedDisabled, expectedAttribute }) => {
+      renderVoiceoverDetail({ workbenchState: { isGenerating } });
+
+      const textEditor = screen.getByTestId('text-editor');
+      const voiceSelector = screen.getByTestId('voice-selector');
+      const actionBar = screen.getByTestId('action-bar');
+
+      expect(textEditor).toHaveProperty('disabled', expectedDisabled);
+      expect(voiceSelector).toHaveProperty('disabled', expectedDisabled);
+      expect(actionBar).toHaveAttribute('data-generating', expectedAttribute);
+    },
+  );
+
+  it.each([
+    {
+      name: 'shows audio player when audio exists',
+      displayAudio: { url: 'https://example.com/audio.mp3', duration: 120 },
+      expectsAudio: true,
+    },
+    {
+      name: 'hides audio player when audio is missing',
+      displayAudio: null,
+      expectsAudio: false,
+    },
+  ])('$name', ({ displayAudio, expectsAudio }) => {
+    renderVoiceoverDetail({ displayAudio });
+
+    const audioStage = screen.queryByTestId('audio-stage');
+    if (expectsAudio) {
+      expect(audioStage).toBeInTheDocument();
+      expect(audioStage?.querySelector('audio')).toHaveAttribute(
+        'src',
+        displayAudio?.url,
+      );
+    } else {
+      expect(audioStage).not.toBeInTheDocument();
+    }
   });
 
   it('renders assistant panel when provided', () => {
-    render(
-      <VoiceoverDetail
-        {...createDefaultProps({
-          assistantPanel: <div>Writing Assistant Panel</div>,
-        })}
-      />,
-    );
+    renderVoiceoverDetail({
+      assistantPanel: <div>Writing Assistant Panel</div>,
+    });
 
     expect(screen.getByText('Writing Assistant Panel')).toBeInTheDocument();
   });
 
   describe('Quick Start Guide', () => {
-    function createNewVoiceoverProps(
-      overrides: Parameters<typeof createDefaultProps>[0] = {},
-    ) {
-      return createDefaultProps({
-        voiceover: createMockVoiceover({
-          text: '',
-          audioUrl: null,
-          status: VoiceoverStatus.DRAFTING,
-        }),
-        settings: createMockSettings({ text: '' }),
-        ...overrides,
-      });
-    }
-
-    it('shows Quick Start when voiceover is DRAFTING with empty text and no audio', () => {
-      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
+    it('shows quick start for drafting voiceovers with no text or audio', () => {
+      renderNewVoiceover();
 
       expect(screen.getByTestId('quick-start-guide')).toBeInTheDocument();
       expect(screen.queryByTestId('text-editor')).not.toBeInTheDocument();
     });
 
-    it('shows TextEditor when voiceover has text', () => {
-      render(
-        <VoiceoverDetail
-          {...createNewVoiceoverProps({
-            voiceover: createMockVoiceover({
-              text: 'Some script',
-              audioUrl: null,
-              status: VoiceoverStatus.DRAFTING,
-            }),
-            settings: createMockSettings({ text: 'Some script' }),
-          })}
-        />,
-      );
+    it.each([
+      {
+        name: 'voiceover already has text',
+        overrides: {
+          voiceover: createMockVoiceover({
+            text: 'Some script',
+            audioUrl: null,
+            status: VoiceoverStatus.DRAFTING,
+          }),
+          settings: createMockSettings({ text: 'Some script' }),
+        },
+      },
+      {
+        name: 'voiceover is already ready',
+        overrides: {
+          voiceover: createMockVoiceover({
+            text: '',
+            audioUrl: null,
+            status: VoiceoverStatus.READY,
+          }),
+        },
+      },
+      {
+        name: 'settings text is non-empty',
+        overrides: {
+          settings: createMockSettings({ text: 'typed something' }),
+        },
+      },
+    ])('shows text editor when $name', ({ overrides }) => {
+      renderNewVoiceover(overrides);
 
       expect(screen.getByTestId('text-editor')).toBeInTheDocument();
       expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
     });
 
-    it('shows TextEditor when voiceover status is READY', () => {
-      render(
-        <VoiceoverDetail
-          {...createNewVoiceoverProps({
-            voiceover: createMockVoiceover({
-              text: '',
-              audioUrl: null,
-              status: VoiceoverStatus.READY,
-            }),
-          })}
-        />,
-      );
+    it.each(['Skip this guide', 'Start Writing'])(
+      'dismisses quick start when clicking "%s"',
+      (buttonLabel) => {
+        renderNewVoiceover();
 
-      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
-      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
-    });
+        fireEvent.click(screen.getByText(buttonLabel));
 
-    it('dismisses Quick Start on "Skip" click and shows TextEditor', () => {
-      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
-
-      expect(screen.getByTestId('quick-start-guide')).toBeInTheDocument();
-
-      fireEvent.click(screen.getByText('Skip this guide'));
-
-      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
-      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
-    });
-
-    it('dismisses Quick Start on "Start Writing" click and shows TextEditor', () => {
-      render(<VoiceoverDetail {...createNewVoiceoverProps()} />);
-
-      fireEvent.click(screen.getByText('Start Writing'));
-
-      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
-      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
-    });
-
-    it('shows TextEditor when settings.text becomes non-empty', () => {
-      render(
-        <VoiceoverDetail
-          {...createNewVoiceoverProps({
-            settings: createMockSettings({ text: 'typed something' }),
-          })}
-        />,
-      );
-
-      expect(screen.getByTestId('text-editor')).toBeInTheDocument();
-      expect(screen.queryByTestId('quick-start-guide')).not.toBeInTheDocument();
-    });
+        expect(
+          screen.queryByTestId('quick-start-guide'),
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId('text-editor')).toBeInTheDocument();
+      },
+    );
   });
 });

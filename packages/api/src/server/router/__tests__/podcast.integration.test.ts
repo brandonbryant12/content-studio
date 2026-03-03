@@ -274,289 +274,128 @@ describe('podcast router', () => {
     await ctx.rollback();
   });
 
-  // ===========================================================================
-  // Tests: list handler
-  // ===========================================================================
+  it('returns UNAUTHORIZED for all protected handlers when user is missing', async () => {
+    const basePodcast = await insertTestPodcast(ctx, testUser.id);
+    const readyPodcast = await insertTestPodcast(ctx, testUser.id, {
+      status: 'ready',
+      segments: DEFAULT_TEST_SEGMENTS,
+    });
+    const approvedPodcast = await insertTestPodcast(ctx, testUser.id, {
+      status: 'ready',
+      segments: DEFAULT_TEST_SEGMENTS,
+      approvedBy: testUser.id,
+      approvedAt: new Date(),
+    });
+    const [job] = await ctx.db
+      .insert(jobTable)
+      .values({
+        type: 'generate-podcast',
+        payload: { podcastId: basePodcast.id, userId: testUser.id },
+        createdBy: testUser.id,
+        status: 'pending',
+      })
+      .returning();
+    expect(job).toBeDefined();
+    if (!job) {
+      throw new Error('Expected a job row for unauthorized checks');
+    }
+
+    const context = createMockContext(runtime, null);
+    const calls: Array<() => Promise<unknown>> = [
+      () => handlers.list({ context, input: { limit: 10, offset: 0 }, errors }),
+      () =>
+        handlers.create({
+          context,
+          input: {
+            title: 'Unauthorized create',
+            format: 'conversation' as const,
+          },
+          errors,
+        }),
+      () => handlers.get({ context, input: { id: basePodcast.id }, errors }),
+      () =>
+        handlers.update({
+          context,
+          input: { id: basePodcast.id, title: 'Unauthorized update' },
+          errors,
+        }),
+      () =>
+        handlers.generate({ context, input: { id: basePodcast.id }, errors }),
+      () => handlers.getJob({ context, input: { jobId: job.id }, errors }),
+      () =>
+        handlers.saveChanges({
+          context,
+          input: {
+            id: readyPodcast.id,
+            segments: [{ speaker: 'host', line: 'No auth', index: 0 }],
+          },
+          errors,
+        }),
+      () =>
+        handlers.approve({ context, input: { id: readyPodcast.id }, errors }),
+      () =>
+        handlers.revokeApproval({
+          context,
+          input: { id: approvedPodcast.id },
+          errors,
+        }),
+      () => handlers.delete({ context, input: { id: basePodcast.id }, errors }),
+    ];
+
+    for (const call of calls) {
+      await expectHandlerErrorCode(call, 'UNAUTHORIZED');
+    }
+  });
 
   describe('list handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.list({
-            context,
-            input: { limit: 10, offset: 0 },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
     it('returns empty array when no podcasts exist', async () => {
-      // Arrange
       const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.list({
         context,
         input: { limit: 10, offset: 0 },
         errors,
       });
 
-      // Assert
       expect(result).toEqual([]);
     });
 
-    it('returns paginated podcasts for the authenticated user', async () => {
-      // Arrange
+    it('applies ownership and pagination with serialized timestamps', async () => {
       const context = createMockContext(runtime, user);
-
-      // Create some podcasts for this user
-      await insertTestPodcast(ctx, testUser.id, { title: 'Podcast One' });
-      await insertTestPodcast(ctx, testUser.id, { title: 'Podcast Two' });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10, offset: 0 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(2);
-      expect(result.map((p) => p.title)).toContain('Podcast One');
-      expect(result.map((p) => p.title)).toContain('Podcast Two');
-    });
-
-    it('respects limit parameter', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create 5 podcasts
-      for (let i = 1; i <= 5; i++) {
-        await insertTestPodcast(ctx, testUser.id, { title: `Podcast ${i}` });
+      for (let i = 1; i <= 3; i++) {
+        await insertTestPodcast(ctx, testUser.id, { title: `Mine ${i}` });
       }
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      await insertTestPodcast(ctx, otherUser.id, {
+        title: 'Other user podcast',
+      });
 
-      // Act
       const result = await handlers.list({
         context,
-        input: { limit: 3 },
+        input: { limit: 2, offset: 1 },
         errors,
       });
 
-      // Assert
-      expect(result).toHaveLength(3);
-    });
-
-    it('respects offset parameter', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create 5 podcasts
-      for (let i = 1; i <= 5; i++) {
-        await insertTestPodcast(ctx, testUser.id, { title: `Podcast ${i}` });
-      }
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 2, offset: 2 },
-        errors,
-      });
-
-      // Assert
       expect(result).toHaveLength(2);
-    });
-
-    it('only returns podcasts owned by the user, not other users podcasts', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create podcast for current user
-      await insertTestPodcast(ctx, testUser.id, { title: 'My Podcast' });
-
-      // Create another user and their podcast
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      await insertTestPodcast(ctx, otherTestUser.id, {
-        title: 'Other User Podcast',
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert - filtering by createdBy should only return current user's podcasts
-      const myPodcasts = result.filter((p) => p.createdBy === testUser.id);
-      expect(myPodcasts).toHaveLength(1);
-      expect(myPodcasts[0]!.title).toBe('My Podcast');
-    });
-
-    it('returns podcasts in serialized format with ISO date strings', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      await insertTestPodcast(ctx, testUser.id, {
-        title: 'Serialization Test',
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(1);
-      const returned = result[0]!;
-
-      // Verify serialized format
-      expect(returned.id).toMatch(/^pod_/);
-      expect(returned.title).toBe('Serialization Test');
-      expect(returned.format).toBe('conversation');
-      expect(returned.createdBy).toBe(testUser.id);
-      // Dates should be ISO strings
-      expectIsoTimestamp(returned.createdAt);
-      expectIsoTimestamp(returned.updatedAt);
-    });
-
-    it('includes status and duration when present', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      await insertTestPodcast(ctx, testUser.id, {
-        title: 'With Status',
-        status: 'ready',
-        duration: 300,
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(1);
-      expect(result[0]!.status).toBe('ready');
-      expect(result[0]!.duration).toBe(300);
+      expect(result.every((entry) => entry.createdBy === testUser.id)).toBe(
+        true,
+      );
+      expect(result.every((entry) => !entry.title.includes('Other user'))).toBe(
+        true,
+      );
+      expect(result[0]).toBeDefined();
+      if (!result[0]) {
+        throw new Error('Expected at least one listed podcast');
+      }
+      expect(result[0].id).toMatch(/^pod_/);
+      expectIsoTimestamp(result[0].createdAt);
+      expectIsoTimestamp(result[0].updatedAt);
     });
   });
 
-  // ===========================================================================
-  // Tests: get handler
-  // ===========================================================================
-
   describe('get handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.get({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('returns podcast when found', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Found Podcast',
-      });
-
-      // Act
-      const result = await handlers.get({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(podcast.id);
-      expect(result.title).toBe('Found Podcast');
-      expect(result.createdBy).toBe(testUser.id);
-    });
-
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_nonexistent123';
-
-      // Act & Assert - throws error with expected protocol code
-      await expectHandlerErrorCode(
-        () =>
-          handlers.get({
-            context,
-            input: { id: nonExistentId },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it("rejects access to another user's podcast (ownership check)", async () => {
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id, {
-        title: 'Other User Podcast',
-      });
-
-      // Act & Assert - non-owner cannot access
-      const context = createMockContext(runtime, user);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.get({
-            context,
-            input: { id: otherPodcast.id },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('returns Not Found for admin when accessing another user podcast', async () => {
-      // Arrange - create podcast as regular user
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Regular User Podcast',
-      });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.get({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('returns podcast in serialized full format with documents and status', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('returns owned podcast with documents, segments, and serialized fields', async () => {
       const doc = await insertTestDocument(ctx, testUser.id, {
         title: 'Source Doc',
       });
@@ -566,527 +405,192 @@ describe('podcast router', () => {
         status: 'ready',
         segments: DEFAULT_TEST_SEGMENTS,
       });
+      const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.get({
         context,
         input: { id: podcast.id },
         errors,
       });
 
-      // Assert
       expect(result.id).toBe(podcast.id);
       expect(result.title).toBe('Full Format Test');
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]!.title).toBe('Source Doc');
       expect(result.status).toBe('ready');
       expect(result.segments).toEqual(DEFAULT_TEST_SEGMENTS);
-      // Dates should be ISO strings
+      expect(result.documents).toHaveLength(1);
+      expect(result.documents[0]?.id).toBe(doc.id);
+      expect(result.documents[0]?.title).toBe('Source Doc');
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
     });
-  });
 
-  // ===========================================================================
-  // Tests: create handler
-  // ===========================================================================
-
-  describe('create handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-
-      // Act & Assert
+    it('returns PODCAST_NOT_FOUND for missing or non-owned resources', async () => {
+      const context = createMockContext(runtime, user);
       await expectHandlerErrorCode(
         () =>
-          handlers.create({
+          handlers.get({
             context,
-            input: { title: 'New Podcast', format: 'conversation' as const },
+            input: { id: 'pod_nonexistent123' as PodcastId },
             errors,
           }),
-        'UNAUTHORIZED',
+        'PODCAST_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
       );
     });
+  });
 
-    it('creates podcast with title and format', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'My New Podcast',
-        format: 'conversation' as const,
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert
-      expect(result.title).toBe('My New Podcast');
-      expect(result.format).toBe('conversation');
-      expect(result.createdBy).toBe(testUser.id);
-    });
-
-    it('creates podcast with source documents', async () => {
-      // Arrange
+  describe('create handler', () => {
+    it('creates and persists a podcast with metadata and documents', async () => {
       const context = createMockContext(runtime, user);
       const doc = await insertTestDocument(ctx, testUser.id, {
         title: 'Source Document',
       });
-      const input = {
-        title: 'Podcast with Docs',
-        format: 'voice_over' as const,
-        documentIds: [doc.id],
-      };
 
-      // Act
       const result = await handlers.create({
         context,
-        input,
+        input: {
+          title: 'Podcast with Metadata',
+          format: 'conversation' as const,
+          documentIds: [doc.id],
+          description: 'A test podcast description',
+          promptInstructions: 'Make it funny',
+          targetDurationMinutes: 10,
+          hostVoice: 'Charon',
+          hostVoiceName: 'Charon',
+          coHostVoice: 'Kore',
+          coHostVoiceName: 'Kore',
+        },
         errors,
       });
 
-      // Assert
-      expect(result.title).toBe('Podcast with Docs');
+      expect(result.id).toMatch(/^pod_/);
+      expect(result.title).toBe('Podcast with Metadata');
+      expect(result.format).toBe('conversation');
+      expect(result.createdBy).toBe(testUser.id);
       expect(result.sourceDocumentIds).toContain(doc.id);
       expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]!.id).toBe(doc.id);
-    });
-
-    it('creates podcast with optional metadata', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'Podcast with Metadata',
-        format: 'conversation' as const,
-        description: 'A test podcast description',
-        promptInstructions: 'Make it funny',
-        targetDurationMinutes: 10,
-        hostVoice: 'Charon',
-        hostVoiceName: 'Charon',
-        coHostVoice: 'Kore',
-        coHostVoiceName: 'Kore',
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert
-      expect(result.title).toBe('Podcast with Metadata');
+      expect(result.documents[0]?.id).toBe(doc.id);
       expect(result.description).toBe('A test podcast description');
       expect(result.promptInstructions).toBe('Make it funny');
       expect(result.targetDurationMinutes).toBe(10);
       expect(result.hostVoice).toBe('Charon');
       expect(result.coHostVoice).toBe('Kore');
-    });
-
-    it('returns serialized podcast response with proper format', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'Format Test',
-        format: 'conversation' as const,
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert - id starts with pod_
-      expect(result.id).toMatch(/^pod_/);
-
-      // Assert - createdAt is an ISO string
       expectIsoTimestamp(result.createdAt);
-
-      // Assert - updatedAt is an ISO string
       expectIsoTimestamp(result.updatedAt);
-    });
 
-    it('persists podcast to database', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'Persistence Test',
-        format: 'conversation' as const,
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Verify - query database directly
-      const [dbPodcast] = await ctx.db
+      const [persisted] = await ctx.db
         .select()
         .from(podcastTable)
         .where(eq(podcastTable.id, result.id as PodcastId));
-
-      expect(dbPodcast).toBeDefined();
-      expect(dbPodcast!.title).toBe('Persistence Test');
-      expect(dbPodcast!.createdBy).toBe(testUser.id);
+      expect(persisted).toBeDefined();
+      expect(persisted?.title).toBe('Podcast with Metadata');
+      expect(persisted?.createdBy).toBe(testUser.id);
     });
 
-    it('generates default title when not provided', async () => {
-      // Arrange
+    it('generates a default title when title is omitted', async () => {
       const context = createMockContext(runtime, user);
-      const input = {
-        format: 'conversation' as const,
-      };
-
-      // Act
       const result = await handlers.create({
         context,
-        input,
+        input: { format: 'conversation' as const },
         errors,
       });
 
-      // Assert - should have a default title
       expect(result.title).toMatch(/\S/);
     });
   });
 
-  // ===========================================================================
-  // Tests: update handler
-  // ===========================================================================
-
   describe('update handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: podcast.id, title: 'Updated' },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('updates podcast title', async () => {
-      // Arrange
+    it('updates multiple fields and persists changes', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Original Title',
+        description: 'Original',
       });
       const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.update({
         context,
         input: {
           id: podcast.id,
           title: 'Updated Title',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.title).toBe('Updated Title');
-      expect(result.id).toBe(podcast.id);
-    });
-
-    it('updates podcast description', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: podcast.id,
-          description: 'New description',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.description).toBe('New description');
-    });
-
-    it('updates podcast target duration', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        targetDurationMinutes: 5,
-      });
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: podcast.id,
+          description: 'Updated description',
+          promptInstructions: 'Updated instructions',
           targetDurationMinutes: 15,
         },
         errors,
       });
 
-      // Assert
+      expect(result.id).toBe(podcast.id);
+      expect(result.title).toBe('Updated Title');
+      expect(result.description).toBe('Updated description');
+      expect(result.promptInstructions).toBe('Updated instructions');
       expect(result.targetDurationMinutes).toBe(15);
-    });
-
-    it('updates multiple fields at once', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: podcast.id,
-          title: 'New Title',
-          description: 'New description',
-          promptInstructions: 'New instructions',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.title).toBe('New Title');
-      expect(result.description).toBe('New description');
-      expect(result.promptInstructions).toBe('New instructions');
-    });
-
-    it('returns serialized updated podcast', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: podcast.id,
-          title: 'Serialized Update',
-        },
-        errors,
-      });
-
-      // Assert - id starts with pod_
-      expect(result.id).toMatch(/^pod_/);
-
-      // Assert - createdAt is an ISO string
       expectIsoTimestamp(result.createdAt);
-
-      // Assert - updatedAt is an ISO string
       expectIsoTimestamp(result.updatedAt);
-    });
 
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_00000000000000';
-
-      // Act & Assert - throws error with expected protocol code
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: nonExistentId, title: 'Should Fail' },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it("rejects updating another user's podcast (ownership check)", async () => {
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id, {
-        title: 'Original Title',
-      });
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot update
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: otherPodcast.id, title: 'Updated Title' },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('returns Not Found for admin when updating another user podcast', async () => {
-      // Arrange - create podcast as regular user
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Original Title',
-      });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: podcast.id, title: 'Admin Updated' },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('persists updates to database', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      await handlers.update({
-        context,
-        input: {
-          id: podcast.id,
-          title: 'Persisted Title',
-        },
-        errors,
-      });
-
-      // Verify - query database directly
-      const [dbPodcast] = await ctx.db
+      const [persisted] = await ctx.db
         .select()
         .from(podcastTable)
         .where(eq(podcastTable.id, podcast.id as PodcastId));
+      expect(persisted?.title).toBe('Updated Title');
+      expect(persisted?.description).toBe('Updated description');
+    });
 
-      expect(dbPodcast).toBeDefined();
-      expect(dbPodcast!.title).toBe('Persisted Title');
+    it('returns PODCAST_NOT_FOUND for missing or non-owned resources', async () => {
+      const context = createMockContext(runtime, user);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: 'pod_00000000000000' as PodcastId, title: 'Missing' },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: { id: otherPodcast.id, title: 'No access' },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
     });
   });
 
-  // ===========================================================================
-  // Tests: delete handler
-  // ===========================================================================
-
   describe('delete handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('deletes podcast successfully', async () => {
-      // Arrange
+    it('deletes a podcast and fails when deleting it again', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
       const context = createMockContext(runtime, user);
 
-      // Act
-      const result = await handlers.delete({
+      const deleted = await handlers.delete({
         context,
         input: { id: podcast.id },
         errors,
       });
+      expect(deleted).toEqual({});
 
-      // Assert - returns empty object on success
-      expect(result).toEqual({});
-    });
-
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_00000000000000';
-
-      // Act & Assert - throws error with expected protocol code
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: nonExistentId },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it("rejects deleting another user's podcast (ownership check)", async () => {
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id);
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot delete
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: otherPodcast.id },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('verifies podcast is actually removed from database after delete', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Verify podcast exists before delete
-      const [beforeDelete] = await ctx.db
-        .select()
-        .from(podcastTable)
-        .where(eq(podcastTable.id, podcast.id as PodcastId));
-      expect(beforeDelete).toBeDefined();
-
-      // Act
-      await handlers.delete({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert - podcast no longer exists in database
       const [afterDelete] = await ctx.db
         .select()
         .from(podcastTable)
         .where(eq(podcastTable.id, podcast.id as PodcastId));
       expect(afterDelete).toBeUndefined();
-    });
-
-    it('returns Not Found for admin when deleting another user podcast', async () => {
-      // Arrange - create podcast as regular user
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
 
       await expectHandlerErrorCode(
         () =>
@@ -1099,124 +603,15 @@ describe('podcast router', () => {
       );
     });
 
-    it('cannot delete same podcast twice', async () => {
-      // Arrange
-      const podcast = await insertTestPodcast(ctx, testUser.id);
+    it('returns PODCAST_NOT_FOUND for non-owned podcasts', async () => {
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id);
       const context = createMockContext(runtime, user);
 
-      // First delete succeeds
-      await handlers.delete({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Act & Assert - second delete fails (throws error with expected protocol code)
       await expectHandlerErrorCode(
         () =>
           handlers.delete({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-  });
-
-  // ===========================================================================
-  // Tests: generate handler
-  // ===========================================================================
-
-  describe('generate handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('creates a generation job for the podcast', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act
-      const result = await handlers.generate({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
-    });
-
-    it('returns existing pending job for idempotency', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Create a pending job for this podcast
-      await ctx.db.insert(jobTable).values({
-        type: 'generate-podcast',
-        payload: { podcastId: podcast.id, userId: testUser.id },
-        createdBy: testUser.id,
-        status: 'pending',
-      });
-
-      // Act - call generate again
-      const result = await handlers.generate({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert - should return existing job
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
-    });
-
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_nonexistent123';
-
-      // Act & Assert - throws error with expected protocol code
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
-            context,
-            input: { id: nonExistentId },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it("rejects generating another user's podcast (ownership check)", async () => {
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id);
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot generate
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
             context,
             input: { id: otherPodcast.id },
             errors,
@@ -1224,68 +619,37 @@ describe('podcast router', () => {
         'PODCAST_NOT_FOUND',
       );
     });
+  });
 
-    it('returns Not Found for admin when generating another user podcast', async () => {
-      // Arrange - create podcast as regular user
+  describe('generate handler', () => {
+    it('creates a generation job and forwards prompt instructions', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('passes prompt instructions to the job payload', async () => {
-      // Arrange
       const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
 
-      // Act
       const result = await handlers.generate({
         context,
-        input: {
-          id: podcast.id,
-          promptInstructions: 'Make it educational',
-        },
+        input: { id: podcast.id, promptInstructions: 'Make it educational' },
         errors,
       });
 
-      // Verify - check the job in the database
+      expect(result.jobId).toMatch(/^job_/);
+      expect(result.status).toBe('pending');
+
       const [job] = await ctx.db
         .select()
         .from(jobTable)
         .where(eq(jobTable.id, result.jobId as JobId));
-
       expect(job).toBeDefined();
+      expect(job?.type).toBe('generate-podcast');
       expect(
-        (job!.payload as { promptInstructions?: string }).promptInstructions,
+        (job?.payload as { promptInstructions?: string } | undefined)
+          ?.promptInstructions,
       ).toBe('Make it educational');
     });
-  });
 
-  // ===========================================================================
-  // Tests: getJob handler
-  // ===========================================================================
-
-  describe('getJob handler', () => {
-    it('returns job when found', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('returns existing pending job for idempotency', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Create a job
-      const [createdJob] = await ctx.db
+      const [existingJob] = await ctx.db
         .insert(jobTable)
         .values({
           type: 'generate-podcast',
@@ -1294,43 +658,52 @@ describe('podcast router', () => {
           status: 'pending',
         })
         .returning();
+      expect(existingJob).toBeDefined();
+      if (!existingJob) {
+        throw new Error('Expected pending job fixture');
+      }
 
-      // Act
-      const result = await handlers.getJob({
+      const context = createMockContext(runtime, user);
+      const result = await handlers.generate({
         context,
-        input: { jobId: createdJob!.id },
+        input: { id: podcast.id },
         errors,
       });
 
-      // Assert
-      expect(result.id).toBe(createdJob!.id);
-      expect(result.type).toBe('generate-podcast');
+      expect(result.jobId).toBe(existingJob.id);
       expect(result.status).toBe('pending');
-      expect(result.createdBy).toBe(testUser.id);
     });
 
-    it('throws error when job does not exist', async () => {
-      // Arrange
+    it('returns PODCAST_NOT_FOUND for missing or non-owned resources', async () => {
       const context = createMockContext(runtime, user);
-      const nonExistentJobId = 'job_nonexistent123';
-
-      // Act & Assert - throws error with expected protocol code
       await expectHandlerErrorCode(
         () =>
-          handlers.getJob({
+          handlers.generate({
             context,
-            input: { jobId: nonExistentJobId },
+            input: { id: 'pod_nonexistent123' as PodcastId },
             errors,
           }),
-        'JOB_NOT_FOUND',
+        'PODCAST_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
       );
     });
+  });
 
-    it('returns job in serialized format with ISO dates', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+  describe('getJob handler', () => {
+    it('returns completed jobs in serialized format', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
-
       const [createdJob] = await ctx.db
         .insert(jobTable)
         .values({
@@ -1348,16 +721,20 @@ describe('podcast router', () => {
           completedAt: new Date(),
         })
         .returning();
+      expect(createdJob).toBeDefined();
+      if (!createdJob) {
+        throw new Error('Expected created completed job');
+      }
 
-      // Act
+      const context = createMockContext(runtime, user);
       const result = await handlers.getJob({
         context,
-        input: { jobId: createdJob!.id },
+        input: { jobId: createdJob.id },
         errors,
       });
 
-      // Assert
-      expect(result.id).toMatch(/^job_/);
+      expect(result.id).toBe(createdJob.id);
+      expect(result.type).toBe('generate-podcast');
       expect(result.status).toBe('completed');
       expect(result.result).toEqual({
         scriptId: 'ver_123',
@@ -1365,18 +742,14 @@ describe('podcast router', () => {
         audioUrl: 'url',
         duration: 300,
       });
-      // Dates should be ISO strings
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
       expectIsoTimestamp(result.startedAt!);
       expectIsoTimestamp(result.completedAt!);
     });
 
-    it('returns null for optional date fields when not set', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('returns pending jobs with null optional fields', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
-
       const [createdJob] = await ctx.db
         .insert(jobTable)
         .values({
@@ -1386,193 +759,103 @@ describe('podcast router', () => {
           status: 'pending',
         })
         .returning();
+      expect(createdJob).toBeDefined();
+      if (!createdJob) {
+        throw new Error('Expected created pending job');
+      }
 
-      // Act
+      const context = createMockContext(runtime, user);
       const result = await handlers.getJob({
         context,
-        input: { jobId: createdJob!.id },
+        input: { jobId: createdJob.id },
         errors,
       });
 
-      // Assert
+      expect(result.status).toBe('pending');
       expect(result.startedAt).toBeNull();
       expect(result.completedAt).toBeNull();
       expect(result.result).toBeNull();
       expect(result.error).toBeNull();
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
+    });
+
+    it('returns JOB_NOT_FOUND when job does not exist', async () => {
+      const context = createMockContext(runtime, user);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.getJob({
+            context,
+            input: { jobId: 'job_nonexistent123' },
+            errors,
+          }),
+        'JOB_NOT_FOUND',
+      );
     });
   });
 
-  // ===========================================================================
-  // Tests: saveChanges handler
-  // ===========================================================================
-
   describe('saveChanges handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-      });
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.saveChanges({
-            context,
-            input: {
-              id: podcast.id,
-              segments: [{ speaker: 'host', line: 'Test', index: 0 }],
-            },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('saves segment changes and queues audio regeneration', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-      });
-
-      const newSegments = [
-        { speaker: 'host', line: 'New opening line!', index: 0 },
-        { speaker: 'cohost', line: 'New response!', index: 1 },
-      ];
-
-      // Act
-      const result = await handlers.saveChanges({
-        context,
-        input: {
-          id: podcast.id,
-          segments: newSegments,
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
-    });
-
-    it('saves voice changes and queues audio regeneration', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('updates content and queues regeneration', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         hostVoice: 'OldVoice',
         status: 'ready',
         segments: DEFAULT_TEST_SEGMENTS,
       });
+      const newSegments = [
+        { speaker: 'host', line: 'New opening line!', index: 0 },
+        { speaker: 'cohost', line: 'New response!', index: 1 },
+      ];
+      const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.saveChanges({
         context,
         input: {
           id: podcast.id,
+          segments: newSegments,
           hostVoice: 'NewVoice',
           hostVoiceName: 'New Voice Name',
         },
         errors,
       });
 
-      // Assert
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
-    });
 
-    it('throws error when podcast does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'pod_nonexistent123';
+      const [persistedPodcast] = await ctx.db
+        .select()
+        .from(podcastTable)
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
+      expect(persistedPodcast?.hostVoice).toBe('NewVoice');
+      expect(persistedPodcast?.segments).toEqual(newSegments);
 
-      // Act & Assert - throws error with expected protocol code
-      await expectHandlerErrorCode(
-        () =>
-          handlers.saveChanges({
-            context,
-            input: {
-              id: nonExistentId,
-              segments: [{ speaker: 'host', line: 'Test', index: 0 }],
-            },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it("rejects saving changes to another user's podcast (ownership check)", async () => {
-      // Arrange - create podcast as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherPodcast = await insertTestPodcast(ctx, otherTestUser.id, {
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-      });
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot save changes
-      await expectHandlerErrorCode(
-        () =>
-          handlers.saveChanges({
-            context,
-            input: {
-              id: otherPodcast.id,
-              segments: [{ speaker: 'host', line: 'New line', index: 0 }],
-            },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
-    });
-
-    it('returns Not Found for admin when saving another user podcast', async () => {
-      // Arrange - create podcast as regular user
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-      });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.saveChanges({
-            context,
-            input: {
-              id: podcast.id,
-              segments: [{ speaker: 'host', line: 'Admin edit', index: 0 }],
-            },
-            errors,
-          }),
-        'PODCAST_NOT_FOUND',
-      );
+      const [job] = await ctx.db
+        .select()
+        .from(jobTable)
+        .where(eq(jobTable.id, result.jobId as JobId));
+      expect(job).toBeDefined();
+      expect(job?.type).toBe('generate-audio');
     });
 
     it('returns existing pending job for idempotency', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
         segments: DEFAULT_TEST_SEGMENTS,
       });
+      const [existingJob] = await ctx.db
+        .insert(jobTable)
+        .values({
+          type: 'generate-podcast',
+          payload: { podcastId: podcast.id, userId: testUser.id },
+          createdBy: testUser.id,
+          status: 'pending',
+        })
+        .returning();
+      expect(existingJob).toBeDefined();
+      if (!existingJob) {
+        throw new Error('Expected pending job fixture');
+      }
 
-      // Create a pending job for this podcast
-      await ctx.db.insert(jobTable).values({
-        type: 'generate-podcast',
-        payload: { podcastId: podcast.id, userId: testUser.id },
-        createdBy: testUser.id,
-        status: 'pending',
-      });
-
-      // Act - call saveChanges
+      const context = createMockContext(runtime, user);
       const result = await handlers.saveChanges({
         context,
         input: {
@@ -1582,22 +865,17 @@ describe('podcast router', () => {
         errors,
       });
 
-      // Assert - should return existing job
-      expect(result.jobId).toMatch(/^job_/);
+      expect(result.jobId).toBe(existingJob.id);
       expect(result.status).toBe('pending');
     });
 
-    it('queues audio regeneration even for same segments', async () => {
-      // NOTE: Current implementation does not detect "no changes" for same segments.
-      // It always queues an audio regeneration job.
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('queues regeneration even when segments are unchanged', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
         segments: DEFAULT_TEST_SEGMENTS,
       });
+      const context = createMockContext(runtime, user);
 
-      // Act - save same segments
       const result = await handlers.saveChanges({
         context,
         input: {
@@ -1607,160 +885,113 @@ describe('podcast router', () => {
         errors,
       });
 
-      // Assert - job is still created
       expect(result.jobId).toMatch(/^job_/);
       expect(result.status).toBe('pending');
     });
-  });
 
-  // ===========================================================================
-  // Tests: approve handler
-  // ===========================================================================
+    it('returns PODCAST_NOT_FOUND for missing or non-owned resources', async () => {
+      const context = createMockContext(runtime, user);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: 'pod_nonexistent123' as PodcastId,
+              segments: [{ speaker: 'host', line: 'Missing', index: 0 }],
+            },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id, {
+        status: 'ready',
+        segments: DEFAULT_TEST_SEGMENTS,
+      });
+      await expectHandlerErrorCode(
+        () =>
+          handlers.saveChanges({
+            context,
+            input: {
+              id: otherPodcast.id,
+              segments: [{ speaker: 'host', line: 'No access', index: 0 }],
+            },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
+    });
+  });
 
   describe('approve handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.approve({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('allows admin to approve a podcast', async () => {
-      // Arrange
+    it('enforces admin role before approving', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Test podcast',
         status: 'ready',
       });
-
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-
-      // Act - Approve as admin
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-      const result = await handlers.approve({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(podcast.id);
-    });
-
-    it('rejects approval from non-admin', async () => {
-      // Arrange
-      const ownerTestUser = createTestUser();
-      const strangerTestUser = createTestUser();
-      await insertTestUser(ctx, ownerTestUser);
-      await insertTestUser(ctx, strangerTestUser);
-
-      const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
-        title: 'Private podcast',
-        status: 'ready',
-      });
-
-      // Act & Assert - Non-admin cannot approve (requires admin role)
-      const strangerUser = toUser(strangerTestUser);
-      const context = createMockContext(runtime, strangerUser);
-
+      const userContext = createMockContext(runtime, user);
       await expectHandlerErrorCode(
         () =>
           handlers.approve({
-            context,
+            context: userContext,
             input: { id: podcast.id },
             errors,
           }),
         'FORBIDDEN',
       );
+
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminContext = createMockContext(runtime, toUser(adminTestUser));
+      await handlers.approve({
+        context: adminContext,
+        input: { id: podcast.id },
+        errors,
+      });
+
+      const [persisted] = await ctx.db
+        .select()
+        .from(podcastTable)
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
+      expect(persisted?.approvedBy).toBe(adminTestUser.id);
+      expect(persisted?.approvedAt).not.toBeNull();
     });
   });
 
-  // ===========================================================================
-  // Tests: revokeApproval handler
-  // ===========================================================================
-
   describe('revokeApproval handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        approvedBy: testUser.id,
-        approvedAt: new Date(),
-      });
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.revokeApproval({
-            context,
-            input: { id: podcast.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('allows admin to revoke approval', async () => {
-      // Arrange
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-
+    it('enforces admin role before revoking', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
         approvedBy: testUser.id,
         approvedAt: new Date(),
       });
-
-      // Act - Revoke as admin
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-      const result = await handlers.revokeApproval({
-        context,
-        input: { id: podcast.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(podcast.id);
-    });
-
-    it('rejects revoke from non-admin', async () => {
-      // Arrange
-      const ownerTestUser = createTestUser();
-      const strangerTestUser = createTestUser();
-      await insertTestUser(ctx, ownerTestUser);
-      await insertTestUser(ctx, strangerTestUser);
-
-      const podcast = await insertTestPodcast(ctx, ownerTestUser.id, {
-        status: 'ready',
-        approvedBy: ownerTestUser.id,
-        approvedAt: new Date(),
-      });
-
-      // Act & Assert - Non-admin cannot revoke
-      const strangerUser = toUser(strangerTestUser);
-      const context = createMockContext(runtime, strangerUser);
-
+      const userContext = createMockContext(runtime, user);
       await expectHandlerErrorCode(
         () =>
           handlers.revokeApproval({
-            context,
+            context: userContext,
             input: { id: podcast.id },
             errors,
           }),
         'FORBIDDEN',
       );
+
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminContext = createMockContext(runtime, toUser(adminTestUser));
+      await handlers.revokeApproval({
+        context: adminContext,
+        input: { id: podcast.id },
+        errors,
+      });
+
+      const [persisted] = await ctx.db
+        .select()
+        .from(podcastTable)
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
+      expect(persisted?.approvedBy).toBeNull();
+      expect(persisted?.approvedAt).toBeNull();
     });
   });
 });

@@ -23,7 +23,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --max-warnings=0",
     "test": "vitest run",
-    "test:invariants": "vitest run src/server/__tests__/effect-handler.invariants.test.ts src/server/__tests__/error-assertions.invariants.test.ts src/server/__tests__/chat-handler.invariants.test.ts",
+    "test:invariants": "vitest run src/server/__tests__/effect-handler.invariants.test.ts src/server/__tests__/error-assertions.invariants.test.ts src/server/__tests__/chat-handler.invariants.test.ts src/server/__tests__/contract-schema.invariants.test.ts src/server/__tests__/router-integration-bloat.invariants.test.ts",
     "test:coverage": "vitest run --coverage",
     "test:coverage:activity": "vitest run --coverage src/server/router/__tests__/activity.integration.test.ts",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"

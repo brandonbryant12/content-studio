@@ -55,15 +55,21 @@ describe('WorkbenchLayout', () => {
   it('renders inline title input with current value', () => {
     render(<WorkbenchLayout {...createProps()} />);
 
-    const titleInput = screen.getByRole('textbox', { name: /voiceover title/i });
+    const titleInput = screen.getByRole('textbox', {
+      name: /voiceover title/i,
+    });
     expect(titleInput).toHaveValue('Test Voiceover');
   });
 
   it('calls onTitleChange when title is edited', () => {
     const onTitleChange = vi.fn();
-    render(<WorkbenchLayout {...createProps()} onTitleChange={onTitleChange} />);
+    render(
+      <WorkbenchLayout {...createProps()} onTitleChange={onTitleChange} />,
+    );
 
-    const titleInput = screen.getByRole('textbox', { name: /voiceover title/i });
+    const titleInput = screen.getByRole('textbox', {
+      name: /voiceover title/i,
+    });
     fireEvent.change(titleInput, { target: { value: 'Renamed Voiceover' } });
 
     expect(onTitleChange).toHaveBeenCalledWith('Renamed Voiceover');
@@ -78,7 +84,9 @@ describe('WorkbenchLayout', () => {
   it('disables title input while generation is active', () => {
     render(<WorkbenchLayout {...createProps()} isTitleDisabled />);
 
-    const titleInput = screen.getByRole('textbox', { name: /voiceover title/i });
+    const titleInput = screen.getByRole('textbox', {
+      name: /voiceover title/i,
+    });
     expect(titleInput).toBeDisabled();
   });
 });

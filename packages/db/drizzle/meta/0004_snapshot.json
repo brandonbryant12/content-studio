@@ -109,13 +109,9 @@
         "account_user_id_user_id_fk": {
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -201,13 +197,9 @@
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -216,9 +208,7 @@
       "uniqueConstraints": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         }
       },
@@ -289,9 +279,7 @@
       "uniqueConstraints": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "nullsNotDistinct": false
         }
       },
@@ -484,13 +472,9 @@
         "document_createdBy_user_id_fk": {
           "name": "document_createdBy_user_id_fk",
           "tableFrom": "document",
-          "columnsFrom": [
-            "createdBy"
-          ],
+          "columnsFrom": ["createdBy"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -701,13 +685,9 @@
         "podcast_createdBy_user_id_fk": {
           "name": "podcast_createdBy_user_id_fk",
           "tableFrom": "podcast",
-          "columnsFrom": [
-            "createdBy"
-          ],
+          "columnsFrom": ["createdBy"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -824,39 +804,27 @@
         "podcastCollaborator_podcastId_podcast_id_fk": {
           "name": "podcastCollaborator_podcastId_podcast_id_fk",
           "tableFrom": "podcastCollaborator",
-          "columnsFrom": [
-            "podcastId"
-          ],
+          "columnsFrom": ["podcastId"],
           "tableTo": "podcast",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "podcastCollaborator_userId_user_id_fk": {
           "name": "podcastCollaborator_userId_user_id_fk",
           "tableFrom": "podcastCollaborator",
-          "columnsFrom": [
-            "userId"
-          ],
+          "columnsFrom": ["userId"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "podcastCollaborator_addedBy_user_id_fk": {
           "name": "podcastCollaborator_addedBy_user_id_fk",
           "tableFrom": "podcastCollaborator",
-          "columnsFrom": [
-            "addedBy"
-          ],
+          "columnsFrom": ["addedBy"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -865,10 +833,7 @@
       "uniqueConstraints": {
         "collaborator_podcast_email_unique": {
           "name": "collaborator_podcast_email_unique",
-          "columns": [
-            "podcastId",
-            "email"
-          ],
+          "columns": ["podcastId", "email"],
           "nullsNotDistinct": false
         }
       },
@@ -1002,13 +967,9 @@
         "voiceover_created_by_user_id_fk": {
           "name": "voiceover_created_by_user_id_fk",
           "tableFrom": "voiceover",
-          "columnsFrom": [
-            "created_by"
-          ],
+          "columnsFrom": ["created_by"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1125,39 +1086,27 @@
         "voiceover_collaborator_voiceover_id_voiceover_id_fk": {
           "name": "voiceover_collaborator_voiceover_id_voiceover_id_fk",
           "tableFrom": "voiceover_collaborator",
-          "columnsFrom": [
-            "voiceover_id"
-          ],
+          "columnsFrom": ["voiceover_id"],
           "tableTo": "voiceover",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "voiceover_collaborator_user_id_user_id_fk": {
           "name": "voiceover_collaborator_user_id_user_id_fk",
           "tableFrom": "voiceover_collaborator",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "voiceover_collaborator_added_by_user_id_fk": {
           "name": "voiceover_collaborator_added_by_user_id_fk",
           "tableFrom": "voiceover_collaborator",
-          "columnsFrom": [
-            "added_by"
-          ],
+          "columnsFrom": ["added_by"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1166,10 +1115,7 @@
       "uniqueConstraints": {
         "voiceover_collaborator_voiceover_email_unique": {
           "name": "voiceover_collaborator_voiceover_email_unique",
-          "columns": [
-            "voiceover_id",
-            "email"
-          ],
+          "columns": ["voiceover_id", "email"],
           "nullsNotDistinct": false
         }
       },
@@ -1309,13 +1255,9 @@
         "job_createdBy_user_id_fk": {
           "name": "job_createdBy_user_id_fk",
           "tableFrom": "job",
-          "columnsFrom": [
-            "createdBy"
-          ],
+          "columnsFrom": ["createdBy"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1459,13 +1401,9 @@
         "infographic_created_by_user_id_fk": {
           "name": "infographic_created_by_user_id_fk",
           "tableFrom": "infographic",
-          "columnsFrom": [
-            "created_by"
-          ],
+          "columnsFrom": ["created_by"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1566,13 +1504,9 @@
         "infographic_version_infographic_id_infographic_id_fk": {
           "name": "infographic_version_infographic_id_infographic_id_fk",
           "tableFrom": "infographic_version",
-          "columnsFrom": [
-            "infographic_id"
-          ],
+          "columnsFrom": ["infographic_id"],
           "tableTo": "infographic",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1700,13 +1634,9 @@
         "activity_log_userId_user_id_fk": {
           "name": "activity_log_userId_user_id_fk",
           "tableFrom": "activity_log",
-          "columnsFrom": [
-            "userId"
-          ],
+          "columnsFrom": ["userId"],
           "tableTo": "user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1733,10 +1663,7 @@
     "public.podcast_format": {
       "name": "podcast_format",
       "schema": "public",
-      "values": [
-        "voice_over",
-        "conversation"
-      ]
+      "values": ["voice_over", "conversation"]
     },
     "public.version_status": {
       "name": "version_status",
@@ -1753,54 +1680,27 @@
     "public.voiceover_status": {
       "name": "voiceover_status",
       "schema": "public",
-      "values": [
-        "drafting",
-        "generating_audio",
-        "ready",
-        "failed"
-      ]
+      "values": ["drafting", "generating_audio", "ready", "failed"]
     },
     "public.job_status": {
       "name": "job_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "processing",
-        "completed",
-        "failed"
-      ]
+      "values": ["pending", "processing", "completed", "failed"]
     },
     "public.content_type": {
       "name": "content_type",
       "schema": "public",
-      "values": [
-        "document",
-        "podcast",
-        "video",
-        "article",
-        "social",
-        "graphic"
-      ]
+      "values": ["document", "podcast", "video", "article", "social", "graphic"]
     },
     "public.infographic_format": {
       "name": "infographic_format",
       "schema": "public",
-      "values": [
-        "portrait",
-        "square",
-        "landscape",
-        "og_card"
-      ]
+      "values": ["portrait", "square", "landscape", "og_card"]
     },
     "public.infographic_status": {
       "name": "infographic_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "generating",
-        "ready",
-        "failed"
-      ]
+      "values": ["draft", "generating", "ready", "failed"]
     },
     "public.infographic_style": {
       "name": "infographic_style",
@@ -1817,12 +1717,7 @@
     "public.infographic_type": {
       "name": "infographic_type",
       "schema": "public",
-      "values": [
-        "timeline",
-        "comparison",
-        "stats_dashboard",
-        "key_takeaways"
-      ]
+      "values": ["timeline", "comparison", "stats_dashboard", "key_takeaways"]
     }
   },
   "schemas": {},

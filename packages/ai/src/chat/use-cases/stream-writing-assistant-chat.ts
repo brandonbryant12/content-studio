@@ -16,58 +16,46 @@ import {
 
 const WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS = 12_000;
 
-export interface WritingAssistantTranscriptEditProposal {
-  readonly summary: string;
-  readonly revisedTranscript: string;
+export interface WritingAssistantTranscriptWriteInput {
+  readonly transcript: string;
 }
 
-export interface WritingAssistantTranscriptEditResult {
-  readonly decision: 'accepted' | 'rejected';
-  readonly appliedTranscript?: string;
-  readonly reason?: string;
+export interface WritingAssistantTranscriptWriteResult {
+  readonly status: 'applied';
+  readonly appliedTranscript: string;
 }
 
 const writingAssistantTools = {
-  proposeTranscriptEdit: tool<
-    WritingAssistantTranscriptEditProposal,
-    WritingAssistantTranscriptEditResult
+  updateVoiceoverText: tool<
+    WritingAssistantTranscriptWriteInput,
+    WritingAssistantTranscriptWriteResult
   >({
     description:
-      'Propose a transcript rewrite. Always send the full revised transcript text.',
-    inputSchema: jsonSchema<WritingAssistantTranscriptEditProposal>({
+      'Write the full updated transcript text directly to the voiceover editor.',
+    inputSchema: jsonSchema<WritingAssistantTranscriptWriteInput>({
       type: 'object',
       additionalProperties: false,
       properties: {
-        summary: {
+        transcript: {
           type: 'string',
           description:
-            'A concise summary of what changed and why this revision helps.',
-        },
-        revisedTranscript: {
-          type: 'string',
-          description:
-            'The complete revised transcript text with all edits applied.',
+            'The complete transcript text that should replace the editor contents.',
         },
       },
-      required: ['summary', 'revisedTranscript'],
+      required: ['transcript'],
     }),
-    outputSchema: jsonSchema<WritingAssistantTranscriptEditResult>({
+    outputSchema: jsonSchema<WritingAssistantTranscriptWriteResult>({
       type: 'object',
       additionalProperties: false,
       properties: {
-        decision: { type: 'string', enum: ['accepted', 'rejected'] },
+        status: { type: 'string', enum: ['applied'] },
         appliedTranscript: {
           type: 'string',
           description:
-            'Transcript text that ended up in the editor after acceptance.',
-        },
-        reason: {
-          type: 'string',
-          description:
-            'Optional user rationale for acceptance or rejection feedback.',
+            'Transcript text written to the editor after the tool call.',
         },
       },
-      required: ['decision'],
+      required: ['status', 'appliedTranscript'],
     }),
   }),
 } as const satisfies ToolSet;
@@ -83,11 +71,15 @@ function normalizeTranscriptForPrompt(transcript: string) {
     return '[Transcript is currently empty]';
   }
 
-  if (trimmedTranscript.length <= WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS) {
+  const truncatedTranscript = trimmedTranscript.slice(
+    0,
+    WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS,
+  );
+  if (truncatedTranscript === trimmedTranscript) {
     return trimmedTranscript;
   }
 
-  return `${trimmedTranscript.slice(0, WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS)}\n\n[Transcript truncated for context length]`;
+  return `${truncatedTranscript}\n\n[Transcript truncated for context length]`;
 }
 
 export const streamWritingAssistantChat = (

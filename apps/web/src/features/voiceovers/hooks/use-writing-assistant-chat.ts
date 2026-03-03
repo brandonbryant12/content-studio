@@ -1,50 +1,22 @@
 import { useChat } from '@ai-sdk/react';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { UIMessage } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
 
-interface TranscriptEditToolInput {
-  readonly summary: string;
-  readonly revisedTranscript: string;
-}
-
-interface TranscriptEditToolOutput {
-  readonly decision: 'accepted' | 'rejected';
-  readonly appliedTranscript?: string;
-  readonly reason?: string;
+interface TranscriptWriteToolInput {
+  readonly transcript: string;
 }
 
 type WritingAssistantMessage = UIMessage;
+const TRANSCRIPT_WRITE_TOOL = 'updateVoiceoverText' as const;
 
-type TranscriptEditToolPart = {
-  readonly type: 'tool-proposeTranscriptEdit';
+type TranscriptWriteToolPart = WritingAssistantMessage['parts'][number] & {
+  readonly type: `tool-${typeof TRANSCRIPT_WRITE_TOOL}`;
   readonly toolCallId: string;
-  readonly state:
-    | 'input-streaming'
-    | 'input-available'
-    | 'approval-requested'
-    | 'approval-responded'
-    | 'output-available'
-    | 'output-error'
-    | 'output-denied';
-  readonly input?: unknown;
-  readonly output?: unknown;
-  readonly errorText?: string;
-  readonly approval?: {
-    readonly reason?: string;
-  };
+  readonly state: 'input-available';
+  readonly input: TranscriptWriteToolInput;
 };
-
-type TranscriptEditDecision = 'pending' | 'accepted' | 'rejected' | 'error';
-
-export interface TranscriptEditProposal {
-  readonly toolCallId: string;
-  readonly summary: string;
-  readonly revisedTranscript: string;
-  readonly decision: TranscriptEditDecision;
-  readonly reason?: string;
-}
 
 function getTranscriptFromRequestBody(body: object | undefined) {
   if (!body || typeof body !== 'object') return '';
@@ -52,149 +24,43 @@ function getTranscriptFromRequestBody(body: object | undefined) {
   return typeof transcript === 'string' ? transcript : '';
 }
 
-function isTranscriptEditInput(value: unknown): value is TranscriptEditToolInput {
-  if (!value || typeof value !== 'object') return false;
-
-  const candidate = value as {
-    summary?: unknown;
-    revisedTranscript?: unknown;
-  };
-
-  return (
-    typeof candidate.summary === 'string' &&
-    typeof candidate.revisedTranscript === 'string'
-  );
-}
-
-function isTranscriptEditOutput(
+function isTranscriptWriteInput(
   value: unknown,
-): value is TranscriptEditToolOutput {
+): value is TranscriptWriteToolInput {
   if (!value || typeof value !== 'object') return false;
-
-  const candidate = value as {
-    decision?: unknown;
-    reason?: unknown;
-    appliedTranscript?: unknown;
-  };
-
-  if (candidate.decision !== 'accepted' && candidate.decision !== 'rejected') {
-    return false;
-  }
-
-  if (
-    candidate.reason !== undefined &&
-    typeof candidate.reason !== 'string'
-  ) {
-    return false;
-  }
-
-  if (
-    candidate.appliedTranscript !== undefined &&
-    typeof candidate.appliedTranscript !== 'string'
-  ) {
-    return false;
-  }
-
-  return true;
+  return typeof (value as { transcript?: unknown }).transcript === 'string';
 }
 
-function isTranscriptEditToolPart(
+function isTranscriptWriteToolPart(
   part: WritingAssistantMessage['parts'][number],
-): boolean {
-  return part.type === 'tool-proposeTranscriptEdit';
+): part is TranscriptWriteToolPart {
+  if (part.type !== `tool-${TRANSCRIPT_WRITE_TOOL}`) return false;
+  if ((part as { state?: unknown }).state !== 'input-available') return false;
+  if (typeof (part as { toolCallId?: unknown }).toolCallId !== 'string') {
+    return false;
+  }
+  return isTranscriptWriteInput((part as { input?: unknown }).input);
 }
 
-function getToolInput(part: TranscriptEditToolPart): TranscriptEditToolInput | null {
-  if (
-    part.state === 'input-available' ||
-    part.state === 'approval-requested' ||
-    part.state === 'approval-responded' ||
-    part.state === 'output-available' ||
-    part.state === 'output-denied'
-  ) {
-    return isTranscriptEditInput(part.input) ? part.input : null;
-  }
-
-  if (
-    part.state === 'output-error' &&
-    isTranscriptEditInput(part.input)
-  ) {
-    return part.input;
-  }
-
-  return null;
-}
-
-function toProposal(part: TranscriptEditToolPart): TranscriptEditProposal | null {
-  const input = getToolInput(part);
-  if (!input) return null;
-
-  if (
-    part.state === 'input-available' ||
-    part.state === 'approval-requested' ||
-    part.state === 'approval-responded'
-  ) {
-    return {
-      toolCallId: part.toolCallId,
-      summary: input.summary,
-      revisedTranscript: input.revisedTranscript,
-      decision: 'pending',
-    };
-  }
-
-  if (part.state === 'output-available') {
-    if (!isTranscriptEditOutput(part.output)) return null;
-
-    return {
-      toolCallId: part.toolCallId,
-      summary: input.summary,
-      revisedTranscript: input.revisedTranscript,
-      decision: part.output.decision,
-      reason: part.output.reason,
-    };
-  }
-
-  if (part.state === 'output-denied') {
-    return {
-      toolCallId: part.toolCallId,
-      summary: input.summary,
-      revisedTranscript: input.revisedTranscript,
-      decision: 'rejected',
-      reason: part.approval?.reason,
-    };
-  }
-
-  if (part.state === 'output-error') {
-    return {
-      toolCallId: part.toolCallId,
-      summary: input.summary,
-      revisedTranscript: input.revisedTranscript,
-      decision: 'error',
-      reason: part.errorText,
-    };
-  }
-
-  return null;
-}
-
-function extractTranscriptEditProposals(
+function extractPendingTranscriptWrites(
   messages: readonly WritingAssistantMessage[],
 ) {
-  const proposals: TranscriptEditProposal[] = [];
+  const writes: Array<{ toolCallId: string; transcript: string }> = [];
 
   for (const message of messages) {
     if (message.role !== 'assistant') continue;
 
     for (const part of message.parts) {
-      if (!isTranscriptEditToolPart(part)) continue;
+      if (!isTranscriptWriteToolPart(part)) continue;
 
-      const proposal = toProposal(part as TranscriptEditToolPart);
-      if (!proposal) continue;
-      proposals.push(proposal);
+      writes.push({
+        toolCallId: part.toolCallId,
+        transcript: part.input.transcript,
+      });
     }
   }
 
-  return proposals;
+  return writes;
 }
 
 const transport = {
@@ -213,114 +79,89 @@ const transport = {
   reconnectToStream: async () => null,
 };
 
-const DEFAULT_REJECTION_REASON =
-  'Auto-rejected because you continued the conversation without accepting this edit.';
+export function useWritingAssistantChat(
+  transcript: string,
+  onApplyTranscriptEdit: (nextTranscript: string) => void,
+) {
+  const { messages, sendMessage, status, error, setMessages, addToolResult } =
+    useChat<WritingAssistantMessage>({
+      transport,
+    });
 
-export function useWritingAssistantChat(transcript: string) {
-  const {
-    messages,
-    sendMessage,
-    status,
-    error,
-    setMessages,
-    addToolResult,
-  } = useChat<WritingAssistantMessage>({
-    transport,
-  });
+  const handledToolCallIdsRef = useRef(new Set<string>());
 
-  const requestOptions = useMemo(
-    () => ({ body: { transcript } }),
-    [transcript],
-  );
+  useEffect(() => {
+    let isCancelled = false;
+
+    const applyPendingWrites = async () => {
+      const pendingWrites = extractPendingTranscriptWrites(messages);
+      let latestAppliedTranscript: string | null = null;
+
+      for (const write of pendingWrites) {
+        if (handledToolCallIdsRef.current.has(write.toolCallId)) {
+          continue;
+        }
+
+        handledToolCallIdsRef.current.add(write.toolCallId);
+
+        if (write.transcript !== transcript) {
+          onApplyTranscriptEdit(write.transcript);
+        }
+
+        try {
+          await addToolResult({
+            tool: TRANSCRIPT_WRITE_TOOL,
+            toolCallId: write.toolCallId,
+            output: {
+              status: 'applied',
+              appliedTranscript: write.transcript,
+            },
+          });
+          latestAppliedTranscript = write.transcript;
+        } catch {
+          handledToolCallIdsRef.current.delete(write.toolCallId);
+        }
+
+        if (isCancelled) {
+          return;
+        }
+      }
+
+      if (!latestAppliedTranscript || isCancelled) {
+        return;
+      }
+
+      try {
+        await sendMessage(undefined, {
+          body: { transcript: latestAppliedTranscript },
+        });
+      } catch {
+        // Keep the applied editor state even if follow-up chat continuation fails.
+      }
+    };
+
+    void applyPendingWrites();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [addToolResult, messages, onApplyTranscriptEdit, sendMessage, transcript]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
-  const proposals = useMemo(
-    () => extractTranscriptEditProposals(messages),
-    [messages],
-  );
-
-  const resolvePendingProposals = useCallback(
-    async (
-      resolver: (proposal: TranscriptEditProposal) => TranscriptEditToolOutput,
-    ) => {
-      const pendingProposals = proposals.filter(
-        (proposal) => proposal.decision === 'pending',
-      );
-
-      for (const proposal of pendingProposals) {
-        await addToolResult({
-          tool: 'proposeTranscriptEdit',
-          toolCallId: proposal.toolCallId,
-          output: resolver(proposal),
-        });
-      }
-    },
-    [addToolResult, proposals],
-  );
-
-  const continueConversation = useCallback(
-    () => sendMessage(undefined, requestOptions),
-    [requestOptions, sendMessage],
-  );
 
   const sendUserMessage = useCallback(
-    async (text: string) => {
-      await resolvePendingProposals(() => ({
-        decision: 'rejected',
-        reason: DEFAULT_REJECTION_REASON,
-      }));
-
-      await sendMessage({ text }, requestOptions);
-    },
-    [requestOptions, resolvePendingProposals, sendMessage],
+    (text: string) => sendMessage({ text }, { body: { transcript } }),
+    [sendMessage, transcript],
   );
 
-  const acceptProposal = useCallback(
-    async (proposal: TranscriptEditProposal) => {
-      await resolvePendingProposals((pendingProposal) =>
-        pendingProposal.toolCallId === proposal.toolCallId
-          ? {
-              decision: 'accepted',
-              appliedTranscript: proposal.revisedTranscript,
-              reason: 'Applied in editor.',
-            }
-          : {
-              decision: 'rejected',
-              reason:
-                'Rejected automatically because another transcript edit was accepted.',
-            },
-      );
-
-      await continueConversation();
-    },
-    [continueConversation, resolvePendingProposals],
-  );
-
-  const rejectProposal = useCallback(
-    async (proposal: TranscriptEditProposal) => {
-      await resolvePendingProposals((pendingProposal) =>
-        pendingProposal.toolCallId === proposal.toolCallId
-          ? { decision: 'rejected', reason: 'Rejected in editor.' }
-          : {
-              decision: 'rejected',
-              reason:
-                'Rejected automatically because another transcript edit was reviewed.',
-            },
-      );
-
-      await continueConversation();
-    },
-    [continueConversation, resolvePendingProposals],
-  );
-
-  const reset = useCallback(() => setMessages([]), [setMessages]);
+  const reset = useCallback(() => {
+    handledToolCallIdsRef.current.clear();
+    setMessages([]);
+  }, [setMessages]);
 
   return {
     messages,
     sendUserMessage,
-    proposals,
-    acceptProposal,
-    rejectProposal,
     status,
     isStreaming,
     error,

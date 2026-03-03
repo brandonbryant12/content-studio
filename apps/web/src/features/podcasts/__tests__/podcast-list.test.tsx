@@ -1,12 +1,9 @@
-// features/podcasts/__tests__/podcast-list.test.tsx
-
 import { VersionStatus } from '@repo/api/contracts';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import type { PodcastListItem } from '../components/podcast-item';
 import { PodcastList } from '../components/podcast-list';
-import { render, screen, fireEvent, userEvent } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
-// Mock PodcastItem to avoid router dependency
 vi.mock('../components/podcast-item', () => ({
   PodcastItem: ({
     podcast,
@@ -30,7 +27,6 @@ vi.mock('../components/podcast-item', () => ({
   ),
 }));
 
-// Mock podcast data matching PodcastListItem interface
 const mockPodcasts: PodcastListItem[] = [
   {
     id: 'podcast-1',
@@ -92,8 +88,7 @@ const mockQuickPlay = {
     `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`,
 };
 
-// Default props for PodcastList
-const createDefaultProps = () => ({
+const defaultProps = {
   podcasts: mockPodcasts,
   searchQuery: '',
   isCreating: false,
@@ -105,163 +100,118 @@ const createDefaultProps = () => ({
   selection: mockSelection,
   isBulkDeleting: false,
   onBulkDelete: vi.fn(),
+};
+
+const createProps = (overrides: Partial<typeof defaultProps> = {}) => ({
+  ...defaultProps,
+  ...overrides,
 });
+
+const renderPodcastList = (overrides: Partial<typeof defaultProps> = {}) => {
+  render(<PodcastList {...createProps(overrides)} />);
+  return { user: userEvent.setup() };
+};
+
+const SEARCH_PLACEHOLDER = 'Search podcasts\u2026';
 
 describe('PodcastList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders list of podcasts', () => {
-    render(<PodcastList {...createDefaultProps()} />);
+  it('renders heading, create action, search input, and podcast rows', () => {
+    renderPodcastList();
 
-    // Check header
     expect(
       screen.getByRole('heading', { name: 'Podcasts' }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole('button', { name: /create podcast/i }).length,
-    ).toBeGreaterThan(0);
-
-    // Check all podcast titles are rendered
-    expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
-    expect(screen.getByText('AI Weekly')).toBeInTheDocument();
-    expect(screen.getByText('Product Update')).toBeInTheDocument();
+      screen.getByRole('button', { name: /create podcast/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument();
+    for (const { title } of mockPodcasts) {
+      expect(screen.getByText(title)).toBeInTheDocument();
+    }
   });
 
-  it('shows empty state when no podcasts', () => {
-    render(<PodcastList {...createDefaultProps()} podcasts={[]} />);
+  it('renders empty state with create actions', () => {
+    renderPodcastList({ podcasts: [] });
 
     expect(screen.getByText('No podcasts yet')).toBeInTheDocument();
     expect(
       screen.getByText('Create your first podcast to get started.'),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole('button', { name: /create podcast/i }).length,
-    ).toBeGreaterThan(0);
+      screen.getAllByRole('button', { name: /create podcast/i }),
+    ).toHaveLength(2);
   });
 
-  it('filters podcasts by search query', () => {
-    render(<PodcastList {...createDefaultProps()} searchQuery="tech" />);
+  it('filters podcasts case-insensitively', () => {
+    renderPodcastList({ searchQuery: 'TECH' });
 
-    // Only "Tech Talk Episode 1" should be visible
     expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
     expect(screen.queryByText('AI Weekly')).not.toBeInTheDocument();
     expect(screen.queryByText('Product Update')).not.toBeInTheDocument();
   });
 
-  it('shows no results message when search matches nothing', () => {
-    render(<PodcastList {...createDefaultProps()} searchQuery="nonexistent" />);
+  it('shows no-results message when search has no matches', () => {
+    renderPodcastList({ searchQuery: 'nonexistent' });
 
-    expect(
-      screen.getByText(
-        (_content, element) =>
-          element?.tagName === 'P' &&
-          element.textContent?.includes('No podcasts found matching') ===
-            true &&
-          element.textContent?.includes('nonexistent') === true,
-      ),
-    ).toBeInTheDocument();
-
-    // Original podcasts should not be visible
-    expect(screen.queryByText('Tech Talk Episode 1')).not.toBeInTheDocument();
-    expect(screen.queryByText('AI Weekly')).not.toBeInTheDocument();
-    expect(screen.queryByText('Product Update')).not.toBeInTheDocument();
+    const noResultsMessage = screen.getByText(/no podcasts found matching/i);
+    expect(noResultsMessage).toHaveTextContent('nonexistent');
   });
 
-  it('calls onCreate when create button clicked', () => {
+  it('calls onCreate from both header and empty-state actions', async () => {
     const onCreate = vi.fn();
-    render(<PodcastList {...createDefaultProps()} onCreate={onCreate} />);
-
-    const createButton = screen.getByRole('button', {
-      name: /create podcast/i,
-    });
-    fireEvent.click(createButton);
-
-    expect(onCreate).toHaveBeenCalledTimes(1);
-  });
-
-  it('shows creating state when isCreating=true', () => {
-    render(<PodcastList {...createDefaultProps()} isCreating={true} />);
-
-    // Should show "Creating..." text in header button
-    const createButton = screen.getByRole('button', { name: /creating/i });
-    expect(createButton).toBeInTheDocument();
-    expect(createButton).toBeDisabled();
-  });
-
-  it('calls onDelete when podcast delete is triggered', () => {
-    const onDelete = vi.fn();
-    render(<PodcastList {...createDefaultProps()} onDelete={onDelete} />);
-
-    // Click the delete button for the first podcast
-    const deleteButton = screen.getByTestId('delete-podcast-1');
-    fireEvent.click(deleteButton);
-
-    expect(onDelete).toHaveBeenCalledTimes(1);
-    expect(onDelete).toHaveBeenCalledWith('podcast-1');
-  });
-
-  it('calls onSearch when search input changes', async () => {
-    const user = userEvent.setup();
-    const onSearch = vi.fn();
-    render(<PodcastList {...createDefaultProps()} onSearch={onSearch} />);
-
-    const searchInput = screen.getByPlaceholderText('Search podcasts\u2026');
-    await user.type(searchInput, 'test query');
-
-    // onSearch is called on each keystroke via startTransition
-    expect(onSearch).toHaveBeenCalled();
-  });
-
-  it('shows creating state in empty state when isCreating=true and no podcasts', () => {
-    render(
-      <PodcastList {...createDefaultProps()} podcasts={[]} isCreating={true} />,
-    );
-
-    // Both header and empty state buttons should show Creating... and be disabled
-    const createButtons = screen.getAllByRole('button', { name: /creating/i });
-    expect(createButtons).toHaveLength(2);
-    createButtons.forEach((button) => {
-      expect(button).toBeDisabled();
-    });
-  });
-
-  it('filters case-insensitively', () => {
-    render(<PodcastList {...createDefaultProps()} searchQuery="TECH" />);
-
-    // Should find "Tech Talk Episode 1" with uppercase query
-    expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
-    expect(screen.queryByText('AI Weekly')).not.toBeInTheDocument();
-  });
-
-  it('shows search input with current query value', () => {
-    render(<PodcastList {...createDefaultProps()} searchQuery="my search" />);
-
-    const searchInput = screen.getByPlaceholderText('Search podcasts\u2026');
-    expect(searchInput).toHaveValue('my search');
-  });
-
-  it('calls onCreate from empty state button', () => {
-    const onCreate = vi.fn();
-    render(
-      <PodcastList
-        {...createDefaultProps()}
-        podcasts={[]}
-        onCreate={onCreate}
-      />,
-    );
+    const { user } = renderPodcastList({ onCreate, podcasts: [] });
 
     const createButtons = screen.getAllByRole('button', {
       name: /create podcast/i,
     });
-    const createButton = createButtons[createButtons.length - 1];
-    expect(createButton).toBeDefined();
-    if (!createButton) {
-      throw new Error('Expected at least one create button');
-    }
-    fireEvent.click(createButton);
 
-    expect(onCreate).toHaveBeenCalledTimes(1);
+    await user.click(createButtons[0]!);
+    await user.click(createButtons[createButtons.length - 1]!);
+
+    expect(onCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it('disables create actions while creating', () => {
+    renderPodcastList({ podcasts: [], isCreating: true });
+
+    const creatingButtons = screen.getAllByRole('button', {
+      name: /creating/i,
+    });
+    expect(creatingButtons).toHaveLength(2);
+    expect(
+      creatingButtons.every((button) => button.hasAttribute('disabled')),
+    ).toBe(true);
+  });
+
+  it('calls onDelete when delete action is selected', async () => {
+    const onDelete = vi.fn();
+    const { user } = renderPodcastList({ onDelete });
+
+    await user.click(screen.getByTestId('delete-podcast-1'));
+
+    expect(onDelete).toHaveBeenCalledWith('podcast-1');
+  });
+
+  it('calls onSearch when user types in search input', async () => {
+    const onSearch = vi.fn();
+    const { user } = renderPodcastList({ onSearch });
+
+    await user.type(
+      screen.getByPlaceholderText(SEARCH_PLACEHOLDER),
+      'test query',
+    );
+
+    expect(onSearch).toHaveBeenCalled();
+  });
+
+  it('keeps search input controlled by searchQuery prop', () => {
+    renderPodcastList({ searchQuery: 'my search' });
+    expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toHaveValue(
+      'my search',
+    );
   });
 });

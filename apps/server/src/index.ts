@@ -41,6 +41,10 @@ app.onError(globalErrorHandler);
 app.get('/healthcheck', (c) => c.text('OK'));
 
 app.get('/healthcheck/deep', async (c) => {
+  if (!env.EXPOSE_DEEP_HEALTHCHECK) {
+    return c.text('Not Found', 404);
+  }
+
   const checks: Record<
     string,
     { status: string; latencyMs?: number; error?: string }

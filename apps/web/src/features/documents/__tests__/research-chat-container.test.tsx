@@ -48,6 +48,13 @@ vi.mock('../components/research-chat-dialog', () => ({
 }));
 
 describe('ResearchChatContainer', () => {
+  const renderContainer = (onOpenChange = vi.fn()) => {
+    render(<ResearchChatContainer open={true} onOpenChange={onOpenChange} />);
+    return { onOpenChange, user: userEvent.setup() };
+  };
+
+  const getStartPayload = () => startResearchMutate.mock.calls[0]?.[0];
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -99,53 +106,41 @@ describe('ResearchChatContainer', () => {
     });
   });
 
-  it('starts research from one click', async () => {
-    const user = userEvent.setup();
-    const onOpenChange = vi.fn();
+  it.each([
+    { autoGeneratePodcast: false, toggleBeforeStart: false },
+    { autoGeneratePodcast: true, toggleBeforeStart: true },
+  ])(
+    'starts research with autoGeneratePodcast=$autoGeneratePodcast',
+    async ({ autoGeneratePodcast, toggleBeforeStart }) => {
+      const { user, onOpenChange } = renderContainer();
 
-    render(<ResearchChatContainer open={true} onOpenChange={onOpenChange} />);
+      if (toggleBeforeStart) {
+        await user.click(
+          screen.getByRole('button', { name: 'Toggle Auto Podcast' }),
+        );
+      }
 
-    await user.click(screen.getByRole('button', { name: 'Start Research' }));
+      await user.click(screen.getByRole('button', { name: 'Start Research' }));
 
-    expect(synthesizeMutate).toHaveBeenCalled();
-    expect(startResearchMutate).toHaveBeenCalled();
-    expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
-      query: 'AI market analysis',
-      title: 'AI Market Analysis',
-      autoGeneratePodcast: false,
-    });
-    expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it('passes auto-generate podcast flag through to start research', async () => {
-    const user = userEvent.setup();
-
-    render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
-
-    // Toggle checkbox first
-    await user.click(
-      screen.getByRole('button', { name: 'Toggle Auto Podcast' }),
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Start Research' }));
-
-    expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
-      query: 'AI market analysis',
-      title: 'AI Market Analysis',
-      autoGeneratePodcast: true,
-    });
-  });
+      expect(synthesizeMutate).toHaveBeenCalled();
+      expect(startResearchMutate).toHaveBeenCalled();
+      expect(getStartPayload()).toEqual({
+        query: 'AI market analysis',
+        title: 'AI Market Analysis',
+        autoGeneratePodcast,
+      });
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    },
+  );
 
   it('does not trigger while synthesize is already pending', async () => {
-    const user = userEvent.setup();
-
     mockUseSynthesizeResearch.mockReturnValue({
       mutate: synthesizeMutate,
       isPending: true,
       error: undefined,
     });
 
-    render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
+    const { user } = renderContainer();
 
     await user.click(screen.getByRole('button', { name: 'Start Research' }));
 

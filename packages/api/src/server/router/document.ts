@@ -138,7 +138,7 @@ const documentRouter = {
         context.runtime,
         context.user,
         deleteDocument({ id: input.id }).pipe(
-          Effect.map(() => ({})),
+          Effect.as({}),
           tapLogActivity(
             context.runtime,
             context.user,

@@ -1,6 +1,5 @@
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
-import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateVoiceover } from '../hooks/use-create-voiceover';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
@@ -14,8 +13,7 @@ import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
-  apiClient.voiceovers.delete.mutationOptions().mutationFn!(input, context);
+const deleteFn = apiClient.voiceovers.delete.mutationOptions().mutationFn!;
 
 export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,8 +66,6 @@ export function VoiceoverListContainer() {
     selection.deselectAll();
   }, [executeBulkDelete, selection, quickPlay]);
 
-  const handleSearch = setSearchQuery;
-
   if (isLoading) {
     return (
       <div className="page-container-narrow">
@@ -113,7 +109,7 @@ export function VoiceoverListContainer() {
       searchQuery={searchQuery}
       isCreating={createMutation.isPending}
       deletingId={deletingId}
-      onSearch={handleSearch}
+      onSearch={setSearchQuery}
       onCreate={handleCreate}
       onDelete={handleDelete}
       quickPlay={quickPlay}

@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentProps } from 'react';
 import { ActivityDashboard } from '../components/activity-dashboard';
 import { render, screen, userEvent } from '@/test-utils';
 
-// Mock TanStack Router Link to avoid RouterProvider requirement
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
     children,
@@ -26,6 +25,8 @@ vi.mock('@tanstack/react-router', () => ({
   },
 }));
 
+const now = Date.now();
+
 const mockActivities = [
   {
     id: 'act_0000000000000001',
@@ -35,7 +36,7 @@ const mockActivities = [
     entityId: 'doc_0000000000000001',
     entityTitle: 'Getting Started Guide',
     metadata: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+    createdAt: new Date(now - 1000 * 60 * 5).toISOString(),
     userName: 'Alice',
   },
   {
@@ -46,7 +47,7 @@ const mockActivities = [
     entityId: 'pod_0000000000000001',
     entityTitle: 'Weekly Roundup',
     metadata: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    createdAt: new Date(now - 1000 * 60 * 60 * 2).toISOString(),
     userName: 'Bob',
   },
   {
@@ -57,7 +58,7 @@ const mockActivities = [
     entityId: 'vo_0000000000000001',
     entityTitle: 'Intro Narration',
     metadata: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
+    createdAt: new Date(now - 1000 * 60 * 60 * 24 * 3).toISOString(),
     userName: 'Alice',
   },
 ];
@@ -74,7 +75,9 @@ const mockTopUsers = [
   { userId: 'user-2', userName: 'Bob', count: 16 },
 ];
 
-const defaultProps = {
+const createProps = (
+  overrides: Partial<ComponentProps<typeof ActivityDashboard>> = {},
+) => ({
   statsTotal: 46,
   statsByEntityType: mockByEntityType,
   statsLoading: false,
@@ -92,11 +95,16 @@ const defaultProps = {
   onLoadMore: vi.fn(),
   isLoadingMore: false,
   feedLoading: false,
-};
+  ...overrides,
+});
+
+const renderDashboard = (
+  overrides: Partial<ComponentProps<typeof ActivityDashboard>> = {},
+) => render(<ActivityDashboard {...createProps(overrides)} />);
 
 describe('ActivityDashboard', () => {
-  it('renders the page heading', () => {
-    render(<ActivityDashboard {...defaultProps} />);
+  it('renders heading, overview text, and core stat cards', () => {
+    renderDashboard();
 
     expect(
       screen.getByRole('heading', { name: 'Activity' }),
@@ -104,11 +112,6 @@ describe('ActivityDashboard', () => {
     expect(
       screen.getByText('Monitor all user activity across the platform.'),
     ).toBeInTheDocument();
-  });
-
-  it('renders activity stats with correct totals', () => {
-    render(<ActivityDashboard {...defaultProps} />);
-
     expect(screen.getByText('Total Activities')).toBeInTheDocument();
     expect(screen.getByText('46')).toBeInTheDocument();
     expect(screen.getByText('Documents')).toBeInTheDocument();
@@ -119,218 +122,192 @@ describe('ActivityDashboard', () => {
     expect(screen.getByText('8')).toBeInTheDocument();
   });
 
-  it('renders activity feed items with entity titles and user names', () => {
-    render(<ActivityDashboard {...defaultProps} />);
+  it('renders activity rows with titles, actor/entity labels, and relative times', () => {
+    renderDashboard();
 
-    // Entity titles
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
     expect(screen.getByText('Weekly Roundup')).toBeInTheDocument();
     expect(screen.getByText('Intro Narration')).toBeInTheDocument();
-
-    // User names appear as "userName · EntityType" in feed rows
-    expect(screen.getAllByText(/Alice/)).toHaveLength(2);
-    expect(screen.getByText(/Bob/)).toBeInTheDocument();
-  });
-
-  it('renders entity type labels in feed', () => {
-    render(<ActivityDashboard {...defaultProps} />);
-
-    // Feed rows show "userName · EntityType" — verify entity type labels appear
     expect(screen.getByText(/Alice · Document/)).toBeInTheDocument();
     expect(screen.getByText(/Bob · Podcast/)).toBeInTheDocument();
     expect(screen.getByText(/Alice · Voiceover/)).toBeInTheDocument();
+    expect(screen.getByText('5m ago')).toBeInTheDocument();
+    expect(screen.getByText('2h ago')).toBeInTheDocument();
+    expect(screen.getByText('3d ago')).toBeInTheDocument();
   });
 
-  it('shows empty state when no activities', () => {
-    render(<ActivityDashboard {...defaultProps} activities={[]} />);
+  it.each([
+    {
+      name: 'shows empty state when activities are empty',
+      props: { activities: [] as typeof mockActivities },
+      expectEmptyState: true,
+    },
+    {
+      name: 'hides feed rows while feed is loading',
+      props: { feedLoading: true },
+      expectEmptyState: false,
+    },
+  ])('$name', ({ props, expectEmptyState }) => {
+    renderDashboard(props);
 
-    expect(screen.getByText('No activity found')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'Activity will appear here as users create and modify content.',
-      ),
-    ).toBeInTheDocument();
+    if (expectEmptyState) {
+      expect(screen.getByText('No activity found')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Activity will appear here as users create and modify content.',
+        ),
+      ).toBeInTheDocument();
+      return;
+    }
+
+    expect(screen.queryByText('Getting Started Guide')).not.toBeInTheDocument();
   });
 
-  it('shows loading state for feed', () => {
-    render(<ActivityDashboard {...defaultProps} feedLoading={true} />);
+  it.each([
+    {
+      name: 'shows load-more button when more pages exist',
+      hasMore: true,
+      isLoadingMore: false,
+      shouldShow: true,
+      shouldBeDisabled: false,
+    },
+    {
+      name: 'hides load-more button when there are no more pages',
+      hasMore: false,
+      isLoadingMore: false,
+      shouldShow: false,
+      shouldBeDisabled: false,
+    },
+    {
+      name: 'disables load-more button while loading more',
+      hasMore: true,
+      isLoadingMore: true,
+      shouldShow: true,
+      shouldBeDisabled: true,
+    },
+  ])('$name', ({ hasMore, isLoadingMore, shouldShow, shouldBeDisabled }) => {
+    renderDashboard({ hasMore, isLoadingMore });
 
-    // Feed items should not be visible
-    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
-  });
-
-  it('shows "Load more" button when hasMore is true', () => {
-    render(<ActivityDashboard {...defaultProps} hasMore={true} />);
-
-    const loadMoreButton = screen.getByRole('button', {
+    const button = screen.queryByRole('button', {
       name: 'Load more activities',
     });
-    expect(loadMoreButton).toBeInTheDocument();
+
+    if (!shouldShow) {
+      expect(button).not.toBeInTheDocument();
+      return;
+    }
+
+    expect(button).toBeInTheDocument();
+    if (shouldBeDisabled) {
+      expect(button).toBeDisabled();
+    }
   });
 
-  it('does not show "Load more" button when hasMore is false', () => {
-    render(<ActivityDashboard {...defaultProps} hasMore={false} />);
-
-    expect(
-      screen.queryByRole('button', { name: 'Load more activities' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('calls onLoadMore when "Load more" is clicked', async () => {
+  it('calls onLoadMore when clicking load-more', async () => {
     const user = userEvent.setup();
     const onLoadMore = vi.fn();
-    render(
-      <ActivityDashboard
-        {...defaultProps}
-        hasMore={true}
-        onLoadMore={onLoadMore}
-      />,
-    );
+    renderDashboard({ hasMore: true, onLoadMore });
 
     await user.click(
       screen.getByRole('button', { name: 'Load more activities' }),
     );
+
     expect(onLoadMore).toHaveBeenCalledOnce();
   });
 
-  it('disables "Load more" button while loading more', () => {
-    render(
-      <ActivityDashboard
-        {...defaultProps}
-        hasMore={true}
-        isLoadingMore={true}
-      />,
+  it('renders period tabs and marks active period', () => {
+    renderDashboard({ period: '7d' });
+
+    expect(
+      screen.getByRole('tablist', { name: 'Time period' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    expect(screen.getAllByRole('tab')[1]).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+  });
+
+  it('calls onPeriodChange when period tab is clicked', async () => {
+    const user = userEvent.setup();
+    const onPeriodChange = vi.fn();
+    renderDashboard({ onPeriodChange });
+
+    await user.click(screen.getAllByRole('tab')[0]!);
+    await user.click(screen.getAllByRole('tab')[2]!);
+
+    expect(onPeriodChange).toHaveBeenCalledWith('24h');
+    expect(onPeriodChange).toHaveBeenCalledWith('30d');
+  });
+
+  it.each([
+    { name: 'renders search input', searchQuery: '', expected: '' },
+    {
+      name: 'renders current search value',
+      searchQuery: 'Weekly',
+      expected: 'Weekly',
+    },
+  ])('$name', ({ searchQuery, expected }) => {
+    renderDashboard({ searchQuery });
+
+    expect(
+      screen.getByRole('textbox', { name: 'Search activity' }),
+    ).toHaveValue(expected);
+  });
+
+  it('calls onSearchChange when typing into search input', async () => {
+    const user = userEvent.setup();
+    const onSearchChange = vi.fn();
+    renderDashboard({ onSearchChange });
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Search activity' }),
+      'A',
     );
 
-    const loadMoreButton = screen.getByRole('button', {
-      name: 'Load more activities',
-    });
-    expect(loadMoreButton).toBeDisabled();
+    expect(onSearchChange).toHaveBeenCalledWith('A');
   });
 
-  describe('period selector', () => {
-    it('renders period tabs with correct ARIA roles', () => {
-      render(<ActivityDashboard {...defaultProps} />);
+  it('shows stat loading spinners when stats are loading', () => {
+    renderDashboard({ statsLoading: true });
 
-      const tablist = screen.getByRole('tablist', { name: 'Time period' });
-      expect(tablist).toBeInTheDocument();
-
-      const tabs = screen.getAllByRole('tab');
-      expect(tabs).toHaveLength(3);
-      expect(tabs[0]).toHaveTextContent('24h');
-      expect(tabs[1]).toHaveTextContent('7d');
-      expect(tabs[2]).toHaveTextContent('30d');
-    });
-
-    it('marks the active period as selected', () => {
-      render(<ActivityDashboard {...defaultProps} period="7d" />);
-
-      const tabs = screen.getAllByRole('tab');
-      expect(tabs[0]).toHaveAttribute('aria-selected', 'false');
-      expect(tabs[1]).toHaveAttribute('aria-selected', 'true');
-      expect(tabs[2]).toHaveAttribute('aria-selected', 'false');
-    });
-
-    it('calls onPeriodChange when a tab is clicked', async () => {
-      const user = userEvent.setup();
-      const onPeriodChange = vi.fn();
-      render(
-        <ActivityDashboard {...defaultProps} onPeriodChange={onPeriodChange} />,
-      );
-
-      await user.click(screen.getAllByRole('tab')[0]!);
-      expect(onPeriodChange).toHaveBeenCalledWith('24h');
-
-      await user.click(screen.getAllByRole('tab')[2]!);
-      expect(onPeriodChange).toHaveBeenCalledWith('30d');
-    });
-  });
-
-  describe('relative timestamps', () => {
-    it('shows relative time for recent activities', () => {
-      render(<ActivityDashboard {...defaultProps} />);
-
-      // 5 minutes ago should show "5m ago"
-      expect(screen.getByText('5m ago')).toBeInTheDocument();
-      // 2 hours ago should show "2h ago"
-      expect(screen.getByText('2h ago')).toBeInTheDocument();
-      // 3 days ago should show "3d ago"
-      expect(screen.getByText('3d ago')).toBeInTheDocument();
-    });
-  });
-
-  describe('search', () => {
-    it('renders the search input', () => {
-      render(<ActivityDashboard {...defaultProps} />);
-
-      expect(
-        screen.getByRole('textbox', { name: 'Search activity' }),
-      ).toBeInTheDocument();
-    });
-
-    it('calls onSearchChange when typing', async () => {
-      const user = userEvent.setup();
-      const onSearchChange = vi.fn();
-      render(
-        <ActivityDashboard {...defaultProps} onSearchChange={onSearchChange} />,
-      );
-
-      await user.type(
-        screen.getByRole('textbox', { name: 'Search activity' }),
-        'A',
-      );
-      expect(onSearchChange).toHaveBeenCalledWith('A');
-    });
-
-    it('displays current search value', () => {
-      render(<ActivityDashboard {...defaultProps} searchQuery="Weekly" />);
-
-      expect(
-        screen.getByRole('textbox', { name: 'Search activity' }),
-      ).toHaveValue('Weekly');
-    });
-  });
-
-  it('shows loading spinners for stats when statsLoading is true', () => {
-    render(<ActivityDashboard {...defaultProps} statsLoading={true} />);
-
-    // Stat values should not be visible
     expect(screen.queryByText('46')).not.toBeInTheDocument();
     expect(screen.queryByText('20')).not.toBeInTheDocument();
   });
 
-  it('renders feed items as links for non-deleted activities', () => {
-    render(<ActivityDashboard {...defaultProps} />);
+  it('renders feed links only for non-deleted activities', () => {
+    renderDashboard();
 
-    // "created" document should have a link
-    const docLink = screen.getByRole('link', {
-      name: /view document: getting started guide/i,
-    });
-    expect(docLink).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: /view document: getting started guide/i,
+      }),
+    ).toBeInTheDocument();
 
-    // "deleted" voiceover should NOT be a link
     expect(
       screen.queryByRole('link', { name: /view voiceover: intro narration/i }),
     ).not.toBeInTheDocument();
   });
 
-  describe('filters', () => {
-    it('renders entity type filter', () => {
-      render(<ActivityDashboard {...defaultProps} />);
+  it.each([
+    {
+      name: 'shows user filter when top users exist',
+      topUsers: mockTopUsers,
+      shouldShowUserFilter: true,
+    },
+    {
+      name: 'hides user filter when top users are empty',
+      topUsers: [],
+      shouldShowUserFilter: false,
+    },
+  ])('$name', ({ topUsers, shouldShowUserFilter }) => {
+    renderDashboard({ topUsers });
 
-      expect(screen.getByText('Entity Type')).toBeInTheDocument();
-    });
-
-    it('renders user filter when topUsers is non-empty', () => {
-      render(<ActivityDashboard {...defaultProps} />);
-
+    expect(screen.getByText('Entity Type')).toBeInTheDocument();
+    if (shouldShowUserFilter) {
       expect(screen.getByText('User')).toBeInTheDocument();
-    });
-
-    it('hides user filter when topUsers is empty', () => {
-      render(<ActivityDashboard {...defaultProps} topUsers={[]} />);
-
+    } else {
       expect(screen.queryByText('User')).not.toBeInTheDocument();
-    });
+    }
   });
 });

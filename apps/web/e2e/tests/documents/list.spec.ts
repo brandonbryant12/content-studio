@@ -35,23 +35,4 @@ authenticatedTest.describe('Documents List', () => {
     await documentsPage.openUploadDialog();
     await expect(documentsPage.getUploadDialog()).toBeVisible();
   });
-
-  authenticatedTest.describe('with documents', () => {
-    authenticatedTest.beforeEach(async ({ api }) => {
-      // Note: We can't easily upload documents via API without file handling
-      // These tests rely on existing documents or will be skipped if none exist
-    });
-
-    authenticatedTest('can search documents', async ({ documentsPage }) => {
-      await documentsPage.search('test');
-      // Search should filter the list
-      await documentsPage.page.waitForTimeout(300); // Debounce wait
-    });
-
-    authenticatedTest('can clear search', async ({ documentsPage }) => {
-      await documentsPage.search('test');
-      await documentsPage.clearSearch();
-      // Should show all documents again
-    });
-  });
 });

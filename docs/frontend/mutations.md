@@ -99,6 +99,37 @@ const deleteMutation = useMutation({
 });
 ```
 
+For create flows that immediately navigate to a suspense-backed detail route,
+seed the detail query cache before navigation to avoid transition flicker.
+Then refresh list data without forcing an active-page refetch.
+
+```tsx
+const createMutation = useMutation(
+  apiClient.podcasts.create.mutationOptions({
+    onSuccess: (data) => {
+      queryClient.setQueryData(getPodcastQueryKey(data.id), data);
+      toast.success("Podcast created");
+      void navigate({
+        to: "/podcasts/$podcastId",
+        params: { podcastId: data.id },
+        search: { version: undefined },
+      });
+      queryClient.invalidateQueries({
+        queryKey: getPodcastListQueryKey(),
+        refetchType: "inactive",
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to create podcast"));
+    },
+  }),
+);
+```
+
+**Canonical examples:**
+- `apps/web/src/features/podcasts/hooks/use-create-podcast.ts`
+- `apps/web/src/features/voiceovers/hooks/use-create-voiceover.ts`
+
 ## Mutation Hook Organization
 
 | Pattern              | Location                                                       |
@@ -135,5 +166,6 @@ const isStreaming = status === "submitted" || status === "streaming";
 
 - Extract `mutationFn` from oRPC: `apiClient.{route}.{method}.mutationOptions().mutationFn!` <!-- enforced-by: manual-review -->
 - Never call `queryClient.invalidateQueries` in `onSettled` -- SSE handles it <!-- enforced-by: manual-review -->
+- For create+redirect flows, seed detail cache with `setQueryData` before `navigate` to prevent suspense flicker; invalidate list with `refetchType: 'inactive'` <!-- enforced-by: manual-review -->
 - Use `getErrorMessage()` for all error toasts (see [`error-handling.md`](./error-handling.md)) <!-- enforced-by: manual-review -->
 - Container calls mutation; presenter calls callback prop <!-- enforced-by: manual-review -->

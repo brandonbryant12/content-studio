@@ -29,6 +29,40 @@ export interface SaveChangesResult {
   hasChanges: boolean;
 }
 
+type VoicePersonaUpdateData = {
+  hostVoice?: string;
+  hostVoiceName?: string;
+  coHostVoice?: string;
+  coHostVoiceName?: string;
+  hostPersonaId?: PersonaId | null;
+  coHostPersonaId?: PersonaId | null;
+};
+
+const buildVoicePersonaUpdateData = (
+  input: SaveChangesInput,
+): VoicePersonaUpdateData => {
+  const updateData: VoicePersonaUpdateData = {};
+  if (input.hostVoice !== undefined) {
+    updateData.hostVoice = input.hostVoice;
+  }
+  if (input.hostVoiceName !== undefined) {
+    updateData.hostVoiceName = input.hostVoiceName;
+  }
+  if (input.coHostVoice !== undefined) {
+    updateData.coHostVoice = input.coHostVoice;
+  }
+  if (input.coHostVoiceName !== undefined) {
+    updateData.coHostVoiceName = input.coHostVoiceName;
+  }
+  if (input.hostPersonaId !== undefined) {
+    updateData.hostPersonaId = input.hostPersonaId;
+  }
+  if (input.coHostPersonaId !== undefined) {
+    updateData.coHostPersonaId = input.coHostPersonaId;
+  }
+  return updateData;
+};
+
 /**
  * Error when save is not possible from current state.
  */
@@ -80,37 +114,16 @@ export const saveChanges = (input: SaveChangesInput) =>
     }
 
     const hasSegmentChanges = input.segments !== undefined;
-    const hasVoiceChanges =
-      input.hostVoice !== undefined ||
-      input.hostVoiceName !== undefined ||
-      input.coHostVoice !== undefined ||
-      input.coHostVoiceName !== undefined;
-    const hasPersonaChanges =
-      input.hostPersonaId !== undefined || input.coHostPersonaId !== undefined;
+    const voicePersonaUpdateData = buildVoicePersonaUpdateData(input);
+    const hasVoiceOrPersonaChanges =
+      Object.keys(voicePersonaUpdateData).length > 0;
 
-    if (!hasSegmentChanges && !hasVoiceChanges && !hasPersonaChanges) {
+    if (!hasSegmentChanges && !hasVoiceOrPersonaChanges) {
       return { podcast, hasChanges: false };
     }
 
-    if (hasVoiceChanges || hasPersonaChanges) {
-      yield* podcastRepo.update(input.podcastId, {
-        ...(input.hostVoice !== undefined && { hostVoice: input.hostVoice }),
-        ...(input.hostVoiceName !== undefined && {
-          hostVoiceName: input.hostVoiceName,
-        }),
-        ...(input.coHostVoice !== undefined && {
-          coHostVoice: input.coHostVoice,
-        }),
-        ...(input.coHostVoiceName !== undefined && {
-          coHostVoiceName: input.coHostVoiceName,
-        }),
-        ...(input.hostPersonaId !== undefined && {
-          hostPersonaId: input.hostPersonaId,
-        }),
-        ...(input.coHostPersonaId !== undefined && {
-          coHostPersonaId: input.coHostPersonaId,
-        }),
-      });
+    if (hasVoiceOrPersonaChanges) {
+      yield* podcastRepo.update(input.podcastId, voicePersonaUpdateData);
     }
 
     if (hasSegmentChanges) {

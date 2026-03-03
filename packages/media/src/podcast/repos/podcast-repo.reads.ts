@@ -16,6 +16,7 @@ import {
 } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { PodcastWithDocuments, PodcastRepoService } from './podcast-repo';
+import type { DatabaseInstance } from '@repo/db/client';
 import { DocumentNotFound, PodcastNotFound } from '../../errors';
 
 const requirePodcast = <T extends PodcastWithDocuments | null | undefined>(
@@ -24,6 +25,25 @@ const requirePodcast = <T extends PodcastWithDocuments | null | undefined>(
   Effect.flatMap((pod: T) =>
     pod ? Effect.succeed(pod) : Effect.fail(new PodcastNotFound({ id })),
   );
+
+const fetchSortedSourceDocuments = async (
+  db: DatabaseInstance,
+  sourceDocumentIds: readonly DocumentId[],
+): Promise<Document[]> => {
+  if (sourceDocumentIds.length === 0) {
+    return [];
+  }
+
+  const docs = await db
+    .select()
+    .from(document)
+    .where(inArray(document.id, sourceDocumentIds));
+
+  const docMap = new Map(docs.map((d) => [d.id, d]));
+  return sourceDocumentIds
+    .map((docId) => docMap.get(docId))
+    .filter((d): d is Document => d !== undefined);
+};
 
 export const podcastReadMethods: Pick<
   PodcastRepoService,
@@ -41,19 +61,10 @@ export const podcastReadMethods: Pick<
       ).execute({ id });
 
       if (!pod) return null;
-
-      const docs =
-        pod.sourceDocumentIds.length > 0
-          ? await db
-              .select()
-              .from(document)
-              .where(inArray(document.id, pod.sourceDocumentIds))
-          : [];
-
-      const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = pod.sourceDocumentIds
-        .map((docId) => docMap.get(docId))
-        .filter((d): d is Document => d !== undefined);
+      const sortedDocs = await fetchSortedSourceDocuments(
+        db,
+        pod.sourceDocumentIds,
+      );
 
       return { ...pod, documents: sortedDocs };
     }).pipe(requirePodcast(id)),
@@ -74,19 +85,10 @@ export const podcastReadMethods: Pick<
           .prepare('podcastRepo_findByIdForUser'),
       ).execute({ id, userId });
       if (!pod) return null;
-
-      const docs =
-        pod.sourceDocumentIds.length > 0
-          ? await db
-              .select()
-              .from(document)
-              .where(inArray(document.id, pod.sourceDocumentIds))
-          : [];
-
-      const docMap = new Map(docs.map((d) => [d.id, d]));
-      const sortedDocs = pod.sourceDocumentIds
-        .map((docId) => docMap.get(docId))
-        .filter((d): d is Document => d !== undefined);
+      const sortedDocs = await fetchSortedSourceDocuments(
+        db,
+        pod.sourceDocumentIds,
+      );
 
       return { ...pod, documents: sortedDocs };
     }).pipe(requirePodcast(id)),
@@ -116,45 +118,46 @@ export const podcastReadMethods: Pick<
     }),
 
   verifyDocumentsExist: (documentIds, userId) =>
-    withDb('podcastRepo.verifyDocuments', async (db) => {
-      const docIds = [...documentIds] as DocumentId[];
-      if (docIds.length === 0) {
-        return {
-          docs: [] as Document[],
-          missingId: undefined as string | undefined,
-          notOwnedId: undefined as string | undefined,
-        };
+    Effect.gen(function* () {
+      if (documentIds.length === 0) {
+        return [];
       }
 
-      const docs = await db
-        .select()
-        .from(document)
-        .where(inArray(document.id, docIds));
+      const result = yield* withDb(
+        'podcastRepo.verifyDocuments',
+        async (db) => {
+          const docIds = documentIds.map((id) => id as DocumentId);
+          const docs = await db
+            .select()
+            .from(document)
+            .where(inArray(document.id, docIds));
 
-      const foundIds = new Set(docs.map((d) => d.id as string));
-      const missingId = docIds.find((docId) => !foundIds.has(docId as string));
+          const foundIds = new Set(docs.map((d) => String(d.id)));
+          const missingId = documentIds.find((docId) => !foundIds.has(docId));
+          const notOwnedId = docs.find((d) => d.createdBy !== userId)?.id;
 
-      const notOwned = docs.find((d) => d.createdBy !== userId);
+          return {
+            docs,
+            missingId,
+            notOwnedId: notOwnedId ? String(notOwnedId) : undefined,
+          };
+        },
+      );
 
-      return {
-        docs,
-        missingId: missingId as string | undefined,
-        notOwnedId: notOwned?.id as string | undefined,
-      };
-    }).pipe(
-      Effect.flatMap((result) => {
-        if (result.missingId) {
-          return Effect.fail(new DocumentNotFound({ id: result.missingId }));
-        }
-        if (result.notOwnedId) {
-          return Effect.fail(
-            new DocumentNotFound({
-              id: result.notOwnedId,
-              message: 'Document not found or access denied',
-            }),
-          );
-        }
-        return Effect.succeed(result.docs);
-      }),
-    ),
+      if (result.missingId) {
+        return yield* Effect.fail(
+          new DocumentNotFound({ id: result.missingId }),
+        );
+      }
+      if (result.notOwnedId) {
+        return yield* Effect.fail(
+          new DocumentNotFound({
+            id: result.notOwnedId,
+            message: 'Document not found or access denied',
+          }),
+        );
+      }
+
+      return result.docs;
+    }),
 };

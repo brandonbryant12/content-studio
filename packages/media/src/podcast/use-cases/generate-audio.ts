@@ -92,10 +92,6 @@ export const generateAudio = (input: GenerateAudioInput) =>
       VersionStatus.GENERATING_AUDIO,
     );
 
-    // Load persona names for speaker detection
-    let hostPersonaName: string | undefined;
-    let coHostPersonaName: string | undefined;
-
     const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
       [
         podcast.hostPersonaId
@@ -108,11 +104,8 @@ export const generateAudio = (input: GenerateAudioInput) =>
       { concurrency: 2 },
     );
 
-    if (hostPersonaResult)
-      hostPersonaName = hostPersonaResult.name.toLowerCase();
-    if (coHostPersonaResult) {
-      coHostPersonaName = coHostPersonaResult.name.toLowerCase();
-    }
+    const hostPersonaName = hostPersonaResult?.name.toLowerCase();
+    const coHostPersonaName = coHostPersonaResult?.name.toLowerCase();
 
     const hostVoice = podcast.hostVoice ?? 'Charon';
     const coHostVoice = podcast.coHostVoice ?? 'Kore';
@@ -132,12 +125,10 @@ export const generateAudio = (input: GenerateAudioInput) =>
     };
 
     const turns: SpeakerTurn[] = podcast.segments.map(
-      (segment: ScriptSegment) => {
-        return {
-          speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
-          text: segment.line,
-        };
-      },
+      (segment: ScriptSegment) => ({
+        speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
+        text: segment.line,
+      }),
     );
 
     const voiceConfigs: SpeakerVoiceConfig[] = [

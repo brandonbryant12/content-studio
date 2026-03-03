@@ -39,6 +39,7 @@ const entityQueryKeys = {
   },
   persona: { get: getPersonaQueryKey, list: getPersonaListQueryKey },
 } as const;
+type EntityType = keyof typeof entityQueryKeys;
 
 /**
  * Check if the user is currently viewing a specific entity's detail page.
@@ -60,13 +61,43 @@ function getCachedTitle(
 }
 
 interface NotifyOptions {
-  entityType: string;
+  entityType: EntityType;
   entityId: string;
   entityPath: string;
   status: 'completed' | 'failed';
   error?: string;
   title?: string;
   queryClient: QueryClient;
+}
+
+type TitleResponse = { title?: string } | null | undefined;
+
+function fetchTitleAndNotify(
+  fetchTitle: () => Promise<TitleResponse>,
+  notify: (title?: string) => void,
+): void {
+  fetchTitle()
+    .then((data) => notify(data?.title))
+    .catch(() => notify());
+}
+
+function notifyCompletionWithFetchedTitle(
+  options: Omit<NotifyOptions, 'title'> & {
+    fetchTitle: () => Promise<TitleResponse>;
+  },
+): void {
+  const { fetchTitle, ...notifyOptions } = options;
+  fetchTitleAndNotify(fetchTitle, (title) =>
+    notifyJobCompletion({ ...notifyOptions, title }),
+  );
+}
+
+function isPodcastGenerationJob(jobType: JobCompletionEvent['jobType']) {
+  return (
+    jobType === 'generate-podcast' ||
+    jobType === 'generate-script' ||
+    jobType === 'generate-audio'
+  );
 }
 
 function notifyJobCompletion({
@@ -81,20 +112,19 @@ function notifyJobCompletion({
   // Don't notify if user is already viewing this entity
   if (isViewingEntity(entityPath, entityId)) return;
 
-  const queryKeyFn =
-    entityQueryKeys[entityType as keyof typeof entityQueryKeys]?.get;
+  const queryKeyFn = entityQueryKeys[entityType].get;
   const title =
-    providedTitle ??
-    (queryKeyFn ? getCachedTitle(queryClient, queryKeyFn(entityId)) : null);
+    providedTitle ?? getCachedTitle(queryClient, queryKeyFn(entityId));
 
   const label = entityType.charAt(0).toUpperCase() + entityType.slice(1);
 
   const path = `/${entityPath}/${entityId}`;
-  const viewAction = navigateToPath
+  const navigate = navigateToPath;
+  const viewAction = navigate
     ? {
         action: {
           label: 'View',
-          onClick: () => navigateToPath!(path),
+          onClick: () => navigate(path),
         },
       }
     : {};
@@ -117,6 +147,7 @@ export function handleJobCompletion(
   queryClient: QueryClient,
 ): void {
   const { jobType, podcastId } = event;
+  const shouldHandlePodcastGeneration = isPodcastGenerationJob(jobType);
 
   // Invalidate specific podcast
   if (podcastId) {
@@ -126,42 +157,28 @@ export function handleJobCompletion(
   }
 
   // Invalidate list for job types that affect list display
-  switch (jobType) {
-    case 'generate-podcast':
-    case 'generate-script':
-    case 'generate-audio':
-      queryClient.invalidateQueries({
-        queryKey: getPodcastListQueryKey(),
-      });
-      break;
+  if (shouldHandlePodcastGeneration) {
+    queryClient.invalidateQueries({
+      queryKey: getPodcastListQueryKey(),
+    });
   }
 
   // Notify on final completion:
   // - generate-podcast covers full pipeline
   // - generate-script and generate-audio cover explicit partial regenerations
-  if (
-    (jobType === 'generate-podcast' ||
-      jobType === 'generate-script' ||
-      jobType === 'generate-audio') &&
-    podcastId
-  ) {
-    const notify = (title?: string) =>
-      notifyJobCompletion({
-        entityType: 'podcast',
-        entityId: podcastId,
-        entityPath: 'podcasts',
-        status: event.status,
-        error: event.error,
-        title,
-        queryClient,
-      });
-
-    queryClient
-      .fetchQuery(
-        apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
-      )
-      .then((data) => notify(data?.title))
-      .catch(() => notify());
+  if (shouldHandlePodcastGeneration && podcastId) {
+    notifyCompletionWithFetchedTitle({
+      entityType: 'podcast',
+      entityId: podcastId,
+      entityPath: 'podcasts',
+      status: event.status,
+      error: event.error,
+      queryClient,
+      fetchTitle: () =>
+        queryClient.fetchQuery(
+          apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
+        ),
+    });
   }
 }
 
@@ -181,23 +198,18 @@ export function handleVoiceoverJobCompletion(
     queryKey: getVoiceoverListQueryKey(),
   });
 
-  const notify = (title?: string) =>
-    notifyJobCompletion({
-      entityType: 'voiceover',
-      entityId: voiceoverId,
-      entityPath: 'voiceovers',
-      status: event.status,
-      error: event.error,
-      title,
-      queryClient,
-    });
-
-  queryClient
-    .fetchQuery(
-      apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }),
-    )
-    .then((data) => notify(data?.title))
-    .catch(() => notify());
+  notifyCompletionWithFetchedTitle({
+    entityType: 'voiceover',
+    entityId: voiceoverId,
+    entityPath: 'voiceovers',
+    status: event.status,
+    error: event.error,
+    queryClient,
+    fetchTitle: () =>
+      queryClient.fetchQuery(
+        apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }),
+      ),
+  });
 }
 
 export function handleInfographicJobCompletion(
@@ -221,23 +233,20 @@ export function handleInfographicJobCompletion(
     queryKey: getInfographicVersionsQueryKey(infographicId),
   });
 
-  const notify = (title?: string) =>
-    notifyJobCompletion({
-      entityType: 'infographic',
-      entityId: infographicId,
-      entityPath: 'infographics',
-      status: event.status,
-      error: event.error,
-      title,
-      queryClient,
-    });
-
-  queryClient
-    .fetchQuery(
-      apiClient.infographics.get.queryOptions({ input: { id: infographicId } }),
-    )
-    .then((data) => notify(data?.title))
-    .catch(() => notify());
+  notifyCompletionWithFetchedTitle({
+    entityType: 'infographic',
+    entityId: infographicId,
+    entityPath: 'infographics',
+    status: event.status,
+    error: event.error,
+    queryClient,
+    fetchTitle: () =>
+      queryClient.fetchQuery(
+        apiClient.infographics.get.queryOptions({
+          input: { id: infographicId },
+        }),
+      ),
+  });
 }
 
 export function handleDocumentJobCompletion(
@@ -256,23 +265,18 @@ export function handleDocumentJobCompletion(
     queryKey: getDocumentListQueryKey(),
   });
 
-  const notify = (title?: string) =>
-    notifyJobCompletion({
-      entityType: 'document',
-      entityId: documentId,
-      entityPath: 'documents',
-      status: event.status,
-      error: event.error,
-      title,
-      queryClient,
-    });
-
-  queryClient
-    .fetchQuery(
-      apiClient.documents.get.queryOptions({ input: { id: documentId } }),
-    )
-    .then((data) => notify(data?.title))
-    .catch(() => notify());
+  notifyCompletionWithFetchedTitle({
+    entityType: 'document',
+    entityId: documentId,
+    entityPath: 'documents',
+    status: event.status,
+    error: event.error,
+    queryClient,
+    fetchTitle: () =>
+      queryClient.fetchQuery(
+        apiClient.documents.get.queryOptions({ input: { id: documentId } }),
+      ),
+  });
 }
 
 export function handleActivityLogged(

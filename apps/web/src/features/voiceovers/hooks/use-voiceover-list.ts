@@ -35,7 +35,9 @@ export function useVoiceoverList(
 export function getVoiceoverListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.voiceovers.list.queryOptions({ input: options }).queryKey;
+  return apiClient.voiceovers.list.queryOptions({
+    input: { limit: options.limit },
+  }).queryKey;
 }
 
 /**

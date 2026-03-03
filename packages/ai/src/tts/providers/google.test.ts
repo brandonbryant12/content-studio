@@ -35,7 +35,10 @@ describe('GoogleTTSLive', () => {
 
   it('passes timeout abort signal and maps timeout to TTSError', async () => {
     fetchMock.mockRejectedValueOnce(
-      new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+      new DOMException(
+        'The operation was aborted due to timeout',
+        'TimeoutError',
+      ),
     );
 
     const exit = await runPreviewVoiceExit();

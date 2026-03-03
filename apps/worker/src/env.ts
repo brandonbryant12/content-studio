@@ -58,6 +58,7 @@ export const envSchema = Schema.Struct({
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),
   NO_PROXY: Schema.optional(Schema.String),
+  NODE_EXTRA_CA_CERTS: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
 });
 
 // Docker Compose sets `VAR: "${VAR:-}"` which resolves to "" when unset.
@@ -69,6 +70,20 @@ const rawEnv = Schema.decodeUnknownSync(envSchema)(sanitizedEnv);
 
 if (!rawEnv.USE_MOCK_AI && !rawEnv.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY is required when USE_MOCK_AI=false');
+}
+
+const proxyConfigured = Boolean(rawEnv.HTTPS_PROXY ?? rawEnv.HTTP_PROXY);
+if (proxyConfigured && !rawEnv.NODE_EXTRA_CA_CERTS) {
+  throw new Error(
+    'NODE_EXTRA_CA_CERTS is required when HTTPS_PROXY or HTTP_PROXY is configured',
+  );
+}
+
+if (
+  process.env.NODE_ENV === 'production' &&
+  new URL(rawEnv.PUBLIC_SERVER_URL).protocol !== 'https:'
+) {
+  throw new Error('PUBLIC_SERVER_URL must use https in production');
 }
 
 export const env = rawEnv;

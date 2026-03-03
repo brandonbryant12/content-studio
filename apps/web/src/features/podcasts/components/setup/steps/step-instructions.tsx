@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import {
   INSTRUCTION_CHAR_LIMIT,
   INSTRUCTION_PRESETS,
+  getInstructionPresetLabel,
 } from '@/features/podcasts/lib/instruction-presets';
 
 interface StepInstructionsProps {
@@ -13,24 +13,18 @@ export function StepInstructions({
   instructions,
   onInstructionsChange,
 }: StepInstructionsProps) {
-  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const activePreset = getInstructionPresetLabel(instructions);
 
   const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
     if (activePreset === preset.label) {
-      // Deselect preset
-      setActivePreset(null);
       onInstructionsChange('');
-    } else {
-      // Select preset
-      setActivePreset(preset.label);
-      onInstructionsChange(preset.value);
+      return;
     }
+
+    onInstructionsChange(preset.value);
   };
 
   const handleTextChange = (value: string) => {
-    // If user manually edits, clear preset selection
-    const matchingPreset = INSTRUCTION_PRESETS.find((p) => p.value === value);
-    setActivePreset(matchingPreset?.label ?? null);
     onInstructionsChange(value.slice(0, INSTRUCTION_CHAR_LIMIT));
   };
 

@@ -38,15 +38,17 @@ export const listActivity = (input: ListActivityInput) =>
     const repo = yield* ActivityLogRepo;
 
     const limit = input.limit ?? 25;
+    const spanAttributes: Record<string, string | number> = {
+      'activity.limit': limit,
+    };
+    if (input.entityType) {
+      spanAttributes['activity.entityType'] = input.entityType;
+    }
+
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.userId ?? user.id,
-      attributes: {
-        'activity.limit': limit,
-        ...(input.entityType
-          ? { 'activity.entityType': input.entityType }
-          : {}),
-      },
+      attributes: spanAttributes,
     });
 
     const rows = yield* repo.list({

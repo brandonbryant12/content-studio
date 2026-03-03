@@ -1,6 +1,5 @@
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
-import type { MutationFunctionContext } from '@tanstack/react-query';
 import {
   usePersonaList,
   getPersonaListQueryKey,
@@ -12,8 +11,7 @@ import { ErrorFallback } from '@/shared/components/error-boundary';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
-  apiClient.personas.delete.mutationOptions().mutationFn!(input, context);
+const deleteFn = apiClient.personas.delete.mutationOptions().mutationFn!;
 
 export function PersonaListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,8 +37,6 @@ export function PersonaListContainer() {
     await executeBulkDelete(selection.selectedIds);
     selection.deselectAll();
   }, [executeBulkDelete, selection]);
-
-  const handleSearch = setSearchQuery;
 
   if (isLoading) {
     return (
@@ -85,7 +81,7 @@ export function PersonaListContainer() {
         personas={personas}
         searchQuery={searchQuery}
         isCreating={false}
-        onSearch={handleSearch}
+        onSearch={setSearchQuery}
         onCreate={handleCreate}
         selection={selection}
         isBulkDeleting={isBulkDeleting}

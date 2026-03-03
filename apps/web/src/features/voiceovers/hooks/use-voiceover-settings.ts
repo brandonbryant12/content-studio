@@ -124,7 +124,9 @@ export function useVoiceoverSettings({
   // Derived hasChanges
   const hasTitleChanges = state.title.trim() !== server.title;
   const hasChanges =
-    hasTitleChanges || state.text !== server.text || state.voice !== server.voice;
+    hasTitleChanges ||
+    state.text !== server.text ||
+    state.voice !== server.voice;
 
   const setTitle = useCallback(
     (value: string) => dispatch({ type: 'SET_TITLE', value }),

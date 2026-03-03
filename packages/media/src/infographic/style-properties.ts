@@ -27,7 +27,7 @@ const sanitizeStyleProperty = (
 };
 
 export const sanitizeStyleProperties = (
-  properties: readonly StyleProperty[],
+  properties: readonly StyleProperty[] = [],
 ): StyleProperty[] => {
   const result: StyleProperty[] = [];
 

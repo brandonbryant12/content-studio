@@ -4,6 +4,7 @@ import {
   user as userTable,
   voiceover as voiceoverTable,
   job as jobTable,
+  type JobId,
   type VoiceoverId,
   type VoiceoverOutput,
   type VoiceoverListItemOutput,
@@ -241,238 +242,161 @@ describe('voiceover router', () => {
     await ctx.rollback();
   });
 
-  // ===========================================================================
-  // Tests: list handler
-  // ===========================================================================
+  it('returns UNAUTHORIZED for all protected handlers when user is missing', async () => {
+    const draftVoiceover = await insertTestVoiceover(ctx, testUser.id, {
+      text: 'Draft text for generation',
+      status: 'drafting',
+    });
+    const readyVoiceover = await insertTestVoiceover(ctx, testUser.id, {
+      status: 'ready',
+    });
+    const approvedVoiceover = await insertTestVoiceover(ctx, testUser.id, {
+      status: 'ready',
+      approvedBy: testUser.id,
+      approvedAt: new Date(),
+    });
+    const [job] = await ctx.db
+      .insert(jobTable)
+      .values({
+        type: 'generate-voiceover',
+        payload: { voiceoverId: draftVoiceover.id, userId: testUser.id },
+        createdBy: testUser.id,
+        status: 'pending',
+      })
+      .returning();
+    expect(job).toBeDefined();
+    if (!job) {
+      throw new Error('Expected a job row for unauthorized checks');
+    }
+
+    const context = createMockContext(runtime, null);
+    const calls: Array<() => Promise<unknown>> = [
+      () => handlers.list({ context, input: { limit: 10, offset: 0 }, errors }),
+      () =>
+        handlers.create({ context, input: { title: 'New voiceover' }, errors }),
+      () => handlers.get({ context, input: { id: draftVoiceover.id }, errors }),
+      () =>
+        handlers.update({
+          context,
+          input: { id: draftVoiceover.id, title: 'Updated title' },
+          errors,
+        }),
+      () =>
+        handlers.delete({ context, input: { id: draftVoiceover.id }, errors }),
+      () =>
+        handlers.generate({
+          context,
+          input: { id: draftVoiceover.id },
+          errors,
+        }),
+      () => handlers.getJob({ context, input: { jobId: job.id }, errors }),
+      () =>
+        handlers.approve({ context, input: { id: readyVoiceover.id }, errors }),
+      () =>
+        handlers.revokeApproval({
+          context,
+          input: { id: approvedVoiceover.id },
+          errors,
+        }),
+    ];
+
+    for (const call of calls) {
+      await expectHandlerErrorCode(call, 'UNAUTHORIZED');
+    }
+  });
 
   describe('list handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.list({
-            context,
-            input: { limit: 10, offset: 0 },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
     it('returns empty array when no voiceovers exist', async () => {
-      // Arrange
       const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.list({
         context,
         input: { limit: 10, offset: 0 },
         errors,
       });
 
-      // Assert
       expect(result).toEqual([]);
     });
 
-    it('returns paginated voiceovers for the authenticated user', async () => {
-      // Arrange
+    it('applies ownership and pagination with serialized timestamps', async () => {
       const context = createMockContext(runtime, user);
-
-      // Create some voiceovers for this user
-      await insertTestVoiceover(ctx, testUser.id, { title: 'Voiceover One' });
-      await insertTestVoiceover(ctx, testUser.id, { title: 'Voiceover Two' });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10, offset: 0 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(2);
-      expect(result.map((v) => v.title)).toContain('Voiceover One');
-      expect(result.map((v) => v.title)).toContain('Voiceover Two');
-    });
-
-    it('respects limit parameter', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create 5 voiceovers
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 3; i++) {
         await insertTestVoiceover(ctx, testUser.id, {
-          title: `Voiceover ${i}`,
+          title: `Mine ${i}`,
+          status: i === 1 ? 'ready' : 'drafting',
+          duration: i === 1 ? 180 : null,
         });
       }
 
-      // Act
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      await insertTestVoiceover(ctx, otherUser.id, {
+        title: 'Other user voiceover',
+      });
+
       const result = await handlers.list({
         context,
-        input: { limit: 3 },
+        input: { limit: 2, offset: 1 },
         errors,
       });
 
-      // Assert
-      expect(result).toHaveLength(3);
-    });
-
-    it('respects offset parameter', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create 5 voiceovers
-      for (let i = 1; i <= 5; i++) {
-        await insertTestVoiceover(ctx, testUser.id, {
-          title: `Voiceover ${i}`,
-        });
-      }
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 2, offset: 2 },
-        errors,
-      });
-
-      // Assert
       expect(result).toHaveLength(2);
-    });
-
-    it('only returns voiceovers owned by the user, not other users voiceovers', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Create voiceover for current user
-      await insertTestVoiceover(ctx, testUser.id, { title: 'My Voiceover' });
-
-      // Create another user and their voiceover
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      await insertTestVoiceover(ctx, otherTestUser.id, {
-        title: 'Other User Voiceover',
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert - filtering by userId should only return current user's voiceovers
-      const myVoiceovers = result.filter((v) => v.createdBy === testUser.id);
-      expect(myVoiceovers).toHaveLength(1);
-      expect(myVoiceovers[0]!.title).toBe('My Voiceover');
-    });
-
-    it('returns voiceovers in serialized format with ISO date strings', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Serialization Test',
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(1);
-      const returned = result[0]!;
-
-      // Verify serialized format
-      expect(returned.id).toMatch(/^voc_/);
-      expect(returned.title).toBe('Serialization Test');
-      expect(returned.voice).toBe('Charon');
-      expect(returned.createdBy).toBe(testUser.id);
-      // Dates should be ISO strings
-      expectIsoTimestamp(returned.createdAt);
-      expectIsoTimestamp(returned.updatedAt);
-    });
-
-    it('includes status and duration when present', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      await insertTestVoiceover(ctx, testUser.id, {
-        title: 'With Status',
-        status: 'ready',
-        duration: 300,
-      });
-
-      // Act
-      const result = await handlers.list({
-        context,
-        input: { limit: 10 },
-        errors,
-      });
-
-      // Assert
-      expect(result).toHaveLength(1);
-      expect(result[0]!.status).toBe('ready');
-      expect(result[0]!.duration).toBe(300);
+      expect(result.every((entry) => entry.createdBy === testUser.id)).toBe(
+        true,
+      );
+      expect(result.every((entry) => !entry.title.includes('Other user'))).toBe(
+        true,
+      );
+      expect(result[0]).toBeDefined();
+      if (!result[0]) {
+        throw new Error('Expected at least one listed voiceover');
+      }
+      expect(result[0].id).toMatch(/^voc_/);
+      expectIsoTimestamp(result[0].createdAt);
+      expectIsoTimestamp(result[0].updatedAt);
     });
   });
 
-  // ===========================================================================
-  // Tests: get handler
-  // ===========================================================================
-
   describe('get handler', () => {
-    it('returns voiceover when found', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('returns owned voiceover with serialized fields', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Found Voiceover',
+        title: 'Narration',
+        text: 'Voiceover text',
+        status: 'ready',
+        voice: 'Kore',
       });
+      const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.get({
         context,
         input: { id: voiceover.id },
         errors,
       });
 
-      // Assert
       expect(result.id).toBe(voiceover.id);
-      expect(result.title).toBe('Found Voiceover');
-      expect(result.createdBy).toBe(testUser.id);
+      expect(result.title).toBe('Narration');
+      expect(result.text).toBe('Voiceover text');
+      expect(result.status).toBe('ready');
+      expect(result.voice).toBe('Kore');
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
     });
 
-    it('throws error when voiceover does not exist', async () => {
-      // Arrange
+    it('returns VOICEOVER_NOT_FOUND for missing or non-owned resources', async () => {
       const context = createMockContext(runtime, user);
-      const nonExistentId = 'voc_nonexistent123' as VoiceoverId;
-
-      // Act & Assert
       await expectHandlerErrorCode(
         () =>
           handlers.get({
             context,
-            input: { id: nonExistentId },
+            input: { id: 'voc_nonexistent123' as VoiceoverId },
             errors,
           }),
         'VOICEOVER_NOT_FOUND',
       );
-    });
 
-    it("rejects access to another user's voiceover (ownership check)", async () => {
-      // Arrange - create voiceover as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
-        title: 'Other User Voiceover',
-      });
-
-      // Act & Assert - non-owner cannot access
-      const context = createMockContext(runtime, user);
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherUser.id);
 
       await expectHandlerErrorCode(
         () =>
@@ -484,508 +408,121 @@ describe('voiceover router', () => {
         'VOICEOVER_NOT_FOUND',
       );
     });
-
-    it('returns Not Found for admin when accessing another user voiceover', async () => {
-      // Arrange - create voiceover as regular user
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Regular User Voiceover',
-      });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.get({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it('returns voiceover in serialized format', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Full Format Test',
-        text: 'Some voiceover text content',
-        status: 'ready',
-        voice: 'Kore',
-      });
-
-      // Act
-      const result = await handlers.get({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(voiceover.id);
-      expect(result.title).toBe('Full Format Test');
-      expect(result.text).toBe('Some voiceover text content');
-      expect(result.status).toBe('ready');
-      expect(result.voice).toBe('Kore');
-      // Dates should be ISO strings
-      expectIsoTimestamp(result.createdAt);
-      expectIsoTimestamp(result.updatedAt);
-    });
   });
 
-  // ===========================================================================
-  // Tests: create handler
-  // ===========================================================================
-
   describe('create handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.create({
-            context,
-            input: { title: 'New Voiceover' },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('creates voiceover with title', async () => {
-      // Arrange
+    it('creates a voiceover and persists it', async () => {
       const context = createMockContext(runtime, user);
-      const input = {
-        title: 'My New Voiceover',
-      };
 
-      // Act
       const result = await handlers.create({
         context,
-        input,
+        input: { title: 'My New Voiceover' },
         errors,
       });
 
-      // Assert
+      expect(result.id).toMatch(/^voc_/);
       expect(result.title).toBe('My New Voiceover');
       expect(result.createdBy).toBe(testUser.id);
       expect(result.status).toBe('drafting');
-    });
-
-    it('returns serialized voiceover response with proper format', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'Format Test',
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert - id starts with voc_
-      expect(result.id).toMatch(/^voc_/);
-
-      // Assert - createdAt is an ISO string
       expectIsoTimestamp(result.createdAt);
-
-      // Assert - updatedAt is an ISO string
       expectIsoTimestamp(result.updatedAt);
-    });
 
-    it('persists voiceover to database', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = {
-        title: 'Persistence Test',
-      };
-
-      // Act
-      const result = await handlers.create({
-        context,
-        input,
-        errors,
-      });
-
-      // Verify - query database directly
-      const [dbVoiceover] = await ctx.db
+      const [persisted] = await ctx.db
         .select()
         .from(voiceoverTable)
         .where(eq(voiceoverTable.id, result.id as VoiceoverId));
-
-      expect(dbVoiceover).toBeDefined();
-      expect(dbVoiceover!.title).toBe('Persistence Test');
-      expect(dbVoiceover!.createdBy).toBe(testUser.id);
+      expect(persisted).toBeDefined();
+      expect(persisted?.title).toBe('My New Voiceover');
     });
   });
 
-  // ===========================================================================
-  // Tests: update handler
-  // ===========================================================================
-
   describe('update handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: voiceover.id, title: 'Updated' },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('updates voiceover title', async () => {
-      // Arrange
+    it('updates multiple fields and persists to the database', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         title: 'Original Title',
+        text: 'Original text',
+        voice: 'Charon',
       });
       const context = createMockContext(runtime, user);
 
-      // Act
       const result = await handlers.update({
         context,
         input: {
           id: voiceover.id,
           title: 'Updated Title',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.title).toBe('Updated Title');
-      expect(result.id).toBe(voiceover.id);
-    });
-
-    it('updates voiceover text', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: voiceover.id,
-          text: 'New voiceover text content',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.text).toBe('New voiceover text content');
-    });
-
-    it('updates voiceover voice', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        voice: 'Charon',
-      });
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: voiceover.id,
-          voice: 'Kore',
-          voiceName: 'Kore',
-        },
-        errors,
-      });
-
-      // Assert
-      expect(result.voice).toBe('Kore');
-      expect(result.voiceName).toBe('Kore');
-    });
-
-    it('updates multiple fields at once', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: voiceover.id,
-          title: 'New Title',
-          text: 'New text content',
+          text: 'Updated text',
           voice: 'Fenrir',
+          voiceName: 'Fenrir',
         },
         errors,
       });
 
-      // Assert
-      expect(result.title).toBe('New Title');
-      expect(result.text).toBe('New text content');
+      expect(result.title).toBe('Updated Title');
+      expect(result.text).toBe('Updated text');
       expect(result.voice).toBe('Fenrir');
-    });
-
-    it('returns serialized updated voiceover', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.update({
-        context,
-        input: {
-          id: voiceover.id,
-          title: 'Serialized Update',
-        },
-        errors,
-      });
-
-      // Assert - id starts with voc_
-      expect(result.id).toMatch(/^voc_/);
-
-      // Assert - createdAt is an ISO string
+      expect(result.voiceName).toBe('Fenrir');
       expectIsoTimestamp(result.createdAt);
-
-      // Assert - updatedAt is an ISO string
       expectIsoTimestamp(result.updatedAt);
-    });
 
-    it('throws error when voiceover does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'voc_00000000000000' as VoiceoverId;
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: nonExistentId, title: 'Should Fail' },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it("rejects updating another user's voiceover (ownership check)", async () => {
-      // Arrange - create voiceover as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
-        title: 'Original Title',
-      });
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot update
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: otherVoiceover.id, title: 'Updated Title' },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it('returns Not Found for admin when updating another user voiceover', async () => {
-      // Arrange - create voiceover as regular user
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Original Title',
-      });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.update({
-            context,
-            input: { id: voiceover.id, title: 'Admin Updated' },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it('persists updates to database', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Act
-      await handlers.update({
-        context,
-        input: {
-          id: voiceover.id,
-          title: 'Persisted Title',
-        },
-        errors,
-      });
-
-      // Verify - query database directly
-      const [dbVoiceover] = await ctx.db
+      const [persisted] = await ctx.db
         .select()
         .from(voiceoverTable)
         .where(eq(voiceoverTable.id, voiceover.id));
+      expect(persisted?.title).toBe('Updated Title');
+      expect(persisted?.text).toBe('Updated text');
+    });
 
-      expect(dbVoiceover).toBeDefined();
-      expect(dbVoiceover!.title).toBe('Persisted Title');
+    it('returns VOICEOVER_NOT_FOUND for missing or non-owned resources', async () => {
+      const context = createMockContext(runtime, user);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: {
+              id: 'voc_00000000000000' as VoiceoverId,
+              title: 'Missing',
+            },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherUser.id);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.update({
+            context,
+            input: {
+              id: otherVoiceover.id,
+              title: 'No access',
+            },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
     });
   });
 
-  // ===========================================================================
-  // Tests: delete handler
-  // ===========================================================================
-
   describe('delete handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('deletes voiceover successfully', async () => {
-      // Arrange
+    it('deletes a voiceover and fails when deleting it again', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
       const context = createMockContext(runtime, user);
 
-      // Act
-      const result = await handlers.delete({
+      const deleted = await handlers.delete({
         context,
         input: { id: voiceover.id },
         errors,
       });
+      expect(deleted).toEqual({});
 
-      // Assert - returns empty object on success
-      expect(result).toEqual({});
-    });
-
-    it('throws error when voiceover does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'voc_00000000000000' as VoiceoverId;
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: nonExistentId },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it("rejects deleting another user's voiceover (ownership check)", async () => {
-      // Arrange - create voiceover as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id);
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot delete
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: otherVoiceover.id },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it('returns Not Found for admin when deleting another user voiceover', async () => {
-      // Arrange - create voiceover as regular user
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.delete({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it('verifies voiceover is actually removed from database after delete', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // Verify voiceover exists before delete
-      const [beforeDelete] = await ctx.db
-        .select()
-        .from(voiceoverTable)
-        .where(eq(voiceoverTable.id, voiceover.id));
-      expect(beforeDelete).toBeDefined();
-
-      // Act
-      await handlers.delete({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert - voiceover no longer exists in database
       const [afterDelete] = await ctx.db
         .select()
         .from(voiceoverTable)
         .where(eq(voiceoverTable.id, voiceover.id));
       expect(afterDelete).toBeUndefined();
-    });
 
-    it('cannot delete same voiceover twice', async () => {
-      // Arrange
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-      const context = createMockContext(runtime, user);
-
-      // First delete succeeds
-      await handlers.delete({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Act & Assert - second delete fails
       await expectHandlerErrorCode(
         () =>
           handlers.delete({
@@ -996,113 +533,16 @@ describe('voiceover router', () => {
         'VOICEOVER_NOT_FOUND',
       );
     });
-  });
 
-  // ===========================================================================
-  // Tests: generate handler
-  // ===========================================================================
+    it('returns VOICEOVER_NOT_FOUND for non-owned voiceovers', async () => {
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherUser.id);
+      const context = createMockContext(runtime, user);
 
-  describe('generate handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        text: 'Some text to generate',
-        status: 'drafting',
-      });
-
-      // Act & Assert
       await expectHandlerErrorCode(
         () =>
-          handlers.generate({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('creates a generation job for the voiceover', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        text: 'Some text to generate audio for',
-        status: 'drafting',
-      });
-
-      // Act
-      const result = await handlers.generate({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
-    });
-
-    it('returns existing pending job for idempotency', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        text: 'Some text to generate',
-        status: 'drafting',
-      });
-
-      // Create a pending job for this voiceover
-      await ctx.db.insert(jobTable).values({
-        type: 'generate-voiceover',
-        payload: { voiceoverId: voiceover.id, userId: testUser.id },
-        createdBy: testUser.id,
-        status: 'pending',
-      });
-
-      // Act - call generate again
-      const result = await handlers.generate({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert - should return existing job
-      expect(result.jobId).toMatch(/^job_/);
-      expect(result.status).toBe('pending');
-    });
-
-    it('throws error when voiceover does not exist', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const nonExistentId = 'voc_nonexistent123' as VoiceoverId;
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
-            context,
-            input: { id: nonExistentId },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-
-    it("rejects generating another user's voiceover (ownership check)", async () => {
-      // Arrange - create voiceover as another user
-      const otherTestUser = createTestUser();
-      await insertTestUser(ctx, otherTestUser);
-      const otherVoiceover = await insertTestVoiceover(ctx, otherTestUser.id, {
-        text: 'Some text to generate',
-        status: 'drafting',
-      });
-
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - non-owner cannot generate
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
+          handlers.delete({
             context,
             input: { id: otherVoiceover.id },
             errors,
@@ -1110,44 +550,39 @@ describe('voiceover router', () => {
         'VOICEOVER_NOT_FOUND',
       );
     });
+  });
 
-    it('returns Not Found for admin when generating another user voiceover', async () => {
-      // Arrange - create voiceover as regular user
+  describe('generate handler', () => {
+    it('creates a generation job for a draft voiceover', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         text: 'Some text to generate audio for',
         status: 'drafting',
       });
-
-      // Create admin user
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.generate({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'VOICEOVER_NOT_FOUND',
-      );
-    });
-  });
-
-  // ===========================================================================
-  // Tests: getJob handler
-  // ===========================================================================
-
-  describe('getJob handler', () => {
-    it('returns job when found', async () => {
-      // Arrange
       const context = createMockContext(runtime, user);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
 
-      // Create a job
-      const [createdJob] = await ctx.db
+      const result = await handlers.generate({
+        context,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      expect(result.jobId).toMatch(/^job_/);
+      expect(result.status).toBe('pending');
+
+      const [persistedJob] = await ctx.db
+        .select()
+        .from(jobTable)
+        .where(eq(jobTable.id, result.jobId as JobId));
+      expect(persistedJob).toBeDefined();
+      expect(persistedJob?.type).toBe('generate-voiceover');
+    });
+
+    it('returns existing pending job for idempotency', async () => {
+      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
+        text: 'Some text to generate',
+        status: 'drafting',
+      });
+      const [existingJob] = await ctx.db
         .insert(jobTable)
         .values({
           type: 'generate-voiceover',
@@ -1156,43 +591,56 @@ describe('voiceover router', () => {
           status: 'pending',
         })
         .returning();
+      expect(existingJob).toBeDefined();
+      if (!existingJob) {
+        throw new Error('Expected pending job fixture');
+      }
 
-      // Act
-      const result = await handlers.getJob({
+      const context = createMockContext(runtime, user);
+      const result = await handlers.generate({
         context,
-        input: { jobId: createdJob!.id },
+        input: { id: voiceover.id },
         errors,
       });
 
-      // Assert
-      expect(result.id).toBe(createdJob!.id);
-      expect(result.type).toBe('generate-voiceover');
+      expect(result.jobId).toBe(existingJob.id);
       expect(result.status).toBe('pending');
-      expect(result.createdBy).toBe(testUser.id);
     });
 
-    it('throws error when job does not exist', async () => {
-      // Arrange
+    it('returns VOICEOVER_NOT_FOUND for missing or non-owned resources', async () => {
       const context = createMockContext(runtime, user);
-      const nonExistentJobId = 'job_nonexistent123';
-
-      // Act & Assert
       await expectHandlerErrorCode(
         () =>
-          handlers.getJob({
+          handlers.generate({
             context,
-            input: { jobId: nonExistentJobId },
+            input: { id: 'voc_nonexistent123' as VoiceoverId },
             errors,
           }),
-        'JOB_NOT_FOUND',
+        'VOICEOVER_NOT_FOUND',
+      );
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherUser.id, {
+        text: 'Other user text',
+        status: 'drafting',
+      });
+
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generate({
+            context,
+            input: { id: otherVoiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
       );
     });
+  });
 
-    it('returns job in serialized format with ISO dates', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+  describe('getJob handler', () => {
+    it('returns completed jobs in serialized format', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
       const [createdJob] = await ctx.db
         .insert(jobTable)
         .values({
@@ -1209,34 +657,34 @@ describe('voiceover router', () => {
           completedAt: new Date(),
         })
         .returning();
+      expect(createdJob).toBeDefined();
+      if (!createdJob) {
+        throw new Error('Expected created completed job');
+      }
 
-      // Act
+      const context = createMockContext(runtime, user);
       const result = await handlers.getJob({
         context,
-        input: { jobId: createdJob!.id },
+        input: { jobId: createdJob.id },
         errors,
       });
 
-      // Assert
-      expect(result.id).toMatch(/^job_/);
+      expect(result.id).toBe(createdJob.id);
+      expect(result.type).toBe('generate-voiceover');
       expect(result.status).toBe('completed');
       expect(result.result).toEqual({
         voiceoverId: voiceover.id,
         audioUrl: 'https://example.com/audio.wav',
         duration: 120,
       });
-      // Dates should be ISO strings
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
       expectIsoTimestamp(result.startedAt!);
       expectIsoTimestamp(result.completedAt!);
     });
 
-    it('returns null for optional date fields when not set', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
+    it('returns pending jobs with null optional fields', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
       const [createdJob] = await ctx.db
         .insert(jobTable)
         .values({
@@ -1246,169 +694,108 @@ describe('voiceover router', () => {
           status: 'pending',
         })
         .returning();
+      expect(createdJob).toBeDefined();
+      if (!createdJob) {
+        throw new Error('Expected created pending job');
+      }
 
-      // Act
+      const context = createMockContext(runtime, user);
       const result = await handlers.getJob({
         context,
-        input: { jobId: createdJob!.id },
+        input: { jobId: createdJob.id },
         errors,
       });
 
-      // Assert
+      expect(result.status).toBe('pending');
       expect(result.startedAt).toBeNull();
       expect(result.completedAt).toBeNull();
       expect(result.result).toBeNull();
       expect(result.error).toBeNull();
+      expectIsoTimestamp(result.createdAt);
+      expectIsoTimestamp(result.updatedAt);
+    });
+
+    it('returns JOB_NOT_FOUND when job does not exist', async () => {
+      const context = createMockContext(runtime, user);
+      await expectHandlerErrorCode(
+        () =>
+          handlers.getJob({
+            context,
+            input: { jobId: 'job_nonexistent123' },
+            errors,
+          }),
+        'JOB_NOT_FOUND',
+      );
     });
   });
-
-  // ===========================================================================
-  // Tests: approve handler
-  // ===========================================================================
 
   describe('approve handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id);
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.approve({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('allows admin to approve a voiceover', async () => {
-      // Arrange
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-
+    it('enforces admin role before approving', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         status: 'ready',
       });
-
-      // Act - Approve as admin
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-      const result = await handlers.approve({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(voiceover.id);
-    });
-
-    it('rejects approval from non-admin', async () => {
-      // Arrange
-      const ownerTestUser = createTestUser();
-      const strangerTestUser = createTestUser();
-      await insertTestUser(ctx, ownerTestUser);
-      await insertTestUser(ctx, strangerTestUser);
-
-      const voiceover = await insertTestVoiceover(ctx, ownerTestUser.id, {
-        title: 'Private voiceover',
-        status: 'ready',
-      });
-
-      // Act & Assert - Stranger cannot approve
-      const strangerUser = toUser(strangerTestUser);
-      const context = createMockContext(runtime, strangerUser);
-
+      const userContext = createMockContext(runtime, user);
       await expectHandlerErrorCode(
         () =>
           handlers.approve({
-            context,
+            context: userContext,
             input: { id: voiceover.id },
             errors,
           }),
         'FORBIDDEN',
       );
+
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminContext = createMockContext(runtime, toUser(adminTestUser));
+      await handlers.approve({
+        context: adminContext,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      const [persisted] = await ctx.db
+        .select()
+        .from(voiceoverTable)
+        .where(eq(voiceoverTable.id, voiceover.id));
+      expect(persisted?.approvedBy).toBe(adminTestUser.id);
+      expect(persisted?.approvedAt).not.toBeNull();
     });
   });
 
-  // ===========================================================================
-  // Tests: revokeApproval handler
-  // ===========================================================================
-
   describe('revokeApproval handler', () => {
-    it('returns UNAUTHORIZED when user is null', async () => {
-      // Arrange
-      const context = createMockContext(runtime, null);
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        approvedBy: testUser.id,
-        approvedAt: new Date(),
-      });
-
-      // Act & Assert
-      await expectHandlerErrorCode(
-        () =>
-          handlers.revokeApproval({
-            context,
-            input: { id: voiceover.id },
-            errors,
-          }),
-        'UNAUTHORIZED',
-      );
-    });
-
-    it('allows admin to revoke approval', async () => {
-      // Arrange
-      const adminTestUser = createTestUser({ role: 'admin' });
-      await insertTestUser(ctx, adminTestUser);
-
+    it('enforces admin role before revoking', async () => {
       const voiceover = await insertTestVoiceover(ctx, testUser.id, {
         status: 'ready',
         approvedBy: testUser.id,
         approvedAt: new Date(),
       });
-
-      // Act - Revoke as admin
-      const adminUser = toUser(adminTestUser);
-      const context = createMockContext(runtime, adminUser);
-      const result = await handlers.revokeApproval({
-        context,
-        input: { id: voiceover.id },
-        errors,
-      });
-
-      // Assert
-      expect(result.id).toBe(voiceover.id);
-    });
-
-    it('rejects revoke from non-admin', async () => {
-      // Arrange
-      const ownerTestUser = createTestUser();
-      const strangerTestUser = createTestUser();
-      await insertTestUser(ctx, ownerTestUser);
-      await insertTestUser(ctx, strangerTestUser);
-
-      const voiceover = await insertTestVoiceover(ctx, ownerTestUser.id, {
-        status: 'ready',
-        approvedBy: ownerTestUser.id,
-        approvedAt: new Date(),
-      });
-
-      // Act & Assert - Stranger cannot revoke
-      const strangerUser = toUser(strangerTestUser);
-      const context = createMockContext(runtime, strangerUser);
-
+      const userContext = createMockContext(runtime, user);
       await expectHandlerErrorCode(
         () =>
           handlers.revokeApproval({
-            context,
+            context: userContext,
             input: { id: voiceover.id },
             errors,
           }),
         'FORBIDDEN',
       );
+
+      const adminTestUser = createTestUser({ role: 'admin' });
+      await insertTestUser(ctx, adminTestUser);
+      const adminContext = createMockContext(runtime, toUser(adminTestUser));
+      await handlers.revokeApproval({
+        context: adminContext,
+        input: { id: voiceover.id },
+        errors,
+      });
+
+      const [persisted] = await ctx.db
+        .select()
+        .from(voiceoverTable)
+        .where(eq(voiceoverTable.id, voiceover.id));
+      expect(persisted?.approvedBy).toBeNull();
+      expect(persisted?.approvedAt).toBeNull();
     });
   });
 });

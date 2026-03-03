@@ -17,6 +17,16 @@ graph TD
 4. E2E: Page Object Model + `authenticatedTest` fixture <!-- enforced-by: manual-review -->
 5. Selector priority: `getByRole` > `getByText` (scoped to container) <!-- enforced-by: manual-review -->
 
+## Anti-Bloat Rules
+<!-- enforced-by: manual-review -->
+
+1. Component tests should cover behavior states, not every visual micro-variation.
+2. Prefer one scenario test with multiple meaningful assertions over many single-assertion duplicates.
+3. Remove E2E tests that only exercise list/search chrome already covered by component tests.
+4. Keep E2E focused on critical user outcomes (create, generate, save, delete, auth guardrails).
+5. Do not keep placeholder skipped tests long-term; either implement with assertions or delete.
+6. Replace hard waits (`waitForTimeout`) with explicit visible/state assertions whenever possible.
+
 ## Test Types
 
 | Type | Tool | Scope | Location |

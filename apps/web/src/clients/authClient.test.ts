@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { refreshAccessToken } from './authClient';
-import { clearAuthToken, getAuthToken, setAuthToken } from '@/shared/lib/auth-token';
+import {
+  clearAuthToken,
+  getAuthToken,
+  setAuthToken,
+} from '@/shared/lib/auth-token';
 
 const { getSessionMock } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),

@@ -3,7 +3,7 @@ import type { JsonValue } from '@repo/db/schema';
 type MetadataInput = Record<string, JsonValue> | null | undefined;
 
 export const sanitizeMetadata = (metadata: MetadataInput) => {
-  if (!metadata) return metadata ?? undefined;
+  if (!metadata) return undefined;
 
   const entries: Array<[string, JsonValue]> = [];
 

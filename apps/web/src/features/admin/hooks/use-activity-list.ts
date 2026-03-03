@@ -1,8 +1,4 @@
-import {
-  useInfiniteQuery,
-  type InfiniteData,
-  type QueryKey,
-} from '@tanstack/react-query';
+import { useInfiniteQuery, type QueryKey } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient, rawApiClient } from '@/clients/apiClient';
 
@@ -102,13 +98,7 @@ export function useActivityList(options: UseActivityListOptions = {}) {
     limit,
   });
 
-  return useInfiniteQuery<
-    ActivityListPage,
-    Error,
-    InfiniteData<ActivityListPage, string | undefined>,
-    QueryKey,
-    string | undefined
-  >({
+  return useInfiniteQuery({
     ...queryOptions,
     enabled,
   });

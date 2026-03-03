@@ -35,5 +35,7 @@ export function usePersonaList(
 export function getPersonaListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.personas.list.queryOptions({ input: options }).queryKey;
+  return apiClient.personas.list.queryOptions({
+    input: { limit: options.limit },
+  }).queryKey;
 }

@@ -56,6 +56,22 @@ const ScriptOutputSchema = Schema.Struct({
   ),
 });
 
+interface PersonaLike {
+  name: string;
+  role: string | null;
+  personalityDescription: string | null;
+  speakingStyle: string | null;
+  exampleQuotes: string[] | null;
+}
+
+const toPersonaContext = (persona: PersonaLike): PersonaContext => ({
+  name: persona.name,
+  role: persona.role,
+  personalityDescription: persona.personalityDescription,
+  speakingStyle: persona.speakingStyle,
+  exampleQuotes: persona.exampleQuotes ?? [],
+});
+
 // =============================================================================
 // Use Case
 // =============================================================================
@@ -81,10 +97,6 @@ export const generateScript = (input: GenerateScriptInput) =>
       VersionStatus.GENERATING_SCRIPT,
     );
 
-    // Load personas if assigned
-    let hostPersona: PersonaContext | undefined;
-    let coHostPersona: PersonaContext | undefined;
-
     const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
       [
         podcast.hostPersonaId
@@ -97,25 +109,12 @@ export const generateScript = (input: GenerateScriptInput) =>
       { concurrency: 2 },
     );
 
-    if (hostPersonaResult) {
-      hostPersona = {
-        name: hostPersonaResult.name,
-        role: hostPersonaResult.role,
-        personalityDescription: hostPersonaResult.personalityDescription,
-        speakingStyle: hostPersonaResult.speakingStyle,
-        exampleQuotes: hostPersonaResult.exampleQuotes ?? [],
-      };
-    }
-
-    if (coHostPersonaResult) {
-      coHostPersona = {
-        name: coHostPersonaResult.name,
-        role: coHostPersonaResult.role,
-        personalityDescription: coHostPersonaResult.personalityDescription,
-        speakingStyle: coHostPersonaResult.speakingStyle,
-        exampleQuotes: coHostPersonaResult.exampleQuotes ?? [],
-      };
-    }
+    const hostPersona = hostPersonaResult
+      ? toPersonaContext(hostPersonaResult)
+      : undefined;
+    const coHostPersona = coHostPersonaResult
+      ? toPersonaContext(coHostPersonaResult)
+      : undefined;
 
     const documentContents = yield* Effect.all(
       podcast.documents.map((doc) =>

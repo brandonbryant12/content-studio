@@ -111,7 +111,7 @@ const infographicRouter = {
         context.runtime,
         context.user,
         deleteInfographic({ id: input.id }).pipe(
-          Effect.map(() => ({})),
+          Effect.as({}),
           tapLogActivity(
             context.runtime,
             context.user,
@@ -258,7 +258,7 @@ const infographicRouter = {
         return handleEffectWithProtocol(
           context.runtime,
           context.user,
-          deleteStylePreset({ id: input.id }).pipe(Effect.map(() => ({}))),
+          deleteStylePreset({ id: input.id }).pipe(Effect.as({})),
           errors,
           {
             requestId: context.requestId,

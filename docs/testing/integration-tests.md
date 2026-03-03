@@ -146,6 +146,17 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
 | Error cases | 1 per error type | Error code matches protocol |
 | Response format | 1 (shared per router) | Dates are strings, IDs match patterns |
 
+## Anti-Bloat Rules
+<!-- enforced-by: manual-review -->
+
+1. Keep authentication checks shared at router level; do not repeat `UNAUTHORIZED` tests for every handler.
+2. Keep response-format checks shared at router level; avoid per-handler ISO/date duplication unless shape differs.
+3. For each handler, prefer one strong success case + only unique protocol failures for that handler.
+4. Extract repetitive oRPC call/test-runtime helpers into `./helpers` instead of re-declaring in each file.
+5. Do not add integration tests that only restate type-level guarantees (for example, compile-time-only shapes).
+6. Delete or merge tests that assert the same error code for the same failure mode through equivalent paths.
+7. Avoid tests that only prove Effect/TypeScript compile-time constraints; keep integration assertions on runtime protocol, wiring, and authorization behavior.
+
 ## Why Test All Handlers
 
 Missing service dependencies only fail at **runtime**, not compile time. A handler requiring `CollaboratorRepo` compiles even if `CollaboratorRepo` is missing from the production layer. Integration tests catch this by actually executing the handler through the Effect runtime.

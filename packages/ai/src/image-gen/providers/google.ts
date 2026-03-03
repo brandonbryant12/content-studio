@@ -67,7 +67,9 @@ const makeGoogleImageGenService = (
               responseModalities: ['IMAGE', 'TEXT'],
               // Per-attempt timeout budget: retries re-run generateContent.
               httpOptions: { timeout: PROVIDER_TIMEOUTS_MS.imageGenerate },
-              abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.imageGenerate),
+              abortSignal: AbortSignal.timeout(
+                PROVIDER_TIMEOUTS_MS.imageGenerate,
+              ),
             },
           });
 

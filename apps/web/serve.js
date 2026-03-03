@@ -30,11 +30,36 @@ const MIME_TYPES = /** @type {const} */ ({
 
 const indexHtml = await readFile(join(DIST_DIR, 'index.html'));
 
+const SECURITY_HEADERS = Object.freeze({
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  Referrer-Policy: 'strict-origin-when-cross-origin',
+  'Permissions-Policy':
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "media-src 'self' https: blob:",
+    "connect-src 'self' https: wss:",
+    "form-action 'self'",
+  ].join('; '),
+});
+
+function withSecurityHeaders(headers = {}) {
+  return { ...SECURITY_HEADERS, ...headers };
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
 
   if (url.pathname === '/healthcheck') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.writeHead(200, withSecurityHeaders({ 'Content-Type': 'text/plain' }));
     return res.end('ok');
   }
 
@@ -45,7 +70,7 @@ const server = createServer(async (req, res) => {
     if (stats.isFile()) {
       const ext = extname(filePath);
       const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
-      const headers = { 'Content-Type': contentType };
+      const headers = withSecurityHeaders({ 'Content-Type': contentType });
 
       // Immutable caching for hashed assets (Vite output in /assets/)
       if (url.pathname.startsWith('/assets/')) {
@@ -61,7 +86,13 @@ const server = createServer(async (req, res) => {
   }
 
   // SPA fallback — serve index.html for all unmatched routes
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.writeHead(
+    200,
+    withSecurityHeaders({
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+    }),
+  );
   res.end(indexHtml);
 });
 

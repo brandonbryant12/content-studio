@@ -86,7 +86,7 @@ const podcastRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        updatePodcast({ podcastId: id as string, data }).pipe(
+        updatePodcast({ podcastId: id, data }).pipe(
           Effect.flatMap(serializePodcastEffect),
           tapSyncTitle(context.runtime, context.user),
         ),
@@ -105,7 +105,7 @@ const podcastRouter = {
         context.runtime,
         context.user,
         deletePodcast({ podcastId: input.id }).pipe(
-          Effect.map(() => ({})),
+          Effect.as({}),
           tapLogActivity(
             context.runtime,
             context.user,

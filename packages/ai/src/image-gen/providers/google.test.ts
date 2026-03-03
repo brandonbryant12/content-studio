@@ -44,7 +44,10 @@ describe('GoogleImageGenLive', () => {
 
   it('passes timeout budget and maps timeout failures to ImageGenError', async () => {
     mockGenerateContent.mockRejectedValueOnce(
-      new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+      new DOMException(
+        'The operation was aborted due to timeout',
+        'TimeoutError',
+      ),
     );
 
     const exit = await runGenerateImageExit();

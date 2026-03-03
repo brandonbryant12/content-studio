@@ -12,12 +12,14 @@ interface UseSessionGuardReturn {
  * Provides session state and authentication status.
  */
 export function useSessionGuard(): UseSessionGuardReturn {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: sessionData, isPending } = authClient.useSession();
+  const session = sessionData ?? null;
+  const user = session?.user ?? null;
 
   return {
-    session: session ?? null,
-    user: session?.user ?? null,
+    session,
+    user,
     isPending,
-    isAuthenticated: !isPending && !!session?.user,
+    isAuthenticated: !isPending && user !== null,
   };
 }

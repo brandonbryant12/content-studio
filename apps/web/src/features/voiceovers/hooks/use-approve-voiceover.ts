@@ -11,7 +11,7 @@ type Voiceover = RouterOutput['voiceovers']['get'];
  * Mutation to approve/revoke a voiceover. Admin-only.
  * Optimistically updates `approvedBy` and `approvedAt`.
  */
-export function useApproveVoiceover(voiceoverId: string, userId: string) {
+export function useApproveVoiceover(voiceoverId: string, userId?: string) {
   const queryClient = useQueryClient();
   const voiceoverQueryKey = getVoiceoverQueryKey(voiceoverId);
 
@@ -23,7 +23,7 @@ export function useApproveVoiceover(voiceoverId: string, userId: string) {
         const previousVoiceover =
           queryClient.getQueryData<Voiceover>(voiceoverQueryKey);
 
-        if (previousVoiceover) {
+        if (previousVoiceover && userId) {
           queryClient.setQueryData<Voiceover>(voiceoverQueryKey, {
             ...previousVoiceover,
             approvedBy: userId,

@@ -195,7 +195,7 @@ const readOptionalModelOverride = (
   if (value === undefined || value.trim().length === 0) {
     return Effect.succeed(undefined);
   }
-  return ensureModel(value, "").pipe(Effect.map((resolved) => resolved));
+  return ensureModel(value, "");
 };
 
 const readOptionalThinkingOverride = (
@@ -204,8 +204,24 @@ const readOptionalThinkingOverride = (
   if (value === undefined || value.trim().length === 0) {
     return Effect.succeed(undefined);
   }
-  return ensureThinking(value, "").pipe(Effect.map((resolved) => resolved));
+  return ensureThinking(value, "");
 };
+
+const buildCodexExecArgs = (
+  cwd: string,
+  model: string,
+  thinking: string,
+): string[] => [
+  "exec",
+  CODEX_DANGEROUS_FLAG,
+  "-m",
+  model,
+  "-c",
+  `model_reasoning_effort="${thinking}"`,
+  "-C",
+  cwd,
+  "-",
+];
 
 const runGhJson = <T>(args: string[], errorContext: string): Effect.Effect<T, ExternalToolError, CliProcess | CliConfig> =>
   Effect.gen(function* () {
@@ -514,17 +530,7 @@ const runCodexPlaybook = (
     }
     const prompt = `${promptLines.join("\n")}\n`;
 
-    const codexArgs = [
-      "exec",
-      CODEX_DANGEROUS_FLAG,
-      "-m",
-      model,
-      "-c",
-      `model_reasoning_effort="${thinking}"`,
-      "-C",
-      config.cwd,
-      "-",
-    ];
+    const codexArgs = buildCodexExecArgs(config.cwd, model, thinking);
 
     if (dryRun) {
       yield* cliConsole.log(`playbook: ${runner.playbookPath}`);
@@ -643,17 +649,11 @@ const runReadyForDevRouter = (
         "",
       ].join("\n");
 
-      const plannerArgs = [
-        "exec",
-        CODEX_DANGEROUS_FLAG,
-        "-m",
-        PLANNER_MODEL,
-        "-c",
-        `model_reasoning_effort="${PLANNER_THINKING}"`,
-        "-C",
+      const plannerArgs = buildCodexExecArgs(
         config.cwd,
-        "-",
-      ];
+        PLANNER_MODEL,
+        PLANNER_THINKING,
+      );
 
       if (dryRun) {
         if (modelOverride) {
@@ -712,12 +712,14 @@ const runReadyForDevRouter = (
         selectedIssues.push(issue);
       }
 
-      const model = yield* (modelOverride
-        ? Effect.succeed(modelOverride)
-        : ensureModel(plan.model, ""));
-      const thinking = yield* (thinkingOverride
-        ? Effect.succeed(thinkingOverride)
-        : ensureThinking(plan.thinking, ""));
+      const model =
+        modelOverride !== undefined
+          ? modelOverride
+          : yield* ensureModel(plan.model, "");
+      const thinking =
+        thinkingOverride !== undefined
+          ? thinkingOverride
+          : yield* ensureThinking(plan.thinking, "");
       yield* ensureIssueRoutingCompatibility(selectedIssues, model, thinking);
 
       for (const selected of selectedIssues) {
@@ -772,17 +774,7 @@ const runReadyForDevRouter = (
         "",
       ].join("\n");
 
-      const codexArgs = [
-        "exec",
-        CODEX_DANGEROUS_FLAG,
-        "-m",
-        model,
-        "-c",
-        `model_reasoning_effort="${thinking}"`,
-        "-C",
-        config.cwd,
-        "-",
-      ];
+      const codexArgs = buildCodexExecArgs(config.cwd, model, thinking);
 
       yield* cliConsole.log(`Run ${runIndex}/${maxRuns}: planner selected ${selectedIssues.length} issue(s).`);
       for (const issue of selectedIssues) {
