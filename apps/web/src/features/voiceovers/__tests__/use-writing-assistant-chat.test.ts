@@ -15,6 +15,14 @@ vi.mock('@ai-sdk/react', () => ({
   useChat: useChatMock,
 }));
 
+vi.mock('@/clients/apiClient', () => ({
+  rawApiClient: {
+    chat: {
+      writingAssistant: vi.fn(),
+    },
+  },
+}));
+
 function pendingProposalMessage(
   toolCallId: string,
   summary: string,

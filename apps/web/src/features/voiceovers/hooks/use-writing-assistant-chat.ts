@@ -15,23 +15,26 @@ interface TranscriptEditToolOutput {
   readonly reason?: string;
 }
 
-interface WritingAssistantTools {
-  readonly proposeTranscriptEdit: {
-    readonly input: TranscriptEditToolInput;
-    readonly output: TranscriptEditToolOutput;
+type WritingAssistantMessage = UIMessage;
+
+type TranscriptEditToolPart = {
+  readonly type: 'tool-proposeTranscriptEdit';
+  readonly toolCallId: string;
+  readonly state:
+    | 'input-streaming'
+    | 'input-available'
+    | 'approval-requested'
+    | 'approval-responded'
+    | 'output-available'
+    | 'output-error'
+    | 'output-denied';
+  readonly input?: unknown;
+  readonly output?: unknown;
+  readonly errorText?: string;
+  readonly approval?: {
+    readonly reason?: string;
   };
-}
-
-type WritingAssistantMessage = UIMessage<
-  unknown,
-  Record<string, never>,
-  WritingAssistantTools
->;
-
-type TranscriptEditToolPart = Extract<
-  WritingAssistantMessage['parts'][number],
-  { type: 'tool-proposeTranscriptEdit' }
->;
+};
 
 type TranscriptEditDecision = 'pending' | 'accepted' | 'rejected' | 'error';
 
@@ -49,9 +52,55 @@ function getTranscriptFromRequestBody(body: object | undefined) {
   return typeof transcript === 'string' ? transcript : '';
 }
 
+function isTranscriptEditInput(value: unknown): value is TranscriptEditToolInput {
+  if (!value || typeof value !== 'object') return false;
+
+  const candidate = value as {
+    summary?: unknown;
+    revisedTranscript?: unknown;
+  };
+
+  return (
+    typeof candidate.summary === 'string' &&
+    typeof candidate.revisedTranscript === 'string'
+  );
+}
+
+function isTranscriptEditOutput(
+  value: unknown,
+): value is TranscriptEditToolOutput {
+  if (!value || typeof value !== 'object') return false;
+
+  const candidate = value as {
+    decision?: unknown;
+    reason?: unknown;
+    appliedTranscript?: unknown;
+  };
+
+  if (candidate.decision !== 'accepted' && candidate.decision !== 'rejected') {
+    return false;
+  }
+
+  if (
+    candidate.reason !== undefined &&
+    typeof candidate.reason !== 'string'
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.appliedTranscript !== undefined &&
+    typeof candidate.appliedTranscript !== 'string'
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 function isTranscriptEditToolPart(
   part: WritingAssistantMessage['parts'][number],
-): part is TranscriptEditToolPart {
+): boolean {
   return part.type === 'tool-proposeTranscriptEdit';
 }
 
@@ -63,14 +112,12 @@ function getToolInput(part: TranscriptEditToolPart): TranscriptEditToolInput | n
     part.state === 'output-available' ||
     part.state === 'output-denied'
   ) {
-    return part.input;
+    return isTranscriptEditInput(part.input) ? part.input : null;
   }
 
   if (
     part.state === 'output-error' &&
-    part.input &&
-    typeof part.input.summary === 'string' &&
-    typeof part.input.revisedTranscript === 'string'
+    isTranscriptEditInput(part.input)
   ) {
     return part.input;
   }
@@ -96,6 +143,8 @@ function toProposal(part: TranscriptEditToolPart): TranscriptEditProposal | null
   }
 
   if (part.state === 'output-available') {
+    if (!isTranscriptEditOutput(part.output)) return null;
+
     return {
       toolCallId: part.toolCallId,
       summary: input.summary,
@@ -111,7 +160,7 @@ function toProposal(part: TranscriptEditToolPart): TranscriptEditProposal | null
       summary: input.summary,
       revisedTranscript: input.revisedTranscript,
       decision: 'rejected',
-      reason: part.approval.reason,
+      reason: part.approval?.reason,
     };
   }
 
@@ -139,7 +188,7 @@ function extractTranscriptEditProposals(
     for (const part of message.parts) {
       if (!isTranscriptEditToolPart(part)) continue;
 
-      const proposal = toProposal(part);
+      const proposal = toProposal(part as TranscriptEditToolPart);
       if (!proposal) continue;
       proposals.push(proposal);
     }
