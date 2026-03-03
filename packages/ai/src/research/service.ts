@@ -1,5 +1,5 @@
 import { Context } from 'effect';
-import type { ResearchError, ResearchTimeoutError } from '../errors';
+import type { ResearchError } from '../errors';
 import type { Effect } from 'effect';
 
 /**
@@ -35,14 +35,11 @@ export interface DeepResearchService {
   /**
    * Poll for the result of a research operation.
    * Returns the result if completed, null if still processing.
-   * Fails with ResearchError on failure or ResearchTimeoutError on timeout.
+   * Fails with ResearchError on provider/research failures.
    */
   readonly getResult: (
     interactionId: string,
-  ) => Effect.Effect<
-    ResearchResult | null,
-    ResearchError | ResearchTimeoutError
-  >;
+  ) => Effect.Effect<ResearchResult | null, ResearchError>;
 }
 
 /**
