@@ -11,7 +11,9 @@ import {
   Queue,
   JobProcessingError,
   formatError,
+  subscribeToQueueNotifications,
   type QueueService,
+  type QueueNotificationSubscription,
   type Job,
   type JobType,
 } from '@repo/queue';
@@ -23,6 +25,7 @@ export interface BaseWorkerConfig {
   pollInterval?: number;
   maxConsecutiveErrors?: number;
   maxConcurrent?: number;
+  perTypeConcurrency?: Partial<Record<JobType, number>>;
   runtime?: ServerRuntime;
   databaseUrl?: string;
   geminiApiKey?: string;
@@ -52,6 +55,32 @@ export const createRetrySchedule = (
     Schedule.union(Schedule.spaced(WORKER_DEFAULTS.BACKOFF_CAP_MS)),
     Schedule.intersect(Schedule.recurs(maxConsecutiveErrors - 1)),
   );
+
+const sanitizeConcurrencyLimit = (
+  value: number | undefined,
+  fallback: number,
+): number => {
+  if (value === undefined || Number.isNaN(value) || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.floor(value));
+};
+
+export const resolvePerTypeConcurrency = (
+  jobTypes: readonly JobType[],
+  maxConcurrent: number,
+  overrides?: Partial<Record<JobType, number>>,
+): Record<JobType, number> =>
+  Object.fromEntries(
+    jobTypes.map((jobType) => {
+      const configured = sanitizeConcurrencyLimit(
+        overrides?.[jobType],
+        maxConcurrent,
+      );
+      return [jobType, Math.min(configured, maxConcurrent)];
+    }),
+  ) as Record<JobType, number>;
 
 const errorStack = (error: unknown): string =>
   error instanceof Error && error.stack ? error.stack : '';
@@ -180,23 +209,58 @@ export const createWorker = <
   const maxConsecutiveErrors =
     config.maxConsecutiveErrors ?? WORKER_DEFAULTS.MAX_CONSECUTIVE_ERRORS;
   const maxConcurrent = config.maxConcurrent ?? MAX_CONCURRENT_JOBS;
+  const perTypeConcurrency = resolvePerTypeConcurrency(
+    jobTypes,
+    maxConcurrent,
+    config.perTypeConcurrency,
+  );
 
   const runtime = createWorkerRuntime(name, config);
 
   const IDLE_SUMMARY_INTERVAL = Math.max(1, Math.round(60_000 / pollInterval));
 
+  type ActiveJobsByType = Record<JobType, number>;
+  type PollResult = { claimed: number; capacity: number };
+
+  const initialActiveByType = Object.fromEntries(
+    jobTypes.map((jobType) => [jobType, 0]),
+  ) as ActiveJobsByType;
+
   let shutdownDeferred: Deferred.Deferred<void> | null = null;
   let loopFiber: Fiber.RuntimeFiber<void, unknown> | null = null;
   let activeJobsRef: Ref.Ref<number> | null = null;
   let jobScopeRef: CloseableScope | null = null;
+  let queueNotificationSubscription: QueueNotificationSubscription | null = null;
+  let wakeRequested = true;
+  let nextHeartbeatAt = Date.now();
 
-  const claimNextJobSafely = (queue: QueueService, jobType: JobType) =>
-    queue.claimNextJob(jobType).pipe(
-      Effect.catchAll((err) => logAndSwallow(`Error claiming ${jobType}`, err)),
+  const claimNextJobSafely = (
+    queue: QueueService,
+    claimableTypes: readonly JobType[],
+  ) => {
+    if (claimableTypes.length === 0) {
+      return Effect.succeed(null);
+    }
+
+    const claimEffect = queue.claimNextJobByTypes
+      ? queue.claimNextJobByTypes(claimableTypes)
+      : queue.claimNextJob(claimableTypes[0]!);
+
+    return claimEffect.pipe(
+      Effect.catchAll((err) =>
+        logAndSwallow(
+          `Error claiming ${claimableTypes.join(',')}`,
+          err,
+        ),
+      ),
       Effect.catchAllDefect((defect) =>
-        logAndSwallow(`Defect claiming ${jobType}`, defect),
+        logAndSwallow(
+          `Defect claiming ${claimableTypes.join(',')}`,
+          defect,
+        ),
       ),
     );
+  };
 
   const notifyJobComplete = (job: Job) =>
     Effect.sync(() => onJobComplete?.(job as Job<TPayload>));
@@ -216,6 +280,7 @@ export const createWorker = <
     queue: QueueService,
     job: Job,
     activeJobs: Ref.Ref<number>,
+    activeJobsByType: Ref.Ref<ActiveJobsByType>,
     jobScope: ScopeType,
   ) =>
     Effect.forkIn(jobScope)(
@@ -240,7 +305,21 @@ export const createWorker = <
             onJobComplete,
           ),
         ),
-        Effect.ensuring(Ref.update(activeJobs, (n) => n - 1)),
+        Effect.ensuring(
+          Ref.update(activeJobs, (n) => Math.max(0, n - 1)).pipe(
+            Effect.zipRight(
+              Ref.update(activeJobsByType, (counts) => ({
+                ...counts,
+                [job.type]: Math.max(0, (counts[job.type] ?? 0) - 1),
+              })),
+            ),
+            Effect.zipRight(
+              Effect.sync(() => {
+                wakeRequested = true;
+              }),
+            ),
+          ),
+        ),
         Effect.annotateLogs('worker', name),
         Effect.annotateLogs('job.id', job.id),
         Effect.annotateLogs('job.type', job.type),
@@ -250,6 +329,7 @@ export const createWorker = <
   const pollOnce = (
     idleCount: Ref.Ref<number>,
     activeJobs: Ref.Ref<number>,
+    activeJobsByType: Ref.Ref<ActiveJobsByType>,
     jobScope: ScopeType,
   ) =>
     Effect.gen(function* () {
@@ -258,26 +338,42 @@ export const createWorker = <
       const capacity = maxConcurrent - activeCount;
 
       if (capacity <= 0) {
-        yield* Effect.logDebug(
-          `At capacity (${activeCount}/${maxConcurrent}), skipping poll`,
-        );
-        return null;
+        return { claimed: 0, capacity: 0 } satisfies PollResult;
       }
 
       let claimed = 0;
 
-      for (const jobType of jobTypes) {
-        if (claimed >= capacity) break;
+      while (claimed < capacity) {
+        const countsByType = yield* Ref.get(activeJobsByType);
+        const claimableTypes = jobTypes.filter(
+          (jobType) => countsByType[jobType] < perTypeConcurrency[jobType],
+        );
 
-        const job = yield* claimNextJobSafely(queue, jobType);
+        if (claimableTypes.length === 0) {
+          break;
+        }
 
-        if (!job) continue;
+        const job = yield* claimNextJobSafely(queue, claimableTypes);
+
+        if (!job) {
+          break;
+        }
 
         claimed++;
         yield* Ref.update(activeJobs, (n) => n + 1);
+        yield* Ref.update(activeJobsByType, (counts) => ({
+          ...counts,
+          [job.type]: (counts[job.type] ?? 0) + 1,
+        }));
         yield* Ref.set(idleCount, 0);
 
-        yield* forkJobProcessing(queue, job, activeJobs, jobScope);
+        yield* forkJobProcessing(
+          queue,
+          job,
+          activeJobs,
+          activeJobsByType,
+          jobScope,
+        );
 
         yield* Effect.logInfo(
           `Forked ${job.type} job ${job.id} (active: ${activeCount + claimed}/${maxConcurrent})`,
@@ -295,20 +391,38 @@ export const createWorker = <
         }
       }
 
-      return null;
+      return { claimed, capacity } satisfies PollResult;
     }).pipe(Effect.annotateLogs('worker', name));
+
+  const setupQueueWakeups = async () => {
+    try {
+      queueNotificationSubscription = await subscribeToQueueNotifications(() => {
+        wakeRequested = true;
+      });
+    } catch (error) {
+      console.warn(
+        `[${name}] Queue notification subscription failed, falling back to heartbeat polling:`,
+        error,
+      );
+      queueNotificationSubscription = null;
+    }
+  };
 
   const start = async () => {
     const retrySchedule = createRetrySchedule(
       pollInterval,
       maxConsecutiveErrors,
     );
+    await setupQueueWakeups();
+    wakeRequested = true;
+    nextHeartbeatAt = Date.now();
 
     const loop = Effect.scoped(
       Effect.gen(function* () {
         const idleCount = yield* Ref.make(0);
         const pollCount = yield* Ref.make(0);
         const activeJobs = yield* Ref.make(0);
+        const activeJobsByType = yield* Ref.make(initialActiveByType);
         activeJobsRef = activeJobs;
         const jobScope = yield* Scope.make();
         jobScopeRef = jobScope;
@@ -317,7 +431,7 @@ export const createWorker = <
         shutdownDeferred = stopSignal;
 
         yield* Effect.logInfo(
-          `Starting ${name}, polling every ${pollInterval}ms`,
+          `Starting ${name}, heartbeat polling every ${pollInterval}ms`,
         );
 
         if (onStart) {
@@ -325,11 +439,29 @@ export const createWorker = <
         }
 
         yield* Effect.gen(function* () {
-          yield* pollOnce(idleCount, activeJobs, jobScope).pipe(
+          const stopRequested = yield* Deferred.isDone(stopSignal);
+          if (stopRequested) {
+            yield* Effect.logInfo(`${name} received stop signal, exiting`);
+            return yield* Effect.interrupt;
+          }
+
+          const activeCount = yield* Ref.get(activeJobs);
+          const shouldWakePoll = wakeRequested && activeCount < maxConcurrent;
+          const shouldHeartbeatPoll = Date.now() >= nextHeartbeatAt;
+          if (!shouldWakePoll && !shouldHeartbeatPoll) {
+            return;
+          }
+
+          const pollResult = yield* pollOnce(
+            idleCount,
+            activeJobs,
+            activeJobsByType,
+            jobScope,
+          ).pipe(
             Effect.catchAllDefect((defect) =>
               Effect.logError(
                 `${name} caught defect during poll: ${formatError(defect)}`,
-              ),
+              ).pipe(Effect.as({ claimed: 0, capacity: 0 } satisfies PollResult)),
             ),
           );
 
@@ -337,26 +469,14 @@ export const createWorker = <
           if (onPollCycle) {
             yield* onPollCycle(count);
           }
-        }).pipe(
-          Effect.tap(() =>
-            Effect.raceFirst(
-              Effect.sleep(pollInterval),
-              Deferred.await(stopSignal),
-            ),
-          ),
-          Effect.tap(() =>
-            Deferred.isDone(stopSignal).pipe(
-              Effect.flatMap((done) =>
-                done
-                  ? Effect.logInfo(
-                      `${name} received stop signal, exiting`,
-                    ).pipe(Effect.flatMap(() => Effect.interrupt))
-                  : Effect.void,
-              ),
-            ),
-          ),
-          Effect.forever,
-        );
+
+          nextHeartbeatAt = Date.now() + pollInterval;
+          if (pollResult.claimed === 0) {
+            wakeRequested = false;
+          } else {
+            wakeRequested = pollResult.claimed >= pollResult.capacity;
+          }
+        }).pipe(Effect.delay(WORKER_DEFAULTS.WAKE_POLL_TICK_MS), Effect.forever);
       }),
     ).pipe(
       Effect.annotateLogs('worker', name),
@@ -422,6 +542,13 @@ export const createWorker = <
     }).pipe(Effect.annotateLogs('worker', name));
 
   const stop = async () => {
+    if (queueNotificationSubscription) {
+      await queueNotificationSubscription.close().catch(() => {
+        // Best-effort queue notification subscriber cleanup.
+      });
+      queueNotificationSubscription = null;
+    }
+
     if (shutdownDeferred) {
       await runtime.runPromise(
         Deferred.complete(shutdownDeferred, Effect.void),

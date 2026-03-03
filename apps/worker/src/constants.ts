@@ -1,18 +1,32 @@
+import type { JobType } from '@repo/queue';
+
 export const WORKER_DEFAULTS = {
-  POLL_INTERVAL_MS: 5000,
+  POLL_INTERVAL_MS: 60_000,
   MAX_CONSECUTIVE_ERRORS: 10,
   BACKOFF_CAP_MS: 60_000,
+  WAKE_POLL_TICK_MS: 100,
 } as const;
 
 export const QUEUE_DEFAULTS = {
-  POLL_INTERVAL_MS: 3000,
+  POLL_INTERVAL_MS: 60_000,
 } as const;
 
 /** Maximum number of jobs processed concurrently */
 export const MAX_CONCURRENT_JOBS = 5;
 
+/** Per-type concurrency limits (clamped by MAX_CONCURRENT_JOBS) */
+export const DEFAULT_PER_TYPE_CONCURRENCY = {
+  'generate-podcast': 2,
+  'generate-script': 3,
+  'generate-audio': 2,
+  'generate-voiceover': 2,
+  'generate-infographic': 2,
+  'process-url': 5,
+  'process-research': 3,
+} as const satisfies Record<JobType, number>;
+
 /** Jobs stuck in `processing` longer than this are considered orphaned */
 export const STALE_JOB_MAX_AGE_MS = 60 * 60 * 1000; // 60 minutes
 
-/** Run the stale-job reaper every N poll cycles (~3 min at 3s polling) */
-export const STALE_CHECK_EVERY_N_POLLS = 60;
+/** Run the stale-job reaper every N milliseconds */
+export const STALE_CHECK_INTERVAL_MS = 3 * 60 * 1000;

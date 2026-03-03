@@ -904,6 +904,9 @@ importers:
       effect:
         specifier: ^3.16.0
         version: 3.19.8
+      redis:
+        specifier: ^5.10.0
+        version: 5.10.0
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

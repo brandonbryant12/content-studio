@@ -26,7 +26,10 @@ import {
   type BaseWorkerConfig,
   type Worker,
 } from './base-worker';
-import { STALE_CHECK_EVERY_N_POLLS } from './constants';
+import {
+  DEFAULT_PER_TYPE_CONCURRENCY,
+  STALE_CHECK_INTERVAL_MS,
+} from './constants';
 import { emitEntityChange, type PublishEvent } from './events';
 import { handleProcessUrl } from './handlers/document-handlers';
 import {
@@ -81,6 +84,7 @@ const logAndReFail = (job: Job, label: string, error: unknown) =>
 
 export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
   const publishEvent = config.publishEvent ?? noop;
+  let lastStaleSweepAt = 0;
 
   const processJob = (job: Job<WorkerPayload>) =>
     Effect.gen(function* () {
@@ -190,15 +194,27 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       Effect.flatMap(() => recoverOrphanedResearch(publishEvent)),
     );
 
-  const onPollCycle = (pollCount: number) =>
-    pollCount % STALE_CHECK_EVERY_N_POLLS === 0
-      ? reapStaleJobs(publishEvent)
-      : Effect.void;
+  const onPollCycle = (_pollCount: number) =>
+    Effect.gen(function* () {
+      const now = Date.now();
+      if (now - lastStaleSweepAt < STALE_CHECK_INTERVAL_MS) {
+        return;
+      }
+
+      lastStaleSweepAt = now;
+      yield* reapStaleJobs(publishEvent);
+    });
 
   return createWorker({
     name: 'UnifiedWorker',
     jobTypes: JOB_TYPES,
-    config,
+    config: {
+      ...config,
+      perTypeConcurrency: {
+        ...DEFAULT_PER_TYPE_CONCURRENCY,
+        ...config.perTypeConcurrency,
+      },
+    },
     processJob,
     onJobComplete,
     onPollCycle,

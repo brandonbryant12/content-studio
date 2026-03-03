@@ -11,8 +11,13 @@ import {
   ssePublisher,
 } from '@repo/api/server';
 import { createDb, verifyDbConnection } from '@repo/db/client';
+import { configureQueueNotifier, shutdownQueueNotifier } from '@repo/queue';
 import { buildStorageConfig } from './config';
-import { MAX_CONCURRENT_JOBS, QUEUE_DEFAULTS } from './constants';
+import {
+  DEFAULT_PER_TYPE_CONCURRENCY,
+  MAX_CONCURRENT_JOBS,
+  QUEUE_DEFAULTS,
+} from './constants';
 import { env } from './env';
 import { createUnifiedWorker } from './unified-worker';
 
@@ -55,6 +60,11 @@ async function startWorker(): Promise<void> {
     channelPrefix: env.SSE_REDIS_CHANNEL_PREFIX,
   });
 
+  configureQueueNotifier({
+    redisUrl: env.SERVER_REDIS_URL,
+    channel: env.QUEUE_NOTIFY_CHANNEL,
+  });
+
   try {
     await verifyDbConnection(db);
     console.log('Database connection verified');
@@ -90,8 +100,9 @@ async function startWorker(): Promise<void> {
 
   console.log(
     `Worker started\n` +
-      `- polling interval: ${QUEUE_DEFAULTS.POLL_INTERVAL_MS}ms\n` +
-      `- max concurrent jobs: ${MAX_CONCURRENT_JOBS}\n` +
+      `- heartbeat poll interval: ${QUEUE_DEFAULTS.POLL_INTERVAL_MS}ms\n` +
+      `- max concurrent jobs (global): ${MAX_CONCURRENT_JOBS}\n` +
+      `- per-type concurrency: ${JSON.stringify(DEFAULT_PER_TYPE_CONCURRENCY)}\n` +
       `- mock AI: ${env.USE_MOCK_AI}`,
   );
 
@@ -121,6 +132,9 @@ async function startWorker(): Promise<void> {
 
       await shutdownSSEPublisher();
       console.log('SSE publisher stopped');
+
+      await shutdownQueueNotifier();
+      console.log('Queue notifier stopped');
 
       console.log('Worker has stopped gracefully.');
     } catch (error) {

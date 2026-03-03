@@ -4,7 +4,13 @@ import { job, JobStatus, JobType as JobTypeConst } from '@repo/db/schema';
 import { Effect, Layer } from 'effect';
 import type { Job, JobType } from './types';
 import type { DatabaseInstance } from '@repo/db/client';
-import { QueueError, JobNotFoundError, JobProcessingError } from './errors';
+import {
+  QueueError,
+  JobNotFoundError,
+  JobProcessingError,
+  formatError,
+} from './errors';
+import { publishQueueNotification } from './notifier';
 import { Queue, type QueueService } from './service';
 
 type JobRow = typeof job.$inferSelect;
@@ -123,6 +129,18 @@ const makeQueueService = Effect.gen(function* () {
           'queue.user.id': userId,
         }),
       ),
+      Effect.tap((queuedJob) =>
+        Effect.tryPromise({
+          try: () => publishQueueNotification(queuedJob.type),
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            Effect.logWarning(
+              `Queue notify publish failed for job ${queuedJob.id}: ${formatError(error)}`,
+            ),
+          ),
+        ),
+      ),
     );
 
   const getJob: QueueService['getJob'] = (jobId) =>
@@ -212,18 +230,30 @@ const makeQueueService = Effect.gen(function* () {
       ),
     );
 
-  const claimNextJob = (type: JobType): Effect.Effect<Job | null, QueueError> =>
-    runQuery(
-      'claimNextJob',
+  const claimNextJobByTypes = (
+    types: readonly JobType[],
+  ): Effect.Effect<Job | null, QueueError> => {
+    if (types.length === 0) {
+      return Effect.succeed(null);
+    }
+
+    return runQuery(
+      'claimNextJobByTypes',
       async (db) => {
+        const typeValues = sql.join(
+          types.map((jobType) => sql`${jobType}`),
+          sql`, `,
+        );
+
         const result = await db.execute(sql`
           UPDATE ${job}
           SET "status" = ${JobStatus.PROCESSING},
               "startedAt" = NOW(),
               "updatedAt" = NOW()
           WHERE ${job.id} = (
-            SELECT ${job.id} FROM ${job}
-            WHERE ${job.type} = ${type}
+            SELECT ${job.id}
+            FROM ${job}
+            WHERE ${job.type} IN (${typeValues})
               AND ${job.status} = ${JobStatus.PENDING}
             ORDER BY ${job.createdAt} ASC
             LIMIT 1
@@ -235,8 +265,16 @@ const makeQueueService = Effect.gen(function* () {
         const row = result.rows[0];
         return row ? mapRowToJob(row as JobRow) : null;
       },
-      'Failed to claim next job',
+      'Failed to claim next job by types',
     ).pipe(
+      Effect.tap(() =>
+        Effect.annotateCurrentSpan('queue.job.types', types.join(',')),
+      ),
+    );
+  };
+
+  const claimNextJob = (type: JobType): Effect.Effect<Job | null, QueueError> =>
+    claimNextJobByTypes([type]).pipe(
       Effect.tap(() => Effect.annotateCurrentSpan('queue.job.type', type)),
     );
 
@@ -327,6 +365,7 @@ const makeQueueService = Effect.gen(function* () {
     getJobsByUser,
     updateJobStatus,
     claimNextJob,
+    claimNextJobByTypes,
     processNextJob,
     processJobById,
     findPendingJobForPodcast,

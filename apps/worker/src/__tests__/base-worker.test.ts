@@ -2,7 +2,12 @@ import { Role } from '@repo/auth/policy';
 import { JobProcessingError } from '@repo/queue';
 import { Schedule, Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
-import { makeJobUser, wrapJobError, createRetrySchedule } from '../base-worker';
+import {
+  makeJobUser,
+  wrapJobError,
+  createRetrySchedule,
+  resolvePerTypeConcurrency,
+} from '../base-worker';
 
 // =============================================================================
 // Tests
@@ -80,5 +85,33 @@ describe('createRetrySchedule', () => {
     // Verify the schedule is created without errors for valid inputs
     const schedule = createRetrySchedule(1000, 5);
     expect(schedule).toBeDefined();
+  });
+});
+
+describe('resolvePerTypeConcurrency', () => {
+  const jobTypes = ['generate-podcast', 'process-url'] as const;
+
+  it('defaults each job type to the global max', () => {
+    const limits = resolvePerTypeConcurrency(jobTypes, 5);
+    expect(limits['generate-podcast']).toBe(5);
+    expect(limits['process-url']).toBe(5);
+  });
+
+  it('applies per-type overrides and clamps to global max', () => {
+    const limits = resolvePerTypeConcurrency(jobTypes, 4, {
+      'generate-podcast': 2,
+      'process-url': 9,
+    });
+    expect(limits['generate-podcast']).toBe(2);
+    expect(limits['process-url']).toBe(4);
+  });
+
+  it('sanitizes invalid values to minimum of 1', () => {
+    const limits = resolvePerTypeConcurrency(jobTypes, 3, {
+      'generate-podcast': 0,
+      'process-url': Number.NaN,
+    });
+    expect(limits['generate-podcast']).toBe(1);
+    expect(limits['process-url']).toBe(3);
   });
 });
