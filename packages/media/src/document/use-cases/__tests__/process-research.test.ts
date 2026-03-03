@@ -1,6 +1,6 @@
 import { DeepResearch, type DeepResearchService } from '@repo/ai';
 import { createMockLLM } from '@repo/ai/testing';
-import { generateJobId } from '@repo/db/schema';
+import { DocumentStatus, generateJobId } from '@repo/db/schema';
 import { Queue, type QueueService } from '@repo/queue';
 import { createMockStorage } from '@repo/storage/testing';
 import {
@@ -19,7 +19,7 @@ import {
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { type DocumentRepoService } from '../../repos';
-import { processResearch } from '../process-research';
+import { processResearch, ResearchTimeoutError } from '../process-research';
 
 // =============================================================================
 // Test Helpers
@@ -290,6 +290,94 @@ describe('processResearch', () => {
       for (const { config } of configUpdates) {
         const c = config as { researchStatus?: string };
         expect(c.researchStatus).not.toBe('in_progress');
+      }
+    });
+  });
+
+  describe('timeout ownership', () => {
+    it('fails with use-case-owned ResearchTimeoutError and timeout payload', async () => {
+      vi.useFakeTimers();
+      const consoleLogSpy = vi
+        .spyOn(console, 'log')
+        .mockImplementation(() => undefined);
+
+      try {
+        const doc = createTestDocument({
+          source: 'research',
+          status: 'processing',
+          researchConfig: { query: 'test query' },
+        });
+        const configUpdates: Array<{
+          operationId?: string;
+          researchStatus?: string;
+        }> = [];
+        const statusUpdates: Array<{
+          status: DocumentStatus;
+          message?: string;
+        }> = [];
+
+        const layers = Layer.mergeAll(
+          MockDbLive,
+          createMockPodcastRepo(),
+          createMockQueue(),
+          mockDocRepo({
+            findById: () => Effect.succeed(doc),
+            updateResearchConfig: (_id, config) =>
+              Effect.sync(() => {
+                configUpdates.push(config);
+                return doc;
+              }),
+            updateStatus: (_id, status, message) =>
+              Effect.sync(() => {
+                statusUpdates.push({ status, message });
+                return doc;
+              }),
+          }),
+          createMockActivityLogRepo(),
+          createMockDeepResearch({
+            startResearch: () =>
+              Effect.succeed({ interactionId: 'op-timeout-123' }),
+            getResult: () => Effect.succeed(null),
+          }),
+          createMockStorage(),
+          mockOutlineLLM(),
+        );
+
+        const resultExit = Effect.runPromiseExit(
+          withTestUser(testUser)(
+            processResearch({ documentId: doc.id, query: 'test query' }).pipe(
+              Effect.provide(layers),
+            ),
+          ),
+        );
+
+        await vi.advanceTimersByTimeAsync(3_700_000);
+        const result = await resultExit;
+
+        expect(result._tag).toBe('Failure');
+        if (result._tag === 'Failure') {
+          const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+          expect(error?._tag).toBe('ResearchTimeoutError');
+          if (error?._tag === 'ResearchTimeoutError') {
+            expect(error.documentId).toBe(doc.id);
+            expect(error.interactionId).toBe('op-timeout-123');
+          }
+        }
+
+        expect(ResearchTimeoutError.httpCode).toBe('DOCUMENT_RESEARCH_TIMEOUT');
+        expect(configUpdates).toContainEqual(
+          expect.objectContaining({
+            operationId: 'op-timeout-123',
+            researchStatus: 'failed',
+          }),
+        );
+        expect(statusUpdates).toContainEqual({
+          status: DocumentStatus.FAILED,
+          message: 'Research timed out after 60 minutes',
+        });
+      } finally {
+        consoleLogSpy.mockRestore();
+        vi.useRealTimers();
       }
     });
   });
