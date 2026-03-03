@@ -98,8 +98,7 @@ describe('audioPlaybackProxy', () => {
       items: [
         {
           id: 'vo_1',
-          audioUrl:
-            'https://api.example.com/storage/voiceovers/vo_1/audio.wav',
+          audioUrl: 'https://api.example.com/storage/voiceovers/vo_1/audio.wav',
         },
       ],
     };

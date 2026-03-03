@@ -50,7 +50,11 @@ const normalizeStorageKey = (key: string): string | null => {
   if (trimmed.includes('\0') || trimmed.includes('\\')) return null;
 
   const segments = trimmed.split('/');
-  if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+  if (
+    segments.some(
+      (segment) => segment === '' || segment === '.' || segment === '..',
+    )
+  ) {
     return null;
   }
 
@@ -265,7 +269,11 @@ export const createAudioPlaybackProxy = (
     const key = parseStorageKey(audioUrl, config.storageConfig);
     if (!key) return audioUrl;
 
-    const token = createAudioToken(key, config.signingSecret, config.ttlSeconds);
+    const token = createAudioToken(
+      key,
+      config.signingSecret,
+      config.ttlSeconds,
+    );
     return buildAudioPlaybackUrl(config.serverUrl, config.apiPath, token);
   };
 
@@ -275,7 +283,8 @@ export const createAudioPlaybackProxy = (
     rewriteAudioUrl,
     rewritePayloadAudioUrls: <T>(payload: T): T =>
       rewritePayloadAudioUrls(payload, rewriteAudioUrl) as T,
-    verifyToken: (token: string) => verifyAudioToken(token, config.signingSecret),
+    verifyToken: (token: string) =>
+      verifyAudioToken(token, config.signingSecret),
     inferContentType: inferAudioContentType,
   };
 };

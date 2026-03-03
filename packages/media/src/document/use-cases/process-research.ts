@@ -73,6 +73,32 @@ const INITIAL_POLL_MS = 30_000;
 const STEADY_POLL_MS = 60_000;
 const getPollStatusLabel = <T>(result: T | null) =>
   result === null ? 'in_progress' : 'completed';
+const getErrorTag = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  '_tag' in error &&
+  typeof error._tag === 'string'
+    ? error._tag
+    : 'UnknownError';
+const buildLatestResearchConfig = ({
+  existing,
+  query,
+  autoGeneratePodcast,
+}: {
+  existing: ResearchConfig | null | undefined;
+  query: string;
+  autoGeneratePodcast: boolean;
+}): ResearchConfig =>
+  existing
+    ? {
+        ...existing,
+        query,
+        autoGeneratePodcast,
+      }
+    : {
+        query,
+        autoGeneratePodcast,
+      };
 
 export const processResearch = (input: ProcessResearchInput) => {
   let latestResearchConfig: ResearchConfig | null = null;
@@ -100,16 +126,11 @@ export const processResearch = (input: ProcessResearchInput) => {
       doc.researchConfig?.researchStatus === 'in_progress';
     const autoGeneratePodcast =
       doc.researchConfig?.autoGeneratePodcast === true;
-    latestResearchConfig = doc.researchConfig
-      ? {
-          ...doc.researchConfig,
-          query,
-          autoGeneratePodcast,
-        }
-      : {
-          query,
-          autoGeneratePodcast,
-        };
+    latestResearchConfig = buildLatestResearchConfig({
+      existing: doc.researchConfig,
+      query,
+      autoGeneratePodcast,
+    });
 
     let interactionId: string;
     if (canResume) {
@@ -219,13 +240,7 @@ export const processResearch = (input: ProcessResearchInput) => {
               contract: 'document.outline',
               attempt,
               maxAttempts,
-              errorTag:
-                typeof error === 'object' &&
-                error !== null &&
-                '_tag' in error &&
-                typeof error._tag === 'string'
-                  ? error._tag
-                  : 'UnknownError',
+              errorTag: getErrorTag(error),
             },
           }),
           {

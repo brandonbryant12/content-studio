@@ -13,6 +13,13 @@ import { useNavigationBlock } from '@/shared/hooks';
 type Persona = RouterOutput['personas']['get'];
 const toFormText = (value: string | null) => value ?? '';
 const toOptionalText = (value: string) => (value === '' ? undefined : value);
+const toOptionalQuotes = (quotes: string[]) => {
+  const filtered = quotes.filter((quote) => quote.trim() !== '');
+  return filtered.length > 0 ? filtered : undefined;
+};
+const haveSameQuotes = (left: string[], right: string[]) =>
+  left.length === right.length &&
+  left.every((quote, index) => quote === right[index]);
 
 function getFormValues(persona: Persona): PersonaFormValues {
   return {
@@ -29,17 +36,14 @@ function getFormValues(persona: Persona): PersonaFormValues {
 
 function hasFormChanges(values: PersonaFormValues, persona: Persona): boolean {
   const initialValues = getFormValues(persona);
-  if (values.name !== persona.name) return true;
+  if (values.name !== initialValues.name) return true;
   if (values.role !== initialValues.role) return true;
   if (values.personalityDescription !== initialValues.personalityDescription)
     return true;
   if (values.speakingStyle !== initialValues.speakingStyle) return true;
   if (values.voiceId !== initialValues.voiceId) return true;
   if (values.voiceName !== initialValues.voiceName) return true;
-
-  const serverQuotes = initialValues.exampleQuotes;
-  if (values.exampleQuotes.length !== serverQuotes.length) return true;
-  return values.exampleQuotes.some((q, i) => q !== serverQuotes[i]);
+  return !haveSameQuotes(values.exampleQuotes, initialValues.exampleQuotes);
 }
 
 interface PersonaDetailContainerProps {
@@ -85,10 +89,6 @@ export function PersonaDetailContainer({
   );
 
   const handleSave = useCallback(() => {
-    const filteredQuotes = formValues.exampleQuotes.filter(
-      (quote) => quote.trim() !== '',
-    );
-
     updateMutation.mutate(
       {
         id: personaId,
@@ -98,7 +98,7 @@ export function PersonaDetailContainer({
           formValues.personalityDescription,
         ),
         speakingStyle: toOptionalText(formValues.speakingStyle),
-        exampleQuotes: filteredQuotes.length > 0 ? filteredQuotes : undefined,
+        exampleQuotes: toOptionalQuotes(formValues.exampleQuotes),
         voiceId: toOptionalText(formValues.voiceId),
         voiceName: toOptionalText(formValues.voiceName),
       },

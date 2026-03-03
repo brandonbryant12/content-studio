@@ -56,6 +56,8 @@ apps/web/src/
     components/
       suspense-boundary.tsx
       error-boundary.tsx
+      query-error-fallback.tsx
+      list-page-state.tsx
     hooks/
       use-optimistic-mutation.ts
       use-sse.ts

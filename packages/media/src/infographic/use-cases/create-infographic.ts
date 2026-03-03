@@ -82,26 +82,28 @@ export const createInfographic = (input: CreateInfographicInput) =>
     const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
     const trimmedPrompt = input.prompt?.trim();
-    const hasCustomPrompt =
-      typeof trimmedPrompt === 'string' && trimmedPrompt.length > 0;
+    const explicitPrompt =
+      trimmedPrompt && trimmedPrompt.length > 0 ? trimmedPrompt : undefined;
 
-    let sourceDocumentId: DocumentId | undefined;
-    let prompt = hasCustomPrompt ? trimmedPrompt : undefined;
-    if (input.documentId) {
-      const document = yield* getDocument({ id: input.documentId });
-      const { content } = yield* getDocumentContent({ id: input.documentId });
+    const sourceDocumentId: DocumentId | undefined = input.documentId;
+    const sourceDocument = sourceDocumentId
+      ? yield* getDocument({ id: sourceDocumentId })
+      : undefined;
+    const sourceContent = sourceDocumentId
+      ? (yield* getDocumentContent({ id: sourceDocumentId })).content
+      : undefined;
 
-      sourceDocumentId = document.id;
-      if (!hasCustomPrompt) {
-        prompt = buildDocumentPrompt({
-          title: document.title,
-          content,
-          outline: document.researchConfig?.outline,
-        });
-      }
-    }
+    const prompt =
+      explicitPrompt ??
+      (sourceDocument && sourceContent !== undefined
+        ? buildDocumentPrompt({
+            title: sourceDocument.title,
+            content: sourceContent,
+            outline: sourceDocument.researchConfig?.outline,
+          })
+        : undefined);
 
-    const insertInput: InsertInfographic = {
+    const infographic = yield* repo.insert({
       id: generateInfographicId(),
       title: input.title,
       prompt,
@@ -109,12 +111,8 @@ export const createInfographic = (input: CreateInfographicInput) =>
       format: input.format,
       status: InfographicStatus.DRAFT,
       createdBy: user.id,
-    };
-    if (sourceDocumentId) {
-      insertInput.sourceDocumentId = sourceDocumentId;
-    }
-
-    const infographic = yield* repo.insert(insertInput);
+      ...(sourceDocumentId ? { sourceDocumentId } : {}),
+    } satisfies InsertInfographic);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: infographic.id,

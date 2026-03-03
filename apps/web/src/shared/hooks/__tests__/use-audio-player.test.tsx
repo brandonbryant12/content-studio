@@ -87,7 +87,10 @@ describe('useAudioPlayer', () => {
       audio.dispatchEvent(new Event('play'));
       audio.currentTime = 42;
       audio.dispatchEvent(new Event('timeupdate'));
-      Object.defineProperty(audio, 'duration', { value: 95, configurable: true });
+      Object.defineProperty(audio, 'duration', {
+        value: 95,
+        configurable: true,
+      });
       audio.dispatchEvent(new Event('durationchange'));
     });
 

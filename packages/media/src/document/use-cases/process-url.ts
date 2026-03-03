@@ -32,20 +32,11 @@ export const processUrl = (input: ProcessUrlInput) =>
       },
     });
     const scraped = yield* urlScraper.fetchAndExtract(url);
-    const metadata: {
-      description?: string;
-      author?: string;
-      publishedAt?: string;
-    } = {};
-    if (scraped.description) {
-      metadata.description = scraped.description;
-    }
-    if (scraped.author) {
-      metadata.author = scraped.author;
-    }
-    if (scraped.publishedAt) {
-      metadata.publishedAt = scraped.publishedAt;
-    }
+    const metadata = {
+      ...(scraped.description ? { description: scraped.description } : {}),
+      ...(scraped.author ? { author: scraped.author } : {}),
+      ...(scraped.publishedAt ? { publishedAt: scraped.publishedAt } : {}),
+    };
 
     const contentKey = `documents/${documentId}/content.txt`;
     yield* storage.upload(

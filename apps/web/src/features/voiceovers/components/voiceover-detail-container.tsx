@@ -97,55 +97,53 @@ export function VoiceoverDetailContainer({
   const canExportAudio = !!voiceover.audioUrl;
   const trimmedText = settings.text.trim();
   const canExportScript = trimmedText.length > 0;
+  const buildVoiceoverFileName = useCallback(
+    (extension: string, labels: string[]) =>
+      buildDownloadFileName({
+        title: voiceover.title,
+        extension,
+        fallbackSlug: 'voiceover',
+        labels,
+        date: voiceover.updatedAt,
+      }),
+    [voiceover.title, voiceover.updatedAt],
+  );
+  const getScriptExportContext = useCallback(() => {
+    if (!trimmedText) return null;
+    return {
+      title: voiceover.title,
+      text: settings.text,
+      voice: settings.voice,
+      voiceName: voiceover.voiceName,
+    };
+  }, [
+    trimmedText,
+    voiceover.title,
+    voiceover.voiceName,
+    settings.text,
+    settings.voice,
+  ]);
 
   const handleExportAudio = useCallback(() => {
     if (!voiceover.audioUrl) return;
     const extension = getFileExtensionFromUrl(voiceover.audioUrl, 'mp3');
-    const fileName = buildDownloadFileName({
-      title: voiceover.title,
-      extension,
-      fallbackSlug: 'voiceover',
-      labels: ['audio'],
-      date: voiceover.updatedAt,
-    });
+    const fileName = buildVoiceoverFileName(extension, ['audio']);
     downloadFromUrl(voiceover.audioUrl, fileName);
-  }, [voiceover.audioUrl, voiceover.title, voiceover.updatedAt]);
+  }, [voiceover.audioUrl, buildVoiceoverFileName]);
 
   const handleExportScript = useCallback(() => {
-    if (!trimmedText) return;
+    const context = getScriptExportContext();
+    if (!context) return;
 
-    const script = buildVoiceoverTextExport({
-      title: voiceover.title,
-      text: settings.text,
-      voice: settings.voice,
-      voiceName: voiceover.voiceName,
-    });
-    const fileName = buildDownloadFileName({
-      title: voiceover.title,
-      extension: 'txt',
-      fallbackSlug: 'voiceover',
-      labels: ['script'],
-      date: voiceover.updatedAt,
-    });
+    const script = buildVoiceoverTextExport(context);
+    const fileName = buildVoiceoverFileName('txt', ['script']);
     downloadTextFile(script, fileName);
-  }, [
-    trimmedText,
-    settings.text,
-    settings.voice,
-    voiceover.title,
-    voiceover.voiceName,
-    voiceover.updatedAt,
-  ]);
+  }, [getScriptExportContext, buildVoiceoverFileName]);
 
   const handleCopyTranscript = useCallback(async () => {
-    if (!trimmedText) return;
-
-    const transcript = buildVoiceoverTranscriptMarkdown({
-      title: voiceover.title,
-      text: settings.text,
-      voice: settings.voice,
-      voiceName: voiceover.voiceName,
-    });
+    const context = getScriptExportContext();
+    if (!context) return;
+    const transcript = buildVoiceoverTranscriptMarkdown(context);
 
     try {
       const copied = await copyTextToClipboard(transcript);
@@ -157,13 +155,15 @@ export function VoiceoverDetailContainer({
     } catch {
       toast.error('Failed to copy transcript');
     }
-  }, [
-    trimmedText,
-    settings.text,
-    settings.voice,
-    voiceover.title,
-    voiceover.voiceName,
-  ]);
+  }, [getScriptExportContext]);
+
+  const handleApprove = useCallback(() => {
+    approve.mutate({ id: voiceoverId });
+  }, [approve, voiceoverId]);
+
+  const handleRevoke = useCallback(() => {
+    revoke.mutate({ id: voiceoverId });
+  }, [revoke, voiceoverId]);
 
   return (
     <VoiceoverDetail
@@ -182,8 +182,8 @@ export function VoiceoverDetailContainer({
       onSave={handleSave}
       onGenerate={actions.handleGenerate}
       onDelete={actions.handleDelete}
-      onApprove={() => approve.mutate({ id: voiceoverId })}
-      onRevoke={() => revoke.mutate({ id: voiceoverId })}
+      onApprove={handleApprove}
+      onRevoke={handleRevoke}
       canExportAudio={canExportAudio}
       canExportScript={canExportScript}
       onExportAudio={handleExportAudio}

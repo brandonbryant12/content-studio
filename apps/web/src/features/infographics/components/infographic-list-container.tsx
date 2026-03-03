@@ -1,4 +1,3 @@
-import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import { useCreateInfographic } from '../hooks/use-create-infographic';
 import {
@@ -9,9 +8,11 @@ import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import { InfographicList } from './infographic-list';
 import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import {
+  ListPageErrorState,
+  ListPageLoadingState,
+} from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = apiClient.infographics.delete.mutationOptions().mutationFn!;
 
@@ -72,39 +73,17 @@ export function InfographicListContainer() {
   }, [executeBulkDelete, selection]);
 
   if (isLoading) {
-    return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Infographics</p>
-            <h1 className="page-title">Infographics</h1>
-          </div>
-        </div>
-        <div className="loading-center-lg">
-          <Spinner size="lg" />
-        </div>
-      </div>
-    );
+    return <ListPageLoadingState title="Infographics" />;
   }
 
   if (isError) {
     return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Infographics</p>
-            <h1 className="page-title">Infographics</h1>
-          </div>
-        </div>
-        <ErrorFallback
-          error={
-            error instanceof Error
-              ? error
-              : new Error(getErrorMessage(error, 'Failed to load infographics'))
-          }
-          resetErrorBoundary={() => refetch()}
-        />
-      </div>
+      <ListPageErrorState
+        title="Infographics"
+        error={error}
+        fallbackMessage="Failed to load infographics"
+        onRetry={refetch}
+      />
     );
   }
 

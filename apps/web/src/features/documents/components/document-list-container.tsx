@@ -1,4 +1,3 @@
-import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import { useCreateFromUrl } from '../hooks/use-create-from-url';
 import {
@@ -11,9 +10,11 @@ import { DocumentList } from './document-list';
 import { ResearchChatContainer } from './research-chat-container';
 import { apiClient } from '@/clients/apiClient';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import {
+  ListPageErrorState,
+  ListPageLoadingState,
+} from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = apiClient.documents.delete.mutationOptions().mutationFn!;
 
@@ -76,39 +77,17 @@ export function DocumentListContainer() {
   );
 
   if (isLoading) {
-    return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Documents</p>
-            <h1 className="page-title">Documents</h1>
-          </div>
-        </div>
-        <div className="loading-center-lg">
-          <Spinner size="lg" />
-        </div>
-      </div>
-    );
+    return <ListPageLoadingState title="Documents" />;
   }
 
   if (isError) {
     return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Documents</p>
-            <h1 className="page-title">Documents</h1>
-          </div>
-        </div>
-        <ErrorFallback
-          error={
-            error instanceof Error
-              ? error
-              : new Error(getErrorMessage(error, 'Failed to load documents'))
-          }
-          resetErrorBoundary={() => refetch()}
-        />
-      </div>
+      <ListPageErrorState
+        title="Documents"
+        error={error}
+        fallbackMessage="Failed to load documents"
+        onRetry={refetch}
+      />
     );
   }
 

@@ -71,6 +71,21 @@ const toPersonaContext = (persona: PersonaLike): PersonaContext => ({
   speakingStyle: persona.speakingStyle,
   exampleQuotes: persona.exampleQuotes ?? [],
 });
+const getErrorTag = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  '_tag' in error &&
+  typeof error._tag === 'string'
+    ? error._tag
+    : 'UnknownError';
+const loadPersonaContext = (personaId: string | null | undefined) =>
+  personaId
+    ? loadPersonaByIdSafe(personaId).pipe(
+        Effect.map((persona) =>
+          persona ? toPersonaContext(persona) : undefined,
+        ),
+      )
+    : Effect.succeed<PersonaContext | undefined>(undefined);
 
 // =============================================================================
 // Use Case
@@ -97,24 +112,13 @@ export const generateScript = (input: GenerateScriptInput) =>
       VersionStatus.GENERATING_SCRIPT,
     );
 
-    const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
+    const [hostPersona, coHostPersona] = yield* Effect.all(
       [
-        podcast.hostPersonaId
-          ? loadPersonaByIdSafe(podcast.hostPersonaId)
-          : Effect.succeed(null),
-        podcast.coHostPersonaId
-          ? loadPersonaByIdSafe(podcast.coHostPersonaId)
-          : Effect.succeed(null),
+        loadPersonaContext(podcast.hostPersonaId),
+        loadPersonaContext(podcast.coHostPersonaId),
       ],
       { concurrency: 2 },
     );
-
-    const hostPersona = hostPersonaResult
-      ? toPersonaContext(hostPersonaResult)
-      : undefined;
-    const coHostPersona = coHostPersonaResult
-      ? toPersonaContext(coHostPersonaResult)
-      : undefined;
 
     const documentContents = yield* Effect.all(
       podcast.documents.map((doc) =>
@@ -161,13 +165,7 @@ export const generateScript = (input: GenerateScriptInput) =>
               contract: 'podcast.script',
               attempt,
               maxAttempts,
-              errorTag:
-                typeof error === 'object' &&
-                error !== null &&
-                '_tag' in error &&
-                typeof error._tag === 'string'
-                  ? error._tag
-                  : 'UnknownError',
+              errorTag: getErrorTag(error),
             },
           }),
           {

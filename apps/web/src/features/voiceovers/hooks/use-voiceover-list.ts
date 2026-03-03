@@ -1,25 +1,12 @@
-import {
-  useQuery,
-  type UseQueryResult,
-  type QueryKey,
-} from '@tanstack/react-query';
-import type { RouterOutput } from '@repo/api/client';
+import { useQuery, type QueryKey } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
-
-type VoiceoverList = RouterOutput['voiceovers']['list'];
 
 interface UseVoiceoverListOptions {
   limit?: number;
   enabled?: boolean;
 }
 
-/**
- * Fetch voiceover list with options.
- * Use this for conditional fetching or optional data.
- */
-export function useVoiceoverList(
-  options: UseVoiceoverListOptions = {},
-): UseQueryResult<VoiceoverList, Error> {
+export function useVoiceoverList(options: UseVoiceoverListOptions = {}) {
   const { limit, enabled = true } = options;
 
   return useQuery({
@@ -28,10 +15,6 @@ export function useVoiceoverList(
   });
 }
 
-/**
- * Get the query key for voiceover list.
- * Useful for cache operations.
- */
 export function getVoiceoverListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
@@ -40,13 +23,9 @@ export function getVoiceoverListQueryKey(
   }).queryKey;
 }
 
-/**
- * Fetch voiceover list with ordering and limit.
- * Use this for displaying ordered voiceover lists with optional limits.
- */
 export function useVoiceoversOrdered(
   options: { limit?: number; orderBy?: 'asc' | 'desc'; enabled?: boolean } = {},
-): UseQueryResult<VoiceoverList, Error> {
+) {
   const { limit, orderBy = 'desc', enabled = true } = options;
 
   return useQuery({

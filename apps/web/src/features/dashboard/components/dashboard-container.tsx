@@ -16,9 +16,8 @@ import {
   useVoiceoversOrdered,
   useCreateVoiceover,
 } from '@/features/voiceovers/hooks';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import { QueryErrorFallback } from '@/shared/components/query-error-fallback';
 import { useOnboardingDismissed } from '@/shared/hooks/use-onboarding-dismissed';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -88,13 +87,10 @@ export function DashboardContainer() {
       voiceoversErrorObj ??
       infographicsErrorObj;
     return (
-      <ErrorFallback
-        error={
-          firstError instanceof Error
-            ? firstError
-            : new Error(getErrorMessage(firstError, 'Failed to load dashboard'))
-        }
-        resetErrorBoundary={() => {
+      <QueryErrorFallback
+        error={firstError}
+        fallbackMessage="Failed to load dashboard"
+        onRetry={() => {
           refetchDocs();
           refetchPodcasts();
           refetchVoiceovers();

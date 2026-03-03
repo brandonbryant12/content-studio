@@ -1,4 +1,3 @@
-import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
 import {
   usePersonaList,
@@ -7,9 +6,11 @@ import {
 import { PersonaChatContainer } from './persona-chat-container';
 import { PersonaList } from './persona-list';
 import { apiClient } from '@/clients/apiClient';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import {
+  ListPageErrorState,
+  ListPageLoadingState,
+} from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 const deleteFn = apiClient.personas.delete.mutationOptions().mutationFn!;
 
@@ -40,38 +41,22 @@ export function PersonaListContainer() {
 
   if (isLoading) {
     return (
-      <div className="page-container">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Personas</p>
-            <h1 className="page-title">Personas</h1>
-          </div>
-        </div>
-        <div className="loading-center-lg">
-          <Spinner size="lg" />
-        </div>
-      </div>
+      <ListPageLoadingState
+        title="Personas"
+        containerClassName="page-container"
+      />
     );
   }
 
   if (isError) {
     return (
-      <div className="page-container">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Personas</p>
-            <h1 className="page-title">Personas</h1>
-          </div>
-        </div>
-        <ErrorFallback
-          error={
-            error instanceof Error
-              ? error
-              : new Error(getErrorMessage(error, 'Failed to load personas'))
-          }
-          resetErrorBoundary={() => refetch()}
-        />
-      </div>
+      <ListPageErrorState
+        title="Personas"
+        error={error}
+        fallbackMessage="Failed to load personas"
+        onRetry={refetch}
+        containerClassName="page-container"
+      />
     );
   }
 

@@ -42,6 +42,20 @@ export function DocumentDetailContainer({
   const actions = useDocumentActions({ document });
   const search = useDocumentSearch(documentContentText);
   const retryMutation = useRetryProcessing();
+  const handleCreateError = useCallback(
+    (fallbackMessage: string, error: unknown) => {
+      toast.error(getErrorMessage(error, fallbackMessage));
+    },
+    [],
+  );
+  const getExportContext = useCallback(() => {
+    if (!documentContent) return null;
+    return {
+      exportTitle: actions.title.trim() || document.title,
+      content: documentContent,
+    };
+  }, [actions.title, document.title, documentContent]);
+
   const createVoiceoverMutation = useMutation(
     apiClient.voiceovers.create.mutationOptions({
       onSuccess: (created) => {
@@ -55,7 +69,7 @@ export function DocumentDetailContainer({
         });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create voiceover'));
+        handleCreateError('Failed to create voiceover', error);
       },
     }),
   );
@@ -72,7 +86,7 @@ export function DocumentDetailContainer({
         });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create infographic'));
+        handleCreateError('Failed to create infographic', error);
       },
     }),
   );
@@ -81,30 +95,45 @@ export function DocumentDetailContainer({
   const canExport = isReady && documentContentText.trim().length > 0;
 
   const handleExportMarkdown = useCallback(() => {
-    if (!documentContent) return;
+    const context = getExportContext();
+    if (!context) return;
 
-    const exportTitle = actions.title.trim() || document.title;
     const markdown = buildDocumentMarkdownExport({
       document,
-      title: exportTitle,
-      content: documentContent,
+      title: context.exportTitle,
+      content: context.content,
     });
-    const fileName = `${toFileSlug(exportTitle, 'document')}.md`;
+    const fileName = `${toFileSlug(context.exportTitle, 'document')}.md`;
     downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
-  }, [actions.title, document, documentContent]);
+  }, [document, getExportContext]);
 
   const handleExportText = useCallback(() => {
-    if (!documentContent) return;
+    const context = getExportContext();
+    if (!context) return;
 
-    const exportTitle = actions.title.trim() || document.title;
     const text = buildDocumentTextExport({
       document,
-      title: exportTitle,
-      content: documentContent,
+      title: context.exportTitle,
+      content: context.content,
     });
-    const fileName = `${toFileSlug(exportTitle, 'document')}.txt`;
+    const fileName = `${toFileSlug(context.exportTitle, 'document')}.txt`;
     downloadTextFile(text, fileName);
-  }, [actions.title, document, documentContent]);
+  }, [document, getExportContext]);
+
+  const handleCreateVoiceover = useCallback(() => {
+    createVoiceoverMutation.mutate({
+      title: `Voiceover: ${document.title}`,
+      documentId: document.id,
+    });
+  }, [createVoiceoverMutation, document.id, document.title]);
+
+  const handleCreateInfographic = useCallback(() => {
+    createInfographicMutation.mutate({
+      title: `Infographic: ${document.title}`,
+      format: 'portrait',
+      documentId: document.id,
+    });
+  }, [createInfographicMutation, document.id, document.title]);
 
   useKeyboardShortcut({
     key: 's',
@@ -143,19 +172,8 @@ export function DocumentDetailContainer({
         canCreateFromDocument={isReady}
         isCreatingVoiceover={createVoiceoverMutation.isPending}
         isCreatingInfographic={createInfographicMutation.isPending}
-        onCreateVoiceover={() =>
-          createVoiceoverMutation.mutate({
-            title: `Voiceover: ${document.title}`,
-            documentId: document.id,
-          })
-        }
-        onCreateInfographic={() =>
-          createInfographicMutation.mutate({
-            title: `Infographic: ${document.title}`,
-            format: 'portrait',
-            documentId: document.id,
-          })
-        }
+        onCreateVoiceover={handleCreateVoiceover}
+        onCreateInfographic={handleCreateInfographic}
         onExportMarkdown={handleExportMarkdown}
         onExportText={handleExportText}
       />

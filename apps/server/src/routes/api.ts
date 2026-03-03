@@ -159,7 +159,10 @@ export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
 
     const chunk = data.subarray(range.start, range.end + 1);
     c.header('Content-Length', String(chunk.length));
-    c.header('Content-Range', `bytes ${range.start}-${range.end}/${totalBytes}`);
+    c.header(
+      'Content-Range',
+      `bytes ${range.start}-${range.end}/${totalBytes}`,
+    );
     return c.body(new Uint8Array(chunk), 206);
   })
   .all('/*', async (c, next) => {

@@ -77,6 +77,30 @@ Error boundaries wrap containers via `<SuspenseBoundary>`. See [`components.md`]
 
 `resetKeys` ensures the boundary resets when navigating between entities (e.g., `/podcasts/1` to `/podcasts/2`).
 
+## Query Error Fallbacks (Non-Suspense)
+
+For non-suspense `useQuery` container failures, prefer shared wrappers over
+repeating `instanceof Error` checks and retry wiring in every container:
+
+- `QueryErrorFallback` for generic query failures
+- `ListPageErrorState` when list pages also need shared title shell
+
+**References:**
+- `apps/web/src/shared/components/query-error-fallback.tsx`
+- `apps/web/src/shared/components/list-page-state.tsx`
+
+```tsx
+if (isError) {
+  return (
+    <QueryErrorFallback
+      error={error}
+      fallbackMessage="Failed to load dashboard"
+      onRetry={refetch}
+    />
+  );
+}
+```
+
 ## Retry Configuration
 
 | Error type | Retry? | Rationale |

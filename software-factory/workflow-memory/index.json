@@ -47,6 +47,39 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-03-docs-knowledge-drift-document-query-error-and-list-state-patterns",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Document shared query-error and list-page state patterns",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "workflow:docs-knowledge-drift",
+      "area:web",
+      "pattern:error-handling",
+      "pattern:components",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-docs-knowledge-drift-document-workbench-orchestration-guidance",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Add container orchestration dedupe guidance for shared action context",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:docs-knowledge-drift",
+      "area:web",
+      "pattern:components",
+      "code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-03-feature-delivery-deep-research-start-reduced-to-single-click",
     "date": "2026-03-03",
     "month": "2026-03",
@@ -141,6 +174,25 @@
     "tags": [
       "skill:feature-delivery",
       "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-update-gemini-defaults-to-latest-flash-image-with-verified-deep-",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Update Gemini defaults to latest Flash/image with verified deep-research preview",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "ai-models",
+      "gemini",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
     ],
     "eventFile": "events/2026-03.jsonl"
   },
@@ -335,6 +387,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-03-periodic-scans-shared-query-error-fallback-and-list-container-state-dedupe",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Shared query-error fallback and list-container state dedupe",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "media",
+      "error-handling"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-03-periodic-scans-simplification-pass-across-apps-and-packages",
     "date": "2026-03-03",
     "month": "2026-03",
@@ -346,6 +415,40 @@
       "skill:code-simplifier",
       "workflow:periodic-scans",
       "quality"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-document-voiceover-workbench-container-orchestration",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify document and voiceover workbench container orchestration",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "voiceover",
+      "document"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-persona-query-hooks-and-media-use-case-builders",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify persona query hooks and media use-case builders",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "media",
+      "skill:tanstack-vite"
     ],
     "eventFile": "events/2026-03.jsonl"
   },

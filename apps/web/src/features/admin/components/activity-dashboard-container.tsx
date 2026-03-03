@@ -6,8 +6,7 @@ import {
 } from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
 import { ActivityDashboard } from './activity-dashboard';
-import { ErrorFallback } from '@/shared/components/error-boundary';
-import { getErrorMessage } from '@/shared/lib/errors';
+import { QueryErrorFallback } from '@/shared/components/query-error-fallback';
 
 export function ActivityDashboardContainer() {
   const [period, setPeriod] = useState<Period>('7d');
@@ -64,18 +63,10 @@ export function ActivityDashboardContainer() {
   if (feedError || statsError) {
     const firstError = feedErrorObj ?? statsErrorObj;
     return (
-      <ErrorFallback
-        error={
-          firstError instanceof Error
-            ? firstError
-            : new Error(
-                getErrorMessage(
-                  firstError,
-                  'Failed to load activity dashboard',
-                ),
-              )
-        }
-        resetErrorBoundary={() => {
+      <QueryErrorFallback
+        error={firstError}
+        fallbackMessage="Failed to load activity dashboard"
+        onRetry={() => {
           refetchFeed();
           refetchStats();
         }}
