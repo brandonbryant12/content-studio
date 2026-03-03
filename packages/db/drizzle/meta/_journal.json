@@ -29,6 +29,13 @@
       "when": 1770591205006,
       "tag": "0003_supreme_anita_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772498394527,
+      "tag": "0004_add_document_links_voiceover_infographic",
+      "breakpoints": true
     }
   ]
 }

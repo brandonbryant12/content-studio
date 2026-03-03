@@ -109,6 +109,7 @@ const makeVoiceover = (overrides?: Partial<Voiceover>): Voiceover => ({
   voiceName: null,
   audioUrl: null,
   duration: null,
+  sourceDocumentId: null,
   status: 'drafting',
   errorMessage: null,
   approvedBy: null,
@@ -125,6 +126,7 @@ const makeInfographic = (overrides?: Partial<Infographic>): Infographic => ({
   prompt: null,
   styleProperties: [],
   format: 'portrait',
+  sourceDocumentId: null,
   imageStorageKey: null,
   thumbnailStorageKey: null,
   status: 'draft',
@@ -323,6 +325,7 @@ describe('voiceover serializers', () => {
       expect(result.voiceName).toBeNull();
       expect(result.audioUrl).toBeNull();
       expect(result.duration).toBeNull();
+      expect(result.sourceDocumentId).toBeNull();
       expect(result.errorMessage).toBeNull();
       expect(result.approvedBy).toBeNull();
       expect(result.approvedAt).toBeNull();
@@ -369,6 +372,7 @@ describe('infographic serializers', () => {
     it('handles null optional fields', () => {
       const result = serializeInfographic(makeInfographic());
       expect(result.prompt).toBeNull();
+      expect(result.sourceDocumentId).toBeNull();
       expect(result.imageStorageKey).toBeNull();
       expect(result.thumbnailStorageKey).toBeNull();
       expect(result.errorMessage).toBeNull();

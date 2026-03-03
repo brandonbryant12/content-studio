@@ -36,6 +36,10 @@ vi.mock('../components/research-chat-dialog', () => ({
     preview,
     autoGeneratePodcast,
     onAutoGeneratePodcastChange,
+    autoGenerateVoiceover,
+    onAutoGenerateVoiceoverChange,
+    autoGenerateInfographic,
+    onAutoGenerateInfographicChange,
   }: {
     onSynthesize: () => void;
     onConfirmResearch: () => void;
@@ -43,10 +47,26 @@ vi.mock('../components/research-chat-dialog', () => ({
     preview: { query: string; title: string } | null;
     autoGeneratePodcast: boolean;
     onAutoGeneratePodcastChange: (value: boolean) => void;
+    autoGenerateVoiceover: boolean;
+    onAutoGenerateVoiceoverChange: (value: boolean) => void;
+    autoGenerateInfographic: boolean;
+    onAutoGenerateInfographicChange: (value: boolean) => void;
   }) => (
     <div>
       <button onClick={() => onAutoGeneratePodcastChange(!autoGeneratePodcast)}>
         Toggle Auto Podcast
+      </button>
+      <button
+        onClick={() => onAutoGenerateVoiceoverChange(!autoGenerateVoiceover)}
+      >
+        Toggle Auto Voiceover
+      </button>
+      <button
+        onClick={() =>
+          onAutoGenerateInfographicChange(!autoGenerateInfographic)
+        }
+      >
+        Toggle Auto Infographic
       </button>
       <button onClick={onSynthesize}>Synthesize</button>
       {preview && (
@@ -136,6 +156,8 @@ describe('ResearchChatContainer', () => {
       query: 'AI market analysis',
       title: 'AI Market Analysis',
       autoGeneratePodcast: false,
+      autoGenerateVoiceover: false,
+      autoGenerateInfographic: false,
     });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
@@ -167,6 +189,37 @@ describe('ResearchChatContainer', () => {
       query: 'AI market analysis',
       title: 'AI Market Analysis',
       autoGeneratePodcast: true,
+      autoGenerateVoiceover: false,
+      autoGenerateInfographic: false,
+    });
+  });
+
+  it('passes auto-generate voiceover and infographic flags through to start research', async () => {
+    const user = userEvent.setup();
+
+    render(<ResearchChatContainer open={true} onOpenChange={vi.fn()} />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Toggle Auto Voiceover' }),
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Toggle Auto Infographic' }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Synthesize' }));
+    await waitFor(() =>
+      expect(
+        screen.getByText('Preview: AI Market Analysis'),
+      ).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Confirm Research' }));
+
+    expect(startResearchMutate.mock.calls[0]?.[0]).toEqual({
+      query: 'AI market analysis',
+      title: 'AI Market Analysis',
+      autoGeneratePodcast: false,
+      autoGenerateVoiceover: true,
+      autoGenerateInfographic: true,
     });
   });
 

@@ -164,6 +164,49 @@ describe('createFromResearch', () => {
     expect(insertData.title).toBe('Research: how to design podcasts');
   });
 
+  it('persists auto-generate flags in researchConfig when requested', async () => {
+    const user = createTestUser();
+    const insertSpy = vi.fn();
+
+    const repo = createMockDocumentRepo({
+      insert: (data) =>
+        Effect.sync(() => {
+          insertSpy(data);
+          return createTestDocument({
+            title: data.title,
+            source: data.source,
+            status: data.status,
+            createdBy: data.createdBy,
+            contentKey: data.contentKey,
+            mimeType: data.mimeType,
+            researchConfig: data.researchConfig,
+          });
+        }),
+    });
+
+    const layers = Layer.mergeAll(MockDbLive, repo, createMockQueue());
+
+    await Effect.runPromise(
+      withTestUser(user)(
+        createFromResearch({
+          query: 'how to repurpose one article for many formats',
+          autoGeneratePodcast: true,
+          autoGenerateVoiceover: true,
+          autoGenerateInfographic: true,
+        }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(insertSpy).toHaveBeenCalledTimes(1);
+    expect(insertSpy.mock.calls[0]?.[0].researchConfig).toEqual(
+      expect.objectContaining({
+        autoGeneratePodcast: true,
+        autoGenerateVoiceover: true,
+        autoGenerateInfographic: true,
+      }),
+    );
+  });
+
   it('marks the document as failed when enqueue fails', async () => {
     const user = createTestUser();
     const state: MockState = {};

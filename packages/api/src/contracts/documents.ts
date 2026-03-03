@@ -216,6 +216,8 @@ const documentContract = oc
               Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
             ),
             autoGeneratePodcast: Schema.optional(Schema.Boolean),
+            autoGenerateVoiceover: Schema.optional(Schema.Boolean),
+            autoGenerateInfographic: Schema.optional(Schema.Boolean),
           }),
         ),
       )

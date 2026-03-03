@@ -51,6 +51,10 @@ interface ResearchChatDialogProps {
   onDismissPreview: () => void;
   autoGeneratePodcast: boolean;
   onAutoGeneratePodcastChange: (value: boolean) => void;
+  autoGenerateVoiceover: boolean;
+  onAutoGenerateVoiceoverChange: (value: boolean) => void;
+  autoGenerateInfographic: boolean;
+  onAutoGenerateInfographicChange: (value: boolean) => void;
   followUpCount: number;
   followUpLimit: number;
   onKeepRefining: () => void;
@@ -75,6 +79,10 @@ export function ResearchChatDialog({
   onDismissPreview,
   autoGeneratePodcast,
   onAutoGeneratePodcastChange,
+  autoGenerateVoiceover,
+  onAutoGenerateVoiceoverChange,
+  autoGenerateInfographic,
+  onAutoGenerateInfographicChange,
   followUpCount,
   followUpLimit,
   onKeepRefining,
@@ -164,25 +172,63 @@ export function ResearchChatDialog({
           </div>
         )}
 
-        {/* Auto-generate podcast checkbox */}
+        {/* Auto-generate outputs */}
         {!preview && (
           <div className="border-t px-6 py-3">
-            <label className="flex items-start gap-3">
-              <Checkbox
-                checked={autoGeneratePodcast}
-                onCheckedChange={(checked) =>
-                  onAutoGeneratePodcastChange(checked === true)
-                }
-                disabled={isSynthesizing || isStartingResearch}
-                aria-label="Auto-generate podcast from findings"
-              />
-              <span className="text-sm leading-5">
-                Auto-generate podcast from findings
-                <span className="block text-xs text-muted-foreground">
-                  Uses defaults: 5 min, no custom instructions, Aoede + Charon.
+            <div className="space-y-3">
+              <label className="flex items-start gap-3">
+                <Checkbox
+                  checked={autoGeneratePodcast}
+                  onCheckedChange={(checked) =>
+                    onAutoGeneratePodcastChange(checked === true)
+                  }
+                  disabled={isSynthesizing || isStartingResearch}
+                  aria-label="Auto-generate podcast from findings"
+                />
+                <span className="text-sm leading-5">
+                  Auto-generate podcast from findings
+                  <span className="block text-xs text-muted-foreground">
+                    Uses defaults: 5 min, no custom instructions, Aoede +
+                    Charon.
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+
+              <label className="flex items-start gap-3">
+                <Checkbox
+                  checked={autoGenerateVoiceover}
+                  onCheckedChange={(checked) =>
+                    onAutoGenerateVoiceoverChange(checked === true)
+                  }
+                  disabled={isSynthesizing || isStartingResearch}
+                  aria-label="Auto-generate voiceover from findings"
+                />
+                <span className="text-sm leading-5">
+                  Auto-generate voiceover from findings
+                  <span className="block text-xs text-muted-foreground">
+                    Creates a document-based draft and starts audio generation.
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3">
+                <Checkbox
+                  checked={autoGenerateInfographic}
+                  onCheckedChange={(checked) =>
+                    onAutoGenerateInfographicChange(checked === true)
+                  }
+                  disabled={isSynthesizing || isStartingResearch}
+                  aria-label="Auto-generate infographic from findings"
+                />
+                <span className="text-sm leading-5">
+                  Auto-generate infographic from findings
+                  <span className="block text-xs text-muted-foreground">
+                    Builds a summary prompt from research output and starts
+                    generation.
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         )}
 

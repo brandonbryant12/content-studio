@@ -35,6 +35,8 @@ export const voiceoverWriteMethods: Pick<
         .insert(voiceover)
         .values({
           title: data.title,
+          text: data.text,
+          sourceDocumentId: data.sourceDocumentId,
           createdBy: data.createdBy,
         })
         .returning();

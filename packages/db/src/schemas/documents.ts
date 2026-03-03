@@ -62,6 +62,8 @@ export interface ResearchConfig {
   sources?: ResearchSource[];
   outline?: DocumentOutline;
   autoGeneratePodcast?: boolean;
+  autoGenerateVoiceover?: boolean;
+  autoGenerateInfographic?: boolean;
 }
 
 export const document = pgTable(
@@ -169,6 +171,8 @@ export const ResearchConfigSchema = Schema.Struct({
   sources: Schema.optional(Schema.Array(ResearchSourceSchema)),
   outline: Schema.optional(DocumentOutlineSchema),
   autoGeneratePodcast: Schema.optional(Schema.Boolean),
+  autoGenerateVoiceover: Schema.optional(Schema.Boolean),
+  autoGenerateInfographic: Schema.optional(Schema.Boolean),
 });
 
 export const DocumentOutputSchema = Schema.Struct({

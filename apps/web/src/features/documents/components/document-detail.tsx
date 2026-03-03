@@ -50,6 +50,11 @@ interface DocumentDetailProps {
   onRetry: () => void;
   search: UseDocumentSearchReturn;
   canExport?: boolean;
+  canCreateFromDocument?: boolean;
+  isCreatingVoiceover?: boolean;
+  isCreatingInfographic?: boolean;
+  onCreateVoiceover?: () => void;
+  onCreateInfographic?: () => void;
   onExportMarkdown?: () => void;
   onExportText?: () => void;
 }
@@ -69,6 +74,11 @@ export function DocumentDetail({
   onRetry,
   search,
   canExport = false,
+  canCreateFromDocument = false,
+  isCreatingVoiceover = false,
+  isCreatingInfographic = false,
+  onCreateVoiceover,
+  onCreateInfographic,
   onExportMarkdown,
   onExportText,
 }: DocumentDetailProps) {
@@ -121,6 +131,40 @@ export function DocumentDetail({
 
             <div className="workbench-meta">
               <div className="workbench-actions">
+                {onCreateVoiceover && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onCreateVoiceover}
+                    disabled={!canCreateFromDocument || isCreatingVoiceover}
+                  >
+                    {isCreatingVoiceover ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Voiceover'
+                    )}
+                  </Button>
+                )}
+                {onCreateInfographic && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onCreateInfographic}
+                    disabled={!canCreateFromDocument || isCreatingInfographic}
+                  >
+                    {isCreatingInfographic ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Infographic'
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
