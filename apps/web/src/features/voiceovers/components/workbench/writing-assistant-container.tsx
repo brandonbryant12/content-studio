@@ -1,5 +1,4 @@
-import { useCallback, useEffect } from 'react';
-import type { TranscriptEditProposal } from '../../hooks/use-writing-assistant-chat';
+import { useEffect } from 'react';
 import { useWritingAssistantChat } from '../../hooks/use-writing-assistant-chat';
 import { WritingAssistantPanel } from './writing-assistant-panel';
 
@@ -14,56 +13,20 @@ export function WritingAssistantContainer({
   manuscriptText,
   onSetManuscriptText,
 }: WritingAssistantContainerProps) {
-  const {
-    messages,
-    sendUserMessage,
-    proposals,
-    acceptProposal,
-    rejectProposal,
-    isStreaming,
-    error,
-    reset,
-  } = useWritingAssistantChat(manuscriptText);
+  const { messages, sendUserMessage, isStreaming, error, reset } =
+    useWritingAssistantChat(manuscriptText, onSetManuscriptText);
 
   useEffect(() => {
     reset();
   }, [voiceoverId, reset]);
 
-  const handleSendMessage = useCallback(
-    (text: string) => {
-      void sendUserMessage(text);
-    },
-    [sendUserMessage],
-  );
-
-  const handleAcceptProposal = useCallback(
-    (proposal: TranscriptEditProposal) => {
-      if (proposal.revisedTranscript !== manuscriptText) {
-        onSetManuscriptText(proposal.revisedTranscript);
-      }
-
-      void acceptProposal(proposal);
-    },
-    [acceptProposal, manuscriptText, onSetManuscriptText],
-  );
-
-  const handleRejectProposal = useCallback(
-    (proposal: TranscriptEditProposal) => {
-      void rejectProposal(proposal);
-    },
-    [rejectProposal],
-  );
-
   return (
     <WritingAssistantPanel
       messages={messages}
-      proposals={proposals}
       isStreaming={isStreaming}
       error={error}
-      onSendMessage={handleSendMessage}
+      onSendMessage={sendUserMessage}
       onReset={reset}
-      onAcceptProposal={handleAcceptProposal}
-      onRejectProposal={handleRejectProposal}
     />
   );
 }

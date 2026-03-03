@@ -12,6 +12,20 @@ const PortSchema = Schema.transform(
   },
 );
 
+const PositiveIntSchema = Schema.transform(
+  Schema.String,
+  Schema.Number.pipe(
+    Schema.int(),
+    Schema.filter((value) => value > 0, {
+      message: () => 'Must be a positive integer',
+    }),
+  ),
+  {
+    decode: (s) => parseInt(s, 10),
+    encode: (n) => String(n),
+  },
+);
+
 const PathStartingWithSlash = Schema.String.pipe(
   Schema.filter((input): input is `/${string}` => input.startsWith('/'), {
     message: () => 'API Path must start with "/" if provided.',
@@ -132,8 +146,21 @@ export const envSchema = Schema.Struct({
   }),
 
   CORS_ORIGINS: Schema.optional(Schema.String),
-  AUTH_COOKIE_SAME_SITE: Schema.optional(CookieSameSiteSchema),
-  AUTH_COOKIE_SECURE: Schema.optional(BooleanStringSchema),
+  AUTH_COOKIE_SAME_SITE: Schema.optionalWith(CookieSameSiteSchema, {
+    default: () => 'none' as const,
+  }),
+  AUTH_COOKIE_SECURE: Schema.optionalWith(BooleanStringSchema, {
+    default: () => true,
+  }),
+  AUTH_RATE_LIMIT_MAX: Schema.optional(PositiveIntSchema),
+  AUTH_RATE_LIMIT_WINDOW_MS: Schema.optional(PositiveIntSchema),
+  AUDIO_PLAYBACK_PROXY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
+    default: () => true,
+  }),
+  AUDIO_PLAYBACK_SIGNING_SECRET: Schema.optional(
+    Schema.String.pipe(Schema.minLength(32)),
+  ),
+  AUDIO_PLAYBACK_URL_TTL_SECONDS: Schema.optional(PositiveIntSchema),
 
   TELEMETRY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
     default: () => process.env.NODE_ENV === 'production',
@@ -149,6 +176,10 @@ export const envSchema = Schema.Struct({
   HTTPS_PROXY: Schema.optional(Schema.String),
   HTTP_PROXY: Schema.optional(Schema.String),
   NO_PROXY: Schema.optional(Schema.String),
+  NODE_EXTRA_CA_CERTS: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
+  EXPOSE_DEEP_HEALTHCHECK: Schema.optionalWith(BooleanStringSchema, {
+    default: () => process.env.NODE_ENV !== 'production',
+  }),
 });
 
 // Docker Compose sets `VAR: "${VAR:-}"` which resolves to "" when unset.
@@ -185,4 +216,76 @@ if (rawEnv.AUTH_MODE !== 'dev-password') {
   }
 }
 
-export const env = rawEnv;
+const proxyConfigured = Boolean(rawEnv.HTTPS_PROXY ?? rawEnv.HTTP_PROXY);
+if (proxyConfigured && !rawEnv.NODE_EXTRA_CA_CERTS) {
+  throw new Error(
+    'NODE_EXTRA_CA_CERTS is required when HTTPS_PROXY or HTTP_PROXY is configured',
+  );
+}
+
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  if (rawEnv.AUTH_MODE === 'dev-password') {
+    throw new Error('AUTH_MODE=dev-password is not allowed in production');
+  }
+
+  if (new URL(rawEnv.PUBLIC_SERVER_URL).protocol !== 'https:') {
+    throw new Error('PUBLIC_SERVER_URL must use https in production');
+  }
+
+  if (new URL(rawEnv.PUBLIC_WEB_URL).protocol !== 'https:') {
+    throw new Error('PUBLIC_WEB_URL must use https in production');
+  }
+
+  if (!rawEnv.CORS_ORIGINS || rawEnv.CORS_ORIGINS.trim() === '*') {
+    throw new Error(
+      'CORS_ORIGINS must be an explicit allowlist in production (wildcard is not allowed)',
+    );
+  }
+
+  if (!rawEnv.TRUST_PROXY) {
+    throw new Error('TRUST_PROXY must be true in production behind ingress');
+  }
+
+  if (
+    rawEnv.AUDIO_PLAYBACK_PROXY_ENABLED &&
+    !rawEnv.AUDIO_PLAYBACK_SIGNING_SECRET
+  ) {
+    throw new Error(
+      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true',
+    );
+  }
+
+  const sameOrigin =
+    new URL(rawEnv.PUBLIC_SERVER_URL).origin ===
+    new URL(rawEnv.PUBLIC_WEB_URL).origin;
+
+  if (!sameOrigin) {
+    if (rawEnv.AUTH_COOKIE_SAME_SITE !== 'none') {
+      throw new Error(
+        'AUTH_COOKIE_SAME_SITE=none is required when PUBLIC_SERVER_URL and PUBLIC_WEB_URL are on different origins',
+      );
+    }
+    if (rawEnv.AUTH_COOKIE_SECURE !== true) {
+      throw new Error(
+        'AUTH_COOKIE_SECURE=true is required when PUBLIC_SERVER_URL and PUBLIC_WEB_URL are on different origins',
+      );
+    }
+  }
+}
+
+const authRateLimitMax =
+  rawEnv.AUTH_RATE_LIMIT_MAX ?? (isProduction ? 120 : 1000);
+const authRateLimitWindowMs =
+  rawEnv.AUTH_RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000;
+const audioPlaybackUrlTtlSeconds = rawEnv.AUDIO_PLAYBACK_URL_TTL_SECONDS ?? 900;
+const audioPlaybackSigningSecret =
+  rawEnv.AUDIO_PLAYBACK_SIGNING_SECRET ?? rawEnv.SERVER_AUTH_SECRET;
+
+export const env = {
+  ...rawEnv,
+  AUTH_RATE_LIMIT_MAX: authRateLimitMax,
+  AUTH_RATE_LIMIT_WINDOW_MS: authRateLimitWindowMs,
+  AUDIO_PLAYBACK_URL_TTL_SECONDS: audioPlaybackUrlTtlSeconds,
+  AUDIO_PLAYBACK_SIGNING_SECRET: audioPlaybackSigningSecret,
+};

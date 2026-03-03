@@ -11,6 +11,7 @@ import { Effect, Schema } from 'effect';
 import { syncEntityTitle } from '../../activity';
 import {
   annotateUseCaseSpan,
+  formatUnknownError,
   runBestEffortSideEffect,
   withUseCaseSpan,
 } from '../../shared';
@@ -85,21 +86,20 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     const infographic = yield* repo.findByIdForUser(infographicId, user.id);
 
     const existingVersions = yield* repo.listVersions(infographicId);
-    const latestVersion =
-      existingVersions.length > 0
-        ? existingVersions[existingVersions.length - 1]
-        : null;
+    const latestVersion = existingVersions[existingVersions.length - 1] ?? null;
     const originalQueryPrompt = selectOriginalTitlePrompt({
       currentPrompt: infographic.prompt ?? null,
       existingVersions,
     });
 
     const isEdit = latestVersion !== null;
+    const currentPrompt = infographic.prompt ?? 'Create an infographic';
+    const versionPrompt = infographic.prompt ?? undefined;
 
     const prompt = buildInfographicPrompt({
-      styleProperties: infographic.styleProperties ?? [],
+      styleProperties: infographic.styleProperties,
       format: infographic.format,
-      prompt: infographic.prompt ?? 'Create an infographic',
+      prompt: currentPrompt,
       isEdit,
     });
 
@@ -131,8 +131,8 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
       .insertVersion({
         infographicId: infographic.id,
         versionNumber: nextVersion,
-        prompt: infographic.prompt ?? undefined,
-        styleProperties: infographic.styleProperties ?? [],
+        prompt: versionPrompt,
+        styleProperties: infographic.styleProperties,
         format: infographic.format,
         imageStorageKey: storageKey,
       })
@@ -187,7 +187,7 @@ export const executeInfographicGeneration = (input: ExecuteGenerationInput) =>
     Effect.catchAll((error) =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          `Infographic generation failed: ${String(error)}`,
+          `Infographic generation failed: ${formatUnknownError(error)}`,
         );
         const repo = yield* InfographicRepo;
         yield* runBestEffortSideEffect(

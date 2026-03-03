@@ -6,7 +6,24 @@ import { render, screen, userEvent } from '@/test-utils';
 
 type ResearchChatDialogProps = ComponentProps<typeof ResearchChatDialog>;
 
-const defaultProps: ResearchChatDialogProps = {
+const messagesFixture: UIMessage[] = [
+  {
+    id: 'msg-1',
+    role: 'user',
+    parts: [{ type: 'text', text: 'AI in healthcare' }],
+  },
+  {
+    id: 'msg-2',
+    role: 'assistant',
+    parts: [
+      { type: 'text', text: 'What aspect of AI in healthcare interests you?' },
+    ],
+  },
+];
+
+const createProps = (
+  overrides: Partial<ResearchChatDialogProps> = {},
+): ResearchChatDialogProps => ({
   open: true,
   onOpenChange: vi.fn(),
   messages: [],
@@ -23,34 +40,17 @@ const defaultProps: ResearchChatDialogProps = {
   followUpCount: 0,
   followUpLimit: 2,
   onKeepRefining: vi.fn(),
-};
+  ...overrides,
+});
 
 const renderDialog = (overrides: Partial<ResearchChatDialogProps> = {}) =>
-  render(<ResearchChatDialog {...defaultProps} {...overrides} />);
-
-const messagesFixture: UIMessage[] = [
-  {
-    id: 'msg-1',
-    role: 'user',
-    parts: [{ type: 'text', text: 'AI in healthcare' }],
-  },
-  {
-    id: 'msg-2',
-    role: 'assistant',
-    parts: [
-      { type: 'text', text: 'What aspect of AI in healthcare interests you?' },
-    ],
-  },
-];
+  render(<ResearchChatDialog {...createProps(overrides)} />);
 
 describe('ResearchChatDialog', () => {
-  it('renders dialog with title when open', () => {
+  it('renders dialog title and empty-state topic chips', () => {
     renderDialog();
-    expect(screen.getByText('Deep Research')).toBeInTheDocument();
-  });
 
-  it('shows empty state with example topics when no messages', () => {
-    renderDialog();
+    expect(screen.getByText('Deep Research')).toBeInTheDocument();
     expect(
       screen.getByText('What would you like to research? Try one of these:'),
     ).toBeInTheDocument();
@@ -59,18 +59,18 @@ describe('ResearchChatDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('displays messages when present', () => {
+  it('renders existing messages when provided', () => {
     renderDialog({ messages: messagesFixture, canStartResearch: true });
+
     expect(screen.getByText('AI in healthcare')).toBeInTheDocument();
     expect(
       screen.getByText('What aspect of AI in healthcare interests you?'),
     ).toBeInTheDocument();
   });
 
-  it('calls onSendMessage when submitting input', async () => {
+  it('sends message on Enter and clears input', async () => {
     const onSendMessage = vi.fn();
     const user = userEvent.setup();
-
     renderDialog({ onSendMessage });
 
     const input = screen.getByPlaceholderText(
@@ -80,12 +80,12 @@ describe('ResearchChatDialog', () => {
     await user.keyboard('{Enter}');
 
     expect(onSendMessage).toHaveBeenCalledWith('Test topic');
+    expect(input).toHaveValue('');
   });
 
-  it('adds newline with Shift+Enter without submitting', async () => {
+  it('adds newline on Shift+Enter without submitting', async () => {
     const onSendMessage = vi.fn();
     const user = userEvent.setup();
-
     renderDialog({ onSendMessage });
 
     const input = screen.getByPlaceholderText(
@@ -98,67 +98,85 @@ describe('ResearchChatDialog', () => {
     expect(input).toHaveValue('Line one\nLine two');
   });
 
-  it('applies a high maxLength for multiline input', () => {
+  it.each([
+    { name: 'streaming', isStreaming: true, isStartingResearch: false },
+    {
+      name: 'research preparation',
+      isStreaming: false,
+      isStartingResearch: true,
+    },
+  ])('disables input while $name', ({ isStreaming, isStartingResearch }) => {
+    renderDialog({
+      messages: messagesFixture,
+      canStartResearch: true,
+      isStreaming,
+      isStartingResearch,
+    });
+
+    expect(screen.getByLabelText('Research topic')).toBeDisabled();
+  });
+
+  it('uses high maxLength on multiline input', () => {
     renderDialog();
-
-    const input = screen.getByPlaceholderText(
-      'Describe your research topic...',
-    );
-    expect(input).toHaveAttribute('maxLength', '12000');
+    expect(
+      screen.getByPlaceholderText('Describe your research topic...'),
+    ).toHaveAttribute('maxLength', '12000');
   });
 
-  it('clears input after sending', async () => {
-    const user = userEvent.setup();
-
-    renderDialog();
-
-    const input = screen.getByPlaceholderText(
-      'Describe your research topic...',
-    );
-    await user.type(input, 'Test topic');
-    await user.keyboard('{Enter}');
-
-    expect(input).toHaveValue('');
+  it.each([
+    {
+      name: 'default prompt when still collecting details',
+      canStartResearch: false,
+      expectedPlaceholder: 'Describe your research topic...',
+    },
+    {
+      name: 'follow-up prompt when research can start',
+      canStartResearch: true,
+      expectedPlaceholder: 'Add more details or click Start Research...',
+    },
+  ])('$name', ({ canStartResearch, expectedPlaceholder }) => {
+    renderDialog({ messages: messagesFixture, canStartResearch });
+    expect(
+      screen.getByPlaceholderText(expectedPlaceholder),
+    ).toBeInTheDocument();
   });
 
-  it('disables input while streaming', () => {
-    renderDialog({ isStreaming: true });
+  it.each([
+    {
+      name: 'shows Start Research button when allowed',
+      canStartResearch: true,
+      shouldShow: true,
+    },
+    {
+      name: 'hides Start Research button when not allowed',
+      canStartResearch: false,
+      shouldShow: false,
+    },
+  ])('$name', ({ canStartResearch, shouldShow }) => {
+    renderDialog({ messages: messagesFixture, canStartResearch });
 
-    const input = screen.getByPlaceholderText(
-      'Describe your research topic...',
-    );
-    expect(input).toBeDisabled();
-  });
-
-  it('shows Start Research button when canStartResearch is true', () => {
-    renderDialog({ messages: messagesFixture, canStartResearch: true });
-
-    expect(screen.getByText('Start Research')).toBeInTheDocument();
-  });
-
-  it('does not show Start Research button when canStartResearch is false', () => {
-    renderDialog({ messages: messagesFixture, canStartResearch: false });
-
-    expect(screen.queryByText('Start Research')).not.toBeInTheDocument();
+    const startButton = screen.queryByText('Start Research');
+    if (shouldShow) {
+      expect(startButton).toBeInTheDocument();
+    } else {
+      expect(startButton).not.toBeInTheDocument();
+    }
   });
 
   it('calls onStartResearch when clicking Start Research', async () => {
     const onStartResearch = vi.fn();
     const user = userEvent.setup();
-
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
       onStartResearch,
     });
 
-    const startButton = screen.getByText('Start Research');
-    await user.click(startButton);
-
+    await user.click(screen.getByText('Start Research'));
     expect(onStartResearch).toHaveBeenCalled();
   });
 
-  it('shows spinner while preparing research', () => {
+  it('shows preparing state while starting research', () => {
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
@@ -168,7 +186,7 @@ describe('ResearchChatDialog', () => {
     expect(screen.getByText('Preparing research...')).toBeInTheDocument();
   });
 
-  it('shows error message when error is set', () => {
+  it('shows stream error message', () => {
     renderDialog({
       messages: messagesFixture,
       error: new Error('Stream failed'),
@@ -179,77 +197,7 @@ describe('ResearchChatDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('sends example topic when chip is clicked', async () => {
-    const onSendMessage = vi.fn();
-    const user = userEvent.setup();
-
-    renderDialog({ onSendMessage });
-
-    await user.click(screen.getByText('AI trends in healthcare 2026'));
-
-    expect(onSendMessage).toHaveBeenCalledWith('AI trends in healthcare 2026');
-  });
-
-  it('changes placeholder when research can be started', () => {
-    renderDialog({ messages: messagesFixture, canStartResearch: true });
-
-    expect(
-      screen.getByPlaceholderText(
-        'Add more details or click Start Research...',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('shows auto-trigger confirmation when autoStartReady', () => {
-    renderDialog({
-      messages: messagesFixture,
-      canStartResearch: true,
-      autoStartReady: true,
-    });
-
-    expect(screen.getByText('Ready to proceed?')).toBeInTheDocument();
-    expect(screen.getByText('Start Research')).toBeInTheDocument();
-    expect(screen.getByText('Keep Refining')).toBeInTheDocument();
-  });
-
-  it('calls onKeepRefining when Keep Refining is clicked in auto-trigger', async () => {
-    const onKeepRefining = vi.fn();
-    const user = userEvent.setup();
-
-    renderDialog({
-      messages: messagesFixture,
-      canStartResearch: true,
-      autoStartReady: true,
-      onKeepRefining,
-    });
-
-    await user.click(screen.getByText('Keep Refining'));
-    expect(onKeepRefining).toHaveBeenCalled();
-  });
-
-  it('shows progress badge when followUpCount > 0', () => {
-    renderDialog({
-      messages: messagesFixture,
-      followUpCount: 1,
-      followUpLimit: 2,
-    });
-
-    expect(screen.getByText('Question 1 of 2')).toBeInTheDocument();
-  });
-
-  it('hides progress badge when autoStartReady', () => {
-    renderDialog({
-      messages: messagesFixture,
-      followUpCount: 2,
-      followUpLimit: 2,
-      autoStartReady: true,
-      canStartResearch: true,
-    });
-
-    expect(screen.queryByText('Question 2 of 2')).not.toBeInTheDocument();
-  });
-
-  it('shows start error message when provided', () => {
+  it('shows start error message when start fails', () => {
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
@@ -261,21 +209,68 @@ describe('ResearchChatDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('disables input while preparing research', () => {
+  it('sends example topic when chip is clicked', async () => {
+    const onSendMessage = vi.fn();
+    const user = userEvent.setup();
+    renderDialog({ onSendMessage });
+
+    await user.click(screen.getByText('AI trends in healthcare 2026'));
+    expect(onSendMessage).toHaveBeenCalledWith('AI trends in healthcare 2026');
+  });
+
+  it('shows auto-trigger confirmation and handles Keep Refining', async () => {
+    const onKeepRefining = vi.fn();
+    const user = userEvent.setup();
     renderDialog({
       messages: messagesFixture,
       canStartResearch: true,
-      isStartingResearch: true,
+      autoStartReady: true,
+      onKeepRefining,
     });
 
-    const input = screen.getByLabelText('Research topic');
-    expect(input).toBeDisabled();
+    expect(screen.getByText('Ready to proceed?')).toBeInTheDocument();
+    expect(screen.getByText('Start Research')).toBeInTheDocument();
+    expect(screen.getByText('Keep Refining')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Keep Refining'));
+    expect(onKeepRefining).toHaveBeenCalled();
   });
 
-  it('calls onAutoGeneratePodcastChange when checkbox toggled', async () => {
+  it.each([
+    {
+      name: 'shows progress badge for follow-up questions',
+      followUpCount: 1,
+      autoStartReady: false,
+      shouldShow: true,
+      label: 'Question 1 of 2',
+    },
+    {
+      name: 'hides progress badge once auto-start is ready',
+      followUpCount: 2,
+      autoStartReady: true,
+      shouldShow: false,
+      label: 'Question 2 of 2',
+    },
+  ])('$name', ({ followUpCount, autoStartReady, shouldShow, label }) => {
+    renderDialog({
+      messages: messagesFixture,
+      canStartResearch: true,
+      followUpCount,
+      autoStartReady,
+      followUpLimit: 2,
+    });
+
+    const badge = screen.queryByText(label);
+    if (shouldShow) {
+      expect(badge).toBeInTheDocument();
+    } else {
+      expect(badge).not.toBeInTheDocument();
+    }
+  });
+
+  it('calls onAutoGeneratePodcastChange when checkbox is toggled', async () => {
     const user = userEvent.setup();
     const onAutoGeneratePodcastChange = vi.fn();
-
     renderDialog({ onAutoGeneratePodcastChange });
 
     await user.click(

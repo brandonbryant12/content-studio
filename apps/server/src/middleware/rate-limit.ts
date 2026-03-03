@@ -294,23 +294,25 @@ export async function shutdownRateLimiters(): Promise<void> {
   await Promise.all(stores.map((s) => s.shutdown?.().catch(() => undefined)));
 }
 
-export const createAuthRateLimit = (
-  opts: Pick<RateLimitOptions, 'redisUrl' | 'trustProxyHeaders'> = {},
-) =>
+interface RateLimitFactoryOptions
+  extends Pick<RateLimitOptions, 'redisUrl' | 'trustProxyHeaders'> {
+  limit?: number;
+  windowMs?: number;
+}
+
+export const createAuthRateLimit = (opts: RateLimitFactoryOptions = {}) =>
   rateLimiter({
-    limit: 20,
-    windowMs: 15 * 60 * 1000,
+    limit: opts.limit ?? 120,
+    windowMs: opts.windowMs ?? 15 * 60 * 1000,
     trustProxyHeaders: opts.trustProxyHeaders,
     redisUrl: opts.redisUrl,
     keyPrefix: `${DEFAULT_KEY_PREFIX}:auth`,
   });
 
-export const createApiRateLimit = (
-  opts: Pick<RateLimitOptions, 'redisUrl' | 'trustProxyHeaders'> = {},
-) =>
+export const createApiRateLimit = (opts: RateLimitFactoryOptions = {}) =>
   rateLimiter({
-    limit: 200,
-    windowMs: 60 * 1000,
+    limit: opts.limit ?? 200,
+    windowMs: opts.windowMs ?? 60 * 1000,
     trustProxyHeaders: opts.trustProxyHeaders,
     redisUrl: opts.redisUrl,
     keyPrefix: `${DEFAULT_KEY_PREFIX}:api`,

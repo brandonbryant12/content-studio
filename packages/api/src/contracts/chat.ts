@@ -2,7 +2,10 @@ import { oc, eventIterator, type } from '@orpc/contract';
 import type { UIMessage, UIMessageChunk } from 'ai';
 
 const ChatMessagesInput = type<{ messages: UIMessage[] }>();
-const WritingAssistantInput = type<{ messages: UIMessage[]; transcript: string }>();
+const WritingAssistantInput = type<{
+  messages: UIMessage[];
+  transcript: string;
+}>();
 const ChatStreamOutput = eventIterator(type<UIMessageChunk>());
 
 const chatContract = oc

@@ -32,3 +32,6 @@ export const INSTRUCTION_PRESETS = [
 ] as const;
 
 export const INSTRUCTION_CHAR_LIMIT = 1000;
+
+export const getInstructionPresetLabel = (value: string): string | null =>
+  INSTRUCTION_PRESETS.find((preset) => preset.value === value)?.label ?? null;

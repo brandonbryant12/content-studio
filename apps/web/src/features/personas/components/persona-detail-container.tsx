@@ -11,32 +11,39 @@ import { PersonaDetail } from './persona-detail';
 import { useNavigationBlock } from '@/shared/hooks';
 
 type Persona = RouterOutput['personas']['get'];
+const toFormText = (value: string | null) => value ?? '';
+const toOptionalText = (value: string) => (value === '' ? undefined : value);
+const toOptionalQuotes = (quotes: string[]) => {
+  const filtered = quotes.filter((quote) => quote.trim() !== '');
+  return filtered.length > 0 ? filtered : undefined;
+};
+const haveSameQuotes = (left: string[], right: string[]) =>
+  left.length === right.length &&
+  left.every((quote, index) => quote === right[index]);
 
 function getFormValues(persona: Persona): PersonaFormValues {
   return {
     name: persona.name,
-    role: persona.role || '',
-    personalityDescription: persona.personalityDescription || '',
-    speakingStyle: persona.speakingStyle || '',
+    role: toFormText(persona.role),
+    personalityDescription: toFormText(persona.personalityDescription),
+    speakingStyle: toFormText(persona.speakingStyle),
     exampleQuotes:
       persona.exampleQuotes.length > 0 ? [...persona.exampleQuotes] : [],
-    voiceId: persona.voiceId || '',
-    voiceName: persona.voiceName || '',
+    voiceId: toFormText(persona.voiceId),
+    voiceName: toFormText(persona.voiceName),
   };
 }
 
 function hasFormChanges(values: PersonaFormValues, persona: Persona): boolean {
-  if (values.name !== persona.name) return true;
-  if (values.role !== (persona.role || '')) return true;
-  if (values.personalityDescription !== (persona.personalityDescription || ''))
+  const initialValues = getFormValues(persona);
+  if (values.name !== initialValues.name) return true;
+  if (values.role !== initialValues.role) return true;
+  if (values.personalityDescription !== initialValues.personalityDescription)
     return true;
-  if (values.speakingStyle !== (persona.speakingStyle || '')) return true;
-  if (values.voiceId !== (persona.voiceId || '')) return true;
-  if (values.voiceName !== (persona.voiceName || '')) return true;
-
-  const serverQuotes = persona.exampleQuotes;
-  if (values.exampleQuotes.length !== serverQuotes.length) return true;
-  return values.exampleQuotes.some((q, i) => q !== serverQuotes[i]);
+  if (values.speakingStyle !== initialValues.speakingStyle) return true;
+  if (values.voiceId !== initialValues.voiceId) return true;
+  if (values.voiceName !== initialValues.voiceName) return true;
+  return !haveSameQuotes(values.exampleQuotes, initialValues.exampleQuotes);
 }
 
 interface PersonaDetailContainerProps {
@@ -86,15 +93,14 @@ export function PersonaDetailContainer({
       {
         id: personaId,
         name: formValues.name,
-        role: formValues.role || undefined,
-        personalityDescription: formValues.personalityDescription || undefined,
-        speakingStyle: formValues.speakingStyle || undefined,
-        exampleQuotes:
-          formValues.exampleQuotes.length > 0
-            ? formValues.exampleQuotes.filter((q) => q.trim() !== '')
-            : undefined,
-        voiceId: formValues.voiceId || undefined,
-        voiceName: formValues.voiceName || undefined,
+        role: toOptionalText(formValues.role),
+        personalityDescription: toOptionalText(
+          formValues.personalityDescription,
+        ),
+        speakingStyle: toOptionalText(formValues.speakingStyle),
+        exampleQuotes: toOptionalQuotes(formValues.exampleQuotes),
+        voiceId: toOptionalText(formValues.voiceId),
+        voiceName: toOptionalText(formValues.voiceName),
       },
       {
         onSuccess: () => clearDraft(persona.id),

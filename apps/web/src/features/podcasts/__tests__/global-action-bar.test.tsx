@@ -22,9 +22,7 @@ describe('GlobalActionBar failed-state actions', () => {
 
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole('button', { name: 'Save & Regenerate' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Save & Regenerate' }));
 
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onGenerate).not.toHaveBeenCalled();

@@ -11,7 +11,7 @@ import { Effect } from 'effect';
 import { getDocument } from '../../document/use-cases/get-document';
 import { getDocumentContent } from '../../document/use-cases/get-document-content';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
-import { InfographicRepo } from '../repos';
+import { InfographicRepo, type InsertInfographic } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
 // =============================================================================
@@ -33,7 +33,8 @@ export interface CreateInfographicInput {
 const MAX_SOURCE_EXCERPT_CHARS = 1200;
 const MAX_OUTLINE_SECTIONS = 5;
 
-const normalizePromptText = (value: string) => value.replace(/\s+/g, ' ').trim();
+const normalizePromptText = (value: string) =>
+  value.replace(/\s+/g, ' ').trim();
 
 const truncateAtWordBoundary = (value: string, maxChars: number) => {
   if (value.length <= maxChars) return value;
@@ -61,7 +62,10 @@ const buildDocumentPrompt = ({
 }) => {
   const sectionSummary = formatOutlineSummary(outline);
   const normalizedContent = normalizePromptText(content);
-  const excerpt = truncateAtWordBoundary(normalizedContent, MAX_SOURCE_EXCERPT_CHARS);
+  const excerpt = truncateAtWordBoundary(
+    normalizedContent,
+    MAX_SOURCE_EXCERPT_CHARS,
+  );
   const sourceBlock = sectionSummary
     ? `Key points:\n${sectionSummary}`
     : `Source excerpt:\n${excerpt}`;
@@ -77,35 +81,38 @@ export const createInfographic = (input: CreateInfographicInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const repo = yield* InfographicRepo;
-    const hasCustomPrompt =
-      typeof input.prompt === 'string' && input.prompt.trim().length > 0;
+    const trimmedPrompt = input.prompt?.trim();
+    const explicitPrompt =
+      trimmedPrompt && trimmedPrompt.length > 0 ? trimmedPrompt : undefined;
 
-    let sourceDocumentId: DocumentId | undefined;
-    let prompt = hasCustomPrompt ? input.prompt?.trim() : undefined;
-    if (input.documentId) {
-      const document = yield* getDocument({ id: input.documentId });
-      const { content } = yield* getDocumentContent({ id: input.documentId });
+    const sourceDocumentId: DocumentId | undefined = input.documentId;
+    const sourceDocument = sourceDocumentId
+      ? yield* getDocument({ id: sourceDocumentId })
+      : undefined;
+    const sourceContent = sourceDocumentId
+      ? (yield* getDocumentContent({ id: sourceDocumentId })).content
+      : undefined;
 
-      sourceDocumentId = document.id;
-      if (!hasCustomPrompt) {
-        prompt = buildDocumentPrompt({
-          title: document.title,
-          content,
-          outline: document.researchConfig?.outline,
-        });
-      }
-    }
+    const prompt =
+      explicitPrompt ??
+      (sourceDocument && sourceContent !== undefined
+        ? buildDocumentPrompt({
+            title: sourceDocument.title,
+            content: sourceContent,
+            outline: sourceDocument.researchConfig?.outline,
+          })
+        : undefined);
 
     const infographic = yield* repo.insert({
       id: generateInfographicId(),
       title: input.title,
       prompt,
-      styleProperties: sanitizeStyleProperties(input.styleProperties ?? []),
+      styleProperties: sanitizeStyleProperties(input.styleProperties),
       format: input.format,
-      ...(sourceDocumentId ? { sourceDocumentId } : {}),
       status: InfographicStatus.DRAFT,
       createdBy: user.id,
-    });
+      ...(sourceDocumentId ? { sourceDocumentId } : {}),
+    } satisfies InsertInfographic);
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: infographic.id,

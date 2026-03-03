@@ -31,6 +31,55 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-03-architecture-adr-guard-stop-process-research-restart-requeue-loop-on-cancelled-interact",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Stop process-research restart requeue loop on cancelled interactions",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "architecture-adr-guard",
+      "skill:architecture-adr-guard",
+      "worker",
+      "research"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-docs-knowledge-drift-document-query-error-and-list-state-patterns",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Document shared query-error and list-page state patterns",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "workflow:docs-knowledge-drift",
+      "area:web",
+      "pattern:error-handling",
+      "pattern:components",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-docs-knowledge-drift-document-workbench-orchestration-guidance",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Add container orchestration dedupe guidance for shared action context",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:docs-knowledge-drift",
+      "area:web",
+      "pattern:components",
+      "code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-03-feature-delivery-deep-research-start-reduced-to-single-click",
     "date": "2026-03-03",
     "month": "2026-03",
@@ -44,6 +93,40 @@
       "regression",
       "skill:debug-fix",
       "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-implemented-security-hardening-for-proxy-auth-ssrf-runtime-heade",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Implemented security hardening for proxy/auth/SSRF/runtime headers",
+    "severity": "high",
+    "status": "in-progress",
+    "tags": [
+      "feature-delivery",
+      "security",
+      "eks",
+      "skill:security-dependency-hygiene",
+      "skill:architecture-adr-guard"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-implemented-signed-backend-audio-playback-proxy-and-eks-split-do",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Implemented signed backend audio playback proxy and EKS split-domain templates",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "security",
+      "eks",
+      "s3",
+      "audio"
     ],
     "eventFile": "events/2026-03.jsonl"
   },
@@ -91,6 +174,555 @@
     "tags": [
       "skill:feature-delivery",
       "automation:ready-for-dev-executor"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-update-gemini-defaults-to-latest-flash-image-with-verified-deep-",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Update Gemini defaults to latest Flash/image with verified deep-research preview",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "ai-models",
+      "gemini",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:semantic",
+      "memory-dynamics:write"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-voiceover-writing-assistant-direct-transcript-apply",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover writing assistant direct transcript apply",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "voiceover",
+      "chat",
+      "llm-tools",
+      "skill:feature-delivery"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-feature-delivery-writing-assistant-now-explains-transcript-rewrites-in-chat",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Writing assistant now explains transcript rewrites in chat",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "voiceover",
+      "chat",
+      "ux",
+      "skill:feature-delivery"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-continue-simplification-pass-for-dashboard-persona-containers-an",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Continue simplification pass for dashboard/persona containers and document use-cases",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "skill:tanstack-vite",
+      "web",
+      "media"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-continue-simplifying-admin-query-hooks-and-media-orchestration-b",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Continue simplifying admin query hooks and media orchestration branches",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "skill:tanstack-vite",
+      "web",
+      "media"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-fifth-test-bloat-reduction-contract-schema-matrix",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Collapse contract schema tests into matrix checks",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "anti-bloat",
+      "contracts",
+      "skill:test-surface-steward"
+    ],
+    "importance": 0.74,
+    "recency": 1,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-fourth-test-bloat-reduction-document-router-helper-pattern",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Document router integration bloat cut with shared helper pattern",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "anti-bloat",
+      "api-router-integration",
+      "skill:test-surface-steward"
+    ],
+    "importance": 0.88,
+    "recency": 1,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-remediated-critical-orpc-client-advisory",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Remediated critical @orpc/client advisory",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scan",
+      "security",
+      "dependencies",
+      "skill:security-dependency-hygiene"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-remove-setup-wizard-wrapper-and-streamline-chat-orchestration-pa",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Remove setup-wizard wrapper and streamline chat/orchestration paths",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "skill:tanstack-vite",
+      "web",
+      "media"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-second-anti-bloat-reduction-pass-remove-type-level-duplication",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Second anti-bloat reduction pass: remove type-level duplication",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "test-surface",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-security-audit-cross-domain-eks-hardening-gaps",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Security audit: cross-domain EKS hardening gaps",
+    "severity": "critical",
+    "status": "open",
+    "tags": [
+      "periodic-scan",
+      "security",
+      "skill:security-dependency-hygiene",
+      "skill:architecture-adr-guard"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-seventh-test-bloat-prevention-router-integration-invariant",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Add router integration anti-bloat invariant",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "anti-bloat",
+      "invariants",
+      "api-router-integration",
+      "skill:test-surface-steward"
+    ],
+    "importance": 0.8,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-shared-query-error-fallback-and-list-container-state-dedupe",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Shared query-error fallback and list-container state dedupe",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "media",
+      "error-handling"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplification-pass-across-apps-and-packages",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplification pass across apps and packages",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:code-simplifier",
+      "workflow:periodic-scans",
+      "quality"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-document-voiceover-workbench-container-orchestration",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify document and voiceover workbench container orchestration",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "voiceover",
+      "document"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-persona-query-hooks-and-media-use-case-builders",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify persona query hooks and media use-case builders",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "web",
+      "media",
+      "skill:tanstack-vite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-podcast-document-detail-containers-and-generation-enque",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify podcast/document detail containers and generation enqueue flows",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "skill:tanstack-vite",
+      "web",
+      "media"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-simplify-web-container-query-and-media-use-cases",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Simplify web container/query and media use-cases",
+    "severity": "medium",
+    "status": "in-progress",
+    "tags": [
+      "periodic-scans",
+      "code-simplifier",
+      "skill:tanstack-vite",
+      "web",
+      "media"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-sixth-test-bloat-prevention-contract-schema-invariant",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Add invariant to prevent contract schema test bloat regrowth",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "anti-bloat",
+      "invariants",
+      "contracts",
+      "skill:test-surface-steward"
+    ],
+    "importance": 0.78,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-test-surface-redundancy-hotspots-and-reduction-plan",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Test-surface redundancy hotspots and reduction plan",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "test-surface",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-third-test-bloat-reduction-router-integration",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Reduce router integration test bloat without losing runtime safety",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "anti-bloat",
+      "skill:test-surface-steward",
+      "api-router-integration"
+    ],
+    "importance": 0.84,
+    "recency": 1,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-audio-and-research-chat-tests-round-6",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app test bloat cleanup: audio player and research chat container tests",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:periodic-scans",
+      "area:web",
+      "quality:test-bloat",
+      "skill:code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-error-boundary-and-bulk-delete-tests-round-5",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app test bloat cleanup: error boundary and bulk delete hooks",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:periodic-scans",
+      "area:web",
+      "quality:test-bloat",
+      "skill:code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-hook-and-detail-tests",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: hook and detail tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "test-surface",
+      "code-simplifier",
+      "skill:code-simplifier",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-podcast-and-infographic-container-tests",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: podcast and infographic container tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "test-surface",
+      "code-simplifier",
+      "skill:code-simplifier",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-podcast-tests-round-3",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app test bloat cleanup: podcast list and script editor tests",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:periodic-scans",
+      "area:web",
+      "quality:test-bloat",
+      "skill:code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-quick-play-and-research-chat-tests",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: quick-play and research-chat tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "test-surface",
+      "code-simplifier",
+      "skill:code-simplifier",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-sse-and-activity-dashboard-tests",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: SSE and activity dashboard tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "test-surface",
+      "code-simplifier",
+      "skill:code-simplifier",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-sse-and-document-selection-tests-round-4",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app test bloat cleanup: SSE provider and document selection tests",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:periodic-scans",
+      "area:web",
+      "quality:test-bloat",
+      "skill:code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-sse-handlers",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: SSE handlers",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "code-simplifier",
+      "skill:code-simplifier"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-voiceover-and-document-list-container-tests",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app bloat trim: voiceover and document list container tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "periodic-scans",
+      "web",
+      "test-surface",
+      "code-simplifier",
+      "skill:code-simplifier",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-03-periodic-scans-web-app-bloat-trim-voiceover-tests-round-2",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Web app test bloat cleanup: voiceover tests round 2",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:periodic-scans",
+      "area:web",
+      "quality:test-bloat",
+      "skill:code-simplifier"
     ],
     "eventFile": "events/2026-03.jsonl"
   },

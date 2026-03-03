@@ -74,6 +74,21 @@ describe('validateUrl', () => {
     });
   });
 
+  describe('credentialed URLs rejected', () => {
+    it('rejects URLs with embedded username/password', async () => {
+      const result = await Effect.runPromiseExit(
+        validateUrl('https://user:pass@example.com/secret'),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('InvalidUrlError');
+        expect((error as InvalidUrlError).message).toContain('credentials');
+      }
+    });
+  });
+
   describe('private IPs rejected', () => {
     it('rejects 127.0.0.1 (loopback)', async () => {
       const result = await Effect.runPromiseExit(
@@ -151,6 +166,35 @@ describe('validateUrl', () => {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error?._tag).toBe('InvalidUrlError');
       }
+    });
+  });
+
+  describe('DNS resolution checks', () => {
+    it('rejects hosts resolving to private IPs when strict DNS mode is enabled', async () => {
+      const result = await Effect.runPromiseExit(
+        validateUrl('https://example.com', {
+          enforceDnsResolution: true,
+          lookupHostAddresses: async () => ['10.10.0.10'],
+        }),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('InvalidUrlError');
+        expect((error as InvalidUrlError).message).toContain('resolves');
+      }
+    });
+
+    it('accepts hosts resolving to public IPs when strict DNS mode is enabled', async () => {
+      const result = await Effect.runPromise(
+        validateUrl('https://example.com/page', {
+          enforceDnsResolution: true,
+          lookupHostAddresses: async () => ['93.184.216.34'],
+        }),
+      );
+
+      expect(result.href).toBe('https://example.com/page');
     });
   });
 

@@ -12,7 +12,7 @@ import {
 } from '../lib/export';
 import { isSetupMode } from '../lib/status';
 import { PodcastDetail } from './podcast-detail';
-import { SetupWizardContainer } from './setup-wizard-container';
+import { SetupWizard } from './setup';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
   useKeyboardShortcut,
@@ -36,7 +36,6 @@ export function PodcastDetailContainer({
   podcastId,
 }: PodcastDetailContainerProps) {
   const { user } = useSessionGuard();
-  const currentUserId = user?.id ?? '';
 
   const { data: podcast } = usePodcast(podcastId);
 
@@ -53,7 +52,7 @@ export function PodcastDetailContainer({
   const settings = usePodcastSettings({ podcast });
 
   const initialDocuments = useMemo(
-    () => [...(podcast.documents ?? [])],
+    () => [...podcast.documents],
     [podcast.documents],
   );
 
@@ -69,7 +68,7 @@ export function PodcastDetailContainer({
     documentSelection,
   });
 
-  const { approve, revoke } = useApprovePodcast(podcastId, currentUserId);
+  const { approve, revoke } = useApprovePodcast(podcastId, user?.id);
 
   const isAdmin = useIsAdmin();
   const isApproved = podcast.approvedBy !== null;
@@ -100,7 +99,8 @@ export function PodcastDetailContainer({
   };
 
   const canExportAudio = !!podcast.audioUrl;
-  const canExportScript = scriptEditor.segments.length > 0;
+  const scriptSegments = scriptEditor.segments;
+  const canExportScript = scriptSegments.length > 0;
 
   const handleExportAudio = useCallback(() => {
     if (!podcast.audioUrl) return;
@@ -116,11 +116,11 @@ export function PodcastDetailContainer({
   }, [podcast.audioUrl, podcast.title, podcast.updatedAt]);
 
   const handleExportScript = useCallback(() => {
-    if (scriptEditor.segments.length === 0) return;
+    if (scriptSegments.length === 0) return;
     const markdown = buildPodcastScriptMarkdown({
       title: podcast.title,
       summary: podcast.summary ?? null,
-      segments: scriptEditor.segments,
+      segments: scriptSegments,
     });
     const fileName = buildDownloadFileName({
       title: podcast.title,
@@ -130,20 +130,15 @@ export function PodcastDetailContainer({
       date: podcast.updatedAt,
     });
     downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
-  }, [
-    podcast.summary,
-    podcast.title,
-    podcast.updatedAt,
-    scriptEditor.segments,
-  ]);
+  }, [podcast.summary, podcast.title, podcast.updatedAt, scriptSegments]);
 
   const handleCopyTranscript = useCallback(async () => {
-    if (scriptEditor.segments.length === 0) return;
+    if (scriptSegments.length === 0) return;
 
     const transcript = buildPodcastTranscriptMarkdown({
       title: podcast.title,
       summary: podcast.summary ?? null,
-      segments: scriptEditor.segments,
+      segments: scriptSegments,
     });
 
     try {
@@ -156,7 +151,7 @@ export function PodcastDetailContainer({
     } catch {
       toast.error('Failed to copy transcript');
     }
-  }, [podcast.summary, podcast.title, scriptEditor.segments]);
+  }, [podcast.summary, podcast.title, scriptSegments]);
 
   const [fullRegenerationConfirmOpen, setFullRegenerationConfirmOpen] =
     useState(false);
@@ -172,11 +167,6 @@ export function PodcastDetailContainer({
     void actions.handleSave();
   }, [actions]);
 
-  const handleConfirmFullRegeneration = useCallback(() => {
-    setFullRegenerationConfirmOpen(false);
-    void actions.handleSave();
-  }, [actions]);
-
   useKeyboardShortcut({
     key: 's',
     cmdOrCtrl: true,
@@ -187,7 +177,7 @@ export function PodcastDetailContainer({
   if (isSetupMode(podcast)) {
     return (
       <Suspense fallback={null}>
-        <SetupWizardContainer podcast={podcast} />
+        <SetupWizard podcast={podcast} />
       </Suspense>
     );
   }
@@ -221,7 +211,10 @@ export function PodcastDetailContainer({
         confirmText="Regenerate"
         variant="destructive"
         isLoading={actions.isSaving}
-        onConfirm={handleConfirmFullRegeneration}
+        onConfirm={() => {
+          setFullRegenerationConfirmOpen(false);
+          void actions.handleSave();
+        }}
       />
     </>
   );

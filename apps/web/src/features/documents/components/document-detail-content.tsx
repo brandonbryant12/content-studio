@@ -125,9 +125,7 @@ export function DocumentProcessingState({ source }: { source: string }) {
       className="flex flex-col items-center justify-center py-20 gap-4"
     >
       <Spinner className="w-8 h-8" />
-      <p className="text-muted-foreground text-sm">
-        {statusText}
-      </p>
+      <p className="text-muted-foreground text-sm">{statusText}</p>
     </div>
   );
 }
@@ -149,7 +147,7 @@ export function DocumentFailedState({
   );
   const statusText = isRetrying
     ? 'Retrying document processing'
-    : failureMessage ?? 'Processing failed';
+    : (failureMessage ?? 'Processing failed');
 
   return (
     <div

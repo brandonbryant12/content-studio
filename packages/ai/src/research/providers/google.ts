@@ -279,19 +279,24 @@ const makeGoogleDeepResearchService = (
     startResearch: (query: string) =>
       Effect.tryPromise({
         try: async () => {
-          const interaction = await genAI.interactions.create({
-            agent: DEEP_RESEARCH_MODEL,
-            input: query,
-            background: true,
-            agent_config: {
-              type: 'deep-research',
+          const interaction = await genAI.interactions.create(
+            {
+              agent: DEEP_RESEARCH_MODEL,
+              input: query,
+              background: true,
+              agent_config: {
+                type: 'deep-research',
+              },
             },
-          }, {
-            // Per-attempt timeout budget: Effect retry starts a fresh request.
-            timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
-            maxRetries: 0,
-            signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.deepResearchStart),
-          });
+            {
+              // Per-attempt timeout budget: Effect retry starts a fresh request.
+              timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
+              maxRetries: 0,
+              signal: AbortSignal.timeout(
+                PROVIDER_TIMEOUTS_MS.deepResearchStart,
+              ),
+            },
+          );
 
           return { interactionId: interaction.id };
         },
@@ -321,12 +326,18 @@ const makeGoogleDeepResearchService = (
       Effect.gen(function* () {
         const interaction = yield* Effect.tryPromise({
           try: () =>
-            genAI.interactions.get(interactionId, {}, {
-              // Per-attempt timeout budget: Effect retry starts a fresh request.
-              timeout: PROVIDER_TIMEOUTS_MS.deepResearchGet,
-              maxRetries: 0,
-              signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.deepResearchGet),
-            }),
+            genAI.interactions.get(
+              interactionId,
+              {},
+              {
+                // Per-attempt timeout budget: Effect retry starts a fresh request.
+                timeout: PROVIDER_TIMEOUTS_MS.deepResearchGet,
+                maxRetries: 0,
+                signal: AbortSignal.timeout(
+                  PROVIDER_TIMEOUTS_MS.deepResearchGet,
+                ),
+              },
+            ),
           catch: (error) =>
             new ResearchError({
               message:

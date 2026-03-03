@@ -13,12 +13,9 @@ export function configureProxy(): void {
     return;
   }
 
-  console.log(`[Proxy] Configuring proxy: ${proxyUrl}`);
-
-  // Corporate proxies often use their own CA
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  process.env.NODE_EXTRA_CA_CERTS = env.NODE_EXTRA_CA_CERTS!;
   console.log(
-    '[Proxy] Disabled TLS certificate verification (NODE_TLS_REJECT_UNAUTHORIZED=0)',
+    `[Proxy] Configuring proxy: ${maskProxyUrl(proxyUrl)} (NODE_EXTRA_CA_CERTS configured)`,
   );
 
   const proxyAgent = new ProxyAgent({
@@ -31,5 +28,19 @@ export function configureProxy(): void {
 
   if (env.NO_PROXY) {
     console.log(`[Proxy] NO_PROXY hosts: ${env.NO_PROXY}`);
+  }
+}
+
+function maskProxyUrl(value: string): string {
+  try {
+    const parsed = new URL(value);
+    if (!parsed.username && !parsed.password) {
+      return parsed.toString();
+    }
+    parsed.username = '***';
+    parsed.password = '***';
+    return parsed.toString();
+  } catch {
+    return '[invalid-proxy-url]';
   }
 }

@@ -11,7 +11,7 @@ type Infographic = RouterOutput['infographics']['get'];
  * Mutation to approve/revoke an infographic. Admin-only.
  * Optimistically updates `approvedBy` and `approvedAt`.
  */
-export function useApproveInfographic(infographicId: string, userId: string) {
+export function useApproveInfographic(infographicId: string, userId?: string) {
   const queryClient = useQueryClient();
   const queryKey = getInfographicQueryKey(infographicId);
 
@@ -22,7 +22,7 @@ export function useApproveInfographic(infographicId: string, userId: string) {
 
         const previous = queryClient.getQueryData<Infographic>(queryKey);
 
-        if (previous) {
+        if (previous && userId) {
           queryClient.setQueryData<Infographic>(queryKey, {
             ...previous,
             approvedBy: userId,

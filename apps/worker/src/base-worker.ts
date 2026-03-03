@@ -230,7 +230,8 @@ export const createWorker = <
   let loopFiber: Fiber.RuntimeFiber<void, unknown> | null = null;
   let activeJobsRef: Ref.Ref<number> | null = null;
   let jobScopeRef: CloseableScope | null = null;
-  let queueNotificationSubscription: QueueNotificationSubscription | null = null;
+  let queueNotificationSubscription: QueueNotificationSubscription | null =
+    null;
   let wakeRequested = true;
   let nextHeartbeatAt = Date.now();
 
@@ -248,16 +249,10 @@ export const createWorker = <
 
     return claimEffect.pipe(
       Effect.catchAll((err) =>
-        logAndSwallow(
-          `Error claiming ${claimableTypes.join(',')}`,
-          err,
-        ),
+        logAndSwallow(`Error claiming ${claimableTypes.join(',')}`, err),
       ),
       Effect.catchAllDefect((defect) =>
-        logAndSwallow(
-          `Defect claiming ${claimableTypes.join(',')}`,
-          defect,
-        ),
+        logAndSwallow(`Defect claiming ${claimableTypes.join(',')}`, defect),
       ),
     );
   };
@@ -396,9 +391,11 @@ export const createWorker = <
 
   const setupQueueWakeups = async () => {
     try {
-      queueNotificationSubscription = await subscribeToQueueNotifications(() => {
-        wakeRequested = true;
-      });
+      queueNotificationSubscription = await subscribeToQueueNotifications(
+        () => {
+          wakeRequested = true;
+        },
+      );
     } catch (error) {
       console.warn(
         `[${name}] Queue notification subscription failed, falling back to heartbeat polling:`,
@@ -461,7 +458,9 @@ export const createWorker = <
             Effect.catchAllDefect((defect) =>
               Effect.logError(
                 `${name} caught defect during poll: ${formatError(defect)}`,
-              ).pipe(Effect.as({ claimed: 0, capacity: 0 } satisfies PollResult)),
+              ).pipe(
+                Effect.as({ claimed: 0, capacity: 0 } satisfies PollResult),
+              ),
             ),
           );
 
@@ -476,7 +475,10 @@ export const createWorker = <
           } else {
             wakeRequested = pollResult.claimed >= pollResult.capacity;
           }
-        }).pipe(Effect.delay(WORKER_DEFAULTS.WAKE_POLL_TICK_MS), Effect.forever);
+        }).pipe(
+          Effect.delay(WORKER_DEFAULTS.WAKE_POLL_TICK_MS),
+          Effect.forever,
+        );
       }),
     ).pipe(
       Effect.annotateLogs('worker', name),

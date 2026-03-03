@@ -32,13 +32,12 @@ export function VoiceoverDetailContainer({
   voiceoverId,
 }: VoiceoverDetailContainerProps) {
   const { user } = useSessionGuard();
-  const currentUserId = user?.id ?? '';
 
   const { data: voiceover } = useVoiceover(voiceoverId);
 
   const settings = useVoiceoverSettings({ voiceover });
 
-  const { approve, revoke } = useApproveVoiceover(voiceoverId, currentUserId);
+  const { approve, revoke } = useApproveVoiceover(voiceoverId, user?.id);
 
   const actions = useVoiceoverActions({
     voiceoverId,
@@ -48,14 +47,6 @@ export function VoiceoverDetailContainer({
 
   const isAdmin = useIsAdmin();
   const isApproved = voiceover.approvedBy !== null;
-
-  const handleApprove = useCallback(() => {
-    approve.mutate({ id: voiceoverId });
-  }, [approve, voiceoverId]);
-
-  const handleRevoke = useCallback(() => {
-    revoke.mutate({ id: voiceoverId });
-  }, [revoke, voiceoverId]);
 
   const handleSave = useCallback(async () => {
     if (!settings.hasChanges) return;
@@ -104,55 +95,55 @@ export function VoiceoverDetailContainer({
   };
 
   const canExportAudio = !!voiceover.audioUrl;
-  const canExportScript = settings.text.trim().length > 0;
+  const trimmedText = settings.text.trim();
+  const canExportScript = trimmedText.length > 0;
+  const buildVoiceoverFileName = useCallback(
+    (extension: string, labels: string[]) =>
+      buildDownloadFileName({
+        title: voiceover.title,
+        extension,
+        fallbackSlug: 'voiceover',
+        labels,
+        date: voiceover.updatedAt,
+      }),
+    [voiceover.title, voiceover.updatedAt],
+  );
+  const getScriptExportContext = useCallback(() => {
+    if (!trimmedText) return null;
+    return {
+      title: voiceover.title,
+      text: settings.text,
+      voice: settings.voice,
+      voiceName: voiceover.voiceName,
+    };
+  }, [
+    trimmedText,
+    voiceover.title,
+    voiceover.voiceName,
+    settings.text,
+    settings.voice,
+  ]);
 
   const handleExportAudio = useCallback(() => {
     if (!voiceover.audioUrl) return;
     const extension = getFileExtensionFromUrl(voiceover.audioUrl, 'mp3');
-    const fileName = buildDownloadFileName({
-      title: voiceover.title,
-      extension,
-      fallbackSlug: 'voiceover',
-      labels: ['audio'],
-      date: voiceover.updatedAt,
-    });
+    const fileName = buildVoiceoverFileName(extension, ['audio']);
     downloadFromUrl(voiceover.audioUrl, fileName);
-  }, [voiceover.audioUrl, voiceover.title, voiceover.updatedAt]);
+  }, [voiceover.audioUrl, buildVoiceoverFileName]);
 
   const handleExportScript = useCallback(() => {
-    if (!settings.text.trim()) return;
+    const context = getScriptExportContext();
+    if (!context) return;
 
-    const script = buildVoiceoverTextExport({
-      title: voiceover.title,
-      text: settings.text,
-      voice: settings.voice,
-      voiceName: voiceover.voiceName,
-    });
-    const fileName = buildDownloadFileName({
-      title: voiceover.title,
-      extension: 'txt',
-      fallbackSlug: 'voiceover',
-      labels: ['script'],
-      date: voiceover.updatedAt,
-    });
+    const script = buildVoiceoverTextExport(context);
+    const fileName = buildVoiceoverFileName('txt', ['script']);
     downloadTextFile(script, fileName);
-  }, [
-    settings.text,
-    settings.voice,
-    voiceover.title,
-    voiceover.voiceName,
-    voiceover.updatedAt,
-  ]);
+  }, [getScriptExportContext, buildVoiceoverFileName]);
 
   const handleCopyTranscript = useCallback(async () => {
-    if (!settings.text.trim()) return;
-
-    const transcript = buildVoiceoverTranscriptMarkdown({
-      title: voiceover.title,
-      text: settings.text,
-      voice: settings.voice,
-      voiceName: voiceover.voiceName,
-    });
+    const context = getScriptExportContext();
+    if (!context) return;
+    const transcript = buildVoiceoverTranscriptMarkdown(context);
 
     try {
       const copied = await copyTextToClipboard(transcript);
@@ -164,7 +155,15 @@ export function VoiceoverDetailContainer({
     } catch {
       toast.error('Failed to copy transcript');
     }
-  }, [settings.text, settings.voice, voiceover.title, voiceover.voiceName]);
+  }, [getScriptExportContext]);
+
+  const handleApprove = useCallback(() => {
+    approve.mutate({ id: voiceoverId });
+  }, [approve, voiceoverId]);
+
+  const handleRevoke = useCallback(() => {
+    revoke.mutate({ id: voiceoverId });
+  }, [revoke, voiceoverId]);
 
   return (
     <VoiceoverDetail

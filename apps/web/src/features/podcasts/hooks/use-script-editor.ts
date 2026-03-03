@@ -37,6 +37,15 @@ function serializeSegments(segments: ScriptSegment[]): string {
   return JSON.stringify(segments);
 }
 
+function removeRecordKey<T>(
+  record: Record<string, T>,
+  key: string,
+): Record<string, T> {
+  if (!(key in record)) return record;
+  const { [key]: _removed, ...rest } = record;
+  return rest;
+}
+
 function segmentsEqual(a: ScriptSegment[], b: ScriptSegment[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
@@ -90,9 +99,7 @@ export function useScriptEditor({
         const next = updater(current);
 
         if (segmentsEqual(next, baselineSegments)) {
-          if (!(podcastId in prev)) return prev;
-          const { [podcastId]: _removed, ...rest } = prev;
-          return rest;
+          return removeRecordKey(prev, podcastId);
         }
 
         return {
@@ -170,11 +177,7 @@ export function useScriptEditor({
 
   const saveCurrentAsBaseline = useCallback(
     (nextSegments: ScriptSegment[]) => {
-      setDraftByPodcastId((prev) => {
-        if (!(podcastId in prev)) return prev;
-        const { [podcastId]: _removed, ...rest } = prev;
-        return rest;
-      });
+      setDraftByPodcastId((prev) => removeRecordKey(prev, podcastId));
       setOptimisticSavedByPodcastId((prev) => ({
         ...prev,
         [podcastId]: {
@@ -205,19 +208,9 @@ export function useScriptEditor({
     );
   }, [podcastId, segments, saveChangesMutation, saveCurrentAsBaseline]);
 
-  const discardChanges = useCallback(() => {
-    setDraftByPodcastId((prev) => {
-      if (!(podcastId in prev)) return prev;
-      const { [podcastId]: _removed, ...rest } = prev;
-      return rest;
-    });
-  }, [podcastId]);
-
-  const resetToSegments = useCallback(
-    (nextSegments: ScriptSegment[]) => {
-      saveCurrentAsBaseline(nextSegments);
-    },
-    [saveCurrentAsBaseline],
+  const discardChanges = useCallback(
+    () => setDraftByPodcastId((prev) => removeRecordKey(prev, podcastId)),
+    [podcastId],
   );
 
   return {
@@ -230,6 +223,6 @@ export function useScriptEditor({
     reorderSegments,
     saveChanges,
     discardChanges,
-    resetToSegments,
+    resetToSegments: saveCurrentAsBaseline,
   };
 }

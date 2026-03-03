@@ -87,6 +87,8 @@ vi.mock('@/clients/apiClient', () => ({
   apiClient: {},
 }));
 
+const AUTHENTICATED_SESSION = { data: { user: { id: 'user-123' } } };
+
 describe('SSEProvider', () => {
   let queryClient: QueryClient;
 
@@ -113,102 +115,94 @@ describe('SSEProvider', () => {
     queryClient.clear();
   });
 
-  describe('useSSEContext', () => {
-    it('throws error when used outside SSEProvider', () => {
-      expect(() => {
-        renderHook(() => useSSEContext(), {
-          wrapper: ({ children }) =>
-            createElement(
-              QueryClientProvider,
-              { client: queryClient },
-              children,
-            ),
-        });
-      }).toThrow('useSSEContext must be used within SSEProvider');
+  const setAuthenticated = () => {
+    mockUseSession.mockReturnValue(AUTHENTICATED_SESSION);
+  };
+
+  const renderWithSSEContext = () =>
+    renderHook(() => useSSEContext(), {
+      wrapper: createWrapper(),
     });
 
-    it('returns initial connection state', () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-      mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
-
-      const { result } = renderHook(() => useSSEContext(), {
-        wrapper: createWrapper(),
+  it('throws error when used outside SSEProvider', () => {
+    expect(() => {
+      renderHook(() => useSSEContext(), {
+        wrapper: ({ children }) =>
+          createElement(QueryClientProvider, { client: queryClient }, children),
       });
-
-      expect(result.current.connectionState).toBe('connecting');
-    });
+    }).toThrow('useSSEContext must be used within SSEProvider');
   });
 
-  describe('authentication-based enabling', () => {
-    it('does not connect when user is not authenticated', () => {
-      mockUseSession.mockReturnValue({ data: null });
+  it('returns initial connection state', () => {
+    const mock = createMockIterator();
+    mockSubscribe.mockResolvedValue(mock.iterator);
+    setAuthenticated();
 
-      renderHook(() => useSSEContext(), {
-        wrapper: createWrapper(),
-      });
+    const { result } = renderWithSSEContext();
 
-      expect(mockSubscribe).not.toHaveBeenCalled();
-    });
-
-    it('connects when user is authenticated', () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-      mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
-
-      renderHook(() => useSSEContext(), {
-        wrapper: createWrapper(),
-      });
-
-      expect(mockSubscribe).toHaveBeenCalled();
-    });
+    expect(result.current.connectionState).toBe('connecting');
   });
 
-  describe('useSSERecovery', () => {
-    it('invalidates all queries when reconnected after disconnection', async () => {
-      const mock1 = createMockIterator();
-      const mock2 = createMockIterator();
-      mockSubscribe
-        .mockResolvedValueOnce(mock1.iterator)
-        .mockResolvedValueOnce(mock2.iterator);
-      mockUseSession.mockReturnValue({ data: { user: { id: 'user-123' } } });
-      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+  it.each([
+    {
+      isAuthenticated: false,
+      session: { data: null },
+      expectedCalls: 0,
+    },
+    {
+      isAuthenticated: true,
+      session: AUTHENTICATED_SESSION,
+      expectedCalls: 1,
+    },
+  ])(
+    'connect behavior follows authentication (isAuthenticated=$isAuthenticated)',
+    ({ session, expectedCalls }) => {
+      if (expectedCalls === 1) {
+        const mock = createMockIterator();
+        mockSubscribe.mockResolvedValue(mock.iterator);
+      }
+      mockUseSession.mockReturnValue(session);
 
-      renderHook(
-        () => {
-          useSSEContext();
-          useSSERecovery();
-        },
-        { wrapper: createWrapper() },
-      );
+      renderWithSSEContext();
 
-      // Get connected first
-      await act(async () => {
-        mock1.push({ type: 'connected', userId: 'user-123' });
-      });
+      expect(mockSubscribe).toHaveBeenCalledTimes(expectedCalls);
+    },
+  );
 
-      // Clear calls from initial connection
-      invalidateSpy.mockClear();
+  it('invalidates all queries when reconnected after disconnection', async () => {
+    const mock1 = createMockIterator();
+    const mock2 = createMockIterator();
+    mockSubscribe
+      .mockResolvedValueOnce(mock1.iterator)
+      .mockResolvedValueOnce(mock2.iterator);
+    setAuthenticated();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      // Simulate disconnect by ending the stream
-      await act(async () => {
-        mock1.fail(new Error('Connection lost'));
-      });
+    renderHook(
+      () => {
+        useSSEContext();
+        useSSERecovery();
+      },
+      { wrapper: createWrapper() },
+    );
 
-      // Wait for reconnect delay
-      await act(async () => {
-        await new Promise((r) => setTimeout(r, 3000));
-      });
+    await act(async () => {
+      mock1.push({ type: 'connected', userId: 'user-123' });
+    });
+    invalidateSpy.mockClear();
 
-      // Simulate successful reconnection on new stream
-      await act(async () => {
-        mock2.push({ type: 'connected', userId: 'user-123' });
-      });
+    await act(async () => {
+      mock1.fail(new Error('Connection lost'));
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 3000));
+    });
+    await act(async () => {
+      mock2.push({ type: 'connected', userId: 'user-123' });
+    });
 
-      // The recovery hook should have invalidated queries
-      await waitFor(() => {
-        expect(invalidateSpy).toHaveBeenCalled();
-      });
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalled();
     });
   });
 });

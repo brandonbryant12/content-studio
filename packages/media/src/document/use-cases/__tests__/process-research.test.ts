@@ -1,6 +1,14 @@
-import { DeepResearch, type DeepResearchService } from '@repo/ai';
+import {
+  DeepResearch,
+  ResearchError,
+  type DeepResearchService,
+} from '@repo/ai';
 import { createMockLLM } from '@repo/ai/testing';
-import { DocumentStatus, generateJobId } from '@repo/db/schema';
+import {
+  DocumentStatus,
+  generateJobId,
+  type ResearchConfig,
+} from '@repo/db/schema';
 import { Queue, type QueueService } from '@repo/queue';
 import { createMockStorage } from '@repo/storage/testing';
 import {
@@ -368,7 +376,8 @@ describe('processResearch', () => {
 
         expect(result._tag).toBe('Failure');
         if (result._tag === 'Failure') {
-          const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+          const error =
+            result.cause._tag === 'Fail' ? result.cause.error : null;
           expect(error?._tag).toBe('ResearchTimeoutError');
           if (error?._tag === 'ResearchTimeoutError') {
             expect(error.documentId).toBe(doc.id);
@@ -391,6 +400,80 @@ describe('processResearch', () => {
         consoleLogSpy.mockRestore();
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe('error handling', () => {
+    it('marks research config as failed when provider polling errors', async () => {
+      const doc = createTestDocument({
+        source: 'research',
+        status: 'processing',
+        researchConfig: {
+          query: 'test query',
+          operationId: 'existing-op-123',
+          researchStatus: 'in_progress',
+        },
+      });
+
+      const researchConfigUpdates: ResearchConfig[] = [];
+      const statusUpdates: Array<{
+        status: DocumentStatus;
+        message?: string;
+      }> = [];
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo(),
+        createMockVoiceoverRepo(),
+        createMockInfographicRepo(),
+        createMockQueue(),
+        mockDocRepo({
+          findById: () => Effect.succeed(doc),
+          updateResearchConfig: (_id, config) =>
+            Effect.sync(() => {
+              researchConfigUpdates.push(config);
+              return doc;
+            }),
+          updateStatus: (_id, status, message) =>
+            Effect.sync(() => {
+              statusUpdates.push({ status, message });
+              return doc;
+            }),
+        }),
+        createMockActivityLogRepo(),
+        createMockDeepResearch({
+          getResult: () =>
+            Effect.fail(
+              new ResearchError({
+                message: 'Research operation was cancelled',
+              }),
+            ),
+        }),
+        createMockStorage(),
+        mockOutlineLLM(),
+      );
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(testUser)(
+          processResearch({
+            documentId: doc.id,
+            query: 'test query',
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      expect(researchConfigUpdates).toContainEqual(
+        expect.objectContaining({
+          query: 'test query',
+          operationId: 'existing-op-123',
+          researchStatus: 'failed',
+        }),
+      );
+      expect(statusUpdates).toContainEqual({
+        status: DocumentStatus.FAILED,
+        message: 'Research operation was cancelled',
+      });
     });
   });
 

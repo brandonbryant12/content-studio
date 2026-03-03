@@ -16,9 +16,8 @@ import {
   useVoiceoversOrdered,
   useCreateVoiceover,
 } from '@/features/voiceovers/hooks';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import { QueryErrorFallback } from '@/shared/components/query-error-fallback';
 import { useOnboardingDismissed } from '@/shared/hooks/use-onboarding-dismissed';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -27,7 +26,7 @@ export function DashboardContainer() {
   const { isDismissed, dismiss } = useOnboardingDismissed();
 
   const {
-    data: documents,
+    data: documents = [],
     isLoading: docsLoading,
     isError: docsError,
     error: docsErrorObj,
@@ -36,7 +35,7 @@ export function DashboardContainer() {
     orderBy: 'desc',
   });
   const {
-    data: podcasts,
+    data: podcasts = [],
     isLoading: podcastsLoading,
     isError: podcastsError,
     error: podcastsErrorObj,
@@ -45,14 +44,14 @@ export function DashboardContainer() {
     orderBy: 'desc',
   });
   const {
-    data: voiceovers,
+    data: voiceovers = [],
     isLoading: voiceoversLoading,
     isError: voiceoversError,
     error: voiceoversErrorObj,
     refetch: refetchVoiceovers,
   } = useVoiceoversOrdered({ orderBy: 'desc' });
   const {
-    data: infographics,
+    data: infographics = [],
     isLoading: infographicsLoading,
     isError: infographicsError,
     error: infographicsErrorObj,
@@ -88,13 +87,10 @@ export function DashboardContainer() {
       voiceoversErrorObj ??
       infographicsErrorObj;
     return (
-      <ErrorFallback
-        error={
-          firstError instanceof Error
-            ? firstError
-            : new Error(getErrorMessage(firstError, 'Failed to load dashboard'))
-        }
-        resetErrorBoundary={() => {
+      <QueryErrorFallback
+        error={firstError}
+        fallbackMessage="Failed to load dashboard"
+        onRetry={() => {
           refetchDocs();
           refetchPodcasts();
           refetchVoiceovers();
@@ -104,10 +100,10 @@ export function DashboardContainer() {
     );
   }
 
-  const docCount = documents?.length ?? 0;
-  const podcastCount = podcasts?.length ?? 0;
-  const voiceoverCount = voiceovers?.length ?? 0;
-  const infographicCount = infographics?.length ?? 0;
+  const docCount = documents.length;
+  const podcastCount = podcasts.length;
+  const voiceoverCount = voiceovers.length;
+  const infographicCount = infographics.length;
 
   const totalCount =
     docCount + podcastCount + voiceoverCount + infographicCount;
@@ -134,10 +130,10 @@ export function DashboardContainer() {
         infographics: infographicsLoading,
       }}
       recent={{
-        documents: documents?.slice(0, 5) ?? [],
-        podcasts: recentPodcasts(podcasts),
-        voiceovers: recentVoiceovers(voiceovers),
-        infographics: recentInfographics(infographics),
+        documents: documents.slice(0, 5),
+        podcasts: podcasts.slice(0, 5),
+        voiceovers: voiceovers.slice(0, 4),
+        infographics: infographics.slice(0, 4),
       }}
       createActions={{
         onCreatePodcast: () =>
@@ -164,37 +160,4 @@ export function DashboardContainer() {
       }}
     />
   );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Helpers — slice recent items from full lists                      */
-/* ------------------------------------------------------------------ */
-
-function recentPodcasts(
-  podcasts:
-    | ReadonlyArray<{ id: string; title: string; duration: number | null }>
-    | undefined,
-) {
-  return podcasts?.slice(0, 5) ?? [];
-}
-
-function recentVoiceovers(
-  voiceovers:
-    | ReadonlyArray<{
-        id: string;
-        title: string;
-        duration: number | null;
-        voiceName: string | null;
-      }>
-    | undefined,
-) {
-  return voiceovers?.slice(0, 4) ?? [];
-}
-
-function recentInfographics(
-  infographics:
-    | ReadonlyArray<{ id: string; title: string; format: string }>
-    | undefined,
-) {
-  return infographics?.slice(0, 4) ?? [];
 }

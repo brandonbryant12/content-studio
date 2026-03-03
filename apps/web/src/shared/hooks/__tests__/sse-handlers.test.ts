@@ -13,92 +13,63 @@ import {
   handleInfographicJobCompletion,
   handleActivityLogged,
 } from '../sse-handlers';
+import { getActivityListQueryKey } from '@/features/admin/hooks';
+import { getDocumentQueryKey } from '@/features/documents/hooks/use-document';
+import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
+import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
+import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
+import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
+import { getPersonaQueryKey } from '@/features/personas/hooks/use-persona';
+import { getPersonaListQueryKey } from '@/features/personas/hooks/use-persona-list';
+import { getPodcastQueryKey } from '@/features/podcasts/hooks/use-podcast';
+import { getPodcastListQueryKey } from '@/features/podcasts/hooks/use-podcast-list';
 
-// Mock the apiClient
-vi.mock('@/clients/apiClient', () => ({
-  apiClient: {
-    podcasts: {
-      get: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['podcasts', 'get', input.id],
-        })),
+vi.mock('@/clients/apiClient', () => {
+  const getEntityMocks = (entity: string) => ({
+    get: {
+      queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+        queryKey: [entity, 'get', input.id],
+      })),
+    },
+    list: {
+      queryOptions: vi.fn(() => ({
+        queryKey: [entity, 'list'],
+      })),
+    },
+  });
+
+  return {
+    apiClient: {
+      podcasts: getEntityMocks('podcasts'),
+      documents: getEntityMocks('documents'),
+      voiceovers: getEntityMocks('voiceovers'),
+      personas: getEntityMocks('personas'),
+      infographics: {
+        ...getEntityMocks('infographics'),
+        listVersions: {
+          queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
+            queryKey: ['infographics', 'versions', input.id],
+          })),
+        },
       },
-      list: {
-        queryOptions: vi.fn(() => ({
-          queryKey: ['podcasts', 'list'],
-        })),
+      admin: {
+        list: {
+          queryOptions: vi.fn(
+            ({ input }: { input?: Record<string, unknown> }) => ({
+              queryKey: [
+                {
+                  scope: 'activity',
+                  route: 'admin.list',
+                },
+                input ?? {},
+              ],
+            }),
+          ),
+        },
       },
     },
-    documents: {
-      get: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['documents', 'get', input.id],
-        })),
-      },
-      list: {
-        queryOptions: vi.fn(() => ({
-          queryKey: ['documents', 'list'],
-        })),
-      },
-    },
-    infographics: {
-      get: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['infographics', 'get', input.id],
-        })),
-      },
-      list: {
-        queryOptions: vi.fn(() => ({
-          queryKey: ['infographics', 'list'],
-        })),
-      },
-      listVersions: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['infographics', 'versions', input.id],
-        })),
-      },
-    },
-    voiceovers: {
-      get: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['voiceovers', 'get', input.id],
-        })),
-      },
-      list: {
-        queryOptions: vi.fn(() => ({
-          queryKey: ['voiceovers', 'list'],
-        })),
-      },
-    },
-    personas: {
-      get: {
-        queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
-          queryKey: ['personas', 'get', input.id],
-        })),
-      },
-      list: {
-        queryOptions: vi.fn(() => ({
-          queryKey: ['personas', 'list'],
-        })),
-      },
-    },
-    admin: {
-      list: {
-        queryOptions: vi.fn(
-          ({ input }: { input?: Record<string, unknown> }) => ({
-            queryKey: [
-              {
-                scope: 'activity',
-                route: 'admin.list',
-              },
-              input ?? {},
-            ],
-          }),
-        ),
-      },
-    },
-  },
-}));
+  };
+});
 
 vi.mock('sonner', () => ({
   toast: {
@@ -111,6 +82,34 @@ const setPathname = (pathname: string) => {
   window.history.replaceState({}, '', pathname);
 };
 
+const flushMicrotasks = async () => {
+  await Promise.resolve();
+};
+
+const createJobEvent = (
+  overrides: Partial<JobCompletionEvent>,
+): JobCompletionEvent => ({
+  type: 'job_completion',
+  jobId: 'job-123',
+  jobType: 'generate-podcast',
+  status: 'completed',
+  podcastId: 'podcast-456',
+  ...overrides,
+});
+
+const createEntityChangeEvent = (
+  entityType: EntityChangeEvent['entityType'] | 'persona',
+  changeType: EntityChangeEvent['changeType'],
+  entityId: string,
+): EntityChangeEvent => ({
+  type: 'entity_change',
+  entityType: entityType as EntityChangeEvent['entityType'],
+  changeType,
+  entityId,
+  userId: 'user-456',
+  timestamp: new Date().toISOString(),
+});
+
 describe('SSE Handlers', () => {
   let queryClient: QueryClient;
 
@@ -121,94 +120,43 @@ describe('SSE Handlers', () => {
       },
     });
     vi.clearAllMocks();
+    setPathname('/');
   });
 
   describe('handleJobCompletion', () => {
     it('invalidates podcast query for the specific podcast', () => {
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-podcast',
-        status: 'completed',
-        podcastId: 'podcast-456',
-      };
-
-      handleJobCompletion(event, queryClient);
+      handleJobCompletion(createJobEvent({}), queryClient);
 
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['podcasts', 'get', 'podcast-456'],
+        queryKey: getPodcastQueryKey('podcast-456'),
       });
     });
 
-    it('invalidates podcasts list for generate-podcast job', () => {
-      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    it.each(['generate-podcast', 'generate-script', 'generate-audio'] as const)(
+      'invalidates podcasts list for %s job',
+      (jobType) => {
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-podcast',
-        status: 'completed',
-        podcastId: 'podcast-456',
-      };
+        handleJobCompletion(createJobEvent({ jobType }), queryClient);
 
-      handleJobCompletion(event, queryClient);
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['podcasts', 'list'],
-      });
-    });
-
-    it('invalidates podcasts list for generate-script job', () => {
-      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-script',
-        status: 'completed',
-        podcastId: 'podcast-456',
-      };
-
-      handleJobCompletion(event, queryClient);
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['podcasts', 'list'],
-      });
-    });
-
-    it('invalidates podcasts list for generate-audio job', () => {
-      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-audio',
-        status: 'completed',
-        podcastId: 'podcast-456',
-      };
-
-      handleJobCompletion(event, queryClient);
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['podcasts', 'list'],
-      });
-    });
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: getPodcastListQueryKey(),
+        });
+      },
+    );
 
     it('handles failed job status the same way', () => {
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-podcast',
-        status: 'failed',
-        podcastId: 'podcast-456',
-        error: 'Something went wrong',
-      };
-
-      handleJobCompletion(event, queryClient);
+      handleJobCompletion(
+        createJobEvent({
+          status: 'failed',
+          error: 'Something went wrong',
+        }),
+        queryClient,
+      );
 
       expect(invalidateSpy).toHaveBeenCalledTimes(2);
     });
@@ -219,20 +167,17 @@ describe('SSE Handlers', () => {
         .mockResolvedValue({ title: 'Audio Regen' });
 
       handleJobCompletion(
-        {
-          type: 'job_completion',
-          jobId: 'job-123',
-          jobType: 'generate-audio',
-          status: 'completed',
-          podcastId: 'podcast-456',
-        },
+        createJobEvent({ jobType: 'generate-audio' }),
         queryClient,
       );
 
-      await Promise.resolve();
+      await flushMicrotasks();
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      expect(toast.success).toHaveBeenCalledWith('Podcast "Audio Regen" is ready', {});
+      expect(toast.success).toHaveBeenCalledWith(
+        'Podcast "Audio Regen" is ready',
+        {},
+      );
     });
 
     it('notifies on generate-script job failure with error', async () => {
@@ -241,24 +186,19 @@ describe('SSE Handlers', () => {
         .mockResolvedValue({ title: 'Script Pass' });
 
       handleJobCompletion(
-        {
-          type: 'job_completion',
+        createJobEvent({
           jobId: 'job-124',
           jobType: 'generate-script',
           status: 'failed',
-          podcastId: 'podcast-456',
           error: 'Script step failed',
-        },
+        }),
         queryClient,
       );
 
-      await Promise.resolve();
+      await flushMicrotasks();
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      expect(toast.error).toHaveBeenCalledWith(
-        'Script step failed',
-        {},
-      );
+      expect(toast.error).toHaveBeenCalledWith('Script step failed', {});
     });
 
     it('suppresses notifications when user is already viewing the podcast', async () => {
@@ -268,17 +208,11 @@ describe('SSE Handlers', () => {
       });
 
       handleJobCompletion(
-        {
-          type: 'job_completion',
-          jobId: 'job-125',
-          jobType: 'generate-audio',
-          status: 'completed',
-          podcastId: 'podcast-456',
-        },
+        createJobEvent({ jobId: 'job-125', jobType: 'generate-audio' }),
         queryClient,
       );
 
-      await Promise.resolve();
+      await flushMicrotasks();
 
       expect(toast.success).not.toHaveBeenCalled();
       expect(toast.error).not.toHaveBeenCalled();
@@ -299,202 +233,94 @@ describe('SSE Handlers', () => {
       handleInfographicJobCompletion(event, queryClient);
 
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['infographics', 'get', 'infographic-456'],
+        queryKey: getInfographicQueryKey('infographic-456'),
       });
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['infographics', 'list'],
+        queryKey: getInfographicListQueryKey(),
       });
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['infographics', 'versions', 'infographic-456'],
+        queryKey: getInfographicVersionsQueryKey('infographic-456'),
       });
     });
   });
 
   describe('handleEntityChange', () => {
-    describe('podcast changes', () => {
-      it('invalidates podcast query on update', () => {
+    it.each([
+      {
+        name: 'podcast update',
+        event: createEntityChangeEvent('podcast', 'update', 'podcast-123'),
+        expectedQueryKeys: [getPodcastQueryKey('podcast-123')],
+      },
+      {
+        name: 'podcast insert',
+        event: createEntityChangeEvent('podcast', 'insert', 'podcast-123'),
+        expectedQueryKeys: [
+          getPodcastQueryKey('podcast-123'),
+          getPodcastListQueryKey(),
+        ],
+      },
+      {
+        name: 'podcast delete',
+        event: createEntityChangeEvent('podcast', 'delete', 'podcast-123'),
+        expectedQueryKeys: [
+          getPodcastQueryKey('podcast-123'),
+          getPodcastListQueryKey(),
+        ],
+      },
+      {
+        name: 'document update',
+        event: createEntityChangeEvent('document', 'update', 'doc-123'),
+        expectedQueryKeys: [getDocumentQueryKey('doc-123')],
+      },
+      {
+        name: 'document insert',
+        event: createEntityChangeEvent('document', 'insert', 'doc-123'),
+        expectedQueryKeys: [
+          getDocumentQueryKey('doc-123'),
+          getDocumentListQueryKey(),
+        ],
+      },
+      {
+        name: 'document delete',
+        event: createEntityChangeEvent('document', 'delete', 'doc-123'),
+        expectedQueryKeys: [
+          getDocumentQueryKey('doc-123'),
+          getDocumentListQueryKey(),
+        ],
+      },
+      {
+        name: 'infographic update',
+        event: createEntityChangeEvent(
+          'infographic',
+          'update',
+          'infographic-123',
+        ),
+        expectedQueryKeys: [
+          getInfographicQueryKey('infographic-123'),
+          getInfographicVersionsQueryKey('infographic-123'),
+        ],
+      },
+      {
+        name: 'persona insert',
+        event: createEntityChangeEvent('persona', 'insert', 'persona-123'),
+        expectedQueryKeys: [
+          getPersonaQueryKey('persona-123'),
+          getPersonaListQueryKey(),
+        ],
+      },
+    ])(
+      'invalidates expected queries for $name',
+      ({ event, expectedQueryKeys }) => {
         const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'podcast',
-          changeType: 'update',
-          entityId: 'podcast-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
 
         handleEntityChange(event, queryClient);
 
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['podcasts', 'get', 'podcast-123'],
+        expectedQueryKeys.forEach((queryKey) => {
+          expect(invalidateSpy).toHaveBeenCalledWith({ queryKey });
         });
-        expect(invalidateSpy).toHaveBeenCalledTimes(1);
-      });
-
-      it('invalidates podcast query and list on insert', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'podcast',
-          changeType: 'insert',
-          entityId: 'podcast-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['podcasts', 'get', 'podcast-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['podcasts', 'list'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(2);
-      });
-
-      it('invalidates podcast query and list on delete', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'podcast',
-          changeType: 'delete',
-          entityId: 'podcast-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['podcasts', 'get', 'podcast-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['podcasts', 'list'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(2);
-      });
-    });
-
-    describe('document changes', () => {
-      it('invalidates document query on update', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'document',
-          changeType: 'update',
-          entityId: 'doc-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['documents', 'get', 'doc-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(1);
-      });
-
-      it('invalidates document query and list on insert', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'document',
-          changeType: 'insert',
-          entityId: 'doc-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['documents', 'get', 'doc-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['documents', 'list'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(2);
-      });
-
-      it('invalidates document query and list on delete', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'document',
-          changeType: 'delete',
-          entityId: 'doc-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['documents', 'get', 'doc-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['documents', 'list'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(2);
-      });
-    });
-
-    describe('infographic changes', () => {
-      it('invalidates infographic query and versions on update', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event: EntityChangeEvent = {
-          type: 'entity_change',
-          entityType: 'infographic',
-          changeType: 'update',
-          entityId: 'infographic-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['infographics', 'get', 'infographic-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['infographics', 'versions', 'infographic-123'],
-        });
-      });
-    });
-
-    describe('persona changes', () => {
-      it('invalidates persona query and list on insert', () => {
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-        const event = {
-          type: 'entity_change',
-          entityType: 'persona',
-          changeType: 'insert',
-          entityId: 'persona-123',
-          userId: 'user-456',
-          timestamp: new Date().toISOString(),
-        };
-
-        handleEntityChange(event as EntityChangeEvent, queryClient);
-
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['personas', 'get', 'persona-123'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledWith({
-          queryKey: ['personas', 'list'],
-        });
-        expect(invalidateSpy).toHaveBeenCalledTimes(2);
-      });
-    });
+        expect(invalidateSpy).toHaveBeenCalledTimes(expectedQueryKeys.length);
+      },
+    );
   });
 
   describe('handleActivityLogged', () => {
@@ -514,12 +340,7 @@ describe('SSE Handlers', () => {
       handleActivityLogged(event, queryClient);
 
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [
-          {
-            scope: 'activity',
-            route: 'admin.list',
-          },
-        ],
+        queryKey: getActivityListQueryKey().slice(0, 1),
       });
       expect(invalidateSpy).toHaveBeenCalledTimes(1);
     });

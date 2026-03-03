@@ -28,8 +28,7 @@ export const createDocument = (input: CreateDocumentInput) =>
     const storage = yield* Storage;
     const documentRepo = yield* DocumentRepo;
 
-    const { userId, ...data } = input;
-    const ownerId = userId ?? user.id;
+    const { userId = user.id, ...data } = input;
 
     const contentKey = `documents/${crypto.randomUUID()}.txt`;
     const contentBuffer = Buffer.from(data.content, 'utf-8');
@@ -46,7 +45,7 @@ export const createDocument = (input: CreateDocumentInput) =>
         source: 'manual',
         originalFileSize: contentBuffer.length,
         metadata: sanitizeMetadata(data.metadata),
-        createdBy: ownerId,
+        createdBy: userId,
       })
       .pipe(
         Effect.tapError(() => storage.delete(contentKey).pipe(Effect.ignore)),

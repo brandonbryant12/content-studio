@@ -57,6 +57,22 @@ graph TD
 | Frontend | All hooks and interactive components | RTL + vitest |
 | E2E | Critical user flows only | Login, create, generate |
 
+## Anti-Bloat Rules
+<!-- enforced-by: manual-review -->
+
+1. One test per behavior branch, not one test per assertion detail.
+2. Avoid cross-layer duplication:
+   Keep deep state-transition checks in workflow tests, not repeated in unit + integration + E2E.
+3. Prefer shared coverage checks:
+   For each router, keep one shared authentication check and one shared response-format check.
+4. Remove low-signal tests:
+   Do not keep tests that only render/click without asserting user-visible outcomes.
+5. Use table-driven tests (`it.each`) for matrix-like permutations to reduce boilerplate.
+6. Use shared test utilities/factories before creating inline mocks in each file.
+7. Replace arbitrary sleeps with deterministic waits/assertions.
+8. If a test failure would not identify a user-impacting regression, delete or merge that test.
+9. Do not add tests for compile-time guarantees from TypeScript/Effect typing alone; only test runtime behavior and runtime validation boundaries.
+
 ## Test File Locations
 
 | Test Type | Path Pattern |

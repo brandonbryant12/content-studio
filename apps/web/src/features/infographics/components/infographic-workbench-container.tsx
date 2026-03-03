@@ -332,8 +332,7 @@ function resolveVersionViewState(
   const selectedVersion = selectedVersionId
     ? (versions.find((version) => version.id === selectedVersionId) ?? null)
     : null;
-  const latestVersion =
-    versions.length > 0 ? (versions[versions.length - 1] ?? null) : null;
+  const latestVersion = versions[versions.length - 1] ?? null;
   const latestVersionNumber = latestVersion?.versionNumber ?? null;
   const isViewingHistoricalVersion =
     selectedVersion !== null && selectedVersion.id !== latestVersion?.id;
@@ -358,17 +357,13 @@ export function InfographicWorkbenchContainer({
   infographicId,
 }: InfographicWorkbenchContainerProps) {
   const { user } = useSessionGuard();
-  const currentUserId = user?.id ?? '';
   const isAdmin = useIsAdmin();
 
   const queryClient = useQueryClient();
   const { data: infographic } = useInfographic(infographicId);
   const settings = useInfographicSettings({ infographic });
 
-  const { approve, revoke } = useApproveInfographic(
-    infographicId,
-    currentUserId,
-  );
+  const { approve, revoke } = useApproveInfographic(infographicId, user?.id);
   const isApproved = infographic.approvedBy !== null;
   const isApprovalPending = approve.isPending || revoke.isPending;
 
@@ -389,9 +384,10 @@ export function InfographicWorkbenchContainer({
   );
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
+  const trimmedTitleDraft = titleDraft?.trim() ?? null;
   const editedTitle = titleDraft ?? infographic.title;
   const hasTitleChange =
-    titleDraft !== null && titleDraft.trim() !== infographic.title;
+    trimmedTitleDraft !== null && trimmedTitleDraft !== infographic.title;
 
   const titleMutation = useMutation(
     apiClient.infographics.update.mutationOptions({
@@ -448,11 +444,6 @@ export function InfographicWorkbenchContainer({
   const hasUnsavedChanges =
     actions.hasChanges || hasPromptDraft || hasTitleChange;
 
-  const getPromptOverride = useCallback(() => {
-    if (!hasExistingImage) return undefined;
-    return iterationPrompt.trim().length > 0 ? iterationPrompt : undefined;
-  }, [hasExistingImage, iterationPrompt]);
-
   const handlePromptChange = useCallback(
     (nextPrompt: string) => {
       if (hasExistingImage) {
@@ -465,12 +456,17 @@ export function InfographicWorkbenchContainer({
   );
 
   const handleSave = useCallback(async () => {
+    const promptOverride =
+      hasExistingImage && iterationPrompt.trim().length > 0
+        ? iterationPrompt
+        : undefined;
+
     try {
-      await actions.handleSave(getPromptOverride());
-      if (hasTitleChange) {
+      await actions.handleSave(promptOverride);
+      if (hasTitleChange && trimmedTitleDraft !== null) {
         titleMutation.mutate({
           id: infographicId,
-          title: titleDraft!.trim(),
+          title: trimmedTitleDraft,
         });
       }
     } catch {
@@ -478,15 +474,19 @@ export function InfographicWorkbenchContainer({
     }
   }, [
     actions,
-    getPromptOverride,
+    hasExistingImage,
+    iterationPrompt,
     hasTitleChange,
+    trimmedTitleDraft,
     titleMutation,
     infographicId,
-    titleDraft,
   ]);
 
   const handleGenerate = useCallback(async () => {
-    const promptOverride = getPromptOverride();
+    const promptOverride =
+      hasExistingImage && iterationPrompt.trim().length > 0
+        ? iterationPrompt
+        : undefined;
 
     try {
       await actions.handleGenerate(promptOverride);
@@ -497,7 +497,7 @@ export function InfographicWorkbenchContainer({
     } catch {
       // Errors are surfaced in mutation toasts.
     }
-  }, [actions, getPromptOverride, hasExistingImage, setIterationPrompt]);
+  }, [actions, hasExistingImage, iterationPrompt, setIterationPrompt]);
 
   // Keyboard shortcuts
   useKeyboardShortcut({

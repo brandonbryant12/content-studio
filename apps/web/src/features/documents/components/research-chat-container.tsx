@@ -34,13 +34,6 @@ export function ResearchChatContainer({
     [onOpenChange, chat],
   );
 
-  const handleSendMessage = useCallback(
-    (text: string) => {
-      chat.sendMessage({ text });
-    },
-    [chat],
-  );
-
   const handleStartResearch = useCallback(() => {
     if (chat.messages.length === 0 || isStartingResearch) return;
 
@@ -73,7 +66,7 @@ export function ResearchChatContainer({
       canStartResearch={chat.canStartResearch}
       autoStartReady={chat.shouldAutoStart}
       startError={startError}
-      onSendMessage={handleSendMessage}
+      onSendMessage={(text) => chat.sendMessage({ text })}
       onStartResearch={handleStartResearch}
       isStartingResearch={isStartingResearch}
       autoGeneratePodcast={autoGeneratePodcast}

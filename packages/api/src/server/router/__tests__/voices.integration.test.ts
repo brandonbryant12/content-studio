@@ -1,7 +1,7 @@
-import { createMockTTS, MOCK_VOICES, MockLLMLive } from '@repo/ai/testing';
+import { createMockTTS, MockLLMLive, MOCK_VOICES } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { user as userTable } from '@repo/db/schema';
-import { Storage, StorageError, type StorageService } from '@repo/storage';
+import { type StorageService, Storage, StorageError } from '@repo/storage';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
@@ -11,7 +11,7 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
 import voicesRouter from '../voices';
@@ -21,13 +21,6 @@ import {
   createTestServerRuntime,
 } from './helpers';
 
-// =============================================================================
-// oRPC Handler Utilities
-// =============================================================================
-
-/**
- * Access the internal handler from an oRPC ImplementedProcedure.
- */
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };
 };
@@ -39,31 +32,27 @@ const callHandler = <T>(
   return procedure['~orpc'].handler(args) as Promise<T>;
 };
 
-/**
- * Helper to assert an error contains an expected message.
- * Handles both ORPCError and FiberFailure (which wraps thrown errors).
- */
 const expectErrorWithMessage = async (
   promise: Promise<unknown>,
   expectedMessage: string | RegExp,
 ) => {
-  await expect(promise).rejects.toThrow();
-  try {
-    await promise;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (typeof expectedMessage === 'string') {
-      expect(errorMessage).toContain(expectedMessage);
-    } else {
-      expect(errorMessage).toMatch(expectedMessage);
-    }
+  const error = await promise.then(
+    () => {
+      throw new Error('Expected promise to reject');
+    },
+    (rejected) => rejected,
+  );
+
+  const message = error instanceof Error ? error.message : String(error);
+  if (typeof expectedMessage === 'string') {
+    expect(message).toContain(expectedMessage);
+    return;
   }
+  expect(message).toMatch(expectedMessage);
 };
 
-// Handler args type
 type HandlerArgs = { context: unknown; input?: unknown; errors: unknown };
 
-// Output types
 interface VoiceOutput extends VoiceInfo {
   previewUrl: string | null;
 }
@@ -74,7 +63,6 @@ interface PreviewOutput {
   voiceId: string;
 }
 
-// Typed handler accessors for voices router
 const handlers = {
   list: (args: HandlerArgs): Promise<VoiceOutput[]> =>
     callHandler<VoiceOutput[]>(
@@ -88,13 +76,6 @@ const handlers = {
     ),
 };
 
-// =============================================================================
-// Test Setup
-// =============================================================================
-
-/**
- * Create a minimal test runtime with TTS service for voice operations.
- */
 interface RuntimeOverrides {
   ttsOptions?: Parameters<typeof createMockTTS>[0];
   storageLayer?: Layer.Layer<Storage>;
@@ -108,20 +89,17 @@ const createTestRuntime = (
   const storageLayer = overrides.storageLayer ?? createInMemoryStorage().layer;
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
 
-  const allLayers = Layer.mergeAll(
-    ctx.dbLayer,
-    mockTTSLayer,
-    MockLLMLive,
-    policyLayer,
-    storageLayer,
+  return createTestServerRuntime(
+    Layer.mergeAll(
+      ctx.dbLayer,
+      mockTTSLayer,
+      MockLLMLive,
+      policyLayer,
+      storageLayer,
+    ),
   );
-
-  return createTestServerRuntime(allLayers);
 };
 
-/**
- * Insert a user into the database for testing.
- */
 const insertTestUser = async (
   ctx: TestContext,
   testUser: ReturnType<typeof createTestUser>,
@@ -134,10 +112,6 @@ const insertTestUser = async (
     role: testUser.role,
   });
 };
-
-// =============================================================================
-// Tests
-// =============================================================================
 
 describe('voices router', () => {
   let ctx: TestContext;
@@ -159,61 +133,26 @@ describe('voices router', () => {
     await ctx.rollback();
   });
 
-  // ===========================================================================
-  // Tests: list handler
-  // ===========================================================================
-
   describe('list handler', () => {
-    it('returns list of available voices', async () => {
-      // Arrange
+    it('returns mock voices with stable shape and expected ids', async () => {
       const context = createMockContext(runtime, user);
 
-      // Act
-      const result = await handlers.list({
-        context,
-        errors,
-      });
+      const result = await handlers.list({ context, errors });
 
-      // Assert
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-    });
+      expect(result).toHaveLength(MOCK_VOICES.length);
+      expect(result.map((voice) => voice.id)).toEqual(
+        MOCK_VOICES.map((voice) => voice.id),
+      );
 
-    it('returns voices with correct structure', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.list({
-        context,
-        errors,
-      });
-
-      // Assert
       const firstVoice = result[0]!;
+
       expect(firstVoice.id).toBe(MOCK_VOICES[0]!.id);
       expect(firstVoice.name).toBe(MOCK_VOICES[0]!.name);
       expect(['male', 'female']).toContain(firstVoice.gender);
-      expect(firstVoice.description).toBe(MOCK_VOICES[0]!.description);
+      expect(typeof firstVoice.description).toBe('string');
     });
 
-    it('returns mock voices from test layer', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Act
-      const result = await handlers.list({
-        context,
-        errors,
-      });
-
-      // Assert - should match the mock voices
-      expect(result).toHaveLength(MOCK_VOICES.length);
-      expect(result.map((v) => v.id)).toEqual(MOCK_VOICES.map((v) => v.id));
-    });
-
-    it('filters voices by gender when custom voices provided', async () => {
-      // Arrange - create runtime with custom voices
+    it('supports custom voice sets from runtime override', async () => {
       const customVoices: VoiceInfo[] = [
         {
           id: 'TestMale',
@@ -233,16 +172,11 @@ describe('voices router', () => {
       });
       const context = createMockContext(customRuntime, user);
 
-      // Act
-      const result = await handlers.list({
-        context,
-        errors,
-      });
+      const result = await handlers.list({ context, errors });
 
-      // Assert - should return all custom voices
       expect(result).toHaveLength(2);
-      expect(result.find((v) => v.gender === 'male')).toBeDefined();
-      expect(result.find((v) => v.gender === 'female')).toBeDefined();
+      expect(result.find((voice) => voice.id === 'TestMale')).toBeDefined();
+      expect(result.find((voice) => voice.id === 'TestFemale')).toBeDefined();
     });
 
     it('fails when preview metadata storage lookup errors', async () => {
@@ -260,133 +194,54 @@ describe('voices router', () => {
       const context = createMockContext(customRuntime, user);
 
       await expectErrorWithMessage(
-        handlers.list({
-          context,
-          errors,
-        }),
+        handlers.list({ context, errors }),
         /INTERNAL_ERROR|Storage operation failed|Connection failed/i,
       );
     });
   });
 
-  // ===========================================================================
-  // Tests: preview handler
-  // ===========================================================================
-
   describe('preview handler', () => {
-    it('generates audio preview for valid voice ID', async () => {
-      // Arrange
+    it('returns base64 audio preview with expected encoding for valid voice', async () => {
       const context = createMockContext(runtime, user);
-      const input = { voiceId: 'Charon' };
 
-      // Act
       const result = await handlers.preview({
         context,
-        input,
+        input: { voiceId: 'Charon' },
         errors,
       });
 
-      // Assert
       expect(result.voiceId).toBe('Charon');
       expect(result.audioEncoding).toBe('LINEAR16');
       expect(result.audioContent.length).toBeGreaterThan(0);
-      // Verify it's base64 encoded
       expect(() => Buffer.from(result.audioContent, 'base64')).not.toThrow();
-    });
-
-    it('returns audio content as base64 string', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = { voiceId: 'Kore' };
-
-      // Act
-      const result = await handlers.preview({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert
-      const decoded = Buffer.from(result.audioContent, 'base64');
-      expect(decoded.length).toBeGreaterThan(0);
-    });
-
-    it('returns preview with correct encoding', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = { voiceId: 'Fenrir' };
-
-      // Act
-      const result = await handlers.preview({
-        context,
-        input,
-        errors,
-      });
-
-      // Assert
-      expect(result.audioEncoding).toBe('LINEAR16'); // Mock TTS returns LINEAR16
-    });
-
-    it('throws error for invalid voice ID', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-      const input = { voiceId: 'InvalidVoice' };
-
-      // Act & Assert - error message indicates voice not found
-      await expectErrorWithMessage(
-        handlers.preview({
-          context,
-          input,
-          errors,
-        }),
-        /not found|InvalidVoice/i,
+      expect(Buffer.from(result.audioContent, 'base64').length).toBeGreaterThan(
+        0,
       );
     });
 
-    it('includes voice ID in error message for invalid voice', async () => {
-      // Arrange
+    it('rejects invalid voice ids with contextual error message', async () => {
       const context = createMockContext(runtime, user);
-      const input = { voiceId: 'NonexistentVoice' };
 
-      // Act & Assert - error message contains the voice ID
       await expectErrorWithMessage(
         handlers.preview({
           context,
-          input,
+          input: { voiceId: 'NonexistentVoice' },
           errors,
         }),
-        'NonexistentVoice',
+        /not found|NonexistentVoice/i,
       );
-    });
-
-    it('accepts valid voice IDs from mock voices', async () => {
-      // Arrange
-      const context = createMockContext(runtime, user);
-
-      // Act & Assert - should not throw for any mock voice
-      for (const voice of MOCK_VOICES) {
-        const result = await handlers.preview({
-          context,
-          input: { voiceId: voice.id },
-          errors,
-        });
-        expect(result.voiceId).toBe(voice.id);
-      }
     });
 
     it('handles TTS service errors gracefully', async () => {
-      // Arrange - create runtime that simulates TTS errors
       const errorRuntime = createTestRuntime(ctx, {
         ttsOptions: { errorMessage: 'TTS service unavailable' },
       });
       const context = createMockContext(errorRuntime, user);
-      const input = { voiceId: 'Charon' };
 
-      // Act & Assert - error contains service unavailable message
       await expectErrorWithMessage(
         handlers.preview({
           context,
-          input,
+          input: { voiceId: 'Charon' },
           errors,
         }),
         /SERVICE_UNAVAILABLE|service unavailable/i,

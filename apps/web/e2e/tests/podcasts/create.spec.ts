@@ -18,23 +18,6 @@ authenticatedTest.describe('Create Podcast', () => {
     },
   );
 
-  // Skip: SSE sync timing makes this test flaky when running in parallel
-  // The delete API call doesn't immediately propagate to the client via SSE
-  authenticatedTest.skip(
-    'shows empty state when no podcasts',
-    async ({ podcastsPage, api, page }) => {
-      // Clean up any existing podcasts
-      await api.deleteAllPodcasts();
-      // Hard refresh to get fresh data
-      await page.goto('/podcasts', { waitUntil: 'networkidle' });
-      // Wait for data to propagate
-      await page.waitForTimeout(1000);
-      // Reload to get fresh data
-      await page.reload({ waitUntil: 'networkidle' });
-      await podcastsPage.expectEmpty();
-    },
-  );
-
   authenticatedTest(
     'can create new podcast',
     async ({ podcastsPage, page }) => {
@@ -54,20 +37,4 @@ authenticatedTest.describe('Create Podcast', () => {
       await expect(page).toHaveURL(/\/podcasts\/.+/);
     },
   );
-});
-
-authenticatedTest.describe('Podcast List', () => {
-  authenticatedTest('can search podcasts', async ({ podcastsPage }) => {
-    await podcastsPage.goto();
-    await podcastsPage.search('test');
-    // Search should filter the list
-    await podcastsPage.page.waitForTimeout(300); // Debounce wait
-  });
-
-  authenticatedTest('can clear search', async ({ podcastsPage }) => {
-    await podcastsPage.goto();
-    await podcastsPage.search('test');
-    await podcastsPage.clearSearch();
-    // Should show all podcasts again
-  });
 });

@@ -32,30 +32,29 @@ export const listDocuments = (input: ListDocumentsInput) =>
     const documentRepo = yield* DocumentRepo;
 
     const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
-
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
+    const spanAttributes: Record<string, string | number> = {
+      'pagination.limit': limit,
+      'pagination.offset': offset,
+      ...(input.userId ? { 'filter.userId': input.userId } : {}),
+    };
+    const listOptions = {
+      createdBy,
+      source: input.source,
+      status: input.status,
+      limit,
+      offset,
+    };
+
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: createdBy ?? user.id,
-      attributes: {
-        ...(input.userId ? { 'filter.userId': input.userId } : {}),
-        'pagination.limit': limit,
-        'pagination.offset': offset,
-      },
+      attributes: spanAttributes,
     });
 
     const [documents, total] = yield* Effect.all(
-      [
-        documentRepo.list({
-          createdBy,
-          source: input.source,
-          status: input.status,
-          limit,
-          offset,
-        }),
-        documentRepo.count({ createdBy }),
-      ],
+      [documentRepo.list(listOptions), documentRepo.count({ createdBy })],
       { concurrency: 'unbounded' },
     );
 

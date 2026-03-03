@@ -50,6 +50,25 @@ export class InvalidAudioGenerationError extends Schema.TaggedError<InvalidAudio
 // Use Case
 // =============================================================================
 
+const failInvalidAudioGeneration = (
+  podcastId: string,
+  currentStatus: string,
+  message: string,
+) =>
+  Effect.fail(
+    new InvalidAudioGenerationError({
+      podcastId,
+      currentStatus,
+      message,
+    }),
+  );
+const loadPersonaName = (personaId: string | null | undefined) =>
+  personaId
+    ? loadPersonaByIdSafe(personaId).pipe(
+        Effect.map((persona) => persona?.name.toLowerCase()),
+      )
+    : Effect.succeed<string | undefined>(undefined);
+
 export const generateAudio = (input: GenerateAudioInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
@@ -68,22 +87,18 @@ export const generateAudio = (input: GenerateAudioInput) =>
     );
 
     if (podcast.status !== VersionStatus.SCRIPT_READY) {
-      return yield* Effect.fail(
-        new InvalidAudioGenerationError({
-          podcastId: input.podcastId,
-          currentStatus: podcast.status,
-          message: `Cannot generate audio from status '${podcast.status}'. Podcast must be in 'script_ready' status.`,
-        }),
+      return yield* failInvalidAudioGeneration(
+        input.podcastId,
+        podcast.status,
+        `Cannot generate audio from status '${podcast.status}'. Podcast must be in 'script_ready' status.`,
       );
     }
 
     if (!podcast.segments || podcast.segments.length === 0) {
-      return yield* Effect.fail(
-        new InvalidAudioGenerationError({
-          podcastId: input.podcastId,
-          currentStatus: podcast.status,
-          message: 'Podcast has no script segments to generate audio from.',
-        }),
+      return yield* failInvalidAudioGeneration(
+        input.podcastId,
+        podcast.status,
+        'Podcast has no script segments to generate audio from.',
       );
     }
 
@@ -92,27 +107,13 @@ export const generateAudio = (input: GenerateAudioInput) =>
       VersionStatus.GENERATING_AUDIO,
     );
 
-    // Load persona names for speaker detection
-    let hostPersonaName: string | undefined;
-    let coHostPersonaName: string | undefined;
-
-    const [hostPersonaResult, coHostPersonaResult] = yield* Effect.all(
+    const [hostPersonaName, coHostPersonaName] = yield* Effect.all(
       [
-        podcast.hostPersonaId
-          ? loadPersonaByIdSafe(podcast.hostPersonaId)
-          : Effect.succeed(null),
-        podcast.coHostPersonaId
-          ? loadPersonaByIdSafe(podcast.coHostPersonaId)
-          : Effect.succeed(null),
+        loadPersonaName(podcast.hostPersonaId),
+        loadPersonaName(podcast.coHostPersonaId),
       ],
       { concurrency: 2 },
     );
-
-    if (hostPersonaResult)
-      hostPersonaName = hostPersonaResult.name.toLowerCase();
-    if (coHostPersonaResult) {
-      coHostPersonaName = coHostPersonaResult.name.toLowerCase();
-    }
 
     const hostVoice = podcast.hostVoice ?? 'Charon';
     const coHostVoice = podcast.coHostVoice ?? 'Kore';
@@ -132,12 +133,10 @@ export const generateAudio = (input: GenerateAudioInput) =>
     };
 
     const turns: SpeakerTurn[] = podcast.segments.map(
-      (segment: ScriptSegment) => {
-        return {
-          speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
-          text: segment.line,
-        };
-      },
+      (segment: ScriptSegment) => ({
+        speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
+        text: segment.line,
+      }),
     );
 
     const voiceConfigs: SpeakerVoiceConfig[] = [

@@ -111,7 +111,10 @@ describe('GoogleLive LLM provider', () => {
 
   it('maps timeout failures to typed LLMError', async () => {
     mockGenerateObject.mockRejectedValue(
-      new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+      new DOMException(
+        'The operation was aborted due to timeout',
+        'TimeoutError',
+      ),
     );
 
     const exit = await runGenerateExit();

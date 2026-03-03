@@ -56,11 +56,41 @@ export function PodcastDetailContainer({ podcastId }: { podcastId: string }) {
 }
 ```
 
+When a container has multiple actions derived from the same source context
+(for example multiple export actions or create-from-resource actions), derive
+that shared context once in a local helper (`getExportContext`, `buildFileName`,
+`handleCreateError`) and reuse it across handlers. Prefer named callbacks passed
+to presenters over repeating inline `mutation.mutate(...)` lambdas in JSX.
+
 ## Presenter Pattern
 
 Presenters are pure render functions driven by props. No hooks that touch server state.
 
 **Canonical example:** `apps/web/src/features/podcasts/components/podcast-detail.tsx`
+
+## Shared List Page States
+
+For list containers that render the same page shell during loading and query-error
+states, use shared state components instead of duplicating the markup:
+
+- `ListPageLoadingState` for title + spinner shell
+- `ListPageErrorState` for title + query retry shell
+
+**Reference:** `apps/web/src/shared/components/list-page-state.tsx`
+
+```tsx
+if (isLoading) return <ListPageLoadingState title="Documents" />;
+if (isError) {
+  return (
+    <ListPageErrorState
+      title="Documents"
+      error={error}
+      fallbackMessage="Failed to load documents"
+      onRetry={refetch}
+    />
+  );
+}
+```
 
 ## Suspense Boundaries
 

@@ -31,12 +31,14 @@ export const listPodcasts = (input: ListPodcastsInput) =>
 
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
+    const spanAttributes: Record<string, string> = input.projectId
+      ? { 'filter.projectId': input.projectId }
+      : {};
+
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: user.id,
-      attributes: {
-        ...(input.projectId ? { 'filter.projectId': input.projectId } : {}),
-      },
+      attributes: spanAttributes,
     });
     const options: ListOptions = {
       createdBy: user.id,

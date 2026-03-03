@@ -60,7 +60,7 @@ describe('streamWritingAssistantChat', () => {
         testMessages,
         expect.objectContaining({
           tools: expect.objectContaining({
-            proposeTranscriptEdit: expect.any(Object),
+            updateVoiceoverText: expect.any(Object),
           }),
         }),
       );
@@ -69,7 +69,7 @@ describe('streamWritingAssistantChat', () => {
           model: mockModel,
           system: expect.stringContaining('voiceover narration'),
           tools: expect.objectContaining({
-            proposeTranscriptEdit: expect.any(Object),
+            updateVoiceoverText: expect.any(Object),
           }),
           messages: mockModelMessages,
           maxOutputTokens: 1024,

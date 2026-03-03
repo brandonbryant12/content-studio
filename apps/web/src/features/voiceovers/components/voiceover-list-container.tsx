@@ -1,6 +1,4 @@
-import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
-import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreateVoiceover } from '../hooks/use-create-voiceover';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
@@ -9,13 +7,14 @@ import {
 } from '../hooks/use-voiceover-list';
 import { VoiceoverList } from './voiceover-list';
 import { apiClient } from '@/clients/apiClient';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import {
+  ListPageErrorState,
+  ListPageLoadingState,
+} from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
-import { getErrorMessage } from '@/shared/lib/errors';
 
-const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
-  apiClient.voiceovers.delete.mutationOptions().mutationFn!(input, context);
+const deleteFn = apiClient.voiceovers.delete.mutationOptions().mutationFn!;
 
 export function VoiceoverListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,42 +67,18 @@ export function VoiceoverListContainer() {
     selection.deselectAll();
   }, [executeBulkDelete, selection, quickPlay]);
 
-  const handleSearch = setSearchQuery;
-
   if (isLoading) {
-    return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Voiceovers</p>
-            <h1 className="page-title">Voiceovers</h1>
-          </div>
-        </div>
-        <div className="loading-center-lg">
-          <Spinner size="lg" />
-        </div>
-      </div>
-    );
+    return <ListPageLoadingState title="Voiceovers" />;
   }
 
   if (isError) {
     return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Voiceovers</p>
-            <h1 className="page-title">Voiceovers</h1>
-          </div>
-        </div>
-        <ErrorFallback
-          error={
-            error instanceof Error
-              ? error
-              : new Error(getErrorMessage(error, 'Failed to load voiceovers'))
-          }
-          resetErrorBoundary={() => refetch()}
-        />
-      </div>
+      <ListPageErrorState
+        title="Voiceovers"
+        error={error}
+        fallbackMessage="Failed to load voiceovers"
+        onRetry={refetch}
+      />
     );
   }
 
@@ -113,7 +88,7 @@ export function VoiceoverListContainer() {
       searchQuery={searchQuery}
       isCreating={createMutation.isPending}
       deletingId={deletingId}
-      onSearch={handleSearch}
+      onSearch={setSearchQuery}
       onCreate={handleCreate}
       onDelete={handleDelete}
       quickPlay={quickPlay}

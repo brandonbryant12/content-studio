@@ -80,7 +80,7 @@ const personaRouter = {
         context.runtime,
         context.user,
         updatePersona({
-          personaId: id as string,
+          personaId: id,
           data: {
             ...data,
             exampleQuotes: data.exampleQuotes && [...data.exampleQuotes],
@@ -100,7 +100,7 @@ const personaRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        deletePersona({ personaId: input.id }).pipe(Effect.map(() => ({}))),
+        deletePersona({ personaId: input.id }).pipe(Effect.as({})),
         errors,
         {
           requestId: context.requestId,
@@ -115,7 +115,7 @@ const personaRouter = {
       return handleEffectWithProtocol(
         context.runtime,
         context.user,
-        generateAvatar({ personaId: input.id }).pipe(Effect.map(() => ({}))),
+        generateAvatar({ personaId: input.id }).pipe(Effect.as({})),
         errors,
         {
           requestId: context.requestId,

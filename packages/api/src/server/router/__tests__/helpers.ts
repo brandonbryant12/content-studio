@@ -1,5 +1,6 @@
 import { ORPCError } from '@orpc/client';
 import { ManagedRuntime, type Layer } from 'effect';
+import { expect } from 'vitest';
 import type { ORPCContext, AuthenticatedORPCContext } from '../../orpc';
 import type { ServerRuntime } from '../../runtime';
 import type { User } from '@repo/auth/policy';
@@ -240,8 +241,8 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
 const mapMessageToCode = (message: string): ErrorCode | null => {
   const normalized = message.toLowerCase();
 
-  const exactCode = (Object.keys(ERROR_STATUS_CODES) as ErrorCode[]).find((code) =>
-    normalized.includes(code.toLowerCase())
+  const exactCode = (Object.keys(ERROR_STATUS_CODES) as ErrorCode[]).find(
+    (code) => normalized.includes(code.toLowerCase()),
   );
   if (exactCode) {
     return exactCode;
@@ -249,6 +250,29 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
 
   if (normalized.includes('authentication required')) {
     return 'UNAUTHORIZED';
+  }
+
+  if (
+    normalized.includes('unsupported format') ||
+    normalized.includes('file type') ||
+    normalized.includes('not supported')
+  ) {
+    return 'UNSUPPORTED_FORMAT';
+  }
+
+  if (
+    normalized.includes('document_parse_error') ||
+    normalized.includes('failed to parse pdf') ||
+    normalized.includes('parse pdf')
+  ) {
+    return 'DOCUMENT_PARSE_ERROR';
+  }
+
+  if (
+    normalized.includes('document_too_large') ||
+    normalized.includes('too large')
+  ) {
+    return 'DOCUMENT_TOO_LARGE';
   }
 
   if (
@@ -372,6 +396,41 @@ export function assertORPCError(
     );
   }
 }
+
+type ORPCProcedure = {
+  '~orpc': { handler: (args: unknown) => Promise<unknown> };
+};
+
+type ORPCHandlerArgs = {
+  context: unknown;
+  input?: unknown;
+  errors: unknown;
+};
+
+export const callORPCHandler = <T>(
+  procedure: ORPCProcedure,
+  args: ORPCHandlerArgs,
+): Promise<T> => {
+  return procedure['~orpc'].handler(args) as Promise<T>;
+};
+
+export const expectHandlerErrorCode = async (
+  operation: () => Promise<unknown>,
+  expectedCode: ErrorCode,
+) => {
+  try {
+    await operation();
+  } catch (error) {
+    assertORPCError(error, expectedCode);
+    return;
+  }
+  throw new Error(`Expected error '${expectedCode}', but operation resolved`);
+};
+
+export const expectIsoTimestamp = (value: string) => {
+  expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(Number.isNaN(Date.parse(value))).toBe(false);
+};
 
 /**
  * Create a test server runtime from a set of layers.

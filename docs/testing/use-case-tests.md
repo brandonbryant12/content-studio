@@ -107,6 +107,17 @@ describe('getDocument', () => {
 | Edge cases | 1-3 | Empty results, pagination, boundary values |
 | Authorization | 1-2 | User isolation, cross-user denial returns 404-equivalent |
 
+## Anti-Bloat Rules
+<!-- enforced-by: manual-review -->
+
+1. Target one canonical success path per behavior branch; avoid near-identical input variants that prove the same branch.
+2. Keep one representative authorization denial per use case unless multiple role branches exist.
+3. Do not duplicate workflow-level state-transition checks here when covered in workflow tests.
+4. Prefer shared mock repo factories from `packages/media/src/test-utils/` over inline full-service stubs.
+5. Use `it.each` for validation matrices (IDs, statuses, boundary variants) instead of copy-pasted test blocks.
+6. Avoid testing internal implementation details when return shape, side effects, and typed errors already prove behavior.
+7. Avoid tests that only prove static typing contracts from Effect/TypeScript; keep unit tests focused on runtime branching, side effects, and tagged failures.
+
 ## Test Utilities
 
 ### Mock Repo Factories

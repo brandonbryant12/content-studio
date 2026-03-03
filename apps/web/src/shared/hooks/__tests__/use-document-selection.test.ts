@@ -14,6 +14,34 @@ function createDoc(overrides: Partial<DocumentInfo>): DocumentInfo {
   };
 }
 
+const renderSelection = (initialDocuments: DocumentInfo[]) =>
+  renderHook(() => useDocumentSelection({ initialDocuments }));
+
+const renderSelectionWithServerDocs = (initialDocuments: DocumentInfo[]) =>
+  renderHook(
+    ({ docs }: { docs: DocumentInfo[] }) =>
+      useDocumentSelection({ initialDocuments: docs }),
+    { initialProps: { docs: initialDocuments } },
+  );
+
+const addDocuments = (
+  result: { current: ReturnType<typeof useDocumentSelection> },
+  docs: DocumentInfo[],
+) => {
+  act(() => {
+    result.current.addDocuments(docs);
+  });
+};
+
+const removeDocument = (
+  result: { current: ReturnType<typeof useDocumentSelection> },
+  docId: string,
+) => {
+  act(() => {
+    result.current.removeDocument(docId);
+  });
+};
+
 describe('useDocumentSelection', () => {
   it('returns initial documents and hasChanges=false', () => {
     const initialDocuments = [
@@ -21,9 +49,7 @@ describe('useDocumentSelection', () => {
       createDoc({ id: 'doc-2' }),
     ];
 
-    const { result } = renderHook(() =>
-      useDocumentSelection({ initialDocuments }),
-    );
+    const { result } = renderSelection(initialDocuments);
 
     expect(result.current.documents).toEqual(initialDocuments);
     expect(result.current.documentIds).toEqual(['doc-1', 'doc-2']);
@@ -34,13 +60,9 @@ describe('useDocumentSelection', () => {
     const initialDocuments = [createDoc({ id: 'doc-1' })];
     const newDoc = createDoc({ id: 'doc-2' });
 
-    const { result } = renderHook(() =>
-      useDocumentSelection({ initialDocuments }),
-    );
+    const { result } = renderSelection(initialDocuments);
 
-    act(() => {
-      result.current.addDocuments([newDoc]);
-    });
+    addDocuments(result, [newDoc]);
 
     expect(result.current.documentIds).toEqual(['doc-1', 'doc-2']);
     expect(result.current.hasChanges).toBe(true);
@@ -52,19 +74,13 @@ describe('useDocumentSelection', () => {
       createDoc({ id: 'doc-2' }),
     ];
 
-    const { result } = renderHook(() =>
-      useDocumentSelection({ initialDocuments }),
-    );
+    const { result } = renderSelection(initialDocuments);
 
-    act(() => {
-      result.current.removeDocument('doc-2');
-    });
+    removeDocument(result, 'doc-2');
     expect(result.current.documentIds).toEqual(['doc-1']);
     expect(result.current.hasChanges).toBe(true);
 
-    act(() => {
-      result.current.addDocuments([createDoc({ id: 'doc-2', title: 'Doc 2' })]);
-    });
+    addDocuments(result, [createDoc({ id: 'doc-2', title: 'Doc 2' })]);
     expect(result.current.documentIds).toEqual(['doc-1', 'doc-2']);
     expect(result.current.hasChanges).toBe(false);
   });
@@ -73,19 +89,13 @@ describe('useDocumentSelection', () => {
     const initialDocuments = [createDoc({ id: 'doc-1' })];
     const newDoc = createDoc({ id: 'doc-3' });
 
-    const { result } = renderHook(() =>
-      useDocumentSelection({ initialDocuments }),
-    );
+    const { result } = renderSelection(initialDocuments);
 
-    act(() => {
-      result.current.addDocuments([newDoc]);
-    });
+    addDocuments(result, [newDoc]);
     expect(result.current.documentIds).toEqual(['doc-1', 'doc-3']);
     expect(result.current.hasChanges).toBe(true);
 
-    act(() => {
-      result.current.removeDocument('doc-3');
-    });
+    removeDocument(result, 'doc-3');
     expect(result.current.documentIds).toEqual(['doc-1']);
     expect(result.current.hasChanges).toBe(false);
   });
@@ -94,11 +104,8 @@ describe('useDocumentSelection', () => {
     const initialDocuments = [createDoc({ id: 'doc-1' })];
     const nextInitialDocuments = [createDoc({ id: 'doc-9' })];
 
-    const { result, rerender } = renderHook(
-      ({ docs }: { docs: DocumentInfo[] }) =>
-        useDocumentSelection({ initialDocuments: docs }),
-      { initialProps: { docs: initialDocuments } },
-    );
+    const { result, rerender } =
+      renderSelectionWithServerDocs(initialDocuments);
 
     expect(result.current.documentIds).toEqual(['doc-1']);
     expect(result.current.hasChanges).toBe(false);
@@ -120,15 +127,10 @@ describe('useDocumentSelection', () => {
       createDoc({ id: 'doc-3' }),
     ];
 
-    const { result, rerender } = renderHook(
-      ({ docs }: { docs: DocumentInfo[] }) =>
-        useDocumentSelection({ initialDocuments: docs }),
-      { initialProps: { docs: initialDocuments } },
-    );
+    const { result, rerender } =
+      renderSelectionWithServerDocs(initialDocuments);
 
-    act(() => {
-      result.current.removeDocument('doc-2');
-    });
+    removeDocument(result, 'doc-2');
     expect(result.current.documentIds).toEqual(['doc-1']);
     expect(result.current.hasChanges).toBe(true);
 
@@ -146,15 +148,10 @@ describe('useDocumentSelection', () => {
       createDoc({ id: 'doc-2', title: 'Server title' }),
     ];
 
-    const { result, rerender } = renderHook(
-      ({ docs }: { docs: DocumentInfo[] }) =>
-        useDocumentSelection({ initialDocuments: docs }),
-      { initialProps: { docs: initialDocuments } },
-    );
+    const { result, rerender } =
+      renderSelectionWithServerDocs(initialDocuments);
 
-    act(() => {
-      result.current.addDocuments([locallyAdded]);
-    });
+    addDocuments(result, [locallyAdded]);
     expect(result.current.hasChanges).toBe(true);
     expect(
       result.current.documents.find((doc) => doc.id === 'doc-2')?.title,
@@ -175,15 +172,10 @@ describe('useDocumentSelection', () => {
       createDoc({ id: 'doc-2' }),
     ];
 
-    const { result, rerender } = renderHook(
-      ({ docs }: { docs: DocumentInfo[] }) =>
-        useDocumentSelection({ initialDocuments: docs }),
-      { initialProps: { docs: initialDocuments } },
-    );
+    const { result, rerender } =
+      renderSelectionWithServerDocs(initialDocuments);
 
-    act(() => {
-      result.current.addDocuments([createDoc({ id: 'doc-9' })]);
-    });
+    addDocuments(result, [createDoc({ id: 'doc-9' })]);
     expect(result.current.documentIds).toEqual(['doc-1', 'doc-9']);
     expect(result.current.hasChanges).toBe(true);
 

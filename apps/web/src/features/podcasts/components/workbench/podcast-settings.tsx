@@ -1,7 +1,6 @@
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
-import { useMemo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import {
   VOICES,
@@ -12,6 +11,7 @@ import {
 import {
   INSTRUCTION_CHAR_LIMIT,
   INSTRUCTION_PRESETS,
+  getInstructionPresetLabel,
 } from '../../lib/instruction-presets';
 import { PersonaPicker } from './persona-picker';
 import { useVoicePreviewController } from '@/shared/hooks';
@@ -178,12 +178,7 @@ export function PodcastSettings({
   const isConversation = podcast.format === 'conversation';
   const { playingVoiceId, previewUrls, togglePreview } =
     useVoicePreviewController();
-  const activePreset = useMemo(() => {
-    const matchingPreset = INSTRUCTION_PRESETS.find(
-      (preset) => preset.value === settings.instructions,
-    );
-    return matchingPreset?.label ?? null;
-  }, [settings.instructions]);
+  const activePreset = getInstructionPresetLabel(settings.instructions);
 
   const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
     if (activePreset === preset.label) {

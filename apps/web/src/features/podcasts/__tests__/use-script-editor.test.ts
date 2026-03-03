@@ -31,6 +31,8 @@ function createSegment(
   };
 }
 
+const PODCAST_ID = 'pod-1';
+
 describe('useScriptEditor', () => {
   let queryClient: QueryClient;
 
@@ -44,6 +46,31 @@ describe('useScriptEditor', () => {
     };
   };
 
+  const renderScriptEditor = (initialSegments: ScriptSegment[]) =>
+    renderHook(
+      () =>
+        useScriptEditor({
+          podcastId: PODCAST_ID,
+          initialSegments,
+        }),
+      { wrapper: createWrapper() },
+    );
+
+  const renderScriptEditorWithSegmentProps = (
+    initialSegments: ScriptSegment[],
+  ) =>
+    renderHook(
+      ({ segments }: { segments: ScriptSegment[] }) =>
+        useScriptEditor({
+          podcastId: PODCAST_ID,
+          initialSegments: segments,
+        }),
+      {
+        wrapper: createWrapper(),
+        initialProps: { segments: initialSegments },
+      },
+    );
+
   beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {
@@ -56,14 +83,7 @@ describe('useScriptEditor', () => {
   it('returns initial segments with no changes', () => {
     const initialSegments = [createSegment(0), createSegment(1)];
 
-    const { result } = renderHook(
-      () =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments,
-        }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderScriptEditor(initialSegments);
 
     expect(result.current.segments).toEqual(initialSegments);
     expect(result.current.hasChanges).toBe(false);
@@ -72,14 +92,7 @@ describe('useScriptEditor', () => {
   it('tracks segment edits and allows discard back to baseline', () => {
     const initialSegments = [createSegment(0), createSegment(1)];
 
-    const { result } = renderHook(
-      () =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments,
-        }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderScriptEditor(initialSegments);
 
     act(() => {
       result.current.updateSegment(0, { line: 'updated-line' });
@@ -97,14 +110,7 @@ describe('useScriptEditor', () => {
   it('clears hasChanges when edits are reverted to baseline values', () => {
     const initialSegments = [createSegment(0, { line: 'a' })];
 
-    const { result } = renderHook(
-      () =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments,
-        }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderScriptEditor(initialSegments);
 
     act(() => {
       result.current.updateSegment(0, { line: 'b' });
@@ -122,17 +128,8 @@ describe('useScriptEditor', () => {
     const initialSegments = [createSegment(0, { line: 'old' })];
     const serverUpdated = [createSegment(0, { line: 'new' })];
 
-    const { result, rerender } = renderHook(
-      ({ segments }: { segments: ScriptSegment[] }) =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments: segments,
-        }),
-      {
-        wrapper: createWrapper(),
-        initialProps: { segments: initialSegments },
-      },
-    );
+    const { result, rerender } =
+      renderScriptEditorWithSegmentProps(initialSegments);
 
     expect(result.current.segments[0]?.line).toBe('old');
 
@@ -146,17 +143,8 @@ describe('useScriptEditor', () => {
     const initialSegments = [createSegment(0, { line: 'server-v1' })];
     const serverUpdated = [createSegment(0, { line: 'server-v2' })];
 
-    const { result, rerender } = renderHook(
-      ({ segments }: { segments: ScriptSegment[] }) =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments: segments,
-        }),
-      {
-        wrapper: createWrapper(),
-        initialProps: { segments: initialSegments },
-      },
-    );
+    const { result, rerender } =
+      renderScriptEditorWithSegmentProps(initialSegments);
 
     act(() => {
       result.current.updateSegment(0, { line: 'local-draft' });
@@ -209,14 +197,7 @@ describe('useScriptEditor', () => {
     const initialSegments = [createSegment(0, { line: 'original' })];
     const savedSegments = [createSegment(0, { line: 'saved' })];
 
-    const { result } = renderHook(
-      () =>
-        useScriptEditor({
-          podcastId: 'pod-1',
-          initialSegments,
-        }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderScriptEditor(initialSegments);
 
     act(() => {
       result.current.updateSegment(0, { line: 'draft' });

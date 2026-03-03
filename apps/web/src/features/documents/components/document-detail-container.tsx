@@ -15,6 +15,8 @@ import {
 } from '../lib/export';
 import { DocumentDetail } from './document-detail';
 import { apiClient } from '@/clients/apiClient';
+import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
+import { getVoiceoverListQueryKey } from '@/features/voiceovers/hooks/use-voiceover-list';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -35,16 +37,30 @@ export function DocumentDetailContainer({
   const isReady = document.status === DocumentStatus.READY;
   const { data: contentData } = useDocumentContentOptional(documentId, isReady);
   const documentContent = contentData?.content ?? null;
+  const documentContentText = documentContent ?? '';
 
   const actions = useDocumentActions({ document });
-  const search = useDocumentSearch(documentContent ?? '');
+  const search = useDocumentSearch(documentContentText);
   const retryMutation = useRetryProcessing();
+  const handleCreateError = useCallback(
+    (fallbackMessage: string, error: unknown) => {
+      toast.error(getErrorMessage(error, fallbackMessage));
+    },
+    [],
+  );
+  const getExportContext = useCallback(() => {
+    if (!documentContent) return null;
+    return {
+      exportTitle: actions.title.trim() || document.title,
+      content: documentContent,
+    };
+  }, [actions.title, document.title, documentContent]);
+
   const createVoiceoverMutation = useMutation(
     apiClient.voiceovers.create.mutationOptions({
       onSuccess: (created) => {
         queryClient.invalidateQueries({
-          queryKey: apiClient.voiceovers.list.queryOptions({ input: {} })
-            .queryKey,
+          queryKey: getVoiceoverListQueryKey(),
         });
         toast.success('Voiceover created');
         navigate({
@@ -53,7 +69,7 @@ export function DocumentDetailContainer({
         });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create voiceover'));
+        handleCreateError('Failed to create voiceover', error);
       },
     }),
   );
@@ -61,8 +77,7 @@ export function DocumentDetailContainer({
     apiClient.infographics.create.mutationOptions({
       onSuccess: (created) => {
         queryClient.invalidateQueries({
-          queryKey: apiClient.infographics.list.queryOptions({ input: {} })
-            .queryKey,
+          queryKey: getInfographicListQueryKey(),
         });
         toast.success('Infographic created');
         navigate({
@@ -71,40 +86,39 @@ export function DocumentDetailContainer({
         });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create infographic'));
+        handleCreateError('Failed to create infographic', error);
       },
     }),
   );
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const canExport = isReady && !!documentContent?.trim();
-  const canCreateFromDocument = isReady;
+  const canExport = isReady && documentContentText.trim().length > 0;
 
   const handleExportMarkdown = useCallback(() => {
-    if (!documentContent) return;
+    const context = getExportContext();
+    if (!context) return;
 
-    const exportTitle = actions.title.trim() || document.title;
     const markdown = buildDocumentMarkdownExport({
       document,
-      title: exportTitle,
-      content: documentContent,
+      title: context.exportTitle,
+      content: context.content,
     });
-    const fileName = `${toFileSlug(exportTitle, 'document')}.md`;
+    const fileName = `${toFileSlug(context.exportTitle, 'document')}.md`;
     downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
-  }, [actions.title, document, documentContent]);
+  }, [document, getExportContext]);
 
   const handleExportText = useCallback(() => {
-    if (!documentContent) return;
+    const context = getExportContext();
+    if (!context) return;
 
-    const exportTitle = actions.title.trim() || document.title;
     const text = buildDocumentTextExport({
       document,
-      title: exportTitle,
-      content: documentContent,
+      title: context.exportTitle,
+      content: context.content,
     });
-    const fileName = `${toFileSlug(exportTitle, 'document')}.txt`;
+    const fileName = `${toFileSlug(context.exportTitle, 'document')}.txt`;
     downloadTextFile(text, fileName);
-  }, [actions.title, document, documentContent]);
+  }, [document, getExportContext]);
 
   const handleCreateVoiceover = useCallback(() => {
     createVoiceoverMutation.mutate({
@@ -155,7 +169,7 @@ export function DocumentDetailContainer({
         onRetry={() => retryMutation.mutate({ id: documentId })}
         search={search}
         canExport={canExport}
-        canCreateFromDocument={canCreateFromDocument}
+        canCreateFromDocument={isReady}
         isCreatingVoiceover={createVoiceoverMutation.isPending}
         isCreatingInfographic={createInfographicMutation.isPending}
         onCreateVoiceover={handleCreateVoiceover}

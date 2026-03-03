@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
+import { getVoiceoverQueryKey } from './use-voiceover';
 import { getVoiceoverListQueryKey } from './use-voiceover-list';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -16,11 +17,15 @@ export function useCreateVoiceover() {
   return useMutation(
     apiClient.voiceovers.create.mutationOptions({
       onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: getVoiceoverListQueryKey() });
+        queryClient.setQueryData(getVoiceoverQueryKey(data.id), data);
         toast.success('Voiceover created');
-        navigate({
+        void navigate({
           to: '/voiceovers/$voiceoverId',
           params: { voiceoverId: data.id },
+        });
+        queryClient.invalidateQueries({
+          queryKey: getVoiceoverListQueryKey(),
+          refetchType: 'inactive',
         });
       },
       onError: (error) => {

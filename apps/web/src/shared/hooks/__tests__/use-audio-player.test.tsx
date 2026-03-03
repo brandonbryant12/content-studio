@@ -1,18 +1,14 @@
 import { render, act } from '@testing-library/react';
 import { useEffect } from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { useAudioPlayer, type UseAudioPlayerReturn } from '../use-audio-player';
+import { useAudioPlayer } from '../use-audio-player';
 
-type AudioSnapshot = Pick<
-  UseAudioPlayerReturn,
-  'isPlaying' | 'currentTime' | 'duration' | 'isLoaded'
->;
-
-interface HarnessProps {
-  src: string;
-  initialDuration?: number | null;
-  onSnapshot: (snapshot: AudioSnapshot) => void;
-}
+type AudioSnapshot = {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  isLoaded: boolean;
+};
 
 const EMPTY_SNAPSHOT: AudioSnapshot = {
   isPlaying: false,
@@ -21,20 +17,51 @@ const EMPTY_SNAPSHOT: AudioSnapshot = {
   isLoaded: false,
 };
 
-function Harness({ src, initialDuration, onSnapshot }: HarnessProps) {
+function Harness({
+  src,
+  initialDuration,
+  onSnapshot,
+}: {
+  src: string;
+  initialDuration?: number | null;
+  onSnapshot: (snapshot: AudioSnapshot) => void;
+}) {
   const { audioRef, isPlaying, currentTime, duration, isLoaded } =
     useAudioPlayer(src, initialDuration);
 
   useEffect(() => {
-    onSnapshot({
-      isPlaying,
-      currentTime,
-      duration,
-      isLoaded,
-    });
+    onSnapshot({ isPlaying, currentTime, duration, isLoaded });
   }, [onSnapshot, isPlaying, currentTime, duration, isLoaded]);
 
   return <audio ref={audioRef} src={src} data-testid="audio" />;
+}
+
+function renderHarness(src: string, initialDuration?: number) {
+  const latestState = { current: EMPTY_SNAPSHOT };
+  const onSnapshot = (snapshot: AudioSnapshot) => {
+    latestState.current = snapshot;
+  };
+
+  const view = render(
+    <Harness
+      src={src}
+      initialDuration={initialDuration}
+      onSnapshot={onSnapshot}
+    />,
+  );
+
+  return {
+    latestState,
+    audio: view.getByTestId('audio') as HTMLAudioElement,
+    rerender: (nextSrc: string, nextInitialDuration?: number) =>
+      view.rerender(
+        <Harness
+          src={nextSrc}
+          initialDuration={nextInitialDuration}
+          onSnapshot={onSnapshot}
+        />,
+      ),
+  };
 }
 
 describe('useAudioPlayer', () => {
@@ -49,19 +76,10 @@ describe('useAudioPlayer', () => {
   });
 
   it('resets playback state when the source changes', () => {
-    const latestState = { current: EMPTY_SNAPSHOT };
-
-    const { getByTestId, rerender } = render(
-      <Harness
-        src="https://example.com/audio-a.mp3"
-        initialDuration={120}
-        onSnapshot={(snapshot) => {
-          latestState.current = snapshot;
-        }}
-      />,
+    const { latestState, audio, rerender } = renderHarness(
+      'https://example.com/audio-a.mp3',
+      120,
     );
-
-    const audio = getByTestId('audio') as HTMLAudioElement;
 
     expect(latestState.current.duration).toBe(120);
 
@@ -76,42 +94,25 @@ describe('useAudioPlayer', () => {
       audio.dispatchEvent(new Event('durationchange'));
     });
 
-    expect(latestState.current.isPlaying).toBe(true);
-    expect(latestState.current.currentTime).toBe(42);
-    expect(latestState.current.duration).toBe(95);
-    expect(latestState.current.isLoaded).toBe(true);
-
-    act(() => {
-      rerender(
-        <Harness
-          src="https://example.com/audio-b.mp3"
-          onSnapshot={(snapshot) => {
-            latestState.current = snapshot;
-          }}
-        />,
-      );
+    expect(latestState.current).toMatchObject({
+      isPlaying: true,
+      currentTime: 42,
+      duration: 95,
+      isLoaded: true,
     });
 
-    expect(latestState.current.isPlaying).toBe(false);
-    expect(latestState.current.currentTime).toBe(0);
-    expect(latestState.current.duration).toBe(0);
-    expect(latestState.current.isLoaded).toBe(false);
+    act(() => {
+      rerender('https://example.com/audio-b.mp3');
+    });
+
+    expect(latestState.current).toMatchObject(EMPTY_SNAPSHOT);
   });
 
   it('re-applies initial duration when metadata inputs change', () => {
-    const latestState = { current: EMPTY_SNAPSHOT };
-
-    const { getByTestId, rerender } = render(
-      <Harness
-        src="https://example.com/audio.mp3"
-        initialDuration={180}
-        onSnapshot={(snapshot) => {
-          latestState.current = snapshot;
-        }}
-      />,
+    const { latestState, audio, rerender } = renderHarness(
+      'https://example.com/audio.mp3',
+      180,
     );
-
-    const audio = getByTestId('audio') as HTMLAudioElement;
 
     expect(latestState.current.duration).toBe(180);
 
@@ -123,22 +124,18 @@ describe('useAudioPlayer', () => {
       audio.dispatchEvent(new Event('loadedmetadata'));
     });
 
-    expect(latestState.current.duration).toBe(210);
-    expect(latestState.current.isLoaded).toBe(true);
-
-    act(() => {
-      rerender(
-        <Harness
-          src="https://example.com/audio.mp3"
-          initialDuration={75}
-          onSnapshot={(snapshot) => {
-            latestState.current = snapshot;
-          }}
-        />,
-      );
+    expect(latestState.current).toMatchObject({
+      duration: 210,
+      isLoaded: true,
     });
 
-    expect(latestState.current.duration).toBe(75);
-    expect(latestState.current.isLoaded).toBe(false);
+    act(() => {
+      rerender('https://example.com/audio.mp3', 75);
+    });
+
+    expect(latestState.current).toMatchObject({
+      duration: 75,
+      isLoaded: false,
+    });
   });
 });

@@ -22,15 +22,20 @@ export const createVoiceover = (input: CreateVoiceoverInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
-    const prefilledText = input.documentId
-      ? (yield* getDocumentContent({ id: input.documentId })).content
+    const sourceDocumentId = input.documentId;
+    const sourceText = sourceDocumentId
+      ? (yield* getDocumentContent({ id: sourceDocumentId })).content
       : undefined;
 
     const voiceover = yield* voiceoverRepo.insert({
       title: input.title,
-      ...(prefilledText !== undefined ? { text: prefilledText } : {}),
-      ...(input.documentId ? { sourceDocumentId: input.documentId } : {}),
       createdBy: user.id,
+      ...(sourceDocumentId
+        ? {
+            text: sourceText,
+            sourceDocumentId,
+          }
+        : {}),
     });
     yield* annotateUseCaseSpan({
       userId: user.id,

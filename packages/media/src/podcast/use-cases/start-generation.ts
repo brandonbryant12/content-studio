@@ -2,7 +2,6 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { VersionStatus, type JobId, type JobStatus } from '@repo/db/schema';
 import { Queue } from '@repo/queue';
 import { Effect } from 'effect';
-import type { GeneratePodcastPayload } from '@repo/queue';
 import {
   annotateUseCaseSpan,
   enqueueJob,
@@ -52,19 +51,17 @@ export const startGeneration = (input: StartGenerationInput) =>
 
     const previousStatus = podcast.status;
 
-    const payload: GeneratePodcastPayload = {
-      podcastId: podcast.id,
-      userId: podcast.createdBy,
-      promptInstructions: input.promptInstructions,
-    };
-
     const job = yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
         yield* podcastRepo.updateStatus(podcast.id, VersionStatus.DRAFTING);
         yield* podcastRepo.clearApproval(podcast.id);
         return yield* enqueueJob({
           type: 'generate-podcast',
-          payload,
+          payload: {
+            podcastId: podcast.id,
+            userId: podcast.createdBy,
+            promptInstructions: input.promptInstructions,
+          },
           userId: podcast.createdBy,
         });
       }),

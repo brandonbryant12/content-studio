@@ -1,18 +1,13 @@
 import { processResearch } from '@repo/media';
 import { JobProcessingError, formatError } from '@repo/queue';
 import { Effect } from 'effect';
-import type {
-  ProcessResearchPayload,
-  ProcessResearchResult,
-  Job,
-} from '@repo/queue';
+import type { ProcessResearchPayload, Job } from '@repo/queue';
 
 export const handleProcessResearch = (job: Job<ProcessResearchPayload>) =>
   processResearch({
     documentId: job.payload.documentId,
     query: job.payload.query,
   }).pipe(
-    Effect.map((result) => result satisfies ProcessResearchResult),
     Effect.catchAll((error) =>
       Effect.fail(
         new JobProcessingError({

@@ -1,7 +1,11 @@
 import { DocumentStatus } from '@repo/db/schema';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import {
+  annotateUseCaseSpan,
+  formatUnknownError,
+  withUseCaseSpan,
+} from '../../shared';
 import { DocumentRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
 import { UrlScraper } from '../services/url-scraper';
@@ -24,10 +28,15 @@ export const processUrl = (input: ProcessUrlInput) =>
       resourceId: documentId,
       attributes: {
         'document.id': documentId,
-        'document.url': input.url,
+        'document.url': url,
       },
     });
     const scraped = yield* urlScraper.fetchAndExtract(url);
+    const metadata = {
+      ...(scraped.description ? { description: scraped.description } : {}),
+      ...(scraped.author ? { author: scraped.author } : {}),
+      ...(scraped.publishedAt ? { publishedAt: scraped.publishedAt } : {}),
+    };
 
     const contentKey = `documents/${documentId}/content.txt`;
     yield* storage.upload(
@@ -44,11 +53,7 @@ export const processUrl = (input: ProcessUrlInput) =>
       contentHash,
       wordCount: scraped.wordCount,
       title: scraped.title,
-      metadata: {
-        ...(scraped.description && { description: scraped.description }),
-        ...(scraped.author && { author: scraped.author }),
-        ...(scraped.publishedAt && { publishedAt: scraped.publishedAt }),
-      },
+      metadata,
     });
 
     yield* documentRepo.updateStatus(documentId, DocumentStatus.READY);
@@ -59,7 +64,11 @@ export const processUrl = (input: ProcessUrlInput) =>
       Effect.gen(function* () {
         const repo = yield* DocumentRepo;
         yield* repo
-          .updateStatus(input.documentId, DocumentStatus.FAILED, String(error))
+          .updateStatus(
+            input.documentId,
+            DocumentStatus.FAILED,
+            formatUnknownError(error),
+          )
           .pipe(Effect.ignore);
         return yield* Effect.fail(error);
       }),

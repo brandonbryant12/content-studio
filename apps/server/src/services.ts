@@ -6,11 +6,20 @@ import {
 import { AuthMode, createAuth } from '@repo/auth/server';
 import { createDb } from '@repo/db/client';
 import { configureQueueNotifier } from '@repo/queue';
+import { createAudioPlaybackProxy } from './audio-playback-proxy';
 import { buildAuthTrustedOrigins } from './auth-trusted-origins';
 import { buildStorageConfig } from './config';
 import { env } from './env';
 
 export const storageConfig = buildStorageConfig();
+export const audioPlaybackProxy = createAudioPlaybackProxy({
+  enabled: env.AUDIO_PLAYBACK_PROXY_ENABLED,
+  signingSecret: env.AUDIO_PLAYBACK_SIGNING_SECRET,
+  ttlSeconds: env.AUDIO_PLAYBACK_URL_TTL_SECONDS,
+  serverUrl: env.PUBLIC_SERVER_URL,
+  apiPath: env.PUBLIC_SERVER_API_PATH,
+  storageConfig,
+});
 
 export const db = createDb({
   databaseUrl: env.SERVER_POSTGRES_URL,

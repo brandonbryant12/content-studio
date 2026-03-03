@@ -1,8 +1,13 @@
 import { NoObjectGeneratedError } from 'ai';
 import { LLMError, LLMRateLimitError } from '../errors';
-import { getGoogleApiErrorDetails, isGoogleRateLimit } from '../google/error-parser';
+import {
+  getGoogleApiErrorDetails,
+  isGoogleRateLimit,
+} from '../google/error-parser';
 
-const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
+const RETRYABLE_STATUS_CODES = new Set([
+  408, 409, 425, 429, 500, 502, 503, 504,
+]);
 const RETRYABLE_STATUS_NAMES = new Set([
   'RESOURCE_EXHAUSTED',
   'TOO_MANY_REQUESTS',

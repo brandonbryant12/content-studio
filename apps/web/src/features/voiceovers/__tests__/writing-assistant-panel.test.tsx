@@ -11,129 +11,64 @@ function assistantMessage(id: string, text: string): UIMessage {
   };
 }
 
-function proposal(overrides: Partial<{
-  toolCallId: string;
-  summary: string;
-  revisedTranscript: string;
-  decision: 'pending' | 'accepted' | 'rejected' | 'error';
-  reason?: string;
-}> = {}) {
-  return {
-    toolCallId: overrides.toolCallId ?? 'tool-1',
-    summary: overrides.summary ?? 'Tightened the intro for a faster hook.',
-    revisedTranscript:
-      overrides.revisedTranscript ??
-      'Welcome back. In 45 seconds, here is how your team ships AI safely.',
-    decision: overrides.decision ?? 'pending',
-    reason: overrides.reason,
-  };
-}
-
 describe('WritingAssistantPanel', () => {
-  it('lets users accept a pending transcript edit proposal', async () => {
+  it('sends typed messages to the caller', async () => {
     const user = userEvent.setup();
-    const onAcceptProposal = vi.fn();
-    const pendingProposal = proposal();
+    const onSendMessage = vi.fn();
 
     render(
       <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'I drafted a tighter version.')]}
-        proposals={[pendingProposal]}
+        messages={[assistantMessage('a-1', 'I can rewrite this intro.')]}
         isStreaming={false}
         error={undefined}
-        onSendMessage={vi.fn()}
+        onSendMessage={onSendMessage}
         onReset={vi.fn()}
-        onAcceptProposal={onAcceptProposal}
-        onRejectProposal={vi.fn()}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Accept edit' }));
+    await user.type(
+      screen.getByRole('textbox', { name: 'Writing assistant input' }),
+      'Rewrite this with a stronger opening.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
 
-    expect(onAcceptProposal).toHaveBeenCalledWith(pendingProposal);
+    expect(onSendMessage).toHaveBeenCalledWith(
+      'Rewrite this with a stronger opening.',
+    );
   });
 
-  it('lets users reject a pending transcript edit proposal', async () => {
+  it('shows clear button when messages exist and calls onReset', async () => {
     const user = userEvent.setup();
-    const onRejectProposal = vi.fn();
-    const pendingProposal = proposal({ toolCallId: 'tool-2' });
+    const onReset = vi.fn();
 
     render(
       <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'I have an alternative draft.')]}
-        proposals={[pendingProposal]}
+        messages={[assistantMessage('a-1', 'Draft ready.')]}
         isStreaming={false}
         error={undefined}
         onSendMessage={vi.fn()}
-        onReset={vi.fn()}
-        onAcceptProposal={vi.fn()}
-        onRejectProposal={onRejectProposal}
+        onReset={onReset}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Reject edit' }));
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
 
-    expect(onRejectProposal).toHaveBeenCalledWith(pendingProposal);
+    expect(onReset).toHaveBeenCalled();
   });
 
-  it('shows proposal status and hides action buttons once accepted', () => {
+  it('shows direct-apply guidance copy', () => {
     render(
       <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'Applied a cleaner cadence.')]}
-        proposals={[proposal({ decision: 'accepted' })]}
+        messages={[]}
         isStreaming={false}
         error={undefined}
         onSendMessage={vi.fn()}
         onReset={vi.fn()}
-        onAcceptProposal={vi.fn()}
-        onRejectProposal={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Accept edit' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Reject edit' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('shows auto-reject guidance while proposals are pending', () => {
-    render(
-      <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'Here is a focused rewrite.')]}
-        proposals={[proposal({ toolCallId: 'tool-1' }), proposal({ toolCallId: 'tool-2' })]}
-        isStreaming={false}
-        error={undefined}
-        onSendMessage={vi.fn()}
-        onReset={vi.fn()}
-        onAcceptProposal={vi.fn()}
-        onRejectProposal={vi.fn()}
       />,
     );
 
     expect(
-      screen.getByText(/auto-reject pending proposals/i),
+      screen.getByText(/rewrites are applied directly to the editor/i),
     ).toBeInTheDocument();
-    expect(screen.getByText('2 pending')).toBeInTheDocument();
-  });
-
-  it('disables proposal actions while assistant is streaming', () => {
-    render(
-      <WritingAssistantPanel
-        messages={[assistantMessage('a-1', 'Streaming draft text')]}
-        proposals={[proposal()]}
-        isStreaming={true}
-        error={undefined}
-        onSendMessage={vi.fn()}
-        onReset={vi.fn()}
-        onAcceptProposal={vi.fn()}
-        onRejectProposal={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Accept edit' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reject edit' })).toBeDisabled();
   });
 });

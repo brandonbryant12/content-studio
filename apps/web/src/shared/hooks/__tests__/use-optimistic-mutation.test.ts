@@ -3,16 +3,35 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
 import { useOptimisticMutation } from '../use-optimistic-mutation';
 
-// Mock sonner
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
   },
 }));
+
+type Item = { id: string; name: string };
+type Variables = { name: string };
+type Cache = Item[];
+
+const queryKey = ['items'];
+const initialData: Cache = [{ id: '1', name: 'Item 1' }];
+const responseData: Item = { id: '2', name: 'Item 2' };
+
+const createDeferred = <T>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve };
+};
+
+const appendOptimisticItem = (
+  current: Cache | undefined,
+  variables: Variables,
+): Cache => [...(current ?? []), { id: 'temp', name: variables.name }];
 
 describe('useOptimisticMutation', () => {
   let queryClient: QueryClient;
@@ -27,15 +46,52 @@ describe('useOptimisticMutation', () => {
     };
   };
 
+  const renderMutationHook = ({
+    mutationFn = vi.fn().mockResolvedValue(responseData),
+    getOptimisticData = appendOptimisticItem,
+    successMessage,
+    errorMessage,
+    onSuccess,
+    showSuccessToast,
+  }: {
+    mutationFn?: (variables: Variables) => Promise<Item>;
+    getOptimisticData?: (
+      current: Cache | undefined,
+      variables: Variables,
+    ) => Cache | undefined;
+    successMessage?: string | ((data: Item) => string);
+    errorMessage?: string;
+    onSuccess?: (data: Item, variables: Variables) => void;
+    showSuccessToast?: boolean;
+  } = {}) =>
+    renderHook(
+      () =>
+        useOptimisticMutation<Item, Variables, Cache>({
+          queryKey,
+          mutationFn,
+          getOptimisticData,
+          successMessage,
+          errorMessage,
+          onSuccess,
+          showSuccessToast,
+        }),
+      { wrapper: createWrapper() },
+    );
+
+  const mutateWithName = (
+    mutate: (variables: Variables) => void,
+    name = 'Item 2',
+  ) => {
+    act(() => {
+      mutate({ name });
+    });
+  };
+
   beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {
-        queries: {
-          retry: false,
-        },
-        mutations: {
-          retry: false,
-        },
+        queries: { retry: false },
+        mutations: { retry: false },
       },
     });
     vi.clearAllMocks();
@@ -45,360 +101,161 @@ describe('useOptimisticMutation', () => {
     queryClient.clear();
   });
 
-  describe('optimistic updates', () => {
-    it('applies optimistic update to cache on mutate', async () => {
-      const queryKey = ['items'];
-      const initialData = [{ id: '1', name: 'Item 1' }];
+  it('applies optimistic update to cache on mutate', async () => {
+    const deferred = createDeferred<Item>();
+    const mutationFn = vi.fn(() => deferred.promise);
+    const getOptimisticData = vi.fn(appendOptimisticItem);
 
-      // Set initial cache data
-      queryClient.setQueryData(queryKey, initialData);
+    queryClient.setQueryData(queryKey, initialData);
 
-      const mutationFn = vi
-        .fn()
-        .mockImplementation(
-          () =>
-            new Promise((resolve) =>
-              setTimeout(() => resolve({ id: '2', name: 'Item 2' }), 100),
-            ),
-        );
+    const { result } = renderMutationHook({ mutationFn, getOptimisticData });
 
-      const getOptimisticData = vi
-        .fn()
-        .mockImplementation(
-          (
-            current: typeof initialData | undefined,
-            variables: { name: string },
-          ) => {
-            return [...(current ?? []), { id: 'temp', name: variables.name }];
-          },
-        );
+    mutateWithName(result.current.mutate, 'New Item');
 
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      // Trigger the mutation
-      act(() => {
-        result.current.mutate({ name: 'New Item' });
-      });
-
-      // Check cache was optimistically updated
-      await waitFor(() => {
-        const cacheData = queryClient.getQueryData(queryKey);
-        expect(cacheData).toEqual([
-          { id: '1', name: 'Item 1' },
-          { id: 'temp', name: 'New Item' },
-        ]);
-      });
-
-      expect(getOptimisticData).toHaveBeenCalledWith(initialData, {
-        name: 'New Item',
-      });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(queryKey)).toEqual([
+        { id: '1', name: 'Item 1' },
+        { id: 'temp', name: 'New Item' },
+      ]);
     });
+
+    expect(getOptimisticData).toHaveBeenCalledWith(initialData, {
+      name: 'New Item',
+    });
+
+    deferred.resolve(responseData);
   });
 
-  describe('error handling', () => {
-    it('rolls back on error', async () => {
-      const queryKey = ['items'];
-      const initialData = [{ id: '1', name: 'Item 1' }];
+  it('rolls back cache on error', async () => {
+    queryClient.setQueryData(queryKey, initialData);
 
-      // Set initial cache data
-      queryClient.setQueryData(queryKey, initialData);
-
-      const mutationFn = vi.fn().mockRejectedValue(new Error('Network error'));
-
-      const getOptimisticData = vi
-        .fn()
-        .mockImplementation(
-          (
-            current: typeof initialData | undefined,
-            variables: { name: string },
-          ) => {
-            return [...(current ?? []), { id: 'temp', name: variables.name }];
-          },
-        );
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            errorMessage: 'Failed to add item',
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      // Trigger the mutation
-      act(() => {
-        result.current.mutate({ name: 'New Item' });
-      });
-
-      // Wait for the error to be handled
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      // Cache should be rolled back to initial data
-      const cacheData = queryClient.getQueryData(queryKey);
-      expect(cacheData).toEqual(initialData);
+    const { result } = renderMutationHook({
+      mutationFn: vi.fn().mockRejectedValue(new Error('Network error')),
+      errorMessage: 'Failed to add item',
     });
 
-    it('shows error toast on failure', async () => {
-      const queryKey = ['items'];
-      const initialData = [{ id: '1', name: 'Item 1' }];
+    mutateWithName(result.current.mutate, 'New Item');
 
-      queryClient.setQueryData(queryKey, initialData);
-
-      const mutationFn = vi.fn().mockRejectedValue(new Error('Network error'));
-
-      const getOptimisticData = vi
-        .fn()
-        .mockImplementation(
-          (current: typeof initialData | undefined) => current,
-        );
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            errorMessage: 'Failed to update',
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({ name: 'Test' });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      // Error toast should be shown with the error message
-      expect(toast.error).toHaveBeenCalledWith('Network error');
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
     });
 
-    it('shows fallback error message when error has no message', async () => {
-      const queryKey = ['items'];
-
-      queryClient.setQueryData(queryKey, []);
-
-      const mutationFn = vi.fn().mockRejectedValue(null);
-
-      const getOptimisticData = vi.fn().mockReturnValue([]);
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            errorMessage: 'Custom fallback error',
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({});
-      });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(toast.error).toHaveBeenCalledWith('Custom fallback error');
-    });
+    expect(queryClient.getQueryData(queryKey)).toEqual(initialData);
   });
 
-  describe('success handling', () => {
-    it('calls onSuccess callback on success', async () => {
-      const queryKey = ['items'];
-      const initialData = [{ id: '1', name: 'Item 1' }];
-      const responseData = { id: '2', name: 'Item 2' };
+  it.each([
+    {
+      name: 'error message from thrown error',
+      rejection: new Error('Network error'),
+      fallback: 'Failed to update',
+      expectedToast: 'Network error',
+    },
+    {
+      name: 'fallback message when error has no message',
+      rejection: null,
+      fallback: 'Custom fallback error',
+      expectedToast: 'Custom fallback error',
+    },
+  ])('shows $name', async ({ rejection, fallback, expectedToast }) => {
+    queryClient.setQueryData(queryKey, initialData);
 
-      queryClient.setQueryData(queryKey, initialData);
-
-      const mutationFn = vi.fn().mockResolvedValue(responseData);
-
-      const getOptimisticData = vi
-        .fn()
-        .mockImplementation(
-          (
-            current: typeof initialData | undefined,
-            variables: { name: string },
-          ) => {
-            return [...(current ?? []), { id: 'temp', name: variables.name }];
-          },
-        );
-
-      const onSuccess = vi.fn();
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            onSuccess,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({ name: 'Item 2' });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
-      expect(onSuccess).toHaveBeenCalledWith(responseData, { name: 'Item 2' });
+    const { result } = renderMutationHook({
+      mutationFn: vi.fn().mockRejectedValue(rejection),
+      getOptimisticData: vi.fn((current) => current ?? []),
+      errorMessage: fallback,
     });
 
-    it('shows success toast when showSuccessToast=true and successMessage provided', async () => {
-      const queryKey = ['items'];
-      const responseData = { id: '2', name: 'Item 2' };
+    mutateWithName(result.current.mutate, 'Test');
 
-      queryClient.setQueryData(queryKey, []);
-
-      const mutationFn = vi.fn().mockResolvedValue(responseData);
-      const getOptimisticData = vi.fn().mockReturnValue([]);
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            successMessage: 'Item added successfully!',
-            showSuccessToast: true,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({ name: 'Item 2' });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
-      expect(toast.success).toHaveBeenCalledWith('Item added successfully!');
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
     });
 
-    it('does not show success toast when showSuccessToast=false', async () => {
-      const queryKey = ['items'];
-      const responseData = { id: '2', name: 'Item 2' };
+    expect(toast.error).toHaveBeenCalledWith(expectedToast);
+  });
 
-      queryClient.setQueryData(queryKey, []);
+  it('calls onSuccess callback on success', async () => {
+    queryClient.setQueryData(queryKey, initialData);
+    const onSuccess = vi.fn();
 
-      const mutationFn = vi.fn().mockResolvedValue(responseData);
-      const getOptimisticData = vi.fn().mockReturnValue([]);
+    const { result } = renderMutationHook({
+      mutationFn: vi.fn().mockResolvedValue(responseData),
+      onSuccess,
+    });
 
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            successMessage: 'Item added successfully!',
-            showSuccessToast: false,
-          }),
-        { wrapper: createWrapper() },
-      );
+    mutateWithName(result.current.mutate);
 
-      act(() => {
-        result.current.mutate({ name: 'Item 2' });
-      });
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
 
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
+    expect(onSuccess).toHaveBeenCalledWith(responseData, { name: 'Item 2' });
+  });
 
+  it.each([
+    {
+      name: 'shows success toast when enabled and message is provided',
+      showSuccessToast: true,
+      successMessage: 'Item added successfully!',
+      expectedToast: 'Item added successfully!',
+    },
+    {
+      name: 'does not show success toast when disabled',
+      showSuccessToast: false,
+      successMessage: 'Item added successfully!',
+      expectedToast: null,
+    },
+    {
+      name: 'does not show success toast when message is missing',
+      showSuccessToast: true,
+      successMessage: undefined,
+      expectedToast: null,
+    },
+  ])('$name', async ({ showSuccessToast, successMessage, expectedToast }) => {
+    queryClient.setQueryData(queryKey, []);
+
+    const { result } = renderMutationHook({
+      mutationFn: vi.fn().mockResolvedValue(responseData),
+      getOptimisticData: vi.fn((current) => current ?? []),
+      showSuccessToast,
+      successMessage,
+    });
+
+    mutateWithName(result.current.mutate);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    if (expectedToast) {
+      expect(toast.success).toHaveBeenCalledWith(expectedToast);
+    } else {
       expect(toast.success).not.toHaveBeenCalled();
+    }
+  });
+
+  it('supports successMessage as a function', async () => {
+    queryClient.setQueryData(queryKey, []);
+    const successMessageFn = vi.fn(
+      (data: Item) => `Created "${data.name}" successfully!`,
+    );
+
+    const { result } = renderMutationHook({
+      mutationFn: vi.fn().mockResolvedValue(responseData),
+      getOptimisticData: vi.fn((current) => current ?? []),
+      showSuccessToast: true,
+      successMessage: successMessageFn,
     });
 
-    it('does not show success toast when successMessage not provided', async () => {
-      const queryKey = ['items'];
-      const responseData = { id: '2', name: 'Item 2' };
+    mutateWithName(result.current.mutate);
 
-      queryClient.setQueryData(queryKey, []);
-
-      const mutationFn = vi.fn().mockResolvedValue(responseData);
-      const getOptimisticData = vi.fn().mockReturnValue([]);
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            showSuccessToast: true,
-            // No successMessage provided
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({ name: 'Item 2' });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
-      expect(toast.success).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
     });
 
-    it('successMessage can be a function', async () => {
-      const queryKey = ['items'];
-      const responseData = { id: '2', name: 'Item 2' };
-
-      queryClient.setQueryData(queryKey, []);
-
-      const mutationFn = vi.fn().mockResolvedValue(responseData);
-      const getOptimisticData = vi.fn().mockReturnValue([]);
-
-      const successMessageFn = vi
-        .fn()
-        .mockImplementation(
-          (data: typeof responseData) => `Created "${data.name}" successfully!`,
-        );
-
-      const { result } = renderHook(
-        () =>
-          useOptimisticMutation({
-            queryKey,
-            mutationFn,
-            getOptimisticData,
-            successMessage: successMessageFn,
-            showSuccessToast: true,
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      act(() => {
-        result.current.mutate({ name: 'Item 2' });
-      });
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
-      expect(successMessageFn).toHaveBeenCalledWith(responseData);
-      expect(toast.success).toHaveBeenCalledWith(
-        'Created "Item 2" successfully!',
-      );
-    });
+    expect(successMessageFn).toHaveBeenCalledWith(responseData);
+    expect(toast.success).toHaveBeenCalledWith(
+      'Created "Item 2" successfully!',
+    );
   });
 });

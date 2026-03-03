@@ -58,6 +58,27 @@ Required for all agent-authored backend changes.
 | `502` | `SERVICE_UNAVAILABLE` |
 | `422` | `UNPROCESSABLE_CONTENT` |
 
+### Contract Schema Matrix Invariants
+<!-- enforced-by: invariant-test -->
+
+**File:** `packages/api/src/server/__tests__/contract-schema.invariants.test.ts`
+
+| Rule | What It Prevents |
+|---|---|
+| `schema-validation` remains matrix-driven (`idSchemaCases` / `contractCases`) | Per-route UUID/brand assertion duplication and test bloat regrowth |
+| Caps `it(...)` count and forbids per-route `describe('documents.*')` style blocks | Re-expansion to one test block per endpoint for equivalent boundary checks |
+
+### Router Integration Bloat Invariants
+<!-- enforced-by: invariant-test -->
+
+**File:** `packages/api/src/server/__tests__/router-integration-bloat.invariants.test.ts`
+
+| Rule | What It Prevents |
+|---|---|
+| Requires one shared unauthorized test per high-risk router suite (`document`, `podcast`, `voiceover`) | Reintroduction of repeated per-handler unauthorized tests |
+| Forbids `returns UNAUTHORIZED when user is null` pattern in those suites | Legacy copy-paste auth duplication across handlers |
+| Caps `it(...)` count per high-risk router suite with headroom | Unbounded integration test growth and verbose redundancy |
+
 ### Invariant Docs Sync
 <!-- enforced-by: invariant-test -->
 

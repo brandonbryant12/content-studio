@@ -7,7 +7,6 @@ import type {
   PersonaId,
   ScriptSegment,
 } from '@repo/db/schema';
-import type { GenerateAudioPayload } from '@repo/queue';
 import {
   annotateUseCaseSpan,
   enqueueJob,
@@ -69,16 +68,7 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       resourceId: input.podcastId,
       attributes: { 'podcast.id': input.podcastId },
     });
-    const result = yield* saveChanges({
-      podcastId: input.podcastId,
-      segments: input.segments,
-      hostVoice: input.hostVoice,
-      hostVoiceName: input.hostVoiceName,
-      coHostVoice: input.coHostVoice,
-      coHostVoiceName: input.coHostVoiceName,
-      hostPersonaId: input.hostPersonaId,
-      coHostPersonaId: input.coHostPersonaId,
-    });
+    const result = yield* saveChanges(input);
 
     if (!result.hasChanges) {
       return yield* Effect.fail(
@@ -93,15 +83,13 @@ export const saveAndQueueAudio = (input: SaveAndQueueAudioInput) =>
       return { jobId: existingJob.id, status: existingJob.status };
     }
 
-    const payload: GenerateAudioPayload = {
-      podcastId: podcast.id,
-      userId: podcast.createdBy,
-    };
-
     const job = yield* withCompensatingAction(
       enqueueJob({
         type: 'generate-audio',
-        payload,
+        payload: {
+          podcastId: podcast.id,
+          userId: podcast.createdBy,
+        },
         userId: podcast.createdBy,
       }),
       () => Effect.void,

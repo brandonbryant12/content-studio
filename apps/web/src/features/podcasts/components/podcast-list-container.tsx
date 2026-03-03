@@ -1,6 +1,4 @@
-import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback } from 'react';
-import type { MutationFunctionContext } from '@tanstack/react-query';
 import { useCreatePodcast } from '../hooks/use-create-podcast';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
@@ -9,13 +7,14 @@ import {
 } from '../hooks/use-podcast-list';
 import { PodcastList } from './podcast-list';
 import { apiClient } from '@/clients/apiClient';
-import { ErrorFallback } from '@/shared/components/error-boundary';
+import {
+  ListPageErrorState,
+  ListPageLoadingState,
+} from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 import { useQuickPlay } from '@/shared/hooks/use-quick-play';
-import { getErrorMessage } from '@/shared/lib/errors';
 
-const deleteFn = (input: { id: string }, context: MutationFunctionContext) =>
-  apiClient.podcasts.delete.mutationOptions().mutationFn!(input, context);
+const deleteFn = apiClient.podcasts.delete.mutationOptions().mutationFn!;
 
 export function PodcastListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,42 +69,18 @@ export function PodcastListContainer() {
     selection.deselectAll();
   }, [executeBulkDelete, selection, quickPlay]);
 
-  const handleSearch = setSearchQuery;
-
   if (isLoading) {
-    return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Podcasts</p>
-            <h1 className="page-title">Podcasts</h1>
-          </div>
-        </div>
-        <div className="loading-center-lg">
-          <Spinner size="lg" />
-        </div>
-      </div>
-    );
+    return <ListPageLoadingState title="Podcasts" />;
   }
 
   if (isError) {
     return (
-      <div className="page-container-narrow">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="page-eyebrow">Podcasts</p>
-            <h1 className="page-title">Podcasts</h1>
-          </div>
-        </div>
-        <ErrorFallback
-          error={
-            error instanceof Error
-              ? error
-              : new Error(getErrorMessage(error, 'Failed to load podcasts'))
-          }
-          resetErrorBoundary={() => refetch()}
-        />
-      </div>
+      <ListPageErrorState
+        title="Podcasts"
+        error={error}
+        fallbackMessage="Failed to load podcasts"
+        onRetry={refetch}
+      />
     );
   }
 
@@ -115,7 +90,7 @@ export function PodcastListContainer() {
       searchQuery={searchQuery}
       isCreating={createMutation.isPending}
       deletingId={deletingId}
-      onSearch={handleSearch}
+      onSearch={setSearchQuery}
       onCreate={handleCreate}
       onDelete={handleDelete}
       quickPlay={quickPlay}

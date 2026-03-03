@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UIMessage } from 'ai';
 import { useWritingAssistantChat } from '../hooks/use-writing-assistant-chat';
@@ -23,22 +23,20 @@ vi.mock('@/clients/apiClient', () => ({
   },
 }));
 
-function pendingProposalMessage(
+function pendingTranscriptWriteMessage(
   toolCallId: string,
-  summary: string,
-  revisedTranscript: string,
+  transcript: string,
 ): UIMessage {
   return {
     id: `assistant-${toolCallId}`,
     role: 'assistant',
     parts: [
       {
-        type: 'tool-proposeTranscriptEdit',
+        type: 'tool-updateVoiceoverText',
         toolCallId,
         state: 'input-available',
         input: {
-          summary,
-          revisedTranscript,
+          transcript,
         },
       },
     ],
@@ -62,13 +60,14 @@ describe('useWritingAssistantChat', () => {
     });
   });
 
-  it('auto-rejects pending proposals before sending a new user message', async () => {
+  it('applies transcript writes from tool calls and acknowledges the tool output', async () => {
+    const onApplyTranscriptEdit = vi.fn();
+
     useChatMock.mockReturnValue({
       messages: [
-        pendingProposalMessage(
+        pendingTranscriptWriteMessage(
           'tool-1',
-          'Tightened the hook.',
-          'Updated transcript for intro hook.',
+          'Updated transcript for stronger pacing.',
         ),
       ],
       sendMessage: sendMessageSpy,
@@ -78,22 +77,39 @@ describe('useWritingAssistantChat', () => {
       addToolResult: addToolResultSpy,
     });
 
+    renderHook(() =>
+      useWritingAssistantChat(
+        'Current transcript context',
+        onApplyTranscriptEdit,
+      ),
+    );
+
+    await waitFor(() => {
+      expect(onApplyTranscriptEdit).toHaveBeenCalledWith(
+        'Updated transcript for stronger pacing.',
+      );
+    });
+
+    expect(addToolResultSpy).toHaveBeenCalledWith({
+      tool: 'updateVoiceoverText',
+      toolCallId: 'tool-1',
+      output: {
+        status: 'applied',
+        appliedTranscript: 'Updated transcript for stronger pacing.',
+      },
+    });
+    expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
+      body: { transcript: 'Updated transcript for stronger pacing.' },
+    });
+  });
+
+  it('sends user messages with transcript context', async () => {
     const { result } = renderHook(() =>
-      useWritingAssistantChat('Current transcript context'),
+      useWritingAssistantChat('Current transcript context', vi.fn()),
     );
 
     await act(async () => {
       await result.current.sendUserMessage('Try a warmer tone.');
-    });
-
-    expect(addToolResultSpy).toHaveBeenCalledWith({
-      tool: 'proposeTranscriptEdit',
-      toolCallId: 'tool-1',
-      output: {
-        decision: 'rejected',
-        reason:
-          'Auto-rejected because you continued the conversation without accepting this edit.',
-      },
     });
 
     expect(sendMessageSpy).toHaveBeenCalledWith(
@@ -102,93 +118,9 @@ describe('useWritingAssistantChat', () => {
     );
   });
 
-  it('accepts selected proposal, rejects remaining pending ones, then continues the chat', async () => {
-    useChatMock.mockReturnValue({
-      messages: [
-        pendingProposalMessage('tool-1', 'Option A', 'Transcript A'),
-        pendingProposalMessage('tool-2', 'Option B', 'Transcript B'),
-      ],
-      sendMessage: sendMessageSpy,
-      status: 'ready',
-      error: undefined,
-      setMessages: setMessagesSpy,
-      addToolResult: addToolResultSpy,
-    });
-
-    const { result } = renderHook(() =>
-      useWritingAssistantChat('Current transcript context'),
-    );
-
-    await act(async () => {
-      await result.current.acceptProposal(result.current.proposals[0]!);
-    });
-
-    expect(addToolResultSpy).toHaveBeenNthCalledWith(1, {
-      tool: 'proposeTranscriptEdit',
-      toolCallId: 'tool-1',
-      output: {
-        decision: 'accepted',
-        appliedTranscript: 'Transcript A',
-        reason: 'Applied in editor.',
-      },
-    });
-    expect(addToolResultSpy).toHaveBeenNthCalledWith(2, {
-      tool: 'proposeTranscriptEdit',
-      toolCallId: 'tool-2',
-      output: {
-        decision: 'rejected',
-        reason:
-          'Rejected automatically because another transcript edit was accepted.',
-      },
-    });
-    expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
-      body: { transcript: 'Current transcript context' },
-    });
-  });
-
-  it('rejects all pending proposals when the selected proposal is rejected', async () => {
-    useChatMock.mockReturnValue({
-      messages: [
-        pendingProposalMessage('tool-1', 'Option A', 'Transcript A'),
-        pendingProposalMessage('tool-2', 'Option B', 'Transcript B'),
-      ],
-      sendMessage: sendMessageSpy,
-      status: 'ready',
-      error: undefined,
-      setMessages: setMessagesSpy,
-      addToolResult: addToolResultSpy,
-    });
-
-    const { result } = renderHook(() =>
-      useWritingAssistantChat('Current transcript context'),
-    );
-
-    await act(async () => {
-      await result.current.rejectProposal(result.current.proposals[0]!);
-    });
-
-    expect(addToolResultSpy).toHaveBeenNthCalledWith(1, {
-      tool: 'proposeTranscriptEdit',
-      toolCallId: 'tool-1',
-      output: { decision: 'rejected', reason: 'Rejected in editor.' },
-    });
-    expect(addToolResultSpy).toHaveBeenNthCalledWith(2, {
-      tool: 'proposeTranscriptEdit',
-      toolCallId: 'tool-2',
-      output: {
-        decision: 'rejected',
-        reason:
-          'Rejected automatically because another transcript edit was reviewed.',
-      },
-    });
-    expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
-      body: { transcript: 'Current transcript context' },
-    });
-  });
-
   it('resets chat messages through setMessages', () => {
     const { result } = renderHook(() =>
-      useWritingAssistantChat('Current transcript context'),
+      useWritingAssistantChat('Current transcript context', vi.fn()),
     );
 
     act(() => {

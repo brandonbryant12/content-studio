@@ -6,13 +6,12 @@ import {
 } from '../hooks/use-activity-list';
 import { useActivityStats } from '../hooks/use-activity-stats';
 import { ActivityDashboard } from './activity-dashboard';
-import { ErrorFallback } from '@/shared/components/error-boundary';
-import { getErrorMessage } from '@/shared/lib/errors';
+import { QueryErrorFallback } from '@/shared/components/query-error-fallback';
 
 export function ActivityDashboardContainer() {
   const [period, setPeriod] = useState<Period>('7d');
-  const [entityType, setEntityType] = useState<string | undefined>(undefined);
-  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [entityType, setEntityType] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -53,26 +52,21 @@ export function ActivityDashboardContainer() {
     refetch: refetchStats,
   } = useActivityStats(period);
 
-  const activities = useMemo(() => {
-    if (!activityPages?.pages) return [];
-    return activityPages.pages.flatMap((page) => page.data);
-  }, [activityPages]);
+  const activities = useMemo(
+    () => activityPages?.pages.flatMap((page) => page.data) ?? [],
+    [activityPages],
+  );
+  const statsTotal = stats?.total ?? 0;
+  const statsByEntityType = stats?.byEntityType ?? [];
+  const topUsers = stats?.topUsers ?? [];
 
   if (feedError || statsError) {
     const firstError = feedErrorObj ?? statsErrorObj;
     return (
-      <ErrorFallback
-        error={
-          firstError instanceof Error
-            ? firstError
-            : new Error(
-                getErrorMessage(
-                  firstError,
-                  'Failed to load activity dashboard',
-                ),
-              )
-        }
-        resetErrorBoundary={() => {
+      <QueryErrorFallback
+        error={firstError}
+        fallbackMessage="Failed to load activity dashboard"
+        onRetry={() => {
           refetchFeed();
           refetchStats();
         }}
@@ -83,8 +77,8 @@ export function ActivityDashboardContainer() {
   return (
     <ActivityDashboard
       // Stats
-      statsTotal={stats?.total ?? 0}
-      statsByEntityType={stats?.byEntityType ?? []}
+      statsTotal={statsTotal}
+      statsByEntityType={statsByEntityType}
       statsLoading={statsLoading}
       // Filters
       period={period}
@@ -93,7 +87,7 @@ export function ActivityDashboardContainer() {
       onEntityTypeChange={setEntityType}
       userId={userId}
       onUserIdChange={setUserId}
-      topUsers={stats?.topUsers ?? []}
+      topUsers={topUsers}
       searchQuery={searchQuery}
       onSearchChange={handleSearchChange}
       // Feed

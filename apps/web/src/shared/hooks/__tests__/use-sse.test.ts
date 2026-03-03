@@ -9,7 +9,6 @@ import {
 } from '../sse-handlers';
 import { useSSE } from '../use-sse';
 
-// Mock SSE handlers
 vi.mock('../sse-handlers', () => ({
   handleJobCompletion: vi.fn(),
   handleVoiceoverJobCompletion: vi.fn(),
@@ -20,7 +19,6 @@ vi.mock('../sse-handlers', () => ({
   setNavigateFn: vi.fn(),
 }));
 
-// Create a controllable async iterator for mocking the ORPC client
 function createMockIterator() {
   const events: Array<Record<string, unknown>> = [];
   let resolve: (() => void) | null = null;
@@ -38,12 +36,9 @@ function createMockIterator() {
         });
         resolve = null;
       }
-      if (error) {
-        throw error;
-      }
-      if (events.length > 0) {
-        return { value: events.shift()!, done: false };
-      }
+
+      if (error) throw error;
+      if (events.length > 0) return { value: events.shift()!, done: false };
       return { value: undefined, done: true };
     },
     async return() {
@@ -70,14 +65,12 @@ function createMockIterator() {
   };
 }
 
-// Mock TanStack Router
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({
-    history: { push: vi.fn() },
+    navigate: vi.fn(),
   }),
 }));
 
-// Mock the raw API client
 const mockSubscribe = vi.fn();
 vi.mock('@/clients/apiClient', () => ({
   rawApiClient: {
@@ -101,11 +94,20 @@ describe('useSSE', () => {
     };
   };
 
+  const renderEnabledSSE = () => {
+    const stream = createMockIterator();
+    mockSubscribe.mockResolvedValue(stream.iterator);
+
+    const hook = renderHook(() => useSSE({ enabled: true }), {
+      wrapper: createWrapper(),
+    });
+
+    return { stream, ...hook };
+  };
+
   beforeEach(() => {
     queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
+      defaultOptions: { queries: { retry: false } },
     });
     vi.clearAllMocks();
   });
@@ -124,38 +126,18 @@ describe('useSSE', () => {
       expect(mockSubscribe).not.toHaveBeenCalled();
     });
 
-    it('calls subscribe when enabled', () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
+    it('subscribes and enters connecting state when enabled', () => {
+      const { result } = renderEnabledSSE();
 
-      renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      expect(mockSubscribe).toHaveBeenCalled();
-    });
-
-    it('transitions to connecting state when enabled', () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      const { result } = renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
+      expect(mockSubscribe).toHaveBeenCalledTimes(1);
       expect(result.current.connectionState).toBe('connecting');
     });
 
     it('transitions to connected state on connected event', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      const { result } = renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
+      const { stream, result } = renderEnabledSSE();
 
       await act(async () => {
-        mock.push({ type: 'connected', userId: 'user-123' });
+        stream.push({ type: 'connected', userId: 'user-123' });
       });
 
       await waitFor(() => {
@@ -163,17 +145,11 @@ describe('useSSE', () => {
       });
     });
 
-    it('aborts on unmount', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      const { unmount } = renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
+    it('aborts active subscription on unmount', () => {
+      const { unmount } = renderEnabledSSE();
 
       unmount();
 
-      // Verify signal was passed
       const callArgs = mockSubscribe.mock.calls[0]!;
       expect(callArgs[1]?.signal).toBeInstanceOf(AbortSignal);
       expect(callArgs[1]!.signal.aborted).toBe(true);
@@ -181,104 +157,70 @@ describe('useSSE', () => {
   });
 
   describe('event handling', () => {
-    it('handles job_completion events', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      const event = {
-        type: 'job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-podcast',
-        status: 'completed',
-        podcastId: 'podcast-456',
-      };
+    it.each([
+      {
+        name: 'job_completion',
+        event: {
+          type: 'job_completion',
+          jobId: 'job-123',
+          jobType: 'generate-podcast',
+          status: 'completed',
+          podcastId: 'podcast-456',
+        },
+        handler: handleJobCompletion,
+      },
+      {
+        name: 'entity_change',
+        event: {
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: 'podcast-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+        },
+        handler: handleEntityChange,
+      },
+      {
+        name: 'voiceover_job_completion',
+        event: {
+          type: 'voiceover_job_completion',
+          jobId: 'job-123',
+          jobType: 'generate-voiceover',
+          status: 'completed',
+          voiceoverId: 'voiceover-456',
+        },
+        handler: handleVoiceoverJobCompletion,
+      },
+    ])('handles $name events', async ({ event, handler }) => {
+      const { stream } = renderEnabledSSE();
 
       await act(async () => {
-        mock.push(event);
+        stream.push(event);
       });
 
       await waitFor(() => {
-        expect(handleJobCompletion).toHaveBeenCalledWith(event, queryClient);
-      });
-    });
-
-    it('handles entity_change events', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      const event = {
-        type: 'entity_change',
-        entityType: 'podcast',
-        changeType: 'update',
-        entityId: 'podcast-123',
-        userId: 'user-456',
-        timestamp: new Date().toISOString(),
-      };
-
-      await act(async () => {
-        mock.push(event);
-      });
-
-      await waitFor(() => {
-        expect(handleEntityChange).toHaveBeenCalledWith(event, queryClient);
-      });
-    });
-
-    it('handles voiceover_job_completion events', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      const event = {
-        type: 'voiceover_job_completion',
-        jobId: 'job-123',
-        jobType: 'generate-voiceover',
-        status: 'completed',
-        voiceoverId: 'voiceover-456',
-      };
-
-      await act(async () => {
-        mock.push(event);
-      });
-
-      await waitFor(() => {
-        expect(handleVoiceoverJobCompletion).toHaveBeenCalledWith(
-          event,
-          queryClient,
-        );
+        expect(handler).toHaveBeenCalledWith(event, queryClient);
       });
     });
   });
 
   describe('reconnection', () => {
     it('reconnects when stream ends', async () => {
-      const mock1 = createMockIterator();
-      const mock2 = createMockIterator();
+      const stream1 = createMockIterator();
+      const stream2 = createMockIterator();
       mockSubscribe
-        .mockResolvedValueOnce(mock1.iterator)
-        .mockResolvedValueOnce(mock2.iterator);
+        .mockResolvedValueOnce(stream1.iterator)
+        .mockResolvedValueOnce(stream2.iterator);
 
       renderHook(() => useSSE({ enabled: true }), {
         wrapper: createWrapper(),
       });
 
-      // End the first stream
       await act(async () => {
-        mock1.end();
+        stream1.end();
       });
 
-      // Wait for reconnect delay + call
       await act(async () => {
         await new Promise((r) => setTimeout(r, 3000));
       });
@@ -289,16 +231,10 @@ describe('useSSE', () => {
     });
 
     it('sets disconnected state when stream errors', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
+      const { stream, result } = renderEnabledSSE();
 
-      const { result } = renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      // Simulate stream error
       await act(async () => {
-        mock.fail(new Error('Stream failed'));
+        stream.fail(new Error('Stream failed'));
       });
 
       await waitFor(() => {
@@ -306,19 +242,12 @@ describe('useSSE', () => {
       });
     });
 
-    it('reconnect triggers new subscribe call', async () => {
-      const mock = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock.iterator);
-
-      const { result } = renderHook(() => useSSE({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
+    it('manual reconnect creates a new subscription', () => {
+      const { result } = renderEnabledSSE();
       expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
-      // Manual reconnect creates new connection
-      const mock2 = createMockIterator();
-      mockSubscribe.mockResolvedValue(mock2.iterator);
+      const stream2 = createMockIterator();
+      mockSubscribe.mockResolvedValue(stream2.iterator);
 
       act(() => {
         result.current.reconnect();

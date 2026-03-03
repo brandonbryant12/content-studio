@@ -66,6 +66,37 @@ vi.mock('@/shared/lib/file-download', async () => {
   };
 });
 
+function createMockVoiceover(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: 'voiceover-1',
+    title: 'Test Voiceover',
+    status: 'drafting',
+    approvedBy: null,
+    audioUrl: null,
+    duration: null,
+    voiceName: 'Charon',
+    updatedAt: '2026-02-20T14:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function createMockSettings(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    title: 'Test Voiceover',
+    text: 'Hello world',
+    voice: 'Charon',
+    setTitle: vi.fn(),
+    setText: vi.fn(),
+    setVoice: vi.fn(),
+    hasTitleChanges: false,
+    hasChanges: false,
+    isSaving: false,
+    saveSettings: vi.fn(),
+    discardChanges: vi.fn(),
+    ...overrides,
+  };
+}
+
 function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     hasChanges: false,
@@ -80,10 +111,40 @@ function createMockActions(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+const setVoiceover = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useVoiceover).mockReturnValue({
+    data: createMockVoiceover(overrides),
+  } as never);
+};
+
+const setSettings = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useVoiceoverSettings).mockReturnValue(
+    createMockSettings(overrides) as never,
+  );
+};
+
+const setActions = (overrides: Partial<Record<string, unknown>> = {}) => {
+  vi.mocked(useVoiceoverActions).mockReturnValue(
+    createMockActions(overrides) as never,
+  );
+};
+
+const renderContainer = () =>
+  render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+
 function getLastVoiceoverDetailProps<T>(): T | undefined {
   const lastCall =
     voiceoverDetailSpy.mock.calls[voiceoverDetailSpy.mock.calls.length - 1];
   return lastCall?.[0] as T | undefined;
+}
+
+function getShortcutConfig(
+  key: string,
+): { onTrigger?: () => void; enabled?: boolean } | undefined {
+  const call = vi
+    .mocked(useKeyboardShortcut)
+    .mock.calls.find(([opts]) => opts.key === key && opts.cmdOrCtrl === true);
+  return call?.[0] as { onTrigger?: () => void; enabled?: boolean } | undefined;
 }
 
 describe('VoiceoverDetailContainer', () => {
@@ -94,83 +155,51 @@ describe('VoiceoverDetailContainer', () => {
       user: { id: 'user-1' },
     } as never);
     vi.mocked(useIsAdmin).mockReturnValue(false);
-
-    vi.mocked(useVoiceover).mockReturnValue({
-      data: {
-        id: 'voiceover-1',
-        title: 'Test Voiceover',
-        status: 'drafting',
-        approvedBy: null,
-        audioUrl: null,
-        duration: null,
-        updatedAt: '2026-02-20T14:00:00.000Z',
-      },
-    } as never);
-
-    vi.mocked(useVoiceoverSettings).mockReturnValue({
-      title: 'Test Voiceover',
-      text: 'Hello world',
-      voice: 'Charon',
-      setTitle: vi.fn(),
-      setText: vi.fn(),
-      setVoice: vi.fn(),
-      hasTitleChanges: false,
-      hasChanges: false,
-      isSaving: false,
-      saveSettings: vi.fn(),
-      discardChanges: vi.fn(),
-    } as never);
-
     vi.mocked(useApproveVoiceover).mockReturnValue({
       approve: { mutate: vi.fn(), isPending: false },
       revoke: { mutate: vi.fn(), isPending: false },
     } as never);
+
+    setVoiceover();
+    setSettings();
+    setActions();
   });
 
-  it('blocks navigation when there are unsaved changes and no generation', () => {
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions({ hasChanges: true, isGenerating: false }) as never,
-    );
-
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
-
-    expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
+  it.each([
+    {
+      name: 'blocks navigation when there are unsaved changes and no generation',
+      isGenerating: false,
       shouldBlock: true,
-    });
-  });
+    },
+    {
+      name: 'does not block navigation while generation is running',
+      isGenerating: true,
+      shouldBlock: false,
+    },
+  ])('$name', ({ isGenerating, shouldBlock }) => {
+    setActions({ hasChanges: true, isGenerating });
 
-  it('does not block navigation while generation is running', () => {
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions({ hasChanges: true, isGenerating: true }) as never,
-    );
-
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+    renderContainer();
 
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
-      shouldBlock: false,
+      shouldBlock,
     });
   });
 
   it('uses smart filename when exporting audio', () => {
-    vi.mocked(useVoiceover).mockReturnValue({
-      data: {
-        id: 'voiceover-1',
-        title: 'Launch Narration',
-        status: 'ready',
-        approvedBy: null,
-        audioUrl: 'https://cdn.example.com/audio/voiceover.mp3?x=1',
-        duration: 75,
-        updatedAt: '2026-02-19T14:00:00.000Z',
-      },
-    } as never);
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions() as never,
-    );
+    setVoiceover({
+      title: 'Launch Narration',
+      status: 'ready',
+      audioUrl: 'https://cdn.example.com/audio/voiceover.mp3?x=1',
+      duration: 75,
+      updatedAt: '2026-02-19T14:00:00.000Z',
+    });
 
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+    renderContainer();
 
-    const props = getLastVoiceoverDetailProps<{ onExportAudio?: () => void }>();
-    props?.onExportAudio?.();
+    getLastVoiceoverDetailProps<{
+      onExportAudio?: () => void;
+    }>()?.onExportAudio?.();
 
     expect(downloadFromUrlSpy).toHaveBeenCalledWith(
       'https://cdn.example.com/audio/voiceover.mp3?x=1',
@@ -179,16 +208,11 @@ describe('VoiceoverDetailContainer', () => {
   });
 
   it('uses smart filename when exporting script', () => {
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions() as never,
-    );
+    renderContainer();
 
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
-
-    const props = getLastVoiceoverDetailProps<{
+    getLastVoiceoverDetailProps<{
       onExportScript?: () => void;
-    }>();
-    props?.onExportScript?.();
+    }>()?.onExportScript?.();
 
     expect(downloadTextFileSpy).toHaveBeenCalledWith(
       expect.any(String),
@@ -198,57 +222,25 @@ describe('VoiceoverDetailContainer', () => {
 
   it('maps Cmd+S to save (not generate)', () => {
     const saveSettings = vi.fn().mockResolvedValue(undefined);
-    vi.mocked(useVoiceoverSettings).mockReturnValue({
-      title: 'Test Voiceover',
-      text: 'Hello world',
-      voice: 'Charon',
-      setTitle: vi.fn(),
-      setText: vi.fn(),
-      setVoice: vi.fn(),
-      hasTitleChanges: false,
-      hasChanges: true,
-      isSaving: false,
-      saveSettings,
-      discardChanges: vi.fn(),
-    } as never);
+    setSettings({ hasChanges: true, saveSettings });
 
     const handleGenerate = vi.fn();
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions({ hasChanges: true, handleGenerate }) as never,
-    );
+    setActions({ hasChanges: true, handleGenerate });
 
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+    renderContainer();
 
-    // Find the Cmd+S shortcut call
-    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
-    const cmdSCall = shortcutCalls.find(
-      ([opts]) => opts.key === 's' && opts.cmdOrCtrl === true,
-    );
-
-    expect(cmdSCall).toBeDefined();
-    // Cmd+S should NOT call handleGenerate
-    expect(cmdSCall![0].onTrigger).not.toBe(handleGenerate);
+    expect(getShortcutConfig('s')).toBeDefined();
+    expect(getShortcutConfig('s')?.onTrigger).not.toBe(handleGenerate);
   });
 
   it('maps Cmd+Enter to generate', () => {
     const handleGenerate = vi.fn();
-    vi.mocked(useVoiceoverActions).mockReturnValue(
-      createMockActions({
-        hasText: true,
-        isGenerating: false,
-        handleGenerate,
-      }) as never,
-    );
+    setActions({ hasText: true, isGenerating: false, handleGenerate });
 
-    render(<VoiceoverDetailContainer voiceoverId="voiceover-1" />);
+    renderContainer();
 
-    const shortcutCalls = vi.mocked(useKeyboardShortcut).mock.calls;
-    const cmdEnterCall = shortcutCalls.find(
-      ([opts]) => opts.key === 'Enter' && opts.cmdOrCtrl === true,
-    );
-
-    expect(cmdEnterCall).toBeDefined();
-    expect(cmdEnterCall![0].onTrigger).toBe(handleGenerate);
-    expect(cmdEnterCall![0].enabled).toBe(true);
+    expect(getShortcutConfig('Enter')).toBeDefined();
+    expect(getShortcutConfig('Enter')?.onTrigger).toBe(handleGenerate);
+    expect(getShortcutConfig('Enter')?.enabled).toBe(true);
   });
 });
