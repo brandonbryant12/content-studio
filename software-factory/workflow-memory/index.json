@@ -15,6 +15,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-03-architecture-adr-guard-ready-for-dev-executor-merged-redis-queue-wakeups-per-type-worke",
+    "date": "2026-03-03",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "ready-for-dev-executor merged Redis queue wakeups + per-type worker concurrency (#237)",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "skill:feature-delivery",
+      "automation:ready-for-dev-executor",
+      "issue:237"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-02-architecture-adr-guard-ready-for-dev-executor-merged-observability-tracing-fixes-327-32",
     "date": "2026-03-02",
     "month": "2026-03",
