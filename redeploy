@@ -25,9 +25,9 @@ info "Pulling latest changes (fast-forward only)..."
 git pull --ff-only
 
 if [[ -f "$ENV_FILE" ]]; then
-  info "Re-deploying with existing $ENV_FILE"
+  info "Re-deploying with existing $ENV_FILE (via ./deploy using sudo docker/sudo docker-compose)"
   printf 'y\n' | ./deploy
 else
-  info "$ENV_FILE not found; launching interactive deploy setup"
+  info "$ENV_FILE not found; launching interactive deploy setup (uses sudo docker/sudo docker-compose)"
   ./deploy
 fi
