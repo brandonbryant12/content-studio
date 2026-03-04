@@ -1,15 +1,13 @@
 import { getEventMeta } from '@repo/api/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   handleJobCompletion,
   handleVoiceoverJobCompletion,
   handleInfographicJobCompletion,
-  handleDocumentJobCompletion,
+  handleSourceJobCompletion,
   handleEntityChange,
   handleActivityLogged,
-  setNavigateFn,
 } from './sse-handlers';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -31,11 +29,6 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const queryClientRef = useRef(queryClient);
   queryClientRef.current = queryClient;
-
-  const router = useRouter();
-  useEffect(() => {
-    setNavigateFn((path: string) => void router.navigate({ to: path }));
-  }, [router]);
 
   const [connectionState, setConnectionState] =
     useState<SSEConnectionState>('disconnected');
@@ -84,7 +77,7 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 handleInfographicJobCompletion(event, qc);
                 break;
               case 'source_job_completion':
-                handleDocumentJobCompletion(event, qc);
+                handleSourceJobCompletion(event, qc);
                 break;
               case 'entity_change':
                 handleEntityChange(event, qc);

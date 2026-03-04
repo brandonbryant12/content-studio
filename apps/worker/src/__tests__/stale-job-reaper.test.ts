@@ -87,7 +87,7 @@ describe('reapStaleJobs', () => {
     expect(publishSpy).not.toHaveBeenCalled();
   });
 
-  it('updates document status to failed for document jobs', async () => {
+  it('updates source status to failed for source jobs', async () => {
     const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
     const publishSpy = vi.fn();
 
@@ -242,7 +242,7 @@ describe('reapStaleJobs', () => {
   });
 
   it('handles multiple stale jobs across entity types', async () => {
-    const docUpdateSpy = vi.fn(() => Effect.succeed({} as never));
+    const sourceUpdateSpy = vi.fn(() => Effect.succeed({} as never));
     const podUpdateSpy = vi.fn(() => Effect.succeed({} as never));
     const publishSpy = vi.fn();
 
@@ -265,7 +265,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
-      createMockSourceRepo({ updateStatus: docUpdateSpy }),
+      createMockSourceRepo({ updateStatus: sourceUpdateSpy }),
       createMockPodcastRepo({ updateStatus: podUpdateSpy }),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -276,7 +276,7 @@ describe('reapStaleJobs', () => {
       reapStaleJobs(publishSpy).pipe(Effect.provide(layers)),
     );
 
-    expect(docUpdateSpy).toHaveBeenCalledOnce();
+    expect(sourceUpdateSpy).toHaveBeenCalledOnce();
     expect(podUpdateSpy).toHaveBeenCalledOnce();
     expect(publishSpy).toHaveBeenCalledTimes(2);
   });
@@ -302,7 +302,7 @@ describe('reapStaleJobs', () => {
       }),
     ];
 
-    // Document repo fails, podcast repo succeeds
+    // Source repo fails, podcast repo succeeds
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
       createMockSourceRepo({
@@ -320,7 +320,7 @@ describe('reapStaleJobs', () => {
       reapStaleJobs(publishSpy).pipe(Effect.provide(layers)),
     );
 
-    // Podcast update should still succeed even though document update failed
+    // Podcast update should still succeed even though source update failed
     expect(podUpdateSpy).toHaveBeenCalledOnce();
   });
 

@@ -41,7 +41,7 @@ export const podcastWriteMethods: Pick<
 > = {
   insert: (data, sourceIds) =>
     withDb('podcastRepo.insert', async (db) => {
-      const docIds = [...sourceIds] as SourceId[];
+      const resolvedSourceIds = [...sourceIds] as SourceId[];
 
       return db.transaction(async (tx) => {
         const [pod] = await tx
@@ -56,22 +56,25 @@ export const podcastWriteMethods: Pick<
             hostVoiceName: data.hostVoiceName,
             coHostVoice: data.coHostVoice,
             coHostVoiceName: data.coHostVoiceName,
-            sourceIds: docIds,
+            sourceIds: resolvedSourceIds,
             createdBy: data.createdBy,
           })
           .returning();
 
         const docs =
-          docIds.length > 0
-            ? await tx.select().from(source).where(inArray(source.id, docIds))
+          resolvedSourceIds.length > 0
+            ? await tx
+                .select()
+                .from(source)
+                .where(inArray(source.id, resolvedSourceIds))
             : [];
 
-        const docMap = new Map(docs.map((d) => [d.id, d]));
-        const sortedDocs = docIds
-          .map((id) => docMap.get(id))
+        const sourceMap = new Map(docs.map((d) => [d.id, d]));
+        const sortedSources = resolvedSourceIds
+          .map((id) => sourceMap.get(id))
           .filter((d): d is Source => d !== undefined);
 
-        return { ...pod!, sources: sortedDocs };
+        return { ...pod!, sources: sortedSources };
       });
     }),
 

@@ -7,7 +7,7 @@ import {
   chatWritingAssistantSystemPrompt,
   infographicGenerationUserPrompt,
   infographicTitleUserPrompt,
-  documentOutlineUserPrompt,
+  sourceOutlineUserPrompt,
   personaAvatarImageUserPrompt,
   podcastCoverImageUserPrompt,
   podcastScriptSystemPrompt,
@@ -28,7 +28,7 @@ const PROMPTS: readonly AnyPromptDefinition[] = [
   podcastScriptUserPrompt,
   infographicGenerationUserPrompt,
   infographicTitleUserPrompt,
-  documentOutlineUserPrompt,
+  sourceOutlineUserPrompt,
   podcastCoverImageUserPrompt,
   personaAvatarImageUserPrompt,
 ] as const;

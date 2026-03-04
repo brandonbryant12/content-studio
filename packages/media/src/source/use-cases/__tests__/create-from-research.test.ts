@@ -62,7 +62,7 @@ describe('createFromResearch', () => {
     resetAllFactories();
   });
 
-  it('creates a research document and enqueues processing', async () => {
+  it('creates a research source and enqueues processing', async () => {
     const user = createTestUser();
     const state: MockState = {};
     const insertSpy = vi.fn();
@@ -87,7 +87,7 @@ describe('createFromResearch', () => {
       updateStatus: (id, status, errorMessage) =>
         Effect.sync(() => {
           if (!state.inserted || state.inserted.id !== id) {
-            throw new Error('updateStatus called with unknown document');
+            throw new Error('updateStatus called with unknown source');
           }
           const updated = {
             ...state.inserted,
@@ -203,7 +203,7 @@ describe('createFromResearch', () => {
     );
   });
 
-  it('marks the document as failed when enqueue fails', async () => {
+  it('marks the source as failed when enqueue fails', async () => {
     const user = createTestUser();
     const state: MockState = {};
     const updateStatusSpy = vi.fn();

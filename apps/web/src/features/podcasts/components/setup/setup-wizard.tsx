@@ -8,8 +8,8 @@ import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { SetupFooter } from './setup-footer';
 import { StepIndicator } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
-import { StepDocuments } from './steps/step-documents';
 import { StepInstructions } from './steps/step-instructions';
+import { StepSources } from './steps/step-sources';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
@@ -38,7 +38,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   );
   const [researchDocId, setResearchDocId] = useState<string | null>(null);
 
-  const handleDocumentCreated = useCallback((docId: string, _title: string) => {
+  const handleSourceCreated = useCallback((docId: string, _title: string) => {
     setResearchDocId(docId);
     setSelectedDocIds((prev) => [...prev, docId]);
   }, []);
@@ -192,11 +192,11 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
         <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
         {currentStep === 1 && (
-          <StepDocuments
+          <StepSources
             selectedIds={selectedDocIds}
             onSelectionChange={setSelectedDocIds}
             researchDocId={researchDocId}
-            onDocumentCreated={handleDocumentCreated}
+            onSourceCreated={handleSourceCreated}
           />
         )}
 

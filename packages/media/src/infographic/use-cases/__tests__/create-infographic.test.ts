@@ -141,9 +141,9 @@ describe('createInfographic', () => {
     expect(result._tag).toBe('Failure');
   });
 
-  it('builds a document-derived prompt and sets sourceId when sourceId is provided', async () => {
+  it('builds a source-derived prompt and sets sourceId when sourceId is provided', async () => {
     const user = createTestUser();
-    const sourceDocument = createTestSource({
+    const testSource = createTestSource({
       createdBy: user.id,
       title: 'AI Market Report',
       extractedText:
@@ -164,31 +164,31 @@ describe('createInfographic', () => {
     });
 
     const repo = createMockInfographicRepo({ insert: mockInsertFn });
-    const documentRepo = createMockSourceRepo({
+    const sourceRepo = createMockSourceRepo({
       findByIdForUser: (id, userId) =>
-        id === sourceDocument.id && userId === user.id
-          ? Effect.succeed(sourceDocument)
-          : Effect.die('unexpected document lookup'),
+        id === testSource.id && userId === user.id
+          ? Effect.succeed(testSource)
+          : Effect.die('unexpected source lookup'),
     });
 
     const layers = Layer.mergeAll(
       MockDbLive,
       repo,
-      documentRepo,
+      sourceRepo,
       createMockStorage(),
     );
 
     const result = await Effect.runPromise(
       withTestUser(user)(
         createInfographic({
-          title: 'From document',
+          title: 'From source',
           format: 'portrait',
-          sourceId: sourceDocument.id,
+          sourceId: testSource.id,
         }),
       ).pipe(Effect.provide(layers)),
     );
 
-    expect(result.sourceId).toBe(sourceDocument.id);
+    expect(result.sourceId).toBe(testSource.id);
     expect(result.prompt).toContain('Create an infographic that summarizes');
     expect(result.prompt).toContain('Key points:');
     expect(result.prompt).toContain('Spending Growth');

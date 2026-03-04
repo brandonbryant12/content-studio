@@ -12,9 +12,9 @@ import { createSource } from '../create-source';
 // =============================================================================
 
 /**
- * Create a mock document for testing.
+ * Create a mock source for testing.
  */
-const createMockDocument = (overrides: Partial<Source> = {}): Source => ({
+const createMockSource = (overrides: Partial<Source> = {}): Source => ({
   id: 'doc_test123' as SourceId,
   title: 'Test Source',
   contentKey: 'sources/test.txt',
@@ -106,14 +106,14 @@ const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
 describe('createSource', () => {
   const testUser = createTestUser({ id: 'user_test123' });
 
-  describe('document creation', () => {
-    it('creates document with correct metadata', async () => {
+  describe('source creation', () => {
+    it('creates source with correct metadata', async () => {
       // Arrange
       const insertSpy = vi.fn();
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
         return Effect.succeed(
-          createMockDocument({
+          createMockSource({
             title: data.title,
             contentKey: data.contentKey,
             wordCount: data.wordCount,
@@ -155,9 +155,7 @@ describe('createSource', () => {
       const insertSpy = vi.fn();
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
-        return Effect.succeed(
-          createMockDocument({ wordCount: data.wordCount }),
-        );
+        return Effect.succeed(createMockSource({ wordCount: data.wordCount }));
       });
 
       const layers = Layer.mergeAll(mockRepo, createMockStorage(), MockDbLive);
@@ -186,7 +184,7 @@ describe('createSource', () => {
       });
 
       const mockRepo = createMockSourceRepo((data) =>
-        Effect.succeed(createMockDocument({ contentKey: data.contentKey })),
+        Effect.succeed(createMockSource({ contentKey: data.contentKey })),
       );
 
       const layers = Layer.mergeAll(mockRepo, mockStorage, MockDbLive);
@@ -221,7 +219,7 @@ describe('createSource', () => {
       const failingStorage = createFailingStorage(storageError);
 
       const mockRepo = createMockSourceRepo(() =>
-        Effect.succeed(createMockDocument()),
+        Effect.succeed(createMockSource()),
       );
 
       const layers = Layer.mergeAll(mockRepo, failingStorage, MockDbLive);
@@ -251,9 +249,7 @@ describe('createSource', () => {
       const insertSpy = vi.fn();
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
-        return Effect.succeed(
-          createMockDocument({ createdBy: data.createdBy }),
-        );
+        return Effect.succeed(createMockSource({ createdBy: data.createdBy }));
       });
 
       const layers = Layer.mergeAll(mockRepo, createMockStorage(), MockDbLive);
@@ -278,9 +274,7 @@ describe('createSource', () => {
       const insertSpy = vi.fn();
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
-        return Effect.succeed(
-          createMockDocument({ createdBy: data.createdBy }),
-        );
+        return Effect.succeed(createMockSource({ createdBy: data.createdBy }));
       });
 
       const layers = Layer.mergeAll(mockRepo, createMockStorage(), MockDbLive);
@@ -307,7 +301,7 @@ describe('createSource', () => {
       const insertSpy = vi.fn();
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
-        return Effect.succeed(createMockDocument({ metadata: data.metadata }));
+        return Effect.succeed(createMockSource({ metadata: data.metadata }));
       });
 
       const layers = Layer.mergeAll(mockRepo, createMockStorage(), MockDbLive);

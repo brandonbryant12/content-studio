@@ -53,7 +53,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 // =============================================================================
 
 /**
- * In-memory storage instance for seeding document content.
+ * In-memory storage instance for seeding source content.
  */
 let inMemoryStorage: ReturnType<typeof createInMemoryStorage>;
 
@@ -98,9 +98,9 @@ const insertTestUser = async (
 };
 
 /**
- * Insert a test document into the database and seed content into storage.
+ * Insert a test source into the database and seed content into storage.
  */
-const insertTestDocument = async (
+const insertTestSource = async (
   ctx: TestContext,
   userId: string,
   options: Partial<Parameters<typeof createTestSource>[0]> & {
@@ -115,8 +115,7 @@ const insertTestDocument = async (
   await ctx.db.insert(sourceTable).values(doc);
 
   // Seed content into storage so getSourceContent works
-  const textContent =
-    content ?? 'Test document content for podcast generation.';
+  const textContent = content ?? 'Test source content for podcast generation.';
   inMemoryStorage.getStore().set(doc.contentKey, {
     data: Buffer.from(textContent),
     contentType: 'text/plain',
@@ -171,9 +170,9 @@ describe('podcast job workflow', () => {
 
   describe('full generation workflow (generate-podcast)', () => {
     it('worker can process full generation job after API enqueues it', async () => {
-      // Arrange: Create a podcast with a linked document
-      const doc = await insertTestDocument(ctx, testUser.id, {
-        title: 'Test Document',
+      // Arrange: Create a podcast with a linked source
+      const doc = await insertTestSource(ctx, testUser.id, {
+        title: 'Test Source',
       });
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Full Generation Test',
@@ -351,9 +350,9 @@ describe('podcast job workflow', () => {
   describe('state validation', () => {
     it('full generation uses consistent status expectations', async () => {
       /**
-       * Documents expected state transitions for full generation.
+       * Expected state transitions for full generation.
        */
-      const doc = await insertTestDocument(ctx, testUser.id);
+      const doc = await insertTestSource(ctx, testUser.id);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'drafting',
         sourceIds: [doc.id],
@@ -408,7 +407,7 @@ describe('podcast job workflow', () => {
 
     it('audio regeneration uses consistent status expectations', async () => {
       /**
-       * Documents expected state transitions for audio regeneration.
+       * Expected state transitions for audio regeneration.
        */
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'ready',
@@ -485,7 +484,7 @@ describe('podcast job workflow', () => {
 
   describe('idempotency', () => {
     it('startGeneration returns existing pending job when called twice', async () => {
-      const doc = await insertTestDocument(ctx, testUser.id);
+      const doc = await insertTestSource(ctx, testUser.id);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'drafting',
         sourceIds: [doc.id],

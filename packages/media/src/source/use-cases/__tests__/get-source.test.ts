@@ -55,28 +55,28 @@ describe('getSource', () => {
   });
 
   describe('authorization', () => {
-    it('returns document when user owns it', async () => {
+    it('returns source when user owns it', async () => {
       const user = createTestUser({ id: 'user-1' });
-      const document = createTestSource({
+      const source = createTestSource({
         title: 'My Source',
         createdBy: user.id,
       });
 
-      const mockRepo = createMockSourceRepo(() => Effect.succeed(document));
+      const mockRepo = createMockSourceRepo(() => Effect.succeed(source));
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
         withTestUser(user)(
-          getSource({ id: document.id }).pipe(Effect.provide(layers)),
+          getSource({ id: source.id }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result.id).toBe(document.id);
+      expect(result.id).toBe(source.id);
       expect(result.title).toBe('My Source');
       expect(result.createdBy).toBe(user.id);
     });
 
-    it('fails with SourceNotFound when user is admin and does not own document', async () => {
+    it('fails with SourceNotFound when user is admin and does not own source', async () => {
       const admin = createTestAdmin({ id: 'admin-1' });
       const sourceId = 'doc_hidden';
 
@@ -123,8 +123,8 @@ describe('getSource', () => {
     });
   });
 
-  describe('document retrieval', () => {
-    it('fails with SourceNotFound when document does not exist', async () => {
+  describe('source retrieval', () => {
+    it('fails with SourceNotFound when source does not exist', async () => {
       const user = createTestUser({ id: 'user-1' });
       const nonExistentId = 'doc_nonexistent';
 
@@ -150,14 +150,14 @@ describe('getSource', () => {
 
   describe('authentication', () => {
     it('fails with UnauthorizedError when no user context', async () => {
-      const document = createTestSource({ createdBy: 'user-1' });
+      const testSource = createTestSource({ createdBy: 'user-1' });
 
-      const mockRepo = createMockSourceRepo(() => Effect.succeed(document));
+      const mockRepo = createMockSourceRepo(() => Effect.succeed(testSource));
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       // Run without withTestUser - no user context
       const result = await Effect.runPromiseExit(
-        getSource({ id: document.id }).pipe(Effect.provide(layers)),
+        getSource({ id: testSource.id }).pipe(Effect.provide(layers)),
       );
 
       expect(result._tag).toBe('Failure');

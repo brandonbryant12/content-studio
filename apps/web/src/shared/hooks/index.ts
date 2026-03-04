@@ -10,10 +10,10 @@ export {
   type UseAudioPlayerReturn,
 } from './use-audio-player';
 export {
-  useDocumentSelection,
-  type DocumentInfo,
-  type UseDocumentSelectionReturn,
-} from './use-document-selection';
+  useSourceSelection,
+  type SourceInfo,
+  type UseSourceSelectionReturn,
+} from './use-source-selection';
 export {
   useBulkSelection,
   type UseBulkSelectionReturn,

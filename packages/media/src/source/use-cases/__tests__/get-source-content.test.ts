@@ -45,10 +45,10 @@ type MockSourceRepoMethods = {
  * Methods are typed without Db requirement for testing convenience.
  */
 const createMockSourceRepo = (overrides: MockSourceRepoMethods = {}) => {
-  const defaultDoc = createTestSource();
+  const defaultSource = createTestSource();
 
   const service: SourceRepoService = {
-    insert: () => Effect.succeed(defaultDoc),
+    insert: () => Effect.succeed(defaultSource),
     findByIdForUser: (id, userId) =>
       overrides.findByIdForUser
         ? (overrides.findByIdForUser(id, userId) as ReturnType<
@@ -58,13 +58,13 @@ const createMockSourceRepo = (overrides: MockSourceRepoMethods = {}) => {
           ? (overrides.findById(id) as ReturnType<
               SourceRepoService['findByIdForUser']
             >)
-          : Effect.succeed(defaultDoc),
+          : Effect.succeed(defaultSource),
     findById: (id) =>
       overrides.findById
         ? (overrides.findById(id) as ReturnType<SourceRepoService['findById']>)
-        : Effect.succeed(defaultDoc),
+        : Effect.succeed(defaultSource),
     list: () => Effect.succeed([]),
-    update: () => Effect.succeed(defaultDoc),
+    update: () => Effect.succeed(defaultSource),
     delete: () => Effect.succeed(true),
     count: () => Effect.succeed(0),
     updateStatus: () => Effect.die('not implemented'),
@@ -103,7 +103,7 @@ describe('getSourceContent', () => {
   });
 
   describe('authorization', () => {
-    it('should return document content when user owns it', async () => {
+    it('should return source content when user owns it', async () => {
       const user = createTestUser({ id: 'owner-123' });
       const doc = createTestSource({
         id: 'doc_test1' as SourceId,
@@ -112,7 +112,7 @@ describe('getSourceContent', () => {
         createdBy: user.id,
       });
 
-      const expectedContent = 'Hello, this is the document content.';
+      const expectedContent = 'Hello, this is the source content.';
 
       const mockRepo = createMockSourceRepo({
         findById: () => Effect.succeed(doc),
@@ -131,9 +131,9 @@ describe('getSourceContent', () => {
       expect(result.content).toBe(expectedContent);
     });
 
-    it('should fail with SourceNotFound when user is admin and does not own document', async () => {
+    it('should fail with SourceNotFound when user is admin and does not own source', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
-      const docId = 'doc_test2' as SourceId;
+      const sourceId = 'doc_test2' as SourceId;
 
       const mockRepo = createMockSourceRepo({
         findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
@@ -144,7 +144,7 @@ describe('getSourceContent', () => {
           Effect.succeed(Buffer.from('Admin can access this content.')),
       });
 
-      const effect = getSourceContent({ id: docId }).pipe(
+      const effect = getSourceContent({ id: sourceId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -154,13 +154,13 @@ describe('getSourceContent', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(docId);
+        expect((error as SourceNotFound).id).toBe(sourceId);
       }
     });
 
     it('should fail with SourceNotFound when non-owner tries to access', async () => {
       const user = createTestUser({ id: 'user-123' });
-      const docId = 'doc_test3' as SourceId;
+      const sourceId = 'doc_test3' as SourceId;
 
       const mockRepo = createMockSourceRepo({
         findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
@@ -168,7 +168,7 @@ describe('getSourceContent', () => {
 
       const mockStorage = createMockStorage();
 
-      const effect = getSourceContent({ id: docId }).pipe(
+      const effect = getSourceContent({ id: sourceId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -178,13 +178,13 @@ describe('getSourceContent', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(docId);
+        expect((error as SourceNotFound).id).toBe(sourceId);
       }
     });
   });
 
-  describe('document retrieval', () => {
-    it('should fail with SourceNotFound when document does not exist', async () => {
+  describe('source retrieval', () => {
+    it('should fail with SourceNotFound when source does not exist', async () => {
       const user = createTestUser({ id: 'user-123' });
       const nonExistentId = 'doc_nonexistent';
 

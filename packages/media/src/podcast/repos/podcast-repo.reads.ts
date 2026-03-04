@@ -39,9 +39,9 @@ const fetchSortedSources = async (
     .from(source)
     .where(inArray(source.id, sourceIds));
 
-  const docMap = new Map(docs.map((d) => [d.id, d]));
+  const sourceMap = new Map(docs.map((d) => [d.id, d]));
   return sourceIds
-    .map((docId) => docMap.get(docId))
+    .map((sourceId) => sourceMap.get(sourceId))
     .filter((d): d is Source => d !== undefined);
 };
 
@@ -61,9 +61,9 @@ export const podcastReadMethods: Pick<
       ).execute({ id });
 
       if (!pod) return null;
-      const sortedDocs = await fetchSortedSources(db, pod.sourceIds);
+      const sortedSources = await fetchSortedSources(db, pod.sourceIds);
 
-      return { ...pod, sources: sortedDocs };
+      return { ...pod, sources: sortedSources };
     }).pipe(requirePodcast(id)),
 
   findByIdForUser: (id, userId) =>
@@ -82,9 +82,9 @@ export const podcastReadMethods: Pick<
           .prepare('podcastRepo_findByIdForUser'),
       ).execute({ id, userId });
       if (!pod) return null;
-      const sortedDocs = await fetchSortedSources(db, pod.sourceIds);
+      const sortedSources = await fetchSortedSources(db, pod.sourceIds);
 
-      return { ...pod, sources: sortedDocs };
+      return { ...pod, sources: sortedSources };
     }).pipe(requirePodcast(id)),
 
   list: (options) =>
@@ -118,14 +118,14 @@ export const podcastReadMethods: Pick<
       }
 
       const result = yield* withDb('podcastRepo.verifySources', async (db) => {
-        const docIds = sourceIds.map((id) => id as SourceId);
+        const resolvedSourceIds = sourceIds.map((id) => id as SourceId);
         const docs = await db
           .select()
           .from(source)
-          .where(inArray(source.id, docIds));
+          .where(inArray(source.id, resolvedSourceIds));
 
         const foundIds = new Set(docs.map((d) => String(d.id)));
-        const missingId = sourceIds.find((docId) => !foundIds.has(docId));
+        const missingId = sourceIds.find((sourceId) => !foundIds.has(sourceId));
         const notOwnedId = docs.find((d) => d.createdBy !== userId)?.id;
 
         return {

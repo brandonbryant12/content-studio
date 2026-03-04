@@ -279,7 +279,7 @@ describe('updatePodcast', () => {
     });
   });
 
-  describe('tags and documents', () => {
+  describe('tags and sources', () => {
     it('updates tags', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
@@ -303,7 +303,7 @@ describe('updatePodcast', () => {
       expect(result.tags).toEqual(['new-tag-1', 'new-tag-2']);
     });
 
-    it('updates document IDs', async () => {
+    it('updates source IDs', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id });
       const doc2 = createTestSource({ createdBy: user.id });

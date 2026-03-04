@@ -17,7 +17,7 @@ function createProps(
   overrides: Partial<QuickStartPanelProps> = {},
 ): QuickStartPanelProps {
   return {
-    counts: { documents: 0, podcasts: 0, voiceovers: 0, infographics: 0 },
+    counts: { sources: 0, podcasts: 0, voiceovers: 0, infographics: 0 },
     createActions: {
       onCreatePodcast: vi.fn(),
       isPodcastPending: false,
@@ -66,7 +66,7 @@ describe('QuickStartPanel', () => {
       <QuickStartPanel
         {...createProps({
           counts: {
-            documents: 5,
+            sources: 5,
             podcasts: 0,
             voiceovers: 0,
             infographics: 0,
@@ -89,7 +89,7 @@ describe('QuickStartPanel', () => {
       <QuickStartPanel
         {...createProps({
           counts: {
-            documents: 3,
+            sources: 3,
             podcasts: 2,
             voiceovers: 0,
             infographics: 0,
@@ -112,7 +112,7 @@ describe('QuickStartPanel', () => {
       <QuickStartPanel
         {...createProps({
           counts: {
-            documents: 3,
+            sources: 3,
             podcasts: 2,
             voiceovers: 1,
             infographics: 1,

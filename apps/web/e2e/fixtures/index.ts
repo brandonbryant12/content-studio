@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { LoginPage } from '../pages/login.page';
 import { RegisterPage } from '../pages/register.page';
 import { DashboardPage } from '../pages/dashboard.page';
-import { DocumentsPage } from '../pages/documents.page';
+import { SourcesPage } from '../pages/sources.page';
 import { PodcastsPage } from '../pages/podcasts.page';
 import { VoiceoversPage } from '../pages/voiceovers.page';
 import { ApiHelper } from '../utils/api';
@@ -31,7 +31,7 @@ interface PageFixtures {
   loginPage: LoginPage;
   registerPage: RegisterPage;
   dashboardPage: DashboardPage;
-  documentsPage: DocumentsPage;
+  sourcesPage: SourcesPage;
   podcastsPage: PodcastsPage;
   voiceoversPage: VoiceoversPage;
   api: ApiHelper;
@@ -53,8 +53,8 @@ export const test = base.extend<PageFixtures>({
     await use(new DashboardPage(page));
   },
 
-  documentsPage: async ({ page }, use) => {
-    await use(new DocumentsPage(page));
+  sourcesPage: async ({ page }, use) => {
+    await use(new SourcesPage(page));
   },
 
   podcastsPage: async ({ page }, use) => {

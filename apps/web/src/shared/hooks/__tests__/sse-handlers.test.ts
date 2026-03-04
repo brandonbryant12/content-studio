@@ -14,8 +14,6 @@ import {
   handleActivityLogged,
 } from '../sse-handlers';
 import { getActivityListQueryKey } from '@/features/admin/hooks';
-import { getDocumentQueryKey } from '@/features/documents/hooks/use-document';
-import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
 import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
 import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
 import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
@@ -23,6 +21,8 @@ import { getPersonaQueryKey } from '@/features/personas/hooks/use-persona';
 import { getPersonaListQueryKey } from '@/features/personas/hooks/use-persona-list';
 import { getPodcastQueryKey } from '@/features/podcasts/hooks/use-podcast';
 import { getPodcastListQueryKey } from '@/features/podcasts/hooks/use-podcast-list';
+import { getSourceQueryKey } from '@/features/sources/hooks/use-source';
+import { getSourceListQueryKey } from '@/features/sources/hooks/use-source-list';
 
 vi.mock('@/clients/apiClient', () => {
   const getEntityMocks = (entity: string) => ({
@@ -176,7 +176,6 @@ describe('SSE Handlers', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(toast.success).toHaveBeenCalledWith(
         'Podcast "Audio Regen" is ready',
-        {},
       );
     });
 
@@ -198,7 +197,7 @@ describe('SSE Handlers', () => {
       await flushMicrotasks();
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      expect(toast.error).toHaveBeenCalledWith('Script step failed', {});
+      expect(toast.error).toHaveBeenCalledWith('Script step failed');
     });
 
     it('suppresses notifications when user is already viewing the podcast', async () => {
@@ -209,6 +208,23 @@ describe('SSE Handlers', () => {
 
       handleJobCompletion(
         createJobEvent({ jobId: 'job-125', jobType: 'generate-audio' }),
+        queryClient,
+      );
+
+      await flushMicrotasks();
+
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('suppresses notifications when user is already viewing the podcast under a base path', async () => {
+      setPathname('/app/podcasts/podcast-456');
+      vi.spyOn(queryClient, 'fetchQuery').mockResolvedValue({
+        title: 'Active Podcast',
+      });
+
+      handleJobCompletion(
+        createJobEvent({ jobId: 'job-126', jobType: 'generate-audio' }),
         queryClient,
       );
 
@@ -270,22 +286,22 @@ describe('SSE Handlers', () => {
       {
         name: 'source update',
         event: createEntityChangeEvent('source', 'update', 'doc-123'),
-        expectedQueryKeys: [getDocumentQueryKey('doc-123')],
+        expectedQueryKeys: [getSourceQueryKey('doc-123')],
       },
       {
         name: 'source insert',
         event: createEntityChangeEvent('source', 'insert', 'doc-123'),
         expectedQueryKeys: [
-          getDocumentQueryKey('doc-123'),
-          getDocumentListQueryKey(),
+          getSourceQueryKey('doc-123'),
+          getSourceListQueryKey(),
         ],
       },
       {
         name: 'source delete',
         event: createEntityChangeEvent('source', 'delete', 'doc-123'),
         expectedQueryKeys: [
-          getDocumentQueryKey('doc-123'),
-          getDocumentListQueryKey(),
+          getSourceQueryKey('doc-123'),
+          getSourceListQueryKey(),
         ],
       },
       {

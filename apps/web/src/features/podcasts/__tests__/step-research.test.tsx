@@ -27,8 +27,8 @@ vi.mock('@/clients/apiClient', () => ({
   },
 }));
 
-vi.mock('@/features/documents/hooks', () => ({
-  getDocumentListQueryKey: () => ['documents', 'list'],
+vi.mock('@/features/sources/hooks', () => ({
+  getSourceListQueryKey: () => ['sources', 'list'],
   useResearchChat: mockUseResearchChat,
   useSynthesizeResearch: mockUseSynthesizeResearch,
 }));
@@ -79,13 +79,10 @@ describe('StepResearch', () => {
 
   it('starts research from one click', async () => {
     const user = userEvent.setup();
-    const onDocumentCreated = vi.fn();
+    const onSourceCreated = vi.fn();
 
     renderWithQuery(
-      <StepResearch
-        onDocumentCreated={onDocumentCreated}
-        createdDocumentId={null}
-      />,
+      <StepResearch onSourceCreated={onSourceCreated} createdSourceId={null} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Start Research' }));
@@ -101,7 +98,7 @@ describe('StepResearch', () => {
       ),
     );
     await waitFor(() =>
-      expect(onDocumentCreated).toHaveBeenCalledWith(
+      expect(onSourceCreated).toHaveBeenCalledWith(
         'doc-123',
         'AI Market Analysis',
       ),
@@ -127,7 +124,7 @@ describe('StepResearch', () => {
     });
 
     renderWithQuery(
-      <StepResearch onDocumentCreated={vi.fn()} createdDocumentId={null} />,
+      <StepResearch onSourceCreated={vi.fn()} createdSourceId={null} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Keep Refining' }));
@@ -147,7 +144,7 @@ describe('StepResearch', () => {
     });
 
     renderWithQuery(
-      <StepResearch onDocumentCreated={vi.fn()} createdDocumentId={null} />,
+      <StepResearch onSourceCreated={vi.fn()} createdSourceId={null} />,
     );
 
     const button = screen.getByRole('button', { name: /Preparing research/ });

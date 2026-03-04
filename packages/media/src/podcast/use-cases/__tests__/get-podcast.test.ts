@@ -130,7 +130,7 @@ describe('getPodcast', () => {
       expect(result.sources[0]!.id).toBe(doc.id);
     });
 
-    it('returns podcast without documents by default', async () => {
+    it('returns podcast without sources by default', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,
@@ -204,8 +204,8 @@ describe('getPodcast', () => {
     });
   });
 
-  describe('documents resolution', () => {
-    it('returns podcast with multiple documents in order', async () => {
+  describe('sources resolution', () => {
+    it('returns podcast with multiple sources in order', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id, title: 'Doc 1' });
       const doc2 = createTestSource({ createdBy: user.id, title: 'Doc 2' });
@@ -230,7 +230,7 @@ describe('getPodcast', () => {
       expect(result.sources).toHaveLength(3);
     });
 
-    it('returns podcast with empty documents array when no source documents', async () => {
+    it('returns podcast with empty sources array when no sources', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,

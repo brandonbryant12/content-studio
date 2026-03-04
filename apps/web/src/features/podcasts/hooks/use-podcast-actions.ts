@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import type { UseDocumentSelectionReturn } from './use-document-selection';
 import type { UsePodcastSettingsReturn } from './use-podcast-settings';
 import type { UseScriptEditorReturn } from './use-script-editor';
+import type { UseSourceSelectionReturn } from './use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
 import { isGeneratingStatus } from '../lib/status';
 import { useOptimisticGeneration } from './use-optimistic-generation';
@@ -31,7 +31,7 @@ interface UsePodcastActionsOptions {
   podcast: Podcast;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;
-  documentSelection: UseDocumentSelectionReturn;
+  sourceSelection: UseSourceSelectionReturn;
 }
 
 export function usePodcastActions({
@@ -39,7 +39,7 @@ export function usePodcastActions({
   podcast,
   scriptEditor,
   settings,
-  documentSelection,
+  sourceSelection,
 }: UsePodcastActionsOptions): UsePodcastActionsReturn {
   const navigate = useNavigate();
 
@@ -69,16 +69,16 @@ export function usePodcastActions({
   const hasAnyChanges =
     scriptEditor.hasChanges ||
     settings.hasChanges ||
-    documentSelection.hasChanges;
+    sourceSelection.hasChanges;
 
   const isGenerating = isGeneratingStatus(podcast.status);
   const isPendingGeneration = generateMutation.isPending;
   const isSaving = saveChangesMutation.isPending || updateMutation.isPending;
   const isDeleting = deleteMutation.isPending;
   const needsFullRegeneration =
-    documentSelection.hasChanges || settings.hasScriptSettingsChanges;
+    sourceSelection.hasChanges || settings.hasScriptSettingsChanges;
 
-  // Combined save handler for script, voice, and document changes
+  // Combined save handler for script, voice, and source changes
   const handleSave = useCallback(async () => {
     if (
       saveChangesMutation.isPending ||
@@ -88,14 +88,14 @@ export function usePodcastActions({
       return;
     }
 
-    // If documents or script-affecting settings changed, we need full regeneration (script + audio)
+    // If sources or script-affecting settings changed, we need full regeneration (script + audio)
     if (needsFullRegeneration) {
       try {
-        // First, save documents and any settings changes
+        // First, save sources and any settings changes
         await updateMutation.mutateAsync({
           id: podcast.id,
-          sourceIds: documentSelection.hasChanges
-            ? documentSelection.documentIds
+          sourceIds: sourceSelection.hasChanges
+            ? sourceSelection.sourceIds
             : undefined,
           hostVoice: settings.hostVoice,
           coHostVoice: settings.coHostVoice,
@@ -110,7 +110,7 @@ export function usePodcastActions({
           { id: podcast.id },
           {
             onSuccess: () => {
-              const message = documentSelection.hasChanges
+              const message = sourceSelection.hasChanges
                 ? 'Regenerating podcast with new sources...'
                 : 'Regenerating script with new settings...';
               toast.success(message);
@@ -123,7 +123,7 @@ export function usePodcastActions({
       return;
     }
 
-    // No document or script settings changes - just save script/voice and regenerate audio
+    // No source or script settings changes - just save script/voice and regenerate audio
     const segmentsToSave = scriptEditor.hasChanges
       ? scriptEditor.segments
       : undefined;
@@ -148,7 +148,7 @@ export function usePodcastActions({
     podcast.id,
     scriptEditor,
     settings,
-    documentSelection,
+    sourceSelection,
     saveChangesMutation,
     updateMutation,
     generateMutation,

@@ -105,9 +105,9 @@ describe('PresetPicker', () => {
     await user.click(campaignBoostButton);
     expect(campaignBoostButton).toHaveAttribute('aria-pressed', 'true');
 
-    const latestProperties = onApplyPreset.mock.calls.at(-1)?.[0] as
-      | StyleProperty[]
-      | undefined;
+    const latestProperties = onApplyPreset.mock.calls[
+      onApplyPreset.mock.calls.length - 1
+    ]?.[0] as StyleProperty[] | undefined;
 
     expect(latestProperties).toEqual(
       expect.arrayContaining([
@@ -149,9 +149,9 @@ describe('PresetPicker', () => {
     expect(brandBaseButton).toHaveAttribute('aria-pressed', 'true');
     expect(campaignBoostButton).toHaveAttribute('aria-pressed', 'false');
 
-    const latestProperties = onApplyPreset.mock.calls.at(-1)?.[0] as
-      | StyleProperty[]
-      | undefined;
+    const latestProperties = onApplyPreset.mock.calls[
+      onApplyPreset.mock.calls.length - 1
+    ]?.[0] as StyleProperty[] | undefined;
 
     expect(latestProperties).toEqual(
       expect.arrayContaining([

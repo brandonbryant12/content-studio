@@ -275,11 +275,11 @@ describe('createVoiceover', () => {
       expect(result.duration).toBeNull();
     });
 
-    it('prefills text from a source document when sourceId is provided', async () => {
+    it('prefills text from a linked source when sourceId is provided', async () => {
       const user = createTestUser({ id: 'user_test123' });
-      const sourceDocument = createTestSource({
+      const testSource = createTestSource({
         createdBy: user.id,
-        extractedText: 'Source document content for narration',
+        extractedText: 'Source content for narration',
       });
 
       let capturedData: Parameters<VoiceoverRepoService['insert']>[0] | null =
@@ -299,9 +299,9 @@ describe('createVoiceover', () => {
 
       const mockSourceRepo = createMockSourceRepo({
         findByIdForUser: (id, userId) =>
-          id === sourceDocument.id && userId === user.id
-            ? Effect.succeed(sourceDocument)
-            : Effect.die('unexpected document lookup'),
+          id === testSource.id && userId === user.id
+            ? Effect.succeed(testSource)
+            : Effect.die('unexpected source lookup'),
       });
 
       const layers = Layer.mergeAll(
@@ -315,17 +315,17 @@ describe('createVoiceover', () => {
         withTestUser(user)(
           createVoiceover({
             title: 'Narrate source',
-            sourceId: sourceDocument.id,
+            sourceId: testSource.id,
           }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result.text).toBe('Source document content for narration');
-      expect(result.sourceId).toBe(sourceDocument.id);
+      expect(result.text).toBe('Source content for narration');
+      expect(result.sourceId).toBe(testSource.id);
       expect(capturedData).toEqual({
         title: 'Narrate source',
-        text: 'Source document content for narration',
-        sourceId: sourceDocument.id,
+        text: 'Source content for narration',
+        sourceId: testSource.id,
         createdBy: user.id,
       });
     });

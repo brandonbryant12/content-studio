@@ -3,9 +3,9 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { ComponentType, ReactNode } from 'react';
 import {
-  type DocumentListItem,
-  DocumentEntryMenu,
-} from '@/features/documents/components';
+  type SourceListItem,
+  SourceEntryMenu,
+} from '@/features/sources/components';
 
 export interface RecentSectionProps<T> {
   title: string;
@@ -67,23 +67,23 @@ export function RecentSection<T>({
   );
 }
 
-interface DocumentsRecentSectionProps {
+interface SourcesRecentSectionProps {
   count: number;
-  items: DocumentListItem[];
+  items: SourceListItem[];
   isLoading: boolean;
   onUpload: () => void;
   onUrl: () => void;
   onResearch: () => void;
 }
 
-export function DocumentsRecentSection({
+export function SourcesRecentSection({
   count,
   items,
   isLoading,
   onUpload,
   onUrl,
   onResearch,
-}: DocumentsRecentSectionProps) {
+}: SourcesRecentSectionProps) {
   return (
     <RecentSection
       title="Sources"
@@ -93,9 +93,9 @@ export function DocumentsRecentSection({
       items={items}
       isLoading={isLoading}
       emptyMessage=""
-      linkTo="/documents"
+      linkTo="/sources"
       action={
-        <DocumentEntryMenu
+        <SourceEntryMenu
           variant="ghost"
           size="sm"
           className="text-xs"
@@ -105,7 +105,7 @@ export function DocumentsRecentSection({
         />
       }
       emptyAction={
-        <DocumentEntryMenu
+        <SourceEntryMenu
           onResearch={onResearch}
           onUrl={onUrl}
           onUpload={onUpload}
@@ -114,8 +114,8 @@ export function DocumentsRecentSection({
       renderItem={(doc) => (
         <Link
           key={doc.id}
-          to="/documents/$documentId"
-          params={{ documentId: doc.id }}
+          to="/sources/$sourceId"
+          params={{ sourceId: doc.id }}
           className="recent-item"
         >
           <div className="recent-item-icon bg-sky-500/10">

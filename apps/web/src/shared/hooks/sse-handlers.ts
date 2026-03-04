@@ -10,8 +10,6 @@ import type {
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
 import { getActivityListQueryKey } from '@/features/admin/hooks';
-import { getDocumentQueryKey } from '@/features/documents/hooks/use-document';
-import { getDocumentListQueryKey } from '@/features/documents/hooks/use-document-list';
 import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
 import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
 import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
@@ -19,19 +17,14 @@ import { getPersonaQueryKey } from '@/features/personas/hooks/use-persona';
 import { getPersonaListQueryKey } from '@/features/personas/hooks/use-persona-list';
 import { getPodcastQueryKey } from '@/features/podcasts/hooks/use-podcast';
 import { getPodcastListQueryKey } from '@/features/podcasts/hooks/use-podcast-list';
+import { getSourceQueryKey } from '@/features/sources/hooks/use-source';
+import { getSourceListQueryKey } from '@/features/sources/hooks/use-source-list';
 import { getVoiceoverQueryKey } from '@/features/voiceovers/hooks/use-voiceover';
 import { getVoiceoverListQueryKey } from '@/features/voiceovers/hooks/use-voiceover-list';
 
-/** Module-level navigate callback, set by useSSE hook. */
-let navigateToPath: ((path: string) => void) | null = null;
-
-export function setNavigateFn(fn: (path: string) => void): void {
-  navigateToPath = fn;
-}
-
 const entityQueryKeys = {
   podcast: { get: getPodcastQueryKey, list: getPodcastListQueryKey },
-  source: { get: getDocumentQueryKey, list: getDocumentListQueryKey },
+  source: { get: getSourceQueryKey, list: getSourceListQueryKey },
   voiceover: { get: getVoiceoverQueryKey, list: getVoiceoverListQueryKey },
   infographic: {
     get: getInfographicQueryKey,
@@ -45,8 +38,28 @@ type EntityType = keyof typeof entityQueryKeys;
  * Check if the user is currently viewing a specific entity's detail page.
  * Uses pathname matching to avoid double-notification.
  */
+function normalizePathname(pathname: string): string {
+  const withoutTrailingSlash = pathname.replace(/\/+$/, '');
+  return withoutTrailingSlash.length > 0 ? withoutTrailingSlash : '/';
+}
+
 function isViewingEntity(entityPath: string, entityId: string): boolean {
-  return window.location.pathname === `/${entityPath}/${entityId}`;
+  const currentPathname = normalizePathname(window.location.pathname);
+  const detailPathname = normalizePathname(`/${entityPath}/${entityId}`);
+
+  if (currentPathname === detailPathname) return true;
+
+  const currentSegments = currentPathname.split('/').filter(Boolean);
+  const detailSegments = detailPathname.split('/').filter(Boolean);
+
+  if (currentSegments.length < detailSegments.length) return false;
+
+  return detailSegments.every(
+    (segment, index) =>
+      currentSegments[
+        currentSegments.length - detailSegments.length + index
+      ] === segment,
+  );
 }
 
 /**
@@ -118,27 +131,16 @@ function notifyJobCompletion({
 
   const label = entityType.charAt(0).toUpperCase() + entityType.slice(1);
 
-  const path = `/${entityPath}/${entityId}`;
-  const navigate = navigateToPath;
-  const viewAction = navigate
-    ? {
-        action: {
-          label: 'View',
-          onClick: () => navigate(path),
-        },
-      }
-    : {};
-
   if (status === 'completed') {
     const message = title
       ? `${label} "${title}" is ready`
       : `${label} is ready`;
-    toast.success(message, viewAction);
+    toast.success(message);
   } else {
     const message = title
       ? `${label} "${title}" generation failed`
       : `${label} generation failed`;
-    toast.error(error || message, viewAction);
+    toast.error(error || message);
   }
 }
 
@@ -249,26 +251,26 @@ export function handleInfographicJobCompletion(
   });
 }
 
-export function handleDocumentJobCompletion(
+export function handleSourceJobCompletion(
   event: SourceJobCompletionEvent,
   queryClient: QueryClient,
 ): void {
   const { sourceId } = event;
 
-  // Invalidate specific document
+  // Invalidate specific source
   queryClient.invalidateQueries({
-    queryKey: getDocumentQueryKey(sourceId),
+    queryKey: getSourceQueryKey(sourceId),
   });
 
   // Also invalidate the list (status changed)
   queryClient.invalidateQueries({
-    queryKey: getDocumentListQueryKey(),
+    queryKey: getSourceListQueryKey(),
   });
 
   notifyCompletionWithFetchedTitle({
     entityType: 'source',
     entityId: sourceId,
-    entityPath: 'documents',
+    entityPath: 'sources',
     status: event.status,
     error: event.error,
     queryClient,

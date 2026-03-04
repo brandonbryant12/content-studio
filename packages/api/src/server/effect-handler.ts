@@ -235,7 +235,7 @@ export const handleTaggedError = <E extends TaggedError>(
  *     Effect.flatMap(serializeSourceEffect)
  *   ),
  *   errors,
- *   { requestId: context.requestId, attributes: { 'document.id': input.id } },
+ *   { requestId: context.requestId, attributes: { 'source.id': input.id } },
  * );
  *
  * // Custom override for specific error
@@ -246,7 +246,7 @@ export const handleTaggedError = <E extends TaggedError>(
  *   errors,
  *   { requestId: context.requestId },
  *   {
- *     DocumentQuotaExceeded: (e) => {
+ *     SourceQuotaExceeded: (e) => {
  *       throw errors.PAYMENT_REQUIRED({ message: 'Upgrade to create more' });
  *     },
  *   },
@@ -324,7 +324,7 @@ export const handleEffectStreamWithProtocol = <
  *
  * @example
  * ```typescript
- * const effect = documentService.findById(id);
+ * const effect = sourceService.findById(id);
  * type Errors = EffectErrors<typeof effect>; // SourceNotFound | DbError
  * ```
  */
@@ -336,8 +336,8 @@ export type EffectErrors<T> =
  *
  * @example
  * ```typescript
- * const effect = documentService.findById(id);
- * type Result = EffectSuccess<typeof effect>; // Document
+ * const effect = sourceService.findById(id);
+ * type Result = EffectSuccess<typeof effect>; // Source
  * ```
  */
 export type EffectSuccess<T> =

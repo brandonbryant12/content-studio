@@ -13,8 +13,7 @@ interface ValidateUrlOptions {
 
 const BLOCKED_HOSTNAMES = new Set(['localhost']);
 
-const shouldEnforceDnsResolution = (): boolean =>
-  env.NODE_ENV === 'production';
+const shouldEnforceDnsResolution = (): boolean => env.NODE_ENV === 'production';
 
 function normalizeHostname(hostname: string): string {
   return hostname.replace(/^\[|]$/g, '').toLowerCase();

@@ -9,24 +9,24 @@ import { type Page, type Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class DashboardPage extends BasePage {
-  readonly uploadDocumentAction: Locator;
+  readonly uploadSourceAction: Locator;
   readonly newPodcastAction: Locator;
-  readonly viewAllDocumentsLink: Locator;
+  readonly viewAllSourcesLink: Locator;
   readonly viewAllPodcastsLink: Locator;
 
   constructor(page: Page) {
     super(page);
 
     // Quick action buttons
-    this.uploadDocumentAction = page.getByRole('button', {
-      name: /upload document/i,
+    this.uploadSourceAction = page.getByRole('button', {
+      name: /upload source/i,
     });
     this.newPodcastAction = page.getByRole('button', { name: /new podcast/i });
 
     // View all links
-    this.viewAllDocumentsLink = page
+    this.viewAllSourcesLink = page
       .locator('section')
-      .filter({ hasText: /recent documents/i })
+      .filter({ hasText: /recent sources/i })
       .getByRole('link', { name: /view all/i });
     this.viewAllPodcastsLink = page
       .locator('section')
@@ -49,15 +49,15 @@ export class DashboardPage extends BasePage {
     await expect(
       this.page.getByRole('heading', { name: /dashboard/i }),
     ).toBeVisible();
-    await expect(this.uploadDocumentAction).toBeVisible();
+    await expect(this.uploadSourceAction).toBeVisible();
     await expect(this.newPodcastAction).toBeVisible();
   }
 
   /**
-   * Click the upload document action
+   * Click the upload source action
    */
-  async clickUploadDocument(): Promise<void> {
-    await this.uploadDocumentAction.click();
+  async clickUploadSource(): Promise<void> {
+    await this.uploadSourceAction.click();
   }
 
   /**
@@ -68,11 +68,11 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Navigate to all documents via the View all link
+   * Navigate to all sources via the View all link
    */
-  async goToAllDocuments(): Promise<void> {
-    await this.viewAllDocumentsLink.click();
-    await this.page.waitForURL('**/documents');
+  async goToAllSources(): Promise<void> {
+    await this.viewAllSourcesLink.click();
+    await this.page.waitForURL('**/sources');
   }
 
   /**
@@ -84,12 +84,10 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Get the recent documents section
+   * Get the recent sources section
    */
-  getRecentDocumentsSection(): Locator {
-    return this.page
-      .locator('section')
-      .filter({ hasText: /recent documents/i });
+  getRecentSourcesSection(): Locator {
+    return this.page.locator('section').filter({ hasText: /recent sources/i });
   }
 
   /**
@@ -100,11 +98,11 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Check if there are no documents
+   * Check if there are no sources
    */
-  async expectNoDocuments(): Promise<void> {
-    const section = this.getRecentDocumentsSection();
-    await expect(section.getByText(/no documents yet/i)).toBeVisible();
+  async expectNoSources(): Promise<void> {
+    const section = this.getRecentSourcesSection();
+    await expect(section.getByText(/no sources yet/i)).toBeVisible();
   }
 
   /**
@@ -116,10 +114,10 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Check if a document appears in the recent list
+   * Check if a source appears in the recent list
    */
-  async expectDocumentVisible(title: string): Promise<void> {
-    const section = this.getRecentDocumentsSection();
+  async expectSourceVisible(title: string): Promise<void> {
+    const section = this.getRecentSourcesSection();
     await expect(section.getByText(title)).toBeVisible();
   }
 

@@ -65,7 +65,7 @@ export interface UpdateAudioOptions {
  */
 export interface PodcastRepoService {
   /**
-   * Insert a new podcast with source document IDs.
+   * Insert a new podcast with source IDs.
    */
   readonly insert: (
     data: Omit<CreatePodcast, 'sourceIds'> & { createdBy: string },
@@ -117,7 +117,7 @@ export interface PodcastRepoService {
   ) => Effect.Effect<number, DatabaseError, Db>;
 
   /**
-   * Verify all document IDs exist and are owned by the specified user.
+   * Verify all source IDs exist and are owned by the specified user.
    */
   readonly verifySourcesExist: (
     sourceIds: readonly string[],

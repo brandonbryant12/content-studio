@@ -17,8 +17,8 @@ const steps = [
     title: 'Add source material',
     description:
       'Upload documents, paste URLs, or research topics to build your knowledge base.',
-    linkTo: '/documents' as const,
-    linkLabel: 'Go to Documents',
+    linkTo: '/sources' as const,
+    linkLabel: 'Go to Sources',
     icon: FileTextIcon,
     accentBg: 'bg-sky-500/10',
     accentText: 'text-sky-600 dark:text-sky-400',

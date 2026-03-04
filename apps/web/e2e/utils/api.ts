@@ -7,7 +7,7 @@
 
 import { type APIRequestContext } from '@playwright/test';
 
-interface Document {
+interface Source {
   id: string;
   title: string;
   mimeType: string;
@@ -19,7 +19,7 @@ interface Podcast {
   title: string;
   status: string;
   format: string;
-  documents?: Document[];
+  sources?: Source[];
   segments?: { speaker: string; line: string; index: number }[];
 }
 
@@ -103,53 +103,53 @@ export class ApiHelper {
     return true;
   }
 
-  // Documents
+  // Sources
 
   /**
-   * List all documents
+   * List all sources
    */
-  async listDocuments(): Promise<Document[]> {
-    return this.get<Document[]>('/documents');
+  async listSources(): Promise<Source[]> {
+    return this.get<Source[]>('/sources');
   }
 
   /**
-   * Get a document by ID
+   * Get a source by ID
    */
-  async getDocument(id: string): Promise<Document> {
-    return this.get<Document>(`/documents/${id}`);
+  async getSource(id: string): Promise<Source> {
+    return this.get<Source>(`/sources/${id}`);
   }
 
   /**
-   * Delete a document by ID
+   * Delete a source by ID
    */
-  async deleteDocument(id: string): Promise<void> {
-    await this.delete(`/documents/${id}`);
+  async deleteSource(id: string): Promise<void> {
+    await this.delete(`/sources/${id}`);
   }
 
   /**
-   * Delete all documents (useful for test cleanup)
-   * Ignores errors for individual document deletions (race conditions)
+   * Delete all sources (useful for test cleanup)
+   * Ignores errors for individual source deletions (race conditions)
    */
-  async deleteAllDocuments(): Promise<void> {
-    const documents = await this.listDocuments();
-    for (const doc of documents) {
+  async deleteAllSources(): Promise<void> {
+    const sources = await this.listSources();
+    for (const source of sources) {
       try {
-        await this.deleteDocument(doc.id);
+        await this.deleteSource(source.id);
       } catch {
-        // Ignore errors - document may have been deleted by another test
+        // Ignore errors - source may have been deleted by another test
       }
     }
   }
 
   /**
-   * Upload a document with text content
-   * Creates a simple text document for testing purposes
+   * Upload a source with text content
+   * Creates a simple text source for testing purposes
    */
-  async uploadDocument(title: string, content: string): Promise<Document> {
+  async uploadSource(title: string, content: string): Promise<Source> {
     // Convert content to base64
     const base64 = Buffer.from(content).toString('base64');
 
-    return this.post<Document>('/documents/upload', {
+    return this.post<Source>('/sources/upload', {
       fileName: `${title.toLowerCase().replace(/\s+/g, '-')}.txt`,
       mimeType: 'text/plain',
       data: base64,
@@ -193,7 +193,7 @@ export class ApiHelper {
     id: string,
     data: {
       title?: string;
-      documentIds?: string[];
+      sourceIds?: string[];
       targetDurationMinutes?: number;
       hostVoice?: string;
       coHostVoice?: string;
@@ -358,6 +358,6 @@ export class ApiHelper {
   async cleanupAll(): Promise<void> {
     await this.deleteAllPodcasts();
     await this.deleteAllVoiceovers();
-    await this.deleteAllDocuments();
+    await this.deleteAllSources();
   }
 }

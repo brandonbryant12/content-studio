@@ -37,7 +37,7 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
   'podcast.script.user': {
     title: 'AI Team Playbook',
     description: 'Operational guidance for shipping AI features safely',
-    documentContent:
+    sourceContent:
       'Use clear ownership, safety checks, and measurable outcomes.',
   },
   'infographic.generate.user': {
@@ -60,7 +60,7 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
       { key: 'Primary', value: '#0ea5e9', type: 'color' },
     ],
   },
-  'document.outline.user': {
+  'source.outline.user': {
     query: 'How should engineering teams adopt schema-first AI workflows?',
     sourceHints: ['https://example.com/reference'],
     content:

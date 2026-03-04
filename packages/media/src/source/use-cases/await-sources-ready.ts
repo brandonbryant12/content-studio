@@ -89,8 +89,8 @@ export const awaitSourcesReady = (input: AwaitSourcesReadyInput) =>
 
       if (docs.every((d) => d.status === SourceStatus.READY)) return;
 
-      const failedDoc = docs.find((d) => d.status === SourceStatus.FAILED);
-      if (failedDoc) {
+      const failedSource = docs.find((d) => d.status === SourceStatus.FAILED);
+      if (failedSource) {
         return yield* failNotReady();
       }
     }

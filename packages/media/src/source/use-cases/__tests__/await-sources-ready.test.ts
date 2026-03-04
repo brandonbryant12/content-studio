@@ -20,7 +20,7 @@ describe('awaitSourcesReady', () => {
     testUser = createTestUser();
   });
 
-  it('returns immediately when all documents are ready', async () => {
+  it('returns immediately when all sources are ready', async () => {
     const doc = createTestSource({ status: 'ready' });
 
     const layers = Layer.mergeAll(
@@ -39,7 +39,7 @@ describe('awaitSourcesReady', () => {
     expect(result).toBeUndefined();
   });
 
-  it('fails when any document is already failed', async () => {
+  it('fails when any source is already failed', async () => {
     const doc = createTestSource({ status: 'failed' });
 
     const layers = Layer.mergeAll(
@@ -62,7 +62,7 @@ describe('awaitSourcesReady', () => {
     }
   });
 
-  it('no-ops when given an empty document list', async () => {
+  it('no-ops when given an empty source list', async () => {
     const layers = Layer.mergeAll(MockDbLive, createMockSourceRepo({}));
 
     const result = await Effect.runPromise(

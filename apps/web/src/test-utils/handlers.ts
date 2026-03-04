@@ -16,7 +16,7 @@ const createMockPodcast = (overrides = {}) => ({
   targetDuration: 300,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  documents: [],
+  sources: [],
   script: null,
   audioUrl: null,
   errorMessage: null,
@@ -24,9 +24,9 @@ const createMockPodcast = (overrides = {}) => ({
   ...overrides,
 });
 
-const createMockDocument = (overrides = {}) => ({
-  id: 'doc-1',
-  title: 'Test Document',
+const createMockSource = (overrides = {}) => ({
+  id: 'src-1',
+  title: 'Test Source',
   mimeType: 'text/plain',
   wordCount: 1000,
   createdAt: new Date().toISOString(),
@@ -61,21 +61,21 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  // Documents
-  http.post(`${API_BASE}/documents.list`, () => {
-    return HttpResponse.json([createMockDocument()]);
+  // Sources
+  http.post(`${API_BASE}/sources.list`, () => {
+    return HttpResponse.json([createMockSource()]);
   }),
 
-  http.post(`${API_BASE}/documents.get`, async ({ request }) => {
+  http.post(`${API_BASE}/sources.get`, async ({ request }) => {
     const body = (await request.json()) as { id?: string };
-    return HttpResponse.json(createMockDocument({ id: body.id || 'doc-1' }));
+    return HttpResponse.json(createMockSource({ id: body.id || 'src-1' }));
   }),
 
-  http.post(`${API_BASE}/documents.upload`, () => {
-    return HttpResponse.json(createMockDocument({ id: `doc-${Date.now()}` }));
+  http.post(`${API_BASE}/sources.upload`, () => {
+    return HttpResponse.json(createMockSource({ id: `src-${Date.now()}` }));
   }),
 
-  http.post(`${API_BASE}/documents.delete`, () => {
+  http.post(`${API_BASE}/sources.delete`, () => {
     return HttpResponse.json({ success: true });
   }),
 

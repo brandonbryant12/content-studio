@@ -72,7 +72,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 const ENTITY_ROUTE: Record<string, { path: string; paramKey: string }> = {
-  document: { path: '/documents/$documentId', paramKey: 'documentId' },
+  document: { path: '/sources/$sourceId', paramKey: 'sourceId' },
   podcast: { path: '/podcasts/$podcastId', paramKey: 'podcastId' },
   voiceover: { path: '/voiceovers/$voiceoverId', paramKey: 'voiceoverId' },
   infographic: {

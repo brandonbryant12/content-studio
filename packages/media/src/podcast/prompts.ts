@@ -40,14 +40,14 @@ export const buildSystemPrompt = (
 };
 
 /**
- * Build the user prompt with document content for script generation.
+ * Build the user prompt with source content for script generation.
  */
 export const buildUserPrompt = (
   podcast: { title?: string | null; description?: string | null },
-  documentContent: string,
+  sourceContent: string,
 ): string =>
   renderPrompt(podcastScriptUserPrompt, {
     title: podcast.title,
     description: podcast.description,
-    documentContent,
+    sourceContent,
   });

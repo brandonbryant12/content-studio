@@ -15,11 +15,11 @@ test.describe('Protected Routes - Unauthenticated', () => {
     await expect(page).not.toHaveURL(/\/dashboard/);
   });
 
-  test('redirects unauthenticated user from documents to home', async ({
+  test('redirects unauthenticated user from sources to home', async ({
     page,
   }) => {
-    await page.goto('/documents');
-    await expect(page).not.toHaveURL(/\/documents/);
+    await page.goto('/sources');
+    await expect(page).not.toHaveURL(/\/sources/);
   });
 
   test('redirects unauthenticated user from podcasts to home', async ({
@@ -50,12 +50,12 @@ authenticatedTest.describe('Protected Routes - Authenticated', () => {
   );
 
   authenticatedTest(
-    'can access documents when authenticated',
+    'can access sources when authenticated',
     async ({ page }) => {
-      await page.goto('/documents');
-      await expect(page).toHaveURL(/\/documents/);
+      await page.goto('/sources');
+      await expect(page).toHaveURL(/\/sources/);
       await expect(
-        page.getByRole('heading', { name: 'Documents', level: 1 }),
+        page.getByRole('heading', { name: 'Sources', level: 1 }),
       ).toBeVisible();
     },
   );

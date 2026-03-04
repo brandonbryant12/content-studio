@@ -94,7 +94,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     inMemoryStorage.layer,
   );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
-  const documentRepoLayer = SourceRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const sourceRepoLayer = SourceRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const activityLogRepoLayer = ActivityLogRepoLive.pipe(
     Layer.provide(ctx.dbLayer),
   );
@@ -104,7 +104,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
       ctx.dbLayer,
       mockAILayers,
       policyLayer,
-      documentRepoLayer,
+      sourceRepoLayer,
       activityLogRepoLayer,
     ),
   );
@@ -125,7 +125,7 @@ const insertTestUser = async (
 
 const encode = (value: string) => Buffer.from(value).toString('base64');
 
-describe('document router', () => {
+describe('source router', () => {
   let ctx: TestContext;
   let runtime: ServerRuntime;
   let testUser: ReturnType<typeof createTestUser>;
@@ -149,7 +149,7 @@ describe('document router', () => {
     const context = createMockContext(runtime, user);
     const existingDoc = await handlers.create({
       context,
-      input: { title: 'Existing document', content: 'Private content' },
+      input: { title: 'Existing source', content: 'Private content' },
       errors,
     });
     const unauthenticatedContext = createMockContext(runtime, null);
@@ -205,7 +205,7 @@ describe('document router', () => {
   });
 
   describe('create handler', () => {
-    it('creates and persists a serialized document with metadata', async () => {
+    it('creates and persists a serialized source with metadata', async () => {
       const context = createMockContext(runtime, user);
 
       const result = await handlers.create({
@@ -392,7 +392,7 @@ describe('document router', () => {
       );
       expect(result[0]).toBeDefined();
       if (!result[0]) {
-        throw new Error('Expected at least one listed document');
+        throw new Error('Expected at least one listed source');
       }
       expect(result[0].id).toMatch(/^doc_/);
       expectIsoTimestamp(result[0].createdAt);
@@ -401,7 +401,7 @@ describe('document router', () => {
   });
 
   describe('get and getContent handlers', () => {
-    it('returns the owned document and its stored content', async () => {
+    it('returns the owned source and its stored content', async () => {
       const context = createMockContext(runtime, user);
       const created = await handlers.create({
         context,
@@ -433,7 +433,7 @@ describe('document router', () => {
       expect(contentResult).toEqual({ content: 'This is stored content.' });
     });
 
-    it('returns SOURCE_NOT_FOUND for missing or non-owned documents', async () => {
+    it('returns SOURCE_NOT_FOUND for missing or non-owned sources', async () => {
       const context = createMockContext(runtime, user);
       const missingId = generateSourceId();
 
@@ -507,7 +507,7 @@ describe('document router', () => {
       expect(persisted?.metadata).toEqual({ combined: true });
     });
 
-    it('returns SOURCE_NOT_FOUND for missing or non-owned documents', async () => {
+    it('returns SOURCE_NOT_FOUND for missing or non-owned sources', async () => {
       const context = createMockContext(runtime, user);
       const missingId = generateSourceId();
 
@@ -544,7 +544,7 @@ describe('document router', () => {
   });
 
   describe('delete handler', () => {
-    it('deletes a document and returns SOURCE_NOT_FOUND on second delete', async () => {
+    it('deletes a source and returns SOURCE_NOT_FOUND on second delete', async () => {
       const context = createMockContext(runtime, user);
       const created = await handlers.create({
         context,
@@ -579,7 +579,7 @@ describe('document router', () => {
       );
     });
 
-    it('returns SOURCE_NOT_FOUND for non-owned documents', async () => {
+    it('returns SOURCE_NOT_FOUND for non-owned sources', async () => {
       const ownerTestUser = createTestUser();
       const ownerUser = toUser(ownerTestUser);
       await insertTestUser(ctx, ownerTestUser);

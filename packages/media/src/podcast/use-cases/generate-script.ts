@@ -120,13 +120,13 @@ export const generateScript = (input: GenerateScriptInput) =>
       { concurrency: 2 },
     );
 
-    const documentContents = yield* Effect.all(
+    const sourceContents = yield* Effect.all(
       podcast.sources.map((doc) =>
         getSourceContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
       ),
       { concurrency: 'unbounded' },
     );
-    const combinedContent = documentContents.join('\n\n---\n\n');
+    const combinedContent = sourceContents.join('\n\n---\n\n');
 
     const effectivePrompt =
       input.promptInstructions ?? podcast.promptInstructions ?? '';

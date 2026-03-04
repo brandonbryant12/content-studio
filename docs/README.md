@@ -16,6 +16,7 @@ All new code reviews and feature work should reference [`docs/`](./) standards.
 8. [`docs/frontend/project-structure.md`](./frontend/project-structure.md)
 9. [`docs/architecture/observability.md`](./architecture/observability.md)
 10. [`docs/architecture/effect-vs-nestjs.md`](./architecture/effect-vs-nestjs.md)
+11. [`docs/architecture/deployment-env-matrix.md`](./architecture/deployment-env-matrix.md)
 
 ## Directory Layout
 

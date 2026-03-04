@@ -99,7 +99,7 @@ describe('retryProcessing', () => {
   });
 
   describe('happy path', () => {
-    it('retries a failed URL document', async () => {
+    it('retries a failed URL source', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -139,7 +139,7 @@ describe('retryProcessing', () => {
       expect(result).toBeDefined();
     });
 
-    it('retries a failed research document', async () => {
+    it('retries a failed research source', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -176,7 +176,7 @@ describe('retryProcessing', () => {
   });
 
   describe('validation', () => {
-    it('fails when document is in processing status', async () => {
+    it('fails when source is in processing status', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -204,7 +204,7 @@ describe('retryProcessing', () => {
       }
     });
 
-    it('fails with SourceNotFound for non-existent document', async () => {
+    it('fails with SourceNotFound for non-existent source', async () => {
       const user = createTestUser();
 
       const layers = Layer.mergeAll(
@@ -228,7 +228,7 @@ describe('retryProcessing', () => {
       }
     });
 
-    it('returns document when already in ready status (no-op)', async () => {
+    it('returns source when already in ready status (no-op)', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -258,7 +258,7 @@ describe('retryProcessing', () => {
   });
 
   describe('authorization', () => {
-    it('fails when user does not own the document', async () => {
+    it('fails when user does not own the source', async () => {
       const user = createTestUser({ id: 'user-1' });
       const doc = createTestSource({
         createdBy: 'other-user',
@@ -289,7 +289,7 @@ describe('retryProcessing', () => {
   });
 
   describe('job type dispatch', () => {
-    it('enqueues process-url for URL source documents', async () => {
+    it('enqueues process-url for URL sources', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -316,7 +316,7 @@ describe('retryProcessing', () => {
       expect(enqueueSpy.mock.calls[0]![0]).toBe('process-url');
     });
 
-    it('does not enqueue a job for upload source documents', async () => {
+    it('does not enqueue a job for upload sources', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,
@@ -347,7 +347,7 @@ describe('retryProcessing', () => {
       expect(enqueueSpy).not.toHaveBeenCalled();
     });
 
-    it('enqueues process-research for research source documents', async () => {
+    it('enqueues process-research for research sources', async () => {
       const user = createTestUser();
       const doc = createTestSource({
         createdBy: user.id,

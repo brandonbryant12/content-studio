@@ -1,7 +1,7 @@
 import { VersionStatus } from '@repo/api/contracts';
-import type { UseDocumentSelectionReturn } from '../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
+import type { UseSourceSelectionReturn } from '../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
 import {
   WorkbenchLayout,
@@ -35,7 +35,7 @@ interface PodcastDetailProps {
   podcast: Podcast;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;
-  documentSelection: UseDocumentSelectionReturn;
+  sourceSelection: UseSourceSelectionReturn;
   displayAudio: DisplayAudio | null;
   workbenchState: PodcastWorkbenchState;
   approvalState: PodcastApprovalState;
@@ -55,7 +55,7 @@ export function PodcastDetail({
   podcast,
   scriptEditor,
   settings,
-  documentSelection,
+  sourceSelection,
   displayAudio,
   workbenchState,
   approvalState,
@@ -113,7 +113,7 @@ export function PodcastDetail({
           isGenerating={isGenerating}
           isPendingGeneration={isPendingGeneration}
           settings={settings}
-          documentSelection={documentSelection}
+          sourceSelection={sourceSelection}
         />
       }
       actionBar={

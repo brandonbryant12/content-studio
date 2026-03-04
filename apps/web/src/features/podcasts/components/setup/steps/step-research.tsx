@@ -7,10 +7,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import {
-  getDocumentListQueryKey,
+  getSourceListQueryKey,
   useResearchChat,
   useSynthesizeResearch,
-} from '@/features/documents/hooks';
+} from '@/features/sources/hooks';
 import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
 import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
 import { ChatThread } from '@/shared/components/chat-thread';
@@ -22,8 +22,8 @@ import {
 import { getErrorMessage } from '@/shared/lib/errors';
 
 interface StepResearchProps {
-  onDocumentCreated: (documentId: string, title: string) => void;
-  createdDocumentId: string | null;
+  onSourceCreated: (sourceId: string, title: string) => void;
+  createdSourceId: string | null;
 }
 
 const EXAMPLE_TOPICS = [
@@ -47,8 +47,8 @@ function pickRandom<T>(items: T[], count: number): T[] {
 }
 
 export function StepResearch({
-  onDocumentCreated,
-  createdDocumentId,
+  onSourceCreated,
+  createdSourceId,
 }: StepResearchProps) {
   const suggestions = useMemo(() => pickRandom(EXAMPLE_TOPICS, 3), []);
   const queryClient = useQueryClient();
@@ -70,9 +70,9 @@ export function StepResearch({
     apiClient.sources.fromResearch.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({
-          queryKey: getDocumentListQueryKey(),
+          queryKey: getSourceListQueryKey(),
         });
-        onDocumentCreated(data.id, data.title);
+        onSourceCreated(data.id, data.title);
       },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to start research'));
@@ -82,10 +82,10 @@ export function StepResearch({
 
   // Auto-focus input on mount
   useEffect(() => {
-    if (!createdDocumentId) {
+    if (!createdSourceId) {
       inputRef.current?.focus();
     }
-  }, [createdDocumentId]);
+  }, [createdSourceId]);
 
   const isStarting = synthesize.isPending || startResearchMutation.isPending;
   const startError =
@@ -115,8 +115,8 @@ export function StepResearch({
     });
   }, [messages, isStarting, synthesize, startResearchMutation]);
 
-  // Complete state — research document created
-  if (createdDocumentId) {
+  // Complete state — research source created
+  if (createdSourceId) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
         <div

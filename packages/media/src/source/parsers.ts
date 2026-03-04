@@ -14,7 +14,7 @@ import {
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * Supported MIME types and their corresponding document source.
+ * Supported MIME types and their corresponding source origin.
  */
 export const SUPPORTED_MIME_TYPES: Record<string, SourceOrigin> = {
   'text/plain': 'upload_txt',
@@ -38,7 +38,7 @@ export const EXTENSION_TO_MIME: Record<string, string> = {
 };
 
 /**
- * Result of parsing a document file.
+ * Result of parsing a source file.
  */
 export interface ParsedSource {
   content: string;
@@ -270,7 +270,7 @@ export const parseUploadedFile = (
     // Validate file size
     yield* validateFileSize(fileName, data.length);
 
-    // Validate and get document source type
+    // Validate and get source origin type
     const source = yield* validateMimeType(fileName, mimeType);
 
     // Parse based on type
@@ -300,7 +300,7 @@ export const parseUploadedFile = (
   );
 
 /**
- * Parse document content without validation (for on-demand parsing of already-stored files).
+ * Parse source content without validation (for on-demand parsing of already-stored files).
  *
  * Use this when re-parsing files that were already validated during upload.
  * Only throws SourceParseError on parsing failures.

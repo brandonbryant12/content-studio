@@ -1,10 +1,6 @@
 import { useCallback, useState } from 'react';
 import { DashboardPage } from './dashboard-page';
 import {
-  useDocumentsOrdered,
-  useCreateFromUrl,
-} from '@/features/documents/hooks';
-import {
   useInfographicList,
   useCreateInfographic,
 } from '@/features/infographics/hooks';
@@ -12,6 +8,7 @@ import {
   useCreatePodcast,
   usePodcastsOrdered,
 } from '@/features/podcasts/hooks';
+import { useSourcesOrdered, useCreateFromUrl } from '@/features/sources/hooks';
 import {
   useVoiceoversOrdered,
   useCreateVoiceover,
@@ -29,7 +26,7 @@ export function DashboardContainer() {
     isError: docsError,
     error: docsErrorObj,
     refetch: refetchDocs,
-  } = useDocumentsOrdered({
+  } = useSourcesOrdered({
     orderBy: 'desc',
   });
   const {
@@ -106,19 +103,19 @@ export function DashboardContainer() {
   return (
     <DashboardPage
       counts={{
-        documents: docCount,
+        sources: docCount,
         podcasts: podcastCount,
         voiceovers: voiceoverCount,
         infographics: infographicCount,
       }}
       loading={{
-        documents: docsLoading,
+        sources: docsLoading,
         podcasts: podcastsLoading,
         voiceovers: voiceoversLoading,
         infographics: infographicsLoading,
       }}
       recent={{
-        documents: documents.slice(0, 5),
+        sources: documents.slice(0, 5),
         podcasts: podcasts.slice(0, 5),
         voiceovers: voiceovers.slice(0, 4),
         infographics: infographics.slice(0, 4),

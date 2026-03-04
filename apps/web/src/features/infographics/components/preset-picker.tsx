@@ -192,7 +192,9 @@ export function PresetPicker({
         presetById,
       );
 
-      onApplyPreset(mergeStyleProperties(manualProperties, mergedPresetProperties));
+      onApplyPreset(
+        mergeStyleProperties(manualProperties, mergedPresetProperties),
+      );
 
       return nextSelectedPresetIds;
     });

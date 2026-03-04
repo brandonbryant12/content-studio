@@ -133,7 +133,7 @@ describe('deletePodcast', () => {
       expect(podcasts.has(podcast.id)).toBe(false);
     });
 
-    it('deletes podcast with associated documents (documents remain)', async () => {
+    it('deletes podcast with associated sources (sources remain)', async () => {
       const user = createTestUser();
       const doc = createTestSource({ createdBy: user.id });
       const podcast = createTestPodcast({

@@ -148,10 +148,10 @@ describe('uploadSource', () => {
   });
 
   describe('text file upload', () => {
-    it('uploads text file and creates document', async () => {
+    it('uploads text file and creates source', async () => {
       // Arrange
       const insertSpy = vi.fn();
-      const textContent = Buffer.from('Hello world this is a test document');
+      const textContent = Buffer.from('Hello world this is a test source');
 
       const mockRepo = createMockSourceRepo((data) => {
         insertSpy(data);
@@ -442,7 +442,7 @@ describe('uploadSource', () => {
   });
 
   describe('metadata handling', () => {
-    it('passes custom metadata to document repo', async () => {
+    it('passes custom metadata to source repo', async () => {
       // Arrange
       const insertSpy = vi.fn();
       const textContent = Buffer.from('Test content');

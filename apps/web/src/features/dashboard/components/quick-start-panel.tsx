@@ -11,7 +11,7 @@ import { Button } from '@repo/ui/components/button';
 import type { ReactNode } from 'react';
 
 interface ContentCounts {
-  documents: number;
+  sources: number;
   podcasts: number;
   voiceovers: number;
   infographics: number;
@@ -41,7 +41,7 @@ export function QuickStartPanel({
   createActions,
   documentDialogs,
 }: QuickStartPanelProps) {
-  const hasDocuments = counts.documents > 0;
+  const hasDocuments = counts.sources > 0;
   const hasGenerated =
     counts.podcasts > 0 || counts.voiceovers > 0 || counts.infographics > 0;
 

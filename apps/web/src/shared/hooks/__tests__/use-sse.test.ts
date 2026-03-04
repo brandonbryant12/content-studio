@@ -13,10 +13,9 @@ vi.mock('../sse-handlers', () => ({
   handleJobCompletion: vi.fn(),
   handleVoiceoverJobCompletion: vi.fn(),
   handleInfographicJobCompletion: vi.fn(),
-  handleDocumentJobCompletion: vi.fn(),
+  handleSourceJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
   handleActivityLogged: vi.fn(),
-  setNavigateFn: vi.fn(),
 }));
 
 function createMockIterator() {

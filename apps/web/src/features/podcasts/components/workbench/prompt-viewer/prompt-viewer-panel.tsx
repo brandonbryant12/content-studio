@@ -6,8 +6,8 @@ import {
 } from '@radix-ui/react-icons';
 import { useRef, useEffect } from 'react';
 import type { RouterOutput } from '@repo/api/client';
-import { DocumentContentViewer } from './document-content-viewer';
 import { PromptSection } from './prompt-section';
+import { SourceContentViewer } from './source-content-viewer';
 
 type GenerationContext = NonNullable<
   RouterOutput['podcasts']['get']['generationContext']
@@ -118,10 +118,10 @@ export function PromptViewerPanel({
             </PromptSection>
           )}
 
-          {/* Source Documents Section */}
+          {/* Source Content Section */}
           <PromptSection
             icon={<FileTextIcon />}
-            title="Source Documents"
+            title="Sources"
             badge={
               <span className="prompt-section-badge">
                 {sourceEntries.length}
@@ -130,11 +130,11 @@ export function PromptViewerPanel({
             defaultOpen={false}
           >
             <div className="prompt-documents">
-              {sourceEntries.map((doc: { id: string; title: string }) => (
-                <DocumentContentViewer
-                  key={doc.id}
-                  documentId={doc.id}
-                  documentTitle={doc.title}
+              {sourceEntries.map((entry: { id: string; title: string }) => (
+                <SourceContentViewer
+                  key={entry.id}
+                  sourceId={entry.id}
+                  sourceTitle={entry.title}
                 />
               ))}
             </div>

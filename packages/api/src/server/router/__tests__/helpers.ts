@@ -261,7 +261,7 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
   }
 
   if (
-    normalized.includes('document_parse_error') ||
+    normalized.includes('source_parse_error') ||
     normalized.includes('failed to parse pdf') ||
     normalized.includes('parse pdf')
   ) {
@@ -269,7 +269,7 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
   }
 
   if (
-    normalized.includes('document_too_large') ||
+    normalized.includes('source_too_large') ||
     normalized.includes('too large')
   ) {
     return 'SOURCE_TOO_LARGE';

@@ -1,11 +1,11 @@
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
-import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
 import { usePodcastActions } from '../hooks/use-podcast-actions';
 import { usePodcastSettings } from '../hooks/use-podcast-settings';
 import { useScriptEditor } from '../hooks/use-script-editor';
+import { useSourceSelection } from '../hooks/use-source-selection';
 import {
   buildPodcastScriptMarkdown,
   buildPodcastTranscriptMarkdown,
@@ -51,13 +51,10 @@ export function PodcastDetailContainer({
 
   const settings = usePodcastSettings({ podcast });
 
-  const initialDocuments = useMemo(
-    () => [...podcast.sources],
-    [podcast.sources],
-  );
+  const initialSources = useMemo(() => [...podcast.sources], [podcast.sources]);
 
-  const documentSelection = useDocumentSelection({
-    initialDocuments,
+  const sourceSelection = useSourceSelection({
+    initialSources,
   });
 
   const actions = usePodcastActions({
@@ -65,7 +62,7 @@ export function PodcastDetailContainer({
     podcast,
     scriptEditor,
     settings,
-    documentSelection,
+    sourceSelection,
   });
 
   const { approve, revoke } = useApprovePodcast(podcastId, user?.id);
@@ -155,8 +152,8 @@ export function PodcastDetailContainer({
 
   const [fullRegenerationConfirmOpen, setFullRegenerationConfirmOpen] =
     useState(false);
-  const regenerationConfirmationDescription = documentSelection.hasChanges
-    ? 'This will regenerate your podcast script from scratch. Your current script edits will be replaced. New source documents will be used to generate a fresh script and audio.'
+  const regenerationConfirmationDescription = sourceSelection.hasChanges
+    ? 'This will regenerate your podcast script from scratch. Your current script edits will be replaced. New sources will be used to generate a fresh script and audio.'
     : 'This will regenerate your podcast script from scratch. Your current script edits will be replaced.';
 
   const handleSave = useCallback(() => {
@@ -188,7 +185,7 @@ export function PodcastDetailContainer({
         podcast={podcast}
         scriptEditor={scriptEditor}
         settings={settings}
-        documentSelection={documentSelection}
+        sourceSelection={sourceSelection}
         displayAudio={displayAudio}
         workbenchState={workbenchState}
         approvalState={approvalState}

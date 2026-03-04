@@ -4,7 +4,7 @@ import { buildCompliance, PROMPT_OWNER } from './shared';
 export interface PodcastScriptUserPromptInput {
   readonly title?: string | null;
   readonly description?: string | null;
-  readonly documentContent: string;
+  readonly sourceContent: string;
 }
 
 export const podcastScriptUserPrompt =
@@ -18,12 +18,12 @@ export const podcastScriptUserPrompt =
     riskTier: 'high',
     status: 'active',
     summary:
-      'Packages source document content and generation requirements for podcast scripts.',
+      'Packages source content and generation requirements for podcast scripts.',
     compliance: buildCompliance({
       userContent: 'required',
       retention: 'resource-bound',
       notes:
-        'Carries full source document text plus optional working title/description context.',
+        'Carries full source text plus optional working title/description context.',
     }),
     render: (input) => {
       const existingContext = input.title
@@ -34,7 +34,7 @@ export const podcastScriptUserPrompt =
 
 ${existingContext}Source content:
 ---
-${input.documentContent}
+${input.sourceContent}
 ---
 
 Generate:

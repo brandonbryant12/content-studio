@@ -60,7 +60,7 @@ const createMockStorageLayer = (
  * Create a mock SourceRepo layer.
  */
 const createMockSourceRepoLayer = (options: {
-  documents: Map<string, Source>;
+  sources: Map<string, Source>;
   onUpdate?: (id: string, data: unknown) => void;
 }): Layer.Layer<SourceRepo> => {
   const service: SourceRepoService = {
@@ -77,12 +77,12 @@ const createMockSourceRepoLayer = (options: {
           metadata: data.metadata ?? undefined,
           createdBy: data.createdBy,
         });
-        options.documents.set(doc.id, doc);
+        options.sources.set(doc.id, doc);
         return doc;
       }),
     findByIdForUser: (id, userId) =>
       Effect.suspend(() => {
-        const doc = options.documents.get(id);
+        const doc = options.sources.get(id);
         if (!doc || doc.createdBy !== userId) {
           return Effect.fail(new SourceNotFound({ id }));
         }
@@ -90,16 +90,16 @@ const createMockSourceRepoLayer = (options: {
       }),
     findById: (id) =>
       Effect.suspend(() => {
-        const doc = options.documents.get(id);
+        const doc = options.sources.get(id);
         if (!doc) {
           return Effect.fail(new SourceNotFound({ id }));
         }
         return Effect.succeed(doc);
       }),
-    list: () => Effect.succeed([...options.documents.values()]),
+    list: () => Effect.succeed([...options.sources.values()]),
     update: (id, data) =>
       Effect.suspend(() => {
-        const existing = options.documents.get(id);
+        const existing = options.sources.get(id);
         if (!existing) {
           return Effect.fail(new SourceNotFound({ id }));
         }
@@ -112,16 +112,16 @@ const createMockSourceRepoLayer = (options: {
           metadata: data.metadata ?? existing.metadata,
           updatedAt: new Date(),
         };
-        options.documents.set(id, updated);
+        options.sources.set(id, updated);
         return Effect.succeed(updated);
       }),
     delete: (id) =>
       Effect.sync(() => {
-        const existed = options.documents.has(id);
-        options.documents.delete(id);
+        const existed = options.sources.has(id);
+        options.sources.delete(id);
         return existed;
       }),
-    count: () => Effect.succeed(options.documents.size),
+    count: () => Effect.succeed(options.sources.size),
     updateStatus: () => Effect.die('not implemented'),
     updateContent: () => Effect.die('not implemented'),
     findBySourceUrl: () => Effect.die('not implemented'),
@@ -137,7 +137,7 @@ const createMockSourceRepoLayer = (options: {
 const runTest = <A, E>(
   effect: Effect.Effect<A, E, Db | Storage | SourceRepo>,
   options: {
-    documents: Map<string, Source>;
+    sources: Map<string, Source>;
     storageTracker?: StorageTracker;
     onUpdate?: (id: string, data: unknown) => void;
   },
@@ -147,7 +147,7 @@ const runTest = <A, E>(
     MockDbLive,
     createMockStorageLayer(storageTracker),
     createMockSourceRepoLayer({
-      documents: options.documents,
+      sources: options.sources,
       onUpdate: options.onUpdate,
     }),
   );
@@ -160,7 +160,7 @@ const runTest = <A, E>(
 const runTestExpectFailure = async <A, E>(
   effect: Effect.Effect<A, E, Db | Storage | SourceRepo>,
   options: {
-    documents: Map<string, Source>;
+    sources: Map<string, Source>;
     storageTracker?: StorageTracker;
   },
 ): Promise<E> => {
@@ -168,7 +168,7 @@ const runTestExpectFailure = async <A, E>(
   const layers = Layer.mergeAll(
     MockDbLive,
     createMockStorageLayer(storageTracker),
-    createMockSourceRepoLayer({ documents: options.documents }),
+    createMockSourceRepoLayer({ sources: options.sources }),
   );
   const result = await Effect.runPromiseExit(
     effect.pipe(Effect.provide(layers)),
@@ -205,7 +205,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       const storageTracker: StorageTracker = { uploads: [], deletes: [] };
 
       const input: UpdateSourceInput = {
@@ -214,7 +214,7 @@ describe('updateSource', () => {
       };
 
       const result = await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         storageTracker,
       });
 
@@ -237,7 +237,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       let capturedUpdate: unknown;
 
       const input: UpdateSourceInput = {
@@ -246,7 +246,7 @@ describe('updateSource', () => {
       };
 
       const result = await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         onUpdate: (_id, data) => {
           capturedUpdate = data;
         },
@@ -266,7 +266,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       const storageTracker: StorageTracker = { uploads: [], deletes: [] };
 
       const input: UpdateSourceInput = {
@@ -275,7 +275,7 @@ describe('updateSource', () => {
       };
 
       await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         storageTracker,
       });
 
@@ -294,7 +294,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       const storageTracker: StorageTracker = { uploads: [], deletes: [] };
 
       const input: UpdateSourceInput = {
@@ -303,7 +303,7 @@ describe('updateSource', () => {
       };
 
       await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         storageTracker,
       });
 
@@ -320,7 +320,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       let capturedUpdate: unknown;
 
       const input: UpdateSourceInput = {
@@ -329,7 +329,7 @@ describe('updateSource', () => {
       };
 
       await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         onUpdate: (_id, data) => {
           capturedUpdate = data;
         },
@@ -346,7 +346,7 @@ describe('updateSource', () => {
   });
 
   describe('ownership and authorization', () => {
-    it('should allow owner to update their document', async () => {
+    it('should allow owner to update their source', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const doc = createTestSource({
         id: 'doc_123' as Source['id'],
@@ -354,7 +354,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
 
       const input: UpdateSourceInput = {
         id: doc.id,
@@ -362,13 +362,13 @@ describe('updateSource', () => {
       };
 
       const result = await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
       });
 
       expect(result.title).toBe('Updated by Owner');
     });
 
-    it('should reject admin updates for documents they do not own', async () => {
+    it('should reject admin updates for sources they do not own', async () => {
       const owner = createTestUser({ id: 'owner-id' });
       const admin = createTestAdmin({ id: 'admin-id' });
       const doc = createTestSource({
@@ -377,7 +377,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
 
       const input: UpdateSourceInput = {
         id: doc.id,
@@ -386,7 +386,7 @@ describe('updateSource', () => {
 
       const error = await runTestExpectFailure(
         withTestUser(admin)(updateSource(input)),
-        { documents },
+        { sources },
       );
 
       expect(error?._tag).toBe('SourceNotFound');
@@ -402,7 +402,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
 
       const input: UpdateSourceInput = {
         id: doc.id,
@@ -411,7 +411,7 @@ describe('updateSource', () => {
 
       const error = await runTestExpectFailure(
         withTestUser(otherUser)(updateSource(input)),
-        { documents },
+        { sources },
       );
 
       expect(error?._tag).toBe('SourceNotFound');
@@ -420,9 +420,9 @@ describe('updateSource', () => {
   });
 
   describe('error handling', () => {
-    it('should fail with SourceNotFound if document does not exist', async () => {
+    it('should fail with SourceNotFound if source does not exist', async () => {
       const user = createTestUser({ id: 'user-1' });
-      const documents = new Map<string, Source>();
+      const sources = new Map<string, Source>();
 
       const input: UpdateSourceInput = {
         id: 'doc_nonexistent' as Source['id'],
@@ -431,7 +431,7 @@ describe('updateSource', () => {
 
       const error = await runTestExpectFailure(
         withTestUser(user)(updateSource(input)),
-        { documents },
+        { sources },
       );
 
       expect(error?._tag).toBe('SourceNotFound');
@@ -449,7 +449,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       let capturedUpdate: unknown;
 
       const input: UpdateSourceInput = {
@@ -463,7 +463,7 @@ describe('updateSource', () => {
       };
 
       await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         onUpdate: (_id, data) => {
           capturedUpdate = data;
         },
@@ -486,7 +486,7 @@ describe('updateSource', () => {
         createdBy: owner.id,
       });
 
-      const documents = new Map<string, Source>([[doc.id, doc]]);
+      const sources = new Map<string, Source>([[doc.id, doc]]);
       const storageTracker: StorageTracker = { uploads: [], deletes: [] };
 
       const input: UpdateSourceInput = {
@@ -496,7 +496,7 @@ describe('updateSource', () => {
       };
 
       const result = await runTest(withTestUser(owner)(updateSource(input)), {
-        documents,
+        sources,
         storageTracker,
       });
 

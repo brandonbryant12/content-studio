@@ -2,7 +2,7 @@
  * Podcast Setup Wizard E2E Tests
  *
  * Tests for the podcast setup wizard flow:
- * 1. Documents step (select sources)
+ * 1. Sources step (select sources)
  * 2. Audio step (duration, voices)
  * 3. Instructions step (optional prompt)
  */
@@ -25,15 +25,15 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
     await expect(page.getByText(/step/i)).toBeVisible();
   });
 
-  authenticatedTest('step 1: shows documents step first', async ({ page }) => {
+  authenticatedTest('step 1: shows sources step first', async ({ page }) => {
     // Should show step indicator
     await expect(
       page.getByText(/step 1/i).or(page.locator('[data-step="1"]')),
     ).toBeVisible();
 
-    // Should show documents step
+    // Should show sources step
     await expect(
-      page.getByRole('heading', { name: /add source documents/i }),
+      page.getByRole('heading', { name: /add sources/i }),
     ).toBeVisible();
 
     // Should have a continue button
@@ -44,14 +44,14 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
   authenticatedTest(
     'step 2: can configure audio settings',
     async ({ page, api }) => {
-      // Upload a document first so we can proceed
-      const doc = await api.uploadDocument('Test Document', 'Test content');
+      // Upload a source first so we can proceed
+      const source = await api.uploadSource('Test Source', 'Test content');
 
-      // Refresh to see the document
+      // Refresh to see the source
       await page.reload();
 
-      // Select the document
-      await page.getByText('Test Document').click();
+      // Select the source
+      await page.getByText('Test Source').click();
 
       // Continue to step 2
       await page.getByRole('button', { name: /continue/i }).click();
@@ -66,14 +66,14 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
   authenticatedTest(
     'has back button after first step',
     async ({ page, api }) => {
-      // Upload a document first so we can proceed
-      await api.uploadDocument('Test Document', 'Test content');
+      // Upload a source first so we can proceed
+      await api.uploadSource('Test Source', 'Test content');
 
-      // Refresh to see the document
+      // Refresh to see the source
       await page.reload();
 
-      // Select the document
-      await page.getByText('Test Document').click();
+      // Select the source
+      await page.getByText('Test Source').click();
 
       // Advance to step 2
       await page.getByRole('button', { name: /continue/i }).click();
@@ -90,22 +90,22 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
     },
   );
 
-  authenticatedTest('step 1: can search documents', async ({ page, api }) => {
-    // Upload multiple documents
-    await api.uploadDocument('Alpha Report', 'Content about alpha');
-    await api.uploadDocument('Beta Analysis', 'Content about beta');
-    await api.uploadDocument('Gamma Study', 'Content about gamma');
+  authenticatedTest('step 1: can search sources', async ({ page, api }) => {
+    // Upload multiple sources
+    await api.uploadSource('Alpha Report', 'Content about alpha');
+    await api.uploadSource('Beta Analysis', 'Content about beta');
+    await api.uploadSource('Gamma Study', 'Content about gamma');
 
-    // Refresh to see the documents
+    // Refresh to see the sources
     await page.reload();
 
-    // Should see all documents initially
+    // Should see all sources initially
     await expect(page.getByText('Alpha Report')).toBeVisible();
     await expect(page.getByText('Beta Analysis')).toBeVisible();
     await expect(page.getByText('Gamma Study')).toBeVisible();
 
     // Search for "Alpha"
-    const searchInput = page.getByPlaceholder(/search documents/i);
+    const searchInput = page.getByPlaceholder(/search sources/i);
     await searchInput.fill('Alpha');
 
     // Should only see Alpha Report
@@ -116,7 +116,7 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
     // Clear search
     await searchInput.clear();
 
-    // Should see all documents again
+    // Should see all sources again
     await expect(page.getByText('Alpha Report')).toBeVisible();
     await expect(page.getByText('Beta Analysis')).toBeVisible();
     await expect(page.getByText('Gamma Study')).toBeVisible();
@@ -144,12 +144,12 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
   authenticatedTest(
     'wizard settings are persisted to workbench after generation starts',
     async ({ page, api }) => {
-      // Upload a document first
-      await api.uploadDocument('Test Document', 'Test content for podcast');
+      // Upload a source first
+      await api.uploadSource('Test Source', 'Test content for podcast');
       await page.reload();
 
-      // Step 1: Select document
-      await page.getByText('Test Document').click();
+      // Step 1: Select source
+      await page.getByText('Test Source').click();
       await page.getByRole('button', { name: /continue/i }).click();
 
       // Step 2: Select non-default duration (10 min instead of default 5)

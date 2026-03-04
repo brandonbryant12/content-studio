@@ -51,14 +51,14 @@ describe('processUrl', () => {
     vi.restoreAllMocks();
   });
 
-  it('updates document content and marks it ready', async () => {
+  it('updates source content and marks it ready', async () => {
     const sourceId = generateSourceId();
     const updateContentSpy = vi.fn();
     const updateStatusSpy = vi.fn();
-    const document = createTestSource({ id: sourceId });
+    const testSource = createTestSource({ id: sourceId });
 
     const repo = createMockSourceRepo({
-      findById: () => Effect.succeed(document),
+      findById: () => Effect.succeed(testSource),
       updateContent: (id, data) =>
         Effect.sync(() => {
           updateContentSpy(id, data);
@@ -122,13 +122,13 @@ describe('processUrl', () => {
     expect(updatePayload.contentHash).toEqual(expect.any(String));
   });
 
-  it('marks document as failed when scraping fails', async () => {
+  it('marks source as failed when scraping fails', async () => {
     const sourceId = generateSourceId();
     const updateStatusSpy = vi.fn();
-    const document = createTestSource({ id: sourceId });
+    const testSource = createTestSource({ id: sourceId });
 
     const repo = createMockSourceRepo({
-      findById: () => Effect.succeed(document),
+      findById: () => Effect.succeed(testSource),
       updateStatus: (id, status, errorMessage) =>
         Effect.sync(() => {
           updateStatusSpy(id, status, errorMessage);
@@ -168,14 +168,14 @@ describe('processUrl', () => {
         wordCount: 2,
       }),
     );
-    const document = createTestSource({
+    const testSource = createTestSource({
       id: sourceId,
       source: 'url',
       sourceUrl: 'https://stored.example.com/page',
     });
 
     const repo = createMockSourceRepo({
-      findById: () => Effect.succeed(document),
+      findById: () => Effect.succeed(testSource),
       updateContent: (id, data) =>
         Effect.succeed({
           id,

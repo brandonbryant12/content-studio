@@ -229,14 +229,14 @@ export class PodcastsPage extends BasePage {
    * Complete the setup wizard and trigger generation
    */
   async completeSetupWizard(options?: {
-    documentTitle?: string;
-    skipDocumentUpload?: boolean;
+    sourceTitle?: string;
+    skipSourceUpload?: boolean;
   }): Promise<void> {
-    const { documentTitle, skipDocumentUpload } = options ?? {};
+    const { sourceTitle, skipSourceUpload } = options ?? {};
 
-    // Step 1: Select document
-    if (documentTitle) {
-      await this.page.getByText(documentTitle).click();
+    // Step 1: Select source
+    if (sourceTitle) {
+      await this.page.getByText(sourceTitle).click();
     }
     await this.page.getByRole('button', { name: /continue/i }).click();
 

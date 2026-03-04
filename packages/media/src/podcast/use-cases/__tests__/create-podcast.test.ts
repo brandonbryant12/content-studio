@@ -181,8 +181,8 @@ describe('createPodcast', () => {
     });
   });
 
-  describe('document handling', () => {
-    it('creates podcast with document IDs', async () => {
+  describe('source handling', () => {
+    it('creates podcast with source IDs', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id });
       const doc2 = createTestSource({ createdBy: user.id });
@@ -210,7 +210,7 @@ describe('createPodcast', () => {
       ]);
     });
 
-    it('verifies documents exist before creating podcast', async () => {
+    it('verifies sources exist before creating podcast', async () => {
       const user = createTestUser();
       const doc = createTestSource({ createdBy: user.id });
       const verifyError = new SourceNotFound({ id: 'doc_missing' });
@@ -238,7 +238,7 @@ describe('createPodcast', () => {
       }
     });
 
-    it('skips document verification when no sourceIds provided', async () => {
+    it('skips source verification when no sourceIds provided', async () => {
       const user = createTestUser();
 
       const mockPodcastRepo = createMockPodcastRepo({ sources: [] });
@@ -252,7 +252,7 @@ describe('createPodcast', () => {
         ),
       );
 
-      // Should succeed without document verification
+      // Should succeed without source verification
       expect(result.sources).toHaveLength(0);
     });
   });

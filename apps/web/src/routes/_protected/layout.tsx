@@ -266,7 +266,7 @@ function Sidebar({
           <SectionLabel label="Assets" collapsed={collapsed} />
 
           <NavItem
-            to="/documents"
+            to="/sources"
             icon={FileTextIcon}
             label="Sources"
             colorScheme="sky"

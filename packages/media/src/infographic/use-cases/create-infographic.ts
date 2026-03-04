@@ -51,7 +51,7 @@ const formatOutlineSummary = (outline?: SourceOutline) => {
     .join('\n');
 };
 
-const buildDocumentPrompt = ({
+const buildSourcePrompt = ({
   title,
   content,
   outline,
@@ -96,7 +96,7 @@ export const createInfographic = (input: CreateInfographicInput) =>
     const prompt =
       explicitPrompt ??
       (sourceEntry && sourceContent !== undefined
-        ? buildDocumentPrompt({
+        ? buildSourcePrompt({
             title: sourceEntry.title,
             content: sourceContent,
             outline: sourceEntry.researchConfig?.outline,

@@ -22,11 +22,11 @@ describe('OnboardingGuidance', () => {
   it('renders CTAs linking to the correct routes', () => {
     render(<OnboardingGuidance onDismiss={vi.fn()} />);
 
-    const docLink = screen.getByText('Go to Documents').closest('a');
+    const docLink = screen.getByText('Go to Sources').closest('a');
     const personaLink = screen.getByText('Go to Personas').closest('a');
     const createLink = screen.getByText('Start Creating').closest('a');
 
-    expect(docLink).toHaveAttribute('href', '/documents');
+    expect(docLink).toHaveAttribute('href', '/sources');
     expect(personaLink).toHaveAttribute('href', '/personas');
     expect(createLink).toHaveAttribute('href', '/podcasts');
   });

@@ -78,6 +78,8 @@ pnpm db:push                    # 5. Push database schema
 | Command | Purpose |
 |---|---|
 | `pnpm dev` | Start all dev servers (Turborepo watch) |
+| `pnpm deploy:linux` | Interactive Docker Compose deploy (`.env.deploy`) |
+| `pnpm redeploy:linux` | `git pull --ff-only` + re-deploy using existing `.env.deploy` |
 | `pnpm typecheck` | Type check all packages |
 | `pnpm test` | Run all tests (includes web app) |
 | `pnpm test:invariants` | Safety invariant tests |

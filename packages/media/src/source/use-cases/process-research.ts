@@ -1,7 +1,7 @@
 import {
   DeepResearch,
   LLM,
-  documentOutlineUserPrompt,
+  sourceOutlineUserPrompt,
   renderPrompt,
 } from '@repo/ai';
 import {
@@ -109,7 +109,7 @@ export const processResearch = (input: ProcessResearchInput) => {
     const sourceRepo = yield* SourceRepo;
     const storage = yield* Storage;
 
-    // 1. Check if we can resume an existing research operation
+    // 1. Check if we can resume an existing research operation for this source
     const doc = yield* sourceRepo.findById(sourceId);
     yield* annotateUseCaseSpan({
       userId: doc.createdBy,
@@ -153,7 +153,7 @@ export const processResearch = (input: ProcessResearchInput) => {
         researchStatus: 'in_progress',
       };
 
-      // Update document with interaction ID
+      // Update source with interaction ID
       yield* sourceRepo.updateResearchConfig(sourceId, {
         query,
         operationId: interactionId,
@@ -214,7 +214,7 @@ export const processResearch = (input: ProcessResearchInput) => {
       maxAttempts: 3,
       run: () =>
         llm.generate({
-          prompt: renderPrompt(documentOutlineUserPrompt, {
+          prompt: renderPrompt(sourceOutlineUserPrompt, {
             query,
             content: result.content,
             sourceHints: result.sources.map((source) => source.url),
@@ -259,7 +259,7 @@ export const processResearch = (input: ProcessResearchInput) => {
     // 5. Compute content hash
     const contentHash = yield* calculateContentHash(result.content);
 
-    // 6. Update document content
+    // 6. Update source content
     yield* sourceRepo.updateContent(sourceId, {
       contentKey,
       extractedText: result.content,
@@ -278,7 +278,7 @@ export const processResearch = (input: ProcessResearchInput) => {
       autoGeneratePodcast,
     });
 
-    // 8. Mark document as ready
+    // 8. Mark source as ready
     yield* sourceRepo.updateStatus(sourceId, SourceStatus.READY);
 
     if (autoGeneratePodcast) {

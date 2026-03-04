@@ -40,10 +40,10 @@ type MockSourceRepoMethods = {
  * Methods are typed without Db requirement for testing convenience.
  */
 const createMockSourceRepo = (overrides: MockSourceRepoMethods = {}) => {
-  const defaultDoc = createTestSource();
+  const defaultSource = createTestSource();
 
   const service: SourceRepoService = {
-    insert: () => Effect.succeed(defaultDoc),
+    insert: () => Effect.succeed(defaultSource),
     findByIdForUser: (id, userId) =>
       overrides.findByIdForUser
         ? (overrides.findByIdForUser(id, userId) as ReturnType<
@@ -53,13 +53,13 @@ const createMockSourceRepo = (overrides: MockSourceRepoMethods = {}) => {
           ? (overrides.findById(id) as ReturnType<
               SourceRepoService['findByIdForUser']
             >)
-          : Effect.succeed(defaultDoc),
+          : Effect.succeed(defaultSource),
     findById: (id) =>
       overrides.findById
         ? (overrides.findById(id) as ReturnType<SourceRepoService['findById']>)
-        : Effect.succeed(defaultDoc),
+        : Effect.succeed(defaultSource),
     list: () => Effect.succeed([]),
-    update: () => Effect.succeed(defaultDoc),
+    update: () => Effect.succeed(defaultSource),
     delete: (id) =>
       overrides.delete
         ? (overrides.delete(id) as ReturnType<SourceRepoService['delete']>)
@@ -101,7 +101,7 @@ describe('deleteSource', () => {
   });
 
   describe('authorization', () => {
-    it('should delete document when user owns it', async () => {
+    it('should delete source when user owns it', async () => {
       const user = createTestUser({ id: 'owner-123' });
       const doc = createTestSource({
         id: 'doc_test1' as SourceId,
@@ -140,9 +140,9 @@ describe('deleteSource', () => {
       expect(repoDeleteCalls).toContain(doc.id);
     });
 
-    it('should fail with SourceNotFound when user is admin and does not own document', async () => {
+    it('should fail with SourceNotFound when user is admin and does not own source', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
-      const docId = 'doc_test2' as SourceId;
+      const sourceId = 'doc_test2' as SourceId;
 
       const deleteCalls: string[] = [];
       const repoDeleteCalls: string[] = [];
@@ -162,7 +162,7 @@ describe('deleteSource', () => {
         },
       });
 
-      const effect = deleteSource({ id: docId }).pipe(
+      const effect = deleteSource({ id: sourceId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -172,7 +172,7 @@ describe('deleteSource', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(docId);
+        expect((error as SourceNotFound).id).toBe(sourceId);
       }
       expect(deleteCalls).toHaveLength(0);
       expect(repoDeleteCalls).toHaveLength(0);
@@ -180,7 +180,7 @@ describe('deleteSource', () => {
 
     it('should fail with SourceNotFound when non-owner tries to delete', async () => {
       const user = createTestUser({ id: 'user-123' });
-      const docId = 'doc_test3' as SourceId;
+      const sourceId = 'doc_test3' as SourceId;
 
       const mockRepo = createMockSourceRepo({
         findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
@@ -188,7 +188,7 @@ describe('deleteSource', () => {
 
       const mockStorage = createMockStorage();
 
-      const effect = deleteSource({ id: docId }).pipe(
+      const effect = deleteSource({ id: sourceId }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
@@ -198,13 +198,13 @@ describe('deleteSource', () => {
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
         expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(docId);
+        expect((error as SourceNotFound).id).toBe(sourceId);
       }
     });
   });
 
   describe('error handling', () => {
-    it('should fail with SourceNotFound when document does not exist', async () => {
+    it('should fail with SourceNotFound when source does not exist', async () => {
       const user = createTestUser({ id: 'user-123' });
       const nonExistentId = 'doc_nonexistent';
 

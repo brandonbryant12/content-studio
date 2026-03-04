@@ -83,7 +83,7 @@ describe('listSources', () => {
   });
 
   describe('regular user', () => {
-    it('returns paginated documents for the current user', async () => {
+    it('returns paginated sources for the current user', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id });
       const doc2 = createTestSource({ createdBy: user.id });
@@ -105,7 +105,7 @@ describe('listSources', () => {
       expect(result.hasMore).toBe(false);
     });
 
-    it('returns empty list when user has no documents', async () => {
+    it('returns empty list when user has no sources', async () => {
       const user = createTestUser();
       const otherUserDoc = createTestSource({ createdBy: 'other-user-id' });
 
@@ -146,7 +146,7 @@ describe('listSources', () => {
       expect(result.hasMore).toBe(true);
     });
 
-    it('regular user only sees their own documents (ignores userId filter)', async () => {
+    it('regular user only sees their own sources (ignores userId filter)', async () => {
       const user = createTestUser();
       const otherUser = createTestUser();
       const userDoc = createTestSource({ createdBy: user.id });
@@ -163,13 +163,13 @@ describe('listSources', () => {
 
       const result = await Effect.runPromise(withTestUser(user)(effect));
 
-      // Should only see their own documents, userId filter is ignored
+      // Should only see their own sources, userId filter is ignored
       expect(result.sources).toHaveLength(1);
       expect(result.sources[0]!.id).toBe(userDoc.id);
       expect(result.total).toBe(1);
     });
 
-    it('hasMore is true when there are more documents beyond offset+limit', async () => {
+    it('hasMore is true when there are more sources beyond offset+limit', async () => {
       const user = createTestUser();
       const docs = Array.from({ length: 15 }, () =>
         createTestSource({ createdBy: user.id }),
@@ -215,7 +215,7 @@ describe('listSources', () => {
   });
 
   describe('admin user', () => {
-    it('admin can list all documents when no userId specified', async () => {
+    it('admin can list all sources when no userId specified', async () => {
       const admin = createTestAdmin();
       const user1 = createTestUser();
       const user2 = createTestUser();
@@ -233,7 +233,7 @@ describe('listSources', () => {
 
       const result = await Effect.runPromise(withTestUser(admin)(effect));
 
-      // Admin sees all documents
+      // Admin sees all sources
       expect(result.sources).toHaveLength(3);
       expect(result.total).toBe(3);
     });
@@ -255,7 +255,7 @@ describe('listSources', () => {
 
       const result = await Effect.runPromise(withTestUser(admin)(effect));
 
-      // Admin can filter to see only target user's documents
+      // Admin can filter to see only target user's sources
       expect(result.sources).toHaveLength(1);
       expect(result.sources[0]!.id).toBe(targetDoc.id);
       expect(result.total).toBe(1);

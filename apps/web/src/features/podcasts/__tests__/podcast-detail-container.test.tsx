@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type * as FileDownloadModule from '@/shared/lib/file-download';
 import { PodcastDetailContainer } from '../components/podcast-detail-container';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
-import { useDocumentSelection } from '../hooks/use-document-selection';
 import { usePodcast } from '../hooks/use-podcast';
 import { usePodcastActions } from '../hooks/use-podcast-actions';
 import { usePodcastSettings } from '../hooks/use-podcast-settings';
 import { useScriptEditor } from '../hooks/use-script-editor';
+import { useSourceSelection } from '../hooks/use-source-selection';
 import { isSetupMode } from '../lib/status';
 import {
   useKeyboardShortcut,
@@ -42,8 +42,8 @@ vi.mock('../hooks/use-podcast-settings', () => ({
   usePodcastSettings: vi.fn(),
 }));
 
-vi.mock('../hooks/use-document-selection', () => ({
-  useDocumentSelection: vi.fn(),
+vi.mock('../hooks/use-source-selection', () => ({
+  useSourceSelection: vi.fn(),
 }));
 
 vi.mock('../hooks/use-podcast-actions', () => ({
@@ -204,11 +204,11 @@ describe('PodcastDetailContainer', () => {
       saveSettings: vi.fn(),
       discardChanges: vi.fn(),
     } as never);
-    vi.mocked(useDocumentSelection).mockReturnValue({
+    vi.mocked(useSourceSelection).mockReturnValue({
       sources: [],
-      documentIds: [],
-      addDocuments: vi.fn(),
-      removeDocument: vi.fn(),
+      sourceIds: [],
+      addSources: vi.fn(),
+      removeSource: vi.fn(),
       discardChanges: vi.fn(),
       hasChanges: false,
     } as never);

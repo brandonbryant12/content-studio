@@ -87,7 +87,7 @@ describe('recoverOrphanedResearch', () => {
     expect(publishSpy).not.toHaveBeenCalled();
   });
 
-  it('resets document status and enqueues job for each orphan', async () => {
+  it('resets source status and enqueues job for each orphan', async () => {
     const publishSpy = vi.fn();
     const enqueueSpy = vi.fn();
     const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
@@ -127,7 +127,7 @@ describe('recoverOrphanedResearch', () => {
       recoverOrphanedResearch(publishSpy).pipe(Effect.provide(layers)),
     );
 
-    // Should reset both documents to processing
+    // Should reset both sources to processing
     expect(updateStatusSpy).toHaveBeenCalledTimes(2);
     expect(updateStatusSpy).toHaveBeenCalledWith(orphan1.id, 'processing');
     expect(updateStatusSpy).toHaveBeenCalledWith(orphan2.id, 'processing');

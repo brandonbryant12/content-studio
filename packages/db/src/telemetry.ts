@@ -35,7 +35,7 @@ export interface TelemetryConfig {
 /**
  * SpanProcessor that renames oRPC auto-generated spans to match our naming convention.
  * Transforms the `call_procedure` span using its `procedure.path` attribute:
- *   call_procedure [procedure.path=["documents","get"]] → api.documents.get
+ *   call_procedure [procedure.path=["sources","get"]] → api.sources.get
  */
 class ORPCSpanRenamer implements SpanProcessor {
   forceFlush(): Promise<void> {

@@ -4138,11 +4138,9 @@
     @apply flex-1 overflow-y-auto;
   }
 
-  /* Centered inner content */
+  /* Full-width inner content */
   .config-panel-v2-inner {
-    @apply px-6 py-8 lg:px-12 lg:py-10 space-y-6;
-    max-width: 800px;
-    margin: 0 auto;
+    @apply w-full px-4 py-8 lg:px-6 lg:py-10 space-y-6;
   }
 
   .config-section-v2 {

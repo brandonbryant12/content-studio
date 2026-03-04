@@ -18,7 +18,7 @@ import { sourceWriteMethods } from './source-repo.writes';
 // =============================================================================
 
 /**
- * Input for inserting a document with content stored in external storage.
+ * Input for inserting a source with content stored in external storage.
  */
 export interface InsertSourceInput {
   title: string;
@@ -43,7 +43,7 @@ export interface InsertSourceInput {
 }
 
 /**
- * Input for updating document content after async processing.
+ * Input for updating source content after async processing.
  */
 export interface UpdateContentInput {
   contentKey?: string;
@@ -55,7 +55,7 @@ export interface UpdateContentInput {
 }
 
 /**
- * Input for updating document metadata.
+ * Input for updating source metadata.
  * Content updates are handled separately via storage.
  */
 export interface UpdateSourceInput {
@@ -72,7 +72,7 @@ export interface UpdateSourceInput {
 // =============================================================================
 
 /**
- * Options for listing documents.
+ * Options for listing sources.
  */
 export interface ListOptions {
   createdBy?: string;
@@ -87,20 +87,20 @@ export interface ListOptions {
 // =============================================================================
 
 /**
- * Repository interface for document operations.
+ * Repository interface for source operations.
  * Handles raw database access without business logic.
  * All methods require Db context.
  */
 export interface SourceRepoService {
   /**
-   * Insert a new document (metadata only - content already in storage).
+   * Insert a new source (metadata only - content already in storage).
    */
   readonly insert: (
     data: InsertSourceInput,
   ) => Effect.Effect<Source, DatabaseError, Db>;
 
   /**
-   * Find document by ID.
+   * Find source by ID.
    * Fails with SourceNotFound if not found.
    */
   readonly findById: (
@@ -108,7 +108,7 @@ export interface SourceRepoService {
   ) => Effect.Effect<Source, SourceNotFound | DatabaseError, Db>;
 
   /**
-   * Find document by ID scoped to owner.
+   * Find source by ID scoped to owner.
    * Fails with SourceNotFound for missing or not-owned records.
    */
   readonly findByIdForUser: (
@@ -117,7 +117,7 @@ export interface SourceRepoService {
   ) => Effect.Effect<Source, SourceNotFound | DatabaseError, Db>;
 
   /**
-   * List documents with optional filters.
+   * List sources with optional filters.
    * Returns lean list items without heavy text fields.
    */
   readonly list: (
@@ -125,7 +125,7 @@ export interface SourceRepoService {
   ) => Effect.Effect<readonly SourceListItem[], DatabaseError, Db>;
 
   /**
-   * Update document by ID (metadata only).
+   * Update source by ID (metadata only).
    * Fails with SourceNotFound if not found.
    */
   readonly update: (
@@ -134,20 +134,20 @@ export interface SourceRepoService {
   ) => Effect.Effect<Source, SourceNotFound | DatabaseError, Db>;
 
   /**
-   * Delete document by ID.
+   * Delete source by ID.
    * Returns true if deleted, false if not found.
    */
   readonly delete: (id: string) => Effect.Effect<boolean, DatabaseError, Db>;
 
   /**
-   * Count documents with optional filter.
+   * Count sources with optional filter.
    */
   readonly count: (options?: {
     createdBy?: string;
   }) => Effect.Effect<number, DatabaseError, Db>;
 
   /**
-   * Update document processing status.
+   * Update source processing status.
    */
   readonly updateStatus: (
     id: string,
@@ -164,7 +164,7 @@ export interface SourceRepoService {
   ) => Effect.Effect<Source, SourceNotFound | DatabaseError, Db>;
 
   /**
-   * Find document by source URL for dedup.
+   * Find source by URL for dedup.
    * Returns null if not found.
    */
   readonly findBySourceUrl: (
@@ -181,8 +181,8 @@ export interface SourceRepoService {
   ) => Effect.Effect<Source, SourceNotFound | DatabaseError, Db>;
 
   /**
-   * Find research documents that were mid-operation when the worker died.
-   * Returns docs with source='research', an operationId, and researchStatus='in_progress'.
+   * Find research sources that were mid-operation when the worker died.
+   * Returns sources with source='research', an operationId, and researchStatus='in_progress'.
    */
   readonly findOrphanedResearch: () => Effect.Effect<
     Source[],

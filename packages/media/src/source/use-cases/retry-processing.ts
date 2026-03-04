@@ -28,7 +28,7 @@ export const retryProcessing = (input: RetryProcessingInput) =>
     });
     const doc = yield* sourceRepo.findByIdForUser(input.id, user.id);
 
-    // Only allow retry on failed documents
+    // Only allow retry on failed sources
     if (doc.status === SourceStatus.PROCESSING) {
       return yield* new SourceAlreadyProcessing({ id: doc.id });
     }

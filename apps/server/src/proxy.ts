@@ -1,4 +1,5 @@
 /* eslint-disable no-console -- Lifecycle logging before Effect runtime is available */
+import { env as processEnv } from 'node:process';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import { env } from './env';
 
@@ -13,7 +14,7 @@ export const configureProxy = (): void => {
     return;
   }
 
-  process.env.NODE_EXTRA_CA_CERTS = env.NODE_EXTRA_CA_CERTS!;
+  processEnv.NODE_EXTRA_CA_CERTS = env.NODE_EXTRA_CA_CERTS!;
   console.log(
     `[Proxy] Configuring proxy: ${maskProxyUrl(proxyUrl)} (NODE_EXTRA_CA_CERTS configured)`,
   );

@@ -6,6 +6,10 @@ This template assumes:
 - backend domain: `api.example.com`
 - Kubernetes ingress controller: `ingress-nginx`
 
+For the required env-variable matrix across Linux Compose and EKS patterns, see:
+
+- [`docs/architecture/deployment-env-matrix.md`](./deployment-env-matrix.md)
+
 ## Ingress Templates
 
 ### Backend Ingress (`api.example.com`)

@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 
 /**
- * Truncate document content at a word boundary for use in LLM prompts.
+ * Truncate source content at a word boundary for use in LLM prompts.
  * Adds a [truncated] marker if content was cut.
  */
 export function truncateForPrompt(content: string, maxChars = 100_000): string {

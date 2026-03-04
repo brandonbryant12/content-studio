@@ -25,7 +25,7 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
   Effect.gen(function* () {
     const { podcastId, promptInstructions } = job.payload;
 
-    // Wait for any pending research documents before generating script
+    // Wait for any pending research sources before generating script
     const podcastRepo = yield* PodcastRepo;
     const podcast = yield* podcastRepo.findById(podcastId);
     const pendingSources = podcast.sources.filter(

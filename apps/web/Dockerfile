@@ -32,6 +32,20 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
+
+# Build with safe placeholders; runtime PUBLIC_* values are injected by
+# entrypoint.sh into dist/env.js when the container starts.
+ARG PUBLIC_SERVER_URL="http://placeholder.invalid"
+ARG PUBLIC_SERVER_API_PATH="/api"
+ARG PUBLIC_AUTH_MODE="dev-password"
+ARG PUBLIC_WEB_URL="http://placeholder.invalid"
+ARG PUBLIC_BASE_PATH="/"
+ENV PUBLIC_SERVER_URL="${PUBLIC_SERVER_URL}" \
+    PUBLIC_SERVER_API_PATH="${PUBLIC_SERVER_API_PATH}" \
+    PUBLIC_AUTH_MODE="${PUBLIC_AUTH_MODE}" \
+    PUBLIC_WEB_URL="${PUBLIC_WEB_URL}" \
+    PUBLIC_BASE_PATH="${PUBLIC_BASE_PATH}"
+
 RUN pnpm build
 
 # =========================================================================== #

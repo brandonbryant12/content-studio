@@ -188,7 +188,7 @@ describe('audioPlaybackProxy', () => {
     expect(proxy.shouldRewritePath('/api/podcasts/pod_1')).toBe(true);
     expect(proxy.shouldRewritePath('/api/voiceovers')).toBe(true);
     expect(proxy.shouldRewritePath('/api/voiceovers/vo_1')).toBe(true);
-    expect(proxy.shouldRewritePath('/api/documents')).toBe(false);
+    expect(proxy.shouldRewritePath('/api/sources')).toBe(false);
     expect(proxy.shouldRewritePath('/api/audio/playback')).toBe(false);
   });
 });

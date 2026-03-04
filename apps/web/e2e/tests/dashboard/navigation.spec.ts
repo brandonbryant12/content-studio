@@ -19,10 +19,10 @@ authenticatedTest.describe('Dashboard', () => {
   );
 
   authenticatedTest(
-    'can navigate to documents via sidebar',
+    'can navigate to sources via sidebar',
     async ({ dashboardPage, page }) => {
-      await dashboardPage.navigateVia('Documents');
-      await expect(page).toHaveURL(/\/documents/);
+      await dashboardPage.navigateVia('Sources');
+      await expect(page).toHaveURL(/\/sources/);
     },
   );
 
@@ -35,10 +35,10 @@ authenticatedTest.describe('Dashboard', () => {
   );
 
   authenticatedTest(
-    'can navigate to documents via View all link',
+    'can navigate to sources via View all link',
     async ({ dashboardPage, page }) => {
-      await dashboardPage.goToAllDocuments();
-      await expect(page).toHaveURL(/\/documents/);
+      await dashboardPage.goToAllSources();
+      await expect(page).toHaveURL(/\/sources/);
     },
   );
 
@@ -51,9 +51,9 @@ authenticatedTest.describe('Dashboard', () => {
   );
 
   authenticatedTest(
-    'shows upload document dialog when clicking quick action',
+    'shows upload source dialog when clicking quick action',
     async ({ dashboardPage, page }) => {
-      await dashboardPage.clickUploadDocument();
+      await dashboardPage.clickUploadSource();
       // Should show upload dialog
       await expect(page.getByRole('dialog')).toBeVisible();
     },

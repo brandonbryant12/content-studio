@@ -123,7 +123,7 @@ describe('handleProcessUrl', () => {
   });
 
   describe('success path', () => {
-    it('scrapes URL, uploads content, and updates document', async () => {
+    it('scrapes URL, uploads content, and updates source', async () => {
       const updateContentSpy = vi.fn();
       const updateStatusSpy = vi.fn();
       const job = createTestJob();
@@ -320,7 +320,7 @@ describe('handleProcessUrl', () => {
   });
 
   describe('error handling', () => {
-    it('marks document as failed when scraping fails', async () => {
+    it('marks source as failed when scraping fails', async () => {
       const updateStatusSpy = vi.fn();
       const job = createTestJob();
 
@@ -353,7 +353,7 @@ describe('handleProcessUrl', () => {
         );
       }
 
-      // Document should be marked as failed
+      // Source should be marked as failed
       expect(updateStatusSpy).toHaveBeenCalledWith(
         'doc_test1',
         'failed',
@@ -361,7 +361,7 @@ describe('handleProcessUrl', () => {
       );
     });
 
-    it('marks document as failed when storage upload fails', async () => {
+    it('marks source as failed when storage upload fails', async () => {
       const updateStatusSpy = vi.fn();
       const job = createTestJob();
 
@@ -390,7 +390,7 @@ describe('handleProcessUrl', () => {
         expect(error?._tag).toBe('JobProcessingError');
       }
 
-      // Document should be marked as failed
+      // Source should be marked as failed
       expect(updateStatusSpy).toHaveBeenCalledWith(
         'doc_test1',
         'failed',
@@ -402,7 +402,7 @@ describe('handleProcessUrl', () => {
       const job = createTestJob();
 
       // Use Effect.fail (not die) so the handler's catchAll can catch it
-      const failingDocRepoLayer = Layer.succeed(SourceRepo, {
+      const failingSourceRepoLayer = Layer.succeed(SourceRepo, {
         insert: () => Effect.die('not implemented'),
         findById: (id) =>
           Effect.succeed(
@@ -423,7 +423,7 @@ describe('handleProcessUrl', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        failingDocRepoLayer,
+        failingSourceRepoLayer,
         createMockUrlScraper({
           fetchAndExtract: () =>
             Effect.fail(

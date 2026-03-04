@@ -180,7 +180,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     inMemoryStorage.layer,
   );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
-  const documentRepoLayer = SourceRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const sourceRepoLayer = SourceRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const activityLogRepoLayer = ActivityLogRepoLive.pipe(
     Layer.provide(ctx.dbLayer),
@@ -191,7 +191,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     ctx.dbLayer,
     mockAILayers,
     policyLayer,
-    documentRepoLayer,
+    sourceRepoLayer,
     podcastRepoLayer,
     activityLogRepoLayer,
     queueLayer,
@@ -218,10 +218,10 @@ const insertTestUser = async (
 };
 
 /**
- * Insert a document into the database for testing.
- * Required for creating podcasts with source documents.
+ * Insert a source into the database for testing.
+ * Required for creating podcasts with linked sources.
  */
-const insertTestDocument = async (
+const insertTestSource = async (
   ctx: TestContext,
   userId: string,
   options: Partial<Parameters<typeof createTestSource>[0]> = {},
@@ -395,8 +395,8 @@ describe('podcast router', () => {
   });
 
   describe('get handler', () => {
-    it('returns owned podcast with documents, segments, and serialized fields', async () => {
-      const doc = await insertTestDocument(ctx, testUser.id, {
+    it('returns owned podcast with sources, segments, and serialized fields', async () => {
+      const doc = await insertTestSource(ctx, testUser.id, {
         title: 'Source Doc',
       });
       const podcast = await insertTestPodcast(ctx, testUser.id, {
@@ -452,10 +452,10 @@ describe('podcast router', () => {
   });
 
   describe('create handler', () => {
-    it('creates and persists a podcast with metadata and documents', async () => {
+    it('creates and persists a podcast with metadata and sources', async () => {
       const context = createMockContext(runtime, user);
-      const doc = await insertTestDocument(ctx, testUser.id, {
-        title: 'Source Document',
+      const doc = await insertTestSource(ctx, testUser.id, {
+        title: 'Source Doc',
       });
 
       const result = await handlers.create({

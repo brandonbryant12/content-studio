@@ -13,13 +13,13 @@ import { MockDbLive } from '../../../test-utils/mock-repos';
 import { SourceRepo, type SourceRepoService } from '../../repos';
 import { createFromUrl } from '../create-from-url';
 
-interface MockDocState {
+interface MockSourceState {
   existingByUrl?: Source | null;
-  insertedDoc?: Source;
+  insertedSource?: Source;
 }
 
 const createMockSourceRepo = (
-  state: MockDocState,
+  state: MockSourceState,
   options?: {
     onInsert?: (data: unknown) => void;
     onDelete?: (id: string) => void;
@@ -36,8 +36,8 @@ const createMockSourceRepo = (
       return this.findById(id);
     },
     findById: (id) =>
-      state.insertedDoc && state.insertedDoc.id === id
-        ? Effect.succeed(state.insertedDoc)
+      state.insertedSource && state.insertedSource.id === id
+        ? Effect.succeed(state.insertedSource)
         : Effect.die(`findById not mocked for id ${id}`),
     insert: (data) =>
       Effect.sync(() => {
@@ -51,13 +51,13 @@ const createMockSourceRepo = (
           mimeType: data.mimeType,
           contentKey: data.contentKey,
         });
-        state.insertedDoc = doc;
+        state.insertedSource = doc;
         return doc;
       }),
     list: () => Effect.die('not implemented'),
     update: (_id) =>
-      state.insertedDoc
-        ? Effect.succeed(state.insertedDoc)
+      state.insertedSource
+        ? Effect.succeed(state.insertedSource)
         : Effect.die('update not mocked'),
     delete: (id) =>
       Effect.sync(() => {
@@ -67,17 +67,17 @@ const createMockSourceRepo = (
     count: () => Effect.die('not implemented'),
     updateStatus: (id, status, errorMessage) =>
       Effect.suspend(() => {
-        if (!state.insertedDoc || state.insertedDoc.id !== id) {
+        if (!state.insertedSource || state.insertedSource.id !== id) {
           return Effect.die('updateStatus not mocked');
         }
         options?.onUpdateStatus?.(id, status, errorMessage);
         const updated: Source = {
-          ...state.insertedDoc,
+          ...state.insertedSource,
           status,
           errorMessage: status === 'failed' ? (errorMessage ?? null) : null,
           updatedAt: new Date(),
         };
-        state.insertedDoc = updated;
+        state.insertedSource = updated;
         return Effect.succeed(updated);
       }),
     updateContent: () => Effect.die('not implemented'),
@@ -136,7 +136,7 @@ describe('createFromUrl', () => {
   });
 
   describe('happy path', () => {
-    it('creates document from valid URL', async () => {
+    it('creates source from valid URL', async () => {
       const user = createTestUser();
       const insertSpy = vi.fn();
       const enqueueSpy = vi.fn();
@@ -267,9 +267,9 @@ describe('createFromUrl', () => {
   });
 
   describe('deduplication', () => {
-    it('returns existing ready document for duplicate URL', async () => {
+    it('returns existing ready source for duplicate URL', async () => {
       const user = createTestUser();
-      const existingDoc = createTestSource({
+      const existingSource = createTestSource({
         createdBy: user.id,
         source: 'url',
         sourceUrl: 'https://example.com/article',
@@ -282,7 +282,7 @@ describe('createFromUrl', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockSourceRepo(
-          { existingByUrl: existingDoc },
+          { existingByUrl: existingSource },
           { onInsert: insertSpy },
         ),
         createMockQueue({ onEnqueue: enqueueSpy }),
@@ -296,14 +296,14 @@ describe('createFromUrl', () => {
         ),
       );
 
-      expect(result.id).toBe(existingDoc.id);
+      expect(result.id).toBe(existingSource.id);
       expect(insertSpy).not.toHaveBeenCalled();
       expect(enqueueSpy).not.toHaveBeenCalled();
     });
 
     it('rejects in-progress duplicates with SourceAlreadyProcessing', async () => {
       const user = createTestUser();
-      const existingDoc = createTestSource({
+      const existingSource = createTestSource({
         createdBy: user.id,
         source: 'url',
         sourceUrl: 'https://example.com/article',
@@ -312,7 +312,7 @@ describe('createFromUrl', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        createMockSourceRepo({ existingByUrl: existingDoc }),
+        createMockSourceRepo({ existingByUrl: existingSource }),
         createMockQueue(),
       );
 
@@ -331,9 +331,9 @@ describe('createFromUrl', () => {
       }
     });
 
-    it('deletes failed duplicate and creates new document', async () => {
+    it('deletes failed duplicate and creates new source', async () => {
       const user = createTestUser();
-      const failedDoc = createTestSource({
+      const failedSource = createTestSource({
         createdBy: user.id,
         source: 'url',
         sourceUrl: 'https://example.com/article',
@@ -347,7 +347,7 @@ describe('createFromUrl', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockSourceRepo(
-          { existingByUrl: failedDoc },
+          { existingByUrl: failedSource },
           { onDelete: deleteSpy, onInsert: insertSpy },
         ),
         createMockQueue(),
@@ -361,14 +361,14 @@ describe('createFromUrl', () => {
         ),
       );
 
-      expect(deleteSpy).toHaveBeenCalledWith(failedDoc.id);
+      expect(deleteSpy).toHaveBeenCalledWith(failedSource.id);
       expect(insertSpy).toHaveBeenCalledTimes(1);
       expect(result.source).toBe('url');
     });
 
     it('returns SourceAlreadyProcessing when active URL uniqueness constraint races', async () => {
       const user = createTestUser();
-      const processingDoc = createTestSource({
+      const processingSource = createTestSource({
         createdBy: user.id,
         source: 'url',
         sourceUrl: 'https://example.com/article',
@@ -398,7 +398,7 @@ describe('createFromUrl', () => {
         findBySourceUrl: () =>
           Effect.sync(() => {
             findCalls += 1;
-            return findCalls === 1 ? null : processingDoc;
+            return findCalls === 1 ? null : processingSource;
           }),
         updateResearchConfig: () => Effect.die('not implemented'),
         findOrphanedResearch: () => Effect.die('not implemented'),
@@ -469,13 +469,13 @@ describe('createFromUrl', () => {
       }
     });
 
-    it('marks document as failed when enqueue fails, then propagates the error', async () => {
+    it('marks source as failed when enqueue fails, then propagates the error', async () => {
       const user = createTestUser();
       const insertSpy = vi.fn();
       const updateStatusSpy = vi.fn();
 
-      const docState: MockDocState = {};
-      const docLayer = createMockSourceRepo(docState, {
+      const sourceState: MockSourceState = {};
+      const sourceLayer = createMockSourceRepo(sourceState, {
         onInsert: insertSpy,
         onUpdateStatus: updateStatusSpy,
       });
@@ -495,7 +495,7 @@ describe('createFromUrl', () => {
         failStaleJobs: () => Effect.die('not implemented'),
       } as QueueService);
 
-      const layers = Layer.mergeAll(MockDbLive, docLayer, failingQueue);
+      const layers = Layer.mergeAll(MockDbLive, sourceLayer, failingQueue);
 
       const result = await Effect.runPromiseExit(
         withTestUser(user)(

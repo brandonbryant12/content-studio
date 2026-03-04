@@ -29,7 +29,7 @@ describe('contract schema test invariants', () => {
     ).toBeLessThanOrEqual(8);
 
     const perRouteDescribeBlocks =
-      source.match(/describe\('(?:documents|podcasts|voiceovers)\./g) ?? [];
+      source.match(/describe\('(?:sources|podcasts|voiceovers)\./g) ?? [];
     expect(
       perRouteDescribeBlocks,
       'Do not use one describe block per route for UUID/brand checks.',

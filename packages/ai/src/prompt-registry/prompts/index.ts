@@ -34,9 +34,9 @@ export {
   type InfographicTitleUserPromptInput,
 } from './infographic-title-user';
 export {
-  documentOutlineUserPrompt,
-  type DocumentOutlineUserPromptInput,
-} from './document-outline-user';
+  sourceOutlineUserPrompt,
+  type SourceOutlineUserPromptInput,
+} from './source-outline-user';
 
 export {
   podcastCoverImageUserPrompt,

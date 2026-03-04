@@ -45,7 +45,7 @@ const createMockDeepResearch = (
   return Layer.succeed(DeepResearch, { ...defaults, ...overrides });
 };
 
-const mockDocRepo = (overrides: Partial<SourceRepoService>) =>
+const mockSourceRepo = (overrides: Partial<SourceRepoService>) =>
   createMockSourceRepo({
     updateResearchConfig: () => Effect.succeed({} as never),
     ...overrides,
@@ -94,11 +94,11 @@ describe('processResearch', () => {
   });
 
   describe('resume branch', () => {
-    it('skips startResearch when document has existing operationId with in_progress status', async () => {
+    it('skips startResearch when source has existing operationId with in_progress status', async () => {
       const startResearchSpy = vi.fn();
       const getResultSpy = vi.fn();
 
-      const existingDoc = createTestSource({
+      const existingSource = createTestSource({
         source: 'research',
         status: 'processing',
         researchConfig: {
@@ -114,10 +114,10 @@ describe('processResearch', () => {
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
         createMockQueue(),
-        mockDocRepo({
-          findById: () => Effect.succeed(existingDoc),
-          updateContent: () => Effect.succeed(existingDoc),
-          updateStatus: () => Effect.succeed(existingDoc),
+        mockSourceRepo({
+          findById: () => Effect.succeed(existingSource),
+          updateContent: () => Effect.succeed(existingSource),
+          updateStatus: () => Effect.succeed(existingSource),
         }),
         createMockActivityLogRepo(),
         createMockDeepResearch({
@@ -141,7 +141,7 @@ describe('processResearch', () => {
       await Effect.runPromise(
         withTestUser(testUser)(
           processResearch({
-            sourceId: existingDoc.id,
+            sourceId: existingSource.id,
             query: 'test query',
           }).pipe(Effect.provide(layers)),
         ),
@@ -153,7 +153,7 @@ describe('processResearch', () => {
       expect(getResultSpy).toHaveBeenCalledWith('existing-op-123');
     });
 
-    it('starts fresh research when document has no operationId', async () => {
+    it('starts fresh research when source has no operationId', async () => {
       const startResearchSpy = vi.fn();
 
       const doc = createTestSource({
@@ -168,7 +168,7 @@ describe('processResearch', () => {
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
         createMockQueue(),
-        mockDocRepo({
+        mockSourceRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),
@@ -220,7 +220,7 @@ describe('processResearch', () => {
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
         createMockQueue(),
-        mockDocRepo({
+        mockSourceRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),
@@ -257,7 +257,7 @@ describe('processResearch', () => {
     it('does not set researchConfig to in_progress when resuming', async () => {
       const configUpdates: Array<{ id: string; config: unknown }> = [];
 
-      const existingDoc = createTestSource({
+      const existingSource = createTestSource({
         source: 'research',
         status: 'processing',
         researchConfig: {
@@ -273,13 +273,13 @@ describe('processResearch', () => {
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
         createMockQueue(),
-        mockDocRepo({
-          findById: () => Effect.succeed(existingDoc),
-          updateContent: () => Effect.succeed(existingDoc),
-          updateStatus: () => Effect.succeed(existingDoc),
+        mockSourceRepo({
+          findById: () => Effect.succeed(existingSource),
+          updateContent: () => Effect.succeed(existingSource),
+          updateStatus: () => Effect.succeed(existingSource),
           updateResearchConfig: (id, config) => {
             configUpdates.push({ id, config });
-            return Effect.succeed(existingDoc);
+            return Effect.succeed(existingSource);
           },
         }),
         createMockActivityLogRepo(),
@@ -298,7 +298,7 @@ describe('processResearch', () => {
       await Effect.runPromise(
         withTestUser(testUser)(
           processResearch({
-            sourceId: existingDoc.id,
+            sourceId: existingSource.id,
             query: 'test query',
           }).pipe(Effect.provide(layers)),
         ),
@@ -340,7 +340,7 @@ describe('processResearch', () => {
           createMockVoiceoverRepo(),
           createMockInfographicRepo(),
           createMockQueue(),
-          mockDocRepo({
+          mockSourceRepo({
             findById: () => Effect.succeed(doc),
             updateResearchConfig: (_id, config) =>
               Effect.sync(() => {
@@ -427,7 +427,7 @@ describe('processResearch', () => {
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
         createMockQueue(),
-        mockDocRepo({
+        mockSourceRepo({
           findById: () => Effect.succeed(doc),
           updateResearchConfig: (_id, config) =>
             Effect.sync(() => {
@@ -501,7 +501,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
-        mockDocRepo({
+        mockSourceRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),
           updateStatus: () => Effect.succeed(doc),

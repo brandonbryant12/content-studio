@@ -108,7 +108,7 @@ export {
   podcastScriptUserPrompt,
   infographicGenerationUserPrompt,
   infographicTitleUserPrompt,
-  documentOutlineUserPrompt,
+  sourceOutlineUserPrompt,
   INFOGRAPHIC_FORMAT_DIMENSIONS,
   podcastCoverImageUserPrompt,
   personaAvatarImageUserPrompt,
@@ -127,7 +127,7 @@ export {
   type PodcastScriptUserPromptInput,
   type InfographicGenerationPromptInput,
   type InfographicTitleUserPromptInput,
-  type DocumentOutlineUserPromptInput,
+  type SourceOutlineUserPromptInput,
   type PodcastCoverImageUserPromptInput,
   type PersonaAvatarImageUserPromptInput,
 } from './prompt-registry';

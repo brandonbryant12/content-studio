@@ -30,26 +30,26 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
-// Stub document components to avoid deep dependency chains
-vi.mock('@/features/documents/components', () => ({
-  UploadDocumentDialog: () => null,
+// Stub source components to avoid deep dependency chains
+vi.mock('@/features/sources/components', () => ({
+  UploadSourceDialog: () => null,
   AddFromUrlDialog: () => null,
   ResearchChatContainer: () => null,
-  DocumentEntryMenu: () => null,
+  SourceEntryMenu: () => null,
 }));
 
 function createProps(
   overrides: Partial<DashboardPageProps> = {},
 ): DashboardPageProps {
   return {
-    counts: { documents: 0, podcasts: 0, voiceovers: 0, infographics: 0 },
+    counts: { sources: 0, podcasts: 0, voiceovers: 0, infographics: 0 },
     loading: {
-      documents: false,
+      sources: false,
       podcasts: false,
       voiceovers: false,
       infographics: false,
     },
-    recent: { documents: [], podcasts: [], voiceovers: [], infographics: [] },
+    recent: { sources: [], podcasts: [], voiceovers: [], infographics: [] },
     createActions: {
       onCreatePodcast: vi.fn(),
       isPodcastPending: false,
@@ -105,7 +105,7 @@ describe('DashboardPage quick-start panel', () => {
     render(
       <DashboardPage
         {...createProps({
-          counts: { documents: 3, podcasts: 0, voiceovers: 0, infographics: 0 },
+          counts: { sources: 3, podcasts: 0, voiceovers: 0, infographics: 0 },
         })}
       />,
     );
@@ -124,7 +124,7 @@ describe('DashboardPage quick-start panel', () => {
     render(
       <DashboardPage
         {...createProps({
-          counts: { documents: 3, podcasts: 2, voiceovers: 0, infographics: 0 },
+          counts: { sources: 3, podcasts: 2, voiceovers: 0, infographics: 0 },
         })}
       />,
     );
@@ -136,7 +136,7 @@ describe('DashboardPage quick-start panel', () => {
     render(
       <DashboardPage
         {...createProps({
-          counts: { documents: 3, podcasts: 2, voiceovers: 1, infographics: 1 },
+          counts: { sources: 3, podcasts: 2, voiceovers: 1, infographics: 1 },
         })}
       />,
     );

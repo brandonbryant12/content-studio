@@ -9,36 +9,36 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { QuickStartPanel } from './quick-start-panel';
-import { DocumentsRecentSection, RecentSection } from './recent-section';
-import {
-  type DocumentListItem,
-  AddFromUrlDialog,
-  ResearchChatContainer,
-  UploadDocumentDialog,
-} from '@/features/documents/components';
+import { SourcesRecentSection, RecentSection } from './recent-section';
 import {
   CreateInfographicDialog,
   type CreateInfographicPayload,
 } from '@/features/infographics/components/create-infographic-dialog';
+import {
+  type SourceListItem,
+  AddFromUrlDialog,
+  ResearchChatContainer,
+  UploadSourceDialog,
+} from '@/features/sources/components';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import { formatDuration } from '@/shared/lib/formatters';
 
 interface ContentCounts {
-  documents: number;
+  sources: number;
   podcasts: number;
   voiceovers: number;
   infographics: number;
 }
 
 interface LoadingState {
-  documents: boolean;
+  sources: boolean;
   podcasts: boolean;
   voiceovers: boolean;
   infographics: boolean;
 }
 
 interface RecentItems {
-  documents: DocumentListItem[];
+  sources: SourceListItem[];
   podcasts: Array<{
     id: string;
     title: string;
@@ -146,17 +146,17 @@ export function DashboardPage({
           isPending={createActions.isInfographicPending}
         />
 
-        <DocumentsRecentSection
-          count={counts.documents}
-          items={recent.documents}
-          isLoading={loading.documents}
+        <SourcesRecentSection
+          count={counts.sources}
+          items={recent.sources}
+          isLoading={loading.sources}
           onResearch={() => documentDialogs.onResearchDialogOpenChange(true)}
           onUrl={() => documentDialogs.onUrlDialogOpenChange(true)}
           onUpload={() => documentDialogs.onUploadOpenChange(true)}
         />
       </div>
 
-      <UploadDocumentDialog
+      <UploadSourceDialog
         open={documentDialogs.uploadOpen}
         onOpenChange={documentDialogs.onUploadOpenChange}
       />

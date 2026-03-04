@@ -1,5 +1,62 @@
 [
   {
+    "id": "2026-03-04-feature-delivery-deploy-script-proxy-wiring-and-git-pull-redeploy-path",
+    "date": "2026-03-04",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Deploy script proxy wiring and git-pull redeploy path",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker",
+      "compose",
+      "deploy",
+      "proxy",
+      "certs",
+      "redeploy",
+      "git"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-04-feature-delivery-fix-toast-view-navigation-and-entity-view-matching",
+    "date": "2026-03-04",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Fix toast View navigation and entity-view matching",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "sse",
+      "toast",
+      "skill:debug-fix"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-04-feature-delivery-fresh-vm-docker-deploy-alignment-for-compose-deploy-script",
+    "date": "2026-03-04",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Fresh-VM Docker deploy alignment for compose + deploy script",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:intake-triage",
+      "skill:pr-risk-review",
+      "docker",
+      "compose",
+      "deploy",
+      "linux",
+      "env",
+      "runtime-injection"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-04-feature-delivery-infographic-style-presets-merged-additively-in-picker",
     "date": "2026-03-04",
     "month": "2026-03",
@@ -16,6 +73,26 @@
     ],
     "importance": 0.76,
     "confidence": 0.89,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-04-feature-delivery-pnpm-deploy-commands-dual-mode-env-matrix-cors-normalization",
+    "date": "2026-03-04",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "PNPM deploy commands + dual-mode env matrix + CORS normalization",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker",
+      "compose",
+      "deploy",
+      "pnpm",
+      "eks",
+      "cors",
+      "documentation"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -56,6 +133,22 @@
     ],
     "importance": 0.78,
     "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-04-feature-delivery-remove-toast-view-action-from-sse-notifications",
+    "date": "2026-03-04",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Remove toast View action from SSE notifications",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "sse",
+      "toast",
+      "skill:debug-fix"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {

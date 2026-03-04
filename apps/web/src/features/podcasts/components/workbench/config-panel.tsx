@@ -1,12 +1,12 @@
 import { FileTextIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
-import type { UseDocumentSelectionReturn } from '../../hooks/use-document-selection';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
+import type { UseSourceSelectionReturn } from '../../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
-import { DocumentManager } from './document-manager';
 import { GenerationStatus } from './generation-status';
 import { PodcastSettings } from './podcast-settings';
 import { PromptViewerPanel } from './prompt-viewer';
+import { SourceManager } from './source-manager';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -15,7 +15,7 @@ interface ConfigPanelProps {
   isGenerating: boolean;
   isPendingGeneration: boolean;
   settings: UsePodcastSettingsReturn;
-  documentSelection: UseDocumentSelectionReturn;
+  sourceSelection: UseSourceSelectionReturn;
 }
 
 export function ConfigPanel({
@@ -23,7 +23,7 @@ export function ConfigPanel({
   isGenerating,
   isPendingGeneration,
   settings,
-  documentSelection,
+  sourceSelection,
 }: ConfigPanelProps) {
   const [showPromptViewer, setShowPromptViewer] = useState(false);
 
@@ -48,13 +48,13 @@ export function ConfigPanel({
             <h3 className="config-section-title">
               Source Documents
               <span className="config-section-count">
-                {documentSelection.documents.length}
+                {sourceSelection.sources.length}
               </span>
             </h3>
-            <DocumentManager
-              documents={documentSelection.documents}
-              onAddDocuments={documentSelection.addDocuments}
-              onRemoveDocument={documentSelection.removeDocument}
+            <SourceManager
+              sources={sourceSelection.sources}
+              onAddSources={sourceSelection.addSources}
+              onRemoveSource={sourceSelection.removeSource}
               disabled={isGenerating}
             />
           </div>
