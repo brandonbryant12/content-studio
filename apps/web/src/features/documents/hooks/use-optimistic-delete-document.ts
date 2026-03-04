@@ -3,11 +3,10 @@ import { getDocumentListQueryKey } from './use-document-list';
 import { apiClient } from '@/clients/apiClient';
 import { useOptimisticMutation } from '@/shared/hooks';
 
-type DocumentList = RouterOutput['documents']['list'];
+type DocumentList = RouterOutput['sources']['list'];
 
 // Extract mutationFn from oRPC options (always defined for mutations)
-const deleteMutationFn =
-  apiClient.documents.delete.mutationOptions().mutationFn!;
+const deleteMutationFn = apiClient.sources.delete.mutationOptions().mutationFn!;
 
 /**
  * Delete document from list with optimistic removal.
@@ -25,8 +24,8 @@ export function useOptimisticDeleteDocument() {
       if (!current) return undefined;
       return current.filter((document) => document.id !== id);
     },
-    successMessage: 'Document deleted',
-    errorMessage: 'Failed to delete document',
+    successMessage: 'Source deleted',
+    errorMessage: 'Failed to delete source',
     showSuccessToast: true,
   });
 }

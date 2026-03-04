@@ -9,7 +9,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { PodcastWithDocuments } from '../../repos/podcast-repo';
+import type { PodcastWithSources } from '../../repos/podcast-repo';
 import type { Podcast } from '@repo/db/schema';
 import {
   createMockPodcastRepo,
@@ -27,8 +27,8 @@ describe('generateAudio', () => {
     const user = createTestUser();
     const podcast = {
       ...createScriptReadyPodcast({ createdBy: user.id }),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } satisfies PodcastWithSources;
     const updateStatusSpy = vi.fn();
     const updateAudioSpy = vi.fn();
 
@@ -86,8 +86,8 @@ describe('generateAudio', () => {
         status: 'drafting',
         segments: [],
       }),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } satisfies PodcastWithSources;
 
     const repo = createMockPodcastRepo({
       findByIdForUser: () => Effect.succeed(podcast),
@@ -122,8 +122,8 @@ describe('generateAudio', () => {
         status: 'script_ready',
         segments: [],
       }),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } satisfies PodcastWithSources;
 
     const repo = createMockPodcastRepo({
       findByIdForUser: () => Effect.succeed(podcast),
@@ -154,8 +154,8 @@ describe('generateAudio', () => {
     const user = createTestUser();
     const podcast = {
       ...createScriptReadyPodcast({ createdBy: user.id }),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } satisfies PodcastWithSources;
     const updateStatusSpy = vi.fn();
 
     const repo = createMockPodcastRepo({

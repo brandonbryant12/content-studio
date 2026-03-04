@@ -21,10 +21,10 @@ describe('getErrorMessage', () => {
     });
   });
 
-  describe('DOCUMENT_TOO_LARGE', () => {
+  describe('SOURCE_TOO_LARGE', () => {
     it('formats error with file details', () => {
       const error = {
-        code: 'DOCUMENT_TOO_LARGE',
+        code: 'SOURCE_TOO_LARGE',
         message: 'File too large',
         data: {
           fileName: 'big-doc.pdf',
@@ -39,7 +39,7 @@ describe('getErrorMessage', () => {
 
     it('formats KB sizes', () => {
       const error = {
-        code: 'DOCUMENT_TOO_LARGE',
+        code: 'SOURCE_TOO_LARGE',
         message: 'File too large',
         data: {
           fileName: 'small.txt',
@@ -115,15 +115,15 @@ describe('getErrorMessage', () => {
     });
   });
 
-  describe('DOCUMENT_QUOTA_EXCEEDED', () => {
+  describe('SOURCE_QUOTA_EXCEEDED', () => {
     it('formats with count and limit', () => {
       const error = {
-        code: 'DOCUMENT_QUOTA_EXCEEDED',
+        code: 'SOURCE_QUOTA_EXCEEDED',
         message: 'Quota exceeded',
         data: { count: 10, limit: 10 },
       };
       expect(getErrorMessage(error, 'Failed')).toBe(
-        "You've reached your document limit (10/10). Upgrade to add more.",
+        "You've reached your source limit (10/10). Upgrade to add more.",
       );
     });
   });
@@ -142,14 +142,14 @@ describe('getErrorMessage', () => {
   });
 
   describe('not found errors', () => {
-    it('formats DOCUMENT_NOT_FOUND', () => {
+    it('formats SOURCE_NOT_FOUND', () => {
       const error = {
-        code: 'DOCUMENT_NOT_FOUND',
-        message: 'Document not found',
-        data: { documentId: 'doc_123' },
+        code: 'SOURCE_NOT_FOUND',
+        message: 'Source not found',
+        data: { sourceId: 'doc_123' },
       };
       expect(getErrorMessage(error, 'Failed')).toBe(
-        'Document not found. It may have been deleted.',
+        'Source not found. It may have been deleted.',
       );
     });
 
@@ -187,10 +187,10 @@ describe('getErrorMessage', () => {
     });
   });
 
-  describe('DOCUMENT_PARSE_ERROR', () => {
+  describe('SOURCE_PARSE_ERROR', () => {
     it('formats with filename', () => {
       const error = {
-        code: 'DOCUMENT_PARSE_ERROR',
+        code: 'SOURCE_PARSE_ERROR',
         message: 'Parse error',
         data: { fileName: 'corrupted.pdf' },
       };

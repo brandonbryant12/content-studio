@@ -8,6 +8,7 @@ import type { RouterOutput } from '@repo/api/client';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { useVoicePreviewController } from '@/shared/hooks';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 import { VOICES } from '@/shared/lib/voices';
 
 type Persona = RouterOutput['personas']['get'];
@@ -49,7 +50,7 @@ export function PersonaDetail({
     .toUpperCase();
 
   return (
-    <div className="page-container-narrow">
+    <div className="page-container-full">
       {/* Back link */}
       <Link
         to="/personas"
@@ -66,7 +67,7 @@ export function PersonaDetail({
           <div className="w-20 h-20 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl font-semibold ring-2 ring-rose-500/15 overflow-hidden">
             {persona.avatarStorageKey ? (
               <img
-                src={persona.avatarStorageKey}
+                src={getStorageUrl(persona.avatarStorageKey)}
                 alt={persona.name}
                 className="w-full h-full object-cover"
               />
@@ -161,12 +162,12 @@ export function PersonaDetail({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-medium text-foreground">Voice</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Assign a voice to use when this persona speaks in podcasts.
             </p>
           </div>
           {!formValues.voiceId && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[11px] font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning/10 text-warning text-xs font-medium">
               No voice assigned
             </span>
           )}
@@ -236,7 +237,7 @@ function VoiceAssignment({
           {voice.name.charAt(0)}
         </div>
         <span className="text-xs font-medium">{voice.name}</span>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {voice.description}
         </span>
         {previewUrls[voice.id] && (
@@ -246,7 +247,7 @@ function VoiceAssignment({
               e.stopPropagation();
               togglePreview(voice.id);
             }}
-            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             aria-label={
               isPlaying ? `Stop ${voice.name} preview` : `Preview ${voice.name}`
             }
@@ -261,17 +262,13 @@ function VoiceAssignment({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-          Female
-        </p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Female</p>
         <div className="grid grid-cols-4 gap-2">
           {femaleVoices.map(renderVoiceCard)}
         </div>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-          Male
-        </p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Male</p>
         <div className="grid grid-cols-4 gap-2">
           {maleVoices.map(renderVoiceCard)}
         </div>

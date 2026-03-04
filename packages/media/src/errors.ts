@@ -1,11 +1,11 @@
 export {
-  DocumentNotFound,
-  DocumentError,
-  DocumentTooLargeError,
-  UnsupportedDocumentFormat,
-  DocumentParseError,
-  DocumentContentNotFound,
-  DocumentAlreadyProcessing,
+  SourceNotFound,
+  SourceError,
+  SourceTooLargeError,
+  UnsupportedSourceFormat,
+  SourceParseError,
+  SourceContentNotFound,
+  SourceAlreadyProcessing,
   PodcastNotFound,
   ScriptNotFound,
   PodcastError,
@@ -26,13 +26,13 @@ export {
 } from './errors/index';
 
 import type {
-  DocumentNotFound,
-  DocumentError,
-  DocumentTooLargeError,
-  UnsupportedDocumentFormat,
-  DocumentParseError,
-  DocumentContentNotFound,
-  DocumentAlreadyProcessing,
+  SourceNotFound,
+  SourceError,
+  SourceTooLargeError,
+  UnsupportedSourceFormat,
+  SourceParseError,
+  SourceContentNotFound,
+  SourceAlreadyProcessing,
   PodcastNotFound,
   ScriptNotFound,
   PodcastError,
@@ -53,15 +53,15 @@ import type {
 } from './errors/index';
 
 export type MediaError =
-  | DocumentNotFound
-  | DocumentError
-  | DocumentTooLargeError
-  | UnsupportedDocumentFormat
-  | DocumentParseError
-  | DocumentContentNotFound
+  | SourceNotFound
+  | SourceError
+  | SourceTooLargeError
+  | UnsupportedSourceFormat
+  | SourceParseError
+  | SourceContentNotFound
   | UrlFetchError
   | InvalidUrlError
-  | DocumentAlreadyProcessing
+  | SourceAlreadyProcessing
   | PodcastNotFound
   | ScriptNotFound
   | PodcastError

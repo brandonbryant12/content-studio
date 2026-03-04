@@ -1,0 +1,90 @@
+import { getCurrentUser } from '@repo/auth/policy';
+import { Storage } from '@repo/storage';
+import { Effect } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
+import {
+  annotateUseCaseSpan,
+  calculateWordCount,
+  withUseCaseSpan,
+} from '../../shared';
+import { getMimeType, parseUploadedFile } from '../parsers';
+import { SourceRepo } from '../repos';
+import { sanitizeMetadata } from '../sanitize-metadata';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface UploadSourceInput {
+  fileName: string;
+  mimeType: string;
+  /** Base64-encoded file data */
+  data: string;
+  title?: string;
+  metadata?: Record<string, JsonValue>;
+}
+
+const mergeMetadata = (
+  extractedMetadata: Record<string, JsonValue> | undefined,
+  inputMetadata: Record<string, JsonValue> | undefined,
+) => {
+  if (inputMetadata === undefined) return extractedMetadata;
+  if (extractedMetadata === undefined) return inputMetadata;
+  return { ...extractedMetadata, ...inputMetadata };
+};
+
+// =============================================================================
+// Use Case
+// =============================================================================
+
+export const uploadSource = (input: UploadSourceInput) =>
+  Effect.gen(function* () {
+    const user = yield* getCurrentUser;
+    const storage = yield* Storage;
+    const sourceRepo = yield* SourceRepo;
+
+    const data = Buffer.from(input.data, 'base64');
+    const mimeType = getMimeType(input.fileName, input.mimeType);
+
+    // parseUploadedFile validates size, format, and extracts content
+    const parsed = yield* parseUploadedFile({
+      fileName: input.fileName,
+      mimeType,
+      data,
+    });
+
+    const lastDot = input.fileName.lastIndexOf('.');
+    const ext = lastDot > 0 ? input.fileName.slice(lastDot) : '';
+    const contentKey = `sources/${crypto.randomUUID()}${ext}`;
+
+    yield* storage.upload(contentKey, data, mimeType);
+
+    const wordCount = calculateWordCount(parsed.content);
+    const title = input.title ?? parsed.title;
+    const mergedMetadata = mergeMetadata(parsed.metadata, input.metadata);
+
+    const doc = yield* sourceRepo
+      .insert({
+        title,
+        contentKey,
+        mimeType,
+        wordCount,
+        source: parsed.source,
+        originalFileName: input.fileName,
+        originalFileSize: data.length,
+        metadata: sanitizeMetadata(mergedMetadata),
+        createdBy: user.id,
+      })
+      .pipe(
+        Effect.tapError(() => storage.delete(contentKey).pipe(Effect.ignore)),
+      );
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: doc.id,
+      attributes: {
+        'source.id': doc.id,
+        'file.name': input.fileName,
+      },
+    });
+    return doc;
+  }).pipe(withUseCaseSpan('useCase.uploadSource'));

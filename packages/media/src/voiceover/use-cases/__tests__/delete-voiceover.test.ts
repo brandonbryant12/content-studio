@@ -24,7 +24,7 @@ const createMockVoiceover = (
   voiceName: null,
   audioUrl: null,
   duration: null,
-  sourceDocumentId: null,
+  sourceId: null,
   status: 'drafting',
   errorMessage: null,
   approvedBy: null,

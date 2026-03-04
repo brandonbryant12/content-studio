@@ -6,7 +6,7 @@ import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-type Document = RouterOutput['documents']['get'];
+type Document = RouterOutput['sources']['get'];
 
 interface UseDocumentActionsReturn {
   /** Current edited title */
@@ -64,36 +64,35 @@ export function useDocumentActions({
   const hasChanges = title.trim() !== document.title;
 
   const updateMutation = useMutation(
-    apiClient.documents.update.mutationOptions({
+    apiClient.sources.update.mutationOptions({
       onSuccess: (updated) => {
-        toast.success('Document saved');
+        toast.success('Source saved');
         clearDraftTitle(document.id);
         // Update the single-document cache
         queryClient.setQueryData(
-          apiClient.documents.get.queryOptions({ input: { id: document.id } })
+          apiClient.sources.get.queryOptions({ input: { id: document.id } })
             .queryKey,
           updated,
         );
         // Invalidate the list so it reflects the new title
         queryClient.invalidateQueries({
-          queryKey: apiClient.documents.list.queryOptions({ input: {} })
-            .queryKey,
+          queryKey: apiClient.sources.list.queryOptions({ input: {} }).queryKey,
         });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to update document'));
+        toast.error(getErrorMessage(error, 'Failed to update source'));
       },
     }),
   );
 
   const deleteMutation = useMutation(
-    apiClient.documents.delete.mutationOptions({
+    apiClient.sources.delete.mutationOptions({
       onSuccess: () => {
-        toast.success('Document deleted');
+        toast.success('Source deleted');
         navigate({ to: '/documents' });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to delete document'));
+        toast.error(getErrorMessage(error, 'Failed to delete source'));
       },
     }),
   );

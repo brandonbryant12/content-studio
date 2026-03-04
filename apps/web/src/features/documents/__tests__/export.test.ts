@@ -5,7 +5,7 @@ import {
   buildDocumentTextExport,
 } from '../lib/export';
 
-type Document = RouterOutput['documents']['get'];
+type Document = RouterOutput['sources']['get'];
 
 function createMockDocument(overrides: Partial<Document> = {}): Document {
   return {

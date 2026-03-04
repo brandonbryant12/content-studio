@@ -16,7 +16,7 @@ import {
 } from '@/shared/components/list-page-state';
 import { useBulkSelection, useBulkDelete } from '@/shared/hooks';
 
-const deleteFn = apiClient.documents.delete.mutationOptions().mutationFn!;
+const deleteFn = apiClient.sources.delete.mutationOptions().mutationFn!;
 
 export function DocumentListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +39,7 @@ export function DocumentListContainer() {
   const { executeBulkDelete, isBulkDeleting } = useBulkDelete({
     queryKey: getDocumentListQueryKey(),
     deleteFn,
-    entityName: 'document',
+    entityName: 'source',
   });
 
   const handleDeleteConfirm = useCallback(() => {
@@ -63,9 +63,9 @@ export function DocumentListContainer() {
   }, [executeBulkDelete, selection]);
 
   const handleCreateFromUrl = useCallback(
-    (url: string, title?: string) => {
+    (url: string) => {
       createFromUrlMutation.mutate(
-        { url, title },
+        { url },
         {
           onSuccess: () => {
             setUrlDialogOpen(false);
@@ -77,15 +77,15 @@ export function DocumentListContainer() {
   );
 
   if (isLoading) {
-    return <ListPageLoadingState title="Documents" />;
+    return <ListPageLoadingState title="Sources" />;
   }
 
   if (isError) {
     return (
       <ListPageErrorState
-        title="Documents"
+        title="Sources"
         error={error}
-        fallbackMessage="Failed to load documents"
+        fallbackMessage="Failed to load sources"
         onRetry={refetch}
       />
     );
@@ -122,8 +122,8 @@ export function DocumentListContainer() {
         onOpenChange={(open) => {
           if (!open) setPendingDeleteId(null);
         }}
-        title="Delete Document"
-        description={`Are you sure you want to delete "${documents.find((d) => d.id === pendingDeleteId)?.title ?? 'this document'}"? This action cannot be undone.`}
+        title="Delete Source"
+        description={`Are you sure you want to delete "${documents.find((d) => d.id === pendingDeleteId)?.title ?? 'this source'}"? This action cannot be undone.`}
         confirmText="Delete"
         variant="destructive"
         onConfirm={handleDeleteConfirm}

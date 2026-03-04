@@ -14,7 +14,7 @@ import {
 describe('errors', () => {
   describe('NotFoundError', () => {
     it('has correct tag and HTTP protocol properties', () => {
-      const error = new NotFoundError({ entity: 'Document', id: 'doc_123' });
+      const error = new NotFoundError({ entity: 'Source', id: 'doc_123' });
       expect(error._tag).toBe('NotFoundError');
       expect(NotFoundError.httpStatus).toBe(404);
       expect(NotFoundError.httpCode).toBe('NOT_FOUND');
@@ -24,13 +24,13 @@ describe('errors', () => {
     it('returns empty string httpMessage when message is omitted (Schema.optional defaults to empty string)', () => {
       // Schema.optional(Schema.String) defaults to '' not undefined,
       // so the ?? fallback in httpMessage never triggers.
-      const error = new NotFoundError({ entity: 'Document', id: 'doc_123' });
+      const error = new NotFoundError({ entity: 'Source', id: 'doc_123' });
       expect(NotFoundError.httpMessage(error)).toBe('');
     });
 
     it('uses custom message when provided', () => {
       const error = new NotFoundError({
-        entity: 'Document',
+        entity: 'Source',
         id: 'doc_123',
         message: 'Custom not found',
       });

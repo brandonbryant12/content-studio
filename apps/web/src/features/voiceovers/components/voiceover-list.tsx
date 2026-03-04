@@ -10,6 +10,7 @@ import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import { Link } from '@tanstack/react-router';
 import {
   memo,
@@ -22,6 +23,7 @@ import {
 import type { VoiceoverListItem } from './voiceover-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import { VoiceoverStatus } from '../lib/status';
 import { StatusBadge } from './status-badge';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
@@ -73,11 +75,23 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
   );
 }
 
-function NoResults({ searchQuery }: { searchQuery: string }) {
+function NoResults({
+  searchQuery,
+  tabLabel,
+}: {
+  searchQuery: string;
+  tabLabel: string;
+}) {
   return (
     <div className="text-center py-16">
       <p className="text-muted-foreground">
-        No voiceovers found matching &ldquo;{searchQuery}&rdquo;
+        {searchQuery ? (
+          <>
+            No {tabLabel} found matching &ldquo;{searchQuery}&rdquo;
+          </>
+        ) : (
+          <>No {tabLabel} yet</>
+        )}
       </p>
     </div>
   );
@@ -148,26 +162,20 @@ const VoiceoverRow = memo(function VoiceoverRow({
   }, [onToggleSelect, voiceover.id]);
 
   return (
-    <tr
-      className={`group border-b border-border last:border-b-0 transition-colors ${
-        isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'
-      }`}
-    >
-      {/* Checkbox */}
-      <td className="py-3 pl-4 pr-1 w-10">
+    <>
+      <div
+        className={`list-row group ${isSelected ? 'list-row-selected' : ''}`}
+      >
         <Checkbox
           checked={isSelected}
           onCheckedChange={handleToggle}
           aria-label={`Select ${voiceover.title}`}
         />
-      </td>
-      {/* Play button */}
-      <td className="py-3 pl-1 pr-1 w-10">
         {hasAudio ? (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full shrink-0"
             onClick={handlePlayClick}
             aria-label={
               isThisPlaying
@@ -182,24 +190,18 @@ const VoiceoverRow = memo(function VoiceoverRow({
             )}
           </Button>
         ) : (
-          <div className="h-8 w-8" />
+          <div className="w-8 shrink-0" />
         )}
-      </td>
-      {/* Title */}
-      <td className="py-3 px-3">
         <Link
           to="/voiceovers/$voiceoverId"
           params={{ voiceoverId: voiceover.id }}
-          className="min-w-0"
+          className="flex-1 min-w-0"
         >
-          <span className="font-medium text-sm truncate block">
+          <span className="list-row-title block truncate">
             {voiceover.title}
           </span>
         </Link>
-      </td>
-      {/* Status */}
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <StatusBadge status={voiceover.status} />
           {voiceover.approvedBy && (
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -208,27 +210,21 @@ const VoiceoverRow = memo(function VoiceoverRow({
             </span>
           )}
         </div>
-      </td>
-      {/* Voice */}
-      <td className="py-3 px-4 text-sm text-muted-foreground hidden md:table-cell">
-        {voiceover.voiceName ?? '-'}
-      </td>
-      {/* Duration */}
-      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right hidden sm:table-cell">
-        {formatDuration(voiceover.duration)}
-      </td>
-      {/* Created */}
-      <td className="py-3 px-4 text-sm text-muted-foreground text-right hidden lg:table-cell">
-        {formatDate(voiceover.createdAt)}
-      </td>
-      {/* Delete */}
-      <td className="py-3 px-2 w-10">
+        <span className="list-row-meta hidden md:block w-20 text-right">
+          {voiceover.voiceName ?? '–'}
+        </span>
+        <span className="list-row-meta tabular-nums hidden sm:block w-14 text-right">
+          {formatDuration(voiceover.duration)}
+        </span>
+        <span className="list-row-meta hidden lg:block w-24 text-right">
+          {formatDate(voiceover.createdAt)}
+        </span>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleDeleteClick}
           disabled={isDeleting}
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+          className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
           aria-label={`Delete ${voiceover.title}`}
         >
           {isDeleting ? (
@@ -237,18 +233,18 @@ const VoiceoverRow = memo(function VoiceoverRow({
             <TrashIcon className="w-3.5 h-3.5" />
           )}
         </Button>
-        <ConfirmationDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          title="Delete Voiceover"
-          description={`Are you sure you want to delete "${voiceover.title}"? This action cannot be undone.`}
-          confirmText="Delete"
-          variant="destructive"
-          isLoading={isDeleting}
-          onConfirm={handleDeleteConfirm}
-        />
-      </td>
-    </tr>
+      </div>
+      <ConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Voiceover"
+        description={`Are you sure you want to delete "${voiceover.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 });
 
@@ -279,14 +275,28 @@ export function VoiceoverList({
   isBulkDeleting,
   onBulkDelete,
 }: VoiceoverListProps) {
+  const [activeTab, setActiveTab] = useState<'voiceovers' | 'drafts'>(
+    'voiceovers',
+  );
   const [isPending, startTransition] = useTransition();
+
+  const drafts = useMemo(
+    () => voiceovers.filter((v) => v.status === VoiceoverStatus.DRAFTING),
+    [voiceovers],
+  );
+  const nonDrafts = useMemo(
+    () => voiceovers.filter((v) => v.status !== VoiceoverStatus.DRAFTING),
+    [voiceovers],
+  );
+
+  const activeList = activeTab === 'drafts' ? drafts : nonDrafts;
 
   const filteredVoiceovers = useMemo(
     () =>
-      voiceovers.filter((voiceover) =>
+      activeList.filter((voiceover) =>
         voiceover.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [voiceovers, searchQuery],
+    [activeList, searchQuery],
   );
 
   const filteredIds = useMemo(
@@ -313,8 +323,9 @@ export function VoiceoverList({
   }, [selection, filteredIds]);
 
   const isEmpty = voiceovers.length === 0;
+  const tabEmpty = !isEmpty && activeList.length === 0;
   const hasNoResults =
-    filteredVoiceovers.length === 0 && searchQuery.length > 0;
+    filteredVoiceovers.length === 0 && (searchQuery.length > 0 || tabEmpty);
 
   return (
     <div className="page-container">
@@ -352,77 +363,72 @@ export function VoiceoverList({
         <MagnifyingGlassIcon className="search-icon" />
       </div>
 
+      {/* Tabs */}
+      {!isEmpty && (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'voiceovers' | 'drafts')}
+          className="mb-4"
+        >
+          <TabsList>
+            <TabsTrigger value="voiceovers">
+              Voiceovers ({nonDrafts.length})
+            </TabsTrigger>
+            <TabsTrigger value="drafts">Drafts ({drafts.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
       {/* Content */}
       {isEmpty ? (
         <EmptyState onCreateClick={onCreate} isCreating={isCreating} />
       ) : hasNoResults ? (
-        <NoResults searchQuery={searchQuery} />
+        <NoResults
+          searchQuery={searchQuery}
+          tabLabel={activeTab === 'drafts' ? 'drafts' : 'voiceovers'}
+        />
       ) : (
         <div
-          className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`transition-opacity ${isPending ? 'opacity-70' : ''}`}
           aria-busy={isPending}
         >
           <div role="status" aria-live="polite" className="sr-only">
             {filteredVoiceovers.length}{' '}
             {filteredVoiceovers.length === 1 ? 'voiceover' : 'voiceovers'} found
           </div>
-          <table className="w-full" aria-label="Voiceovers">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="py-2.5 pl-4 pr-1 w-10">
-                  <Checkbox
-                    checked={
-                      selection.isIndeterminate(filteredIds)
-                        ? 'indeterminate'
-                        : selection.isAllSelected(filteredIds)
-                    }
-                    onCheckedChange={handleToggleAll}
-                    aria-label="Select all voiceovers"
-                  />
-                </th>
-                <th className="w-10">
-                  <span className="sr-only">Play</span>
-                </th>
-                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                  Voice
-                </th>
-                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
-                  Duration
-                </th>
-                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                  Created
-                </th>
-                <th className="w-10">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVoiceovers.map((voiceover) => (
-                <VoiceoverRow
-                  key={voiceover.id}
-                  voiceover={voiceover}
-                  onDelete={onDelete}
-                  isDeleting={deletingId === voiceover.id}
-                  isThisPlaying={
-                    quickPlay.playingId === voiceover.id && quickPlay.isPlaying
-                  }
-                  onTogglePlay={quickPlay.toggle}
-                  isSelected={selection.isSelected(voiceover.id)}
-                  onToggleSelect={selection.toggle}
-                />
-              ))}
-            </tbody>
-          </table>
-          {/* Playback progress rendered outside the row loop so only active row subscribes to time */}
+          <div className="list-toolbar">
+            <Checkbox
+              checked={
+                selection.isIndeterminate(filteredIds)
+                  ? 'indeterminate'
+                  : selection.isAllSelected(filteredIds)
+              }
+              onCheckedChange={handleToggleAll}
+              aria-label="Select all voiceovers"
+            />
+            <span className="list-toolbar-count">
+              {filteredVoiceovers.length}{' '}
+              {filteredVoiceovers.length === 1 ? 'voiceover' : 'voiceovers'}
+            </span>
+          </div>
+          <div className="space-y-1.5" role="list" aria-label="Voiceovers">
+            {filteredVoiceovers.map((voiceover) => (
+              <VoiceoverRow
+                key={voiceover.id}
+                voiceover={voiceover}
+                onDelete={onDelete}
+                isDeleting={deletingId === voiceover.id}
+                isThisPlaying={
+                  quickPlay.playingId === voiceover.id && quickPlay.isPlaying
+                }
+                onTogglePlay={quickPlay.toggle}
+                isSelected={selection.isSelected(voiceover.id)}
+                onToggleSelect={selection.toggle}
+              />
+            ))}
+          </div>
           {quickPlay.playingId && (
-            <div className="px-4 pb-2 text-xs text-muted-foreground tabular-nums">
+            <div className="px-1 pt-3">
               <PlaybackProgress quickPlay={quickPlay} />
             </div>
           )}

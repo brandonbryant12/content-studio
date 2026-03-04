@@ -8,16 +8,18 @@ export function PodcastIcon({
   status: VersionStatusType | undefined;
 }) {
   const isReady = status === VersionStatus.READY;
-  const containerClass = isReady ? 'icon-box-primary' : 'icon-box-lg';
-  const iconClass = isReady
-    ? 'text-primary-foreground'
-    : 'text-muted-foreground';
 
   return (
-    <div className={containerClass}>
+    <div
+      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+        isReady
+          ? 'bg-violet-600 shadow-[0_2px_8px_theme(colors.violet.600/0.35)]'
+          : 'bg-violet-100 dark:bg-violet-500/10'
+      }`}
+    >
       {format === 'conversation' ? (
         <svg
-          className={`w-5 h-5 ${iconClass}`}
+          className={`w-5 h-5 ${isReady ? 'text-white' : 'text-violet-600 dark:text-violet-400'}`}
           fill="currentColor"
           viewBox="0 0 24 24"
         >
@@ -26,7 +28,7 @@ export function PodcastIcon({
         </svg>
       ) : (
         <svg
-          className={`w-5 h-5 ${iconClass}`}
+          className={`w-5 h-5 ${isReady ? 'text-white' : 'text-violet-600 dark:text-violet-400'}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

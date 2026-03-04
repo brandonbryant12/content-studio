@@ -1,5 +1,5 @@
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { DocumentStatus } from '@repo/api/contracts';
+import { SourceStatus } from '@repo/api/contracts';
 import { type CSSProperties, useState } from 'react';
 import type { DocumentDetailDocument } from './document-detail-types';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
@@ -180,7 +180,7 @@ function ResearchCallout({
                             href={citation}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/50"
+                            className="inline-flex rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/50"
                           >
                             {extractDomain(citation)}
                           </a>
@@ -216,7 +216,7 @@ export function DocumentMetadataBar({
 
       <span className="doc-meta-separator" aria-hidden="true" />
 
-      {document.status === DocumentStatus.READY && (
+      {document.status === SourceStatus.READY && (
         <>
           <span className="doc-meta-item">
             {document.wordCount.toLocaleString()} words

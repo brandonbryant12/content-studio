@@ -5,10 +5,6 @@ import {
   type ActivityLogRepoService,
 } from '../activity/repos/activity-log-repo';
 import {
-  DocumentRepo,
-  type DocumentRepoService,
-} from '../document/repos/document-repo';
-import {
   InfographicRepo,
   type InfographicRepoService,
 } from '../infographic/repos/infographic-repo';
@@ -20,6 +16,10 @@ import {
   PodcastRepo,
   type PodcastRepoService,
 } from '../podcast/repos/podcast-repo';
+import {
+  SourceRepo,
+  type SourceRepoService,
+} from '../source/repos/source-repo';
 import {
   VoiceoverRepo,
   type VoiceoverRepoService,
@@ -36,7 +36,7 @@ import {
  * @example
  * ```ts
  * const mockRepo = createMockPodcastRepo({
- *   findById: (id) => Effect.succeed({ ...testPodcast, documents: [] }),
+ *   findById: (id) => Effect.succeed({ ...testPodcast, sources: [] }),
  *   delete: (id) => Effect.succeed(true),
  * });
  * ```
@@ -52,7 +52,7 @@ export const createMockPodcastRepo = (
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -124,21 +124,21 @@ export const createMockVoiceoverRepo = (
 };
 
 /**
- * Create a mock DocumentRepo layer with `Effect.die('not implemented')` defaults.
+ * Create a mock SourceRepo layer with `Effect.die('not implemented')` defaults.
  * Override individual methods by passing them in the overrides object.
  *
  * @example
  * ```ts
- * const mockRepo = createMockDocumentRepo({
+ * const mockRepo = createMockSourceRepo({
  *   findById: (id) => Effect.succeed(testDocument),
  *   list: (options) => Effect.succeed([testDocument]),
  * });
  * ```
  */
-export const createMockDocumentRepo = (
-  overrides: Partial<DocumentRepoService> = {},
-): Layer.Layer<DocumentRepo> => {
-  const defaults: DocumentRepoService = {
+export const createMockSourceRepo = (
+  overrides: Partial<SourceRepoService> = {},
+): Layer.Layer<SourceRepo> => {
+  const defaults: SourceRepoService = {
     insert: () => Effect.die('not implemented'),
     findById: () => Effect.die('not implemented'),
     findByIdForUser: () => Effect.die('not implemented'),
@@ -158,11 +158,11 @@ export const createMockDocumentRepo = (
     (overrides.findById
       ? (id: string, _userId: string) =>
           overrides.findById!(id) as ReturnType<
-            DocumentRepoService['findByIdForUser']
+            SourceRepoService['findByIdForUser']
           >
       : defaults.findByIdForUser);
 
-  return Layer.succeed(DocumentRepo, {
+  return Layer.succeed(SourceRepo, {
     ...defaults,
     ...overrides,
     findByIdForUser,

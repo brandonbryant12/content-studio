@@ -7,7 +7,7 @@ import {
   Pencil1Icon,
   TrashIcon,
 } from '@radix-ui/react-icons';
-import { DocumentStatus } from '@repo/api/contracts';
+import { SourceStatus } from '@repo/api/contracts';
 import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
@@ -104,7 +104,7 @@ export function DocumentDetail({
             <Link
               to="/documents"
               className="workbench-back-btn"
-              aria-label="Back to documents"
+              aria-label="Back to sources"
             >
               <ArrowLeftIcon />
             </Link>
@@ -117,7 +117,7 @@ export function DocumentDetail({
                     value={title}
                     onChange={(e) => onTitleChange(e.target.value)}
                     className="workbench-title-input"
-                    aria-label="Document title"
+                    aria-label="Source title"
                   />
                   {hasChanges && (
                     <Pencil1Icon
@@ -170,7 +170,7 @@ export function DocumentDetail({
                   size="icon"
                   onClick={search.isOpen ? search.close : search.open}
                   className={search.isOpen ? 'text-primary' : ''}
-                  aria-label="Search in document"
+                  aria-label="Search in source"
                   aria-pressed={search.isOpen}
                 >
                   <MagnifyingGlassIcon className="w-4 h-4" />
@@ -181,7 +181,7 @@ export function DocumentDetail({
                       variant="ghost"
                       size="icon"
                       disabled={!canExport}
-                      aria-label="Export document"
+                      aria-label="Export source"
                     >
                       <DownloadIcon className="w-4 h-4" />
                     </Button>
@@ -230,11 +230,11 @@ export function DocumentDetail({
               <DocumentMetadataBar document={document} />
               <DocumentSourceCallout document={document} />
 
-              {document.status === DocumentStatus.PROCESSING && (
+              {document.status === SourceStatus.PROCESSING && (
                 <DocumentProcessingState source={document.source} />
               )}
 
-              {document.status === DocumentStatus.FAILED && (
+              {document.status === SourceStatus.FAILED && (
                 <DocumentFailedState
                   errorMessage={document.errorMessage}
                   onRetry={onRetry}
@@ -242,7 +242,7 @@ export function DocumentDetail({
                 />
               )}
 
-              {document.status === DocumentStatus.READY && (
+              {document.status === SourceStatus.READY && (
                 <DocumentContentReader
                   content={content}
                   paragraphs={paragraphs}

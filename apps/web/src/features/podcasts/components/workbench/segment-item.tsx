@@ -8,6 +8,7 @@ interface SegmentItemProps {
   segmentIndex: number;
   isEditing: boolean;
   disabled?: boolean;
+  hostSpeaker: string;
   onStartEdit: (segmentIndex: number) => void;
   onSaveEdit: (
     segmentIndex: number,
@@ -22,6 +23,7 @@ interface SegmentItemProps {
 interface EditingSegmentFieldsProps {
   segment: ScriptSegment;
   segmentIndex: number;
+  hostSpeaker: string;
   onSaveEdit: SegmentItemProps['onSaveEdit'];
   onCancelEdit: SegmentItemProps['onCancelEdit'];
   onNavigate: SegmentItemProps['onNavigate'];
@@ -30,6 +32,7 @@ interface EditingSegmentFieldsProps {
 function EditingSegmentFields({
   segment,
   segmentIndex,
+  hostSpeaker,
   onSaveEdit,
   onCancelEdit,
   onNavigate,
@@ -107,8 +110,8 @@ function EditingSegmentFields({
     [handleSave],
   );
 
-  const isHost = editSpeaker.toLowerCase() === 'host';
-  const isCohost = editSpeaker.toLowerCase() === 'cohost';
+  const isHost = editSpeaker.toLowerCase() === hostSpeaker.toLowerCase();
+  const isCohost = !isHost;
 
   return (
     <>
@@ -172,6 +175,7 @@ export const SegmentItem = memo(function SegmentItem({
   segmentIndex,
   isEditing,
   disabled,
+  hostSpeaker,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -193,7 +197,7 @@ export const SegmentItem = memo(function SegmentItem({
     onAddAfter(segmentIndex);
   }, [segmentIndex, onAddAfter]);
 
-  const isHost = segment.speaker.toLowerCase() === 'host';
+  const isHost = segment.speaker.toLowerCase() === hostSpeaker.toLowerCase();
 
   return (
     <div
@@ -203,6 +207,7 @@ export const SegmentItem = memo(function SegmentItem({
         <EditingSegmentFields
           segment={segment}
           segmentIndex={segmentIndex}
+          hostSpeaker={hostSpeaker}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}
           onNavigate={onNavigate}

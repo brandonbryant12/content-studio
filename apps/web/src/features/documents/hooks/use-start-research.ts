@@ -7,7 +7,7 @@ export function useStartResearch() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    apiClient.documents.fromResearch.mutationOptions({
+    apiClient.sources.fromResearch.mutationOptions({
       onSuccess: () => {
         toast.success('Research started — this may take a few minutes');
         queryClient.invalidateQueries({

@@ -5,7 +5,7 @@ import type { ProcessResearchPayload, Job } from '@repo/queue';
 
 export const handleProcessResearch = (job: Job<ProcessResearchPayload>) =>
   processResearch({
-    documentId: job.payload.documentId,
+    sourceId: job.payload.sourceId,
     query: job.payload.query,
   }).pipe(
     Effect.catchAll((error) =>
@@ -21,7 +21,7 @@ export const handleProcessResearch = (job: Job<ProcessResearchPayload>) =>
       attributes: {
         'job.id': job.id,
         'job.type': job.type,
-        'document.id': job.payload.documentId,
+        'source.id': job.payload.sourceId,
       },
     }),
   );

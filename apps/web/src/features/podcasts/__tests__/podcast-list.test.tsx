@@ -119,7 +119,7 @@ describe('PodcastList', () => {
     vi.clearAllMocks();
   });
 
-  it('renders heading, create action, search input, and podcast rows', () => {
+  it('renders heading, create action, search input, and non-draft podcasts on default tab', () => {
     renderPodcastList();
 
     expect(
@@ -129,9 +129,32 @@ describe('PodcastList', () => {
       screen.getByRole('button', { name: /create podcast/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument();
-    for (const { title } of mockPodcasts) {
-      expect(screen.getByText(title)).toBeInTheDocument();
-    }
+    // Non-drafts visible on default Podcasts tab
+    expect(screen.getByText('Tech Talk Episode 1')).toBeInTheDocument();
+    expect(screen.getByText('AI Weekly')).toBeInTheDocument();
+    // Draft is on Drafts tab, not visible
+    expect(screen.queryByText('Product Update')).not.toBeInTheDocument();
+  });
+
+  it('shows drafts when Drafts tab is selected', async () => {
+    const { user } = renderPodcastList();
+
+    await user.click(screen.getByRole('tab', { name: /drafts/i }));
+
+    expect(screen.getByText('Product Update')).toBeInTheDocument();
+    expect(screen.queryByText('Tech Talk Episode 1')).not.toBeInTheDocument();
+    expect(screen.queryByText('AI Weekly')).not.toBeInTheDocument();
+  });
+
+  it('shows tab counts', () => {
+    renderPodcastList();
+
+    expect(
+      screen.getByRole('tab', { name: /podcasts \(2\)/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('tab', { name: /drafts \(1\)/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders empty state with create actions', () => {

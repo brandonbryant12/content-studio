@@ -54,9 +54,12 @@ describe('ResearchChatDialog', () => {
     expect(
       screen.getByText('What would you like to research? Try one of these:'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('AI trends in healthcare 2026'),
-    ).toBeInTheDocument();
+    // 3 randomly selected topic chips are rendered
+    const chips = screen
+      .getByText('What would you like to research? Try one of these:')
+      .closest('div')!
+      .querySelectorAll('button');
+    expect(chips).toHaveLength(3);
   });
 
   it('renders existing messages when provided', () => {
@@ -214,8 +217,13 @@ describe('ResearchChatDialog', () => {
     const user = userEvent.setup();
     renderDialog({ onSendMessage });
 
-    await user.click(screen.getByText('AI trends in healthcare 2026'));
-    expect(onSendMessage).toHaveBeenCalledWith('AI trends in healthcare 2026');
+    const chips = screen
+      .getByText('What would you like to research? Try one of these:')
+      .closest('div')!
+      .querySelectorAll('button');
+    const firstChip = chips[0]!;
+    await user.click(firstChip);
+    expect(onSendMessage).toHaveBeenCalledWith(firstChip.textContent);
   });
 
   it('shows auto-trigger confirmation and handles Keep Refining', async () => {

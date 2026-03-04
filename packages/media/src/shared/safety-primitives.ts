@@ -178,7 +178,7 @@ export const replaceTextContentSafely = <A, E, R>(
   Effect.gen(function* () {
     const storage = yield* Storage;
     const contentBuffer = Buffer.from(input.content, 'utf-8');
-    const newContentKey = `documents/${crypto.randomUUID()}.txt`;
+    const newContentKey = `sources/${crypto.randomUUID()}.txt`;
 
     yield* storage.upload(newContentKey, contentBuffer, 'text/plain');
 

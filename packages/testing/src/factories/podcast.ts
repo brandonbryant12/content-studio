@@ -22,7 +22,7 @@ export interface CreateTestPodcastOptions {
   promptInstructions?: string | null;
   targetDurationMinutes?: number | null;
   tags?: string[];
-  sourceDocumentIds?: string[];
+  sourceIds?: string[];
   generationContext?: GenerationContext | null;
   status?: VersionStatus;
   segments?: ScriptSegment[] | null;
@@ -69,8 +69,7 @@ export function createTestPodcast(
     promptInstructions: options.promptInstructions ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
     tags: options.tags ?? [],
-    sourceDocumentIds: (options.sourceDocumentIds ??
-      []) as Podcast['sourceDocumentIds'],
+    sourceIds: (options.sourceIds ?? []) as Podcast['sourceIds'],
     generationContext: options.generationContext ?? null,
     status: options.status ?? 'drafting',
     segments: options.segments ?? null,

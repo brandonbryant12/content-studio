@@ -11,14 +11,14 @@ export function useUploadDocument(options?: { onSuccess?: () => void }) {
   const queryClient = useQueryClient();
 
   return useMutation(
-    apiClient.documents.upload.mutationOptions({
+    apiClient.sources.upload.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
-        toast.success('Document uploaded');
+        toast.success('Source uploaded');
         options?.onSuccess?.();
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to upload document'));
+        toast.error(getErrorMessage(error, 'Failed to upload source'));
       },
     }),
   );

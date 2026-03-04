@@ -10,7 +10,7 @@ import {
 } from '@repo/ui/components/dialog';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { UIMessage } from 'ai';
 import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
 import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
@@ -25,7 +25,21 @@ const EXAMPLE_TOPICS = [
   'AI trends in healthcare 2026',
   'Sustainable energy storage solutions',
   'Remote work productivity research',
+  'The psychology of decision-making under uncertainty',
+  'How CRISPR is reshaping agriculture',
+  'The economics of creator-led media companies',
+  'Breakthroughs in solid-state battery technology',
+  'The rise of synthetic biology startups',
+  'How cities are adapting infrastructure for climate resilience',
+  'The neuroscience of habit formation and behavior change',
+  'Emerging models for universal basic services',
+  'The future of decentralized identity and digital trust',
 ];
+
+function pickRandom<T>(items: T[], count: number): T[] {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 interface ResearchChatDialogProps {
   open: boolean;
@@ -64,6 +78,7 @@ export function ResearchChatDialog({
   followUpLimit,
   onKeepRefining,
 }: ResearchChatDialogProps) {
+  const suggestions = useMemo(() => pickRandom(EXAMPLE_TOPICS, 3), []);
   const isInputDisabled = isStreaming || isStartingResearch;
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
@@ -109,7 +124,7 @@ export function ResearchChatDialog({
                 What would you like to research? Try one of these:
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {EXAMPLE_TOPICS.map((topic) => (
+                {suggestions.map((topic) => (
                   <button
                     key={topic}
                     type="button"

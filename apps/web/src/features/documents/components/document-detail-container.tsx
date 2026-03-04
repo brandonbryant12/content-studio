@@ -1,6 +1,6 @@
 // Container: Fetches document + content, manages state, coordinates actions
 
-import { DocumentStatus } from '@repo/api/contracts';
+import { SourceStatus } from '@repo/api/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
@@ -34,7 +34,7 @@ export function DocumentDetailContainer({
   const { data: document } = useDocument(documentId);
 
   // Only fetch content when document is ready (hook always called, `enabled` controls fetching)
-  const isReady = document.status === DocumentStatus.READY;
+  const isReady = document.status === SourceStatus.READY;
   const { data: contentData } = useDocumentContentOptional(documentId, isReady);
   const documentContent = contentData?.content ?? null;
   const documentContentText = documentContent ?? '';
@@ -62,7 +62,6 @@ export function DocumentDetailContainer({
         queryClient.invalidateQueries({
           queryKey: getVoiceoverListQueryKey(),
         });
-        toast.success('Voiceover created');
         navigate({
           to: '/voiceovers/$voiceoverId',
           params: { voiceoverId: created.id },
@@ -79,7 +78,6 @@ export function DocumentDetailContainer({
         queryClient.invalidateQueries({
           queryKey: getInfographicListQueryKey(),
         });
-        toast.success('Infographic created');
         navigate({
           to: '/infographics/$infographicId',
           params: { infographicId: created.id },
@@ -103,7 +101,7 @@ export function DocumentDetailContainer({
       title: context.exportTitle,
       content: context.content,
     });
-    const fileName = `${toFileSlug(context.exportTitle, 'document')}.md`;
+    const fileName = `${toFileSlug(context.exportTitle, 'source')}.md`;
     downloadTextFile(markdown, fileName, 'text/markdown;charset=utf-8');
   }, [document, getExportContext]);
 
@@ -116,14 +114,14 @@ export function DocumentDetailContainer({
       title: context.exportTitle,
       content: context.content,
     });
-    const fileName = `${toFileSlug(context.exportTitle, 'document')}.txt`;
+    const fileName = `${toFileSlug(context.exportTitle, 'source')}.txt`;
     downloadTextFile(text, fileName);
   }, [document, getExportContext]);
 
   const handleCreateVoiceover = useCallback(() => {
     createVoiceoverMutation.mutate({
       title: `Voiceover: ${document.title}`,
-      documentId: document.id,
+      sourceId: document.id,
     });
   }, [createVoiceoverMutation, document.id, document.title]);
 
@@ -131,7 +129,7 @@ export function DocumentDetailContainer({
     createInfographicMutation.mutate({
       title: `Infographic: ${document.title}`,
       format: 'portrait',
-      documentId: document.id,
+      sourceId: document.id,
     });
   }, [createInfographicMutation, document.id, document.title]);
 
@@ -180,8 +178,8 @@ export function DocumentDetailContainer({
       <ConfirmationDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="Delete Document"
-        description={`Are you sure you want to delete "${document.title}"? This action cannot be undone. Any podcasts or voiceovers using this document will not be affected.`}
+        title="Delete Source"
+        description={`Are you sure you want to delete "${document.title}"? This action cannot be undone. Any podcasts or voiceovers using this source will not be affected.`}
         confirmText="Delete"
         variant="destructive"
         isLoading={actions.isDeleting}

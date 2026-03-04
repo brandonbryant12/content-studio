@@ -2,6 +2,7 @@ import { Checkbox } from '@repo/ui/components/checkbox';
 import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
+import { getStorageUrl } from '@/shared/lib/storage-url';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 
@@ -51,7 +52,7 @@ export const PersonaCard = memo(function PersonaCard({
         <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg font-semibold tracking-tight mb-4 ring-2 ring-rose-500/10 transition-shadow group-hover:ring-rose-500/20">
           {persona.avatarStorageKey ? (
             <img
-              src={persona.avatarStorageKey}
+              src={getStorageUrl(persona.avatarStorageKey)}
               alt={persona.name}
               className="w-full h-full rounded-full object-cover"
             />
@@ -74,7 +75,7 @@ export const PersonaCard = memo(function PersonaCard({
 
         {/* Voice */}
         {persona.voiceName ? (
-          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-muted/60 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-muted/60 text-xs text-muted-foreground">
             <svg
               className="w-3 h-3"
               fill="none"
@@ -92,7 +93,7 @@ export const PersonaCard = memo(function PersonaCard({
             {persona.voiceName}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-warning/10 text-[11px] text-warning font-medium">
+          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-warning/10 text-xs text-warning font-medium">
             No voice
           </span>
         )}

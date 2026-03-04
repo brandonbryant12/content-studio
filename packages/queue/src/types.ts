@@ -79,23 +79,23 @@ export interface GenerateInfographicResult {
 }
 
 export interface ProcessUrlPayload {
-  readonly documentId: string;
+  readonly sourceId: string;
   readonly url: string;
   readonly userId: string;
 }
 
 export interface ProcessUrlResult {
-  readonly documentId: string;
+  readonly sourceId: string;
   readonly wordCount: number;
 }
 
 export interface ProcessResearchPayload {
-  readonly documentId: string;
+  readonly sourceId: string;
   readonly query: string;
   readonly userId: string;
 }
 
 export interface ProcessResearchResult {
-  readonly documentId: string;
+  readonly sourceId: string;
   readonly wordCount: number;
 }

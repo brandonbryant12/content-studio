@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, renderWithQuery, screen } from '@/test-utils';
 import { QueryErrorFallback } from '../components/query-error-fallback';
+import { fireEvent, renderWithQuery, screen } from '@/test-utils';
 
 describe('QueryErrorFallback', () => {
   it('renders provided Error messages', () => {

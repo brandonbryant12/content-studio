@@ -41,7 +41,7 @@ vi.mock('@/clients/apiClient', () => {
   return {
     apiClient: {
       podcasts: getEntityMocks('podcasts'),
-      documents: getEntityMocks('documents'),
+      sources: getEntityMocks('sources'),
       voiceovers: getEntityMocks('voiceovers'),
       personas: getEntityMocks('personas'),
       infographics: {
@@ -268,21 +268,21 @@ describe('SSE Handlers', () => {
         ],
       },
       {
-        name: 'document update',
-        event: createEntityChangeEvent('document', 'update', 'doc-123'),
+        name: 'source update',
+        event: createEntityChangeEvent('source', 'update', 'doc-123'),
         expectedQueryKeys: [getDocumentQueryKey('doc-123')],
       },
       {
-        name: 'document insert',
-        event: createEntityChangeEvent('document', 'insert', 'doc-123'),
+        name: 'source insert',
+        event: createEntityChangeEvent('source', 'insert', 'doc-123'),
         expectedQueryKeys: [
           getDocumentQueryKey('doc-123'),
           getDocumentListQueryKey(),
         ],
       },
       {
-        name: 'document delete',
-        event: createEntityChangeEvent('document', 'delete', 'doc-123'),
+        name: 'source delete',
+        event: createEntityChangeEvent('source', 'delete', 'doc-123'),
         expectedQueryKeys: [
           getDocumentQueryKey('doc-123'),
           getDocumentListQueryKey(),

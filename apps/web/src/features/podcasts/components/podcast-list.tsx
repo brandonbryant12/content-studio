@@ -4,9 +4,17 @@ import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useCallback, useMemo, useTransition, type ChangeEvent } from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useTransition,
+  type ChangeEvent,
+} from 'react';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
+import { VersionStatus } from '../lib/status';
 import { PodcastItem, type PodcastListItem } from './podcast-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
@@ -56,11 +64,23 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
   );
 }
 
-function NoResults({ searchQuery }: { searchQuery: string }) {
+function NoResults({
+  searchQuery,
+  tabLabel,
+}: {
+  searchQuery: string;
+  tabLabel: string;
+}) {
   return (
     <div className="text-center py-16">
       <p className="text-muted-foreground">
-        No podcasts found matching &ldquo;{searchQuery}&rdquo;
+        {searchQuery ? (
+          <>
+            No {tabLabel} found matching &ldquo;{searchQuery}&rdquo;
+          </>
+        ) : (
+          <>No {tabLabel} yet</>
+        )}
       </p>
     </div>
   );
@@ -93,15 +113,27 @@ export function PodcastList({
   isBulkDeleting,
   onBulkDelete,
 }: PodcastListProps) {
+  const [activeTab, setActiveTab] = useState<'podcasts' | 'drafts'>('podcasts');
   // Use transition for non-urgent search updates (rerender-transitions)
   const [isPending, startTransition] = useTransition();
 
+  const drafts = useMemo(
+    () => podcasts.filter((p) => p.status === VersionStatus.DRAFTING),
+    [podcasts],
+  );
+  const nonDrafts = useMemo(
+    () => podcasts.filter((p) => p.status !== VersionStatus.DRAFTING),
+    [podcasts],
+  );
+
+  const activeList = activeTab === 'drafts' ? drafts : nonDrafts;
+
   const filteredPodcasts = useMemo(
     () =>
-      podcasts.filter((podcast) =>
+      activeList.filter((podcast) =>
         podcast.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [podcasts, searchQuery],
+    [activeList, searchQuery],
   );
 
   const filteredIds = useMemo(
@@ -129,7 +161,9 @@ export function PodcastList({
   }, [selection, filteredIds]);
 
   const isEmpty = podcasts.length === 0;
-  const hasNoResults = filteredPodcasts.length === 0 && searchQuery.length > 0;
+  const tabEmpty = !isEmpty && activeList.length === 0;
+  const hasNoResults =
+    filteredPodcasts.length === 0 && (searchQuery.length > 0 || tabEmpty);
   const hasSelection = selection.selectedCount > 0;
 
   return (
@@ -168,11 +202,30 @@ export function PodcastList({
         <MagnifyingGlassIcon className="search-icon" />
       </div>
 
+      {/* Tabs */}
+      {!isEmpty && (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'podcasts' | 'drafts')}
+          className="mb-4"
+        >
+          <TabsList>
+            <TabsTrigger value="podcasts">
+              Podcasts ({nonDrafts.length})
+            </TabsTrigger>
+            <TabsTrigger value="drafts">Drafts ({drafts.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
       {/* Content */}
       {isEmpty ? (
         <EmptyState onCreateClick={onCreate} isCreating={isCreating} />
       ) : hasNoResults ? (
-        <NoResults searchQuery={searchQuery} />
+        <NoResults
+          searchQuery={searchQuery}
+          tabLabel={activeTab === 'drafts' ? 'drafts' : 'podcasts'}
+        />
       ) : (
         <div
           role="list"

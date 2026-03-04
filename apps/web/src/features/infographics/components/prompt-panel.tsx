@@ -28,7 +28,7 @@ export function PromptPanel({
         {label}
       </label>
       {isEditMode && (
-        <p className="text-xs font-medium text-primary">
+        <p className="text-sm font-medium text-primary">
           You are editing an existing infographic version
         </p>
       )}

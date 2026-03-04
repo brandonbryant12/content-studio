@@ -1,5 +1,5 @@
 import {
-  FileTextIcon,
+  ArrowRightIcon,
   ImageIcon,
   MixerHorizontalIcon,
   PlusIcon,
@@ -8,9 +8,8 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
-import { OnboardingGuidance } from './onboarding-guidance';
+import { QuickStartPanel } from './quick-start-panel';
 import { DocumentsRecentSection, RecentSection } from './recent-section';
-import { StatCard } from './stat-card';
 import {
   type DocumentListItem,
   AddFromUrlDialog,
@@ -78,18 +77,12 @@ interface DocumentDialogs {
   isCreateFromUrlPending: boolean;
 }
 
-interface OnboardingState {
-  show: boolean;
-  onDismiss: () => void;
-}
-
 export interface DashboardPageProps {
   counts: ContentCounts;
   loading: LoadingState;
   recent: RecentItems;
   createActions: CreateActions;
   documentDialogs: DocumentDialogs;
-  onboarding: OnboardingState;
 }
 
 export function DashboardPage({
@@ -98,70 +91,37 @@ export function DashboardPage({
   recent,
   createActions,
   documentDialogs,
-  onboarding,
 }: DashboardPageProps) {
   return (
     <div className="page-container">
-      <h1 className="sr-only">Dashboard</h1>
+      {/* Editorial header */}
+      <div className="mb-6">
+        <h1 className="page-title mb-1">Dashboard</h1>
+        <p className="text-body text-muted-foreground">
+          Create AI-generated podcasts, voiceovers, and visuals — grounded in
+          your source material.
+        </p>
+      </div>
 
-      {/* Stats Row */}
-      <div className="content-grid-4 mb-8 animate-fade-in-up stagger-1">
-        <StatCard
-          label="Documents"
-          linkTo="/documents"
-          icon={FileTextIcon}
-          iconBg="bg-sky-500/10"
-          iconColor="text-sky-600 dark:text-sky-400"
-          count={counts.documents}
-          isLoading={loading.documents}
-        />
-        <StatCard
-          label="Podcasts"
-          linkTo="/podcasts"
-          icon={MixerHorizontalIcon}
-          iconBg="bg-violet-500/10"
-          iconColor="text-violet-600 dark:text-violet-400"
-          count={counts.podcasts}
-          isLoading={loading.podcasts}
-        />
-        <StatCard
-          label="Voiceovers"
-          linkTo="/voiceovers"
-          icon={SpeakerLoudIcon}
-          iconBg="bg-emerald-500/10"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          count={counts.voiceovers}
-          isLoading={loading.voiceovers}
-        />
-        <StatCard
-          label="Infographics"
-          linkTo="/infographics"
-          icon={ImageIcon}
-          iconBg="bg-amber-500/10"
-          iconColor="text-amber-600 dark:text-amber-400"
-          count={counts.infographics}
-          isLoading={loading.infographics}
+      {/* Workflow strip — persistent "how it works" reminder */}
+      <WorkflowStrip />
+
+      {/* Adaptive quick-start panel */}
+      <div className="mb-8">
+        <QuickStartPanel
+          counts={counts}
+          createActions={createActions}
+          documentDialogs={documentDialogs}
         />
       </div>
 
-      {/* First-value onboarding guidance */}
-      {onboarding.show && (
-        <div className="mb-8">
-          <OnboardingGuidance onDismiss={onboarding.onDismiss} />
-        </div>
-      )}
-
-      {/* Content Grid - 2 columns on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
-        <DocumentsRecentSection
-          count={counts.documents}
-          items={recent.documents}
-          isLoading={loading.documents}
-          onResearch={() => documentDialogs.onResearchDialogOpenChange(true)}
-          onUrl={() => documentDialogs.onUrlDialogOpenChange(true)}
-          onUpload={() => documentDialogs.onUploadOpenChange(true)}
-        />
-
+      {/* Recent content — outputs first */}
+      <div className="mb-4 animate-fade-in-up stagger-2">
+        <h2 className="font-serif text-lg font-semibold text-foreground">
+          Recent content
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 animate-fade-in-up stagger-2">
         <PodcastsRecentSection
           count={counts.podcasts}
           items={recent.podcasts}
@@ -185,6 +145,15 @@ export function DashboardPage({
           onCreateInfographic={createActions.onCreateInfographic}
           isPending={createActions.isInfographicPending}
         />
+
+        <DocumentsRecentSection
+          count={counts.documents}
+          items={recent.documents}
+          isLoading={loading.documents}
+          onResearch={() => documentDialogs.onResearchDialogOpenChange(true)}
+          onUrl={() => documentDialogs.onUrlDialogOpenChange(true)}
+          onUpload={() => documentDialogs.onUploadOpenChange(true)}
+        />
       </div>
 
       <UploadDocumentDialog
@@ -201,6 +170,71 @@ export function DashboardPage({
         open={documentDialogs.researchDialogOpen}
         onOpenChange={documentDialogs.onResearchDialogOpenChange}
       />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Workflow strip — compact persistent "how it works"                */
+/* ------------------------------------------------------------------ */
+
+const WORKFLOW_STEPS = [
+  {
+    number: '1',
+    label: 'Upload sources',
+    detail: 'PDFs, URLs, or AI research',
+    color: 'bg-sky-500 text-white',
+    textColor: 'text-sky-600 dark:text-sky-400',
+  },
+  {
+    number: '2',
+    label: 'AI creates content',
+    detail: 'Podcasts, voiceovers, infographics',
+    color: 'bg-primary text-primary-foreground',
+    textColor: 'text-primary',
+  },
+  {
+    number: '3',
+    label: 'Review & refine',
+    detail: 'Edit scripts, swap voices, adjust styles',
+    color: 'bg-emerald-500 text-white',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+  },
+] as const;
+
+function WorkflowStrip() {
+  return (
+    <div
+      className="mb-8 rounded-xl border border-border/60 bg-card/50 px-4 py-3 animate-fade-in"
+      aria-label="How Content Studio works"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {WORKFLOW_STEPS.map((step, i) => (
+          <div key={step.number} className="flex items-start gap-3">
+            {/* Step number */}
+            <span
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${step.color}`}
+            >
+              {step.number}
+            </span>
+            <div className="min-w-0">
+              <span className={`text-sm font-medium ${step.textColor}`}>
+                {step.label}
+              </span>
+              <p className="text-xs text-muted-foreground leading-snug mt-0.5">
+                {step.detail}
+              </p>
+            </div>
+            {/* Connector arrow — desktop only, not on last step */}
+            {i < WORKFLOW_STEPS.length - 1 && (
+              <ArrowRightIcon
+                className="hidden sm:block w-4 h-4 text-border shrink-0 mt-1 ml-auto"
+                aria-hidden="true"
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -258,7 +292,7 @@ function PodcastsRecentSection({
       count={count}
       items={items}
       isLoading={isLoading}
-      emptyMessage="No podcasts yet"
+      emptyMessage="Create a podcast from your sources"
       linkTo="/podcasts"
       action={
         <CreateButton
@@ -311,7 +345,7 @@ function VoiceoversRecentSection({
       count={count}
       items={items}
       isLoading={isLoading}
-      emptyMessage="No voiceovers yet"
+      emptyMessage="Record a voiceover with AI narration"
       linkTo="/voiceovers"
       action={
         <CreateButton
@@ -364,7 +398,7 @@ function InfographicsRecentSection({
       count={count}
       items={items}
       isLoading={isLoading}
-      emptyMessage="No infographics yet"
+      emptyMessage="Generate visuals from your content"
       linkTo="/infographics"
       action={
         <CreateInfographicDialog

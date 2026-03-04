@@ -1,4 +1,4 @@
-import { BookmarkIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { BookmarkIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import { Input } from '@repo/ui/components/input';
 import {
   useState,
   useCallback,
+  useMemo,
   type CSSProperties,
   type MouseEvent,
 } from 'react';
@@ -27,6 +28,56 @@ interface PresetPickerProps {
   onApplyPreset: (properties: StyleProperty[]) => void;
   disabled?: boolean;
 }
+
+const getPropertyKey = (property: StyleProperty) =>
+  property.key.trim().toLowerCase();
+
+const mergeStyleProperties = (
+  currentProperties: readonly StyleProperty[],
+  presetProperties: readonly StyleProperty[],
+): StyleProperty[] => {
+  const merged = new Map<string, StyleProperty>();
+
+  for (const property of currentProperties) {
+    merged.set(getPropertyKey(property), { ...property });
+  }
+
+  for (const property of presetProperties) {
+    merged.set(getPropertyKey(property), { ...property });
+  }
+
+  return [...merged.values()];
+};
+
+const getManagedPresetKeys = (
+  presetIds: readonly string[],
+  presetById: ReadonlyMap<string, { properties: readonly StyleProperty[] }>,
+) => {
+  const keys = new Set<string>();
+  for (const presetId of presetIds) {
+    const preset = presetById.get(presetId);
+    if (!preset) continue;
+    for (const property of preset.properties) {
+      keys.add(getPropertyKey(property));
+    }
+  }
+  return keys;
+};
+
+const mergePresetPropertiesBySelection = (
+  presetIds: readonly string[],
+  presetById: ReadonlyMap<string, { properties: readonly StyleProperty[] }>,
+) => {
+  const merged = new Map<string, StyleProperty>();
+  for (const presetId of presetIds) {
+    const preset = presetById.get(presetId);
+    if (!preset) continue;
+    for (const property of preset.properties) {
+      merged.set(getPropertyKey(property), { ...property });
+    }
+  }
+  return [...merged.values()];
+};
 
 function ColorDots({ properties }: { properties: readonly StyleProperty[] }) {
   const colors = properties
@@ -52,27 +103,37 @@ function PresetCard({
   description,
   properties,
   onClick,
+  selected,
   disabled,
 }: {
   name: string;
   description?: string;
   properties: readonly StyleProperty[];
   onClick: () => void;
+  selected: boolean;
   disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       disabled={disabled}
-      className="text-left p-2.5 rounded-lg border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
+      className={`text-left p-2.5 rounded-lg border transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none ${
+        selected
+          ? 'border-primary/60 bg-primary/10'
+          : 'border-border/50 hover:border-primary/40 hover:bg-primary/5'
+      }`}
     >
       <div className="flex items-center gap-1.5">
         <ColorDots properties={properties} />
         <span className="text-xs font-medium truncate">{name}</span>
+        {selected ? (
+          <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0 ml-auto" />
+        ) : null}
       </div>
       {description && (
-        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1 leading-snug">
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 leading-snug">
           {description}
         </p>
       )}
@@ -90,6 +151,7 @@ export function PresetPicker({
   const deletePreset = useDeleteStylePreset();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [presetName, setPresetName] = useState('');
+  const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
 
   const builtIn = presets.filter((p) => p.isBuiltIn);
   const userOwned = presets.filter((p) => !p.isBuiltIn);
@@ -99,13 +161,42 @@ export function PresetPicker({
   const examplePresets = STATIC_INFOGRAPHIC_PRESETS.filter(
     (preset) => !serverPresetNames.has(preset.name.trim().toLowerCase()),
   );
-
-  const handleApplyPreset = useCallback(
-    (properties: readonly StyleProperty[]) => {
-      onApplyPreset([...properties]);
-    },
-    [onApplyPreset],
+  const selectablePresets = useMemo(
+    () => [...builtIn, ...examplePresets, ...userOwned],
+    [builtIn, examplePresets, userOwned],
   );
+  const presetById = useMemo(
+    () => new Map(selectablePresets.map((preset) => [preset.id, preset])),
+    [selectablePresets],
+  );
+
+  const handleTogglePreset = (presetId: string) => {
+    setSelectedPresetIds((previousSelectedPresetIds) => {
+      const currentSelectedPresetIds = previousSelectedPresetIds.filter((id) =>
+        presetById.has(id),
+      );
+      const wasSelected = currentSelectedPresetIds.includes(presetId);
+      const nextSelectedPresetIds = wasSelected
+        ? currentSelectedPresetIds.filter((id) => id !== presetId)
+        : [...currentSelectedPresetIds, presetId];
+
+      const managedPresetKeys = getManagedPresetKeys(
+        currentSelectedPresetIds,
+        presetById,
+      );
+      const manualProperties = currentProperties.filter(
+        (property) => !managedPresetKeys.has(getPropertyKey(property)),
+      );
+      const mergedPresetProperties = mergePresetPropertiesBySelection(
+        nextSelectedPresetIds,
+        presetById,
+      );
+
+      onApplyPreset(mergeStyleProperties(manualProperties, mergedPresetProperties));
+
+      return nextSelectedPresetIds;
+    });
+  };
 
   const handleSavePreset = useCallback(() => {
     if (!presetName.trim()) return;
@@ -144,60 +235,79 @@ export function PresetPicker({
         {/* Built-in + Example presets as a 2-column grid */}
         {(builtIn.length > 0 || examplePresets.length > 0) && (
           <div className="grid grid-cols-2 gap-1.5">
-            {builtIn.map((preset) => (
-              <PresetCard
-                key={preset.id}
-                name={preset.name}
-                properties={preset.properties}
-                onClick={() => handleApplyPreset(preset.properties)}
-                disabled={disabled}
-              />
-            ))}
-            {examplePresets.map((preset) => (
-              <PresetCard
-                key={preset.id}
-                name={preset.name}
-                description={preset.description}
-                properties={preset.properties}
-                onClick={() => handleApplyPreset(preset.properties)}
-                disabled={disabled}
-              />
-            ))}
+            {builtIn.map((preset) => {
+              const selected = selectedPresetIds.includes(preset.id);
+              return (
+                <PresetCard
+                  key={preset.id}
+                  name={preset.name}
+                  properties={preset.properties}
+                  onClick={() => handleTogglePreset(preset.id)}
+                  selected={selected}
+                  disabled={disabled}
+                />
+              );
+            })}
+            {examplePresets.map((preset) => {
+              const selected = selectedPresetIds.includes(preset.id);
+              return (
+                <PresetCard
+                  key={preset.id}
+                  name={preset.name}
+                  description={preset.description}
+                  properties={preset.properties}
+                  onClick={() => handleTogglePreset(preset.id)}
+                  selected={selected}
+                  disabled={disabled}
+                />
+              );
+            })}
           </div>
         )}
 
         {/* User-saved presets as pills */}
         {userOwned.length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">
               My Presets
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {userOwned.map((preset) => (
-                <div
-                  key={preset.id}
-                  className="group flex items-center rounded-md border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-colors overflow-hidden"
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleApplyPreset(preset.properties)}
-                    disabled={disabled}
-                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium disabled:opacity-50 disabled:pointer-events-none"
+              {userOwned.map((preset) => {
+                const selected = selectedPresetIds.includes(preset.id);
+                return (
+                  <div
+                    key={preset.id}
+                    className={`group flex items-center rounded-md border transition-colors overflow-hidden ${
+                      selected
+                        ? 'border-primary/60 bg-primary/10'
+                        : 'border-border/60 hover:border-primary/40 hover:bg-primary/5'
+                    }`}
                   >
-                    <ColorDots properties={preset.properties} />
-                    {preset.name}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeletePreset(preset.id, e)}
-                    disabled={deletePreset.isPending}
-                    className="px-1.5 py-1 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors border-l border-border/40"
-                    aria-label={`Delete ${preset.name}`}
-                  >
-                    <Cross2Icon className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePreset(preset.id)}
+                      aria-pressed={selected}
+                      disabled={disabled}
+                      className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      <ColorDots properties={preset.properties} />
+                      {preset.name}
+                      {selected ? (
+                        <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                      ) : null}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeletePreset(preset.id, e)}
+                      disabled={deletePreset.isPending}
+                      className="px-1.5 py-1 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors border-l border-border/40"
+                      aria-label={`Delete ${preset.name}`}
+                    >
+                      <Cross2Icon className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

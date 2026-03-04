@@ -108,12 +108,12 @@ export function createMockContext(
 }
 
 /**
- * Error codes used by the document router and common across the API.
+ * Error codes used by the source router and common across the API.
  */
 export type ErrorCode =
-  | 'DOCUMENT_NOT_FOUND'
-  | 'DOCUMENT_TOO_LARGE'
-  | 'DOCUMENT_PARSE_ERROR'
+  | 'SOURCE_NOT_FOUND'
+  | 'SOURCE_TOO_LARGE'
+  | 'SOURCE_PARSE_ERROR'
   | 'UNSUPPORTED_FORMAT'
   | 'INVALID_VOICEOVER_AUDIO_GENERATION'
   | 'INVALID_SAVE'
@@ -135,15 +135,15 @@ export type ErrorCode =
  * Error factory interface matching oRPC handler errors.
  */
 export interface MockErrorFactory {
-  DOCUMENT_NOT_FOUND: (opts: {
+  SOURCE_NOT_FOUND: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
-  DOCUMENT_TOO_LARGE: (opts: {
+  SOURCE_TOO_LARGE: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
-  DOCUMENT_PARSE_ERROR: (opts: {
+  SOURCE_PARSE_ERROR: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
@@ -217,9 +217,9 @@ export interface MockErrorFactory {
  * HTTP status codes for each error type.
  */
 const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
-  DOCUMENT_NOT_FOUND: 404,
-  DOCUMENT_TOO_LARGE: 413,
-  DOCUMENT_PARSE_ERROR: 422,
+  SOURCE_NOT_FOUND: 404,
+  SOURCE_TOO_LARGE: 413,
+  SOURCE_PARSE_ERROR: 422,
   UNSUPPORTED_FORMAT: 415,
   INVALID_VOICEOVER_AUDIO_GENERATION: 400,
   INVALID_SAVE: 409,
@@ -265,14 +265,14 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
     normalized.includes('failed to parse pdf') ||
     normalized.includes('parse pdf')
   ) {
-    return 'DOCUMENT_PARSE_ERROR';
+    return 'SOURCE_PARSE_ERROR';
   }
 
   if (
     normalized.includes('document_too_large') ||
     normalized.includes('too large')
   ) {
-    return 'DOCUMENT_TOO_LARGE';
+    return 'SOURCE_TOO_LARGE';
   }
 
   if (
@@ -295,7 +295,7 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
 /**
  * Create a mock error factory for testing oRPC handlers.
  *
- * Returns factories for all error codes used by the document router.
+ * Returns factories for all error codes used by the source router.
  * Each factory creates an ORPCError that can be caught and inspected in tests.
  *
  * @example
@@ -304,15 +304,15 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
  *
  * // In handler test
  * await expect(
- *   documentRouter.get({ context, input, errors })
+ *   sourceRouter.get({ context, input, errors })
  * ).rejects.toThrow(ORPCError);
  *
  * // Inspecting error details
  * try {
- *   await documentRouter.get({ context, input, errors });
+ *   await sourceRouter.get({ context, input, errors });
  * } catch (error) {
  *   expect(error).toBeInstanceOf(ORPCError);
- *   expect((error as ORPCError).code).toBe('DOCUMENT_NOT_FOUND');
+ *   expect((error as ORPCError).code).toBe('SOURCE_NOT_FOUND');
  * }
  * ```
  */
@@ -327,9 +327,9 @@ export const createMockErrors = (): MockErrorFactory => {
       });
 
   return {
-    DOCUMENT_NOT_FOUND: createErrorFactory('DOCUMENT_NOT_FOUND'),
-    DOCUMENT_TOO_LARGE: createErrorFactory('DOCUMENT_TOO_LARGE'),
-    DOCUMENT_PARSE_ERROR: createErrorFactory('DOCUMENT_PARSE_ERROR'),
+    SOURCE_NOT_FOUND: createErrorFactory('SOURCE_NOT_FOUND'),
+    SOURCE_TOO_LARGE: createErrorFactory('SOURCE_TOO_LARGE'),
+    SOURCE_PARSE_ERROR: createErrorFactory('SOURCE_PARSE_ERROR'),
     UNSUPPORTED_FORMAT: createErrorFactory('UNSUPPORTED_FORMAT'),
     INVALID_VOICEOVER_AUDIO_GENERATION: createErrorFactory(
       'INVALID_VOICEOVER_AUDIO_GENERATION',
@@ -357,10 +357,10 @@ export const createMockErrors = (): MockErrorFactory => {
  * @example
  * ```typescript
  * try {
- *   await documentRouter.get({ context, input, errors });
+ *   await sourceRouter.get({ context, input, errors });
  *   fail('Expected error to be thrown');
  * } catch (error) {
- *   assertORPCError(error, 'DOCUMENT_NOT_FOUND');
+ *   assertORPCError(error, 'SOURCE_NOT_FOUND');
  * }
  * ```
  */
@@ -383,7 +383,7 @@ export function assertORPCError(
         expectedCode === 'PODCAST_NOT_FOUND' ||
         expectedCode === 'SCRIPT_NOT_FOUND' ||
         expectedCode === 'VOICE_NOT_FOUND' ||
-        expectedCode === 'DOCUMENT_NOT_FOUND')
+        expectedCode === 'SOURCE_NOT_FOUND')
     ) {
       return;
     }

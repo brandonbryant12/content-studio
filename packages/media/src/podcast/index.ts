@@ -3,7 +3,7 @@ export {
   PodcastRepo,
   PodcastRepoLive,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
   type ListOptions,
   type UpdateScriptOptions,
   type UpdateAudioOptions,
@@ -60,7 +60,7 @@ export type {
   PodcastFormat,
   CreatePodcast,
   UpdatePodcast,
-  Document,
+  Source,
   VersionStatus,
   ScriptSegment,
 } from '@repo/db/schema';

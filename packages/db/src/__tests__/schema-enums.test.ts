@@ -1,6 +1,5 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
-import { DocumentSourceSchema } from '../schemas/documents';
 import {
   InfographicStatus,
   InfographicFormatSchema,
@@ -19,6 +18,7 @@ import {
   PodcastFormatSchema,
   VersionStatusSchema,
 } from '../schemas/podcasts';
+import { SourceOriginSchema } from '../schemas/sources';
 import { VoiceoverStatus, VoiceoverStatusSchema } from '../schemas/voiceovers';
 
 describe('enum companion objects', () => {
@@ -79,8 +79,8 @@ describe('enum companion objects', () => {
 });
 
 describe('enum schemas', () => {
-  describe('DocumentSourceSchema', () => {
-    const decode = Schema.decodeUnknownSync(DocumentSourceSchema);
+  describe('SourceOriginSchema', () => {
+    const decode = Schema.decodeUnknownSync(SourceOriginSchema);
 
     it('accepts valid sources', () => {
       expect(decode('manual')).toBe('manual');

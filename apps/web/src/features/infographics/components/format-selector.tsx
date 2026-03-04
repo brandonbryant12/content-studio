@@ -43,7 +43,7 @@ export function FormatSelector({
               className={`w-6 ${option.aspect} rounded-sm border border-current opacity-40`}
               aria-hidden="true"
             />
-            <span className="text-[11px] font-medium">{option.label}</span>
+            <span className="text-xs font-medium">{option.label}</span>
           </button>
         ))}
       </div>

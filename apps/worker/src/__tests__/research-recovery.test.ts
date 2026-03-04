@@ -1,12 +1,12 @@
 import {
-  createMockDocumentRepo,
+  createMockSourceRepo,
   createMockPodcastRepo,
   createMockVoiceoverRepo,
   createMockInfographicRepo,
   MockDbLive,
 } from '@repo/media/test-utils';
 import { Queue, type QueueService } from '@repo/queue';
-import { createTestDocument, resetAllFactories } from '@repo/testing';
+import { createTestSource, resetAllFactories } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { JobId, JobStatus } from '@repo/db/schema';
@@ -72,7 +72,7 @@ describe('recoverOrphanedResearch', () => {
     const enqueueSpy = vi.fn();
 
     const layers = Layer.mergeAll(
-      createMockDocumentRepo({
+      createMockSourceRepo({
         findOrphanedResearch: () => Effect.succeed([]),
       }),
       createMockQueue({ onEnqueue: enqueueSpy }),
@@ -92,7 +92,7 @@ describe('recoverOrphanedResearch', () => {
     const enqueueSpy = vi.fn();
     const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
 
-    const orphan1 = createTestDocument({
+    const orphan1 = createTestSource({
       source: 'research',
       status: 'failed',
       createdBy: 'user_1',
@@ -103,7 +103,7 @@ describe('recoverOrphanedResearch', () => {
       },
     });
 
-    const orphan2 = createTestDocument({
+    const orphan2 = createTestSource({
       source: 'research',
       status: 'processing',
       createdBy: 'user_2',
@@ -115,7 +115,7 @@ describe('recoverOrphanedResearch', () => {
     });
 
     const layers = Layer.mergeAll(
-      createMockDocumentRepo({
+      createMockSourceRepo({
         findOrphanedResearch: () => Effect.succeed([orphan1, orphan2]),
         updateStatus: updateStatusSpy,
       }),
@@ -137,7 +137,7 @@ describe('recoverOrphanedResearch', () => {
     expect(enqueueSpy).toHaveBeenCalledWith(
       'process-research',
       expect.objectContaining({
-        documentId: orphan1.id,
+        sourceId: orphan1.id,
         query: 'quantum computing',
         userId: 'user_1',
       }),
@@ -146,7 +146,7 @@ describe('recoverOrphanedResearch', () => {
     expect(enqueueSpy).toHaveBeenCalledWith(
       'process-research',
       expect.objectContaining({
-        documentId: orphan2.id,
+        sourceId: orphan2.id,
         query: 'machine learning',
         userId: 'user_2',
       }),
@@ -159,7 +159,7 @@ describe('recoverOrphanedResearch', () => {
       'user_1',
       expect.objectContaining({
         type: 'entity_change',
-        entityType: 'document',
+        entityType: 'source',
         entityId: orphan1.id,
       }),
     );
@@ -169,7 +169,7 @@ describe('recoverOrphanedResearch', () => {
     const publishSpy = vi.fn();
 
     const layers = Layer.mergeAll(
-      createMockDocumentRepo({
+      createMockSourceRepo({
         findOrphanedResearch: () =>
           Effect.fail(new Error('DB connection lost') as never),
       }),

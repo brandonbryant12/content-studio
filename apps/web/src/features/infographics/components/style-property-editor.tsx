@@ -77,7 +77,7 @@ export function StylePropertyEditor({
                     type="button"
                     onClick={() => changeType(index, option.value)}
                     disabled={disabled}
-                    className={`h-5.5 min-w-5.5 px-1.5 rounded text-[10px] font-semibold transition-colors ${
+                    className={`h-5.5 min-w-5.5 px-1.5 rounded text-xs font-semibold transition-colors ${
                       isActive
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'

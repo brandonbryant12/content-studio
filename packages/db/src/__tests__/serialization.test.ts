@@ -104,11 +104,11 @@ describe('createSyncSerializer', () => {
 describe('SerializationError', () => {
   it('has the correct tag', () => {
     const error = new SerializationError({
-      entity: 'document',
+      entity: 'source',
       message: 'Failed to serialize',
     });
     expect(error._tag).toBe('SerializationError');
-    expect(error.entity).toBe('document');
+    expect(error.entity).toBe('source');
     expect(error.message).toBe('Failed to serialize');
   });
 });

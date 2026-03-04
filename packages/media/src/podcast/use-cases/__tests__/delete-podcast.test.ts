@@ -2,19 +2,19 @@ import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestPodcast,
-  createTestDocument,
+  createTestSource,
   resetPodcastCounters,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { Podcast, Document } from '@repo/db/schema';
+import type { Podcast, Source } from '@repo/db/schema';
 import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { deletePodcast } from '../delete-podcast';
 
@@ -24,7 +24,7 @@ import { deletePodcast } from '../delete-podcast';
 
 interface MockRepoState {
   podcasts: Map<string, Podcast>;
-  documents: Document[];
+  sources: Source[];
 }
 
 /**
@@ -41,7 +41,7 @@ const createMockPodcastRepo = (
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -56,12 +56,12 @@ const createMockPodcastRepo = (
         if (!podcast || podcast.createdBy !== userId) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -71,12 +71,12 @@ const createMockPodcastRepo = (
         if (!podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -118,7 +118,7 @@ describe('deletePodcast', () => {
       const deleteCalls: string[] = [];
 
       const mockRepo = createMockPodcastRepo(
-        { podcasts, documents: [] },
+        { podcasts, sources: [] },
         { onDelete: (id) => deleteCalls.push(id) },
       );
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
@@ -135,16 +135,16 @@ describe('deletePodcast', () => {
 
     it('deletes podcast with associated documents (documents remain)', async () => {
       const user = createTestUser();
-      const doc = createTestDocument({ createdBy: user.id });
+      const doc = createTestSource({ createdBy: user.id });
       const podcast = createTestPodcast({
         createdBy: user.id,
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
       const deleteCalls: string[] = [];
 
       const mockRepo = createMockPodcastRepo(
-        { podcasts, documents: [doc] },
+        { podcasts, sources: [doc] },
         { onDelete: (id) => deleteCalls.push(id) },
       );
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
@@ -165,7 +165,7 @@ describe('deletePodcast', () => {
       const podcast = createTestPodcast({ createdBy: user.id });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -191,7 +191,7 @@ describe('deletePodcast', () => {
         list: () => Effect.die('not implemented'),
         update: () => Effect.die('not implemented'),
         count: () => Effect.die('not implemented'),
-        verifyDocumentsExist: () => Effect.die('not implemented'),
+        verifySourcesExist: () => Effect.die('not implemented'),
         updateGenerationContext: () => Effect.die('not implemented'),
         updateStatus: () => Effect.die('not implemented'),
         updateScript: () => Effect.die('not implemented'),
@@ -206,7 +206,7 @@ describe('deletePodcast', () => {
             if (!pod || pod.createdBy !== userId) {
               return Effect.fail(new PodcastNotFound({ id }));
             }
-            return Effect.succeed({ ...pod, documents: [] });
+            return Effect.succeed({ ...pod, sources: [] });
           }),
         findById: (id: string) =>
           Effect.suspend(() => {
@@ -215,7 +215,7 @@ describe('deletePodcast', () => {
             if (!pod) {
               return Effect.fail(new PodcastNotFound({ id }));
             }
-            return Effect.succeed({ ...pod, documents: [] });
+            return Effect.succeed({ ...pod, sources: [] });
           }),
         delete: (id: string) =>
           Effect.sync(() => {
@@ -251,7 +251,7 @@ describe('deletePodcast', () => {
       const nonExistentId = 'pod_nonexistent';
       const podcasts = new Map<string, Podcast>();
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
@@ -277,7 +277,7 @@ describe('deletePodcast', () => {
       const deleteCalls: string[] = [];
 
       const mockRepo = createMockPodcastRepo(
-        { podcasts, documents: [] },
+        { podcasts, sources: [] },
         { onDelete: (id) => deleteCalls.push(id) },
       );
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
@@ -307,7 +307,7 @@ describe('deletePodcast', () => {
         [podcast3.id, podcast3],
       ]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       await Effect.runPromise(

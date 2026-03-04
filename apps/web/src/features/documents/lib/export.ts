@@ -1,6 +1,6 @@
 import type { RouterOutput } from '@repo/api/client';
 
-type Document = RouterOutput['documents']['get'];
+type Document = RouterOutput['sources']['get'];
 
 interface BuildDocumentExportInput {
   document: Document;
@@ -10,7 +10,7 @@ interface BuildDocumentExportInput {
 
 function getExportTitle(title: string): string {
   const trimmed = title.trim();
-  return trimmed.length > 0 ? trimmed : 'Untitled Document';
+  return trimmed.length > 0 ? trimmed : 'Untitled Source';
 }
 
 function buildResearchSourcesMarkdown(document: Document): string[] {

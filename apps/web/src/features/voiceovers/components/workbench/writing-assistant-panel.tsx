@@ -36,7 +36,7 @@ export function WritingAssistantPanel({
   });
 
   return (
-    <section className="flex flex-1 min-h-[420px] lg:min-h-0 flex-col bg-card/40">
+    <section className="flex flex-1 min-h-0 flex-col bg-card/40">
       <header className="border-b border-border px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -44,7 +44,7 @@ export function WritingAssistantPanel({
               <ChatBubbleIcon className="w-4 h-4 text-primary" />
               Writing Assistant
             </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Refine wording, pacing, and tone so your narration lands.
             </p>
           </div>
@@ -60,10 +60,10 @@ export function WritingAssistantPanel({
             </Button>
           )}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           This chat is temporary and is not saved.
         </p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           Transcript rewrites are applied directly to the editor.
         </p>
       </header>

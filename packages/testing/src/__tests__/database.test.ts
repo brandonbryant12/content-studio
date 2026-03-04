@@ -1,4 +1,4 @@
-import { user as userTable, document as documentTable } from '@repo/db/schema';
+import { user as userTable, source as sourceTable } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
@@ -67,8 +67,8 @@ describe('database test context', () => {
       updatedAt: now,
     });
 
-    await ctx.db.insert(documentTable).values({
-      title: 'Test Document',
+    await ctx.db.insert(sourceTable).values({
+      title: 'Test Source',
       contentKey: 'docs/test.txt',
       mimeType: 'text/plain',
       wordCount: 100,
@@ -80,11 +80,11 @@ describe('database test context', () => {
 
     const docs = await ctx.db
       .select()
-      .from(documentTable)
-      .where(eq(documentTable.createdBy, 'user-fk-test'));
+      .from(sourceTable)
+      .where(eq(sourceTable.createdBy, 'user-fk-test'));
 
     expect(docs).toHaveLength(1);
-    expect(docs[0]!.title).toBe('Test Document');
+    expect(docs[0]!.title).toBe('Test Source');
     expect(docs[0]!.metadata).toEqual({ key: 'value', nested: { a: 1 } });
   });
 });

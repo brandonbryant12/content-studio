@@ -153,8 +153,8 @@ describe('safety invariants', () => {
     }
   });
 
-  it('requires update-document to use safe content replacement primitive', () => {
-    const source = read('document/use-cases/update-document.ts');
+  it('requires update-source to use safe content replacement primitive', () => {
+    const source = read('source/use-cases/update-source.ts');
     expect(source).toContain('replaceTextContentSafely(');
   });
 
@@ -163,9 +163,9 @@ describe('safety invariants', () => {
       'podcast/use-cases/start-generation.ts',
       'voiceover/use-cases/start-generation.ts',
       'infographic/use-cases/generate-infographic.ts',
-      'document/use-cases/create-from-url.ts',
-      'document/use-cases/create-from-research.ts',
-      'document/use-cases/retry-processing.ts',
+      'source/use-cases/create-from-url.ts',
+      'source/use-cases/create-from-research.ts',
+      'source/use-cases/retry-processing.ts',
     ];
 
     for (const file of files) {

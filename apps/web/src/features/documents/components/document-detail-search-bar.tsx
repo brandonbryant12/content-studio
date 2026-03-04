@@ -33,7 +33,7 @@ export const DocumentDetailSearchBar = memo(function DocumentDetailSearchBar({
     <div
       className="flex items-center gap-2 px-6 py-2 border-b border-border bg-muted/50"
       role="search"
-      aria-label="Search in document"
+      aria-label="Search in source"
     >
       <MagnifyingGlassIcon
         className="w-4 h-4 text-muted-foreground shrink-0"
@@ -58,9 +58,9 @@ export const DocumentDetailSearchBar = memo(function DocumentDetailSearchBar({
             close();
           }
         }}
-        placeholder="Search in document..."
+        placeholder="Search in source..."
         className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        aria-label="Search in document"
+        aria-label="Search in source"
       />
       {query.length >= 2 && (
         <span className="text-xs text-muted-foreground tabular-nums shrink-0">

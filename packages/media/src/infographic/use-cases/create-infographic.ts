@@ -3,14 +3,14 @@ import {
   generateInfographicId,
   InfographicStatus,
   type InfographicFormat,
-  type DocumentId,
-  type DocumentOutline,
+  type SourceId,
+  type SourceOutline,
   type StyleProperty,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
-import { getDocument } from '../../document/use-cases/get-document';
-import { getDocumentContent } from '../../document/use-cases/get-document-content';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { getSource } from '../../source/use-cases/get-source';
+import { getSourceContent } from '../../source/use-cases/get-source-content';
 import { InfographicRepo, type InsertInfographic } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -23,7 +23,7 @@ export interface CreateInfographicInput {
   format: InfographicFormat;
   prompt?: string;
   styleProperties?: readonly StyleProperty[];
-  documentId?: DocumentId;
+  sourceId?: SourceId;
 }
 
 // =============================================================================
@@ -42,7 +42,7 @@ const truncateAtWordBoundary = (value: string, maxChars: number) => {
   return value.slice(0, cutoff > 0 ? cutoff : maxChars).trim();
 };
 
-const formatOutlineSummary = (outline?: DocumentOutline) => {
+const formatOutlineSummary = (outline?: SourceOutline) => {
   const topSections = outline?.sections.slice(0, MAX_OUTLINE_SECTIONS) ?? [];
   if (topSections.length === 0) return null;
 
@@ -58,7 +58,7 @@ const buildDocumentPrompt = ({
 }: {
   title: string;
   content: string;
-  outline?: DocumentOutline;
+  outline?: SourceOutline;
 }) => {
   const sectionSummary = formatOutlineSummary(outline);
   const normalizedContent = normalizePromptText(content);
@@ -85,21 +85,21 @@ export const createInfographic = (input: CreateInfographicInput) =>
     const explicitPrompt =
       trimmedPrompt && trimmedPrompt.length > 0 ? trimmedPrompt : undefined;
 
-    const sourceDocumentId: DocumentId | undefined = input.documentId;
-    const sourceDocument = sourceDocumentId
-      ? yield* getDocument({ id: sourceDocumentId })
+    const sourceId: SourceId | undefined = input.sourceId;
+    const sourceEntry = sourceId
+      ? yield* getSource({ id: sourceId })
       : undefined;
-    const sourceContent = sourceDocumentId
-      ? (yield* getDocumentContent({ id: sourceDocumentId })).content
+    const sourceContent = sourceId
+      ? (yield* getSourceContent({ id: sourceId })).content
       : undefined;
 
     const prompt =
       explicitPrompt ??
-      (sourceDocument && sourceContent !== undefined
+      (sourceEntry && sourceContent !== undefined
         ? buildDocumentPrompt({
-            title: sourceDocument.title,
+            title: sourceEntry.title,
             content: sourceContent,
-            outline: sourceDocument.researchConfig?.outline,
+            outline: sourceEntry.researchConfig?.outline,
           })
         : undefined);
 
@@ -111,7 +111,7 @@ export const createInfographic = (input: CreateInfographicInput) =>
       format: input.format,
       status: InfographicStatus.DRAFT,
       createdBy: user.id,
-      ...(sourceDocumentId ? { sourceDocumentId } : {}),
+      ...(sourceId ? { sourceId } : {}),
     } satisfies InsertInfographic);
     yield* annotateUseCaseSpan({
       userId: user.id,

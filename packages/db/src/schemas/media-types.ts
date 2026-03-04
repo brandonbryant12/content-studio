@@ -1,7 +1,7 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 export const contentTypeEnum = pgEnum('content_type', [
-  'document',
+  'source',
   'podcast',
   'video',
   'article',
@@ -24,8 +24,8 @@ export interface MediaTypeConfig {
 }
 
 export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
-  document: {
-    label: 'Document',
+  source: {
+    label: 'Source',
     description: 'Text content from files or AI generation',
     acceptsInputFrom: ['podcast', 'video', 'article'],
     canBeInputFor: ['podcast', 'article', 'graphic', 'video', 'social'],
@@ -38,8 +38,8 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   podcast: {
     label: 'Podcast',
     description: 'AI-generated audio conversations',
-    acceptsInputFrom: ['document'],
-    canBeInputFor: ['document', 'graphic', 'social', 'video'],
+    acceptsInputFrom: ['source'],
+    canBeInputFor: ['source', 'graphic', 'social', 'video'],
     canBeUploaded: false,
     canBeGenerated: true,
     icon: 'SpeakerLoudIcon',
@@ -49,8 +49,8 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   video: {
     label: 'Video',
     description: 'AI-generated video content',
-    acceptsInputFrom: ['document', 'podcast', 'graphic'],
-    canBeInputFor: ['document', 'social'],
+    acceptsInputFrom: ['source', 'podcast', 'graphic'],
+    canBeInputFor: ['source', 'social'],
     canBeUploaded: true,
     canBeGenerated: true,
     icon: 'VideoIcon',
@@ -60,8 +60,8 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   article: {
     label: 'Article',
     description: 'AI-generated written content',
-    acceptsInputFrom: ['document', 'podcast'],
-    canBeInputFor: ['document', 'social', 'graphic'],
+    acceptsInputFrom: ['source', 'podcast'],
+    canBeInputFor: ['source', 'social', 'graphic'],
     canBeUploaded: false,
     canBeGenerated: true,
     icon: 'ReaderIcon',
@@ -71,7 +71,7 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   social: {
     label: 'Social',
     description: 'Short-form content for social platforms',
-    acceptsInputFrom: ['document', 'podcast', 'video', 'article', 'graphic'],
+    acceptsInputFrom: ['source', 'podcast', 'video', 'article', 'graphic'],
     canBeInputFor: [],
     canBeUploaded: false,
     canBeGenerated: true,
@@ -82,7 +82,7 @@ export const MEDIA_TYPE_CONFIG: Record<ContentType, MediaTypeConfig> = {
   graphic: {
     label: 'Graphic',
     description: 'AI-generated visual assets',
-    acceptsInputFrom: ['document', 'podcast'],
+    acceptsInputFrom: ['source', 'podcast'],
     canBeInputFor: ['video', 'social'],
     canBeUploaded: true,
     canBeGenerated: true,

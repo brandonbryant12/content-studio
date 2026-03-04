@@ -86,7 +86,7 @@ export function DocumentsRecentSection({
 }: DocumentsRecentSectionProps) {
   return (
     <RecentSection
-      title="Documents"
+      title="Sources"
       icon={FileTextIcon}
       iconColor="text-sky-600 dark:text-sky-400"
       count={count}

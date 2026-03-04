@@ -5,12 +5,12 @@ import {
   type CreatePodcast,
   type UpdatePodcast,
   type GenerationContext,
-  type Document,
+  type Source,
   type VersionStatus,
   type ScriptSegment,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
-import type { DocumentNotFound, PodcastNotFound } from '../../errors';
+import type { SourceNotFound, PodcastNotFound } from '../../errors';
 import type { Effect } from 'effect';
 import { podcastReadMethods } from './podcast-repo.reads';
 import { podcastWriteMethods } from './podcast-repo.writes';
@@ -20,10 +20,10 @@ import { podcastWriteMethods } from './podcast-repo.writes';
 // =============================================================================
 
 /**
- * Podcast with resolved source documents.
+ * Podcast with resolved sources.
  */
-export interface PodcastWithDocuments extends Podcast {
-  documents: Document[];
+export interface PodcastWithSources extends Podcast {
+  sources: Source[];
 }
 
 /**
@@ -68,29 +68,25 @@ export interface PodcastRepoService {
    * Insert a new podcast with source document IDs.
    */
   readonly insert: (
-    data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string },
-    documentIds: readonly string[],
-  ) => Effect.Effect<
-    PodcastWithDocuments,
-    DatabaseError | DocumentNotFound,
-    Db
-  >;
+    data: Omit<CreatePodcast, 'sourceIds'> & { createdBy: string },
+    sourceIds: readonly string[],
+  ) => Effect.Effect<PodcastWithSources, DatabaseError | SourceNotFound, Db>;
 
   /**
-   * Find podcast by ID with resolved documents.
+   * Find podcast by ID with resolved sources.
    */
   readonly findById: (
     id: string,
-  ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
+  ) => Effect.Effect<PodcastWithSources, PodcastNotFound | DatabaseError, Db>;
 
   /**
-   * Find podcast by ID with resolved documents scoped to owner.
+   * Find podcast by ID with resolved sources scoped to owner.
    * Fails with PodcastNotFound for missing or not-owned records.
    */
   readonly findByIdForUser: (
     id: string,
     userId: string,
-  ) => Effect.Effect<PodcastWithDocuments, PodcastNotFound | DatabaseError, Db>;
+  ) => Effect.Effect<PodcastWithSources, PodcastNotFound | DatabaseError, Db>;
 
   /**
    * Update podcast by ID.
@@ -123,10 +119,10 @@ export interface PodcastRepoService {
   /**
    * Verify all document IDs exist and are owned by the specified user.
    */
-  readonly verifyDocumentsExist: (
-    documentIds: readonly string[],
+  readonly verifySourcesExist: (
+    sourceIds: readonly string[],
     userId: string,
-  ) => Effect.Effect<Document[], DatabaseError | DocumentNotFound, Db>;
+  ) => Effect.Effect<Source[], DatabaseError | SourceNotFound, Db>;
 
   /**
    * Update podcast generation context.

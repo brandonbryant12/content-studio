@@ -7,14 +7,14 @@ import { DocumentListContainer } from '@/features/documents/components/document-
 export const Route = createFileRoute('/_protected/documents/')({
   loader: () =>
     queryClient.ensureQueryData(
-      apiClient.documents.list.queryOptions({ input: {} }),
+      apiClient.sources.list.queryOptions({ input: {} }),
     ),
   component: DocumentsPage,
 });
 
 function DocumentsPage() {
   useEffect(() => {
-    document.title = 'Documents - Content Studio';
+    document.title = 'Sources - Content Studio';
   }, []);
 
   return <DocumentListContainer />;

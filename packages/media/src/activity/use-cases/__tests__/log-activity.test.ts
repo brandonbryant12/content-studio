@@ -10,7 +10,7 @@ const createMockActivityLog = (
   id: 'act_0000000000000001' as ActivityLogId,
   userId: 'user-1',
   action: 'created',
-  entityType: 'document',
+  entityType: 'source',
   entityId: null,
   entityTitle: null,
   metadata: null,
@@ -28,7 +28,7 @@ describe('logActivity', () => {
       const insertSpy = vi.fn();
       const mockLog = createMockActivityLog({
         action: 'created',
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc_0000000000000001',
         entityTitle: 'My Document',
         metadata: { status: 'draft' },
@@ -47,7 +47,7 @@ describe('logActivity', () => {
         logActivity({
           userId: 'user-1',
           action: 'created',
-          entityType: 'document',
+          entityType: 'source',
           entityId: 'doc_0000000000000001',
           entityTitle: 'My Document',
           metadata: { status: 'draft' },
@@ -59,7 +59,7 @@ describe('logActivity', () => {
         expect.objectContaining({
           userId: 'user-1',
           action: 'created',
-          entityType: 'document',
+          entityType: 'source',
           entityId: 'doc_0000000000000001',
           entityTitle: 'My Document',
           metadata: { status: 'draft' },
@@ -98,7 +98,7 @@ describe('logActivity', () => {
     });
 
     it('handles all entity types', async () => {
-      const entityTypes = ['document', 'podcast', 'voiceover', 'infographic'];
+      const entityTypes = ['source', 'podcast', 'voiceover', 'infographic'];
 
       for (const entityType of entityTypes) {
         const insertSpy = vi.fn();

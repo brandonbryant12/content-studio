@@ -241,7 +241,7 @@ export function StepAudio({
           <>
             {/* Female Voices */}
             <div className="mb-4">
-              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
                 Female
               </p>
               <div
@@ -266,7 +266,7 @@ export function StepAudio({
 
             {/* Male Voices */}
             <div>
-              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
                 Male
               </p>
               <div
@@ -321,7 +321,7 @@ export function StepAudio({
             <>
               {/* Female Voices */}
               <div className="mb-4">
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
                   Female
                 </p>
                 <div
@@ -346,7 +346,7 @@ export function StepAudio({
 
               {/* Male Voices */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
                   Male
                 </p>
                 <div

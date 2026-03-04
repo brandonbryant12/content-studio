@@ -9,7 +9,7 @@ export function useRetryProcessing() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    apiClient.documents.retry.mutationOptions({
+    apiClient.sources.retry.mutationOptions({
       onSuccess: (document, variables) => {
         queryClient.setQueryData(getDocumentQueryKey(variables.id), document);
         toast.success('Retrying — content is being reprocessed');

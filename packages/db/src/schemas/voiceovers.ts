@@ -11,16 +11,16 @@ import { Schema } from 'effect';
 import { user } from './auth';
 import {
   type VoiceoverId,
-  type DocumentId,
+  type SourceId,
   VoiceoverIdSchema,
-  DocumentIdSchema,
+  SourceIdSchema,
   generateVoiceoverId,
 } from './brands';
-import { document } from './documents';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
 } from './serialization';
+import { source } from './sources';
 
 /** Flow: drafting -> generating_audio -> ready */
 export const voiceoverStatusEnum = pgEnum('voiceover_status', [
@@ -50,9 +50,9 @@ export const voiceover = pgTable(
     voiceName: varchar('voice_name', { length: 100 }),
     audioUrl: varchar('audio_url', { length: 500 }),
     duration: integer('duration'),
-    sourceDocumentId: varchar('sourceDocumentId', { length: 20 })
-      .$type<DocumentId>()
-      .references(() => document.id, { onDelete: 'set null' }),
+    sourceId: varchar('sourceId', { length: 20 })
+      .$type<SourceId>()
+      .references(() => source.id, { onDelete: 'set null' }),
     status: voiceoverStatusEnum('status').notNull().default('drafting'),
     errorMessage: text('error_message'),
     approvedBy: text('approved_by').references(() => user.id),
@@ -70,13 +70,13 @@ export const voiceover = pgTable(
   (table) => [
     index('voiceover_createdBy_idx').on(table.createdBy),
     index('voiceover_status_idx').on(table.status),
-    index('voiceover_sourceDocumentId_idx').on(table.sourceDocumentId),
+    index('voiceover_sourceId_idx').on(table.sourceId),
   ],
 );
 
 export const CreateVoiceoverSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
-  documentId: Schema.optional(DocumentIdSchema),
+  sourceId: Schema.optional(SourceIdSchema),
 });
 
 export const UpdateVoiceoverFields = {
@@ -104,7 +104,7 @@ export const VoiceoverOutputSchema = Schema.Struct({
   voiceName: Schema.NullOr(Schema.String),
   audioUrl: Schema.NullOr(Schema.String),
   duration: Schema.NullOr(Schema.Number),
-  sourceDocumentId: Schema.NullOr(DocumentIdSchema),
+  sourceId: Schema.NullOr(SourceIdSchema),
   status: VoiceoverStatusSchema,
   errorMessage: Schema.NullOr(Schema.String),
   approvedBy: Schema.NullOr(Schema.String),
@@ -131,7 +131,7 @@ const voiceoverTransform = (voiceover: Voiceover): VoiceoverOutput => ({
   voiceName: voiceover.voiceName ?? null,
   audioUrl: voiceover.audioUrl ?? null,
   duration: voiceover.duration ?? null,
-  sourceDocumentId: voiceover.sourceDocumentId ?? null,
+  sourceId: voiceover.sourceId ?? null,
   status: voiceover.status,
   errorMessage: voiceover.errorMessage ?? null,
   approvedBy: voiceover.approvedBy ?? null,

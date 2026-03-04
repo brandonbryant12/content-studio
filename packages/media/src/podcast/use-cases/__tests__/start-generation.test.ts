@@ -37,13 +37,13 @@ const createMockPodcastRepo = (
         state.podcast &&
         state.podcast.id === id &&
         state.podcast.createdBy === userId
-          ? Effect.succeed({ ...state.podcast, documents: [] })
+          ? Effect.succeed({ ...state.podcast, sources: [] })
           : Effect.fail(new PodcastNotFound({ id })),
       ),
     findById: (id: string) =>
       Effect.suspend(() =>
         state.podcast
-          ? Effect.succeed({ ...state.podcast, documents: [] })
+          ? Effect.succeed({ ...state.podcast, sources: [] })
           : Effect.fail(new PodcastNotFound({ id })),
       ),
     list: () => Effect.die('not implemented'),
@@ -52,7 +52,7 @@ const createMockPodcastRepo = (
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateStatus: (id: string, status: VersionStatus) =>
       Effect.sync(() => {
         options?.onUpdateStatus?.(id, status);

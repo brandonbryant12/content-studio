@@ -1,8 +1,8 @@
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import type { DocumentId } from '@repo/db/schema';
-import { getDocumentContent } from '../../document/use-cases/get-document-content';
+import type { SourceId } from '@repo/db/schema';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { getSourceContent } from '../../source/use-cases/get-source-content';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -11,7 +11,7 @@ import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 export interface CreateVoiceoverInput {
   title: string;
-  documentId?: DocumentId;
+  sourceId?: SourceId;
 }
 
 // =============================================================================
@@ -22,18 +22,18 @@ export const createVoiceover = (input: CreateVoiceoverInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const voiceoverRepo = yield* VoiceoverRepo;
-    const sourceDocumentId = input.documentId;
-    const sourceText = sourceDocumentId
-      ? (yield* getDocumentContent({ id: sourceDocumentId })).content
+    const sourceId = input.sourceId;
+    const sourceText = sourceId
+      ? (yield* getSourceContent({ id: sourceId })).content
       : undefined;
 
     const voiceover = yield* voiceoverRepo.insert({
       title: input.title,
       createdBy: user.id,
-      ...(sourceDocumentId
+      ...(sourceId
         ? {
             text: sourceText,
-            sourceDocumentId,
+            sourceId,
           }
         : {}),
     });

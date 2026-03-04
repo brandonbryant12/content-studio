@@ -1,12 +1,12 @@
 export {
-  DocumentNotFound,
-  DocumentError,
-  DocumentTooLargeError,
-  UnsupportedDocumentFormat,
-  DocumentParseError,
-  DocumentContentNotFound,
-  DocumentAlreadyProcessing,
-} from './document-errors';
+  SourceNotFound,
+  SourceError,
+  SourceTooLargeError,
+  UnsupportedSourceFormat,
+  SourceParseError,
+  SourceContentNotFound,
+  SourceAlreadyProcessing,
+} from './source-errors';
 
 export {
   PodcastNotFound,

@@ -1,5 +1,5 @@
 import {
-  createMockDocumentRepo,
+  createMockSourceRepo,
   createMockPodcastRepo,
   createMockVoiceoverRepo,
   createMockInfographicRepo,
@@ -20,7 +20,7 @@ const createTestJob = (overrides: Partial<Job> = {}): Job => ({
   type: 'process-url',
   status: 'failed' as JobStatus,
   payload: {
-    documentId: 'doc_1',
+    sourceId: 'doc_1',
     url: 'https://example.com',
     userId: 'user_1',
   },
@@ -62,7 +62,7 @@ const createMockQueue = (
 const noopPublish = vi.fn();
 
 const baseRepoLayers = Layer.mergeAll(
-  createMockDocumentRepo(),
+  createMockSourceRepo(),
   createMockPodcastRepo(),
   createMockVoiceoverRepo(),
   createMockInfographicRepo(),
@@ -94,7 +94,7 @@ describe('reapStaleJobs', () => {
     const staleJob = createTestJob({
       type: 'process-url',
       payload: {
-        documentId: 'doc_abc',
+        sourceId: 'doc_abc',
         url: 'https://x.com',
         userId: 'user_1',
       },
@@ -102,7 +102,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue([staleJob]),
-      createMockDocumentRepo({ updateStatus: updateStatusSpy }),
+      createMockSourceRepo({ updateStatus: updateStatusSpy }),
       createMockPodcastRepo(),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -122,7 +122,7 @@ describe('reapStaleJobs', () => {
       'user_1',
       expect.objectContaining({
         type: 'entity_change',
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc_abc',
       }),
     );
@@ -139,7 +139,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue([staleJob]),
-      createMockDocumentRepo(),
+      createMockSourceRepo(),
       createMockPodcastRepo({ updateStatus: updateStatusSpy }),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -176,7 +176,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue([staleJob]),
-      createMockDocumentRepo(),
+      createMockSourceRepo(),
       createMockPodcastRepo(),
       createMockVoiceoverRepo({ updateStatus: updateStatusSpy }),
       createMockInfographicRepo(),
@@ -213,7 +213,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue([staleJob]),
-      createMockDocumentRepo(),
+      createMockSourceRepo(),
       createMockPodcastRepo(),
       createMockVoiceoverRepo(),
       createMockInfographicRepo({ update: updateSpy }),
@@ -251,7 +251,7 @@ describe('reapStaleJobs', () => {
         id: 'job_1' as JobId,
         type: 'process-url',
         payload: {
-          documentId: 'doc_1',
+          sourceId: 'doc_1',
           url: 'https://x.com',
           userId: 'user_1',
         },
@@ -265,7 +265,7 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
-      createMockDocumentRepo({ updateStatus: docUpdateSpy }),
+      createMockSourceRepo({ updateStatus: docUpdateSpy }),
       createMockPodcastRepo({ updateStatus: podUpdateSpy }),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -290,7 +290,7 @@ describe('reapStaleJobs', () => {
         id: 'job_1' as JobId,
         type: 'process-url',
         payload: {
-          documentId: 'doc_1',
+          sourceId: 'doc_1',
           url: 'https://x.com',
           userId: 'user_1',
         },
@@ -305,7 +305,7 @@ describe('reapStaleJobs', () => {
     // Document repo fails, podcast repo succeeds
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
-      createMockDocumentRepo({
+      createMockSourceRepo({
         updateStatus: () =>
           Effect.fail(new Error('DB connection lost') as never),
       }),

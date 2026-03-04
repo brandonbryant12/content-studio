@@ -2,19 +2,19 @@ import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestPodcast,
-  createTestDocument,
+  createTestSource,
   resetPodcastCounters,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Podcast, Document, UpdatePodcast } from '@repo/db/schema';
+import type { Podcast, Source, UpdatePodcast } from '@repo/db/schema';
 import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { updatePodcast } from '../update-podcast';
 
@@ -24,7 +24,7 @@ import { updatePodcast } from '../update-podcast';
 
 interface MockRepoState {
   podcasts: Map<string, Podcast>;
-  documents: Document[];
+  sources: Source[];
 }
 
 /**
@@ -41,7 +41,7 @@ const createMockPodcastRepo = (
     list: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -56,12 +56,12 @@ const createMockPodcastRepo = (
         if (!podcast || podcast.createdBy !== userId) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -71,12 +71,12 @@ const createMockPodcastRepo = (
         if (!podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -101,9 +101,9 @@ const createMockPodcastRepo = (
           targetDurationMinutes:
             data.targetDurationMinutes ?? existing.targetDurationMinutes,
           tags: data.tags ? [...data.tags] : existing.tags,
-          sourceDocumentIds: data.documentIds
-            ? ([...data.documentIds] as Podcast['sourceDocumentIds'])
-            : existing.sourceDocumentIds,
+          sourceIds: data.sourceIds
+            ? ([...data.sourceIds] as Podcast['sourceIds'])
+            : existing.sourceIds,
           updatedAt: new Date(),
         };
         state.podcasts.set(id, updated);
@@ -140,7 +140,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -163,7 +163,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -189,7 +189,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -214,7 +214,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -240,7 +240,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -263,7 +263,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -288,7 +288,7 @@ describe('updatePodcast', () => {
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -305,17 +305,17 @@ describe('updatePodcast', () => {
 
     it('updates document IDs', async () => {
       const user = createTestUser();
-      const doc1 = createTestDocument({ createdBy: user.id });
-      const doc2 = createTestDocument({ createdBy: user.id });
+      const doc1 = createTestSource({ createdBy: user.id });
+      const doc2 = createTestSource({ createdBy: user.id });
       const podcast = createTestPodcast({
-        sourceDocumentIds: [doc1.id],
+        sourceIds: [doc1.id],
         createdBy: user.id,
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
       const mockRepo = createMockPodcastRepo({
         podcasts,
-        documents: [doc1, doc2],
+        sources: [doc1, doc2],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -323,12 +323,12 @@ describe('updatePodcast', () => {
         withTestUser(user)(
           updatePodcast({
             podcastId: podcast.id,
-            data: { documentIds: [doc2.id] },
+            data: { sourceIds: [doc2.id] },
           }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result.sourceDocumentIds).toEqual([doc2.id]);
+      expect(result.sourceIds).toEqual([doc2.id]);
     });
   });
 
@@ -345,7 +345,7 @@ describe('updatePodcast', () => {
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
       const mockRepo = createMockPodcastRepo(
-        { podcasts, documents: [] },
+        { podcasts, sources: [] },
         { onUpdate: updateSpy },
       );
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
@@ -386,7 +386,7 @@ describe('updatePodcast', () => {
       const podcast = createTestPodcast({ createdBy: owner.id });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
@@ -413,7 +413,7 @@ describe('updatePodcast', () => {
       const nonExistentId = 'pod_nonexistent';
       const podcasts = new Map<string, Podcast>();
 
-      const mockRepo = createMockPodcastRepo({ podcasts, documents: [] });
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(

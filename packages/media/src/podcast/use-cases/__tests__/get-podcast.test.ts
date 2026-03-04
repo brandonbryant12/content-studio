@@ -2,19 +2,19 @@ import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestPodcast,
-  createTestDocument,
+  createTestSource,
   resetPodcastCounters,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { Podcast, Document } from '@repo/db/schema';
+import type { Podcast, Source } from '@repo/db/schema';
 import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { getPodcast } from '../get-podcast';
 
@@ -24,7 +24,7 @@ import { getPodcast } from '../get-podcast';
 
 interface MockRepoState {
   podcasts: Podcast[];
-  documents: Document[];
+  sources: Source[];
 }
 
 /**
@@ -39,7 +39,7 @@ const createMockPodcastRepo = (
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -56,12 +56,12 @@ const createMockPodcastRepo = (
         if (!podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -71,12 +71,12 @@ const createMockPodcastRepo = (
         if (!podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const docs = state.documents.filter((d) =>
-          podcast.sourceDocumentIds.includes(d.id),
+        const docs = state.sources.filter((d) =>
+          podcast.sourceIds.includes(d.id),
         );
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return Effect.succeed(result);
       }),
@@ -103,18 +103,18 @@ describe('getPodcast', () => {
   });
 
   describe('basic retrieval', () => {
-    it('returns podcast with documents when found', async () => {
+    it('returns podcast with sources when found', async () => {
       const user = createTestUser();
-      const doc = createTestDocument({ createdBy: user.id });
+      const doc = createTestSource({ createdBy: user.id });
       const podcast = createTestPodcast({
         title: 'My Podcast',
         createdBy: user.id,
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
       });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [doc],
+        sources: [doc],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -126,8 +126,8 @@ describe('getPodcast', () => {
 
       expect(result.id).toBe(podcast.id);
       expect(result.title).toBe('My Podcast');
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]!.id).toBe(doc.id);
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]!.id).toBe(doc.id);
     });
 
     it('returns podcast without documents by default', async () => {
@@ -139,7 +139,7 @@ describe('getPodcast', () => {
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -153,18 +153,18 @@ describe('getPodcast', () => {
       expect(result.status).toBe('ready');
     });
 
-    it('returns podcast with documents when includeDocuments is true', async () => {
+    it('returns podcast with sources when includeSources is true', async () => {
       const user = createTestUser();
-      const doc = createTestDocument({ createdBy: user.id });
+      const doc = createTestSource({ createdBy: user.id });
       const podcast = createTestPodcast({
         createdBy: user.id,
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
         status: 'ready',
       });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [doc],
+        sources: [doc],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -176,8 +176,8 @@ describe('getPodcast', () => {
 
       expect(result.id).toBe(podcast.id);
       expect(result.status).toBe('ready');
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]!.id).toBe(doc.id);
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]!.id).toBe(doc.id);
     });
 
     it('returns podcast with status from the podcast directly', async () => {
@@ -189,7 +189,7 @@ describe('getPodcast', () => {
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -207,17 +207,17 @@ describe('getPodcast', () => {
   describe('documents resolution', () => {
     it('returns podcast with multiple documents in order', async () => {
       const user = createTestUser();
-      const doc1 = createTestDocument({ createdBy: user.id, title: 'Doc 1' });
-      const doc2 = createTestDocument({ createdBy: user.id, title: 'Doc 2' });
-      const doc3 = createTestDocument({ createdBy: user.id, title: 'Doc 3' });
+      const doc1 = createTestSource({ createdBy: user.id, title: 'Doc 1' });
+      const doc2 = createTestSource({ createdBy: user.id, title: 'Doc 2' });
+      const doc3 = createTestSource({ createdBy: user.id, title: 'Doc 3' });
       const podcast = createTestPodcast({
         createdBy: user.id,
-        sourceDocumentIds: [doc1.id, doc2.id, doc3.id],
+        sourceIds: [doc1.id, doc2.id, doc3.id],
       });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [doc1, doc2, doc3],
+        sources: [doc1, doc2, doc3],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -227,19 +227,19 @@ describe('getPodcast', () => {
         ),
       );
 
-      expect(result.documents).toHaveLength(3);
+      expect(result.sources).toHaveLength(3);
     });
 
     it('returns podcast with empty documents array when no source documents', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,
-        sourceDocumentIds: [],
+        sourceIds: [],
       });
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -249,7 +249,7 @@ describe('getPodcast', () => {
         ),
       );
 
-      expect(result.documents).toHaveLength(0);
+      expect(result.sources).toHaveLength(0);
     });
   });
 
@@ -261,7 +261,7 @@ describe('getPodcast', () => {
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [podcast],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -287,7 +287,7 @@ describe('getPodcast', () => {
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
@@ -305,13 +305,13 @@ describe('getPodcast', () => {
       }
     });
 
-    it('fails with PodcastNotFound when includeDocuments is true and podcast does not exist', async () => {
+    it('fails with PodcastNotFound when includeSources is true and podcast does not exist', async () => {
       const user = createTestUser();
       const nonExistentId = 'pod_nonexistent';
 
       const mockRepo = createMockPodcastRepo({
         podcasts: [],
-        documents: [],
+        sources: [],
       });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 

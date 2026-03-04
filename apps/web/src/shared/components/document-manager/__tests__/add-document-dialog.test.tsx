@@ -12,7 +12,7 @@ const { mockUploadMutationFn, mockFromUrlMutationFn, mockUseDocuments } =
 
 vi.mock('@/clients/apiClient', () => ({
   apiClient: {
-    documents: {
+    sources: {
       upload: {
         mutationOptions: (options: Record<string, unknown> = {}) => ({
           mutationFn: mockUploadMutationFn,

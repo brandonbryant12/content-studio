@@ -12,7 +12,7 @@ const createMockActivityLog = (
   userId: 'user-1',
   userName: 'Test User',
   action: 'created',
-  entityType: 'document',
+  entityType: 'source',
   entityId: null,
   entityTitle: null,
   metadata: null,

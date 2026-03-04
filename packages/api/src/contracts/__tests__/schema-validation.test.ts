@@ -5,11 +5,11 @@
  * reject UUID-like values.
  */
 import {
-  DocumentIdSchema,
+  SourceIdSchema,
   JobIdSchema,
   PodcastIdSchema,
   VoiceoverIdSchema,
-  generateDocumentId,
+  generateSourceId,
   generateJobId,
   generatePodcastId,
   generateVoiceoverId,
@@ -37,13 +37,13 @@ type IdSchemaCase = {
 
 const idSchemaCases: IdSchemaCase[] = [
   {
-    name: 'DocumentIdSchema',
-    schema: DocumentIdSchema,
+    name: 'SourceIdSchema',
+    schema: SourceIdSchema,
     validIds: [
       'doc_0000000000000000',
       'doc_abcdefghjkmnpqrs',
-      generateDocumentId(),
-      generateDocumentId(),
+      generateSourceId(),
+      generateSourceId(),
     ],
     invalidIds: [
       UUID,
@@ -149,27 +149,27 @@ type ContractCase = {
 
 const contractCases: ContractCase[] = [
   {
-    name: 'documents.get',
-    contract: appContract.documents.get,
-    validInput: () => ({ id: generateDocumentId() }),
+    name: 'sources.get',
+    contract: appContract.sources.get,
+    validInput: () => ({ id: generateSourceId() }),
     invalidInput: () => ({ id: UUID }),
   },
   {
-    name: 'documents.getContent',
-    contract: appContract.documents.getContent,
-    validInput: () => ({ id: generateDocumentId() }),
+    name: 'sources.getContent',
+    contract: appContract.sources.getContent,
+    validInput: () => ({ id: generateSourceId() }),
     invalidInput: () => ({ id: UUID }),
   },
   {
-    name: 'documents.update',
-    contract: appContract.documents.update,
-    validInput: () => ({ id: generateDocumentId(), title: 'Updated title' }),
+    name: 'sources.update',
+    contract: appContract.sources.update,
+    validInput: () => ({ id: generateSourceId(), title: 'Updated title' }),
     invalidInput: () => ({ id: UUID, title: 'Updated title' }),
   },
   {
-    name: 'documents.delete',
-    contract: appContract.documents.delete,
-    validInput: () => ({ id: generateDocumentId() }),
+    name: 'sources.delete',
+    contract: appContract.sources.delete,
+    validInput: () => ({ id: generateSourceId() }),
     invalidInput: () => ({ id: UUID }),
   },
   {

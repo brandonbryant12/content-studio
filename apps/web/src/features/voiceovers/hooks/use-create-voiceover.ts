@@ -18,7 +18,6 @@ export function useCreateVoiceover() {
     apiClient.voiceovers.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.setQueryData(getVoiceoverQueryKey(data.id), data);
-        toast.success('Voiceover created');
         void navigate({
           to: '/voiceovers/$voiceoverId',
           params: { voiceoverId: data.id },

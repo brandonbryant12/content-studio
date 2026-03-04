@@ -119,7 +119,7 @@ const insertActivity = async (
   await ctx.db.insert(activityLogTable).values({
     userId,
     action: options.action ?? 'created',
-    entityType: options.entityType ?? 'document',
+    entityType: options.entityType ?? 'source',
     entityId: options.entityId ?? null,
     entityTitle: options.entityTitle ?? null,
     metadata: null,
@@ -173,7 +173,7 @@ describe('activity router', () => {
 
       await insertActivity(ctx, member.id, {
         action: 'created',
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc-1',
         entityTitle: 'Q1 Plan',
         createdAt: olderTime,
@@ -214,7 +214,7 @@ describe('activity router', () => {
       await insertTestUser(ctx, member);
 
       await insertActivity(ctx, member.id, {
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc-2',
         entityTitle: 'Engineering Handbook',
       });
@@ -271,7 +271,7 @@ describe('activity router', () => {
       const now = Date.now();
       await insertActivity(ctx, alice.id, {
         action: 'created',
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc-3',
         createdAt: new Date(now - 2 * 60 * 60 * 1000),
       });
@@ -289,7 +289,7 @@ describe('activity router', () => {
       });
       await insertActivity(ctx, bob.id, {
         action: 'created',
-        entityType: 'document',
+        entityType: 'source',
         entityId: 'doc-4',
         createdAt: new Date(now - 10 * 24 * 60 * 60 * 1000),
       });
@@ -309,8 +309,8 @@ describe('activity router', () => {
 
       expect(result.total - before.total).toBe(3);
       expect(
-        (byEntityTypeAfter.get('document') ?? 0) -
-          (byEntityTypeBefore.get('document') ?? 0),
+        (byEntityTypeAfter.get('source') ?? 0) -
+          (byEntityTypeBefore.get('source') ?? 0),
       ).toBe(1);
       expect(
         (byEntityTypeAfter.get('podcast') ?? 0) -

@@ -36,7 +36,7 @@ const logActivity = (
  * service requirements to the pipeline. Schedules logging as a separate
  * runtime.runPromise call so it doesn't block or affect the response.
  *
- * Usage: `effect.pipe(tapLogActivity(runtime, user, 'created', 'document'))`
+ * Usage: `effect.pipe(tapLogActivity(runtime, user, 'created', 'source'))`
  */
 export const tapLogActivity =
   (

@@ -13,7 +13,7 @@ import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { revokeApproval } from '../revoke-approval';
 
@@ -32,7 +32,7 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -49,9 +49,9 @@ const createMockPodcastRepo = (state: MockState): Layer.Layer<PodcastRepo> => {
         if (!podcast) {
           return Effect.fail(new PodcastNotFound({ id }));
         }
-        const result: PodcastWithDocuments = {
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: [],
+          sources: [],
         };
         return Effect.succeed(result);
       }),

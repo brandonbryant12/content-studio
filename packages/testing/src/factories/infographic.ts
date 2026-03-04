@@ -4,7 +4,7 @@ import {
   type Infographic,
   type InfographicVersion,
   type InfographicId,
-  type DocumentId,
+  type SourceId,
   type StyleProperty,
 } from '@repo/db/schema';
 
@@ -14,7 +14,7 @@ export interface CreateTestInfographicOptions {
   prompt?: string | null;
   styleProperties?: StyleProperty[];
   format?: Infographic['format'];
-  sourceDocumentId?: DocumentId | null;
+  sourceId?: SourceId | null;
   imageStorageKey?: string | null;
   thumbnailStorageKey?: string | null;
   status?: Infographic['status'];
@@ -44,7 +44,7 @@ export function createTestInfographic(
     prompt: options.prompt ?? `Test prompt ${infographicCounter}`,
     styleProperties: options.styleProperties ?? [],
     format: options.format ?? 'portrait',
-    sourceDocumentId: options.sourceDocumentId ?? null,
+    sourceId: options.sourceId ?? null,
     imageStorageKey: options.imageStorageKey ?? null,
     thumbnailStorageKey: options.thumbnailStorageKey ?? null,
     status: options.status ?? 'draft',

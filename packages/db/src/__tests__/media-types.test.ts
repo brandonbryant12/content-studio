@@ -18,27 +18,27 @@ describe('MEDIA_TYPE_CONFIG', () => {
 });
 
 describe('canBeSourceFor', () => {
-  it('returns true when document is a source for podcast', () => {
-    expect(canBeSourceFor('document', 'podcast')).toBe(true);
+  it('returns true when source is a source for podcast', () => {
+    expect(canBeSourceFor('source', 'podcast')).toBe(true);
   });
 
-  it('returns false when podcast is not a source for document by default config', () => {
+  it('returns false when podcast is not a source for source by default config', () => {
     // Check the actual config
-    const result = canBeSourceFor('podcast', 'document');
+    const result = canBeSourceFor('podcast', 'source');
     expect(result).toBe(
-      MEDIA_TYPE_CONFIG.document.acceptsInputFrom.includes('podcast'),
+      MEDIA_TYPE_CONFIG.source.acceptsInputFrom.includes('podcast'),
     );
   });
 
   it('returns false for invalid source-target pair', () => {
-    expect(canBeSourceFor('social', 'document')).toBe(false);
+    expect(canBeSourceFor('social', 'source')).toBe(false);
   });
 });
 
 describe('getAcceptedSourceTypes', () => {
   it('returns accepted source types for podcast', () => {
     const sources = getAcceptedSourceTypes('podcast');
-    expect(sources).toContain('document');
+    expect(sources).toContain('source');
   });
 
   it('returns empty for types with no inputs (social has max inputs)', () => {
@@ -48,8 +48,8 @@ describe('getAcceptedSourceTypes', () => {
 });
 
 describe('getTargetTypes', () => {
-  it('returns target types for document', () => {
-    const targets = getTargetTypes('document');
+  it('returns target types for source', () => {
+    const targets = getTargetTypes('source');
     expect(targets).toContain('podcast');
   });
 
@@ -67,9 +67,9 @@ describe('getAvailableMediaTypes', () => {
     }
   });
 
-  it('includes document and podcast', () => {
+  it('includes source and podcast', () => {
     const available = getAvailableMediaTypes();
-    expect(available).toContain('document');
+    expect(available).toContain('source');
     expect(available).toContain('podcast');
   });
 

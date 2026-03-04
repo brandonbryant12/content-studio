@@ -1,4 +1,4 @@
-import { DocumentStatus } from '@repo/api/contracts';
+import { SourceStatus } from '@repo/api/contracts';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
@@ -9,13 +9,13 @@ import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 export const Route = createFileRoute('/_protected/documents/$documentId')({
   loader: async ({ params }) => {
     const doc = await queryClient.ensureQueryData(
-      apiClient.documents.get.queryOptions({
+      apiClient.sources.get.queryOptions({
         input: { id: params.documentId },
       }),
     );
-    if (doc.status === DocumentStatus.READY) {
+    if (doc.status === SourceStatus.READY) {
       await queryClient.ensureQueryData(
-        apiClient.documents.getContent.queryOptions({
+        apiClient.sources.getContent.queryOptions({
           input: { id: params.documentId },
         }),
       );
@@ -28,7 +28,7 @@ function DocumentPage() {
   const { documentId } = Route.useParams();
 
   useEffect(() => {
-    document.title = 'Document - Content Studio';
+    document.title = 'Source - Content Studio';
   }, []);
 
   return (

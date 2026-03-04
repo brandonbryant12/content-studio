@@ -104,7 +104,7 @@ export function DocumentContentReader({
         )
       ) : (
         <p className="text-muted-foreground italic">
-          No content available for this document.
+          No content available for this source.
         </p>
       )}
     </article>
@@ -114,8 +114,8 @@ export function DocumentContentReader({
 export function DocumentProcessingState({ source }: { source: string }) {
   const statusText =
     source === 'research'
-      ? 'Document research is in progress and may take a few minutes'
-      : 'Document processing is in progress';
+      ? 'Source research is in progress and may take a few minutes'
+      : 'Source processing is in progress';
 
   return (
     <div
@@ -146,7 +146,7 @@ export function DocumentFailedState({
     'Processing failed. Please retry.',
   );
   const statusText = isRetrying
-    ? 'Retrying document processing'
+    ? 'Retrying source processing'
     : (failureMessage ?? 'Processing failed');
 
   return (

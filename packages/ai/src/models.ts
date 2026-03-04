@@ -6,7 +6,7 @@
  */
 
 /** Structured object generation (generateObject). Latest Gemini Flash text model. */
-export const LLM_MODEL = 'gemini-3-flash-preview';
+export const LLM_MODEL = 'gemini-3.1-flash-lite-preview';
 
 /** Text-to-speech synthesis. */
 export const TTS_MODEL = 'gemini-2.5-flash-preview-tts';

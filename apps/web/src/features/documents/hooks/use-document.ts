@@ -8,8 +8,8 @@ import {
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 
-type Document = RouterOutput['documents']['get'];
-type DocumentContent = RouterOutput['documents']['getContent'];
+type Document = RouterOutput['sources']['get'];
+type DocumentContent = RouterOutput['sources']['getContent'];
 
 /**
  * Fetch a single document by ID with Suspense.
@@ -19,7 +19,7 @@ export function useDocument(
   id: string,
 ): UseSuspenseQueryResult<Document, Error> {
   return useSuspenseQuery(
-    apiClient.documents.get.queryOptions({ input: { id } }),
+    apiClient.sources.get.queryOptions({ input: { id } }),
   );
 }
 
@@ -28,7 +28,7 @@ export function useDocument(
  * Useful for cache operations.
  */
 export function getDocumentQueryKey(documentId: string): QueryKey {
-  return apiClient.documents.get.queryOptions({ input: { id: documentId } })
+  return apiClient.sources.get.queryOptions({ input: { id: documentId } })
     .queryKey;
 }
 
@@ -41,7 +41,7 @@ export function useDocumentContentOptional(
   enabled: boolean,
 ): UseQueryResult<DocumentContent, Error> {
   return useQuery({
-    ...apiClient.documents.getContent.queryOptions({ input: { id } }),
+    ...apiClient.sources.getContent.queryOptions({ input: { id } }),
     enabled,
   });
 }

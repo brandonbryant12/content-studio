@@ -2,6 +2,7 @@ import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import {
   useCallback,
   useMemo,
@@ -10,6 +11,7 @@ import {
   type ChangeEvent,
 } from 'react';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
+import { InfographicStatus } from '../lib/status';
 import {
   CreateInfographicDialog,
   type CreateInfographicPayload,
@@ -63,11 +65,23 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
   );
 }
 
-function NoResults({ searchQuery }: { searchQuery: string }) {
+function NoResults({
+  searchQuery,
+  tabLabel,
+}: {
+  searchQuery: string;
+  tabLabel: string;
+}) {
   return (
     <div className="text-center py-16">
       <p className="text-muted-foreground">
-        No infographics found matching &ldquo;{searchQuery}&rdquo;
+        {searchQuery ? (
+          <>
+            No {tabLabel} found matching &ldquo;{searchQuery}&rdquo;
+          </>
+        ) : (
+          <>No {tabLabel} yet</>
+        )}
       </p>
     </div>
   );
@@ -98,15 +112,29 @@ export function InfographicList({
   isBulkDeleting,
   onBulkDelete,
 }: InfographicListProps) {
+  const [activeTab, setActiveTab] = useState<'infographics' | 'drafts'>(
+    'infographics',
+  );
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const drafts = useMemo(
+    () => infographics.filter((i) => i.status === InfographicStatus.DRAFT),
+    [infographics],
+  );
+  const nonDrafts = useMemo(
+    () => infographics.filter((i) => i.status !== InfographicStatus.DRAFT),
+    [infographics],
+  );
+
+  const activeList = activeTab === 'drafts' ? drafts : nonDrafts;
+
   const filteredInfographics = useMemo(
     () =>
-      infographics.filter((infographic) =>
+      activeList.filter((infographic) =>
         infographic.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [infographics, searchQuery],
+    [activeList, searchQuery],
   );
 
   const filteredIds = useMemo(
@@ -133,8 +161,9 @@ export function InfographicList({
   }, [selection, filteredIds]);
 
   const isEmpty = infographics.length === 0;
+  const tabEmpty = !isEmpty && activeList.length === 0;
   const hasNoResults =
-    filteredInfographics.length === 0 && searchQuery.length > 0;
+    filteredInfographics.length === 0 && (searchQuery.length > 0 || tabEmpty);
   const hasSelection = selection.selectedCount > 0;
 
   const openDialog = useCallback(() => {
@@ -175,10 +204,29 @@ export function InfographicList({
         <MagnifyingGlassIcon className="search-icon" />
       </div>
 
+      {/* Tabs */}
+      {!isEmpty && (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'infographics' | 'drafts')}
+          className="mb-4"
+        >
+          <TabsList>
+            <TabsTrigger value="infographics">
+              Infographics ({nonDrafts.length})
+            </TabsTrigger>
+            <TabsTrigger value="drafts">Drafts ({drafts.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
       {isEmpty ? (
         <EmptyState onCreateClick={openDialog} isCreating={isCreating} />
       ) : hasNoResults ? (
-        <NoResults searchQuery={searchQuery} />
+        <NoResults
+          searchQuery={searchQuery}
+          tabLabel={activeTab === 'drafts' ? 'drafts' : 'infographics'}
+        />
       ) : (
         <div
           role="list"

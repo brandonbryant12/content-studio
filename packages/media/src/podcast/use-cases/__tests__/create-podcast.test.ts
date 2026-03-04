@@ -2,24 +2,19 @@ import { Db } from '@repo/db/effect';
 import {
   createTestUser,
   createTestPodcast,
-  createTestDocument,
+  createTestSource,
   resetPodcastCounters,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type {
-  Podcast,
-  Document,
-  CreatePodcast,
-  DocumentId,
-} from '@repo/db/schema';
-import { DocumentNotFound } from '../../../errors';
+import type { Podcast, Source, CreatePodcast, SourceId } from '@repo/db/schema';
+import { SourceNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { createPodcast } from '../create-podcast';
 
@@ -28,7 +23,7 @@ import { createPodcast } from '../create-podcast';
 // =============================================================================
 
 interface MockRepoState {
-  documents: Document[];
+  sources: Source[];
   insertedPodcast?: Podcast;
 }
 
@@ -39,10 +34,10 @@ const createMockPodcastRepo = (
   state: MockRepoState,
   options?: {
     onInsert?: (
-      data: Omit<CreatePodcast, 'documentIds'> & { createdBy: string },
-      documentIds: readonly string[],
+      data: Omit<CreatePodcast, 'sourceIds'> & { createdBy: string },
+      sourceIds: readonly string[],
     ) => void;
-    verifyDocumentsError?: DocumentNotFound;
+    verifySourcesError?: SourceNotFound;
   },
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
@@ -62,9 +57,9 @@ const createMockPodcastRepo = (
     clearApproval: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
 
-    insert: (data, documentIds) =>
+    insert: (data, sourceIds) =>
       Effect.sync(() => {
-        options?.onInsert?.(data, documentIds);
+        options?.onInsert?.(data, sourceIds);
         const podcast =
           state.insertedPodcast ??
           createTestPodcast({
@@ -76,22 +71,22 @@ const createMockPodcastRepo = (
             promptInstructions: data.promptInstructions,
             targetDurationMinutes: data.targetDurationMinutes,
             createdBy: data.createdBy,
-            sourceDocumentIds: [...documentIds],
+            sourceIds: [...sourceIds],
           });
-        const docs = state.documents.filter((d) => documentIds.includes(d.id));
-        const result: PodcastWithDocuments = {
+        const docs = state.sources.filter((d) => sourceIds.includes(d.id));
+        const result: PodcastWithSources = {
           ...podcast,
-          documents: docs,
+          sources: docs,
         };
         return result;
       }),
 
-    verifyDocumentsExist: (documentIds, _userId) =>
+    verifySourcesExist: (sourceIds, _userId) =>
       Effect.suspend(() => {
-        if (options?.verifyDocumentsError) {
-          return Effect.fail(options.verifyDocumentsError);
+        if (options?.verifySourcesError) {
+          return Effect.fail(options.verifySourcesError);
         }
-        const docs = state.documents.filter((d) => documentIds.includes(d.id));
+        const docs = state.sources.filter((d) => sourceIds.includes(d.id));
         return Effect.succeed(docs);
       }),
   };
@@ -122,7 +117,7 @@ describe('createPodcast', () => {
       const insertSpy = vi.fn();
 
       const mockPodcastRepo = createMockPodcastRepo(
-        { documents: [] },
+        { sources: [] },
         { onInsert: insertSpy },
       );
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
@@ -151,7 +146,7 @@ describe('createPodcast', () => {
       const insertSpy = vi.fn();
 
       const mockPodcastRepo = createMockPodcastRepo(
-        { documents: [] },
+        { sources: [] },
         { onInsert: insertSpy },
       );
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
@@ -189,12 +184,12 @@ describe('createPodcast', () => {
   describe('document handling', () => {
     it('creates podcast with document IDs', async () => {
       const user = createTestUser();
-      const doc1 = createTestDocument({ createdBy: user.id });
-      const doc2 = createTestDocument({ createdBy: user.id });
+      const doc1 = createTestSource({ createdBy: user.id });
+      const doc2 = createTestSource({ createdBy: user.id });
       const insertSpy = vi.fn();
 
       const mockPodcastRepo = createMockPodcastRepo(
-        { documents: [doc1, doc2] },
+        { sources: [doc1, doc2] },
         { onInsert: insertSpy },
       );
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
@@ -203,12 +198,12 @@ describe('createPodcast', () => {
         withTestUser(user)(
           createPodcast({
             format: 'conversation',
-            documentIds: [doc1.id, doc2.id],
+            sourceIds: [doc1.id, doc2.id],
           }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result.documents).toHaveLength(2);
+      expect(result.sources).toHaveLength(2);
       expect(insertSpy).toHaveBeenCalledWith(expect.anything(), [
         doc1.id,
         doc2.id,
@@ -217,12 +212,12 @@ describe('createPodcast', () => {
 
     it('verifies documents exist before creating podcast', async () => {
       const user = createTestUser();
-      const doc = createTestDocument({ createdBy: user.id });
-      const verifyError = new DocumentNotFound({ id: 'doc_missing' });
+      const doc = createTestSource({ createdBy: user.id });
+      const verifyError = new SourceNotFound({ id: 'doc_missing' });
 
       const mockPodcastRepo = createMockPodcastRepo(
-        { documents: [doc] },
-        { verifyDocumentsError: verifyError },
+        { sources: [doc] },
+        { verifySourcesError: verifyError },
       );
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
@@ -230,7 +225,7 @@ describe('createPodcast', () => {
         withTestUser(user)(
           createPodcast({
             format: 'conversation',
-            documentIds: ['doc_missing' as DocumentId],
+            sourceIds: ['doc_missing' as SourceId],
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -238,15 +233,15 @@ describe('createPodcast', () => {
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error?._tag).toBe('DocumentNotFound');
-        expect((error as DocumentNotFound).id).toBe('doc_missing');
+        expect(error?._tag).toBe('SourceNotFound');
+        expect((error as SourceNotFound).id).toBe('doc_missing');
       }
     });
 
-    it('skips document verification when no documentIds provided', async () => {
+    it('skips document verification when no sourceIds provided', async () => {
       const user = createTestUser();
 
-      const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
+      const mockPodcastRepo = createMockPodcastRepo({ sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(
@@ -258,7 +253,7 @@ describe('createPodcast', () => {
       );
 
       // Should succeed without document verification
-      expect(result.documents).toHaveLength(0);
+      expect(result.sources).toHaveLength(0);
     });
   });
 
@@ -266,7 +261,7 @@ describe('createPodcast', () => {
     it('creates podcast with drafting status', async () => {
       const user = createTestUser();
 
-      const mockPodcastRepo = createMockPodcastRepo({ documents: [] });
+      const mockPodcastRepo = createMockPodcastRepo({ sources: [] });
       const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
 
       const result = await Effect.runPromise(

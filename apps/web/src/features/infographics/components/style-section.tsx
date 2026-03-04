@@ -24,7 +24,7 @@ export function StyleSection({
       />
 
       <div>
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+        <p className="text-xs font-medium text-muted-foreground mb-2">
           Properties
         </p>
         <StylePropertyEditor

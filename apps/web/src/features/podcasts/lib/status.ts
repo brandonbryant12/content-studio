@@ -78,7 +78,7 @@ export function getStatusConfig(
  */
 export function isSetupMode(podcast: PodcastFull): boolean {
   // Has documents been configured?
-  const hasDocuments = podcast.documents.length > 0;
+  const hasDocuments = podcast.sources.length > 0;
   // Has generation ever been started?
   const hasGenerationContext = podcast.generationContext !== null;
   // Has script content?

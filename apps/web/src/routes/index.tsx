@@ -1,7 +1,9 @@
 import {
   ArrowRightIcon,
+  CheckCircledIcon,
   FileTextIcon,
   ImageIcon,
+  LightningBoltIcon,
   MixerHorizontalIcon,
   SpeakerLoudIcon,
 } from '@radix-ui/react-icons';
@@ -79,19 +81,19 @@ function RouteComponent() {
           </div>
 
           {/* Eyebrow */}
-          <p className="page-eyebrow animate-fade-in-up">
-            Ideate. Generate. Publish.
-          </p>
+          <p className="page-eyebrow animate-fade-in-up">AI Content Studio</p>
 
           {/* Headline */}
           <h1 className="hero-title font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1">
-            Where ideas become <span className="text-primary">content</span>
+            Create compliant, high-quality content —{' '}
+            <span className="text-primary">powered by AI</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-body-lg mt-6 max-w-xl mx-auto animate-fade-in-up stagger-2">
-            Generate podcasts, voiceovers, infographics, and more — AI-powered
-            content creation across every modality.
+            Upload your sources, paste a URL, or let AI research a topic.
+            Content Studio generates polished podcasts, voiceovers, and visuals
+            you can trust — grounded in your sources.
           </p>
 
           {/* CTAs */}
@@ -113,15 +115,77 @@ function RouteComponent() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="px-6 pb-20 md:pb-28">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-serif font-bold text-2xl md:text-3xl text-foreground text-center mb-12">
+            How it works
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0">
+            {[
+              {
+                step: 1,
+                icon: FileTextIcon,
+                title: 'Add your sources',
+                desc: 'Upload PDFs, paste URLs, or let AI deep-research a topic for you.',
+                color: 'text-sky-500',
+                bg: 'bg-sky-500',
+              },
+              {
+                step: 2,
+                icon: LightningBoltIcon,
+                title: 'AI creates your content',
+                desc: 'Choose your format — podcast, voiceover, or infographic — and Content Studio generates it from your approved sources.',
+                color: 'text-primary',
+                bg: 'bg-primary',
+              },
+              {
+                step: 3,
+                icon: CheckCircledIcon,
+                title: 'Review, refine, approve',
+                desc: 'Fine-tune scripts, swap voices, adjust styles — review every detail before finalizing.',
+                color: 'text-emerald-500',
+                bg: 'bg-emerald-500',
+              },
+            ].map(({ step, icon: Icon, title, desc, color, bg }, i) => (
+              <div
+                key={step}
+                className="relative flex flex-col items-center text-center px-6"
+              >
+                {/* Connector line between steps (desktop only) */}
+                {i < 2 && (
+                  <div
+                    className="hidden sm:block absolute top-5 left-[calc(50%+24px)] w-[calc(100%-48px)] border-t-2 border-dashed border-border"
+                    aria-hidden="true"
+                  />
+                )}
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${bg} text-sm font-semibold text-white mb-4`}
+                >
+                  {step}
+                </span>
+                <Icon className={`w-5 h-5 ${color} mb-3`} aria-hidden="true" />
+                <h3 className="font-serif font-semibold text-base text-foreground mb-1.5">
+                  {title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="px-6 pb-20 md:pb-28">
         <div className="max-w-5xl mx-auto space-y-24">
           {[
             {
               icon: FileTextIcon,
-              label: 'Knowledge Base',
-              headline: 'Your content starts here',
-              desc: 'Upload documents, import from URLs, or use AI-powered deep research to build your knowledge base. Every piece of content you create draws from this foundation.',
+              label: 'Sources',
+              headline: 'Ground every asset in verified source material',
+              desc: 'Upload approved files, import web pages, or let AI deep-research a topic. Your source library becomes the single source of truth behind every piece of content.',
               image: '/screenshots/documents.png',
               color: 'text-sky-400',
               iconBg: 'bg-sky-500/10',
@@ -129,8 +193,8 @@ function RouteComponent() {
             {
               icon: MixerHorizontalIcon,
               label: 'Podcasts',
-              headline: 'Conversations, crafted by AI',
-              desc: 'Generate multi-voice podcast episodes with custom personas drawn from your knowledge base. Interactively edit every line of the script, then export broadcast-ready audio.',
+              headline: 'Generate a podcast episode from a single source',
+              desc: 'Select your sources, choose conversation or monologue format, assign personas with distinct voices, then review and edit every line of the script before generating audio.',
               image: '/screenshots/podcasts.png',
               color: 'text-violet-400',
               iconBg: 'bg-violet-500/10',
@@ -139,8 +203,9 @@ function RouteComponent() {
             {
               icon: SpeakerLoudIcon,
               label: 'Voiceovers',
-              headline: 'Crisp narration, built-in writing assistant',
-              desc: 'Create polished voiceovers with natural-sounding voices. A built-in writing assistant helps you refine your script before generating audio — perfect for explainers, intros, and more.',
+              headline:
+                'From script to professional narration — fully reviewable',
+              desc: 'Write or paste your script, let the built-in AI assistant refine it, pick from 30+ natural voices, and generate polished audio — perfect for compliant training, explainers, and presentations.',
               image: '/screenshots/voiceovers.png',
               color: 'text-emerald-400',
               iconBg: 'bg-emerald-500/10',
@@ -148,8 +213,8 @@ function RouteComponent() {
             {
               icon: ImageIcon,
               label: 'Infographics',
-              headline: 'Custom visuals, your style',
-              desc: 'Generate eye-catching images and infographics from prompts. Save custom styles to keep your brand consistent across every visual you create.',
+              headline: 'Create on-brand visuals without a designer',
+              desc: 'Describe what you need, choose a format and style preset, and get review-ready images. Save your brand styles so every visual stays consistent and on-message.',
               image: '/screenshots/infographics.png',
               color: 'text-amber-400',
               iconBg: 'bg-amber-500/10',
@@ -196,6 +261,29 @@ function RouteComponent() {
               </div>
             ),
           )}
+        </div>
+      </section>
+
+      {/* Capabilities */}
+      <section className="px-6 pb-16 md:pb-20">
+        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          {[
+            '30+ natural voices',
+            'PDF, DOCX, URL import',
+            '4 infographic formats',
+            'AI deep research',
+            'Full script review',
+            'Source-grounded output',
+          ].map((item, i, arr) => (
+            <span key={item} className="flex items-center gap-4">
+              {item}
+              {i < arr.length - 1 && (
+                <span aria-hidden="true" className="text-border">
+                  ·
+                </span>
+              )}
+            </span>
+          ))}
         </div>
       </section>
 

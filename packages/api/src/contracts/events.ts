@@ -6,7 +6,7 @@ import { oc, eventIterator } from '@orpc/contract';
 import { Schema } from 'effect';
 import { std } from './shared';
 
-export type EntityType = 'podcast' | 'document' | 'voiceover' | 'infographic';
+export type EntityType = 'podcast' | 'source' | 'voiceover' | 'infographic';
 export type ChangeType = 'insert' | 'update' | 'delete';
 
 export interface EntityChangeEvent {
@@ -56,12 +56,12 @@ export interface ActivityLoggedEvent {
   timestamp: string;
 }
 
-export interface DocumentJobCompletionEvent {
-  type: 'document_job_completion';
+export interface SourceJobCompletionEvent {
+  type: 'source_job_completion';
   jobId: string;
   jobType: 'process-url' | 'process-research';
   status: 'completed' | 'failed';
-  documentId: string;
+  sourceId: string;
   error?: string;
 }
 
@@ -75,13 +75,13 @@ export type SSEEvent =
   | JobCompletionEvent
   | VoiceoverJobCompletionEvent
   | InfographicJobCompletionEvent
-  | DocumentJobCompletionEvent
+  | SourceJobCompletionEvent
   | ActivityLoggedEvent
   | ConnectionEvent;
 
 const EntityChangeEventSchema = Schema.Struct({
   type: Schema.Literal('entity_change'),
-  entityType: Schema.Literal('podcast', 'document', 'voiceover', 'infographic'),
+  entityType: Schema.Literal('podcast', 'source', 'voiceover', 'infographic'),
   changeType: Schema.Literal('insert', 'update', 'delete'),
   entityId: Schema.String,
   userId: Schema.String,
@@ -130,12 +130,12 @@ const ActivityLoggedEventSchema = Schema.Struct({
   timestamp: Schema.String,
 });
 
-const DocumentJobCompletionEventSchema = Schema.Struct({
-  type: Schema.Literal('document_job_completion'),
+const SourceJobCompletionEventSchema = Schema.Struct({
+  type: Schema.Literal('source_job_completion'),
   jobId: Schema.String,
   jobType: Schema.Literal('process-url', 'process-research'),
   status: Schema.Literal('completed', 'failed'),
-  documentId: Schema.String,
+  sourceId: Schema.String,
   error: Schema.optional(Schema.String),
 });
 
@@ -149,7 +149,7 @@ const SSEEventSchema = Schema.Union(
   JobCompletionEventSchema,
   VoiceoverJobCompletionEventSchema,
   InfographicJobCompletionEventSchema,
-  DocumentJobCompletionEventSchema,
+  SourceJobCompletionEventSchema,
   ActivityLoggedEventSchema,
   ConnectionEventSchema,
 );

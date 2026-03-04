@@ -14,7 +14,7 @@ import {
 } from '@repo/queue';
 import { Effect } from 'effect';
 import type {
-  DocumentJobCompletionEvent,
+  SourceJobCompletionEvent,
   InfographicJobCompletionEvent,
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
@@ -31,7 +31,6 @@ import {
   STALE_CHECK_INTERVAL_MS,
 } from './constants';
 import { emitEntityChange, type PublishEvent } from './events';
-import { handleProcessUrl } from './handlers/document-handlers';
 import {
   handleGenerateAudio,
   handleGeneratePodcast,
@@ -39,6 +38,7 @@ import {
 } from './handlers/handlers';
 import { handleGenerateInfographic } from './handlers/infographic-handlers';
 import { handleProcessResearch } from './handlers/research-handlers';
+import { handleProcessUrl } from './handlers/source-handlers';
 import { handleGenerateVoiceover } from './handlers/voiceover-handlers';
 import { recoverOrphanedResearch } from './research-recovery';
 import { reapStaleJobs } from './stale-job-reaper';
@@ -133,20 +133,20 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
     const status = job.status === JobStatus.COMPLETED ? 'completed' : 'failed';
     const error = job.error ?? undefined;
 
-    if ('documentId' in job.payload) {
-      const { documentId } = job.payload as
+    if ('sourceId' in job.payload) {
+      const { sourceId } = job.payload as
         | ProcessUrlPayload
         | ProcessResearchPayload;
-      const event: DocumentJobCompletionEvent = {
-        type: 'document_job_completion',
+      const event: SourceJobCompletionEvent = {
+        type: 'source_job_completion',
         jobId: job.id,
         jobType: job.type as 'process-url' | 'process-research',
         status,
-        documentId,
+        sourceId,
         error,
       };
       publishEvent(userId, event);
-      emitEntityChange(publishEvent, userId, 'document', documentId);
+      emitEntityChange(publishEvent, userId, 'source', sourceId);
     } else if ('infographicId' in job.payload) {
       const { infographicId } = job.payload as GenerateInfographicPayload;
       const event: InfographicJobCompletionEvent = {

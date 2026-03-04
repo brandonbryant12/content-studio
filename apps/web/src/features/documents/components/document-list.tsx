@@ -11,7 +11,7 @@ import { memo, useCallback, useMemo, useTransition } from 'react';
 import type { DocumentListItem } from './document-item';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { getFileBadgeClass, getFileLabel } from '../lib/format';
-import { DocumentStatus, getStatusConfig } from '../lib/status';
+import { SourceStatus, getStatusConfig } from '../lib/status';
 import { DocumentEntryMenu } from './document-entry-menu';
 import { DocumentIcon } from './document-icon';
 import { UploadDocumentDialog } from './upload-document-dialog';
@@ -19,14 +19,14 @@ import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === DocumentStatus.READY) return null;
+  if (status === SourceStatus.READY) return null;
   const config = getStatusConfig(
-    status as (typeof DocumentStatus)[keyof typeof DocumentStatus],
+    status as (typeof SourceStatus)[keyof typeof SourceStatus],
   );
   if (!config) return null;
   return (
     <Badge variant={config.badgeVariant} className="gap-1.5">
-      {status === DocumentStatus.PROCESSING && <Spinner className="w-3 h-3" />}
+      {status === SourceStatus.PROCESSING && <Spinner className="w-3 h-3" />}
       {config.label}
     </Badge>
   );
@@ -58,12 +58,12 @@ function EmptyState({
         </svg>
       </div>
       <h2 className="empty-state-title">
-        {hasSearch ? 'No documents found' : 'No documents yet'}
+        {hasSearch ? 'No sources found' : 'No sources yet'}
       </h2>
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Upload your first document to start creating podcasts, voiceovers, and infographics.'}
+          : 'Upload your first source to start creating podcasts, voiceovers, and infographics.'}
       </p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -97,62 +97,50 @@ const DocumentRow = memo(function DocumentRow({
   }, [onToggleSelect, document.id]);
 
   return (
-    <tr
-      className={`group border-b border-border last:border-b-0 transition-colors ${
-        isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'
-      }`}
-    >
-      <td className="py-3 pl-4 pr-1 w-10">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={handleToggle}
-          aria-label={`Select ${document.title}`}
-        />
-      </td>
-      <td className="py-3 px-4">
-        <Link
-          to="/documents/$documentId"
-          params={{ documentId: document.id }}
-          className="flex items-center gap-3 min-w-0"
-        >
-          <DocumentIcon source={document.source} />
-          <span className="font-medium text-sm truncate">{document.title}</span>
-        </Link>
-      </td>
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-2">
-          <span className={`${getFileBadgeClass(document.source)} text-xs`}>
-            {getFileLabel(document.source)}
-          </span>
-          <StatusBadge status={document.status} />
-        </div>
-      </td>
-      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right">
+    <div className={`list-row group ${isSelected ? 'list-row-selected' : ''}`}>
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={handleToggle}
+        aria-label={`Select ${document.title}`}
+      />
+      <Link
+        to="/documents/$documentId"
+        params={{ documentId: document.id }}
+        className="flex items-center gap-3 flex-1 min-w-0"
+      >
+        <DocumentIcon source={document.source} />
+        <span className="list-row-title truncate">{document.title}</span>
+      </Link>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className={`${getFileBadgeClass(document.source)} text-xs`}>
+          {getFileLabel(document.source)}
+        </span>
+        <StatusBadge status={document.status} />
+      </div>
+      <span className="list-row-meta tabular-nums w-16 text-right hidden sm:block">
         {document.wordCount.toLocaleString()}
-      </td>
-      <td className="py-3 px-4 text-sm text-muted-foreground tabular-nums text-right hidden sm:table-cell">
+      </span>
+      <span className="list-row-meta tabular-nums hidden md:block w-16 text-right">
         {formatFileSize(document.originalFileSize)}
-      </td>
-      <td className="py-3 px-4 text-sm text-muted-foreground text-right hidden md:table-cell">
+      </span>
+      <span className="list-row-meta hidden lg:block w-24 text-right">
         {formatDate(document.createdAt)}
-      </td>
-      <td className="py-3 px-2 w-10">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
-          aria-label={`Delete ${document.title}`}
-        >
-          {isDeleting ? (
-            <Spinner className="w-3.5 h-3.5" />
-          ) : (
-            <TrashIcon className="w-3.5 h-3.5" />
-          )}
-        </Button>
-      </td>
-    </tr>
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+        aria-label={`Delete ${document.title}`}
+      >
+        {isDeleting ? (
+          <Spinner className="w-3.5 h-3.5" />
+        ) : (
+          <TrashIcon className="w-3.5 h-3.5" />
+        )}
+      </Button>
+    </div>
   );
 });
 
@@ -226,8 +214,8 @@ export function DocumentList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Documents</p>
-          <h1 className="page-title">Documents</h1>
+          <p className="page-eyebrow">Sources</p>
+          <h1 className="page-title">Sources</h1>
         </div>
         <div className="flex items-center gap-2">
           <DocumentEntryMenu
@@ -243,10 +231,10 @@ export function DocumentList({
         <Input
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="Search documents…"
+          placeholder="Search sources…"
           className="search-input pl-10"
           autoComplete="off"
-          aria-label="Search documents"
+          aria-label="Search sources"
         />
         <MagnifyingGlassIcon className="search-icon" />
       </div>
@@ -267,60 +255,40 @@ export function DocumentList({
         <EmptyState hasSearch={true} />
       ) : (
         <div
-          className={`rounded-lg border border-border overflow-hidden transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          className={`transition-opacity ${isPending ? 'opacity-70' : ''}`}
           aria-busy={isPending}
         >
           <div role="status" aria-live="polite" className="sr-only">
             {filteredDocuments.length}{' '}
-            {filteredDocuments.length === 1 ? 'document' : 'documents'} found
+            {filteredDocuments.length === 1 ? 'source' : 'sources'} found
           </div>
-          <table className="w-full" aria-label="Documents">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="py-2.5 pl-4 pr-1 w-10">
-                  <Checkbox
-                    checked={
-                      selection.isIndeterminate(filteredIds)
-                        ? 'indeterminate'
-                        : selection.isAllSelected(filteredIds)
-                    }
-                    onCheckedChange={handleToggleAll}
-                    aria-label="Select all documents"
-                  />
-                </th>
-                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="py-2.5 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Words
-                </th>
-                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
-                  Size
-                </th>
-                <th className="py-2.5 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                  Created
-                </th>
-                <th className="w-10">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocuments.map((doc) => (
-                <DocumentRow
-                  key={doc.id}
-                  document={doc}
-                  onDelete={onDelete}
-                  isDeleting={deletingId === doc.id}
-                  isSelected={selection.isSelected(doc.id)}
-                  onToggleSelect={selection.toggle}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="list-toolbar">
+            <Checkbox
+              checked={
+                selection.isIndeterminate(filteredIds)
+                  ? 'indeterminate'
+                  : selection.isAllSelected(filteredIds)
+              }
+              onCheckedChange={handleToggleAll}
+              aria-label="Select all sources"
+            />
+            <span className="list-toolbar-count">
+              {filteredDocuments.length}{' '}
+              {filteredDocuments.length === 1 ? 'source' : 'sources'}
+            </span>
+          </div>
+          <div className="space-y-1.5" role="list" aria-label="Sources">
+            {filteredDocuments.map((doc) => (
+              <DocumentRow
+                key={doc.id}
+                document={doc}
+                onDelete={onDelete}
+                isDeleting={deletingId === doc.id}
+                isSelected={selection.isSelected(doc.id)}
+                onToggleSelect={selection.toggle}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -333,7 +301,7 @@ export function DocumentList({
         isAllSelected={selection.isAllSelected(filteredIds)}
         isIndeterminate={selection.isIndeterminate(filteredIds)}
         isDeleting={isBulkDeleting}
-        entityName="document"
+        entityName="source"
         onToggleAll={handleToggleAll}
         onDeselectAll={selection.deselectAll}
         onDeleteSelected={onBulkDelete}

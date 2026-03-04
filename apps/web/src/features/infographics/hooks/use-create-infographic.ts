@@ -15,7 +15,7 @@ type CreateInfographicInput = {
   format: InfographicFormat;
   prompt?: string;
   styleProperties?: StyleProperty[];
-  documentId?: string;
+  sourceId?: string;
   autoGenerate?: boolean;
 };
 
@@ -36,7 +36,7 @@ export function useCreateInfographic() {
           format: variables.format,
           prompt: variables.prompt,
           styleProperties: variables.styleProperties,
-          documentId: variables.documentId,
+          sourceId: variables.sourceId,
         },
         context,
       ),
@@ -53,7 +53,6 @@ export function useCreateInfographic() {
       if (shouldAutoGenerate) {
         try {
           await generateMutation.mutateAsync({ id: data.id });
-          toast.success('Infographic created and generation started');
         } catch (error) {
           toast.error(
             getErrorMessage(
@@ -62,8 +61,6 @@ export function useCreateInfographic() {
             ),
           );
         }
-      } else {
-        toast.success('Infographic created');
       }
 
       navigate({

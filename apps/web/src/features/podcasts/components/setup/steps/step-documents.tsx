@@ -7,7 +7,7 @@ import {
   CheckCircledIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
-import { DocumentStatus } from '@repo/api/contracts';
+import { SourceStatus } from '@repo/api/contracts';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import {
@@ -419,16 +419,14 @@ export function StepDocuments({
   // Filter documents: only show ready ones, then apply search
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
-    const ready = documents.filter(
-      (doc) => doc.status === DocumentStatus.READY,
-    );
+    const ready = documents.filter((doc) => doc.status === SourceStatus.READY);
     if (!searchQuery.trim()) return ready;
     const query = searchQuery.toLowerCase();
     return ready.filter((doc) => doc.title.toLowerCase().includes(query));
   }, [documents, searchQuery]);
 
   const uploadMutation = useMutation(
-    apiClient.documents.upload.mutationOptions({
+    apiClient.sources.upload.mutationOptions({
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to upload document'));
       },
@@ -436,7 +434,7 @@ export function StepDocuments({
   );
 
   const fromUrlMutation = useMutation(
-    apiClient.documents.fromUrl.mutationOptions({
+    apiClient.sources.fromUrl.mutationOptions({
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to add URL'));
       },
@@ -583,12 +581,12 @@ export function StepDocuments({
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as StepDocumentsTab)}
       >
-        <TabsList className="setup-tabs" aria-label="Document source">
+        <TabsList className="setup-source-tabs" aria-label="Document source">
           {STEP_DOCUMENT_TABS.map((tab) => (
             <TabsTrigger
               key={tab.key}
               value={tab.key}
-              className={`setup-tab ${activeTab === tab.key ? 'active' : ''}`}
+              className="setup-source-tab"
             >
               {tab.label}
               {tab.key === 'research' && researchDocId && (

@@ -6,7 +6,7 @@ import {
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient } from '@/clients/apiClient';
 
-type DocumentList = RouterOutput['documents']['list'];
+type DocumentList = RouterOutput['sources']['list'];
 
 interface UseDocumentListOptions {
   limit?: number;
@@ -23,7 +23,7 @@ export function useDocumentList(
   const { limit, enabled = true } = options;
 
   return useQuery({
-    ...apiClient.documents.list.queryOptions({ input: { limit } }),
+    ...apiClient.sources.list.queryOptions({ input: { limit } }),
     enabled,
   });
 }
@@ -37,7 +37,7 @@ export const useDocuments = useDocumentList;
 export function getDocumentListQueryKey(
   options: { limit?: number } = {},
 ): QueryKey {
-  return apiClient.documents.list.queryOptions({
+  return apiClient.sources.list.queryOptions({
     input: { limit: options.limit },
   }).queryKey;
 }
@@ -52,7 +52,7 @@ export function useDocumentsOrdered(
   const { limit, orderBy = 'desc', enabled = true } = options;
 
   return useQuery({
-    ...apiClient.documents.list.queryOptions({ input: { limit } }),
+    ...apiClient.sources.list.queryOptions({ input: { limit } }),
     enabled,
     select: (data) => {
       // ISO 8601 dates are lexicographically sortable - no Date objects needed

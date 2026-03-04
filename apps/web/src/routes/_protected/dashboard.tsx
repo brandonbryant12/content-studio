@@ -9,7 +9,7 @@ export const Route = createFileRoute('/_protected/dashboard')({
   loader: () =>
     Promise.all([
       queryClient.ensureQueryData(
-        apiClient.documents.list.queryOptions({ input: {} }),
+        apiClient.sources.list.queryOptions({ input: {} }),
       ),
       queryClient.ensureQueryData(
         apiClient.podcasts.list.queryOptions({ input: {} }),

@@ -104,7 +104,7 @@ function createMockPodcast(overrides: Partial<Record<string, unknown>> = {}) {
     title: 'Test Podcast',
     status: 'ready',
     segments: [],
-    documents: [],
+    sources: [],
     approvedBy: null,
     audioUrl: null,
     duration: null,
@@ -205,7 +205,7 @@ describe('PodcastDetailContainer', () => {
       discardChanges: vi.fn(),
     } as never);
     vi.mocked(useDocumentSelection).mockReturnValue({
-      documents: [],
+      sources: [],
       documentIds: [],
       addDocuments: vi.fn(),
       removeDocument: vi.fn(),

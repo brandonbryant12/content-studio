@@ -3,7 +3,7 @@ import type {
   JobCompletionEvent,
   VoiceoverJobCompletionEvent,
   InfographicJobCompletionEvent,
-  DocumentJobCompletionEvent,
+  SourceJobCompletionEvent,
   EntityChangeEvent,
   ActivityLoggedEvent,
 } from '@repo/api/contracts';
@@ -31,7 +31,7 @@ export function setNavigateFn(fn: (path: string) => void): void {
 
 const entityQueryKeys = {
   podcast: { get: getPodcastQueryKey, list: getPodcastListQueryKey },
-  document: { get: getDocumentQueryKey, list: getDocumentListQueryKey },
+  source: { get: getDocumentQueryKey, list: getDocumentListQueryKey },
   voiceover: { get: getVoiceoverQueryKey, list: getVoiceoverListQueryKey },
   infographic: {
     get: getInfographicQueryKey,
@@ -250,14 +250,14 @@ export function handleInfographicJobCompletion(
 }
 
 export function handleDocumentJobCompletion(
-  event: DocumentJobCompletionEvent,
+  event: SourceJobCompletionEvent,
   queryClient: QueryClient,
 ): void {
-  const { documentId } = event;
+  const { sourceId } = event;
 
   // Invalidate specific document
   queryClient.invalidateQueries({
-    queryKey: getDocumentQueryKey(documentId),
+    queryKey: getDocumentQueryKey(sourceId),
   });
 
   // Also invalidate the list (status changed)
@@ -266,15 +266,15 @@ export function handleDocumentJobCompletion(
   });
 
   notifyCompletionWithFetchedTitle({
-    entityType: 'document',
-    entityId: documentId,
+    entityType: 'source',
+    entityId: sourceId,
     entityPath: 'documents',
     status: event.status,
     error: event.error,
     queryClient,
     fetchTitle: () =>
       queryClient.fetchQuery(
-        apiClient.documents.get.queryOptions({ input: { id: documentId } }),
+        apiClient.sources.get.queryOptions({ input: { id: sourceId } }),
       ),
   });
 }

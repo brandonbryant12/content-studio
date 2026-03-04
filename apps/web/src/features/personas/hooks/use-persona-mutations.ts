@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { getPersonaQueryKey } from './use-persona';
 import { getPersonaListQueryKey } from './use-persona-list';
-import { apiClient } from '@/clients/apiClient';
+import { apiClient, rawApiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 /**
@@ -18,11 +18,23 @@ export function useCreatePersona() {
     apiClient.personas.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getPersonaListQueryKey() });
-        toast.success('Persona created');
         navigate({
           to: '/personas/$personaId',
           params: { personaId: data.id },
         });
+
+        // Fire-and-forget avatar generation
+        rawApiClient.personas
+          .generateAvatar({ id: data.id })
+          .then(() => {
+            queryClient.invalidateQueries({
+              queryKey: getPersonaQueryKey(data.id),
+            });
+            toast.success('Avatar generated');
+          })
+          .catch(() => {
+            // Silent fail — user can retry from detail page
+          });
       },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to create persona'));

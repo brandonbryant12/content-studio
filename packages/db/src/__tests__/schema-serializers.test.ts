@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
-import type { DocumentId } from '../schemas/brands';
+import type { SourceId } from '../schemas/brands';
 import type { PodcastId } from '../schemas/brands';
 import type { VoiceoverId } from '../schemas/brands';
 import type { InfographicId, InfographicVersionId } from '../schemas/brands';
@@ -11,12 +11,6 @@ import {
   serializeActivityLogEffect,
   type ActivityLogWithUser,
 } from '../schemas/activity-log';
-import {
-  serializeDocument,
-  serializeDocumentEffect,
-  serializeDocumentsEffect,
-  type Document,
-} from '../schemas/documents';
 import {
   serializeInfographic,
   serializeInfographicEffect,
@@ -33,6 +27,12 @@ import {
   type Podcast,
 } from '../schemas/podcasts';
 import {
+  serializeSource,
+  serializeSourceEffect,
+  serializeSourcesEffect,
+  type Source,
+} from '../schemas/sources';
+import {
   serializeVoiceover,
   serializeVoiceoverEffect,
   serializeVoiceoverListItem,
@@ -46,10 +46,10 @@ import {
 const now = new Date('2024-06-15T12:00:00Z');
 const later = new Date('2024-06-15T13:00:00Z');
 
-const makeDocument = (overrides?: Partial<Document>): Document => ({
-  id: 'doc_0123456789abcdef' as DocumentId,
-  title: 'Test Document',
-  contentKey: 'documents/test.txt',
+const makeSource = (overrides?: Partial<Source>): Source => ({
+  id: 'doc_0123456789abcdef' as SourceId,
+  title: 'Test Source',
+  contentKey: 'sources/test.txt',
   mimeType: 'text/plain',
   wordCount: 100,
   source: 'manual',
@@ -81,7 +81,7 @@ const makePodcast = (overrides?: Partial<Podcast>): Podcast => ({
   promptInstructions: null,
   targetDurationMinutes: 5,
   tags: ['tech'],
-  sourceDocumentIds: ['doc_0123456789abcdef' as DocumentId],
+  sourceIds: ['doc_0123456789abcdef' as SourceId],
   generationContext: null,
   status: 'drafting',
   segments: null,
@@ -109,7 +109,7 @@ const makeVoiceover = (overrides?: Partial<Voiceover>): Voiceover => ({
   voiceName: null,
   audioUrl: null,
   duration: null,
-  sourceDocumentId: null,
+  sourceId: null,
   status: 'drafting',
   errorMessage: null,
   approvedBy: null,
@@ -126,7 +126,7 @@ const makeInfographic = (overrides?: Partial<Infographic>): Infographic => ({
   prompt: null,
   styleProperties: [],
   format: 'portrait',
-  sourceDocumentId: null,
+  sourceId: null,
   imageStorageKey: null,
   thumbnailStorageKey: null,
   status: 'draft',
@@ -176,7 +176,7 @@ const makeActivityLog = (
   userId: 'user-1',
   userName: 'Test User',
   action: 'created',
-  entityType: 'document',
+  entityType: 'source',
   entityId: 'doc_123',
   entityTitle: 'My Doc',
   metadata: null,
@@ -185,27 +185,27 @@ const makeActivityLog = (
 });
 
 // =============================================================================
-// Document Serializers
+// Source Serializers
 // =============================================================================
 
-describe('document serializers', () => {
-  describe('serializeDocument (sync)', () => {
+describe('source serializers', () => {
+  describe('serializeSource (sync)', () => {
     it('converts dates to ISO strings', () => {
-      const result = serializeDocument(makeDocument());
+      const result = serializeSource(makeSource());
       expect(result.createdAt).toBe('2024-06-15T12:00:00.000Z');
       expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
     });
 
     it('preserves all fields', () => {
-      const doc = makeDocument({
+      const doc = makeSource({
         originalFileName: 'test.txt',
         originalFileSize: 1024,
         metadata: { key: 'value' },
       });
-      const result = serializeDocument(doc);
+      const result = serializeSource(doc);
       expect(result.id).toBe(doc.id);
-      expect(result.title).toBe('Test Document');
-      expect(result.contentKey).toBe('documents/test.txt');
+      expect(result.title).toBe('Test Source');
+      expect(result.contentKey).toBe('sources/test.txt');
       expect(result.mimeType).toBe('text/plain');
       expect(result.wordCount).toBe(100);
       expect(result.source).toBe('manual');
@@ -216,20 +216,20 @@ describe('document serializers', () => {
     });
   });
 
-  describe('serializeDocumentEffect', () => {
-    it('serializes document via Effect', async () => {
+  describe('serializeSourceEffect', () => {
+    it('serializes source via Effect', async () => {
       const result = await Effect.runPromise(
-        serializeDocumentEffect(makeDocument()),
+        serializeSourceEffect(makeSource()),
       );
       expect(result.id).toBe('doc_0123456789abcdef');
       expect(result.createdAt).toBe(now.toISOString());
     });
   });
 
-  describe('serializeDocumentsEffect (batch)', () => {
-    it('serializes multiple documents', async () => {
-      const docs = [makeDocument(), makeDocument({ title: 'Second' })];
-      const results = await Effect.runPromise(serializeDocumentsEffect(docs));
+  describe('serializeSourcesEffect (batch)', () => {
+    it('serializes multiple sources', async () => {
+      const docs = [makeSource(), makeSource({ title: 'Second' })];
+      const results = await Effect.runPromise(serializeSourcesEffect(docs));
       expect(results).toHaveLength(2);
     });
   });
@@ -247,10 +247,10 @@ describe('podcast serializers', () => {
       expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
     });
 
-    it('preserves tags and sourceDocumentIds arrays', () => {
+    it('preserves tags and sourceIds arrays', () => {
       const result = serializePodcast(makePodcast());
       expect(result.tags).toEqual(['tech']);
-      expect(result.sourceDocumentIds).toEqual(['doc_0123456789abcdef']);
+      expect(result.sourceIds).toEqual(['doc_0123456789abcdef']);
     });
 
     it('handles null optional fields', () => {
@@ -267,14 +267,14 @@ describe('podcast serializers', () => {
       expect(result.approvedAt).toBe('2024-06-15T12:00:00.000Z');
     });
 
-    it('defaults undefined tags/sourceDocumentIds to empty arrays', () => {
+    it('defaults undefined tags/sourceIds to empty arrays', () => {
       const podcast = makePodcast();
       // Simulate DB returning undefined for nullable jsonb
       (podcast as Record<string, unknown>).tags = undefined;
-      (podcast as Record<string, unknown>).sourceDocumentIds = undefined;
+      (podcast as Record<string, unknown>).sourceIds = undefined;
       const result = serializePodcast(podcast);
       expect(result.tags).toEqual([]);
-      expect(result.sourceDocumentIds).toEqual([]);
+      expect(result.sourceIds).toEqual([]);
     });
   });
 
@@ -289,13 +289,13 @@ describe('podcast serializers', () => {
   });
 
   describe('serializePodcastFull (sync)', () => {
-    it('includes serialized documents', () => {
+    it('includes serialized sources', () => {
       const podcast = makePodcast();
-      const docs = [makeDocument()];
-      const result = serializePodcastFull({ ...podcast, documents: docs });
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]!.id).toBe('doc_0123456789abcdef');
-      expect(result.documents[0]!.createdAt).toBe(now.toISOString());
+      const docs = [makeSource()];
+      const result = serializePodcastFull({ ...podcast, sources: docs });
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]!.id).toBe('doc_0123456789abcdef');
+      expect(result.sources[0]!.createdAt).toBe(now.toISOString());
     });
   });
 
@@ -325,7 +325,7 @@ describe('voiceover serializers', () => {
       expect(result.voiceName).toBeNull();
       expect(result.audioUrl).toBeNull();
       expect(result.duration).toBeNull();
-      expect(result.sourceDocumentId).toBeNull();
+      expect(result.sourceId).toBeNull();
       expect(result.errorMessage).toBeNull();
       expect(result.approvedBy).toBeNull();
       expect(result.approvedAt).toBeNull();
@@ -372,7 +372,7 @@ describe('infographic serializers', () => {
     it('handles null optional fields', () => {
       const result = serializeInfographic(makeInfographic());
       expect(result.prompt).toBeNull();
-      expect(result.sourceDocumentId).toBeNull();
+      expect(result.sourceId).toBeNull();
       expect(result.imageStorageKey).toBeNull();
       expect(result.thumbnailStorageKey).toBeNull();
       expect(result.errorMessage).toBeNull();
@@ -483,7 +483,7 @@ describe('activityLog serializers', () => {
       expect(result.userId).toBe('user-1');
       expect(result.userName).toBe('Test User');
       expect(result.action).toBe('created');
-      expect(result.entityType).toBe('document');
+      expect(result.entityType).toBe('source');
       expect(result.entityId).toBe('doc_123');
       expect(result.entityTitle).toBe('My Doc');
       expect(result.metadata).toBeNull();

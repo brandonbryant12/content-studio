@@ -36,7 +36,7 @@ export const voiceoverWriteMethods: Pick<
         .values({
           title: data.title,
           text: data.text,
-          sourceDocumentId: data.sourceDocumentId,
+          sourceId: data.sourceId,
           createdBy: data.createdBy,
         })
         .returning();

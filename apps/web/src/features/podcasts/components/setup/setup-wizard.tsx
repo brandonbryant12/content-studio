@@ -26,7 +26,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   // Prefetch documents on mount so they're ready for step 2
   useEffect(() => {
     queryClient.prefetchQuery(
-      apiClient.documents.list.queryOptions({ input: {} }),
+      apiClient.sources.list.queryOptions({ input: {} }),
     );
   }, [queryClient]);
 
@@ -34,7 +34,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
 
   // Step 2 state
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>(() =>
-    podcast.documents.map((d) => d.id),
+    podcast.sources.map((d) => d.id),
   );
   const [researchDocId, setResearchDocId] = useState<string | null>(null);
 
@@ -98,8 +98,8 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
             return {
               ...current,
               ...updatedPodcast,
-              // Preserve documents since update only returns podcast fields
-              documents: current.documents,
+              // Preserve sources since update only returns podcast fields
+              sources: current.sources,
             };
           },
         );
@@ -136,7 +136,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
         case 1:
           await updateMutation.mutateAsync({
             id: podcast.id,
-            documentIds: selectedDocIds,
+            sourceIds: selectedDocIds,
           });
           break;
         case 2:

@@ -39,19 +39,19 @@ export type PodcastId = typeof PodcastIdSchema.Type;
 export const generatePodcastId = (): PodcastId =>
   `pod_${generateRandomBase32()}` as PodcastId;
 
-// Document ID
+// Source ID
 
-export const DocumentIdSchema = Schema.String.pipe(
+export const SourceIdSchema = Schema.String.pipe(
   Schema.pattern(/^doc_[0-9a-hjkmnp-tv-z]{16}$/, {
-    message: () => 'Invalid document ID format',
+    message: () => 'Invalid source ID format',
   }),
-  Schema.brand('DocumentId'),
+  Schema.brand('SourceId'),
 );
 
-export type DocumentId = typeof DocumentIdSchema.Type;
+export type SourceId = typeof SourceIdSchema.Type;
 
-export const generateDocumentId = (): DocumentId =>
-  `doc_${generateRandomBase32()}` as DocumentId;
+export const generateSourceId = (): SourceId =>
+  `doc_${generateRandomBase32()}` as SourceId;
 
 // Job ID
 

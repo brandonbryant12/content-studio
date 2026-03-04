@@ -1,9 +1,9 @@
 import { withDb } from '@repo/db/effect';
 import {
   podcast,
-  document,
-  type Document,
-  type DocumentId,
+  source,
+  type Source,
+  type SourceId,
   type Podcast,
   type PodcastId,
 } from '@repo/db/schema';
@@ -11,14 +11,14 @@ import { eq, inArray } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type {
   PodcastRepoService,
-  PodcastWithDocuments,
+  PodcastWithSources,
   UpdateAudioOptions,
   UpdateScriptOptions,
 } from './podcast-repo';
 import { PodcastNotFound } from '../../errors';
 
 const requirePodcast = <
-  T extends Podcast | PodcastWithDocuments | null | undefined,
+  T extends Podcast | PodcastWithSources | null | undefined,
 >(
   id: string,
 ) =>
@@ -39,9 +39,9 @@ export const podcastWriteMethods: Pick<
   | 'setApproval'
   | 'clearApproval'
 > = {
-  insert: (data, documentIds) =>
+  insert: (data, sourceIds) =>
     withDb('podcastRepo.insert', async (db) => {
-      const docIds = [...documentIds] as DocumentId[];
+      const docIds = [...sourceIds] as SourceId[];
 
       return db.transaction(async (tx) => {
         const [pod] = await tx
@@ -56,38 +56,35 @@ export const podcastWriteMethods: Pick<
             hostVoiceName: data.hostVoiceName,
             coHostVoice: data.coHostVoice,
             coHostVoiceName: data.coHostVoiceName,
-            sourceDocumentIds: docIds,
+            sourceIds: docIds,
             createdBy: data.createdBy,
           })
           .returning();
 
         const docs =
           docIds.length > 0
-            ? await tx
-                .select()
-                .from(document)
-                .where(inArray(document.id, docIds))
+            ? await tx.select().from(source).where(inArray(source.id, docIds))
             : [];
 
         const docMap = new Map(docs.map((d) => [d.id, d]));
         const sortedDocs = docIds
           .map((id) => docMap.get(id))
-          .filter((d): d is Document => d !== undefined);
+          .filter((d): d is Source => d !== undefined);
 
-        return { ...pod!, documents: sortedDocs };
+        return { ...pod!, sources: sortedDocs };
       });
     }),
 
   update: (id, data) =>
     withDb('podcastRepo.update', async (db) => {
-      const { documentIds, tags, ...rest } = data;
+      const { sourceIds, tags, ...rest } = data;
       const updateValues: Partial<Podcast> = {
         ...rest,
         updatedAt: new Date(),
       };
 
-      if (documentIds) {
-        updateValues.sourceDocumentIds = [...documentIds] as DocumentId[];
+      if (sourceIds) {
+        updateValues.sourceIds = [...sourceIds] as SourceId[];
       }
       if (tags) {
         updateValues.tags = [...tags];

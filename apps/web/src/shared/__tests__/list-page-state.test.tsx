@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, renderWithQuery, screen } from '@/test-utils';
 import {
   ListPageErrorState,
   ListPageLoadingState,
 } from '../components/list-page-state';
+import { fireEvent, renderWithQuery, screen } from '@/test-utils';
 
 describe('ListPageState', () => {
   it('renders title and spinner for loading state', () => {

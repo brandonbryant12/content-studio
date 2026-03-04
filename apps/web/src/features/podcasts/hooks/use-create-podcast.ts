@@ -17,7 +17,6 @@ export function useCreatePodcast() {
     apiClient.podcasts.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.setQueryData(getPodcastQueryKey(data.id), data);
-        toast.success('Podcast created');
         void navigate({
           to: '/podcasts/$podcastId',
           params: { podcastId: data.id },

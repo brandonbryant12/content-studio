@@ -16,7 +16,7 @@ const {
 
 vi.mock('@/clients/apiClient', () => ({
   apiClient: {
-    documents: {
+    sources: {
       fromResearch: {
         mutationOptions: (options: Record<string, unknown> = {}) => ({
           mutationFn: mockFromResearchMutationFn,

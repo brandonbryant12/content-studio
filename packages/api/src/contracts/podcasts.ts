@@ -24,9 +24,9 @@ const podcastErrors = {
     status: 404,
     data: std(Schema.Struct({ podcastId: Schema.String })),
   },
-  DOCUMENT_NOT_FOUND: {
+  SOURCE_NOT_FOUND: {
     status: 404,
-    data: std(Schema.Struct({ documentId: Schema.String })),
+    data: std(Schema.Struct({ sourceId: Schema.String })),
   },
   MEDIA_NOT_FOUND: {
     status: 404,
@@ -80,7 +80,7 @@ const podcastContract = oc
         method: 'GET',
         path: '/{id}',
         summary: 'Get podcast',
-        description: 'Retrieve a podcast with its documents',
+        description: 'Retrieve a podcast with its sources',
       })
       .errors(podcastErrors)
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
@@ -92,7 +92,7 @@ const podcastContract = oc
         method: 'POST',
         path: '/',
         summary: 'Create podcast',
-        description: 'Create a new podcast from documents',
+        description: 'Create a new podcast from sources',
       })
       .errors(podcastErrors)
       .input(std(CreatePodcastSchema))

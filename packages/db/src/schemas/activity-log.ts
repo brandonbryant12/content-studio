@@ -65,7 +65,7 @@ export const ActivityLogActionSchema = Schema.Union(
 );
 
 export const ActivityLogEntityTypeSchema = Schema.Union(
-  Schema.Literal('document'),
+  Schema.Literal('source'),
   Schema.Literal('podcast'),
   Schema.Literal('voiceover'),
   Schema.Literal('infographic'),

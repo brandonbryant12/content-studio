@@ -100,14 +100,12 @@ describe('DocumentList', () => {
     renderList();
 
     expect(
-      screen.getByRole('heading', { name: 'Documents' }),
+      screen.getByRole('heading', { name: 'Sources' }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /add source/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText('Search documents…'),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search sources…')).toBeInTheDocument();
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
     expect(screen.getByText('API Documentation')).toBeInTheDocument();
     expect(screen.getByText('Project Roadmap')).toBeInTheDocument();
@@ -118,14 +116,14 @@ describe('DocumentList', () => {
     {
       name: 'shows empty state when there are no documents',
       props: { documents: [] as DocumentListItem[] },
-      expectedTitle: 'No documents yet',
+      expectedTitle: 'No sources yet',
       expectedDescription:
-        'Upload your first document to start creating podcasts, voiceovers, and infographics.',
+        'Upload your first source to start creating podcasts, voiceovers, and infographics.',
     },
     {
       name: 'shows no-results state when search has no matches',
       props: { searchQuery: 'nonexistent document xyz' },
-      expectedTitle: 'No documents found',
+      expectedTitle: 'No sources found',
       expectedDescription: 'Try adjusting your search query.',
     },
   ])('$name', ({ props, expectedTitle, expectedDescription }) => {
@@ -149,7 +147,7 @@ describe('DocumentList', () => {
     renderList({ onSearch });
 
     await user.type(
-      screen.getByPlaceholderText('Search documents…'),
+      screen.getByPlaceholderText('Search sources…'),
       'test query',
     );
 

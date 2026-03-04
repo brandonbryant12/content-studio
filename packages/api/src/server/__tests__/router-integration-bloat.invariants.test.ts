@@ -14,8 +14,8 @@ type RouterBloatTarget = {
 
 const targets: RouterBloatTarget[] = [
   {
-    name: 'document',
-    file: 'packages/api/src/server/router/__tests__/document.integration.test.ts',
+    name: 'source',
+    file: 'packages/api/src/server/router/__tests__/source.integration.test.ts',
     maxTests: 24,
   },
   {

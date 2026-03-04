@@ -3,25 +3,25 @@ import { createMockStorage } from '@repo/storage/testing';
 import {
   createTestUser,
   createTestPodcast,
-  createTestDocument,
+  createTestSource,
   resetAllFactories,
   withTestUser,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { PodcastWithDocuments } from '../../repos/podcast-repo';
+import type { PodcastWithSources } from '../../repos/podcast-repo';
 import type { Podcast } from '@repo/db/schema';
 import {
   createMockPodcastRepo,
   createMockPersonaRepo,
-  createMockDocumentRepo,
+  createMockSourceRepo,
   createMockActivityLogRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { generateScript } from '../generate-script';
 
-vi.mock('../../../document', () => ({
-  getDocumentContent: ({ id }: { id: string }) =>
+vi.mock('../../../source', () => ({
+  getSourceContent: ({ id }: { id: string }) =>
     Effect.succeed({ content: `Content for ${id}` }),
 }));
 
@@ -32,11 +32,11 @@ describe('generateScript', () => {
 
   it('generates a script and updates the podcast', async () => {
     const user = createTestUser();
-    const doc = createTestDocument({ createdBy: user.id });
+    const doc = createTestSource({ createdBy: user.id });
     const podcast = {
       ...createTestPodcast({ createdBy: user.id }),
-      documents: [doc],
-    } satisfies PodcastWithDocuments;
+      sources: [doc],
+    } as PodcastWithSources;
 
     const updateStatusSpy = vi.fn();
     const updateScriptSpy = vi.fn();
@@ -47,17 +47,17 @@ describe('generateScript', () => {
       updateStatus: (id, status) =>
         Effect.sync(() => {
           updateStatusSpy(id, status);
-          return { ...podcast, status } as Podcast;
+          return { ...podcast, status } as unknown as Podcast;
         }),
       updateScript: (id, data) =>
         Effect.sync(() => {
           updateScriptSpy(id, data);
-          return { ...podcast, ...data } as Podcast;
+          return { ...podcast, ...data } as unknown as Podcast;
         }),
       update: (id, data) =>
         Effect.sync(() => {
           updateSpy(id, data);
-          return { ...podcast, ...data } as Podcast;
+          return { ...podcast, ...data } as unknown as Podcast;
         }),
     });
 
@@ -76,7 +76,7 @@ describe('generateScript', () => {
       MockDbLive,
       repo,
       createMockPersonaRepo(),
-      createMockDocumentRepo(),
+      createMockSourceRepo(),
       createMockActivityLogRepo(),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
       createMockLLM({ response: llmResponse }),

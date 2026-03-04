@@ -68,49 +68,95 @@ function createProps(
       onCreateFromUrl: vi.fn(),
       isCreateFromUrlPending: false,
     },
-    onboarding: {
-      show: false,
-      onDismiss: vi.fn(),
-    },
     ...overrides,
   };
 }
 
-describe('DashboardPage onboarding integration', () => {
-  it('shows onboarding guidance when show is true', () => {
-    render(
-      <DashboardPage
-        {...createProps({ onboarding: { show: true, onDismiss: vi.fn() } })}
-      />,
-    );
+describe('DashboardPage heading and value communication', () => {
+  it('renders visible dashboard heading with value subtitle', () => {
+    render(<DashboardPage {...createProps()} />);
 
-    expect(screen.getByText('Welcome to Content Studio')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create AI-generated podcasts, voiceovers, and visuals/),
+    ).toBeInTheDocument();
   });
 
-  it('hides onboarding guidance when show is false', () => {
+  it('renders the workflow strip with all three steps', () => {
+    render(<DashboardPage {...createProps()} />);
+
+    expect(screen.getByText('Upload sources')).toBeInTheDocument();
+    expect(screen.getByText('AI creates content')).toBeInTheDocument();
+    expect(screen.getByText('Review & refine')).toBeInTheDocument();
+  });
+});
+
+describe('DashboardPage quick-start panel', () => {
+  it('shows add sources panel when no documents exist', () => {
+    render(<DashboardPage {...createProps()} />);
+
+    expect(screen.getByText('Add your first source')).toBeInTheDocument();
+    expect(screen.getByText('Upload a file')).toBeInTheDocument();
+    expect(screen.getByText('Import from URL')).toBeInTheDocument();
+    expect(screen.getByText('AI deep research')).toBeInTheDocument();
+  });
+
+  it('shows create first content panel when documents exist but no generated content', () => {
     render(
       <DashboardPage
-        {...createProps({ onboarding: { show: false, onDismiss: vi.fn() } })}
+        {...createProps({
+          counts: { documents: 3, podcasts: 0, voiceovers: 0, infographics: 0 },
+        })}
       />,
     );
+
+    expect(screen.getByText('Create your first content')).toBeInTheDocument();
+    // "Create Podcast" appears in both the quick-start panel and recent section
+    expect(
+      screen.getAllByRole('button', { name: /Create Podcast/i }).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByRole('button', { name: /Create Voiceover/i }).length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows suggestion bar for missing content types', () => {
+    render(
+      <DashboardPage
+        {...createProps({
+          counts: { documents: 3, podcasts: 2, voiceovers: 0, infographics: 0 },
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Try creating:')).toBeInTheDocument();
+  });
+
+  it('shows quick create toolbar when all types have content', () => {
+    render(
+      <DashboardPage
+        {...createProps({
+          counts: { documents: 3, podcasts: 2, voiceovers: 1, infographics: 1 },
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Quick create:')).toBeInTheDocument();
+  });
+});
+
+describe('DashboardPage empty messages', () => {
+  it('shows action-oriented empty messages in recent sections', () => {
+    render(<DashboardPage {...createProps()} />);
 
     expect(
-      screen.queryByText('Welcome to Content Studio'),
-    ).not.toBeInTheDocument();
-  });
-
-  it('still renders stat cards alongside onboarding', () => {
-    render(
-      <DashboardPage
-        {...createProps({ onboarding: { show: true, onDismiss: vi.fn() } })}
-      />,
-    );
-
-    // Stat card values should be present (rendered as count "0")
-    const zeros = screen.getAllByText('0');
-    expect(zeros.length).toBeGreaterThanOrEqual(4);
-
-    // Onboarding should also be present
-    expect(screen.getByText('Welcome to Content Studio')).toBeInTheDocument();
+      screen.getByText('Create a podcast from your sources'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Record a voiceover with AI narration'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Generate visuals from your content'),
+    ).toBeInTheDocument();
   });
 });

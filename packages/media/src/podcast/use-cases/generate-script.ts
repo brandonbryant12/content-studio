@@ -3,7 +3,6 @@ import { getCurrentUser } from '@repo/auth/policy';
 import { VersionStatus, type Podcast } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
-import { getDocumentContent } from '../../document';
 import { loadPersonaByIdSafe } from '../../persona';
 import {
   annotateUseCaseSpan,
@@ -11,6 +10,7 @@ import {
   runSchemaContractWithRetries,
   withUseCaseSpan,
 } from '../../shared';
+import { getSourceContent } from '../../source';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -121,8 +121,8 @@ export const generateScript = (input: GenerateScriptInput) =>
     );
 
     const documentContents = yield* Effect.all(
-      podcast.documents.map((doc) =>
-        getDocumentContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
+      podcast.sources.map((doc) =>
+        getSourceContent({ id: doc.id }).pipe(Effect.map((r) => r.content)),
       ),
       { concurrency: 'unbounded' },
     );

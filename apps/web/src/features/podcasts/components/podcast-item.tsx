@@ -16,7 +16,6 @@ import {
   getStatusConfig,
   isGeneratingStatus,
 } from '../lib/status';
-import { PodcastIcon } from './podcast-icon';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { formatDuration } from '@/shared/lib/formatters';
 import { getStorageUrl } from '@/shared/lib/storage-url';
@@ -139,15 +138,15 @@ export const PodcastItem = memo(function PodcastItem({
               />
             </div>
           )}
-          {podcast.coverImageStorageKey ? (
-            <img
-              src={getStorageUrl(podcast.coverImageStorageKey)}
-              alt={`${podcast.title} cover`}
-              loading="lazy"
-            />
-          ) : (
-            <PodcastIcon format={podcast.format} status={podcast.status} />
-          )}
+          <img
+            src={
+              podcast.coverImageStorageKey
+                ? getStorageUrl(podcast.coverImageStorageKey)
+                : '/default-podcast.svg'
+            }
+            alt={`${podcast.title} cover`}
+            loading="lazy"
+          />
           {isGeneratingStatus(podcast.status) && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
               <Spinner className="w-6 h-6 text-primary" />

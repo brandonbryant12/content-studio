@@ -1,35 +1,35 @@
-import { DocumentStatus, JobType } from '@repo/db/schema';
-import { DocumentRepo } from '@repo/media';
+import { SourceStatus, JobType } from '@repo/db/schema';
+import { SourceRepo } from '@repo/media';
 import { Queue, formatError, type ProcessResearchPayload } from '@repo/queue';
 import { Effect } from 'effect';
 import { emitEntityChange, type PublishEvent } from './events';
 
 export const recoverOrphanedResearch = (publishEvent: PublishEvent) =>
   Effect.gen(function* () {
-    const documentRepo = yield* DocumentRepo;
+    const sourceRepo = yield* SourceRepo;
     const queue = yield* Queue;
 
-    const orphans = yield* documentRepo.findOrphanedResearch();
+    const orphans = yield* sourceRepo.findOrphanedResearch();
 
     if (orphans.length === 0) return;
 
     for (const doc of orphans) {
       // Reset status to processing (stale reaper may have marked it failed)
-      yield* documentRepo.updateStatus(doc.id, DocumentStatus.PROCESSING);
+      yield* sourceRepo.updateStatus(doc.id, SourceStatus.PROCESSING);
 
       // Re-enqueue process-research job — processResearch will see the
       // existing operationId and resume polling instead of starting fresh
       yield* queue.enqueue(
         JobType.PROCESS_RESEARCH,
         {
-          documentId: doc.id,
+          sourceId: doc.id,
           query: doc.researchConfig!.query,
           userId: doc.createdBy,
         } satisfies ProcessResearchPayload,
         doc.createdBy,
       );
 
-      emitEntityChange(publishEvent, doc.createdBy, 'document', doc.id);
+      emitEntityChange(publishEvent, doc.createdBy, 'source', doc.id);
     }
 
     const summary = orphans.map((d) => d.id).join(', ');

@@ -27,7 +27,7 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@/clients/apiClient', () => ({
   apiClient: {
-    documents: {
+    sources: {
       get: {
         queryOptions: ({ input }: { input: { id: string } }) => ({
           queryKey: ['documents', 'get', input.id],

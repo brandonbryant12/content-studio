@@ -1,13 +1,16 @@
+import { SourceStatus } from '@repo/api/contracts';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DocumentStatus } from '@repo/api/contracts';
+import type * as UseDocumentModule from '../hooks/use-document';
+import type * as TanstackReactQueryModule from '@tanstack/react-query';
+import type * as TanstackReactRouterModule from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { DocumentDetailContainer } from '../components/document-detail-container';
 import { useDocument, useDocumentContentOptional } from '../hooks/use-document';
 import { useDocumentActions } from '../hooks/use-document-actions';
 import { useDocumentSearch } from '../hooks/use-document-search';
 import { useRetryProcessing } from '../hooks/use-retry-processing';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
 import { render } from '@/test-utils';
 
 const {
@@ -27,9 +30,8 @@ const {
 }));
 
 vi.mock('../hooks/use-document', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/use-document')>(
-    '../hooks/use-document',
-  );
+  const actual =
+    await vi.importActual<UseDocumentModule>('../hooks/use-document');
   return {
     ...actual,
     useDocument: vi.fn(),
@@ -74,7 +76,7 @@ vi.mock('@/env', () => ({
 }));
 
 vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual<typeof import('@tanstack/react-query')>(
+  const actual = await vi.importActual<TanstackReactQueryModule>(
     '@tanstack/react-query',
   );
   return {
@@ -85,7 +87,7 @@ vi.mock('@tanstack/react-query', async () => {
 });
 
 vi.mock('@tanstack/react-router', async () => {
-  const actual = await vi.importActual<typeof import('@tanstack/react-router')>(
+  const actual = await vi.importActual<TanstackReactRouterModule>(
     '@tanstack/react-router',
   );
   return {
@@ -99,7 +101,7 @@ function createDocument(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 'doc-1',
     title: 'Quarterly Report',
-    status: DocumentStatus.READY,
+    status: SourceStatus.READY,
     source: 'manual',
     errorMessage: null,
     wordCount: 100,
@@ -114,10 +116,10 @@ function createDocument(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 function setupDocument({
-  status = DocumentStatus.READY,
+  status = SourceStatus.READY,
   content = 'Content body',
 }: {
-  status?: DocumentStatus;
+  status?: SourceStatus;
   content?: string | null;
 }) {
   vi.mocked(useDocument).mockReturnValue({
@@ -198,7 +200,7 @@ describe('DocumentDetailContainer', () => {
   it.each([
     {
       name: 'uses fetched content for ready documents',
-      status: DocumentStatus.READY,
+      status: SourceStatus.READY,
       content: 'Alpha beta',
       expectedSearchInput: 'Alpha beta',
       canExport: true,
@@ -206,7 +208,7 @@ describe('DocumentDetailContainer', () => {
     },
     {
       name: 'falls back to empty content for non-ready documents',
-      status: DocumentStatus.PROCESSING,
+      status: SourceStatus.PROCESSING,
       content: null,
       expectedSearchInput: '',
       canExport: false,
@@ -242,12 +244,12 @@ describe('DocumentDetailContainer', () => {
 
     expect(voiceoverMutate).toHaveBeenCalledWith({
       title: 'Voiceover: Quarterly Report',
-      documentId: 'doc-1',
+      sourceId: 'doc-1',
     });
     expect(infographicMutate).toHaveBeenCalledWith({
       title: 'Infographic: Quarterly Report',
       format: 'portrait',
-      documentId: 'doc-1',
+      sourceId: 'doc-1',
     });
   });
 });

@@ -21,7 +21,7 @@ describe('DocumentProcessingState', () => {
     expect(liveStatus).toHaveAttribute('aria-live', 'polite');
     expect(
       screen.getByText(
-        'Document research is in progress and may take a few minutes',
+        'Source research is in progress and may take a few minutes',
       ),
     ).toBeInTheDocument();
   });
@@ -32,7 +32,7 @@ describe('DocumentProcessingState', () => {
     const liveStatus = screen.getByRole('status');
     expect(liveStatus).toHaveAttribute('aria-live', 'polite');
     expect(
-      screen.getByText('Document processing is in progress'),
+      screen.getByText('Source processing is in progress'),
     ).toBeInTheDocument();
   });
 });
@@ -49,9 +49,7 @@ describe('DocumentFailedState', () => {
 
     const liveStatus = screen.getByRole('status');
     expect(liveStatus).toHaveAttribute('aria-live', 'polite');
-    expect(
-      screen.getByText('Retrying document processing'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Retrying source processing')).toBeInTheDocument();
   });
 
   it('announces failure message in a live region while not retrying', () => {
@@ -66,7 +64,7 @@ describe('DocumentFailedState', () => {
     const liveStatus = screen.getByRole('status');
     expect(liveStatus).toHaveAttribute('aria-live', 'polite');
     expect(
-      screen.queryByText('Retrying document processing'),
+      screen.queryByText('Retrying source processing'),
     ).not.toBeInTheDocument();
     expect(screen.getByText('Processing failed')).toBeInTheDocument();
   });

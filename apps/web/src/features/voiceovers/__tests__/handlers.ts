@@ -29,7 +29,7 @@ export function createMockVoiceover(
     id,
     title: 'Test Voiceover',
     text: 'This is the voiceover text content.',
-    sourceDocumentId: null,
+    sourceId: null,
     voice: 'Charon',
     voiceName: 'Charon',
     audioUrl: null,

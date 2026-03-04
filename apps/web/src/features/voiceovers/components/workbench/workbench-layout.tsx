@@ -1,5 +1,6 @@
 import {
   ArrowLeftIcon,
+  ChatBubbleIcon,
   DownloadIcon,
   Pencil1Icon,
   TrashIcon,
@@ -75,6 +76,7 @@ export function WorkbenchLayout({
   const handleExportScript = onExportScript ?? (() => {});
   const handleCopyTranscript = onCopyTranscript ?? (() => {});
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(true);
 
   const handleDeleteClick = useCallback(() => {
     setDeleteConfirmOpen(true);
@@ -157,8 +159,23 @@ export function WorkbenchLayout({
                   />
                 </div>
 
-                {/* Delete button */}
                 <div className="workbench-actions">
+                  {/* Toggle writing assistant */}
+                  {rightPanel && (
+                    <Button
+                      variant={assistantOpen ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setAssistantOpen((prev) => !prev)}
+                      aria-label={
+                        assistantOpen
+                          ? 'Hide writing assistant'
+                          : 'Show writing assistant'
+                      }
+                      aria-pressed={assistantOpen}
+                    >
+                      <ChatBubbleIcon className="w-4 h-4" />
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -213,7 +230,7 @@ export function WorkbenchLayout({
 
         {/* Main content */}
         <div className="workbench-main">
-          {rightPanel ? (
+          {rightPanel && assistantOpen ? (
             <>
               <div className="workbench-panel-left">
                 <div className="workbench-scroll-container">{children}</div>

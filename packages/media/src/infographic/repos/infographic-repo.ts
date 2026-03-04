@@ -4,7 +4,7 @@ import {
   type InfographicVersion,
   type InfographicId,
   type InfographicStatusType,
-  type DocumentId,
+  type SourceId,
   type StyleProperty,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
@@ -23,7 +23,7 @@ export interface InsertInfographic {
   prompt?: string;
   styleProperties?: StyleProperty[];
   format: Infographic['format'];
-  sourceDocumentId?: DocumentId;
+  sourceId?: SourceId;
   status?: InfographicStatusType;
   createdBy: string;
 }

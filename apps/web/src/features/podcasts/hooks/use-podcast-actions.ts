@@ -94,7 +94,7 @@ export function usePodcastActions({
         // First, save documents and any settings changes
         await updateMutation.mutateAsync({
           id: podcast.id,
-          documentIds: documentSelection.hasChanges
+          sourceIds: documentSelection.hasChanges
             ? documentSelection.documentIds
             : undefined,
           hostVoice: settings.hostVoice,

@@ -10,7 +10,7 @@ export function VersionSettingsPanel({ version }: VersionSettingsPanelProps) {
 
   return (
     <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="text-xs font-medium text-muted-foreground">
         Version {version.versionNumber} Settings
       </p>
 

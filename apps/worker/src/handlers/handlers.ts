@@ -1,11 +1,11 @@
-import { DocumentStatus } from '@repo/db/schema';
+import { SourceStatus } from '@repo/db/schema';
 import {
   generateScript,
   generateAudio,
   generateCoverImage,
   syncEntityTitle,
   PodcastRepo,
-  awaitDocumentsReady,
+  awaitSourcesReady,
   type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
 } from '@repo/media';
@@ -28,15 +28,15 @@ export const handleGeneratePodcast = (job: Job<GeneratePodcastPayload>) =>
     // Wait for any pending research documents before generating script
     const podcastRepo = yield* PodcastRepo;
     const podcast = yield* podcastRepo.findById(podcastId);
-    const pendingDocs = podcast.documents.filter(
-      (d) => d.status !== DocumentStatus.READY,
+    const pendingSources = podcast.sources.filter(
+      (d) => d.status !== SourceStatus.READY,
     );
-    if (pendingDocs.length > 0) {
+    if (pendingSources.length > 0) {
       yield* Effect.logInfo(
-        `Waiting for ${pendingDocs.length} document(s) to become ready...`,
+        `Waiting for ${pendingSources.length} source(s) to become ready...`,
       );
-      yield* awaitDocumentsReady({
-        documentIds: pendingDocs.map((d) => d.id),
+      yield* awaitSourcesReady({
+        sourceIds: pendingSources.map((d) => d.id),
       });
     }
 

@@ -19,13 +19,13 @@ import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { withCurrentUser, Role, type User } from '@repo/auth/policy';
 import {
   user as userTable,
-  document as documentTable,
+  source as sourceTable,
   podcast as podcastTable,
   VersionStatus,
 } from '@repo/db/schema';
 import {
   PodcastRepoLive,
-  DocumentRepoLive,
+  SourceRepoLive,
   ActivityLogRepoLive,
   PersonaRepoLive,
   startGeneration,
@@ -38,7 +38,7 @@ import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
-  createTestDocument,
+  createTestSource,
   createTestPodcast,
   resetAllFactories,
   DEFAULT_TEST_SEGMENTS,
@@ -72,7 +72,7 @@ const createWorkflowRuntime = (ctx: TestContext) => {
     ctx.dbLayer,
     mockAILayers,
     PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer)),
-    DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer)),
+    SourceRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     ActivityLogRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     PersonaRepoLive.pipe(Layer.provide(ctx.dbLayer)),
     QueueLive.pipe(Layer.provide(ctx.dbLayer)),
@@ -103,18 +103,18 @@ const insertTestUser = async (
 const insertTestDocument = async (
   ctx: TestContext,
   userId: string,
-  options: Partial<Parameters<typeof createTestDocument>[0]> & {
+  options: Partial<Parameters<typeof createTestSource>[0]> & {
     content?: string;
   } = {},
 ) => {
   const { content, ...docOptions } = options;
-  const doc = createTestDocument({
+  const doc = createTestSource({
     createdBy: userId,
     ...docOptions,
   });
-  await ctx.db.insert(documentTable).values(doc);
+  await ctx.db.insert(sourceTable).values(doc);
 
-  // Seed content into storage so getDocumentContent works
+  // Seed content into storage so getSourceContent works
   const textContent =
     content ?? 'Test document content for podcast generation.';
   inMemoryStorage.getStore().set(doc.contentKey, {
@@ -178,7 +178,7 @@ describe('podcast job workflow', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Full Generation Test',
         status: 'drafting',
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
       });
 
       // Step 1: Call the API use case (startGeneration)
@@ -356,7 +356,7 @@ describe('podcast job workflow', () => {
       const doc = await insertTestDocument(ctx, testUser.id);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'drafting',
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
       });
 
       const statusHistory: string[] = [];
@@ -488,7 +488,7 @@ describe('podcast job workflow', () => {
       const doc = await insertTestDocument(ctx, testUser.id);
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'drafting',
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
       });
 
       // First call

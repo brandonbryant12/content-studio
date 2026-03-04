@@ -17,7 +17,7 @@ describe('getActivityStats', () => {
         countTotal: () => Effect.succeed(42),
         countByEntityType: () =>
           Effect.succeed([
-            { field: 'document', count: 20 },
+            { field: 'source', count: 20 },
             { field: 'podcast', count: 22 },
           ]),
         countByAction: () => Effect.succeed([{ field: 'created', count: 42 }]),
@@ -34,7 +34,7 @@ describe('getActivityStats', () => {
 
       expect(result.total).toBe(42);
       expect(result.byEntityType).toEqual([
-        { field: 'document', count: 20 },
+        { field: 'source', count: 20 },
         { field: 'podcast', count: 22 },
       ]);
       expect(result.byAction).toEqual([{ field: 'created', count: 42 }]);

@@ -12,7 +12,7 @@ import { PodcastNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
 } from '../../repos/podcast-repo';
 import { saveChanges, InvalidSaveError } from '../save-changes';
 
@@ -38,7 +38,7 @@ const createMockPodcastRepo = (
     insert: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifyDocumentsExist: () => Effect.die('not implemented'),
+    verifySourcesExist: () => Effect.die('not implemented'),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateAudio: () => Effect.die('not implemented'),
     setApproval: () => Effect.die('not implemented'),
@@ -52,8 +52,8 @@ const createMockPodcastRepo = (
         }
         return Effect.succeed({
           ...podcast,
-          documents: [],
-        } as PodcastWithDocuments);
+          sources: [],
+        } as PodcastWithSources);
       }),
     findById: (id: string) =>
       Effect.suspend(() => {
@@ -61,8 +61,8 @@ const createMockPodcastRepo = (
         if (!podcast) return Effect.fail(new PodcastNotFound({ id }));
         return Effect.succeed({
           ...podcast,
-          documents: [],
-        } as PodcastWithDocuments);
+          sources: [],
+        } as PodcastWithSources);
       }),
 
     update: (id: string, data) => {

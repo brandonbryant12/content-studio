@@ -38,9 +38,7 @@ export function SynthesisPreviewCard({
 }: SynthesisPreviewCardProps) {
   return (
     <div className="mx-auto w-full max-w-md rounded-xl border border-border bg-accent/30 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {title}
-      </p>
+      <p className="text-xs font-medium text-muted-foreground">{title}</p>
 
       {children}
 
@@ -85,7 +83,7 @@ export function ResearchPreviewContent({
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-medium text-foreground">{title}</h4>
-      <p className="text-xs text-muted-foreground leading-relaxed">{query}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{query}</p>
     </div>
   );
 }
@@ -108,7 +106,7 @@ export function PersonaPreviewContent({
   voiceName,
 }: PersonaPreviewContentProps) {
   return (
-    <div className="space-y-2 text-xs">
+    <div className="space-y-2 text-sm">
       <div>
         <span className="font-medium text-foreground">{name}</span>
         <span className="text-muted-foreground"> — {role}</span>

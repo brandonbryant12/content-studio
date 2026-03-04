@@ -10,12 +10,13 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { getRandomUrlSourceSuggestions } from '../lib/url-source-suggestions';
 
 interface AddFromUrlDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (url: string, title?: string) => void;
+  onSubmit: (url: string) => void;
   isSubmitting: boolean;
 }
 
@@ -26,22 +27,24 @@ export function AddFromUrlDialog({
   isSubmitting,
 }: AddFromUrlDialogProps) {
   const [url, setUrl] = useState('');
-  const [title, setTitle] = useState('');
+  const suggestions = useMemo(
+    () => (open ? getRandomUrlSourceSuggestions(3) : []),
+    [open],
+  );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!url.trim()) return;
-      onSubmit(url.trim(), title.trim() || undefined);
+      onSubmit(url.trim());
     },
-    [url, title, onSubmit],
+    [url, onSubmit],
   );
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
         setUrl('');
-        setTitle('');
       }
       onOpenChange(open);
     },
@@ -75,20 +78,26 @@ export function AddFromUrlDialog({
               disabled={isSubmitting}
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="title">
-              Title{' '}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
-            </Label>
-            <Input
-              id="title"
-              placeholder="Auto-detected from page"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isSubmitting}
-            />
+            <p className="text-sm font-medium">Need ideas?</p>
+            <p className="text-xs text-muted-foreground">
+              Try one of these reliable public sources.
+            </p>
+            <div className="grid gap-2">
+              {suggestions.map((suggestion) => (
+                <Button
+                  key={suggestion.url}
+                  type="button"
+                  variant="outline"
+                  className="justify-start text-left h-auto py-2 px-3"
+                  disabled={isSubmitting}
+                  onClick={() => setUrl(suggestion.url)}
+                >
+                  <span className="truncate">{suggestion.label}</span>
+                </Button>
+              ))}
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button

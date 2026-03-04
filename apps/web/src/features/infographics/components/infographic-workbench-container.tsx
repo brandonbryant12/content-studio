@@ -217,14 +217,12 @@ function ControlsSidebar({
         <div className="p-5 pb-4">
           {hasExistingImage && (
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mb-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-                Iteration Mode
-              </p>
+              <p className="text-xs font-medium text-primary">Iteration Mode</p>
               <p className="text-xs text-foreground/80 mt-1 leading-relaxed">
                 Editing an existing image. Generating creates a new version from
                 the latest result.
               </p>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                 <span className="rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 text-muted-foreground">
                   Viewing v{viewingVersionNumber ?? '—'}
                 </span>

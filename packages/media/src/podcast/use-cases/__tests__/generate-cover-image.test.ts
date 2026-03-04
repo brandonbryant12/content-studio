@@ -8,7 +8,7 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { PodcastWithDocuments } from '../../repos/podcast-repo';
+import type { PodcastWithSources } from '../../repos/podcast-repo';
 import type { Podcast } from '@repo/db/schema';
 import {
   createMockPodcastRepo,
@@ -27,8 +27,8 @@ describe('generateCoverImage', () => {
   it('uploads and stores a cover image for the podcast', async () => {
     const podcast = {
       ...createTestPodcast(),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } as PodcastWithSources;
     const updateSpy = vi.fn();
 
     const repo = createMockPodcastRepo({
@@ -36,7 +36,7 @@ describe('generateCoverImage', () => {
       update: (id, data) =>
         Effect.sync(() => {
           updateSpy(id, data);
-          return { ...podcast, ...data } as Podcast;
+          return { ...podcast, ...data } as unknown as Podcast;
         }),
     });
 
@@ -63,8 +63,8 @@ describe('generateCoverImage', () => {
   it('propagates image generation failures', async () => {
     const podcast = {
       ...createTestPodcast(),
-      documents: [],
-    } satisfies PodcastWithDocuments;
+      sources: [],
+    } as PodcastWithSources;
 
     const repo = createMockPodcastRepo({
       findById: () => Effect.succeed(podcast),

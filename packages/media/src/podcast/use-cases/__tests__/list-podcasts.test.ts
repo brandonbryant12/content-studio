@@ -32,7 +32,7 @@ const createMockPodcastRepo = (state: MockRepoState): PodcastRepoService => ({
   findById: () => Effect.die('Not implemented in mock'),
   update: () => Effect.die('Not implemented in mock'),
   delete: () => Effect.die('Not implemented in mock'),
-  verifyDocumentsExist: () => Effect.die('Not implemented in mock'),
+  verifySourcesExist: () => Effect.die('Not implemented in mock'),
   updateGenerationContext: () => Effect.die('Not implemented in mock'),
   updateStatus: () => Effect.die('Not implemented in mock'),
   updateScript: () => Effect.die('Not implemented in mock'),

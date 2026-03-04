@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { ErrorBoundary } from '../components/error-boundary/error-boundary';
 import type { ErrorBoundaryProps } from '../components/error-boundary/types';
+import type { ReactNode } from 'react';
+import { ErrorBoundary } from '../components/error-boundary/error-boundary';
 import { renderWithQuery, screen, fireEvent } from '@/test-utils';
 
 function ThrowingComponent({ error }: { error: Error }): never {

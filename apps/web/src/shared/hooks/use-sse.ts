@@ -83,7 +83,7 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
               case 'infographic_job_completion':
                 handleInfographicJobCompletion(event, qc);
                 break;
-              case 'document_job_completion':
+              case 'source_job_completion':
                 handleDocumentJobCompletion(event, qc);
                 break;
               case 'entity_change':

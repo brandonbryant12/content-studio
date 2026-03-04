@@ -16,7 +16,7 @@ export function DocumentContentViewer({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { data, isPending, isError } = useQuery({
-    ...apiClient.documents.getContent.queryOptions({
+    ...apiClient.sources.getContent.queryOptions({
       input: { id: documentId },
     }),
     enabled: isExpanded,

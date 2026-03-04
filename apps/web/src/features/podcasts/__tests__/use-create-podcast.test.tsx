@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreatePodcast } from '../hooks/use-create-podcast';
 import { getPodcastQueryKey } from '../hooks/use-podcast';
@@ -101,7 +100,6 @@ describe('useCreatePodcast', () => {
       ).toEqual(createdPodcast);
     });
 
-    expect(toast.success).toHaveBeenCalledWith('Podcast created');
     expect(navigateMock).toHaveBeenCalledWith({
       to: '/podcasts/$podcastId',
       params: { podcastId: createdPodcast.id },

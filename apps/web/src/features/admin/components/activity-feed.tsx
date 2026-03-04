@@ -176,7 +176,7 @@ export function ActivityFeed({
     return (
       <div className="text-center py-12">
         <p className="text-body">No activity found</p>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Activity will appear here as users create and modify content.
         </p>
       </div>

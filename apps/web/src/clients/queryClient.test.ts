@@ -29,12 +29,12 @@ describe('queryClient retry policy', () => {
   it('does not retry NOT_FOUND class API errors', () => {
     const retry = getRetry();
     const notFound = { code: 'NOT_FOUND' } as Error & { code: string };
-    const documentNotFound = {
-      code: 'DOCUMENT_NOT_FOUND',
+    const sourceNotFound = {
+      code: 'SOURCE_NOT_FOUND',
     } as Error & { code: string };
 
     expect(retry(1, notFound)).toBe(false);
-    expect(retry(1, documentNotFound)).toBe(false);
+    expect(retry(1, sourceNotFound)).toBe(false);
   });
 
   it('retries transient errors up to the retry cap', () => {

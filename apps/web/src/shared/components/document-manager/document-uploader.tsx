@@ -129,7 +129,7 @@ export function DocumentUploader({
             type="text"
             value={uploadTitle}
             onChange={handleTitleChange}
-            placeholder="Document title"
+            placeholder="Source title"
             className="setup-input"
           />
         </div>

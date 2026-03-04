@@ -1,13 +1,13 @@
-import { act, render } from '@/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PersonaDetailContainer } from '../components/persona-detail-container';
+import { usePersona } from '../hooks/use-persona';
 import {
   useDeletePersona,
   useGenerateAvatar,
   useUpdatePersona,
 } from '../hooks/use-persona-mutations';
-import { usePersona } from '../hooks/use-persona';
 import { useNavigationBlock } from '@/shared/hooks';
+import { act, render } from '@/test-utils';
 
 const { personaDetailSpy, updateMutate, deleteMutate, avatarMutate } =
   vi.hoisted(() => ({

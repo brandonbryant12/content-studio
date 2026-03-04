@@ -17,13 +17,11 @@ import {
   useCreateVoiceover,
 } from '@/features/voiceovers/hooks';
 import { QueryErrorFallback } from '@/shared/components/query-error-fallback';
-import { useOnboardingDismissed } from '@/shared/hooks/use-onboarding-dismissed';
 
 export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [researchDialogOpen, setResearchDialogOpen] = useState(false);
-  const { isDismissed, dismiss } = useOnboardingDismissed();
 
   const {
     data: documents = [],
@@ -105,12 +103,6 @@ export function DashboardContainer() {
   const voiceoverCount = voiceovers.length;
   const infographicCount = infographics.length;
 
-  const totalCount =
-    docCount + podcastCount + voiceoverCount + infographicCount;
-  const anyLoading =
-    docsLoading || podcastsLoading || voiceoversLoading || infographicsLoading;
-  const showOnboarding = totalCount === 0 && !anyLoading && !isDismissed;
-
   return (
     <DashboardPage
       counts={{
@@ -118,10 +110,6 @@ export function DashboardContainer() {
         podcasts: podcastCount,
         voiceovers: voiceoverCount,
         infographics: infographicCount,
-      }}
-      onboarding={{
-        show: showOnboarding,
-        onDismiss: dismiss,
       }}
       loading={{
         documents: docsLoading,

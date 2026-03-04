@@ -72,11 +72,11 @@ export function ExistingDocumentPicker({
           />
           <input
             type="text"
-            placeholder="Search documents\u2026"
+            placeholder="Search sources\u2026"
             value={searchQuery}
             onChange={handleSearchChange}
             className="setup-input pl-9"
-            aria-label="Search documents"
+            aria-label="Search sources"
           />
         </div>
       )}
@@ -129,17 +129,17 @@ export function ExistingDocumentPicker({
           <div className="empty-state-icon">
             <MagnifyingGlassIcon aria-hidden="true" className="w-6 h-6" />
           </div>
-          <p className="text-body">No documents match your search.</p>
+          <p className="text-body">No sources match your search.</p>
         </div>
       ) : (
         <div className="empty-state-lg">
           <div className="empty-state-icon">
             <FileTextIcon aria-hidden="true" className="w-6 h-6" />
           </div>
-          <p className="text-body">No more documents available to add.</p>
+          <p className="text-body">No more sources available to add.</p>
           <Button variant="outline" onClick={onSwitchToUpload} className="mt-4">
             <UploadIcon aria-hidden="true" className="w-4 h-4 mr-2" />
-            Upload Document
+            Upload Source
           </Button>
         </div>
       )}

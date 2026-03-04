@@ -146,7 +146,7 @@ export const VoiceSelector = memo(function VoiceSelector({
               aria-label={`${v.name} — ${VOICE_TRAITS[v.id] ?? v.description}`}
             >
               <div className="voice-card-symbol">
-                <VoiceSymbol voiceId={v.id} className="w-5 h-5" />
+                <VoiceSymbol voiceId={v.id} className="w-4 h-4" />
               </div>
               <span className="voice-card-name">{v.name}</span>
               <span className="voice-card-trait">

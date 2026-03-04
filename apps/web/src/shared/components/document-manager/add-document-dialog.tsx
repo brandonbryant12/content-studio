@@ -42,21 +42,21 @@ export function AddDocumentDialog({
   });
 
   const uploadMutation = useMutation(
-    apiClient.documents.upload.mutationOptions({
+    apiClient.sources.upload.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
-        toast.success('Document uploaded');
+        toast.success('Source uploaded');
         onAddDocuments([data]);
         handleClose();
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to upload document'));
+        toast.error(getErrorMessage(error, 'Failed to upload source'));
       },
     }),
   );
 
   const fromUrlMutation = useMutation(
-    apiClient.documents.fromUrl.mutationOptions({
+    apiClient.sources.fromUrl.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getDocumentListQueryKey() });
         toast.success('URL added — content is being processed');
@@ -128,8 +128,8 @@ export function AddDocumentDialog({
         if (!isOpen) handleClose();
         else onOpenChange(isOpen);
       }}
-      title="Add Documents"
-      description="Select existing documents, upload new ones, or add from a URL."
+      title="Add Sources"
+      description="Select existing sources, upload new ones, or add from a URL."
       maxWidth="lg"
       scrollable
       footer={

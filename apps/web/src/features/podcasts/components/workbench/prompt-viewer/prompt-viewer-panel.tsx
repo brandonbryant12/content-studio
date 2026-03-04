@@ -36,7 +36,7 @@ export function PromptViewerPanel({
   const {
     systemPromptTemplate,
     userInstructions,
-    sourceDocuments,
+    sourceEntries,
     modelId,
     modelParams,
     generatedAt,
@@ -124,13 +124,13 @@ export function PromptViewerPanel({
             title="Source Documents"
             badge={
               <span className="prompt-section-badge">
-                {sourceDocuments.length}
+                {sourceEntries.length}
               </span>
             }
             defaultOpen={false}
           >
             <div className="prompt-documents">
-              {sourceDocuments.map((doc: { id: string; title: string }) => (
+              {sourceEntries.map((doc: { id: string; title: string }) => (
                 <DocumentContentViewer
                   key={doc.id}
                   documentId={doc.id}

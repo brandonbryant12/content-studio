@@ -231,8 +231,8 @@ export const handleTaggedError = <E extends TaggedError>(
  * return handleEffectWithProtocol(
  *   context.runtime,
  *   context.user,
- *   getDocument({ id: input.id }).pipe(
- *     Effect.flatMap(serializeDocumentEffect)
+ *   getSource({ id: input.id }).pipe(
+ *     Effect.flatMap(serializeSourceEffect)
  *   ),
  *   errors,
  *   { requestId: context.requestId, attributes: { 'document.id': input.id } },
@@ -242,7 +242,7 @@ export const handleTaggedError = <E extends TaggedError>(
  * return handleEffectWithProtocol(
  *   context.runtime,
  *   context.user,
- *   createDocument(input),
+ *   createSource(input),
  *   errors,
  *   { requestId: context.requestId },
  *   {
@@ -325,7 +325,7 @@ export const handleEffectStreamWithProtocol = <
  * @example
  * ```typescript
  * const effect = documentService.findById(id);
- * type Errors = EffectErrors<typeof effect>; // DocumentNotFound | DbError
+ * type Errors = EffectErrors<typeof effect>; // SourceNotFound | DbError
  * ```
  */
 export type EffectErrors<T> =

@@ -99,9 +99,9 @@ export function UploadDocumentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
+          <DialogTitle>Upload Source</DialogTitle>
           <DialogDescription>
-            Upload a document to use across content types. Supports TXT, PDF,
+            Upload a source to use across content types. Supports TXT, PDF,
             DOCX, and PPTX.
           </DialogDescription>
         </DialogHeader>
@@ -171,7 +171,7 @@ export function UploadDocumentDialog({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Document title…"
+              placeholder="Source title…"
               autoComplete="off"
             />
           </div>

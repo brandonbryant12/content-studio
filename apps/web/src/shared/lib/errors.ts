@@ -18,7 +18,7 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
   }
 
   switch (error.code) {
-    case 'DOCUMENT_TOO_LARGE': {
+    case 'SOURCE_TOO_LARGE': {
       const data = error.data as {
         fileName: string;
         fileSize: number;
@@ -43,17 +43,17 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
         : 'Too many requests. Please wait a moment.';
     }
 
-    case 'DOCUMENT_QUOTA_EXCEEDED': {
+    case 'SOURCE_QUOTA_EXCEEDED': {
       const data = error.data as { count: number; limit: number };
-      return `You've reached your document limit (${data.count}/${data.limit}). Upgrade to add more.`;
+      return `You've reached your source limit (${data.count}/${data.limit}). Upgrade to add more.`;
     }
 
     case 'GENERATION_IN_PROGRESS': {
       return 'This podcast is already being generated. Please wait.';
     }
 
-    case 'DOCUMENT_NOT_FOUND': {
-      return 'Document not found. It may have been deleted.';
+    case 'SOURCE_NOT_FOUND': {
+      return 'Source not found. It may have been deleted.';
     }
 
     case 'PODCAST_NOT_FOUND': {
@@ -64,7 +64,7 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
       return 'Script not found. Try regenerating the podcast.';
     }
 
-    case 'DOCUMENT_PARSE_ERROR': {
+    case 'SOURCE_PARSE_ERROR': {
       const data = error.data as { fileName: string };
       return `Failed to parse ${data.fileName}. The file may be corrupted.`;
     }
@@ -92,7 +92,7 @@ const SAFE_GENERATION_ERROR_PATTERNS = [
   /^Processing failed(?:\.[\s\S]*)?$/i,
   /^Too many requests\.[\s\S]*$/i,
   /^AI service is temporarily unavailable\.[\s\S]*$/i,
-  /^Document not found\.[\s\S]*$/i,
+  /^Source not found\.[\s\S]*$/i,
   /^Podcast not found\.[\s\S]*$/i,
   /^Script not found\.[\s\S]*$/i,
   /^Job not found\.[\s\S]*$/i,

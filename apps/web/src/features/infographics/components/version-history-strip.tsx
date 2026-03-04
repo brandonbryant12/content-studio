@@ -49,7 +49,7 @@ const VersionCard = memo(function VersionCard({
           </span>
         </div>
       )}
-      <span className="text-[10px] font-medium text-muted-foreground">
+      <span className="text-xs font-medium text-muted-foreground">
         v{version.versionNumber}
       </span>
     </button>
@@ -89,7 +89,7 @@ export function VersionHistoryStrip({
             <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">
               Versions ({versions.length})
             </p>
-            <div className="flex items-center gap-1.5 text-[11px]">
+            <div className="flex items-center gap-1.5 text-xs">
               <span className="rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 text-muted-foreground">
                 Viewing v{viewingVersionNumber ?? '—'}
               </span>

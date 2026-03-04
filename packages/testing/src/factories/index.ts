@@ -1,15 +1,15 @@
 export * from './user';
-export * from './document';
+export * from './source';
 export * from './podcast';
 export * from './infographic';
 export * from './voiceover';
 
-import { resetDocumentCounter } from './document';
 import {
   resetInfographicCounter,
   resetInfographicVersionCounter,
 } from './infographic';
 import { resetPodcastCounters } from './podcast';
+import { resetSourceCounter } from './source';
 import { resetUserCounter } from './user';
 import { resetVoiceoverCounter } from './voiceover';
 
@@ -19,7 +19,7 @@ import { resetVoiceoverCounter } from './voiceover';
  */
 export function resetAllFactories() {
   resetUserCounter();
-  resetDocumentCounter();
+  resetSourceCounter();
   resetPodcastCounters();
   resetInfographicCounter();
   resetInfographicVersionCounter();

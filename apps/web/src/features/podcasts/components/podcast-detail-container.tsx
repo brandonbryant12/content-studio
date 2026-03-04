@@ -52,8 +52,8 @@ export function PodcastDetailContainer({
   const settings = usePodcastSettings({ podcast });
 
   const initialDocuments = useMemo(
-    () => [...podcast.documents],
-    [podcast.documents],
+    () => [...podcast.sources],
+    [podcast.sources],
   );
 
   const documentSelection = useDocumentSelection({

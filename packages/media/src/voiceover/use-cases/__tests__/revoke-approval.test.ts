@@ -81,7 +81,7 @@ const createTestVoiceover = (
   voiceName: null,
   audioUrl: null,
   duration: null,
-  sourceDocumentId: null,
+  sourceId: null,
   status: 'ready',
   errorMessage: null,
   approvedBy: null,

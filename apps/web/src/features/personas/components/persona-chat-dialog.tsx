@@ -9,7 +9,7 @@ import {
 } from '@repo/ui/components/dialog';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { UIMessage } from 'ai';
 import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
 import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
@@ -24,7 +24,21 @@ const EXAMPLE_PROMPTS = [
   'A witty science communicator',
   'A no-nonsense tech analyst',
   'A warm storytelling host',
+  'A sarcastic historian who makes the past feel personal',
+  'A calm mindfulness coach with a poetic edge',
+  'A high-energy sports commentator turned business analyst',
+  'A retired astronaut who explains complex ideas simply',
+  'A street-smart entrepreneur with zero filter',
+  'A philosophical comedian who finds humor in big questions',
+  'A Gen-Z culture critic with deep media literacy',
+  'A grandmotherly figure who gives tough-love career advice',
+  'A cybersecurity expert who speaks in metaphors',
 ];
+
+function pickRandom<T>(items: T[], count: number): T[] {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 interface PersonaChatDialogProps {
   open: boolean;
@@ -59,6 +73,7 @@ export function PersonaChatDialog({
   followUpLimit,
   onKeepRefining,
 }: PersonaChatDialogProps) {
+  const suggestions = useMemo(() => pickRandom(EXAMPLE_PROMPTS, 3), []);
   const isInputDisabled = isStreaming || isCreatingPersona;
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
@@ -103,7 +118,7 @@ export function PersonaChatDialog({
                 What kind of persona would you like to create? Try one of these:
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {EXAMPLE_PROMPTS.map((prompt) => (
+                {suggestions.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"

@@ -1,11 +1,11 @@
 import {
-  DocumentStatus,
+  SourceStatus,
   VersionStatus,
   VoiceoverStatus,
   InfographicStatus,
 } from '@repo/db/schema';
 import {
-  DocumentRepo,
+  SourceRepo,
   PodcastRepo,
   VoiceoverRepo,
   InfographicRepo,
@@ -23,14 +23,14 @@ const updateEntityForJob = (job: Job, publishEvent: PublishEvent) =>
     const userId = payload.userId;
     if (!userId) return;
 
-    if (payload.documentId) {
-      const repo = yield* DocumentRepo;
+    if (payload.sourceId) {
+      const repo = yield* SourceRepo;
       yield* repo.updateStatus(
-        payload.documentId,
-        DocumentStatus.FAILED,
+        payload.sourceId,
+        SourceStatus.FAILED,
         TIMEOUT_MESSAGE,
       );
-      emitEntityChange(publishEvent, userId, 'document', payload.documentId);
+      emitEntityChange(publishEvent, userId, 'source', payload.sourceId);
     } else if (payload.podcastId) {
       const repo = yield* PodcastRepo;
       yield* repo.updateStatus(

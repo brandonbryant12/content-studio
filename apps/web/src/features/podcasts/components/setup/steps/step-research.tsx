@@ -3,7 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
 import {
@@ -31,12 +31,26 @@ const EXAMPLE_TOPICS = [
   'Climate Technology',
   'Space Exploration',
   'Quantum Computing',
+  'The Future of Work and Automation',
+  'Gene Editing and Bioethics',
+  'Ocean Conservation Breakthroughs',
+  'The Psychology of Misinformation',
+  'Autonomous Vehicles and Smart Cities',
+  'The Science of Sleep and Performance',
+  'Digital Privacy in the Age of AI',
+  'Renewable Energy Grid Challenges',
 ];
+
+function pickRandom<T>(items: T[], count: number): T[] {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 export function StepResearch({
   onDocumentCreated,
   createdDocumentId,
 }: StepResearchProps) {
+  const suggestions = useMemo(() => pickRandom(EXAMPLE_TOPICS, 3), []);
   const queryClient = useQueryClient();
   const {
     messages,
@@ -53,7 +67,7 @@ export function StepResearch({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const startResearchMutation = useMutation(
-    apiClient.documents.fromResearch.mutationOptions({
+    apiClient.sources.fromResearch.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({
           queryKey: getDocumentListQueryKey(),
@@ -144,7 +158,7 @@ export function StepResearch({
               Describe a topic to research for your podcast
             </p>
             <div className="flex flex-wrap justify-center gap-2">
-              {EXAMPLE_TOPICS.map((topic) => (
+              {suggestions.map((topic) => (
                 <button
                   key={topic}
                   type="button"

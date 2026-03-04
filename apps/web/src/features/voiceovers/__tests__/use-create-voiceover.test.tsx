@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreateVoiceover } from '../hooks/use-create-voiceover';
 import { getVoiceoverQueryKey } from '../hooks/use-voiceover';
@@ -98,7 +97,6 @@ describe('useCreateVoiceover', () => {
       ).toEqual(createdVoiceover);
     });
 
-    expect(toast.success).toHaveBeenCalledWith('Voiceover created');
     expect(navigateMock).toHaveBeenCalledWith({
       to: '/voiceovers/$voiceoverId',
       params: { voiceoverId: createdVoiceover.id },

@@ -1,5 +1,5 @@
 import { PlusIcon } from '@radix-ui/react-icons';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { SegmentItem } from './segment-item';
 
@@ -20,11 +20,13 @@ interface ScriptEditorProps {
  */
 function NewSegmentRow({
   speaker,
+  hostSpeaker,
   onSave,
   onCancel,
   onSpeakerToggle,
 }: {
   speaker: string;
+  hostSpeaker: string;
   onSave: (line: string) => void;
   onCancel: () => void;
   onSpeakerToggle: () => void;
@@ -63,8 +65,8 @@ function NewSegmentRow({
     [handleSave, onCancel],
   );
 
-  const isHost = speaker.toLowerCase() === 'host';
-  const isCohost = speaker.toLowerCase() === 'cohost';
+  const isHost = speaker.toLowerCase() === hostSpeaker.toLowerCase();
+  const isCohost = !isHost;
 
   return (
     <div className="segment-row editing new-segment">
@@ -136,6 +138,22 @@ export function ScriptEditor({
     speaker: string;
   } | null>(null);
 
+  // Derive the two unique speaker names from segments.
+  // First unique speaker = host role, second = cohost role.
+  // Handles both literal 'host'/'cohost' and persona names like 'Alex'.
+  const speakerNames = useMemo(() => {
+    const unique: string[] = [];
+    for (const seg of segments) {
+      if (
+        unique.length < 2 &&
+        !unique.some((n) => n.toLowerCase() === seg.speaker.toLowerCase())
+      ) {
+        unique.push(seg.speaker);
+      }
+    }
+    return { host: unique[0] ?? 'host', cohost: unique[1] ?? 'cohost' };
+  }, [segments]);
+
   const handleStartEdit = useCallback((segmentIndex: number) => {
     setEditingIndex(segmentIndex);
   }, []);
@@ -178,13 +196,15 @@ export function ScriptEditor({
 
   const getOppositeSpeaker = useCallback(
     (afterIndex: number): string => {
-      if (afterIndex === -1) return 'host';
+      if (afterIndex === -1) return speakerNames.host;
       const arrayIdx = segments.findIndex((s) => s.index === afterIndex);
-      if (arrayIdx === -1) return 'host';
+      if (arrayIdx === -1) return speakerNames.host;
       const prevSpeaker = segments[arrayIdx]?.speaker.toLowerCase();
-      return prevSpeaker === 'host' ? 'cohost' : 'host';
+      return prevSpeaker === speakerNames.host.toLowerCase()
+        ? speakerNames.cohost
+        : speakerNames.host;
     },
-    [segments],
+    [segments, speakerNames],
   );
 
   const handleAddAfter = useCallback(
@@ -217,10 +237,13 @@ export function ScriptEditor({
   const handleNewSegmentSpeakerToggle = useCallback(() => {
     setNewSegment((prev) => {
       if (!prev) return prev;
-      const newSpeaker = prev.speaker === 'host' ? 'cohost' : 'host';
+      const newSpeaker =
+        prev.speaker.toLowerCase() === speakerNames.host.toLowerCase()
+          ? speakerNames.cohost
+          : speakerNames.host;
       return { ...prev, speaker: newSpeaker };
     });
-  }, []);
+  }, [speakerNames]);
 
   return (
     <div className="script-segments">
@@ -228,6 +251,7 @@ export function ScriptEditor({
       {newSegment && newSegment.afterIndex === -1 && (
         <NewSegmentRow
           speaker={newSegment.speaker}
+          hostSpeaker={speakerNames.host}
           onSave={handleNewSegmentSave}
           onCancel={handleNewSegmentCancel}
           onSpeakerToggle={handleNewSegmentSpeakerToggle}
@@ -241,6 +265,7 @@ export function ScriptEditor({
             segmentIndex={segment.index}
             isEditing={editingIndex === segment.index}
             disabled={disabled || newSegment !== null}
+            hostSpeaker={speakerNames.host}
             onStartEdit={handleStartEdit}
             onSaveEdit={handleSaveEdit}
             onCancelEdit={handleCancelEdit}
@@ -252,6 +277,7 @@ export function ScriptEditor({
           {newSegment && newSegment.afterIndex === segment.index && (
             <NewSegmentRow
               speaker={newSegment.speaker}
+              hostSpeaker={speakerNames.host}
               onSave={handleNewSegmentSave}
               onCancel={handleNewSegmentCancel}
               onSpeakerToggle={handleNewSegmentSpeakerToggle}

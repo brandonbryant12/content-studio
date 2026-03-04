@@ -2,7 +2,7 @@ import { type Db, type DatabaseError } from '@repo/db/effect';
 import {
   type Voiceover,
   type VoiceoverStatus,
-  type DocumentId,
+  type SourceId,
 } from '@repo/db/schema';
 import { Context, Layer } from 'effect';
 import type { VoiceoverNotFound } from '../../errors';
@@ -48,7 +48,7 @@ export interface VoiceoverRepoService {
   readonly insert: (data: {
     title: string;
     text?: string;
-    sourceDocumentId?: DocumentId;
+    sourceId?: SourceId;
     createdBy: string;
   }) => Effect.Effect<Voiceover, DatabaseError, Db>;
 

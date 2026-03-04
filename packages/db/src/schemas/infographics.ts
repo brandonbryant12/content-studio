@@ -13,18 +13,18 @@ import { user } from './auth';
 import {
   type InfographicId,
   type InfographicVersionId,
-  type DocumentId,
+  type SourceId,
   InfographicIdSchema,
   InfographicVersionIdSchema,
-  DocumentIdSchema,
+  SourceIdSchema,
   generateInfographicId,
   generateInfographicVersionId,
 } from './brands';
-import { document } from './documents';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
 } from './serialization';
+import { source } from './sources';
 
 // =============================================================================
 // Style Properties
@@ -89,9 +89,9 @@ export const infographic = pgTable(
       .notNull()
       .default([]),
     format: infographicFormatEnum('format').notNull(),
-    sourceDocumentId: varchar('sourceDocumentId', { length: 20 })
-      .$type<DocumentId>()
-      .references(() => document.id, { onDelete: 'set null' }),
+    sourceId: varchar('sourceId', { length: 20 })
+      .$type<SourceId>()
+      .references(() => source.id, { onDelete: 'set null' }),
     imageStorageKey: text('image_storage_key'),
     thumbnailStorageKey: text('thumbnail_storage_key'),
     status: infographicStatusEnum('status').notNull().default('draft'),
@@ -111,7 +111,7 @@ export const infographic = pgTable(
   (table) => [
     index('infographic_createdBy_idx').on(table.createdBy),
     index('infographic_status_idx').on(table.status),
-    index('infographic_sourceDocumentId_idx').on(table.sourceDocumentId),
+    index('infographic_sourceId_idx').on(table.sourceId),
   ],
 );
 
@@ -161,7 +161,7 @@ export const CreateInfographicSchema = Schema.Struct({
   format: InfographicFormatSchema,
   prompt: Schema.optional(Schema.String),
   styleProperties: Schema.optional(StylePropertiesSchema),
-  documentId: Schema.optional(DocumentIdSchema),
+  sourceId: Schema.optional(SourceIdSchema),
 });
 
 export const UpdateInfographicFields = {
@@ -181,7 +181,7 @@ export const InfographicOutputSchema = Schema.Struct({
   prompt: Schema.NullOr(Schema.String),
   styleProperties: StylePropertiesSchema,
   format: InfographicFormatSchema,
-  sourceDocumentId: Schema.NullOr(DocumentIdSchema),
+  sourceId: Schema.NullOr(SourceIdSchema),
   imageStorageKey: Schema.NullOr(Schema.String),
   thumbnailStorageKey: Schema.NullOr(Schema.String),
   status: InfographicStatusSchema,
@@ -230,7 +230,7 @@ const infographicTransform = (row: Infographic): InfographicOutput => ({
   prompt: row.prompt ?? null,
   styleProperties: row.styleProperties ?? [],
   format: row.format,
-  sourceDocumentId: row.sourceDocumentId ?? null,
+  sourceId: row.sourceId ?? null,
   imageStorageKey: row.imageStorageKey ?? null,
   thumbnailStorageKey: row.thumbnailStorageKey ?? null,
   status: row.status,

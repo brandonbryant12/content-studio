@@ -426,11 +426,9 @@
     font-optical-sizing: auto;
   }
 
-  /* Monospace for technical/meta info */
+  /* Technical/meta info */
   .font-technical {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     font-size: 0.875em;
-    letter-spacing: -0.02em;
   }
 }
 
@@ -536,8 +534,7 @@
   }
 
   .recent-section-count {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded;
+    @apply text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded tabular-nums;
   }
 
   .recent-section-body {
@@ -561,12 +558,11 @@
   }
 
   .recent-item-title {
-    @apply text-sm font-medium text-foreground truncate;
+    @apply text-base font-medium text-foreground truncate;
   }
 
   .recent-item-meta {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[11px] text-muted-foreground mt-0.5;
+    @apply text-xs text-muted-foreground mt-0.5;
   }
 
   .recent-item-status {
@@ -621,10 +617,7 @@
      Warm, editorial feel with Fraunces display
      ----------------------------------------- */
   .page-eyebrow {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.75em;
-    letter-spacing: 0.12em;
-    @apply text-primary/70 mb-3 uppercase font-medium;
+    @apply text-xs font-semibold text-primary/70 mb-3;
   }
 
   .page-title {
@@ -663,7 +656,7 @@
   }
 
   .text-body {
-    @apply text-muted-foreground text-sm leading-relaxed;
+    @apply text-muted-foreground text-base leading-relaxed;
   }
 
   .text-body-lg {
@@ -671,9 +664,6 @@
   }
 
   .text-meta {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.8em;
-    letter-spacing: -0.01em;
     @apply text-xs text-muted-foreground;
   }
 
@@ -757,7 +747,7 @@
   }
 
   .action-card-description {
-    @apply text-sm text-muted-foreground mt-0.5;
+    @apply text-base text-muted-foreground mt-0.5;
   }
 
   /* -----------------------------------------
@@ -976,7 +966,7 @@
   }
 
   .content-card-description {
-    @apply text-xs text-muted-foreground line-clamp-2 leading-relaxed;
+    @apply text-sm text-muted-foreground line-clamp-2 leading-relaxed;
   }
 
   .content-card-delete {
@@ -1066,7 +1056,7 @@
   }
 
   .empty-state-description {
-    @apply text-sm text-muted-foreground text-center max-w-sm mb-5 leading-relaxed;
+    @apply text-base text-muted-foreground text-center max-w-sm mb-5 leading-relaxed;
   }
 
   /* -----------------------------------------
@@ -1110,7 +1100,7 @@
   }
 
   .text-link {
-    @apply text-sm text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline decoration-primary/40;
+    @apply text-base text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline decoration-primary/40;
   }
 
   .text-link-primary {
@@ -1182,6 +1172,45 @@
 
   .search-icon {
     @apply absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground;
+  }
+
+  /* -----------------------------------------
+     LIST ROWS
+     Card-style rows for entity lists
+     ----------------------------------------- */
+  .list-row {
+    @apply flex items-center gap-3 px-4 py-3.5 rounded-lg;
+    @apply border border-border/40 bg-card;
+    @apply border-l-2 border-l-transparent;
+    @apply transition-all duration-150;
+  }
+
+  .list-row:hover {
+    @apply border-border border-l-primary/40 shadow-sm;
+  }
+
+  .list-row-selected {
+    @apply border-primary/30 bg-primary/5 border-l-primary;
+  }
+
+  .list-row-selected:hover {
+    @apply border-primary/30 border-l-primary shadow-sm;
+  }
+
+  .list-row-title {
+    @apply font-medium text-sm text-foreground;
+  }
+
+  .list-row-meta {
+    @apply text-xs text-muted-foreground shrink-0;
+  }
+
+  .list-toolbar {
+    @apply flex items-center gap-3 px-1 pb-3;
+  }
+
+  .list-toolbar-count {
+    @apply text-xs text-muted-foreground;
   }
 
   /* -----------------------------------------
@@ -1332,7 +1361,7 @@
   }
 
   .workbench-v3-status {
-    @apply gap-1 text-[10px] px-2 py-0.5;
+    @apply gap-1 text-xs px-2 py-0.5;
   }
 
   .workbench-v3-header-right {
@@ -1340,7 +1369,6 @@
   }
 
   .workbench-v3-duration {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground tabular-nums;
   }
 
@@ -1445,7 +1473,6 @@
   }
 
   .workbench-duration {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply flex items-center gap-1.5 text-sm text-primary font-medium tabular-nums;
   }
 
@@ -1514,8 +1541,7 @@
   }
 
   .research-callout-label {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[10px] uppercase tracking-wider text-purple-500/70 dark:text-purple-400/60;
+    @apply text-xs font-medium text-purple-500/70 dark:text-purple-400/60;
   }
 
   .research-callout-query {
@@ -1536,8 +1562,7 @@
   }
 
   .research-sources-count {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[11px] tracking-wide;
+    @apply text-xs;
   }
 
   .research-sources-list {
@@ -1581,8 +1606,7 @@
   }
 
   .research-source-domain {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground/70 truncate;
+    @apply text-xs text-muted-foreground/70 truncate;
   }
 
   .research-source-arrow {
@@ -1609,12 +1633,11 @@
      DOCUMENT READER LAYOUT
      ----------------------------------------- */
   .doc-reader-wrapper {
-    @apply px-4 py-8 sm:px-6 lg:px-8 lg:py-12
-           flex justify-center;
+    @apply px-4 py-8 sm:px-6 lg:px-8 lg:py-12;
   }
 
   .doc-reader-surface {
-    @apply w-full max-w-3xl
+    @apply w-full
            bg-card rounded-xl border border-border/60
            px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12;
     box-shadow:
@@ -1626,9 +1649,8 @@
      DOCUMENT METADATA BAR
      ----------------------------------------- */
   .doc-meta-bar {
-    font-family: var(--font-mono);
     @apply flex flex-wrap items-center gap-2.5 mb-8
-           text-xs tracking-wide text-muted-foreground;
+           text-xs text-muted-foreground;
   }
 
   .doc-meta-item {
@@ -1667,13 +1689,11 @@
   }
 
   .doc-url-callout-domain {
-    font-family: var(--font-mono);
-    @apply text-xs font-medium text-foreground/70 tracking-wide;
+    @apply text-xs font-medium text-foreground/70;
   }
 
   .doc-url-callout-date {
-    font-family: var(--font-mono);
-    @apply text-[10px] text-muted-foreground/60 ml-auto;
+    @apply text-xs text-muted-foreground/60 ml-auto;
   }
 
   .doc-url-callout-link {
@@ -1759,7 +1779,7 @@
   }
 
   .script-summary-v2-label {
-    @apply uppercase tracking-wider font-medium;
+    @apply font-medium;
   }
 
   .script-summary-v2-icon {
@@ -1885,7 +1905,7 @@
   }
 
   .script-summary-text {
-    @apply text-xs font-semibold text-warning uppercase tracking-wider;
+    @apply text-xs font-semibold text-warning;
   }
 
   .script-summary-chevron {
@@ -1938,7 +1958,7 @@
   }
 
   .segment-row-speaker-badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold;
   }
 
   .segment-row-speaker-badge.host {
@@ -2012,7 +2032,7 @@
   }
 
   .segment-speaker-btn {
-    @apply px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide
+    @apply px-2 py-0.5 rounded text-xs font-semibold
            transition-all duration-150 border border-transparent;
   }
 
@@ -2034,8 +2054,7 @@
 
   /* Edit mode hint bar */
   .segment-edit-hints {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply flex items-center gap-3 mt-2 pt-2 border-t border-border/50 text-[10px] text-muted-foreground;
+    @apply flex items-center gap-3 mt-2 pt-2 border-t border-border/50 text-xs text-muted-foreground;
   }
 
   .segment-edit-hint {
@@ -2252,8 +2271,7 @@
   }
 
   .generation-step-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] uppercase tracking-wider transition-colors duration-300;
+    @apply text-xs font-medium transition-colors duration-300;
   }
 
   .generation-step-label.pending {
@@ -2335,7 +2353,7 @@
   }
 
   .doc-manager-item-icon span {
-    @apply text-[9px] font-semibold text-warning uppercase;
+    @apply text-xs font-semibold text-warning;
   }
 
   .doc-manager-item-info {
@@ -2347,8 +2365,7 @@
   }
 
   .doc-manager-item-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[11px] text-muted-foreground tabular-nums;
+    @apply text-xs text-muted-foreground tabular-nums;
   }
 
   .doc-manager-item-remove {
@@ -2381,7 +2398,7 @@
   }
 
   .doc-picker-item-icon span {
-    @apply text-[10px] font-bold text-warning uppercase tracking-wider;
+    @apply text-xs font-bold text-warning;
   }
 
   .doc-picker-item-info {
@@ -2393,8 +2410,7 @@
   }
 
   .doc-picker-item-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[11px] text-muted-foreground tabular-nums;
+    @apply text-xs text-muted-foreground tabular-nums;
   }
 
   .doc-picker-checkbox {
@@ -2425,7 +2441,7 @@
   }
 
   .settings-label {
-    @apply text-xs font-medium text-muted-foreground uppercase tracking-wide;
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   .settings-grid {
@@ -2449,7 +2465,7 @@
   }
 
   .settings-voice-indicator {
-    @apply w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold;
+    @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold;
   }
 
   .settings-voice-indicator.female {
@@ -2485,7 +2501,7 @@
   }
 
   .settings-hint {
-    @apply text-[11px] text-muted-foreground;
+    @apply text-xs text-muted-foreground;
   }
 
   /* -----------------------------------------
@@ -2601,8 +2617,7 @@
   }
 
   .mixer-locked-hint {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-warning flex items-center gap-1;
+    @apply text-xs text-warning flex items-center gap-1;
   }
 
   .mixer-section.disabled {
@@ -2657,8 +2672,7 @@
   }
 
   .mixer-channel-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider;
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   /* Voice selector dropdown-style */
@@ -2697,7 +2711,7 @@
   }
 
   .mixer-voice-desc {
-    @apply text-[10px] text-muted-foreground truncate;
+    @apply text-xs text-muted-foreground truncate;
   }
 
   .mixer-voice-chevron {
@@ -2741,7 +2755,7 @@
   }
 
   .mixer-voice-option-avatar {
-    @apply w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold;
+    @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold;
   }
 
   .mixer-voice-option-name {
@@ -2796,8 +2810,7 @@
   }
 
   .mixer-duration-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block;
+    @apply text-xs font-medium text-muted-foreground mb-2 block;
   }
 
   .mixer-duration-track {
@@ -2855,8 +2868,7 @@
   }
 
   .mixer-notes-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block;
+    @apply text-xs font-medium text-muted-foreground mb-2 block;
   }
 
   /* Duration Slider */
@@ -2869,8 +2881,7 @@
   }
 
   .mixer-duration-range-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground tabular-nums shrink-0;
+    @apply text-xs text-muted-foreground tabular-nums shrink-0;
   }
 
   .mixer-duration-value-display {
@@ -2878,7 +2889,6 @@
   }
 
   .mixer-duration-value {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-lg font-semibold text-warning tabular-nums;
   }
 
@@ -2894,8 +2904,7 @@
   }
 
   .persona-picker-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block;
+    @apply text-xs font-medium text-muted-foreground mb-1.5 block;
   }
 
   .persona-picker-trigger {
@@ -2927,7 +2936,7 @@
   }
 
   .persona-picker-selected-role {
-    @apply text-[10px] text-muted-foreground truncate leading-tight;
+    @apply text-xs text-muted-foreground truncate leading-tight;
   }
 
   .persona-picker-placeholder {
@@ -2979,7 +2988,7 @@
 
   .persona-picker-option-avatar {
     @apply w-6 h-6 rounded-md bg-primary/15 text-primary
-           flex items-center justify-center text-[10px] font-bold shrink-0;
+           flex items-center justify-center text-xs font-bold shrink-0;
   }
 
   .persona-picker-option-avatar.none {
@@ -2995,12 +3004,11 @@
   }
 
   .persona-picker-option-role {
-    @apply text-[10px] text-muted-foreground truncate leading-tight;
+    @apply text-xs text-muted-foreground truncate leading-tight;
   }
 
   .persona-picker-option-voice-badge {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[9px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium uppercase tracking-wider shrink-0;
+    @apply text-xs px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium shrink-0;
   }
 
   .persona-picker-empty {
@@ -3130,12 +3138,11 @@
   }
 
   .timeline-version-number {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-sm font-medium text-foreground tabular-nums;
   }
 
   .timeline-version-badge {
-    @apply px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide
+    @apply px-1.5 py-0.5 rounded text-xs font-semibold
            bg-warning/20 text-warning;
   }
 
@@ -3144,8 +3151,7 @@
   }
 
   .timeline-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground tabular-nums mt-1;
+    @apply text-xs text-muted-foreground tabular-nums mt-1;
   }
 
   .timeline-restore-btn {
@@ -3174,8 +3180,7 @@
   }
 
   .history-toggle-count {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] bg-muted px-1.5 py-0.5 rounded tabular-nums;
+    @apply text-xs bg-muted px-1.5 py-0.5 rounded tabular-nums;
   }
 
   .history-toggle.active .history-toggle-count {
@@ -3293,7 +3298,6 @@
   }
 
   .prompt-meta-value {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-foreground;
   }
 
@@ -3324,8 +3328,7 @@
   }
 
   .prompt-section-badge {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded ml-1;
+    @apply text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded ml-1;
   }
 
   .prompt-section-chevron {
@@ -3416,8 +3419,7 @@
   }
 
   .docs-count {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded;
+    @apply text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded tabular-nums;
   }
 
   /* -----------------------------------------
@@ -3489,8 +3491,7 @@
   }
 
   .audio-player-time {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply flex items-center gap-1 text-xs text-muted-foreground;
+    @apply flex items-center gap-1 text-xs text-muted-foreground tabular-nums;
   }
 
   .audio-player-current {
@@ -3590,8 +3591,7 @@
   }
 
   .setup-step-eyebrow {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    @apply text-xs text-warning font-medium uppercase tracking-widest mb-2;
+    @apply text-xs text-warning font-semibold mb-2;
   }
 
   .setup-step-title {
@@ -3687,7 +3687,7 @@
      DOCUMENT PICKER (Step 2)
      ----------------------------------------- */
   .setup-tabs {
-    @apply flex gap-2 p-1 bg-secondary/50 rounded-xl mb-6;
+    @apply flex gap-2 p-1 bg-secondary/50 rounded-xl mb-6 mx-auto w-fit;
   }
 
   .setup-tab {
@@ -3699,8 +3699,35 @@
     @apply outline-none ring-2 ring-warning/50 ring-offset-2 ring-offset-background;
   }
 
-  .setup-tab.active {
+  .setup-tab.active,
+  .setup-tab[aria-selected='true'] {
     @apply bg-card text-foreground shadow-sm;
+  }
+
+  .setup-source-tabs {
+    @apply mb-6 mx-auto flex h-auto w-full max-w-[32rem] flex-wrap items-center justify-center gap-1 rounded-xl bg-secondary/50 p-1;
+  }
+
+  .setup-source-tab {
+    @apply inline-flex min-h-9 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[color,background-color,box-shadow] duration-200 text-muted-foreground hover:text-foreground;
+  }
+
+  .setup-source-tabs .setup-source-tab:focus-visible {
+    @apply relative z-10 outline-none ring-2 ring-ring/60 ring-offset-1 ring-offset-background;
+  }
+
+  .setup-source-tabs .setup-source-tab[data-state='active'] {
+    @apply bg-card text-foreground shadow-sm;
+  }
+
+  @media (min-width: 640px) {
+    .setup-source-tabs {
+      @apply w-fit max-w-none flex-nowrap gap-2;
+    }
+
+    .setup-source-tab {
+      @apply flex-none px-4;
+    }
   }
 
   .setup-doc-grid {
@@ -3721,7 +3748,7 @@
   }
 
   .setup-doc-icon span {
-    @apply text-[10px] font-bold text-warning uppercase tracking-wider;
+    @apply text-xs font-bold text-warning;
   }
 
   .setup-doc-info {
@@ -3733,7 +3760,6 @@
   }
 
   .setup-doc-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground tabular-nums mt-0.5;
   }
 
@@ -3814,7 +3840,6 @@
   }
 
   .setup-file-size {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground;
   }
 
@@ -3855,7 +3880,6 @@
   }
 
   .setup-duration-range-label {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground tabular-nums shrink-0;
   }
 
@@ -3864,7 +3888,6 @@
   }
 
   .setup-duration-value {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-2xl font-semibold text-warning tabular-nums;
   }
 
@@ -3971,7 +3994,6 @@
   }
 
   .setup-char-count {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground text-right mt-1 tabular-nums;
   }
 
@@ -4128,11 +4150,11 @@
   }
 
   .config-section-title {
-    @apply flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider;
+    @apply flex items-center gap-2 text-xs font-medium text-muted-foreground;
   }
 
   .config-section-count {
-    @apply ml-1 px-1.5 py-0.5 rounded bg-muted text-[10px] font-semibold tabular-nums;
+    @apply ml-1 px-1.5 py-0.5 rounded bg-muted text-xs font-semibold tabular-nums;
   }
 
   .config-prompt-toggle {
@@ -4287,7 +4309,7 @@
   }
 
   .collab-overflow-text {
-    @apply text-[10px] font-semibold tracking-tight;
+    @apply text-xs font-semibold;
   }
 
   /* -----------------------------------------
@@ -4363,13 +4385,13 @@
   }
 
   .collab-list-role-badge {
-    @apply text-[10px] font-semibold uppercase tracking-wide;
+    @apply text-xs font-semibold;
     @apply px-1.5 py-0.5 rounded;
     @apply bg-primary/10 text-primary;
   }
 
   .collab-list-pending-badge {
-    @apply text-[10px] font-medium uppercase tracking-wide;
+    @apply text-xs font-medium;
     @apply px-1.5 py-0.5 rounded;
     @apply bg-muted text-muted-foreground;
     @apply border border-dashed border-muted-foreground/30;
@@ -4504,15 +4526,18 @@
   }
 
   .voice-ensemble-stage {
-    @apply flex flex-wrap justify-center gap-3;
+    @apply flex gap-2 overflow-x-auto py-1 px-0.5;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
   }
 
   .voice-card {
-    @apply flex flex-col items-center gap-2 px-4 py-3 min-w-[90px] cursor-pointer;
+    @apply flex flex-1 flex-col items-center gap-1 px-3 py-2.5 min-w-[4.5rem] cursor-pointer;
     @apply rounded-xl border border-border bg-card;
     @apply transition-all duration-300 ease-out;
     @apply hover:border-muted-foreground/30;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    scroll-snap-align: start;
   }
 
   .voice-card[aria-disabled='true'] {
@@ -4520,24 +4545,24 @@
   }
 
   .voice-card:hover:not([aria-disabled='true']) {
-    transform: translateY(-2px);
-    @apply shadow-md;
+    transform: translateY(-1px);
+    @apply shadow-sm;
   }
 
   .voice-card-selected {
     @apply border-primary bg-primary/5;
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-1px);
     box-shadow:
-      0 4px 12px -2px hsl(var(--primary) / 0.2),
+      0 2px 8px -2px hsl(var(--primary) / 0.2),
       0 0 0 1px hsl(var(--primary) / 0.3);
   }
 
   .voice-card-selected:hover:not([aria-disabled='true']) {
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-1px);
   }
 
   .voice-card-symbol {
-    @apply flex items-center justify-center w-10 h-10 rounded-full;
+    @apply flex items-center justify-center w-8 h-8 rounded-full;
     @apply bg-muted text-muted-foreground;
     @apply transition-all duration-300;
   }
@@ -4548,17 +4573,16 @@
 
   .voice-card-name {
     font-family: 'Fraunces', Georgia, serif;
-    @apply text-sm font-semibold text-foreground;
+    @apply text-xs font-semibold text-foreground;
   }
 
   .voice-card-trait {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    @apply text-[10px] uppercase tracking-wider text-muted-foreground;
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   /* Voice Preview Button — voiceover ensemble cards */
   .voice-preview-btn {
-    @apply w-7 h-7 rounded-full flex items-center justify-center mt-1;
+    @apply w-6 h-6 rounded-full flex items-center justify-center;
     @apply text-muted-foreground/60 bg-transparent border border-transparent;
     @apply transition-all duration-200 ease-out;
     @apply hover:text-primary hover:bg-primary/10 hover:border-primary/20;
@@ -4634,7 +4658,6 @@
   }
 
   .manuscript-count-text {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-xs text-muted-foreground tabular-nums;
   }
 
@@ -4711,7 +4734,6 @@
   }
 
   .stage-time {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
     @apply text-sm text-muted-foreground tabular-nums min-w-[40px];
   }
 

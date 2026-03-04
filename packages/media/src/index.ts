@@ -1,14 +1,14 @@
 import { Layer } from 'effect';
 
 export {
-  DocumentNotFound,
-  DocumentError,
-  DocumentTooLargeError,
-  UnsupportedDocumentFormat,
-  DocumentParseError,
+  SourceNotFound,
+  SourceError,
+  SourceTooLargeError,
+  UnsupportedSourceFormat,
+  SourceParseError,
   UrlFetchError,
   InvalidUrlError,
-  DocumentAlreadyProcessing,
+  SourceAlreadyProcessing,
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
@@ -43,31 +43,31 @@ export {
 } from './activity';
 
 export {
-  DocumentRepo,
-  DocumentRepoLive,
-  type DocumentRepoService,
-  type ListOptions as DocumentListOptions,
-} from './document';
+  SourceRepo,
+  SourceRepoLive,
+  type SourceRepoService,
+  type ListOptions as SourceListOptions,
+} from './source';
 
 export {
-  listDocuments,
-  getDocument,
-  getDocumentContent,
-  createDocument,
-  uploadDocument,
-  updateDocument,
-  deleteDocument,
+  listSources,
+  getSource,
+  getSourceContent,
+  createSource,
+  uploadSource,
+  updateSource,
+  deleteSource,
   createFromUrl,
   retryProcessing,
-  type ListDocumentsInput,
-  type ListDocumentsResult,
-  type GetDocumentInput,
-  type GetDocumentContentInput,
-  type GetDocumentContentResult,
-  type CreateDocumentInput,
-  type UploadDocumentInput,
-  type UpdateDocumentInput,
-  type DeleteDocumentInput,
+  type ListSourcesInput,
+  type ListSourcesResult,
+  type GetSourceInput,
+  type GetSourceContentInput,
+  type GetSourceContentResult,
+  type CreateSourceInput,
+  type UploadSourceInput,
+  type UpdateSourceInput,
+  type DeleteSourceInput,
   type CreateFromUrlInput,
   type RetryProcessingInput,
   createFromResearch,
@@ -77,21 +77,21 @@ export {
   calculateContentHash,
   processResearch,
   type ProcessResearchInput,
-  awaitDocumentsReady,
-  type AwaitDocumentsReadyInput,
-  DocumentsNotReadyTimeout,
-} from './document';
+  awaitSourcesReady,
+  type AwaitSourcesReadyInput,
+  SourcesNotReadyTimeout,
+} from './source';
 
 export {
   UrlScraper,
   UrlScraperLive,
   type UrlScraperService,
   type ScrapedContent,
-} from './document';
+} from './source';
 
 export {
   parseUploadedFile,
-  parseDocumentContent,
+  parseSourceContent,
   validateFileSize,
   validateMimeType,
   getMimeType,
@@ -99,21 +99,21 @@ export {
   MAX_FILE_SIZE,
   SUPPORTED_MIME_TYPES,
   EXTENSION_TO_MIME,
-  type ParsedDocument,
+  type ParsedSource,
   type FileUploadInput,
-  type InsertDocumentInput,
-  type UpdateDocumentInput as RepoUpdateDocumentInput,
-  type Document,
-  type CreateDocument,
-  type UpdateDocument,
-  type DocumentSource,
-} from './document';
+  type InsertSourceInput,
+  type UpdateSourceInput as RepoUpdateSourceInput,
+  type Source,
+  type CreateSource,
+  type UpdateSource,
+  type SourceOrigin,
+} from './source';
 
 export {
   PodcastRepo,
   PodcastRepoLive,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
   type ListOptions,
   type UpdateScriptOptions,
   type UpdateAudioOptions,
@@ -213,24 +213,24 @@ export {
 } from './persona';
 
 import type { ActivityLogRepo } from './activity';
-import type { DocumentRepo } from './document';
 import type { InfographicRepo } from './infographic';
 import type { StylePresetRepo } from './infographic';
 import type { PersonaRepo } from './persona';
 import type { PodcastRepo } from './podcast';
+import type { SourceRepo } from './source';
 import type { VoiceoverRepo } from './voiceover';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 import { ActivityLogRepoLive } from './activity';
-import { DocumentRepoLive } from './document';
 import { InfographicRepoLive, StylePresetRepoLive } from './infographic';
 import { PersonaRepoLive } from './persona';
 import { PodcastRepoLive } from './podcast';
+import { SourceRepoLive } from './source';
 import { VoiceoverRepoLive } from './voiceover';
 
 // When adding a new repo, add it to both Media and MediaLive.
 export type Media =
-  | DocumentRepo
+  | SourceRepo
   | PodcastRepo
   | VoiceoverRepo
   | InfographicRepo
@@ -240,7 +240,7 @@ export type Media =
 
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
-    DocumentRepoLive,
+    SourceRepoLive,
     PodcastRepoLive,
     VoiceoverRepoLive,
     InfographicRepoLive,

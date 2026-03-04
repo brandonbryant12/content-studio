@@ -13,23 +13,19 @@ import { Schema } from 'effect';
 import { user } from './auth';
 import {
   type PodcastId,
-  type DocumentId,
+  type SourceId,
   type PersonaId,
   PodcastIdSchema,
-  DocumentIdSchema,
+  SourceIdSchema,
   PersonaIdSchema,
   generatePodcastId,
 } from './brands';
-import {
-  DocumentOutputSchema,
-  serializeDocument,
-  type Document,
-} from './documents';
 import { persona } from './personas';
 import {
   createEffectSerializer,
   createBatchEffectSerializer,
 } from './serialization';
+import { SourceOutputSchema, serializeSource, type Source } from './sources';
 
 export const podcastFormatEnum = pgEnum('podcast_format', [
   'voice_over',
@@ -58,7 +54,7 @@ export const VersionStatus = {
 export interface GenerationContext {
   systemPromptTemplate: string;
   userInstructions: string;
-  sourceDocuments: Array<{
+  sourceEntries: Array<{
     id: string;
     title: string;
     contentHash?: string;
@@ -97,9 +93,9 @@ export const podcast = pgTable(
     promptInstructions: text('promptInstructions'),
     targetDurationMinutes: integer('targetDurationMinutes').default(5),
     tags: jsonb('tags').$type<string[]>().default([]),
-    sourceDocumentIds: varchar('sourceDocumentIds', { length: 20 })
+    sourceIds: varchar('sourceIds', { length: 20 })
       .array()
-      .$type<DocumentId[]>()
+      .$type<SourceId[]>()
       .notNull()
       .default([]),
     generationContext: jsonb('generationContext').$type<GenerationContext>(),
@@ -154,7 +150,7 @@ export const CreatePodcastSchema = Schema.Struct({
   ),
   description: Schema.optional(Schema.String),
   format: PodcastFormatSchema,
-  documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+  sourceIds: Schema.optional(Schema.Array(SourceIdSchema)),
   promptInstructions: Schema.optional(Schema.String),
   targetDurationMinutes: Schema.optional(
     Schema.Number.pipe(
@@ -187,7 +183,7 @@ export const UpdatePodcastFields = {
   coHostVoice: Schema.optional(Schema.String),
   coHostVoiceName: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
-  documentIds: Schema.optional(Schema.Array(DocumentIdSchema)),
+  sourceIds: Schema.optional(Schema.Array(SourceIdSchema)),
   coverImageStorageKey: Schema.optional(Schema.NullOr(Schema.String)),
   hostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
   coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
@@ -214,7 +210,7 @@ export const UpdateScriptSchema = Schema.Struct({
 export const GenerationContextOutputSchema = Schema.Struct({
   systemPromptTemplate: Schema.String,
   userInstructions: Schema.String,
-  sourceDocuments: Schema.Array(
+  sourceEntries: Schema.Array(
     Schema.Struct({
       id: Schema.String,
       title: Schema.String,
@@ -243,7 +239,7 @@ export const PodcastOutputSchema = Schema.Struct({
   promptInstructions: Schema.NullOr(Schema.String),
   targetDurationMinutes: Schema.NullOr(Schema.Number),
   tags: Schema.Array(Schema.String),
-  sourceDocumentIds: Schema.Array(DocumentIdSchema),
+  sourceIds: Schema.Array(SourceIdSchema),
   generationContext: Schema.NullOr(GenerationContextOutputSchema),
   status: VersionStatusSchema,
   segments: Schema.NullOr(Schema.Array(ScriptSegmentSchema)),
@@ -264,7 +260,7 @@ export const PodcastOutputSchema = Schema.Struct({
 
 export const PodcastFullOutputSchema = Schema.Struct({
   ...PodcastOutputSchema.fields,
-  documents: Schema.Array(DocumentOutputSchema),
+  sources: Schema.Array(SourceOutputSchema),
 });
 
 /**
@@ -300,7 +296,7 @@ export const PodcastListItemOutputSchema = Schema.Struct({
   promptInstructions: Schema.NullOr(Schema.String),
   targetDurationMinutes: Schema.NullOr(Schema.Number),
   tags: Schema.Array(Schema.String),
-  sourceDocumentIds: Schema.Array(DocumentIdSchema),
+  sourceIds: Schema.Array(SourceIdSchema),
   status: VersionStatusSchema,
   audioUrl: Schema.NullOr(Schema.String),
   duration: Schema.NullOr(Schema.Number),
@@ -337,7 +333,7 @@ const podcastListItemTransform = (
   promptInstructions: p.promptInstructions,
   targetDurationMinutes: p.targetDurationMinutes,
   tags: p.tags ?? [],
-  sourceDocumentIds: p.sourceDocumentIds ?? [],
+  sourceIds: p.sourceIds ?? [],
   status: p.status,
   audioUrl: p.audioUrl ?? null,
   duration: p.duration ?? null,
@@ -367,7 +363,7 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   promptInstructions: podcast.promptInstructions,
   targetDurationMinutes: podcast.targetDurationMinutes,
   tags: podcast.tags ?? [],
-  sourceDocumentIds: podcast.sourceDocumentIds ?? [],
+  sourceIds: podcast.sourceIds ?? [],
   generationContext: podcast.generationContext ?? null,
   status: podcast.status,
   segments: podcast.segments ?? null,
@@ -386,15 +382,15 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   updatedAt: podcast.updatedAt.toISOString(),
 });
 
-type PodcastWithDocuments = Podcast & {
-  documents: Document[];
+type PodcastWithSources = Podcast & {
+  sources: Source[];
 };
 
 const podcastFullTransform = (
-  podcast: PodcastWithDocuments,
+  podcast: PodcastWithSources,
 ): PodcastFullOutput => ({
   ...podcastTransform(podcast),
-  documents: podcast.documents.map(serializeDocument),
+  sources: podcast.sources.map(serializeSource),
 });
 
 export const serializePodcastEffect = createEffectSerializer(

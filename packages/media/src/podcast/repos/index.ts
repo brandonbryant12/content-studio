@@ -2,7 +2,7 @@ export {
   PodcastRepo,
   PodcastRepoLive,
   type PodcastRepoService,
-  type PodcastWithDocuments,
+  type PodcastWithSources,
   type ListOptions,
   type UpdateScriptOptions,
   type UpdateAudioOptions,

@@ -34,7 +34,7 @@ function EmptyState({
         {title}
       </h3>
       {description && (
-        <p className="text-sm text-muted-foreground text-center max-w-sm mb-5 leading-relaxed">
+        <p className="text-base text-muted-foreground text-center max-w-sm mb-5 leading-relaxed">
           {description}
         </p>
       )}

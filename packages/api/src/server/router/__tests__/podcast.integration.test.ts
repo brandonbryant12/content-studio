@@ -2,7 +2,7 @@ import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
   user as userTable,
-  document as documentTable,
+  source as sourceTable,
   podcast as podcastTable,
   job as jobTable,
   type PodcastFullOutput,
@@ -14,14 +14,14 @@ import {
 import {
   ActivityLogRepoLive,
   PodcastRepoLive,
-  DocumentRepoLive,
+  SourceRepoLive,
 } from '@repo/media';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
   createTestUser,
-  createTestDocument,
+  createTestSource,
   createTestPodcast,
   resetAllFactories,
   toUser,
@@ -180,7 +180,7 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
     inMemoryStorage.layer,
   );
   const policyLayer = DatabasePolicyLive.pipe(Layer.provide(ctx.dbLayer));
-  const documentRepoLayer = DocumentRepoLive.pipe(Layer.provide(ctx.dbLayer));
+  const documentRepoLayer = SourceRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const podcastRepoLayer = PodcastRepoLive.pipe(Layer.provide(ctx.dbLayer));
   const activityLogRepoLayer = ActivityLogRepoLive.pipe(
     Layer.provide(ctx.dbLayer),
@@ -224,13 +224,13 @@ const insertTestUser = async (
 const insertTestDocument = async (
   ctx: TestContext,
   userId: string,
-  options: Partial<Parameters<typeof createTestDocument>[0]> = {},
+  options: Partial<Parameters<typeof createTestSource>[0]> = {},
 ) => {
-  const doc = createTestDocument({
+  const doc = createTestSource({
     createdBy: userId,
     ...options,
   });
-  await ctx.db.insert(documentTable).values(doc);
+  await ctx.db.insert(sourceTable).values(doc);
   return doc;
 };
 
@@ -401,7 +401,7 @@ describe('podcast router', () => {
       });
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         title: 'Full Format Test',
-        sourceDocumentIds: [doc.id],
+        sourceIds: [doc.id],
         status: 'ready',
         segments: DEFAULT_TEST_SEGMENTS,
       });
@@ -417,9 +417,9 @@ describe('podcast router', () => {
       expect(result.title).toBe('Full Format Test');
       expect(result.status).toBe('ready');
       expect(result.segments).toEqual(DEFAULT_TEST_SEGMENTS);
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]?.id).toBe(doc.id);
-      expect(result.documents[0]?.title).toBe('Source Doc');
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]?.id).toBe(doc.id);
+      expect(result.sources[0]?.title).toBe('Source Doc');
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
     });
@@ -463,7 +463,7 @@ describe('podcast router', () => {
         input: {
           title: 'Podcast with Metadata',
           format: 'conversation' as const,
-          documentIds: [doc.id],
+          sourceIds: [doc.id],
           description: 'A test podcast description',
           promptInstructions: 'Make it funny',
           targetDurationMinutes: 10,
@@ -479,9 +479,9 @@ describe('podcast router', () => {
       expect(result.title).toBe('Podcast with Metadata');
       expect(result.format).toBe('conversation');
       expect(result.createdBy).toBe(testUser.id);
-      expect(result.sourceDocumentIds).toContain(doc.id);
-      expect(result.documents).toHaveLength(1);
-      expect(result.documents[0]?.id).toBe(doc.id);
+      expect(result.sourceIds).toContain(doc.id);
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]?.id).toBe(doc.id);
       expect(result.description).toBe('A test podcast description');
       expect(result.promptInstructions).toBe('Make it funny');
       expect(result.targetDurationMinutes).toBe(10);
