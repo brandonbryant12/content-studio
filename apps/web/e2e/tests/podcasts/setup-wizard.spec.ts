@@ -175,10 +175,12 @@ authenticatedTest.describe('Podcast Setup Wizard', () => {
       await page.getByRole('button', { name: /settings/i }).click();
 
       // Verify duration is 10 (not the default 5)
-      await expect(page.locator('.mixer-duration-value')).toHaveText('10');
+      await expect(page.locator('.mixer-duration-readout-value')).toHaveText(
+        '10',
+      );
 
       // Verify custom instructions are populated
-      await expect(page.locator('.mixer-notes-textarea')).toHaveValue(
+      await expect(page.locator('.mixer-direction-textarea')).toHaveValue(
         customInstructions,
       );
     },

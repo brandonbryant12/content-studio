@@ -1,4 +1,4 @@
-import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
 import type { RouterOutput } from '@repo/api/client';
@@ -22,6 +22,7 @@ interface PodcastSettingsProps {
   podcast: PodcastFull;
   disabled?: boolean;
   settings: UsePodcastSettingsReturn;
+  section: 'voice' | 'duration' | 'instructions';
 }
 
 interface VoiceSelectorProps {
@@ -174,6 +175,7 @@ export function PodcastSettings({
   podcast,
   disabled,
   settings,
+  section,
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
   const { playingVoiceId, previewUrls, togglePreview } =
@@ -194,93 +196,42 @@ export function PodcastSettings({
     settings.setInstructions(nextValue);
   };
 
-  return (
-    <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-      <div className="mixer-header">
-        <h3 className="mixer-title">Voice Mixer</h3>
-        {disabled && (
-          <span className="mixer-locked-hint">
-            <LockClosedIcon className="w-3 h-3" />
-            Locked during generation
-          </span>
-        )}
-      </div>
-
-      <div className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}>
-        <div className={`mixer-channel ${!isConversation ? 'single' : ''}`}>
-          <div className="mixer-channel-header">
-            <div className="mixer-channel-indicator host" />
-            <span className="mixer-channel-label">
-              {isConversation ? 'Host' : 'Voice'}
-            </span>
-          </div>
-          <PersonaPicker
-            selectedPersonaId={settings.hostPersonaId}
-            onSelect={(personaId, voiceId) =>
-              settings.setHostPersona(personaId, voiceId)
-            }
-            disabled={disabled}
-            label={isConversation ? 'Host Persona' : 'Persona'}
-          />
-          {settings.hostPersonaVoiceId ? (
-            <div className="mixer-voice-readonly">
-              <div
-                className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.hostPersonaVoiceId)?.gender}`}
-              >
-                {VOICES.find(
-                  (v) => v.id === settings.hostPersonaVoiceId,
-                )?.name.charAt(0)}
-              </div>
-              <div className="mixer-voice-info">
-                <p className="mixer-voice-name">
-                  {
-                    VOICES.find((v) => v.id === settings.hostPersonaVoiceId)
-                      ?.name
-                  }
-                </p>
-                <p className="mixer-voice-desc">Set by persona</p>
-              </div>
-            </div>
-          ) : (
-            <VoiceSelector
-              value={settings.hostVoice}
-              onChange={settings.setHostVoice}
-              disabledVoice={isConversation ? settings.coHostVoice : undefined}
-              disabled={disabled}
-              previewUrls={previewUrls}
-              playingVoiceId={playingVoiceId}
-              onPreview={togglePreview}
-            />
-          )}
-        </div>
-
-        {isConversation && (
-          <div className="mixer-channel">
+  if (section === 'voice') {
+    return (
+      <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
+        <div
+          className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}
+        >
+          <div
+            className={`mixer-channel host-channel ${!isConversation ? 'single' : ''}`}
+          >
             <div className="mixer-channel-header">
-              <div className="mixer-channel-indicator cohost" />
-              <span className="mixer-channel-label">Co-Host</span>
+              <div className="mixer-channel-indicator host" />
+              <span className="mixer-channel-label">
+                {isConversation ? 'Host' : 'Voice'}
+              </span>
             </div>
             <PersonaPicker
-              selectedPersonaId={settings.coHostPersonaId}
+              selectedPersonaId={settings.hostPersonaId}
               onSelect={(personaId, voiceId) =>
-                settings.setCoHostPersona(personaId, voiceId)
+                settings.setHostPersona(personaId, voiceId)
               }
               disabled={disabled}
-              label="Co-Host Persona"
+              label={isConversation ? 'Host Persona' : 'Persona'}
             />
-            {settings.coHostPersonaVoiceId ? (
+            {settings.hostPersonaVoiceId ? (
               <div className="mixer-voice-readonly">
                 <div
-                  className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)?.gender}`}
+                  className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.hostPersonaVoiceId)?.gender}`}
                 >
                   {VOICES.find(
-                    (v) => v.id === settings.coHostPersonaVoiceId,
+                    (v) => v.id === settings.hostPersonaVoiceId,
                   )?.name.charAt(0)}
                 </div>
                 <div className="mixer-voice-info">
                   <p className="mixer-voice-name">
                     {
-                      VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)
+                      VOICES.find((v) => v.id === settings.hostPersonaVoiceId)
                         ?.name
                     }
                   </p>
@@ -289,9 +240,11 @@ export function PodcastSettings({
               </div>
             ) : (
               <VoiceSelector
-                value={settings.coHostVoice}
-                onChange={settings.setCoHostVoice}
-                disabledVoice={settings.hostVoice}
+                value={settings.hostVoice}
+                onChange={settings.setHostVoice}
+                disabledVoice={
+                  isConversation ? settings.coHostVoice : undefined
+                }
                 disabled={disabled}
                 previewUrls={previewUrls}
                 playingVoiceId={playingVoiceId}
@@ -299,18 +252,69 @@ export function PodcastSettings({
               />
             )}
           </div>
+
+          {isConversation && (
+            <div className="mixer-channel cohost-channel">
+              <div className="mixer-channel-header">
+                <div className="mixer-channel-indicator cohost" />
+                <span className="mixer-channel-label">Co-Host</span>
+              </div>
+              <PersonaPicker
+                selectedPersonaId={settings.coHostPersonaId}
+                onSelect={(personaId, voiceId) =>
+                  settings.setCoHostPersona(personaId, voiceId)
+                }
+                disabled={disabled}
+                label="Co-Host Persona"
+              />
+              {settings.coHostPersonaVoiceId ? (
+                <div className="mixer-voice-readonly">
+                  <div
+                    className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)?.gender}`}
+                  >
+                    {VOICES.find(
+                      (v) => v.id === settings.coHostPersonaVoiceId,
+                    )?.name.charAt(0)}
+                  </div>
+                  <div className="mixer-voice-info">
+                    <p className="mixer-voice-name">
+                      {
+                        VOICES.find(
+                          (v) => v.id === settings.coHostPersonaVoiceId,
+                        )?.name
+                      }
+                    </p>
+                    <p className="mixer-voice-desc">Set by persona</p>
+                  </div>
+                </div>
+              ) : (
+                <VoiceSelector
+                  value={settings.coHostVoice}
+                  onChange={settings.setCoHostVoice}
+                  disabledVoice={settings.hostVoice}
+                  disabled={disabled}
+                  previewUrls={previewUrls}
+                  playingVoiceId={playingVoiceId}
+                  onPreview={togglePreview}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {settings.voiceConflict && (
+          <div className="mixer-voice-conflict">
+            Host and co-host are using the same voice. Consider assigning
+            different voices.
+          </div>
         )}
       </div>
+    );
+  }
 
-      {settings.voiceConflict && (
-        <div className="mx-0 mt-3 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
-          Host and co-host are using the same voice. Consider assigning
-          different voices.
-        </div>
-      )}
-
-      <div className="mixer-duration">
-        <span className="mixer-duration-label">Target Length</span>
+  if (section === 'duration') {
+    return (
+      <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
         <div className="mixer-duration-slider">
           <span className="mixer-duration-range-label">{MIN_DURATION}</span>
           <Slider
@@ -326,23 +330,30 @@ export function PodcastSettings({
           />
           <span className="mixer-duration-range-label">{MAX_DURATION}</span>
         </div>
-        <div className="mixer-duration-value-display">
-          <span className="mixer-duration-value">
+        <div className="mixer-duration-readout">
+          <span className="mixer-duration-readout-value">
             {settings.targetDuration}
           </span>
-          <span className="mixer-duration-unit">min</span>
+          <span className="mixer-duration-readout-unit">min</span>
         </div>
       </div>
+    );
+  }
 
-      <div className="mixer-notes">
-        <span className="mixer-notes-label">Custom Instructions</span>
-        <div className="setup-preset-group mt-2">
+  // section === 'instructions'
+  return (
+    <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
+      <div className="mixer-direction">
+        <p className="mixer-direction-hint">
+          Guide the AI to refine and iterate on your podcast script.
+        </p>
+        <div className="mixer-direction-presets">
           {INSTRUCTION_PRESETS.map((preset) => (
             <button
               key={preset.label}
               type="button"
               onClick={() => handlePresetClick(preset)}
-              className={`setup-preset-btn ${activePreset === preset.label ? 'active' : ''}`}
+              className={`mixer-direction-preset ${activePreset === preset.label ? 'active' : ''}`}
               disabled={disabled}
             >
               {preset.label}
@@ -353,9 +364,9 @@ export function PodcastSettings({
           value={settings.instructions}
           onChange={(e) => handleInstructionsChange(e.target.value)}
           disabled={disabled}
-          placeholder="Add specific instructions for the AI..."
-          className="mixer-notes-textarea"
-          aria-label="Custom instructions"
+          placeholder="Tell the AI how to adjust the script..."
+          className="mixer-direction-textarea"
+          aria-label="Script direction"
         />
         <p className="setup-char-count">
           {settings.instructions.length} / {INSTRUCTION_CHAR_LIMIT}

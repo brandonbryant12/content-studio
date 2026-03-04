@@ -1,4 +1,10 @@
-import { FileTextIcon } from '@radix-ui/react-icons';
+import {
+  FileTextIcon,
+  LockClosedIcon,
+  Pencil2Icon,
+  SpeakerLoudIcon,
+  TimerIcon,
+} from '@radix-ui/react-icons';
 import { useState } from 'react';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
 import type { UseSourceSelectionReturn } from '../../hooks/use-source-selection';
@@ -32,56 +38,111 @@ export function ConfigPanel({
       {/* Full-width scroll container */}
       <div className="config-panel-v2-scroll">
         <div className="config-panel-v2-inner">
-          {/* Generation Progress - shown only during generation */}
+          {/* Generation Progress */}
           {(isPendingGeneration || isGenerating) && (
-            <div className="config-section-v2">
-              <GenerationStatus
-                status={podcast.status}
-                isSavingSettings={false}
-                isPendingGeneration={isPendingGeneration}
-              />
+            <div className="studio-module generating">
+              <div className="studio-module-body">
+                <GenerationStatus
+                  status={podcast.status}
+                  isSavingSettings={false}
+                  isPendingGeneration={isPendingGeneration}
+                />
+              </div>
             </div>
           )}
 
-          {/* Source Documents */}
-          <div className="config-section-v2">
-            <h3 className="config-section-title">
-              Source Documents
-              <span className="config-section-count">
-                {sourceSelection.sources.length}
-              </span>
-            </h3>
-            <SourceManager
-              sources={sourceSelection.sources}
-              onAddSources={sourceSelection.addSources}
-              onRemoveSource={sourceSelection.removeSource}
-              disabled={isGenerating}
-            />
+          {/* Voice Mixer */}
+          <div className="studio-module">
+            <div className="studio-module-header">
+              <div className="studio-module-icon voice">
+                <SpeakerLoudIcon aria-hidden="true" />
+              </div>
+              <span className="studio-module-title">Voice Mixer</span>
+              {isGenerating && (
+                <span className="mixer-locked-hint">
+                  <LockClosedIcon className="w-3 h-3" />
+                  Locked
+                </span>
+              )}
+            </div>
+            <div className="studio-module-body">
+              <PodcastSettings
+                podcast={podcast}
+                disabled={isGenerating}
+                settings={settings}
+                section="voice"
+              />
+            </div>
           </div>
 
-          {/* Podcast Settings */}
-          <div className="config-section-v2">
-            <h3 className="config-section-title">Voice & Format</h3>
-            <PodcastSettings
-              podcast={podcast}
-              disabled={isGenerating}
-              settings={settings}
-            />
+          {/* Duration */}
+          <div className="studio-module">
+            <div className="studio-module-header">
+              <div className="studio-module-icon duration">
+                <TimerIcon aria-hidden="true" />
+              </div>
+              <span className="studio-module-title">Duration</span>
+            </div>
+            <div className="studio-module-body">
+              <PodcastSettings
+                podcast={podcast}
+                disabled={isGenerating}
+                settings={settings}
+                section="duration"
+              />
+            </div>
+          </div>
+
+          {/* Script Direction */}
+          <div className="studio-module">
+            <div className="studio-module-header">
+              <div className="studio-module-icon direction">
+                <Pencil2Icon aria-hidden="true" />
+              </div>
+              <span className="studio-module-title">Script Direction</span>
+            </div>
+            <div className="studio-module-body">
+              <PodcastSettings
+                podcast={podcast}
+                disabled={isGenerating}
+                settings={settings}
+                section="instructions"
+              />
+            </div>
+          </div>
+
+          {/* Source Documents */}
+          <div className="studio-module">
+            <div className="studio-module-header">
+              <div className="studio-module-icon sources">
+                <FileTextIcon aria-hidden="true" />
+              </div>
+              <span className="studio-module-title">Sources</span>
+              <span className="studio-module-badge">
+                {sourceSelection.sources.length}
+              </span>
+            </div>
+            <div className="studio-module-body">
+              <SourceManager
+                sources={sourceSelection.sources}
+                onAddSources={sourceSelection.addSources}
+                onRemoveSource={sourceSelection.removeSource}
+                disabled={isGenerating}
+              />
+            </div>
           </div>
 
           {/* Prompt Viewer Toggle */}
           {podcast.generationContext && (
-            <div className="config-section-v2">
-              <button
-                type="button"
-                onClick={() => setShowPromptViewer((prev) => !prev)}
-                className="config-prompt-toggle"
-                aria-expanded={showPromptViewer}
-              >
-                <FileTextIcon className="w-4 h-4" aria-hidden="true" />
-                <span>View generation details</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowPromptViewer((prev) => !prev)}
+              className="config-prompt-toggle"
+              aria-expanded={showPromptViewer}
+            >
+              <FileTextIcon className="w-4 h-4" aria-hidden="true" />
+              <span>View generation details</span>
+            </button>
           )}
         </div>
       </div>
