@@ -69,7 +69,7 @@ Start here:
 corepack enable                 # 1. Enable pnpm via corepack
 pnpm install                    # 2. Install all dependencies
 pnpm env:copy-example           # 3. Copy .env.example files
-docker compose up -d            # 4. Start Postgres + Redis
+docker compose up -d db redis minio minio-init # 4. Start Postgres + Redis + MinIO
 pnpm db:push                    # 5. Push database schema
 ```
 
@@ -100,6 +100,10 @@ pnpm db:push                    # 5. Push database schema
 | `PUBLIC_SERVER_URL` | Public API URL used for server responses and web client configuration |
 | `PUBLIC_WEB_URL` | Public web app URL used by server CORS/auth redirects |
 | `SERVER_AUTH_SECRET` | Auth secret for `better-auth` session signing |
+| `S3_BUCKET` | S3/MinIO bucket used by server/worker storage layer |
+| `S3_REGION` | S3/MinIO region |
+| `S3_ACCESS_KEY_ID` | S3/MinIO access key |
+| `S3_SECRET_ACCESS_KEY` | S3/MinIO secret key |
 | `GEMINI_API_KEY` | Google Gemini API key when `USE_MOCK_AI=false` |
 
 #### Optional
@@ -109,13 +113,12 @@ pnpm db:push                    # 5. Push database schema
 | `AUTH_MODE` | Auth behavior (`dev-password`, `hybrid`, `sso-only`) | `dev-password` |
 | `PUBLIC_AUTH_MODE` | Web login UI mode; keep aligned with server `AUTH_MODE` | `dev-password` |
 | `USE_MOCK_AI` | Use mock AI providers instead of live Gemini providers | `true` |
-| `STORAGE_PROVIDER` | Storage backend (`filesystem` / `s3`) | `filesystem` |
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
 | `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` | Run pending Drizzle migrations during server startup | `false` (set `true` in Docker runtime image) |
 | `TRUST_PROXY` | Trust `x-forwarded-for` / `x-real-ip` for rate-limit identity | `false` |
 | `CORS_ORIGINS` | Comma-separated CORS origin allowlist for bearer-token requests (`*` allows any origin) | `*` |
-| `S3_BUCKET` | S3 bucket name | -- |
-| `S3_REGION` | S3 region | -- |
+| `S3_ENDPOINT` | Optional S3-compatible endpoint override (for MinIO) | -- |
+| `S3_PUBLIC_ENDPOINT` | Optional URL base for generated object URLs | `S3_ENDPOINT` |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTLP traces endpoint (used as-is) | -- |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers (`KEY=value,KEY2=value2`) | -- |
@@ -124,6 +127,19 @@ pnpm db:push                    # 5. Push database schema
 | `OTEL_ENV` | Deployment environment tag | `NODE_ENV` |
 
 Telemetry settings apply to backend services (`apps/server`, `apps/worker`) only.
+
+#### Local MinIO Defaults
+
+When running local dev with MinIO:
+
+```env
+S3_BUCKET=content-studio
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=minioadmin
+S3_SECRET_ACCESS_KEY=minioadmin
+S3_ENDPOINT=http://localhost:9001
+S3_PUBLIC_ENDPOINT=http://localhost:9001
+```
 
 #### SSO Variables (Required when `AUTH_MODE=hybrid` or `AUTH_MODE=sso-only`)
 

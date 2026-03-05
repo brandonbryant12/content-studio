@@ -5,7 +5,13 @@ import { cors } from 'hono/cors';
 import { bearerCorsPolicy } from '../config';
 import { env } from '../env';
 import { createApiRateLimit } from '../middleware/rate-limit';
-import { api, audioPlaybackProxy, serverRuntime } from '../services';
+import {
+  api,
+  audioPlaybackProxy,
+  serverRuntime,
+  storageAccessProxy,
+} from '../services';
+import { apiBodyLimit } from './api-body-limit';
 
 const apiRateLimit = createApiRateLimit({
   redisUrl: env.SERVER_REDIS_URL,
@@ -73,12 +79,17 @@ const createResponseWithBody = (response: Response, body: string): Response => {
   });
 };
 
-const rewriteAudioUrlsInResponse = async (
+const rewritePayloadUrlsInResponse = async (
   requestPath: string,
   response: Response,
 ): Promise<Response> => {
-  if (!audioPlaybackProxy.enabled) return response;
-  if (!audioPlaybackProxy.shouldRewritePath(requestPath)) return response;
+  const shouldRewriteAudio =
+    audioPlaybackProxy.enabled &&
+    audioPlaybackProxy.shouldRewritePath(requestPath);
+  const shouldRewriteStorage =
+    storageAccessProxy.enabled &&
+    storageAccessProxy.shouldRewritePath(requestPath);
+  if (!shouldRewriteAudio && !shouldRewriteStorage) return response;
 
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) return response;
@@ -89,9 +100,14 @@ const rewriteAudioUrlsInResponse = async (
   }
 
   try {
-    const payload = JSON.parse(body) as unknown;
-    const rewritten = audioPlaybackProxy.rewritePayloadAudioUrls(payload);
-    return createResponseWithBody(response, JSON.stringify(rewritten));
+    let payload = JSON.parse(body) as unknown;
+    if (shouldRewriteAudio) {
+      payload = audioPlaybackProxy.rewritePayloadAudioUrls(payload);
+    }
+    if (shouldRewriteStorage) {
+      payload = storageAccessProxy.rewritePayloadStorageUrls(payload);
+    }
+    return createResponseWithBody(response, JSON.stringify(payload));
   } catch {
     return createResponseWithBody(response, body);
   }
@@ -107,6 +123,7 @@ export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
     }),
   )
   .use(apiRateLimit)
+  .use(apiBodyLimit)
   .get('/audio/playback', async (c) => {
     if (!audioPlaybackProxy.enabled) {
       return c.text('Not Found', 404);
@@ -171,7 +188,7 @@ export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
       c.get('requestId'),
     );
     if (matched) {
-      const rewrittenResponse = await rewriteAudioUrlsInResponse(
+      const rewrittenResponse = await rewritePayloadUrlsInResponse(
         c.req.path,
         response,
       );

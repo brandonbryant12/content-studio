@@ -9,17 +9,15 @@ import { appContract } from '../contracts';
 type Session = AuthInstance['$Infer']['Session'];
 
 /** Storage configuration for different providers */
-export type StorageConfig =
-  | { provider: 'filesystem'; basePath: string; baseUrl: string }
-  | {
-      provider: 's3';
-      bucket: string;
-      region: string;
-      accessKeyId: string;
-      secretAccessKey: string;
-      endpoint?: string;
-      publicEndpoint?: string;
-    };
+export type StorageConfig = {
+  provider: 's3';
+  bucket: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  endpoint?: string;
+  publicEndpoint?: string;
+};
 
 /**
  * oRPC context passed to all handlers.

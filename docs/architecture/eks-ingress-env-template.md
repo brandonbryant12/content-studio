@@ -9,6 +9,7 @@ This template assumes:
 For the required env-variable matrix across Linux Compose and EKS patterns, see:
 
 - [`docs/architecture/deployment-env-matrix.md`](./deployment-env-matrix.md)
+- [`docs/architecture/eks-helm-recommendations.md`](./eks-helm-recommendations.md)
 
 ## Ingress Templates
 
@@ -103,7 +104,6 @@ data:
   TRUST_PROXY: "true"
   EXPOSE_DEEP_HEALTHCHECK: "false"
 
-  STORAGE_PROVIDER: "s3"
   S3_REGION: "us-east-1"
   S3_BUCKET: "content-studio-prod"
   S3_ENDPOINT: "https://s3.us-east-1.amazonaws.com"
@@ -169,4 +169,5 @@ data:
 - Keep `TRUST_PROXY=true` in production behind ingress so rate limiting and client IP logic are correct.
 - `CORS_ORIGINS` defaults to `*`; set an explicit allowlist if you want stricter browser access control.
 - `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP=true` is the default simple path; for multi-replica rollouts, prefer a one-off migration job and set app pods to `false`.
-- Keep S3 objects private and serve audio through signed backend playback URLs (`/api/audio/playback`).
+- Keep S3 objects private and serve media through signed backend URLs (`/api/audio/playback` and `/storage/*?token=...`).
+- Common request sequence: [`docs/architecture/deployment-env-matrix.md#common-signed-media-access-model`](./deployment-env-matrix.md#common-signed-media-access-model).

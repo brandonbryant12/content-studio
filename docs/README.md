@@ -17,6 +17,7 @@ All new code reviews and feature work should reference [`docs/`](./) standards.
 9. [`docs/architecture/observability.md`](./architecture/observability.md)
 10. [`docs/architecture/effect-vs-nestjs.md`](./architecture/effect-vs-nestjs.md)
 11. [`docs/architecture/deployment-env-matrix.md`](./architecture/deployment-env-matrix.md)
+12. [`docs/architecture/eks-helm-recommendations.md`](./architecture/eks-helm-recommendations.md)
 
 ## Directory Layout
 

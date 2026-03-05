@@ -5,11 +5,6 @@ const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
   encode: (b) => (b ? 'true' : 'false'),
 });
 
-const StorageProviderSchema = Schema.Union(
-  Schema.Literal('filesystem'),
-  Schema.Literal('s3'),
-);
-
 export const envSchema = Schema.Struct({
   SERVER_POSTGRES_URL: Schema.String,
   PUBLIC_SERVER_URL: Schema.optionalWith(Schema.String, {
@@ -22,11 +17,6 @@ export const envSchema = Schema.Struct({
     default: () => true,
   }),
 
-  STORAGE_PROVIDER: Schema.optionalWith(StorageProviderSchema, {
-    default: () => 'filesystem' as const,
-  }),
-  STORAGE_PATH: Schema.optional(Schema.String),
-  STORAGE_BASE_URL: Schema.optional(Schema.String),
   S3_BUCKET: Schema.optional(Schema.String),
   S3_REGION: Schema.optional(Schema.String),
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String),

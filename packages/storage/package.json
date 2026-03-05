@@ -11,10 +11,6 @@
       "types": "./dist/src/errors.d.ts",
       "default": "./src/errors.ts"
     },
-    "./providers/filesystem": {
-      "types": "./dist/src/providers/filesystem.d.ts",
-      "default": "./src/providers/filesystem.ts"
-    },
     "./providers/s3": {
       "types": "./dist/src/providers/s3.d.ts",
       "default": "./src/providers/s3.ts"
@@ -38,6 +34,7 @@
   },
   "prettier": "@repo/prettier-config",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1002.0",
     "effect": "^3.16.0"
   },
   "devDependencies": {

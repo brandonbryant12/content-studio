@@ -34,7 +34,7 @@ graph LR
 |---|---|
 | HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (bearer-only transport; cookie fallback disabled) |
 | Login mode | `AUTH_MODE` selects providers: `dev-password`, `hybrid`, `sso-only` |
-| SSO role sync | In SSO modes, `databaseHooks.session.create.after` calls Microsoft Graph `transitiveMemberOf` and maps configured group IDs to `admin`/`user` |
+| SSO role sync | On Microsoft callback, `databaseHooks.session.create.before` calls Graph `transitiveMemberOf`; auth fails closed if sync fails or no configured groups match, otherwise role is mapped to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
 | Handler | Receives `AuthenticatedORPCContext` with typed `user` field |
 
@@ -62,10 +62,11 @@ sequenceDiagram
   A-->>U: 302 Redirect to Microsoft login
   U->>MS: Authenticate + consent
   MS-->>A: OAuth callback with code
-  A->>DB: Create/refresh user + session
+  A->>DB: Create/refresh user + account
   A->>G: GET transitiveMemberOf(user)
   G-->>A: Group IDs
   A->>DB: Map groups -> role (admin/user)
+  A->>DB: Create session (only if sync + group check pass)
   A-->>W: Response with set-auth-token header
   W->>W: Store bearer token in memory
 ```

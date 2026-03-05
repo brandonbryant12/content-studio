@@ -1,32 +1,38 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { StorageConfig } from '@repo/api/server';
 
-interface AudioPlaybackTokenPayload {
+interface StorageAccessTokenPayload {
   v: 1;
   key: string;
   exp: number;
 }
 
-export interface AudioPlaybackProxyConfig {
+export interface StorageAccessProxyConfig {
   enabled: boolean;
   signingSecret: string;
   ttlSeconds: number;
   serverUrl: string;
+  storagePath: `/${string}`;
   apiPath: `/${string}`;
   storageConfig: StorageConfig;
 }
 
-export interface AudioPlaybackProxy {
+export interface StorageAccessProxy {
   readonly enabled: boolean;
   readonly shouldRewritePath: (requestPath: string) => boolean;
-  readonly rewriteAudioUrl: (audioUrl: string | null) => string | null;
-  readonly rewritePayloadAudioUrls: <T>(payload: T) => T;
+  readonly rewriteStorageLocation: (
+    storageLocation: string | null,
+  ) => string | null;
+  readonly rewritePayloadStorageUrls: <T>(payload: T) => T;
   readonly verifyToken: (token: string) => { key: string } | null;
-  readonly inferContentType: (key: string) => string;
 }
 
 const TOKEN_VERSION = 1 as const;
-const AUDIO_PLAYBACK_ROUTE = '/audio/playback';
+const STORAGE_PAYLOAD_FIELDS = new Set([
+  'contentKey',
+  'imageUrl',
+  'thumbnailUrl',
+]);
 
 const asBase64Url = (value: string | Buffer): string =>
   Buffer.from(value).toString('base64url');
@@ -43,6 +49,15 @@ const safeEquals = (left: string, right: string): boolean => {
 
 const ensureTrailingSlash = (value: string): string =>
   value.endsWith('/') ? value : `${value}/`;
+
+const normalizeRoutePath = (value: `/${string}`): `/${string}` => {
+  const withLeadingSlash = value.startsWith('/') ? value : `/${value}`;
+  const withoutTrailingSlash =
+    withLeadingSlash.endsWith('/') && withLeadingSlash.length > 1
+      ? withLeadingSlash.slice(0, -1)
+      : withLeadingSlash;
+  return withoutTrailingSlash as `/${string}`;
+};
 
 const normalizeStorageKey = (key: string): string | null => {
   const trimmed = key.trim().replace(/^\/+/, '');
@@ -64,8 +79,14 @@ const normalizeStorageKey = (key: string): string | null => {
 const pathPrefix = (pathname: string): string =>
   pathname.endsWith('/') ? pathname : `${pathname}/`;
 
+const encodeStorageKeyForPath = (key: string): string =>
+  key
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+
 const parseStorageKeyFromS3Url = (
-  audioUrl: URL,
+  storageUrl: URL,
   storageConfig: StorageConfig,
 ): string | null => {
   const endpoint =
@@ -80,12 +101,40 @@ const parseStorageKeyFromS3Url = (
     return null;
   }
 
-  if (audioUrl.origin !== base.origin) return null;
+  if (storageUrl.origin !== base.origin) return null;
 
   const bucketPrefix = `${pathPrefix(base.pathname)}${storageConfig.bucket}/`;
-  if (!audioUrl.pathname.startsWith(bucketPrefix)) return null;
+  if (!storageUrl.pathname.startsWith(bucketPrefix)) return null;
 
-  const encodedKey = audioUrl.pathname.slice(bucketPrefix.length);
+  const encodedKey = storageUrl.pathname.slice(bucketPrefix.length);
+  try {
+    return normalizeStorageKey(decodeURIComponent(encodedKey));
+  } catch {
+    return null;
+  }
+};
+
+const parseStorageKeyFromStorageUrl = (
+  storageUrl: URL,
+  serverUrl: string,
+  storagePath: `/${string}`,
+): string | null => {
+  let server: URL;
+  try {
+    server = new URL(serverUrl);
+  } catch {
+    return null;
+  }
+
+  if (storageUrl.origin !== server.origin) return null;
+
+  const cleanStoragePath = normalizeRoutePath(storagePath);
+  const serverBasePath =
+    server.pathname === '/' ? '' : server.pathname.replace(/\/+$/, '');
+  const routePrefix = `${serverBasePath}${cleanStoragePath}/`;
+  if (!storageUrl.pathname.startsWith(routePrefix)) return null;
+
+  const encodedKey = storageUrl.pathname.slice(routePrefix.length);
   try {
     return normalizeStorageKey(decodeURIComponent(encodedKey));
   } catch {
@@ -94,40 +143,50 @@ const parseStorageKeyFromS3Url = (
 };
 
 const parseStorageKey = (
-  audioUrl: string,
-  storageConfig: StorageConfig,
+  storageLocation: string,
+  config: StorageAccessProxyConfig,
 ): string | null => {
   let parsed: URL;
   try {
-    parsed = new URL(audioUrl);
+    parsed = new URL(storageLocation);
   } catch {
-    return normalizeStorageKey(audioUrl);
+    return normalizeStorageKey(storageLocation);
   }
 
-  return parseStorageKeyFromS3Url(parsed, storageConfig);
+  return (
+    parseStorageKeyFromStorageUrl(
+      parsed,
+      config.serverUrl,
+      normalizeRoutePath(config.storagePath),
+    ) ?? parseStorageKeyFromS3Url(parsed, config.storageConfig)
+  );
 };
 
-const AUDIO_URL_FIELDS = new Set(['audioUrl', 'previewUrl']);
+const isStorageFieldName = (fieldName: string): boolean =>
+  fieldName.endsWith('StorageKey') || STORAGE_PAYLOAD_FIELDS.has(fieldName);
 
-const buildAudioPlaybackUrl = (
+const buildStorageAccessUrl = (
   serverUrl: string,
-  apiPath: `/${string}`,
+  storagePath: `/${string}`,
+  key: string,
   token: string,
 ): string => {
   const base = new URL(ensureTrailingSlash(serverUrl));
-  const cleanApiPath = apiPath.endsWith('/') ? apiPath.slice(0, -1) : apiPath;
-  base.pathname = `${cleanApiPath}${AUDIO_PLAYBACK_ROUTE}`;
+  const cleanStoragePath = normalizeRoutePath(storagePath);
+  const serverBasePath =
+    base.pathname === '/' ? '' : base.pathname.replace(/\/+$/, '');
+  base.pathname = `${serverBasePath}${cleanStoragePath}/${encodeStorageKeyForPath(key)}`;
   base.search = '';
   base.searchParams.set('token', token);
   return base.toString();
 };
 
-const createAudioToken = (
+const createStorageToken = (
   key: string,
   signingSecret: string,
   ttlSeconds: number,
 ): string => {
-  const payload: AudioPlaybackTokenPayload = {
+  const payload: StorageAccessTokenPayload = {
     v: TOKEN_VERSION,
     key,
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
@@ -137,7 +196,7 @@ const createAudioToken = (
   return `${payloadSegment}.${signature}`;
 };
 
-const verifyAudioToken = (
+const verifyStorageToken = (
   token: string,
   signingSecret: string,
 ): { key: string } | null => {
@@ -157,7 +216,7 @@ const verifyAudioToken = (
   }
 
   if (!payload || typeof payload !== 'object') return null;
-  const candidate = payload as Partial<AudioPlaybackTokenPayload>;
+  const candidate = payload as Partial<StorageAccessTokenPayload>;
   if (candidate.v !== TOKEN_VERSION) return null;
   if (typeof candidate.exp !== 'number') return null;
   if (candidate.exp < Math.floor(Date.now() / 1000)) return null;
@@ -169,14 +228,14 @@ const verifyAudioToken = (
   return { key };
 };
 
-const rewritePayloadAudioUrls = (
+const rewritePayloadStorageUrls = (
   value: unknown,
-  rewriteAudioUrl: (audioUrl: string | null) => string | null,
+  rewriteStorageLocation: (storageLocation: string | null) => string | null,
 ): unknown => {
   if (Array.isArray(value)) {
     let changed = false;
     const next = value.map((item) => {
-      const rewritten = rewritePayloadAudioUrls(item, rewriteAudioUrl);
+      const rewritten = rewritePayloadStorageUrls(item, rewriteStorageLocation);
       if (rewritten !== item) changed = true;
       return rewritten;
     });
@@ -192,9 +251,9 @@ const rewritePayloadAudioUrls = (
   const next: Record<string, unknown> = {};
 
   for (const [key, item] of Object.entries(record)) {
-    if (AUDIO_URL_FIELDS.has(key)) {
+    if (isStorageFieldName(key)) {
       if (typeof item === 'string' || item === null) {
-        const rewritten = rewriteAudioUrl(item);
+        const rewritten = rewriteStorageLocation(item);
         next[key] = rewritten;
         if (rewritten !== item) changed = true;
       } else {
@@ -203,7 +262,7 @@ const rewritePayloadAudioUrls = (
       continue;
     }
 
-    const rewritten = rewritePayloadAudioUrls(item, rewriteAudioUrl);
+    const rewritten = rewritePayloadStorageUrls(item, rewriteStorageLocation);
     next[key] = rewritten;
     if (rewritten !== item) changed = true;
   }
@@ -211,55 +270,44 @@ const rewritePayloadAudioUrls = (
   return changed ? next : value;
 };
 
-const inferAudioContentType = (key: string): string => {
-  const lowerKey = key.toLowerCase();
-  if (lowerKey.endsWith('.wav')) return 'audio/wav';
-  if (lowerKey.endsWith('.mp3')) return 'audio/mpeg';
-  if (lowerKey.endsWith('.m4a')) return 'audio/mp4';
-  if (lowerKey.endsWith('.aac')) return 'audio/aac';
-  if (lowerKey.endsWith('.ogg')) return 'audio/ogg';
-  if (lowerKey.endsWith('.webm')) return 'audio/webm';
-  return 'application/octet-stream';
-};
-
-export const createAudioPlaybackProxy = (
-  config: AudioPlaybackProxyConfig,
-): AudioPlaybackProxy => {
-  const cleanApiPath = config.apiPath.endsWith('/')
-    ? config.apiPath.slice(0, -1)
-    : config.apiPath;
+export const createStorageAccessProxy = (
+  config: StorageAccessProxyConfig,
+): StorageAccessProxy => {
+  const cleanApiPath = normalizeRoutePath(config.apiPath);
 
   const shouldRewritePath = (requestPath: string): boolean => {
     const pathOnly = requestPath.split('?')[0] ?? requestPath;
-    return (
-      pathOnly.startsWith(`${cleanApiPath}/podcasts`) ||
-      pathOnly.startsWith(`${cleanApiPath}/voiceovers`) ||
-      pathOnly.startsWith(`${cleanApiPath}/voices`)
-    );
+    return pathOnly === cleanApiPath || pathOnly.startsWith(`${cleanApiPath}/`);
   };
 
-  const rewriteAudioUrl = (audioUrl: string | null): string | null => {
-    if (!config.enabled || audioUrl === null) return audioUrl;
+  const rewriteStorageLocation = (
+    storageLocation: string | null,
+  ): string | null => {
+    if (!config.enabled || storageLocation === null) return storageLocation;
 
-    const key = parseStorageKey(audioUrl, config.storageConfig);
-    if (!key) return audioUrl;
+    const key = parseStorageKey(storageLocation, config);
+    if (!key) return storageLocation;
 
-    const token = createAudioToken(
+    const token = createStorageToken(
       key,
       config.signingSecret,
       config.ttlSeconds,
     );
-    return buildAudioPlaybackUrl(config.serverUrl, config.apiPath, token);
+    return buildStorageAccessUrl(
+      config.serverUrl,
+      config.storagePath,
+      key,
+      token,
+    );
   };
 
   return {
     enabled: config.enabled,
     shouldRewritePath,
-    rewriteAudioUrl,
-    rewritePayloadAudioUrls: <T>(payload: T): T =>
-      rewritePayloadAudioUrls(payload, rewriteAudioUrl) as T,
+    rewriteStorageLocation,
+    rewritePayloadStorageUrls: <T>(payload: T): T =>
+      rewritePayloadStorageUrls(payload, rewriteStorageLocation) as T,
     verifyToken: (token: string) =>
-      verifyAudioToken(token, config.signingSecret),
-    inferContentType: inferAudioContentType,
+      verifyStorageToken(token, config.signingSecret),
   };
 };

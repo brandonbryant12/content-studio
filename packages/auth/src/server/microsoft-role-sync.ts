@@ -8,6 +8,19 @@ export interface MicrosoftRoleGroupConfig {
   readonly userGroupIds: readonly string[];
 }
 
+export class MicrosoftRoleSyncError extends Error {
+  readonly code:
+    | 'MICROSOFT_ACCESS_TOKEN_MISSING'
+    | 'MICROSOFT_GROUP_MEMBERSHIP_REQUIRED'
+    | 'MICROSOFT_USER_NOT_FOUND';
+
+  constructor(code: MicrosoftRoleSyncError['code'], message: string) {
+    super(message);
+    this.name = 'MicrosoftRoleSyncError';
+    this.code = code;
+  }
+}
+
 interface GraphMemberOfResponse {
   readonly value?: Array<{ readonly id?: string }>;
   readonly '@odata.nextLink'?: string;
@@ -25,7 +38,7 @@ export const resolveRoleFromGroupIds = ({
 }: {
   groupIds: ReadonlySet<string>;
   roleGroups: MicrosoftRoleGroupConfig;
-}) => {
+}): Role | null => {
   if (roleGroups.adminGroupIds.some((groupId) => groupIds.has(groupId))) {
     return Role.ADMIN;
   }
@@ -34,7 +47,7 @@ export const resolveRoleFromGroupIds = ({
     return Role.USER;
   }
 
-  return Role.USER;
+  return null;
 };
 
 export const fetchMicrosoftGroupIds = async ({
@@ -106,7 +119,12 @@ export const syncUserRoleFromMicrosoftGraph = async ({
   fetchFn?: typeof fetch;
 }): Promise<void> => {
   const accessToken = await getLatestMicrosoftAccessToken({ db, userId });
-  if (!accessToken) return;
+  if (!accessToken) {
+    throw new MicrosoftRoleSyncError(
+      'MICROSOFT_ACCESS_TOKEN_MISSING',
+      'No Microsoft access token available for role synchronization',
+    );
+  }
 
   const graphGroupIds = await fetchMicrosoftGroupIds({
     accessToken,
@@ -116,14 +134,26 @@ export const syncUserRoleFromMicrosoftGraph = async ({
     groupIds: graphGroupIds,
     roleGroups,
   });
+  if (!resolvedRole) {
+    throw new MicrosoftRoleSyncError(
+      'MICROSOFT_GROUP_MEMBERSHIP_REQUIRED',
+      'User is not in any configured Microsoft role group',
+    );
+  }
 
   const [currentUser] = await db
     .select({ role: user.role })
     .from(user)
     .where(eq(user.id, userId))
     .limit(1);
+  if (!currentUser) {
+    throw new MicrosoftRoleSyncError(
+      'MICROSOFT_USER_NOT_FOUND',
+      `User ${userId} not found while synchronizing Microsoft role`,
+    );
+  }
 
-  if (asRole(currentUser?.role) === resolvedRole) return;
+  if (asRole(currentUser.role) === resolvedRole) return;
 
   await db.update(user).set({ role: resolvedRole }).where(eq(user.id, userId));
 };

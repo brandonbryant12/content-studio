@@ -1,0 +1,53 @@
+import { Hono } from 'hono';
+import { describe, expect, it } from 'vitest';
+import { apiBodyLimit, API_BODY_LIMIT_BYTES } from '../routes/api-body-limit';
+
+const createApp = () => {
+  const app = new Hono();
+  app.use('/api/*', apiBodyLimit);
+  app.post('/api/sources/upload', async (c) => {
+    await c.req.json();
+    return c.json({ ok: true });
+  });
+  return app;
+};
+
+describe('api body limit', () => {
+  it('rejects oversized payloads with 413', async () => {
+    const app = createApp();
+    const oversizedData = 'a'.repeat(API_BODY_LIMIT_BYTES + 1024);
+    const body = JSON.stringify({
+      fileName: 'large.txt',
+      mimeType: 'text/plain',
+      data: oversizedData,
+    });
+    const request = new Request('http://localhost/api/sources/upload', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'content-length': String(Buffer.byteLength(body)),
+      },
+      body,
+    });
+    const res = await app.request(request);
+
+    expect(res.status).toBe(413);
+    await expect(res.json()).resolves.toEqual({ error: 'Payload too large' });
+  });
+
+  it('allows non-oversized payloads to reach normal handler flow', async () => {
+    const app = createApp();
+    const res = await app.request('/api/sources/upload', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        fileName: 'small.txt',
+        mimeType: 'text/plain',
+        data: Buffer.from('hello', 'utf-8').toString('base64'),
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ ok: true });
+  });
+});

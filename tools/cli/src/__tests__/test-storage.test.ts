@@ -1,23 +1,9 @@
-import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { Storage, FilesystemStorageLive } from '@repo/storage';
+import { Storage, type StorageNotFoundError } from '@repo/storage';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import { Effect } from 'effect';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import type { StorageNotFoundError } from '@repo/storage';
+import { describe, it, expect } from 'vitest';
 
-let tempDir: string;
-
-beforeEach(async () => {
-  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cli-storage-test-'));
-});
-
-afterEach(async () => {
-  await fs.rm(tempDir, { recursive: true, force: true });
-});
-
-const makeLayer = () =>
-  FilesystemStorageLive({ basePath: tempDir, baseUrl: `file://${tempDir}` });
+const makeLayer = () => createInMemoryStorage().layer;
 
 describe('Storage CRUD lifecycle', () => {
   const TEST_KEY = 'test/hello.txt';

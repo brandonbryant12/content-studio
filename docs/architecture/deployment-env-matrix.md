@@ -14,6 +14,10 @@ pnpm deploy:linux
 pnpm redeploy:linux
 ```
 
+For Helm-first EKS recommendations (chart topology + migration strategy), see:
+
+- [`docs/architecture/eks-helm-recommendations.md`](./eks-helm-recommendations.md)
+
 ## CORS Rule (Both Patterns)
 
 `CORS_ORIGINS` is optional and defaults to `*` (permissive bearer-token CORS).
@@ -27,6 +31,37 @@ Examples:
 - port-based local ingress: `CORS_ORIGINS=https://studio.example.com:8086`
 
 `pnpm deploy:linux` now defaults this to `*`.
+
+## Common Signed Media Access Model
+
+This sequence is the same across local MinIO, Linux VM + MinIO, and EKS + S3.
+
+```mermaid
+sequenceDiagram
+  participant U as User Browser
+  participant API as apps/server
+  participant ST as S3 / MinIO
+
+  U->>API: GET /api/... (entity with media fields)
+  API->>API: Rewrite media fields to signed backend URLs\n(/api/audio/playback?token=... or /storage/{key}?token=...)
+  API-->>U: JSON response with signed URLs
+
+  U->>API: GET signed media URL
+  API->>API: Verify HMAC token, expiry, and key match
+  alt token invalid or expired
+    API-->>U: 404 Not Found
+  else token valid
+    API->>ST: Download object with server credentials (SigV4)
+    ST-->>API: Object bytes
+    API-->>U: Media bytes + content-type
+  end
+```
+
+Security properties:
+
+- Buckets remain private (no anonymous/public object reads).
+- Browser never receives storage credentials.
+- Access is short-lived and possession-based; leaked signed URLs work only until TTL expiry.
 
 ## Startup Migration Policy (Server)
 
@@ -79,12 +114,11 @@ Conditionally required:
 
 - `AUTH_MICROSOFT_CLIENT_ID`, `AUTH_MICROSOFT_CLIENT_SECRET`, `AUTH_MICROSOFT_TENANT_ID`, `AUTH_ROLE_ADMIN_GROUP_IDS`, `AUTH_ROLE_USER_GROUP_IDS` when `AUTH_MODE=hybrid|sso-only`
 - `GEMINI_API_KEY` when `USE_MOCK_AI=false`
-- `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` when `STORAGE_PROVIDER=s3`
+- `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
 - `NODE_EXTRA_CA_CERTS` when `HTTPS_PROXY` or `HTTP_PROXY` is set
 
 Common optional-but-important:
 
-- `STORAGE_PROVIDER` (`s3` for both patterns in deployment)
 - `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`
 - `USE_MOCK_AI`
 - `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` (default `true` in containerized deployment path)
@@ -118,6 +152,7 @@ Special requirements:
 - `PUBLIC_WEB_URL` and `PUBLIC_SERVER_URL` are different origins.
 - `SERVER_POSTGRES_URL` and `SERVER_REDIS_URL` point to managed/external services.
 - `S3_*` values point to external object storage (AWS S3 or compatible).
+- Keep object ACLs private; backend serves audio and storage objects with short-lived signed URLs.
 
 Typical split-domain core values:
 

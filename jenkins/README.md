@@ -15,31 +15,45 @@ Pin tool versions and use `pnpm install --frozen-lockfile`.
 
 ## Pipeline Files
 
-1. [`jenkins/Jenkinsfile.main-cd.groovy`](./Jenkinsfile.main-cd.groovy)
+1. [`jenkins/Jenkinsfile.pr-ci.groovy`](./Jenkinsfile.pr-ci.groovy)
+Purpose: Pull request merge gate.
+Key gates: `spec:check`, `typecheck`, `lint`, `test`, `test:invariants`, `build`.
+
+2. [`jenkins/Jenkinsfile.main-cd.groovy`](./Jenkinsfile.main-cd.groovy)
 Purpose: Main branch CI + optional production deploy.
 Key gates: Same quality gates as CI, then manual approval + deploy placeholder.
 
-2. [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
+3. [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
 Purpose: Deep nightly checks.
 Key gates: Core gates + `test:e2e`, optional `test:live`.
 
-3. [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
+4. [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
 Purpose: Repo cleanliness and hygiene drift checks.
 Key gates: formatting, spec drift, skill mirror drift, dependency audit/outdated reports.
 
+For cadence and gate recommendations, see:
+
+- [`jenkins/RECOMMENDED_SETUP.md`](./RECOMMENDED_SETUP.md)
+- [`jenkins/JOB_SETUP_QUICKSTART.md`](./JOB_SETUP_QUICKSTART.md)
+
 ## Recommended Jenkins Jobs
 
-1. `content-studio-main-cd`
+1. `content-studio-pr-ci`
+Type: Multibranch Pipeline
+Pipeline script path: [`jenkins/Jenkinsfile.pr-ci.groovy`](./Jenkinsfile.pr-ci.groovy)
+Trigger: Pull request open/update events.
+
+2. `content-studio-main-cd`
 Type: Pipeline
 Pipeline script path: [`jenkins/Jenkinsfile.main-cd.groovy`](./Jenkinsfile.main-cd.groovy)
 Trigger: Push to `main` (webhook) or post-merge event.
 
-2. `content-studio-nightly-hygiene`
+3. `content-studio-nightly-hygiene`
 Type: Pipeline
 Pipeline script path: [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
 Trigger: Cron, example `H 2 * * *`.
 
-3. `content-studio-weekly-maintenance`
+4. `content-studio-weekly-maintenance`
 Type: Pipeline
 Pipeline script path: [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
 Trigger: Cron, example `H 4 * * 1`.

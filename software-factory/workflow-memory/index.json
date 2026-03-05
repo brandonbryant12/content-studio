@@ -1,5 +1,75 @@
 [
   {
+    "id": "2026-03-05-docs-knowledge-drift-added-eks-helm-first-deployment-recommendation-doc",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Added EKS Helm-first deployment recommendation doc",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "eks",
+      "helm",
+      "migrations",
+      "deployment",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-added-jenkins-job-creation-quickstart",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Added Jenkins job creation quickstart",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "jenkins",
+      "ci-cd",
+      "onboarding",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-added-jenkins-maintenance-setup-recommendation",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Added Jenkins maintenance setup recommendation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "jenkins",
+      "ci-cd",
+      "maintenance",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-common-signed-media-access-sequence-diagram",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Documented common signed media access sequence",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "security",
+      "storage",
+      "architecture",
+      "sequence-diagram",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-docs-knowledge-drift-documented-bearer-auth-refresh-and-startup-migration-policy",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -13,6 +83,24 @@
       "cors",
       "deployment",
       "migrations",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-local-dev-minio-required-storage-env-clarification",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Clarified required local MinIO storage env defaults",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "storage",
+      "minio",
+      "local-dev",
+      "env",
       "skill:docs-knowledge-drift"
     ],
     "eventFile": "events/2026-03.jsonl"
@@ -53,6 +141,24 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-feature-delivery-s3-only-storage-with-signed-operations-and-private-minio-default",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "S3-only storage with signed operations and private MinIO defaults",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:security-dependency-hygiene",
+      "security",
+      "storage",
+      "s3",
+      "minio"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-feature-delivery-server-docker-startup-now-runs-db-migrations-before-boot",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -65,6 +171,62 @@
       "docker",
       "server",
       "migrations"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-signed-storage-token-protection-for-images-and-documents",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Signed /storage token protection for images and documents",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "security",
+      "storage",
+      "signed-urls",
+      "documents",
+      "images",
+      "skill:feature-delivery",
+      "skill:security-dependency-hygiene"
+    ],
+    "importance": 0.84,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-upload-payload-size-enforcement-at-contract-and-http-boundary",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Upload payload size enforcement at contract and HTTP boundary",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "security",
+      "upload-limits",
+      "dos-prevention",
+      "skill:security-dependency-hygiene",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.83,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-periodic-scans-repo-wide-security-audit-findings-2026-03-05",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Repo-wide security audit findings (2026-03-05)",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scan",
+      "security",
+      "auth",
+      "storage"
     ],
     "eventFile": "events/2026-03.jsonl"
   },

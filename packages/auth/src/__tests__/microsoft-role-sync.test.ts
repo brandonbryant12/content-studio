@@ -3,6 +3,7 @@ import { Role } from '../policy/types';
 import {
   fetchMicrosoftGroupIds,
   resolveRoleFromGroupIds,
+  syncUserRoleFromMicrosoftGraph,
 } from '../server/microsoft-role-sync';
 
 const asJsonResponse = (value: unknown, init?: ResponseInit) =>
@@ -11,6 +12,49 @@ const asJsonResponse = (value: unknown, init?: ResponseInit) =>
     headers: { 'content-type': 'application/json' },
     ...init,
   });
+
+type SyncArgs = Parameters<typeof syncUserRoleFromMicrosoftGraph>[0];
+
+const createMockRoleSyncDb = ({
+  accessToken,
+  currentRole = Role.USER,
+}: {
+  accessToken: string | null;
+  currentRole?: Role;
+}): SyncArgs['db'] => {
+  let selectCalls = 0;
+
+  const db = {
+    select: () => ({
+      from: () => {
+        selectCalls += 1;
+
+        if (selectCalls === 1) {
+          return {
+            where: () => ({
+              orderBy: () => ({
+                limit: async () => (accessToken ? [{ accessToken }] : []),
+              }),
+            }),
+          };
+        }
+
+        return {
+          where: () => ({
+            limit: async () => [{ role: currentRole }],
+          }),
+        };
+      },
+    }),
+    update: () => ({
+      set: () => ({
+        where: async () => undefined,
+      }),
+    }),
+  };
+
+  return db as unknown as SyncArgs['db'];
+};
 
 describe('resolveRoleFromGroupIds', () => {
   it('prefers admin role when user matches both role groups', () => {
@@ -37,7 +81,7 @@ describe('resolveRoleFromGroupIds', () => {
     expect(role).toBe(Role.USER);
   });
 
-  it('falls back to user role when no configured groups match', () => {
+  it('returns null when no configured groups match', () => {
     const role = resolveRoleFromGroupIds({
       groupIds: new Set(['some-other-group']),
       roleGroups: {
@@ -46,7 +90,7 @@ describe('resolveRoleFromGroupIds', () => {
       },
     });
 
-    expect(role).toBe(Role.USER);
+    expect(role).toBeNull();
   });
 });
 
@@ -92,5 +136,44 @@ describe('fetchMicrosoftGroupIds', () => {
         fetchFn: fetchMock as unknown as typeof fetch,
       }),
     ).rejects.toThrow('Microsoft Graph groups request failed');
+  });
+});
+
+describe('syncUserRoleFromMicrosoftGraph', () => {
+  const roleGroups = {
+    adminGroupIds: ['admin-group-id'],
+    userGroupIds: ['user-group-id'],
+  } as const;
+
+  it('throws when no Microsoft access token exists', async () => {
+    const db = createMockRoleSyncDb({ accessToken: null });
+
+    await expect(
+      syncUserRoleFromMicrosoftGraph({
+        db,
+        userId: 'user-1',
+        roleGroups,
+      }),
+    ).rejects.toThrow(
+      'No Microsoft access token available for role synchronization',
+    );
+  });
+
+  it('throws when user is not in configured Microsoft role groups', async () => {
+    const db = createMockRoleSyncDb({ accessToken: 'access-token' });
+    const fetchMock = vi.fn().mockResolvedValue(
+      asJsonResponse({
+        value: [{ id: 'some-other-group' }],
+      }),
+    );
+
+    await expect(
+      syncUserRoleFromMicrosoftGraph({
+        db,
+        userId: 'user-1',
+        roleGroups,
+        fetchFn: fetchMock as unknown as typeof fetch,
+      }),
+    ).rejects.toThrow('User is not in any configured Microsoft role group');
   });
 });

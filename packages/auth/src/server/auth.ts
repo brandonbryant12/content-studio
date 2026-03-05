@@ -1,9 +1,11 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { APIError } from 'better-auth/api';
 import { bearer, openAPI } from 'better-auth/plugins';
 import urlJoin from 'url-join';
 import type { DatabaseInstance } from '@repo/db/client';
 import {
+  MicrosoftRoleSyncError,
   type MicrosoftRoleGroupConfig,
   syncUserRoleFromMicrosoftGraph,
 } from './microsoft-role-sync';
@@ -120,7 +122,14 @@ export const createAuth = ({
         ? {
             session: {
               create: {
-                after: async (session) => {
+                before: async (session, context) => {
+                  const callbackPath = context?.path;
+                  const isMicrosoftCallback =
+                    typeof callbackPath === 'string' &&
+                    (callbackPath.startsWith('/callback/microsoft') ||
+                      callbackPath.startsWith('/oauth2/callback/microsoft'));
+                  if (!isMicrosoftCallback) return;
+
                   try {
                     await syncUserRoleFromMicrosoftGraph({
                       db,
@@ -129,9 +138,24 @@ export const createAuth = ({
                     });
                   } catch (error) {
                     console.warn(
-                      '[AUTH] Failed to sync role from Microsoft Graph:',
+                      '[AUTH] Denying Microsoft SSO session creation:',
                       error instanceof Error ? error.message : String(error),
                     );
+
+                    if (
+                      error instanceof MicrosoftRoleSyncError &&
+                      error.code === 'MICROSOFT_GROUP_MEMBERSHIP_REQUIRED'
+                    ) {
+                      throw new APIError('FORBIDDEN', {
+                        code: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
+                        message: 'Microsoft SSO group membership is required',
+                      });
+                    }
+
+                    throw new APIError('FORBIDDEN', {
+                      code: 'SSO_AUTHORIZATION_FAILED',
+                      message: 'Microsoft SSO authorization failed',
+                    });
                   }
                 },
               },

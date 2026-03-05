@@ -53,7 +53,7 @@ export interface ServerRuntimeConfig {
  * - Db: Database connection
  * - Policy: Authorization service (depends on Db)
  * - Queue: Job queue service (depends on Db)
- * - Storage: File storage (S3 or filesystem)
+ * - Storage: S3-compatible object storage
  * - AI: LLM + TTS services (standalone)
  * - Media: SourceRepo, PodcastRepo, VoiceoverRepo (depends on Db, Storage)
  */

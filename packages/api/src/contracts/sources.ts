@@ -64,10 +64,15 @@ const urlErrors = {
   },
 } as const;
 
+const MAX_UPLOAD_SOURCE_BYTES = 10 * 1024 * 1024;
+// Base64 expands payload size by ~4/3. Keep a small buffer for transport overhead.
+export const MAX_UPLOAD_SOURCE_BASE64_CHARS =
+  Math.ceil((MAX_UPLOAD_SOURCE_BYTES * 4) / 3) + 2048;
+
 const UploadSourceSchema = Schema.Struct({
   fileName: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   mimeType: Schema.String,
-  data: Schema.String,
+  data: Schema.String.pipe(Schema.maxLength(MAX_UPLOAD_SOURCE_BASE64_CHARS)),
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),

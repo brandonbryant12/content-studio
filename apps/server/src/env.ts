@@ -51,11 +51,6 @@ const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
   encode: (b) => (b ? 'true' : 'false'),
 });
 
-const StorageProviderSchema = Schema.Union(
-  Schema.Literal('filesystem'),
-  Schema.Literal('s3'),
-);
-
 const AuthModeSchema = Schema.Union(
   Schema.Literal('dev-password'),
   Schema.Literal('hybrid'),
@@ -121,11 +116,6 @@ export const envSchema = Schema.Struct({
     default: () => true,
   }),
 
-  STORAGE_PROVIDER: Schema.optionalWith(StorageProviderSchema, {
-    default: () => 'filesystem' as const,
-  }),
-  STORAGE_PATH: Schema.optional(Schema.String),
-  STORAGE_BASE_URL: Schema.optional(Schema.String),
   S3_BUCKET: Schema.optional(Schema.String),
   S3_REGION: Schema.optional(Schema.String),
   S3_ACCESS_KEY_ID: Schema.optional(Schema.String),

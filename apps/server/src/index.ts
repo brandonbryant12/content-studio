@@ -16,7 +16,7 @@ import {
   staticRoute,
   staticPath,
 } from './routes';
-import { db, storageConfig } from './services';
+import { db } from './services';
 import { generateRootHtml } from './utils';
 
 const app = new Hono<{
@@ -85,9 +85,7 @@ app.get('/', (c) =>
   c.html(generateRootHtml(env.PUBLIC_WEB_URL, env.PUBLIC_SERVER_URL)),
 );
 
-if (storageConfig.provider === 'filesystem') {
-  app.route(staticPath, staticRoute);
-}
+app.route(staticPath, staticRoute);
 
 app.route(authPath, authRoute);
 

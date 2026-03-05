@@ -10,6 +10,7 @@ import { createAudioPlaybackProxy } from './audio-playback-proxy';
 import { buildAuthTrustedOrigins } from './auth-trusted-origins';
 import { buildStorageConfig } from './config';
 import { env } from './env';
+import { createStorageAccessProxy } from './storage-access-proxy';
 
 export const storageConfig = buildStorageConfig();
 export const audioPlaybackProxy = createAudioPlaybackProxy({
@@ -17,6 +18,15 @@ export const audioPlaybackProxy = createAudioPlaybackProxy({
   signingSecret: env.AUDIO_PLAYBACK_SIGNING_SECRET,
   ttlSeconds: env.AUDIO_PLAYBACK_URL_TTL_SECONDS,
   serverUrl: env.PUBLIC_SERVER_URL,
+  apiPath: env.PUBLIC_SERVER_API_PATH,
+  storageConfig,
+});
+export const storageAccessProxy = createStorageAccessProxy({
+  enabled: env.AUDIO_PLAYBACK_PROXY_ENABLED,
+  signingSecret: env.AUDIO_PLAYBACK_SIGNING_SECRET,
+  ttlSeconds: env.AUDIO_PLAYBACK_URL_TTL_SECONDS,
+  serverUrl: env.PUBLIC_SERVER_URL,
+  storagePath: '/storage',
   apiPath: env.PUBLIC_SERVER_API_PATH,
   storageConfig,
 });

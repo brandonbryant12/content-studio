@@ -1,6 +1,6 @@
 import { Command } from '@effect/cli';
 import { VOICES, GoogleTTSLive, previewVoice } from '@repo/ai/tts';
-import { Storage, FilesystemStorageLive, S3StorageLive } from '@repo/storage';
+import { Storage, S3StorageLive } from '@repo/storage';
 import { Console, Effect, Layer } from 'effect';
 import { loadEnv, type EnvError } from '../lib/env';
 
@@ -19,42 +19,32 @@ const FRONTEND_VOICE_IDS = [
 const storageKey = (voiceId: string) => `voice-previews/${voiceId}.wav`;
 
 const buildStorageLayer = (env: {
-  STORAGE_PROVIDER?: string;
-  STORAGE_PATH?: string;
-  STORAGE_BASE_URL?: string;
-  PUBLIC_SERVER_URL?: string;
   S3_BUCKET?: string;
   S3_REGION?: string;
   S3_ACCESS_KEY_ID?: string;
   S3_SECRET_ACCESS_KEY?: string;
   S3_ENDPOINT?: string;
+  S3_PUBLIC_ENDPOINT?: string;
 }): Layer.Layer<Storage> => {
-  if (env.STORAGE_PROVIDER === 's3') {
-    if (
-      !env.S3_BUCKET ||
-      !env.S3_REGION ||
-      !env.S3_ACCESS_KEY_ID ||
-      !env.S3_SECRET_ACCESS_KEY
-    ) {
-      throw new Error(
-        'S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY required for s3 provider',
-      );
-    }
-    return S3StorageLive({
-      bucket: env.S3_BUCKET,
-      region: env.S3_REGION,
-      accessKeyId: env.S3_ACCESS_KEY_ID,
-      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-      endpoint: env.S3_ENDPOINT,
-    });
+  if (
+    !env.S3_BUCKET ||
+    !env.S3_REGION ||
+    !env.S3_ACCESS_KEY_ID ||
+    !env.S3_SECRET_ACCESS_KEY
+  ) {
+    throw new Error(
+      'S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY are required.',
+    );
   }
 
-  // Default to filesystem
-  const basePath = env.STORAGE_PATH ?? './uploads';
-  const baseUrl =
-    env.STORAGE_BASE_URL ??
-    `${env.PUBLIC_SERVER_URL ?? 'http://localhost:3000'}/storage`;
-  return FilesystemStorageLive({ basePath, baseUrl });
+  return S3StorageLive({
+    bucket: env.S3_BUCKET,
+    region: env.S3_REGION,
+    accessKeyId: env.S3_ACCESS_KEY_ID,
+    secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    endpoint: env.S3_ENDPOINT,
+    publicEndpoint: env.S3_PUBLIC_ENDPOINT,
+  });
 };
 
 const run = Effect.gen(function* () {

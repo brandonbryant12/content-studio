@@ -1,3 +1,10 @@
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Effect, Layer } from 'effect';
 import {
   StorageError,
@@ -20,8 +27,18 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
   const baseUrl =
     config.endpoint ?? `https://s3.${config.region}.amazonaws.com`;
   const publicBaseUrl = config.publicEndpoint ?? baseUrl;
+  const s3Client = new S3Client({
+    region: config.region,
+    endpoint: config.endpoint,
+    forcePathStyle: Boolean(config.endpoint),
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+    // Keep retries explicit in Effect call sites.
+    maxAttempts: 1,
+  });
 
-  const internalUrl = (key: string) => `${baseUrl}/${config.bucket}/${key}`;
   const publicUrl = (key: string) => `${publicBaseUrl}/${config.bucket}/${key}`;
 
   const spanAttributes = (key: string) => ({
@@ -30,23 +47,51 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     'storage.bucket': config.bucket,
   });
 
+  const isS3NotFound = (error: unknown): boolean => {
+    if (!error || typeof error !== 'object') return false;
+
+    const name =
+      'name' in error && typeof error.name === 'string'
+        ? error.name
+        : undefined;
+    const code =
+      'Code' in error && typeof error.Code === 'string'
+        ? error.Code
+        : undefined;
+    const metadata =
+      '$metadata' in error &&
+      typeof error.$metadata === 'object' &&
+      error.$metadata !== null
+        ? error.$metadata
+        : undefined;
+    const statusCode =
+      metadata &&
+      'httpStatusCode' in metadata &&
+      typeof metadata.httpStatusCode === 'number'
+        ? metadata.httpStatusCode
+        : undefined;
+
+    return (
+      name === 'NoSuchKey' ||
+      name === 'NotFound' ||
+      code === 'NoSuchKey' ||
+      code === 'NotFound' ||
+      statusCode === 404
+    );
+  };
+
   return {
     upload: (key, data, contentType) =>
       Effect.tryPromise({
         try: async () => {
-          const url = internalUrl(key);
-          const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': contentType,
-              'x-amz-acl': 'private',
-            },
-            body: new Uint8Array(data),
-          });
-
-          if (!response.ok) {
-            throw new Error(`S3 upload failed: ${response.statusText}`);
-          }
+          await s3Client.send(
+            new PutObjectCommand({
+              Bucket: config.bucket,
+              Key: key,
+              Body: data,
+              ContentType: contentType,
+            }),
+          );
 
           return publicUrl(key);
         },
@@ -62,29 +107,35 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
 
     download: (key) =>
       Effect.gen(function* () {
-        const response = yield* Effect.tryPromise({
-          try: () => fetch(internalUrl(key)),
-          catch: (cause) =>
-            new StorageError({
+        const output = yield* Effect.tryPromise({
+          try: () =>
+            s3Client.send(
+              new GetObjectCommand({
+                Bucket: config.bucket,
+                Key: key,
+              }),
+            ),
+          catch: (cause) => {
+            if (isS3NotFound(cause)) {
+              return new StorageNotFoundError({ key });
+            }
+            return new StorageError({
               message: `Failed to download from S3: ${key}`,
               cause,
-            }),
+            });
+          },
         });
 
-        if (response.status === 404) {
-          return yield* Effect.fail(new StorageNotFoundError({ key }));
-        }
-
-        if (!response.ok) {
+        if (!output.Body) {
           return yield* Effect.fail(
             new StorageError({
-              message: `S3 download failed: ${response.statusText}`,
+              message: `S3 download failed: empty body for ${key}`,
             }),
           );
         }
 
-        const arrayBuffer = yield* Effect.tryPromise({
-          try: () => response.arrayBuffer(),
+        const bytes = yield* Effect.tryPromise({
+          try: () => output.Body!.transformToByteArray(),
           catch: (cause) =>
             new StorageError({
               message: `Failed to read S3 response: ${key}`,
@@ -92,7 +143,7 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
             }),
         });
 
-        return Buffer.from(arrayBuffer);
+        return Buffer.from(bytes);
       }).pipe(
         Effect.withSpan('storage.download', {
           attributes: spanAttributes(key),
@@ -102,11 +153,12 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     delete: (key) =>
       Effect.tryPromise({
         try: async () => {
-          const response = await fetch(internalUrl(key), { method: 'DELETE' });
-
-          if (!response.ok && response.status !== 404) {
-            throw new Error(`S3 delete failed: ${response.statusText}`);
-          }
+          await s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: config.bucket,
+              Key: key,
+            }),
+          );
         },
         catch: (cause) =>
           new StorageError({
@@ -125,11 +177,24 @@ const makeS3Storage = (config: S3StorageConfig): StorageService => {
     exists: (key) =>
       Effect.tryPromise({
         try: async () => {
-          const response = await fetch(internalUrl(key), { method: 'HEAD' });
-          return response.ok;
+          try {
+            await s3Client.send(
+              new HeadObjectCommand({
+                Bucket: config.bucket,
+                Key: key,
+              }),
+            );
+            return true;
+          } catch (cause) {
+            if (isS3NotFound(cause)) return false;
+            throw cause;
+          }
         },
-        catch: () =>
-          new StorageError({ message: `Failed to check S3 object: ${key}` }),
+        catch: (cause) =>
+          new StorageError({
+            message: `Failed to check S3 object: ${key}`,
+            cause,
+          }),
       }).pipe(
         Effect.withSpan('storage.exists', { attributes: spanAttributes(key) }),
       ),

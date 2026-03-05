@@ -5,7 +5,7 @@ set -euo pipefail
 # Generates .env files for server, web, and worker apps.
 #
 # Supports two modes:
-#   local   — bare-metal dev (filesystem storage, default ports 3035/8085)
+#   local   — bare-metal dev (MinIO S3 storage, default ports 3035/8085)
 #   docker  — docker compose (MinIO S3 storage, default ports 3036/8086)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -94,8 +94,8 @@ fi
 
 # ─── Deployment Mode ─────────────────────────────────────────────────
 header "Deployment Mode"
-info "local  — run services directly (pnpm dev), filesystem storage"
-info "docker — run via docker compose, MinIO S3 storage"
+info "local  — run services directly (pnpm dev) with MinIO S3 storage"
+info "docker — run via docker compose with MinIO S3 storage"
 echo
 prompt MODE "Mode (local/docker)" "docker"
 
@@ -105,7 +105,6 @@ if [[ "$MODE" == "docker" ]]; then
   DEFAULT_WEB_PORT="8086"
   DEFAULT_POSTGRES_URL="postgres://postgres:postgres@localhost:5432/content_studio"
   DEFAULT_REDIS_URL="redis://localhost:6379"
-  DEFAULT_STORAGE_PROVIDER="s3"
   DEFAULT_TELEMETRY_ENABLED="true"
   DEFAULT_OTEL_ENV="production"
 else
@@ -113,7 +112,6 @@ else
   DEFAULT_WEB_PORT="8085"
   DEFAULT_POSTGRES_URL="postgres://postgres:postgres@localhost:5432/postgres"
   DEFAULT_REDIS_URL="redis://localhost:6379"
-  DEFAULT_STORAGE_PROVIDER="filesystem"
   DEFAULT_TELEMETRY_ENABLED="false"
   DEFAULT_OTEL_ENV="development"
 fi
@@ -167,31 +165,17 @@ fi
 
 # ─── Storage ──────────────────────────────────────────────────────────
 header "Storage"
-info "filesystem = local disk, s3 = S3-compatible (MinIO, AWS, etc.)"
-if [[ "$MODE" == "docker" ]]; then
-  info "Docker mode defaults to MinIO S3 (included in docker compose)."
-fi
+info "S3-compatible object storage (MinIO local, AWS S3 in cloud)."
 echo
-prompt STORAGE_PROVIDER "Storage provider (filesystem/s3)" "$DEFAULT_STORAGE_PROVIDER"
-
-STORAGE_PATH=""
-STORAGE_BASE_URL=""
-S3_BUCKET="" S3_REGION="" S3_ACCESS_KEY_ID="" S3_SECRET_ACCESS_KEY="" S3_ENDPOINT="" S3_PUBLIC_ENDPOINT=""
-
-if [[ "$STORAGE_PROVIDER" == "filesystem" ]]; then
-  prompt STORAGE_PATH "Storage path" "./uploads"
-  STORAGE_BASE_URL="${PUBLIC_SERVER_URL}/storage"
-elif [[ "$STORAGE_PROVIDER" == "s3" ]]; then
-  # MinIO defaults from docker compose
-  MINIO_PORT="9001"
-  MINIO_CONSOLE_PORT="9090"
-  prompt S3_BUCKET "S3 bucket" "content-studio"
-  prompt S3_REGION "S3 region" "us-east-1"
-  prompt S3_ACCESS_KEY_ID "S3 access key ID" "minioadmin"
-  prompt_secret S3_SECRET_ACCESS_KEY "S3 secret access key" "minioadmin"
-  prompt S3_ENDPOINT "S3 endpoint" "http://localhost:${MINIO_PORT}"
-  prompt S3_PUBLIC_ENDPOINT "S3 public endpoint (for file URLs)" "http://${HOST}:${MINIO_PORT}"
-fi
+# MinIO defaults from docker compose
+MINIO_PORT="9001"
+MINIO_CONSOLE_PORT="9090"
+prompt S3_BUCKET "S3 bucket" "content-studio"
+prompt S3_REGION "S3 region" "us-east-1"
+prompt S3_ACCESS_KEY_ID "S3 access key ID" "minioadmin"
+prompt_secret S3_SECRET_ACCESS_KEY "S3 secret access key" "minioadmin"
+prompt S3_ENDPOINT "S3 endpoint" "http://localhost:${MINIO_PORT}"
+prompt S3_PUBLIC_ENDPOINT "S3 public endpoint (for file URLs)" "http://${HOST}:${MINIO_PORT}"
 
 # ─── CORS ─────────────────────────────────────────────────────────────
 CORS_ORIGINS=""
@@ -233,15 +217,9 @@ OTEL_ENV=${DEFAULT_OTEL_ENV}
 EOF
 
 # Storage
-echo -e "\n# Storage\nSTORAGE_PROVIDER=${STORAGE_PROVIDER}" >> "$ROOT_DIR/apps/server/.env"
+cat >> "$ROOT_DIR/apps/server/.env" <<EOF
 
-if [[ "$STORAGE_PROVIDER" == "filesystem" ]]; then
-  cat >> "$ROOT_DIR/apps/server/.env" <<EOF
-STORAGE_PATH=${STORAGE_PATH}
-STORAGE_BASE_URL=${STORAGE_BASE_URL}
-EOF
-elif [[ "$STORAGE_PROVIDER" == "s3" ]]; then
-  cat >> "$ROOT_DIR/apps/server/.env" <<EOF
+# Storage
 S3_BUCKET=${S3_BUCKET}
 S3_REGION=${S3_REGION}
 S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
@@ -249,7 +227,6 @@ S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
 S3_ENDPOINT=${S3_ENDPOINT}
 S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT}
 EOF
-fi
 
 ok "apps/server/.env"
 
@@ -287,15 +264,9 @@ OTEL_ENV=${DEFAULT_OTEL_ENV}
 EOF
 
 # Storage (worker needs same storage config as server)
-echo -e "\n# Storage\nSTORAGE_PROVIDER=${STORAGE_PROVIDER}" >> "$ROOT_DIR/apps/worker/.env"
+cat >> "$ROOT_DIR/apps/worker/.env" <<EOF
 
-if [[ "$STORAGE_PROVIDER" == "filesystem" ]]; then
-  cat >> "$ROOT_DIR/apps/worker/.env" <<EOF
-STORAGE_PATH=${STORAGE_PATH}
-STORAGE_BASE_URL=${STORAGE_BASE_URL}
-EOF
-elif [[ "$STORAGE_PROVIDER" == "s3" ]]; then
-  cat >> "$ROOT_DIR/apps/worker/.env" <<EOF
+# Storage
 S3_BUCKET=${S3_BUCKET}
 S3_REGION=${S3_REGION}
 S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
@@ -303,7 +274,6 @@ S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
 S3_ENDPOINT=${S3_ENDPOINT}
 S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT}
 EOF
-fi
 
 ok "apps/worker/.env"
 
@@ -315,11 +285,8 @@ echo -e "  ${DIM}Mode:    ${MODE}${RESET}"
 echo -e "  ${DIM}Server:  ${PUBLIC_SERVER_URL}${RESET}"
 echo -e "  ${DIM}Web:     ${PUBLIC_WEB_URL}${RESET}"
 echo -e "  ${DIM}Mock AI: ${USE_MOCK_AI}${RESET}"
-echo -e "  ${DIM}Storage: ${STORAGE_PROVIDER}${RESET}"
-
-if [[ "$STORAGE_PROVIDER" == "s3" ]]; then
-  echo -e "  ${DIM}S3:      ${S3_ENDPOINT} (bucket: ${S3_BUCKET})${RESET}"
-fi
+echo -e "  ${DIM}Storage: s3${RESET}"
+echo -e "  ${DIM}S3:      ${S3_ENDPOINT} (bucket: ${S3_BUCKET})${RESET}"
 
 echo
 header "Next steps"
@@ -333,7 +300,7 @@ if [[ "$MODE" == "docker" ]]; then
   info "  MinIO console: http://${HOST}:9090 (minioadmin/minioadmin)"
 else
   info "  1. pnpm install"
-  info "  2. docker compose -f docker-compose.yml up -d  # start postgres + redis"
+  info "  2. docker compose up -d db redis minio minio-init  # start postgres + redis + minio"
   info "  3. pnpm db:push"
   info "  4. pnpm dev"
 fi

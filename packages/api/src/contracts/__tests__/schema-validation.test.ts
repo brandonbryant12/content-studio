@@ -17,6 +17,7 @@ import {
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 import { appContract } from '../index';
+import { MAX_UPLOAD_SOURCE_BASE64_CHARS } from '../sources';
 
 const UUID = '00000000-0000-0000-0000-000000000000';
 
@@ -221,5 +222,28 @@ describe('contract input schema validation', () => {
         false,
       );
     }
+  });
+});
+
+describe('upload input constraints', () => {
+  it('accepts small base64 payloads', async () => {
+    const success = await validateContractInput(appContract.sources.upload, {
+      fileName: 'sample.txt',
+      mimeType: 'text/plain',
+      data: Buffer.from('hello world', 'utf-8').toString('base64'),
+    });
+
+    expect(success).toBe(true);
+  });
+
+  it('rejects oversized base64 payloads', async () => {
+    const oversizedBase64 = 'a'.repeat(MAX_UPLOAD_SOURCE_BASE64_CHARS + 1);
+    const success = await validateContractInput(appContract.sources.upload, {
+      fileName: 'sample.txt',
+      mimeType: 'text/plain',
+      data: oversizedBase64,
+    });
+
+    expect(success).toBe(false);
   });
 });
