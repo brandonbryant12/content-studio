@@ -491,6 +491,28 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-periodic-scans-developer-experience-scan-found-broken-e2e-bootstrap-toolchain-d",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Developer experience scan found broken E2E bootstrap, toolchain drift, and onboarding gaps",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "dx",
+      "local-dev",
+      "testing",
+      "docs",
+      "workflow:developer-experience",
+      "skill:periodic-scans",
+      "skill:codebase-nav"
+    ],
+    "importance": 0.91,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-periodic-scans-repo-wide-security-audit-findings-2026-03-05",
     "date": "2026-03-05",
     "month": "2026-03",

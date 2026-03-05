@@ -33,6 +33,7 @@ flowchart LR
 5. Prefer accessible selectors: `getByRole` first, then scoped text selectors <!-- enforced-by: manual-review -->
 
 ## Anti-Bloat Rules
+
 <!-- enforced-by: manual-review -->
 
 1. Cover behavior states, not every visual micro-variation.
@@ -43,20 +44,20 @@ flowchart LR
 
 ## Test Types
 
-| Type | Tool | Scope | Typical location |
-|------|------|-------|------------------|
-| Presenter / component | Vitest + RTL | Pure rendering and UI events | `features/{domain}/__tests__/` |
-| Container / query-backed component | Vitest + RTL + Query provider | Hooks, query state, mutation wiring | `features/{domain}/__tests__/` or `shared/**/__tests__/` |
-| Hook | Vitest + `renderHook` | Hook logic and local state | `features/{domain}/__tests__/` or `shared/hooks/__tests__/` |
-| E2E | Playwright | Full browser flow | `apps/web/e2e/tests/` |
+| Type                               | Tool                          | Scope                               | Typical location                                            |
+| ---------------------------------- | ----------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| Presenter / component              | Vitest + RTL                  | Pure rendering and UI events        | `features/{domain}/__tests__/`                              |
+| Container / query-backed component | Vitest + RTL + Query provider | Hooks, query state, mutation wiring | `features/{domain}/__tests__/` or `shared/**/__tests__/`    |
+| Hook                               | Vitest + `renderHook`         | Hook logic and local state          | `features/{domain}/__tests__/` or `shared/hooks/__tests__/` |
+| E2E                                | Playwright                    | Full browser flow                   | `apps/web/e2e/tests/`                                       |
 
 ## Component And Container Tests
 
 ### Base Setup
 
 ```tsx
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithQuery, screen, userEvent, waitFor } from '@/test-utils';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithQuery, screen, userEvent, waitFor } from "@/test-utils";
 ```
 
 **Reference:** `apps/web/src/test-utils/index.tsx`
@@ -72,9 +73,9 @@ When the test cares about client transport behavior, keep handlers close to the 
 
 ```tsx
 // apps/web/src/features/sources/__tests__/handlers.ts
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
-const API_BASE = '/rpc';
+const API_BASE = "/rpc";
 
 export const sourceHandlers = [
   http.post(`${API_BASE}/sources.list`, () => HttpResponse.json(mockSources)),
@@ -83,7 +84,7 @@ export const sourceHandlers = [
     const source = mockSources.find((item) => item.id === body.id);
     return source
       ? HttpResponse.json(source)
-      : HttpResponse.json({ error: 'Source not found' }, { status: 404 });
+      : HttpResponse.json({ error: "Source not found" }, { status: 404 });
   }),
 ];
 ```
@@ -95,18 +96,18 @@ export const sourceHandlers = [
 Many current feature tests isolate the UI by mocking `apiClient` adapters or feature hooks directly.
 
 ```tsx
-describe('AddSourceDialog', () => {
+describe("AddSourceDialog", () => {
   beforeEach(() => {
     mockUseSources.mockReturnValue({ data: [], isLoading: false });
     mockFromUrlMutationFn.mockResolvedValue({
-      id: 'url-src-2',
-      title: 'URL Source',
-      mimeType: 'text/html',
+      id: "url-src-2",
+      title: "URL Source",
+      mimeType: "text/html",
       wordCount: 220,
     });
   });
 
-  it('adds a source from URL and closes the dialog', async () => {
+  it("adds a source from URL and closes the dialog", async () => {
     const user = userEvent.setup();
     renderWithQuery(
       <AddSourceDialog
@@ -117,9 +118,9 @@ describe('AddSourceDialog', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'From URL' }));
-    await user.type(screen.getByLabelText('URL'), 'https://example.com/news');
-    await user.click(screen.getByRole('button', { name: 'Add URL' }));
+    await user.click(screen.getByRole("tab", { name: "From URL" }));
+    await user.type(screen.getByLabelText("URL"), "https://example.com/news");
+    await user.click(screen.getByRole("button", { name: "Add URL" }));
 
     await waitFor(() => expect(mockFromUrlMutationFn).toHaveBeenCalled());
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
@@ -131,26 +132,26 @@ describe('AddSourceDialog', () => {
 
 ## Test Checklist By Component Type
 
-| Component type | Required tests |
-|---|---|
-| List | Renders items, empty state, search/no-results state, key actions |
-| Form / dialog | Valid submit path, validation feedback, pending state, failure handling |
-| Detail container | Correct derived props, loading / missing content branches, destructive actions |
-| Hook | Default state, state transitions, dirty tracking, reset behavior |
-| Shared async wrapper | Error boundary behavior, retry wiring, suspense fallback behavior |
+| Component type       | Required tests                                                                 |
+| -------------------- | ------------------------------------------------------------------------------ |
+| List                 | Renders items, empty state, search/no-results state, key actions               |
+| Form / dialog        | Valid submit path, validation feedback, pending state, failure handling        |
+| Detail container     | Correct derived props, loading / missing content branches, destructive actions |
+| Hook                 | Default state, state transitions, dirty tracking, reset behavior               |
+| Shared async wrapper | Error boundary behavior, retry wiring, suspense fallback behavior              |
 
 ## Hook Tests
 
 ```tsx
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from "@testing-library/react";
 
-describe('useScriptEditor', () => {
-  it('tracks changes after edit', () => {
+describe("useScriptEditor", () => {
+  it("tracks changes after edit", () => {
     const { result } = renderHook(() =>
-      useScriptEditor({ podcastId: 'pod_1', initialSegments: mockSegments }),
+      useScriptEditor({ podcastId: "pod_1", initialSegments: mockSegments }),
     );
 
-    act(() => result.current.updateSegment(0, 'New text'));
+    act(() => result.current.updateSegment(0, "New text"));
 
     expect(result.current.hasChanges).toBe(true);
   });
@@ -161,17 +162,31 @@ describe('useScriptEditor', () => {
 
 ## E2E Tests (Playwright)
 
+Preferred entrypoint:
+
+```bash
+pnpm test:e2e
+```
+
+The wrapper script provisions an ephemeral PostgreSQL Testcontainer, ensures the local Redis/MinIO Docker services are available, starts `apps/server`, `apps/worker`, and `apps/web`, and then runs Playwright.
+
+For interactive debugging:
+
+```bash
+pnpm test:e2e:ui
+```
+
 ### Fixtures
 
 Use `authenticatedTest` for flows that require login.
 
 ```tsx
-import { authenticatedTest, expect } from '../../fixtures';
+import { authenticatedTest, expect } from "../../fixtures";
 
-authenticatedTest('uploads a source', async ({ sourcesPage }) => {
+authenticatedTest("uploads a source", async ({ sourcesPage }) => {
   await sourcesPage.goto();
   await sourcesPage.expectVisible();
-  await sourcesPage.uploadFile('fixtures/source.txt');
+  await sourcesPage.uploadFile("fixtures/source.txt");
 
   await expect(sourcesPage.getUploadDialog()).toBeHidden();
 });
@@ -186,17 +201,17 @@ Each major route gets a Page Object under `apps/web/e2e/pages/`.
 ```tsx
 // apps/web/e2e/pages/sources.page.ts
 export class SourcesPage extends BasePage {
-  readonly uploadButton = this.page.getByRole('button', { name: /upload/i });
+  readonly uploadButton = this.page.getByRole("button", { name: /upload/i });
   readonly searchInput = this.page.getByPlaceholder(/search/i);
 
   async goto() {
-    await this.page.goto('/sources');
+    await this.page.goto("/sources");
     await this.waitForLoading();
   }
 
   async expectVisible() {
     await expect(
-      this.page.getByRole('heading', { name: 'Sources', level: 1 }),
+      this.page.getByRole("heading", { name: "Sources", level: 1 }),
     ).toBeVisible();
   }
 }
@@ -206,12 +221,12 @@ export class SourcesPage extends BasePage {
 
 ### Selector Best Practices
 
-| Priority | Selector | When |
-|----------|---------|------|
-| 1 | `getByRole('button', { name: /save/i })` | Interactive elements |
-| 2 | `getByRole('heading', { name: /sources/i, level: 1 })` | Headings |
-| 3 | Scoped `getByText(...)` | Static text inside a known region |
-| 4 | `getByTestId(...)` | No better accessible selector exists |
+| Priority | Selector                                               | When                                 |
+| -------- | ------------------------------------------------------ | ------------------------------------ |
+| 1        | `getByRole('button', { name: /save/i })`               | Interactive elements                 |
+| 2        | `getByRole('heading', { name: /sources/i, level: 1 })` | Headings                             |
+| 3        | Scoped `getByText(...)`                                | Static text inside a known region    |
+| 4        | `getByTestId(...)`                                     | No better accessible selector exists |
 
 Scope selectors to a container when repeated UI exists on the page.
 
@@ -236,6 +251,8 @@ apps/web/e2e/
     voiceovers/
   utils/api.ts
 ```
+
+Raw `playwright test` is still available for manual debugging, but the repo-standard path is `pnpm test:e2e` so the full runtime is started consistently.
 
 ## Rules
 

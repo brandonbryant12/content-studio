@@ -19,6 +19,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const AUTH_FILE = path.join(__dirname, '.auth', 'user.json');
+const authHeaders = (webUrl: string) => ({
+  'Content-Type': 'application/json',
+  Origin: new URL(webUrl).origin,
+});
 
 async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0]?.use?.baseURL ?? 'http://localhost:8085';
@@ -36,7 +40,7 @@ async function globalSetup(config: FullConfig) {
 
   // Step 1: Seed test user
   console.log('\n🌱 Seeding test user...');
-  await seedTestUser(apiURL);
+  await seedTestUser(apiURL, baseURL);
 
   // Step 2: Login via browser and save auth state
   console.log('\n🔐 Logging in to save auth state...');
@@ -49,8 +53,10 @@ async function globalSetup(config: FullConfig) {
     await page.goto(`${baseURL}/login`);
 
     // Fill login form
-    await page.getByLabel(/email/i).fill(TEST_USER.email);
-    await page.getByLabel(/password/i).fill(TEST_USER.password);
+    await page.getByRole('textbox', { name: /^email$/i }).fill(TEST_USER.email);
+    await page
+      .getByRole('textbox', { name: /^password$/i })
+      .fill(TEST_USER.password);
     await page.getByRole('button', { name: /sign in|log in/i }).click();
 
     // Wait for successful navigation to dashboard
@@ -73,11 +79,11 @@ async function globalSetup(config: FullConfig) {
   console.log('\n✅ Global Setup Complete\n');
 }
 
-async function seedTestUser(apiURL: string) {
+async function seedTestUser(apiURL: string, webUrl: string) {
   // Try to sign in first
   const signInResponse = await fetch(`${apiURL}/api/auth/sign-in/email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(webUrl),
     body: JSON.stringify({
       email: TEST_USER.email,
       password: TEST_USER.password,
@@ -94,7 +100,7 @@ async function seedTestUser(apiURL: string) {
   // Create user
   const signUpResponse = await fetch(`${apiURL}/api/auth/sign-up/email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(webUrl),
     body: JSON.stringify({
       email: TEST_USER.email,
       password: TEST_USER.password,

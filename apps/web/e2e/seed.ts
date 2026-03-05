@@ -12,7 +12,16 @@ export const TEST_USER = {
 };
 
 const API_BASE_URL = process.env.E2E_API_URL ?? 'http://localhost:3035';
+const WEB_BASE_URL =
+  process.env.E2E_BASE_URL ??
+  process.env.PUBLIC_WEB_URL ??
+  'http://localhost:8085';
 const AUTH_PATH = '/api/auth';
+
+const authHeaders = {
+  'Content-Type': 'application/json',
+  Origin: new URL(WEB_BASE_URL).origin,
+};
 
 interface AuthResponse {
   user?: { id: string; email: string; name: string };
@@ -22,7 +31,7 @@ interface AuthResponse {
 async function signUp(): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${AUTH_PATH}/sign-up/email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders,
     body: JSON.stringify({
       email: TEST_USER.email,
       password: TEST_USER.password,
@@ -36,7 +45,7 @@ async function signUp(): Promise<AuthResponse> {
 async function signIn(): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${AUTH_PATH}/sign-in/email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders,
     body: JSON.stringify({
       email: TEST_USER.email,
       password: TEST_USER.password,

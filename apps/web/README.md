@@ -8,8 +8,11 @@ React SPA built with Vite, TanStack Router, and Tailwind CSS.
 pnpm dev       # Start Vite dev server (reads .env for PUBLIC_* vars)
 pnpm build     # Production build
 pnpm test      # Run unit tests
-pnpm test:e2e  # Run Playwright e2e tests
+pnpm test:e2e  # Start the E2E runtime and run Playwright
+pnpm test:e2e:ui # Launch Playwright UI mode with the same runtime bootstrap
 ```
+
+`pnpm test:e2e` provisions the browser-test runtime for you: ephemeral Postgres, local Redis/MinIO, plus the server, worker, and Vite app.
 
 ## Environment Variables
 

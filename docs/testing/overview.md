@@ -2,13 +2,13 @@
 
 ## Diagram Legend
 
-| Color | Meaning |
-|---|---|
-| Blue | Test entry point |
-| Green | Shared harness or runtime under test |
-| Amber | Async workflow path |
-| Gray | External environment or stateful dependency |
-| Red | Guardrail or invariant layer |
+| Color | Meaning                                     |
+| ----- | ------------------------------------------- |
+| Blue  | Test entry point                            |
+| Green | Shared harness or runtime under test        |
+| Amber | Async workflow path                         |
+| Gray  | External environment or stateful dependency |
+| Red   | Guardrail or invariant layer                |
 
 ```mermaid
 flowchart LR
@@ -54,32 +54,34 @@ flowchart LR
 ```
 
 ## Pattern-to-Test Matrix
+
 <!-- enforced-by: manual-review -->
 
-| Change Type | Required Tests | Package | Command |
-|---|---|---|---|
-| Use case | Unit test + invariants | `@repo/media` | `pnpm --filter @repo/media test` + `pnpm test:invariants` |
-| Handler / router | Integration test | `@repo/api` | `pnpm --filter @repo/api test` |
-| Job workflow | Workflow test + invariants | `@repo/api` | `pnpm --filter @repo/api test` + `pnpm test:invariants` |
-| Frontend component | Component test | `web` | `pnpm --filter web test` |
-| Frontend hook | Hook test | `web` | `pnpm --filter web test` |
-| Critical user flow | E2E test | root | `pnpm test:e2e` |
-| New Effect service/layer | Update integration test runtime | `@repo/api` | `pnpm --filter @repo/api test` |
-| Error class added | Invariant coverage | `@repo/api` | `pnpm test:invariants` |
-| Safety primitive added | Invariant test | `@repo/media` | `pnpm test:invariants` |
+| Change Type              | Required Tests                  | Package       | Command                                                   |
+| ------------------------ | ------------------------------- | ------------- | --------------------------------------------------------- |
+| Use case                 | Unit test + invariants          | `@repo/media` | `pnpm --filter @repo/media test` + `pnpm test:invariants` |
+| Handler / router         | Integration test                | `@repo/api`   | `pnpm --filter @repo/api test`                            |
+| Job workflow             | Workflow test + invariants      | `@repo/api`   | `pnpm --filter @repo/api test` + `pnpm test:invariants`   |
+| Frontend component       | Component test                  | `web`         | `pnpm --filter web test`                                  |
+| Frontend hook            | Hook test                       | `web`         | `pnpm --filter web test`                                  |
+| Critical user flow       | E2E test                        | root          | `pnpm test:e2e`                                           |
+| New Effect service/layer | Update integration test runtime | `@repo/api`   | `pnpm --filter @repo/api test`                            |
+| Error class added        | Invariant coverage              | `@repo/api`   | `pnpm test:invariants`                                    |
+| Safety primitive added   | Invariant test                  | `@repo/media` | `pnpm test:invariants`                                    |
 
 ## Coverage Expectations
 
-| Test Type | Target | Notes |
-|---|---|---|
-| Use case unit | Every use case file has a test file | Success + error + edge + auth |
-| Integration | Every handler has at least one test | Catches missing service wiring |
-| Workflow | Every job type has a workflow test | Catches API/worker status mismatches |
-| Invariant | All safety primitives enforced | AST-level, runs in CI |
-| Frontend | All hooks and interactive components | RTL + vitest |
-| E2E | Critical user flows only | Login, create, generate |
+| Test Type     | Target                               | Notes                                |
+| ------------- | ------------------------------------ | ------------------------------------ |
+| Use case unit | Every use case file has a test file  | Success + error + edge + auth        |
+| Integration   | Every handler has at least one test  | Catches missing service wiring       |
+| Workflow      | Every job type has a workflow test   | Catches API/worker status mismatches |
+| Invariant     | All safety primitives enforced       | AST-level, runs in CI                |
+| Frontend      | All hooks and interactive components | RTL + vitest                         |
+| E2E           | Critical user flows only             | Login, create, generate              |
 
 ## Anti-Bloat Rules
+
 <!-- enforced-by: manual-review -->
 
 1. One test per behavior branch, not one test per assertion detail.
@@ -97,16 +99,16 @@ flowchart LR
 
 ## Test File Locations
 
-| Test Type | Path Pattern |
-|---|---|
-| Use case unit | `packages/media/src/{domain}/use-cases/__tests__/{action}.test.ts` |
-| Integration | `packages/api/src/server/router/__tests__/{router}.integration.test.ts` |
-| Workflow | `packages/api/src/server/router/__tests__/{entity}-workflow.test.ts` |
-| Invariant (media) | `packages/media/src/shared/__tests__/safety-invariants.test.ts` |
-| Invariant (API) | `packages/api/src/server/__tests__/effect-handler.invariants.test.ts` |
-| Frontend | `apps/web/src/features/{domain}/__tests__/*.test.ts(x)` |
-| Live | `packages/{ai,storage}/src/__tests__/live/*.live.test.ts` |
-| E2E | `apps/web/e2e/*.spec.ts` |
+| Test Type         | Path Pattern                                                            |
+| ----------------- | ----------------------------------------------------------------------- |
+| Use case unit     | `packages/media/src/{domain}/use-cases/__tests__/{action}.test.ts`      |
+| Integration       | `packages/api/src/server/router/__tests__/{router}.integration.test.ts` |
+| Workflow          | `packages/api/src/server/router/__tests__/{entity}-workflow.test.ts`    |
+| Invariant (media) | `packages/media/src/shared/__tests__/safety-invariants.test.ts`         |
+| Invariant (API)   | `packages/api/src/server/__tests__/effect-handler.invariants.test.ts`   |
+| Frontend          | `apps/web/src/features/{domain}/__tests__/*.test.ts(x)`                 |
+| Live              | `packages/{ai,storage}/src/__tests__/live/*.live.test.ts`               |
+| E2E               | `apps/web/e2e/tests/**/*.spec.ts`                                       |
 
 ## Test Profiles
 
@@ -123,6 +125,11 @@ flowchart LR
 - `pnpm test:unit`:
   - Fast unit-focused gate (excludes `@repo/api` integration/workflow suite).
   - Use during feature iteration before running full profile tests.
+- `pnpm test:e2e`:
+  - Starts an ephemeral PostgreSQL Testcontainer for the Playwright run.
+  - Ensures local Redis + MinIO are up through Docker Compose.
+  - Starts the API server, worker, and web app before launching Playwright.
+  - Best for browser-flow validation without manually bootstrapping services.
 
 For profile and `pnpm test` runs, you can tune concurrency without editing code:
 
@@ -143,6 +150,9 @@ pnpm test:ci
 
 # Unit-focused quick loop
 pnpm test:unit
+
+# Browser flow validation
+pnpm test:e2e
 
 # Cooler laptop profile override
 TURBO_TEST_CONCURRENCY=35% VITEST_MAX_WORKERS=35% pnpm test:local

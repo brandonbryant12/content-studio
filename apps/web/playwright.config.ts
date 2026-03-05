@@ -3,10 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+const managedServices = process.env.E2E_MANAGED_SERVICES === '1';
+
 export default defineConfig({
   testDir: './e2e/tests',
 
-  /* Global setup runs after webServer starts */
+  /* Global setup runs after services are ready */
   globalSetup: './e2e/global-setup.ts',
 
   /* Run tests in files in parallel */
@@ -60,27 +62,29 @@ export default defineConfig({
     // },
   ],
 
-  /* Start both API server and web app before running tests */
-  webServer: [
-    {
-      // API Server with test configuration (mock AI, test database)
-      command: 'pnpm --filter server start:test',
-      url: 'http://localhost:3035/healthcheck',
-      reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-    {
-      // Web app (Vite dev server)
-      command: 'pnpm dev',
-      url: 'http://localhost:8085',
-      reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-  ],
+  /* Start both API server and web app before running tests unless managed externally */
+  webServer: managedServices
+    ? undefined
+    : [
+        {
+          // API Server with test configuration (mock AI, test database)
+          command: 'pnpm --filter server start:test',
+          url: 'http://localhost:3035/healthcheck',
+          reuseExistingServer: !process.env.CI,
+          timeout: 30 * 1000,
+          stdout: 'pipe',
+          stderr: 'pipe',
+        },
+        {
+          // Web app (Vite dev server)
+          command: 'pnpm dev',
+          url: 'http://localhost:8085',
+          reuseExistingServer: !process.env.CI,
+          timeout: 30 * 1000,
+          stdout: 'pipe',
+          stderr: 'pipe',
+        },
+      ],
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   outputDir: 'e2e-results/test-artifacts',

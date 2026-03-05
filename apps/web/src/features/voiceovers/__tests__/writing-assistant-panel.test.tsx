@@ -68,7 +68,9 @@ describe('WritingAssistantPanel', () => {
     );
 
     expect(
-      screen.getByText(/Use AI to improve the current script before you generate audio\./i),
+      screen.getByText(
+        /Use AI to improve the current script before you generate audio\./i,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/uses your current script as context/i),

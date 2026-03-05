@@ -9,6 +9,7 @@
     "clean": "turbo run clean",
     "deploy:linux": "./deploy",
     "redeploy:linux": "./redeploy",
+    "setup:local": "pnpm exec tsx scripts/setup-local.ts",
     "db:push": "turbo -F @repo/db push",
     "db:migrate": "turbo -F @repo/db migrate",
     "db:generate": "turbo -F @repo/db generate",

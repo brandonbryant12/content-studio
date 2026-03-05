@@ -12,41 +12,41 @@ This document defines the recommended Jenkins pipeline model for maintaining and
 ## Pipeline Portfolio
 
 1. `content-studio-pr-ci` (blocking)
-Pipeline: [`jenkins/Jenkinsfile.pr-ci.groovy`](./Jenkinsfile.pr-ci.groovy)
-Trigger: PR opened/synchronize/reopened
-Purpose: Fast merge gate
+   Pipeline: [`jenkins/Jenkinsfile.pr-ci.groovy`](./Jenkinsfile.pr-ci.groovy)
+   Trigger: PR opened/synchronize/reopened
+   Purpose: Fast merge gate
 
 2. `content-studio-main-cd` (blocking)
-Pipeline: [`jenkins/Jenkinsfile.main-cd.groovy`](./Jenkinsfile.main-cd.groovy)
-Trigger: push/merge to `main`
-Purpose: Validate branch head, optionally deploy with manual approval
+   Pipeline: [`jenkins/Jenkinsfile.main-cd.groovy`](./Jenkinsfile.main-cd.groovy)
+   Trigger: push/merge to `main`
+   Purpose: Validate branch head, optionally deploy with manual approval
 
 3. `content-studio-nightly-hygiene` (scheduled)
-Pipeline: [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
-Trigger: cron `H 2 * * *`
-Purpose: Deep daily checks (`e2e`, optional live tests)
+   Pipeline: [`jenkins/Jenkinsfile.nightly-hygiene.groovy`](./Jenkinsfile.nightly-hygiene.groovy)
+   Trigger: cron `H 2 * * *`
+   Purpose: Deep daily checks (`e2e`, optional live tests)
 
 4. `content-studio-weekly-maintenance` (scheduled)
-Pipeline: [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
-Trigger: cron `H 4 * * 1`
-Purpose: Hygiene drift and dependency maintenance checks
+   Pipeline: [`jenkins/Jenkinsfile.weekly-maintenance.groovy`](./Jenkinsfile.weekly-maintenance.groovy)
+   Trigger: cron `H 4 * * 1`
+   Purpose: Hygiene drift and dependency maintenance checks
 
 ## Gate Timing Matrix
 
-| Gate | PR CI | Main CD | Nightly | Weekly |
-|---|---|---|---|---|
-| `pnpm install --frozen-lockfile` | Required | Required | Required | Required |
-| `pnpm spec:check` | Required | Required | Required | Required |
-| `pnpm typecheck` | Required | Required | Required | Optional |
-| `pnpm lint` | Required | Required | Required | Optional |
-| `pnpm test` | Required | Required | Required | Optional |
-| `pnpm test:invariants` | Required | Required | Required | Optional |
-| `pnpm build` | Required | Required | Required | Optional |
-| `pnpm test:e2e` | Skip | Optional | Required | Skip |
-| `pnpm test:live` | Skip | Skip | Optional (`RUN_LIVE_TESTS=true`) | Skip |
-| `pnpm format` | Skip | Skip | Skip | Required |
-| `pnpm audit --prod` | Skip | Skip | Optional | Advisory |
-| `pnpm outdated --recursive` | Skip | Skip | Skip | Advisory |
+| Gate                             | PR CI    | Main CD  | Nightly                          | Weekly   |
+| -------------------------------- | -------- | -------- | -------------------------------- | -------- |
+| `pnpm install --frozen-lockfile` | Required | Required | Required                         | Required |
+| `pnpm spec:check`                | Required | Required | Required                         | Required |
+| `pnpm typecheck`                 | Required | Required | Required                         | Optional |
+| `pnpm lint`                      | Required | Required | Required                         | Optional |
+| `pnpm test`                      | Required | Required | Required                         | Optional |
+| `pnpm test:invariants`           | Required | Required | Required                         | Optional |
+| `pnpm build`                     | Required | Required | Required                         | Optional |
+| `pnpm test:e2e`                  | Skip     | Optional | Required                         | Skip     |
+| `pnpm test:live`                 | Skip     | Skip     | Optional (`RUN_LIVE_TESTS=true`) | Skip     |
+| `pnpm format`                    | Skip     | Skip     | Skip                             | Required |
+| `pnpm audit --prod`              | Skip     | Skip     | Optional                         | Advisory |
+| `pnpm outdated --recursive`      | Skip     | Skip     | Skip                             | Advisory |
 
 ## Recommended Jenkins Job Types
 
@@ -72,14 +72,14 @@ Keep these non-blocking but alerting:
 1. Keep deploy manual (`DEPLOY_TO_PRODUCTION=true` + approval step).
 2. Keep deploy command in `main-cd` explicit and environment-specific.
 3. For EKS, prefer Helm release commands in deploy step:
-`helm upgrade --install ... --atomic --wait`.
+   `helm upgrade --install ... --atomic --wait`.
 
 ## Agent and Runtime Baseline
 
 1. Linux agent with Node.js 22 and `corepack`.
 2. `pnpm` pinned to `10.23.0`.
-3. Workspace-local cache directories for pnpm/turbo where possible.
-4. Docker-capable agents only for jobs that need container build validation.
+3. Docker-capable agents for PR CI, main CD, and nightly hygiene because `pnpm test` uses Testcontainers and `pnpm test:e2e` uses Docker Compose-backed services.
+4. Workspace-local cache directories for pnpm/turbo where possible.
 
 ## Secrets and Credentials
 
