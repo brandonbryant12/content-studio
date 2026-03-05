@@ -1,7 +1,23 @@
-import { ChevronDownIcon, PersonIcon } from '@radix-ui/react-icons';
+import {
+  ChevronDownIcon,
+  InfoCircledIcon,
+  PersonIcon,
+} from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { Button } from '@repo/ui/components/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@repo/ui/components/tooltip';
 import { cn } from '@repo/ui/lib/utils';
+import { Link } from '@tanstack/react-router';
 import { usePersonaList } from '@/features/personas/hooks';
+import {
+  PERSONA_PICKER_EMPTY_DESCRIPTION,
+  PERSONA_TOOLTIP_HELP,
+} from '@/shared/lib/persona-guidance';
 
 interface PersonaPickerProps {
   selectedPersonaId: string | null;
@@ -38,16 +54,42 @@ export function PersonaPicker({
 
   if (personas.length === 0) {
     return (
-      <div className="persona-picker-empty">
+      <div className="persona-picker-empty flex flex-col items-start gap-3 rounded-xl border border-dashed border-border/70 bg-muted/30 p-4 text-left">
         <PersonIcon className="persona-picker-empty-icon" />
-        <span>No personas available</span>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">No personas yet</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {PERSONA_PICKER_EMPTY_DESCRIPTION}
+          </p>
+        </div>
+        <Button asChild variant="link" size="sm" className="h-auto px-0">
+          <Link to="/personas">Open Personas</Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="persona-picker-wrap">
-      <span className="persona-picker-label">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="persona-picker-label">{label}</span>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${label}: what is a persona?`}
+              >
+                <InfoCircledIcon className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-64 leading-relaxed">
+              {PERSONA_TOOLTIP_HELP}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <SelectPrimitive.Root
         value={selectedPersonaId ?? NONE_VALUE}
         onValueChange={handleValueChange}

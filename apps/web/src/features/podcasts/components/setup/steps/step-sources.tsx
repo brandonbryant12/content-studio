@@ -28,6 +28,11 @@ import { apiClient } from '@/clients/apiClient';
 import { useSources, getSourceListQueryKey } from '@/features/sources/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { fileToBase64 } from '@/shared/lib/file-base64';
+import {
+  SOURCE_ASSIGNMENT_HELP,
+  SOURCE_WIZARD_STEP_DESCRIPTION,
+  SOURCE_WIZARD_STEP_HELP,
+} from '@/shared/lib/source-guidance';
 
 type SourceItem = {
   id: string;
@@ -89,7 +94,7 @@ function ExistingDocumentsPanel({
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
         <p className="text-sm font-medium text-destructive">
-          Failed to load documents
+          Failed to load sources
         </p>
         <p className="text-xs text-muted-foreground mt-1">
           Please try again later or switch to another tab to upload directly.
@@ -112,13 +117,13 @@ function ExistingDocumentsPanel({
         <div className="setup-doc-empty-icon">
           <FileTextIcon />
         </div>
-        <p className="setup-doc-empty-title">No documents yet</p>
+        <p className="setup-doc-empty-title">No sources yet</p>
         <p className="setup-doc-empty-description">
-          Upload your first document to get started.
+          Upload your first source to start grounding this podcast.
         </p>
         <Button variant="outline" onClick={onSwitchToUpload} className="mt-4">
           <UploadIcon className="w-4 h-4 mr-2" />
-          Upload Document
+          Upload Source
         </Button>
       </div>
     );
@@ -130,11 +135,11 @@ function ExistingDocumentsPanel({
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search documents..."
+          placeholder="Search sources..."
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           className="setup-input pl-9"
-          aria-label="Search documents"
+          aria-label="Search sources"
         />
       </div>
 
@@ -167,9 +172,9 @@ function ExistingDocumentsPanel({
           <div className="setup-doc-empty-icon">
             <MagnifyingGlassIcon />
           </div>
-          <p className="setup-doc-empty-title">No documents found</p>
+          <p className="setup-doc-empty-title">No sources found</p>
           <p className="setup-doc-empty-description">
-            No documents match your search.
+            No sources match your search.
           </p>
         </div>
       )}
@@ -256,7 +261,7 @@ function UploadPanel({
           ) : (
             <>
               <UploadIcon className="w-4 h-4 mr-2" />
-              Upload Document
+              Upload Source
             </>
           )}
         </Button>
@@ -555,10 +560,21 @@ export function StepSources({
     <div className="setup-content">
       <div className="setup-step-header">
         <p className="setup-step-eyebrow">Step 1 of 3</p>
-        <h2 className="setup-step-title">Add Source Documents</h2>
+        <h2 className="setup-step-title">Add Sources</h2>
         <p className="setup-step-description">
-          Select existing documents or upload new ones. Your podcast will be
-          generated from these sources.
+          {SOURCE_WIZARD_STEP_DESCRIPTION}
+        </p>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+        <p className="text-sm font-semibold text-foreground">
+          Why sources matter
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          {SOURCE_WIZARD_STEP_HELP}
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          {SOURCE_ASSIGNMENT_HELP}
         </p>
       </div>
 
@@ -567,7 +583,7 @@ export function StepSources({
         <div className="flex justify-center mb-6">
           <span className="setup-selection-counter">
             <CheckIcon className="w-4 h-4" />
-            {selectedIds.length} document{selectedIds.length !== 1 ? 's' : ''}{' '}
+            {selectedIds.length} source{selectedIds.length !== 1 ? 's' : ''}{' '}
             selected
           </span>
         </div>
@@ -578,7 +594,7 @@ export function StepSources({
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as StepDocumentsTab)}
       >
-        <TabsList className="setup-source-tabs" aria-label="Document source">
+        <TabsList className="setup-source-tabs" aria-label="Source options">
           {STEP_DOCUMENT_TABS.map((tab) => (
             <TabsTrigger
               key={tab.key}

@@ -1,7 +1,7 @@
 # UI Surface (Generated)
 
 - Routes: 15
-- Feature modules: 6
+- Feature modules: 7
 
 ## Routes
 
@@ -10,8 +10,6 @@
 | / | public |
 | /admin/activity | protected |
 | /dashboard | protected |
-| /documents/ | protected |
-| /documents/$documentId | protected |
 | /infographics/ | protected |
 | /infographics/$infographicId | protected |
 | /login | public |
@@ -20,14 +18,17 @@
 | /podcasts/ | protected |
 | /podcasts/$podcastId | protected |
 | /register | public |
+| /sources/ | protected |
+| /sources/$sourceId | protected |
 | /voiceovers/ | protected |
 | /voiceovers/$voiceoverId | protected |
 
 ## Feature Modules
 
 - `admin`
-- `documents`
+- `dashboard`
 - `infographics`
 - `personas`
 - `podcasts`
+- `sources`
 - `voiceovers`

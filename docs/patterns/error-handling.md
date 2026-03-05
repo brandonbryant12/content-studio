@@ -2,41 +2,43 @@
 
 ```mermaid
 flowchart LR
-  R[Repo] -->|"EntityNotFound"| UC[Use Case]
-  UC -->|"error union<br/>(auto-inferred)"| H[Handler]
-  H -->|"handleEffectWithProtocol"| P[HTTP Protocol]
-  P -->|"httpStatus + httpCode"| C[oRPC Client]
+  R[Repo or service] -->|"Tagged error"| UC[Use case]
+  UC -->|"auto-inferred error union"| H[Handler]
+  H -->|"handleEffectWithProtocol"| P[HTTP protocol]
+  P -->|"status + code + data"| C[oRPC client]
   style P fill:#fef3cd
 ```
 
 ## Golden Principles
 
-1. **All errors extend `Schema.TaggedError`** with HTTP protocol static properties <!-- enforced-by: invariant-test -->
-2. **Each package owns its errors** -- import from the owning package <!-- enforced-by: eslint -->
-3. **Use `handleEffectWithProtocol`** -- never legacy `handleEffect` with manual mapping <!-- enforced-by: invariant-test -->
-4. **Let Effect infer the error union**; export derived alias for consumers/tests <!-- enforced-by: types -->
-5. **In Effect logic, prefer `Effect.fail` / `Effect.die` over `throw`**; especially never `throw` directly inside `Effect.gen` <!-- enforced-by: eslint -->
-6. **In backend tests, assert tagged errors via `_tag` + fields** rather than `toBeInstanceOf(...)` for domain/app errors <!-- enforced-by: eslint -->
-7. **Avoid paranoid fallbacks in backend flows**; do not add speculative default return values for every code path. Model expected failures as typed errors and fail explicitly when invariants are violated <!-- enforced-by: manual-review -->
+1. **All domain and app errors extend `Schema.TaggedError`** and carry HTTP protocol statics. <!-- enforced-by: invariant-test -->
+2. **Each package owns its own errors**. Import from the owning package, not a random shared barrel. <!-- enforced-by: eslint -->
+3. **Use `handleEffectWithProtocol`**, not the old manual-mapping path. <!-- enforced-by: invariant-test -->
+4. **Let Effect infer the error union** and export a derived alias only when needed. <!-- enforced-by: types -->
+5. **Inside Effect logic, use `Effect.fail` or `Effect.die` instead of `throw`**. <!-- enforced-by: eslint -->
+6. **Backend tests assert `_tag` and fields**, not `toBeInstanceOf(...)`, for tagged domain/app errors. <!-- enforced-by: eslint -->
+7. **Avoid paranoid fallback values**; model real failures explicitly as typed errors. <!-- enforced-by: manual-review -->
 
 ## Error Template
 
 ```typescript
-// packages/{package}/src/errors.ts
 import { Schema } from 'effect';
 
-export class EntityNotFound extends Schema.TaggedError<EntityNotFound>()(
-  'EntityNotFound',
-  { id: Schema.String, message: Schema.optional(Schema.String) },
+export class SourceNotFound extends Schema.TaggedError<SourceNotFound>()(
+  'SourceNotFound',
+  {
+    id: Schema.String,
+    message: Schema.optional(Schema.String),
+  },
 ) {
   static readonly httpStatus = 404 as const;
-  static readonly httpCode = 'ENTITY_NOT_FOUND' as const;
-  static readonly httpMessage = (e: EntityNotFound) =>
-    e.message ?? `Entity ${e.id} not found`;
+  static readonly httpCode = 'SOURCE_NOT_FOUND' as const;
+  static readonly httpMessage = (e: SourceNotFound) =>
+    e.message ?? `Source ${e.id} not found`;
   static readonly logLevel = 'silent' as const;
 
-  static getData(e: EntityNotFound) {
-    return { entityId: e.id };
+  static getData(e: SourceNotFound) {
+    return { sourceId: e.id };
   }
 }
 ```
@@ -45,84 +47,82 @@ export class EntityNotFound extends Schema.TaggedError<EntityNotFound>()(
 
 | Property | Type | Description |
 |---|---|---|
-| `httpStatus` | `number` | HTTP status code (404, 500, etc.) |
-| `httpCode` | `string` | Client error code (`DOCUMENT_NOT_FOUND`) |
-| `httpMessage` | `string \| (e) => string` | Response message |
+| `httpStatus` | `number` | HTTP status code |
+| `httpCode` | `string` | Client error code such as `SOURCE_NOT_FOUND` |
+| `httpMessage` | `string | (e) => string` | Response message |
 | `logLevel` | `LogLevel` | Logging behavior |
 
-### Optional: `getData(e)` <!-- enforced-by: manual-review -->
+### Optional `getData(e)` <!-- enforced-by: manual-review -->
 
-Returns structured data for the response body. Include it when the frontend needs details (file sizes, limits, IDs).
+Use `getData` when the client needs structured details such as limits, IDs, or retry metadata.
 
 ## Error Location Rules <!-- enforced-by: eslint -->
 
-| Error Type | Package | Example |
+| Error type | Package | Example |
 |---|---|---|
-| Base / infrastructure | `@repo/db/errors` | `DbError`, `ForbiddenError`, `ValidationError` |
-| Document / Podcast | `@repo/media/errors` | `DocumentNotFound`, `PodcastNotFound` |
-| AI / LLM / TTS | `@repo/ai/errors` | `LLMError`, `TTSError` |
-| Storage | `@repo/storage/errors` | `StorageError` |
+| Base / infrastructure | `@repo/db/errors` | `UnauthorizedError`, `ValidationError`, `DbError` |
+| Media domain | `@repo/media/errors` | `SourceNotFound`, `PodcastNotFound`, `VoiceoverNotFound` |
+| AI / provider | `@repo/ai/errors` | `LLMError`, `TTSError`, `VoiceNotFoundError` |
+| Storage | `@repo/storage/errors` | `StorageError`, `StorageNotFoundError` |
 | Queue / jobs | `@repo/queue/errors` | `QueueError`, `JobNotFoundError` |
-| Auth / policy | `@repo/auth/errors` | `PolicyError` |
+| Auth / policy | `@repo/auth/errors` | `PolicyError`, `AuthSessionLookupError` |
 
-Import from the owning package, never cross-import domain errors through `@repo/db`.
-Do not define domain error classes inline inside repository files.
+Do not define domain error classes inline inside repos or handlers.
 
 ## Log Levels <!-- enforced-by: manual-review -->
 
 | Level | When | Examples |
 |---|---|---|
-| `silent` | Expected -- user mistakes, not-found | `NotFound`, `Unauthorized`, `ValidationError` |
-| `warn` | Unusual but not critical | `RateLimited`, `QuotaExceeded` |
-| `error` | Unexpected failures | `DatabaseError`, `ExternalServiceError` |
-| `error-with-stack` | Internal errors needing debug | `UnexpectedError` |
+| `silent` | Expected user-facing failures | not-found, unauthorized, validation |
+| `warn` | Unusual but anticipated failures | parse issues, quota or rate pressure |
+| `error` | Unexpected recoverable failures | DB/service failures |
+| `error-with-stack` | Internal failures that need debugging context | internal operation errors |
 
 ## HTTP Status Decision Table <!-- enforced-by: manual-review -->
 
-| Status | When | Typical Errors |
+| Status | When | Typical errors |
 |---|---|---|
-| 400 | Bad request / validation | `ValidationError` |
-| 401 | Not authenticated | `Unauthorized` |
-| 403 | Not authorized | `Forbidden` |
-| 404 | Resource not found | `DocumentNotFound`, `PodcastNotFound` |
-| 409 | Conflict | `AlreadyExists`, `VersionConflict` |
-| 429 | Rate limited | `RateLimited` |
-| 500 | Internal | `DatabaseError` |
-| 503 | Service unavailable | `ExternalServiceError` |
+| 400 | Bad request / validation | `ValidationError`, `InvalidUrlError` |
+| 401 | Not authenticated | `UnauthorizedError` |
+| 403 | Not authorized | `ForbiddenError`, `PolicyError` |
+| 404 | Resource not found or concealed | `SourceNotFound`, `PodcastNotFound`, `JobNotFoundError` |
+| 409 | Conflict | `SourceAlreadyProcessing` |
+| 413 | Payload too large | `SourceTooLargeError` |
+| 415 | Unsupported media type | `UnsupportedSourceFormat` |
+| 422 | Semantic processing failure | `SourceParseError`, `UrlFetchError` |
+| 429 | Rate limited | `LLMRateLimitError` or mapped rate-limit protocol errors |
+| 500 | Internal failure | `DbError`, `SourceError` |
+| 503 | Service unavailable | `ExternalServiceError`, auth context lookup failure |
 
 Auth context boundary rule:
-- `no session` stays an expected unauthenticated state (`UNAUTHORIZED` only when a protected handler is reached)
-- auth/session lookup infrastructure failures at context creation must map to `SERVICE_UNAVAILABLE` and include `requestId` + stable auth-context error tag in logs
+
+- missing session remains an expected unauthenticated state
+- auth/session infrastructure failures during context creation map to `SERVICE_UNAVAILABLE` with `requestId` and a stable auth-context tag in logs
 
 ## Error Type Inference <!-- enforced-by: types -->
 
-Use cases must NOT manually annotate error types. Let Effect infer, then export a derived alias:
+Use cases should not manually annotate error unions.
 
 ```typescript
-// In the use case file -- return type is inferred
-export const createDocument = (input: CreateDocumentInput) =>
-  Effect.gen(function* () { /* ... */ }).pipe(Effect.withSpan('useCase.createDocument'));
+export const createSource = (input: CreateSourceInput) =>
+  Effect.gen(function* () {
+    // ...
+  }).pipe(withUseCaseSpan('useCase.createSource'));
 
-// Derived alias for consumers / tests
-export type CreateDocumentError = Effect.Effect.Error<ReturnType<typeof createDocument>>;
+export type CreateSourceError = Effect.Effect.Error<
+  ReturnType<typeof createSource>
+>;
 ```
 
 ## Protocol Interface
 
-> See `packages/db/src/error-protocol.ts`
+`handleEffectWithProtocol` reads the static protocol fields from the thrown tagged error and converts them into the oRPC response automatically.
 
-```typescript
-export interface HttpErrorProtocol {
-  readonly httpStatus: number;
-  readonly httpCode: string;
-  readonly httpMessage: string | ((error: any) => string);
-  readonly logLevel: 'silent' | 'warn' | 'error' | 'error-with-stack';
-  getData?: (error: any) => Record<string, unknown>;
-}
-```
+## Adding A New Error <!-- enforced-by: types -->
 
-## Adding a New Error <!-- enforced-by: types -->
+1. Define the tagged error class in the owning package.
+2. Add the required protocol statics.
+3. Export it from the package error barrel if appropriate.
+4. Use it in the Effect flow with `Effect.fail(...)`.
 
-1. Define the class with all HTTP protocol statics in the owning package's `errors.ts`
-2. Export it
-3. Done -- `handleEffectWithProtocol` reads the protocol automatically; no handler updates needed
+No handler-level mapping is required for the normal case.

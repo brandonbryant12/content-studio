@@ -5,29 +5,13 @@
 
 | Domain | Use Cases | API Endpoints |
 |---|---|---|
-| document | 13 | 10 |
 | infographic | 14 | 13 |
 | persona | 6 | 6 |
 | podcast | 14 | 11 |
+| source | 13 | 10 |
 | voiceover | 10 | 9 |
 
 ## Use Cases by Domain
-
-### document
-
-- `await-documents-ready`
-- `create-document`
-- `create-from-research`
-- `create-from-url`
-- `delete-document`
-- `get-document`
-- `get-document-content`
-- `list-documents`
-- `process-research`
-- `process-url`
-- `retry-processing`
-- `update-document`
-- `upload-document`
 
 ### infographic
 
@@ -71,6 +55,22 @@
 - `save-changes`
 - `start-generation`
 - `update-podcast`
+
+### source
+
+- `await-sources-ready`
+- `create-from-research`
+- `create-from-url`
+- `create-source`
+- `delete-source`
+- `get-source`
+- `get-source-content`
+- `list-sources`
+- `process-research`
+- `process-url`
+- `retry-processing`
+- `update-source`
+- `upload-source`
 
 ### voiceover
 

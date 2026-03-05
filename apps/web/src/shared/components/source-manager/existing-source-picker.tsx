@@ -13,6 +13,7 @@ import {
   type MouseEvent,
 } from 'react';
 import type { SourceInfo } from '@/shared/hooks/use-source-selection';
+import { SOURCE_PICKER_EMPTY_DESCRIPTION } from '@/shared/lib/source-guidance';
 
 interface ExistingSourcePickerProps {
   availableSources: SourceInfo[] | undefined;
@@ -136,7 +137,10 @@ export function ExistingSourcePicker({
           <div className="empty-state-icon">
             <FileTextIcon aria-hidden="true" className="w-6 h-6" />
           </div>
-          <p className="text-body">No more sources available to add.</p>
+          <p className="text-body">No unused sources available.</p>
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            {SOURCE_PICKER_EMPTY_DESCRIPTION}
+          </p>
           <Button variant="outline" onClick={onSwitchToUpload} className="mt-4">
             <UploadIcon aria-hidden="true" className="w-4 h-4 mr-2" />
             Upload Source

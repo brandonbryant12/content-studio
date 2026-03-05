@@ -4,6 +4,7 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useCallback, type ChangeEvent } from 'react';
+import { PERSONA_FIELD_HELP } from '@/shared/lib/persona-guidance';
 
 export interface PersonaFormValues {
   name: string;
@@ -88,6 +89,12 @@ export function PersonaForm({
         <Label htmlFor="persona-name">
           Name <span className="text-destructive">*</span>
         </Label>
+        <p
+          id="persona-name-help"
+          className="text-xs leading-relaxed text-muted-foreground"
+        >
+          {PERSONA_FIELD_HELP.name}
+        </p>
         <Input
           id="persona-name"
           value={values.name}
@@ -95,12 +102,19 @@ export function PersonaForm({
           placeholder="e.g., Dr. Sarah Chen"
           disabled={disabled}
           autoComplete="off"
+          aria-describedby="persona-name-help"
         />
       </div>
 
       {/* Role */}
       <div className="space-y-2">
         <Label htmlFor="persona-role">Role</Label>
+        <p
+          id="persona-role-help"
+          className="text-xs leading-relaxed text-muted-foreground"
+        >
+          {PERSONA_FIELD_HELP.role}
+        </p>
         <Input
           id="persona-role"
           value={values.role}
@@ -108,12 +122,19 @@ export function PersonaForm({
           placeholder="e.g., Industry Expert, Storyteller, Interviewer"
           disabled={disabled}
           autoComplete="off"
+          aria-describedby="persona-role-help"
         />
       </div>
 
       {/* Personality Description */}
       <div className="space-y-2">
         <Label htmlFor="persona-personality">Personality Description</Label>
+        <p
+          id="persona-personality-help"
+          className="text-xs leading-relaxed text-muted-foreground"
+        >
+          {PERSONA_FIELD_HELP.personalityDescription}
+        </p>
         <Textarea
           id="persona-personality"
           value={values.personalityDescription}
@@ -122,12 +143,19 @@ export function PersonaForm({
           disabled={disabled}
           rows={4}
           className="resize-y"
+          aria-describedby="persona-personality-help"
         />
       </div>
 
       {/* Speaking Style */}
       <div className="space-y-2">
         <Label htmlFor="persona-speaking-style">Speaking Style</Label>
+        <p
+          id="persona-speaking-style-help"
+          className="text-xs leading-relaxed text-muted-foreground"
+        >
+          {PERSONA_FIELD_HELP.speakingStyle}
+        </p>
         <Textarea
           id="persona-speaking-style"
           value={values.speakingStyle}
@@ -136,6 +164,7 @@ export function PersonaForm({
           disabled={disabled}
           rows={3}
           className="resize-y"
+          aria-describedby="persona-speaking-style-help"
         />
       </div>
 
@@ -155,11 +184,9 @@ export function PersonaForm({
             Add Quote
           </Button>
         </div>
-        {values.exampleQuotes.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Add example quotes to help the AI capture this persona&apos;s voice.
-          </p>
-        )}
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {PERSONA_FIELD_HELP.exampleQuotes}
+        </p>
         <div className="space-y-2">
           {values.exampleQuotes.map((quote, index) => (
             <div key={`quote-${index}`} className="flex items-start gap-2">

@@ -14,6 +14,7 @@ const CONTRACT_FILE_BY_DOMAIN: Record<string, string> = {
   infographic: 'infographics',
   persona: 'personas',
   podcast: 'podcasts',
+  source: 'sources',
   voiceover: 'voiceovers',
   voices: 'voices',
 };

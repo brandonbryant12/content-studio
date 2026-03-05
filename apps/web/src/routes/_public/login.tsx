@@ -17,9 +17,6 @@ function RouteComponent() {
     document.title = 'Sign In - Content Studio';
   }, []);
 
-  const showPasswordAuth = isPasswordAuthEnabled;
-  const showMicrosoftSSO = isMicrosoftSSOAuthEnabled;
-
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -28,13 +25,13 @@ function RouteComponent() {
           <h1 className="page-title">Sign in</h1>
         </div>
         <div className="card-padded">
-          {showMicrosoftSSO ? <MicrosoftSSOButton /> : null}
-          {showMicrosoftSSO && showPasswordAuth ? (
-            <p className="my-4 text-center text-sm text-muted-foreground">or</p>
-          ) : null}
-          {showPasswordAuth ? <LoginCredentialsForm /> : null}
+          {isMicrosoftSSOAuthEnabled ? (
+            <MicrosoftSSOButton />
+          ) : (
+            <LoginCredentialsForm />
+          )}
         </div>
-        {showPasswordAuth ? (
+        {isPasswordAuthEnabled ? (
           <p className="auth-footer">
             Don&apos;t have an account?{' '}
             <Link to="/register" className="text-link-primary">

@@ -110,13 +110,15 @@ pnpm db:push                    # 5. Push database schema
 
 | Variable | Description | Default |
 |---|---|---|
-| `AUTH_MODE` | Auth behavior (`dev-password`, `hybrid`, `sso-only`) | `dev-password` |
+| `AUTH_MODE` | Auth behavior (`dev-password`, `sso-only`) | `dev-password` |
 | `PUBLIC_AUTH_MODE` | Web login UI mode; keep aligned with server `AUTH_MODE` | `dev-password` |
 | `USE_MOCK_AI` | Use mock AI providers instead of live Gemini providers | `true` |
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
 | `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` | Run pending Drizzle migrations during server startup | `false` (set `true` in Docker runtime image) |
 | `TRUST_PROXY` | Trust `x-forwarded-for` / `x-real-ip` for rate-limit identity | `false` |
 | `CORS_ORIGINS` | Comma-separated CORS origin allowlist for bearer-token requests (`*` allows any origin) | `*` |
+| `AUDIO_PLAYBACK_PROXY_ENABLED` | Enable signed backend audio playback URLs | `true` |
+| `STORAGE_ACCESS_PROXY_ENABLED` | Enable signed backend `/storage/*` URLs | `true` |
 | `S3_ENDPOINT` | Optional S3-compatible endpoint override (for MinIO) | -- |
 | `S3_PUBLIC_ENDPOINT` | Optional URL base for generated object URLs | `S3_ENDPOINT` |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |
@@ -141,7 +143,7 @@ S3_ENDPOINT=http://localhost:9001
 S3_PUBLIC_ENDPOINT=http://localhost:9001
 ```
 
-#### SSO Variables (Required when `AUTH_MODE=hybrid` or `AUTH_MODE=sso-only`)
+#### SSO Variables (Required when `AUTH_MODE=sso-only`)
 
 | Variable | Description |
 |---|---|

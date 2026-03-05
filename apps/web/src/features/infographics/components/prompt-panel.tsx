@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { INFOGRAPHIC_PROMPT_HELP } from '@/shared/lib/content-guidance';
 
 interface PromptPanelProps {
   prompt: string;
@@ -27,6 +28,9 @@ export function PromptPanel({
       <label htmlFor={textareaId} className="text-sm font-medium">
         {label}
       </label>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {INFOGRAPHIC_PROMPT_HELP}
+      </p>
       {isEditMode && (
         <p className="text-sm font-medium text-primary">
           You are editing an existing infographic version

@@ -8,13 +8,23 @@ sequenceDiagram
   participant Queue as Job Queue
   participant Worker as Worker Use Case
 
-  Test->>API: startGeneration(input)
-  API->>DB: Set status = 'generating'
-  API->>Queue: enqueue(job)
-  Test->>Test: Assert status after API
-  Test->>Worker: processJob(input)
-  Worker->>DB: Set status = 'ready'
-  Test->>Test: Assert final status
+  rect rgb(232, 241, 255)
+    Test->>API: startGeneration(input)
+  end
+  rect rgb(236, 253, 243)
+    API->>DB: Set status = 'generating'
+  end
+  rect rgb(255, 247, 237)
+    API->>Queue: enqueue(job)
+    Test->>Test: Assert status after API
+    Test->>Worker: processJob(input)
+  end
+  rect rgb(245, 245, 244)
+    Worker->>DB: Set status = 'ready'
+  end
+  rect rgb(232, 241, 255)
+    Test->>Test: Assert final status
+  end
 ```
 
 ## Golden Principles
@@ -104,7 +114,7 @@ Workflow tests share the same runtime setup as integration tests. See [`docs/tes
 | Test Category | Purpose | Required |
 |---|---|---|
 | API-to-Worker flow | Verifies full workflow executes | 1 per job type |
-| Status transitions | Documents expected state changes | 1 per job type |
+| Status transitions | Expected state changes are asserted end-to-end | 1 per job type |
 | Status alignment | Catches API/worker mismatches | 1 per job type |
 | Idempotency | Duplicate calls return same job | 1 per job type |
 | Multi-phase (if applicable) | All phases complete in sequence | 1 per multi-phase job |

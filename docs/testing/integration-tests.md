@@ -1,7 +1,13 @@
 # Router Integration Tests
 
 ```mermaid
-graph LR
+flowchart LR
+  classDef entry fill:#e8f1ff,stroke:#1d4ed8,color:#0f172a,stroke-width:1.5px;
+  classDef runtime fill:#ecfdf3,stroke:#15803d,color:#0f172a,stroke-width:1.5px;
+  classDef async fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:1.5px;
+  classDef store fill:#f5f5f4,stroke:#57534e,color:#0f172a,stroke-width:1.5px;
+  classDef control fill:#fef2f2,stroke:#b91c1c,color:#0f172a,stroke-width:1.5px;
+
   Test[Test Code] -->|direct call| Handler[oRPC Handler]
   Handler --> EH[handleEffectWithProtocol]
   EH --> UC[Use Case]
@@ -9,6 +15,10 @@ graph LR
   UC --> MockAI[MockLLM / MockTTS]
   UC --> MockStorage[In-Memory Storage]
   MockRepo --> TestDB[(Postgres Testcontainer)]
+
+  class Test entry;
+  class Handler,EH,UC,MockRepo,MockAI,MockStorage runtime;
+  class TestDB store;
 ```
 
 ## Golden Principles
@@ -36,7 +46,7 @@ packages/api/src/server/router/__tests__/{router}.integration.test.ts
 
 ## Canonical Example
 
-See: `packages/api/src/server/router/__tests__/document.integration.test.ts`
+See: `packages/api/src/server/router/__tests__/source.integration.test.ts`
 
 ## Prerequisites
 
@@ -190,8 +200,10 @@ describe('{Domain} Router Integration', () => {
 
 | File | Domain |
 |---|---|
-| `packages/api/src/server/router/__tests__/document.integration.test.ts` | Documents |
+| `packages/api/src/server/router/__tests__/activity.integration.test.ts` | Activity |
+| `packages/api/src/server/router/__tests__/persona.integration.test.ts` | Personas |
 | `packages/api/src/server/router/__tests__/podcast.integration.test.ts` | Podcasts |
+| `packages/api/src/server/router/__tests__/source.integration.test.ts` | Sources |
 | `packages/api/src/server/router/__tests__/voiceover.integration.test.ts` | Voiceovers |
 | `packages/api/src/server/router/__tests__/voices.integration.test.ts` | Voices |
 

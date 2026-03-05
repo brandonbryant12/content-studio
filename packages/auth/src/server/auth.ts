@@ -12,7 +12,6 @@ import {
 
 export const AuthMode = {
   DEV_PASSWORD: 'dev-password',
-  HYBRID: 'hybrid',
   SSO_ONLY: 'sso-only',
 } as const;
 export type AuthMode = (typeof AuthMode)[keyof typeof AuthMode];
@@ -59,10 +58,10 @@ export const buildTrustedOrigins = (
 };
 
 const isPasswordAuthEnabled = (authMode: AuthMode) =>
-  authMode !== AuthMode.SSO_ONLY;
+  authMode === AuthMode.DEV_PASSWORD;
 
 const isMicrosoftSSOEnabled = (authMode: AuthMode) =>
-  authMode !== AuthMode.DEV_PASSWORD;
+  authMode === AuthMode.SSO_ONLY;
 
 const MICROSOFT_SCOPES = [
   'openid',

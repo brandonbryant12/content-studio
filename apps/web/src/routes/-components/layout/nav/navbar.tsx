@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { AuthSession } from '@/clients/authClient';
 import { APP_NAME } from '@/constants';
+import { isPasswordAuthEnabled } from '@/env';
 import NavContainer from '@/routes/-components/layout/nav/nav-container';
 
 function WaveformIcon({ className }: { className?: string }) {
@@ -36,9 +37,11 @@ export function Navbar({ session }: Readonly<{ session: AuthSession }>) {
           <Link to="/login" className="nav-link">
             Log in
           </Link>
-          <Link to="/register" className="nav-link-primary">
-            Sign up
-          </Link>
+          {isPasswordAuthEnabled ? (
+            <Link to="/register" className="nav-link-primary">
+              Sign up
+            </Link>
+          ) : null}
         </div>
       )}
     </NavContainer>

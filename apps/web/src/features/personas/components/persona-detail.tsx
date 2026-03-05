@@ -1,15 +1,14 @@
 import { ArrowLeftIcon, TrashIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
-import { cn } from '@repo/ui/lib/utils';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
+import { PersonaGuidancePanel } from './persona-guidance-panel';
+import { PersonaVoiceSection } from './persona-voice-section';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { useVoicePreviewController } from '@/shared/hooks';
 import { getStorageUrl } from '@/shared/lib/storage-url';
-import { VOICES } from '@/shared/lib/voices';
 
 type Persona = RouterOutput['personas']['get'];
 
@@ -150,6 +149,7 @@ export function PersonaDetail({
 
       {/* Form */}
       <div className="rounded-lg border border-border/60 bg-card p-6">
+        <PersonaGuidancePanel />
         <PersonaForm
           values={formValues}
           onChange={onFormChange}
@@ -158,27 +158,14 @@ export function PersonaDetail({
       </div>
 
       {/* Voice Assignment */}
-      <div className="rounded-lg border border-border/60 bg-card p-6 mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-medium text-foreground">Voice</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Assign a voice to use when this persona speaks in podcasts.
-            </p>
-          </div>
-          {!formValues.voiceId && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning/10 text-warning text-xs font-medium">
-              No voice assigned
-            </span>
-          )}
-        </div>
-        <VoiceAssignment
-          voiceId={formValues.voiceId}
-          onVoiceChange={(voiceId, voiceName) =>
-            onFormChange({ ...formValues, voiceId, voiceName })
-          }
-        />
-      </div>
+      <PersonaVoiceSection
+        voiceId={formValues.voiceId}
+        onVoiceChange={(voiceId, voiceName) =>
+          onFormChange({ ...formValues, voiceId, voiceName })
+        }
+        description="Assign a default voice to use whenever this persona is selected in a podcast. Without one, you can still pick a voice per episode."
+        isGeneratingAvatar={isGeneratingAvatar}
+      />
 
       {/* Delete confirmation */}
       <ConfirmationDialog
@@ -194,85 +181,6 @@ export function PersonaDetail({
           onDelete();
         }}
       />
-    </div>
-  );
-}
-
-function VoiceAssignment({
-  voiceId,
-  onVoiceChange,
-}: {
-  voiceId: string;
-  onVoiceChange: (voiceId: string, voiceName: string) => void;
-}) {
-  const { playingVoiceId, previewUrls, togglePreview } =
-    useVoicePreviewController();
-
-  const femaleVoices = VOICES.filter((v) => v.gender === 'female');
-  const maleVoices = VOICES.filter((v) => v.gender === 'male');
-
-  const renderVoiceCard = (voice: (typeof VOICES)[number]) => {
-    const isSelected = voiceId === voice.id;
-    const isPlaying = playingVoiceId === voice.id;
-    return (
-      <button
-        key={voice.id}
-        type="button"
-        onClick={() => onVoiceChange(voice.id, voice.name)}
-        className={cn(
-          'flex flex-col items-center gap-1.5 rounded-lg border p-3 transition-all text-center',
-          isSelected
-            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-            : 'border-border/60 hover:border-border hover:bg-muted/50',
-        )}
-      >
-        <div
-          className={cn(
-            'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold',
-            voice.gender === 'female'
-              ? 'bg-warning/20 text-warning'
-              : 'bg-info/20 text-info',
-          )}
-        >
-          {voice.name.charAt(0)}
-        </div>
-        <span className="text-xs font-medium">{voice.name}</span>
-        <span className="text-xs text-muted-foreground">
-          {voice.description}
-        </span>
-        {previewUrls[voice.id] && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePreview(voice.id);
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={
-              isPlaying ? `Stop ${voice.name} preview` : `Preview ${voice.name}`
-            }
-          >
-            {isPlaying ? 'Stop' : 'Preview'}
-          </button>
-        )}
-      </button>
-    );
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Female</p>
-        <div className="grid grid-cols-4 gap-2">
-          {femaleVoices.map(renderVoiceCard)}
-        </div>
-      </div>
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Male</p>
-        <div className="grid grid-cols-4 gap-2">
-          {maleVoices.map(renderVoiceCard)}
-        </div>
-      </div>
     </div>
   );
 }

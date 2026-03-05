@@ -1,50 +1,19 @@
 import { useState, useCallback } from 'react';
 import type { PersonaFormValues } from './persona-form';
-import type { RouterOutput } from '@repo/api/client';
 import { usePersona } from '../hooks/use-persona';
 import {
   useUpdatePersona,
   useDeletePersona,
   useGenerateAvatar,
 } from '../hooks/use-persona-mutations';
+import {
+  getPersonaFormValues,
+  hasPersonaFormChanges,
+  toOptionalQuotes,
+  toOptionalText,
+} from '../lib/persona-form-values';
 import { PersonaDetail } from './persona-detail';
 import { useNavigationBlock } from '@/shared/hooks';
-
-type Persona = RouterOutput['personas']['get'];
-const toFormText = (value: string | null) => value ?? '';
-const toOptionalText = (value: string) => (value === '' ? undefined : value);
-const toOptionalQuotes = (quotes: string[]) => {
-  const filtered = quotes.filter((quote) => quote.trim() !== '');
-  return filtered.length > 0 ? filtered : undefined;
-};
-const haveSameQuotes = (left: string[], right: string[]) =>
-  left.length === right.length &&
-  left.every((quote, index) => quote === right[index]);
-
-function getFormValues(persona: Persona): PersonaFormValues {
-  return {
-    name: persona.name,
-    role: toFormText(persona.role),
-    personalityDescription: toFormText(persona.personalityDescription),
-    speakingStyle: toFormText(persona.speakingStyle),
-    exampleQuotes:
-      persona.exampleQuotes.length > 0 ? [...persona.exampleQuotes] : [],
-    voiceId: toFormText(persona.voiceId),
-    voiceName: toFormText(persona.voiceName),
-  };
-}
-
-function hasFormChanges(values: PersonaFormValues, persona: Persona): boolean {
-  const initialValues = getFormValues(persona);
-  if (values.name !== initialValues.name) return true;
-  if (values.role !== initialValues.role) return true;
-  if (values.personalityDescription !== initialValues.personalityDescription)
-    return true;
-  if (values.speakingStyle !== initialValues.speakingStyle) return true;
-  if (values.voiceId !== initialValues.voiceId) return true;
-  if (values.voiceName !== initialValues.voiceName) return true;
-  return !haveSameQuotes(values.exampleQuotes, initialValues.exampleQuotes);
-}
 
 interface PersonaDetailContainerProps {
   personaId: string;
@@ -63,9 +32,10 @@ export function PersonaDetailContainer({
   const [draftsByPersonaId, setDraftsByPersonaId] = useState<
     Record<string, PersonaFormValues>
   >({});
-  const formValues = draftsByPersonaId[persona.id] ?? getFormValues(persona);
+  const formValues =
+    draftsByPersonaId[persona.id] ?? getPersonaFormValues(persona);
 
-  const hasChanges = hasFormChanges(formValues, persona);
+  const hasChanges = hasPersonaFormChanges(formValues, persona);
 
   useNavigationBlock({ shouldBlock: hasChanges });
 

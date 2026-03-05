@@ -103,6 +103,12 @@ describe('SourceList', () => {
       screen.getByRole('heading', { name: 'Sources' }),
     ).toBeInTheDocument();
     expect(
+      screen.getByText(
+        /Sources are reusable reference materials that Content Studio turns into podcasts, voiceovers, infographics, and future edits\./,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('What sources do')).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /add source/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search sources…')).toBeInTheDocument();
@@ -118,7 +124,7 @@ describe('SourceList', () => {
       props: { sources: [] as SourceListItem[] },
       expectedTitle: 'No sources yet',
       expectedDescription:
-        'Upload your first source to start creating podcasts, voiceovers, and infographics.',
+        'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.',
     },
     {
       name: 'shows no-results state when search has no matches',

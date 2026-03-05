@@ -93,6 +93,13 @@ describe('VoiceoverList quick play', () => {
       />,
     );
 
+    expect(
+      screen.getByText(
+        /Voiceovers turn written narration into spoken audio with your chosen voice\./,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('How voiceovers work')).toBeInTheDocument();
+
     const playButton = screen.getByRole('button', {
       name: /play product announcement/i,
     });

@@ -1,7 +1,7 @@
 # API Contract Surface (Generated)
 
 - Endpoints: 59
-- Tags: admin, chat, document, events, infographic, persona, podcast, voiceover, voices
+- Tags: admin, chat, events, infographic, persona, podcast, source, voiceover, voices
 
 | Method | Path | Operation ID | Tags | Streaming | Summary |
 |---|---|---|---|---|---|
@@ -12,16 +12,6 @@
 | POST | /chat/synthesize-persona | chat.synthesizePersona | chat | no |  |
 | POST | /chat/synthesize-research-query | chat.synthesizeResearchQuery | chat | no |  |
 | POST | /chat/writing-assistant | chat.writingAssistant | chat | yes |  |
-| GET | /documents/ | documents.list | document | no | List documents |
-| POST | /documents/ | documents.create | document | no | Create document |
-| GET | /documents/{id} | documents.get | document | no | Get document |
-| PATCH | /documents/{id} | documents.update | document | no | Update document |
-| DELETE | /documents/{id} | documents.delete | document | no | Delete document |
-| GET | /documents/{id}/content | documents.getContent | document | no | Get document content |
-| POST | /documents/{id}/retry | documents.retry | document | no | Retry processing |
-| POST | /documents/from-research | documents.fromResearch | document | no | Create from research |
-| POST | /documents/from-url | documents.fromUrl | document | no | Create from URL |
-| POST | /documents/upload | documents.upload | document | no | Upload document |
 | GET | /events/ | events.subscribe | events | yes |  |
 | GET | /infographics/ | infographics.list | infographic | no | List infographics |
 | POST | /infographics/ | infographics.create | infographic | no | Create infographic |
@@ -53,6 +43,16 @@
 | POST | /podcasts/{id}/save-changes | podcasts.saveChanges | podcast | no | Save changes and regenerate audio |
 | GET | /podcasts/{id}/script | podcasts.getScript | podcast | no | Get script |
 | GET | /podcasts/jobs/{jobId} | podcasts.getJob | podcast | no | Get job status |
+| GET | /sources/ | sources.list | source | no | List sources |
+| POST | /sources/ | sources.create | source | no | Create source |
+| GET | /sources/{id} | sources.get | source | no | Get source |
+| PATCH | /sources/{id} | sources.update | source | no | Update source |
+| DELETE | /sources/{id} | sources.delete | source | no | Delete source |
+| GET | /sources/{id}/content | sources.getContent | source | no | Get source content |
+| POST | /sources/{id}/retry | sources.retry | source | no | Retry processing |
+| POST | /sources/from-research | sources.fromResearch | source | no | Create from research |
+| POST | /sources/from-url | sources.fromUrl | source | no | Create from URL |
+| POST | /sources/upload | sources.upload | source | no | Upload source |
 | GET | /voiceovers/ | voiceovers.list | voiceover | no | List voiceovers |
 | POST | /voiceovers/ | voiceovers.create | voiceover | no | Create voiceover |
 | GET | /voiceovers/{id} | voiceovers.get | voiceover | no | Get voiceover |

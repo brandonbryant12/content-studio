@@ -79,13 +79,13 @@ states, use shared state components instead of duplicating the markup:
 **Reference:** `apps/web/src/shared/components/list-page-state.tsx`
 
 ```tsx
-if (isLoading) return <ListPageLoadingState title="Documents" />;
+if (isLoading) return <ListPageLoadingState title="Sources" />;
 if (isError) {
   return (
     <ListPageErrorState
-      title="Documents"
+      title="Sources"
       error={error}
-      fallbackMessage="Failed to load documents"
+      fallbackMessage="Failed to load sources"
       onRetry={refetch}
     />
   );

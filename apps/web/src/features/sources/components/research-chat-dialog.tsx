@@ -20,6 +20,10 @@ import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
+import {
+  SOURCE_RESEARCH_DIALOG_DESCRIPTION,
+  SOURCE_RESEARCH_DIALOG_PROMPT,
+} from '@/shared/lib/source-guidance';
 
 const EXAMPLE_TOPICS = [
   'AI trends in healthcare 2026',
@@ -107,8 +111,7 @@ export function ResearchChatDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            Describe your research topic and I&apos;ll help refine it for the
-            best results.
+            {SOURCE_RESEARCH_DIALOG_DESCRIPTION}
           </DialogDescription>
         </DialogHeader>
 
@@ -121,7 +124,7 @@ export function ResearchChatDialog({
           emptyState={
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
               <p className="text-sm text-muted-foreground">
-                What would you like to research? Try one of these:
+                {SOURCE_RESEARCH_DIALOG_PROMPT}
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.map((topic) => (
@@ -153,7 +156,8 @@ export function ResearchChatDialog({
               <span className="text-sm leading-5">
                 Auto-generate podcast from findings
                 <span className="block text-xs text-muted-foreground">
-                  Uses defaults: 5 min, no custom instructions, Aoede + Charon.
+                  Creates a podcast from this new source using defaults: 5 min,
+                  no custom instructions, Aoede + Charon.
                 </span>
               </span>
             </label>

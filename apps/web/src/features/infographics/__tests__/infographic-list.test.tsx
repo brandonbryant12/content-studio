@@ -43,10 +43,20 @@ describe('InfographicList quick start', () => {
     const onCreate = vi.fn();
     render(<InfographicList {...createDefaultProps()} onCreate={onCreate} />);
 
+    expect(
+      screen.getByText(
+        /Infographics turn a prompt into a generated visual draft that you can refine through prompt, style, and format changes\./,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('How infographics work')).toBeInTheDocument();
+
     const createButtons = screen.getAllByRole('button', {
       name: /create infographic/i,
     });
     fireEvent.click(createButtons[createButtons.length - 1]!);
+    expect(
+      screen.getByText(/Create a draft if you want to set things up first/i),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /create draft/i }));
 
     expect(onCreate).toHaveBeenCalledWith({

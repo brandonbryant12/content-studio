@@ -2,98 +2,111 @@
 
 ```mermaid
 flowchart LR
-  A[oRPC Handler] -->|"input"| B[Use Case]
-  B -->|"yield*"| C[Repo / Service]
-  B -->|"yield*"| D[getCurrentUser]
-  B -->|raw domain data| A
-  A -->|serializeEffect| E[Client]
+  H[oRPC handler] -->|"input"| U[Use case]
+  U -->|"yield*"| R[Repo or service]
+  U -->|"yield*"| G[getCurrentUser]
+  U -->|raw domain data| H
+  H -->|serializeEffect| C[Client]
 ```
 
 ## Golden Principles
 
-1. **Use safety primitives** for queue/content ops (`enqueueJob`, `replaceTextContentSafely`, etc.) <!-- enforced-by: eslint, invariant-test -->
-2. **Return raw domain data** -- handler serializes, never the use case <!-- enforced-by: invariant-test -->
-3. **Always `Effect.withSpan('useCase.{name}')`** with relevant attributes <!-- enforced-by: invariant-test -->
-4. **Get user via `yield* getCurrentUser`** (FiberRef), never `Context.Tag` <!-- enforced-by: architecture -->
-5. **Let Effect infer types**; export derived alias: `type XError = Effect.Effect.Error<ReturnType<typeof x>>` <!-- enforced-by: types -->
+1. **Use safety primitives** for queue and content operations (`enqueueJob`, `replaceTextContentSafely`, and similar helpers) <!-- enforced-by: eslint, invariant-test -->
+2. **Return raw domain data** from use cases; handlers serialize it <!-- enforced-by: invariant-test -->
+3. **Always use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`** so required trace attributes are attached <!-- enforced-by: invariant-test -->
+4. **Get the user via `yield* getCurrentUser`** (FiberRef), never from direct HTTP context access <!-- enforced-by: architecture -->
+5. **Let Effect infer types** and export derived aliases when needed <!-- enforced-by: types -->
 
 ## File Location
 
 ```
-packages/media/src/{domain}/use-cases/{action}.ts   # one file per use case
+packages/media/src/{domain}/use-cases/{action}.ts
 ```
+
+One file per use case, re-exported from the domain `index.ts`.
 
 ## Canonical Example
 
-> See `packages/media/src/document/use-cases/get-document.ts`
+> See `packages/media/src/source/use-cases/get-source.ts`
 
 ```typescript
 import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
-import { DocumentRepo } from '../repos';
+import { SourceRepo } from '../repos';
 
-export interface GetDocumentInput { id: string }
+export interface GetSourceInput {
+  id: string;
+}
 
-export const getDocument = (input: GetDocumentInput) =>
+export const getSource = (input: GetSourceInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
-    const documentRepo = yield* DocumentRepo;
+    const sourceRepo = yield* SourceRepo;
 
     yield* annotateUseCaseSpan({
       userId: user.id,
       resourceId: input.id,
-      attributes: { 'document.id': input.id },
+      attributes: { 'source.id': input.id },
     });
-    const doc = yield* documentRepo.findByIdForUser(input.id, user.id);
 
-    return doc;                         // raw domain data
-  }).pipe(withUseCaseSpan('useCase.getDocument'));
+    return yield* sourceRepo.findByIdForUser(input.id, user.id);
+  }).pipe(withUseCaseSpan('useCase.getSource'));
 ```
 
 ## Rules
 
 ### 1. One File Per Use Case <!-- enforced-by: architecture -->
 
-Each use case is a single exported function in its own file. Re-export from `index.ts`.
+Each use case exports one primary function from its own file. Re-export it from the domain `index.ts`.
 
 ### 2. Let Effect Infer Types <!-- enforced-by: types -->
 
-Never annotate the return type of a use case. Export a derived error alias when consumers need it:
+Do not manually annotate the effect return type. When consumers need the error union, derive it:
 
 ```typescript
-export type GetDocumentError = Effect.Effect.Error<ReturnType<typeof getDocument>>;
+export type GetSourceError = Effect.Effect.Error<ReturnType<typeof getSource>>;
 ```
 
 ### 3. Span Naming <!-- enforced-by: invariant-test -->
 
-Format: `useCase.{actionName}`. Pass domain IDs as attributes.
+Use `withUseCaseSpan('useCase.{ActionName}')` and attach domain IDs with `annotateUseCaseSpan(...)`.
 
-### 4. Compose Use Cases by Calling Other Use Cases <!-- enforced-by: architecture -->
+### 4. Compose Use Cases Carefully <!-- enforced-by: architecture -->
+
+If a flow truly needs another use case, call it explicitly rather than duplicating behavior. Keep the ownership check and trace attributes close to the mutation.
 
 ```typescript
-export const deleteDocument = (input: DeleteDocumentInput) =>
+export const updateSource = (input: UpdateSourceInput) =>
   Effect.gen(function* () {
-    const usages = yield* getDocumentUsages({ documentId: input.id });
-    if (usages.length > 0) {
-      return yield* Effect.fail(new DocumentInUse({ id: input.id, podcastIds: usages.map(p => p.id) }));
-    }
-    const repo = yield* DocumentRepo;
-    yield* repo.delete(input.id);
-  }).pipe(Effect.withSpan('useCase.deleteDocument'));
+    const user = yield* getCurrentUser;
+    const sourceRepo = yield* SourceRepo;
+
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'source.id': input.id },
+    });
+
+    const existing = yield* sourceRepo.findByIdForUser(input.id, user.id);
+    // additional mutation logic...
+    return existing;
+  }).pipe(withUseCaseSpan('useCase.updateSource'));
 ```
 
 ### 5. Parallel Operations <!-- enforced-by: manual-review -->
 
-Use `Effect.all` with `concurrency` instead of sequential loops:
+Use `Effect.all(..., { concurrency })` instead of sequential loops when work can run safely in parallel.
 
 ```typescript
-yield* Effect.all(ids.map(id => processDocument(id)), { concurrency: 10 });
+yield* Effect.all(sourceIds.map((id) => getSource({ id })), {
+  concurrency: 10,
+});
 ```
 
-### 6. Safety Primitives for High-Risk Ops <!-- enforced-by: eslint, invariant-test -->
+### 6. Safety Primitives For High-Risk Ops <!-- enforced-by: eslint, invariant-test -->
 
-| Operation | Required Primitive |
+| Operation | Required primitive |
 |---|---|
 | Job polling | `getOwnedJobOrNotFound(jobId)` |
 | Enqueue | `enqueueJob({ type, payload, userId })` |
@@ -104,43 +117,39 @@ See [`docs/patterns/safety-primitives.md`](./safety-primitives.md).
 
 ### 7. No Direct Repo Bypass <!-- enforced-by: manual-review -->
 
-Use cases access data through repos, never via direct DB imports. If a repo method is missing, add it to the repo.
+Use cases go through repos and services, not direct DB imports. If a query is missing, add a repo method.
 
-### 8. Propagate Errors <!-- enforced-by: eslint, invariant-test -->
+### 8. Propagate Errors Intentionally <!-- enforced-by: eslint, invariant-test -->
 
-Never swallow errors with `Effect.catchAll(() => Effect.succeed(null))`. Propagate or handle explicitly.
+Do not swallow errors with generic `catchAll` fallbacks. Either propagate the typed error or handle it explicitly.
 
-For intentional best-effort side effects (for example, activity logging), use
-`runBestEffortSideEffect(...)` from `packages/media/src/shared/best-effort-side-effect.ts`
-so failures are logged and scoped without masking the main flow.
+For intentional best-effort side effects, use `runBestEffortSideEffect(...)` from `packages/media/src/shared/best-effort-side-effect.ts`.
 
-### 8a. Never Throw Inside `Effect.gen` <!-- enforced-by: eslint -->
+### 9. Never Throw Inside `Effect.gen` <!-- enforced-by: eslint -->
 
-Inside use cases, model typed failures with `Effect.fail(...)`.
-If a code path is truly unrecoverable, use `Effect.die(...)`.
-Do not use `throw` statements directly in `Effect.gen` generators.
+Inside use cases, model failures with `Effect.fail(...)` or `Effect.die(...)`, not raw `throw`.
 
-### 9. Authorize Before Mutating Existing Data <!-- enforced-by: manual-review -->
+### 10. Authorize Before Mutating Existing Data <!-- enforced-by: manual-review -->
 
-For update/delete operations on existing entities:
+For update and delete flows on existing resources:
 
-- Load existing entity first
-- Enforce `requireOwnership(...)` (or explicit role policy) before write/delete
-- Do not rely on client filtering as authorization
+- Load the existing resource first.
+- Enforce ownership or role policy before the write.
+- Do not rely on client-side filtering as authorization.
 
-### 10. Sanitize User-Editable Structured Inputs <!-- enforced-by: manual-review -->
+### 11. Sanitize User-Editable Structured Inputs <!-- enforced-by: manual-review -->
 
-When persisting prompt/style-like key-value inputs:
+When persisting structured user input such as metadata or style controls:
 
-- Trim whitespace
-- Drop empty key/value entries
-- Normalize optional enum-like fields before storing or prompt composition
+- Trim whitespace.
+- Drop empty entries.
+- Normalize optional values before persistence or prompt composition.
 
 ## Index File
 
 ```typescript
 // packages/media/src/{domain}/use-cases/index.ts
-export * from './get-document';
-export * from './create-document';
+export * from './get-source';
+export * from './create-source';
 // ...
 ```

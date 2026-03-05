@@ -1,5 +1,6 @@
 import {
   CheckCircledIcon,
+  InfoCircledIcon,
   MagnifyingGlassIcon,
   PauseIcon,
   PlayIcon,
@@ -29,6 +30,11 @@ import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import { formatDuration, formatDate } from '@/shared/lib/formatters';
+import {
+  VOICEOVER_DEFINITION,
+  VOICEOVER_FLOW_STEPS,
+  VOICEOVER_LIST_SUPPORT,
+} from '@/shared/lib/content-guidance';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -56,7 +62,8 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
       </div>
       <h2 className="empty-state-title">No voiceovers yet</h2>
       <p className="empty-state-description">
-        Create your first voiceover to get started.
+        Create your first voiceover, refine the draft with AI if needed, then
+        generate audio.
       </p>
       <Button onClick={onCreateClick} disabled={isCreating}>
         {isCreating ? (
@@ -334,6 +341,9 @@ export function VoiceoverList({
         <div>
           <p className="page-eyebrow">Voiceovers</p>
           <h1 className="page-title">Voiceovers</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {VOICEOVER_DEFINITION} {VOICEOVER_LIST_SUPPORT}
+          </p>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>
           {isCreating ? (
@@ -348,6 +358,38 @@ export function VoiceoverList({
             </>
           )}
         </Button>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-amber-200/60 bg-amber-50/80 p-5 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-amber-500/10 p-2 text-amber-600 dark:text-amber-300">
+            <InfoCircledIcon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">
+              How voiceovers work
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Voiceovers start with a script. You can write it yourself or use
+              AI to strengthen the draft before generating audio.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {VOICEOVER_FLOW_STEPS.map((step) => (
+            <div
+              key={step.title}
+              className="rounded-xl border border-amber-200/50 bg-background/80 p-4 dark:border-amber-500/10 dark:bg-background/40"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {step.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {step.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Search */}

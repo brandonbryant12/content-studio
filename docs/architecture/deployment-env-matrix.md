@@ -42,12 +42,17 @@ sequenceDiagram
   participant API as apps/server
   participant ST as S3 / MinIO
 
-  U->>API: GET /api/... (entity with media fields)
-  API->>API: Rewrite media fields to signed backend URLs\n(/api/audio/playback?token=... or /storage/{key}?token=...)
-  API-->>U: JSON response with signed URLs
-
-  U->>API: GET signed media URL
-  API->>API: Verify HMAC token, expiry, and key match
+  rect rgb(232, 241, 255)
+    U->>API: GET /api/... (entity with media fields)
+  end
+  rect rgb(236, 253, 243)
+    API->>API: Rewrite media fields to signed backend URLs\n(/api/audio/playback?token=... or /storage/{key}?token=...)
+    API-->>U: JSON response with signed URLs
+    U->>API: GET signed media URL
+  end
+  rect rgb(254, 242, 242)
+    API->>API: Verify HMAC token, expiry, and key match
+  end
   alt token invalid or expired
     API-->>U: 404 Not Found
   else token valid
@@ -103,7 +108,7 @@ Required:
 
 - `NODE_ENV` (`production` for prod)
 - `SERVER_AUTH_SECRET`
-- `AUTH_MODE` (`hybrid` or `sso-only` in production)
+- `AUTH_MODE` (`sso-only` in production)
 - `SERVER_POSTGRES_URL`
 - `SERVER_REDIS_URL`
 - `PUBLIC_SERVER_URL`
@@ -112,7 +117,7 @@ Required:
 
 Conditionally required:
 
-- `AUTH_MICROSOFT_CLIENT_ID`, `AUTH_MICROSOFT_CLIENT_SECRET`, `AUTH_MICROSOFT_TENANT_ID`, `AUTH_ROLE_ADMIN_GROUP_IDS`, `AUTH_ROLE_USER_GROUP_IDS` when `AUTH_MODE=hybrid|sso-only`
+- `AUTH_MICROSOFT_CLIENT_ID`, `AUTH_MICROSOFT_CLIENT_SECRET`, `AUTH_MICROSOFT_TENANT_ID`, `AUTH_ROLE_ADMIN_GROUP_IDS`, `AUTH_ROLE_USER_GROUP_IDS` when `AUTH_MODE=sso-only`
 - `GEMINI_API_KEY` when `USE_MOCK_AI=false`
 - `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
 - `NODE_EXTRA_CA_CERTS` when `HTTPS_PROXY` or `HTTP_PROXY` is set
@@ -120,6 +125,7 @@ Conditionally required:
 Common optional-but-important:
 
 - `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`
+- `AUDIO_PLAYBACK_PROXY_ENABLED`, `STORAGE_ACCESS_PROXY_ENABLED`, `AUDIO_PLAYBACK_URL_TTL_SECONDS`
 - `USE_MOCK_AI`
 - `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` (default `true` in containerized deployment path)
 - `CORS_ORIGINS` (default `*`; optional explicit allowlist)

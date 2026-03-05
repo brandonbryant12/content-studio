@@ -513,12 +513,12 @@ collect_variables() {
   default_secret="${_DEF_SERVER_AUTH_SECRET:-$(generate_secret)}"
   prompt_secret SERVER_AUTH_SECRET "Auth session signing secret" "$default_secret"
 
-  local auth_options="dev-password|hybrid|sso-only"
+  local auth_options="dev-password|sso-only"
   local auth_default="${_DEF_AUTH_MODE:-dev-password}"
   if [[ "$DEPLOY_NODE_ENV" == "production" ]]; then
-    auth_options="hybrid|sso-only"
+    auth_options="sso-only"
     if [[ "$auth_default" == "dev-password" ]]; then
-      auth_default="hybrid"
+      auth_default="sso-only"
     fi
   fi
   prompt_choice AUTH_MODE "Authentication mode" "$auth_options" "$auth_default"

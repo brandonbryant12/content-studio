@@ -8,6 +8,7 @@ import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
+import { WRITING_ASSISTANT_HELP } from '@/shared/lib/content-guidance';
 
 const EXAMPLE_PROMPTS = [
   'Give me three stronger opening lines for this narration.',
@@ -45,7 +46,7 @@ export function WritingAssistantPanel({
               Writing Assistant
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Refine wording, pacing, and tone so your narration lands.
+              Use AI to improve the current script before you generate audio.
             </p>
           </div>
           {messages.length > 0 && (
@@ -61,10 +62,11 @@ export function WritingAssistantPanel({
           )}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          This chat is temporary and is not saved.
+          {WRITING_ASSISTANT_HELP}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Transcript rewrites are applied directly to the editor.
+          This chat is temporary and is not saved. Transcript rewrites are
+          applied directly to the editor.
         </p>
       </header>
 
@@ -76,7 +78,8 @@ export function WritingAssistantPanel({
         emptyState={
           <div className="h-full flex flex-col items-center justify-center text-center gap-4">
             <p className="text-sm text-muted-foreground">
-              Ask for rewrites, better hooks, or smoother transitions.
+              Ask for rewrites, stronger hooks, smoother transitions, or a
+              tighter read.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {EXAMPLE_PROMPTS.map((prompt) => (
@@ -103,7 +106,7 @@ export function WritingAssistantPanel({
           value={composer.input}
           onChange={(e) => composer.setInput(e.target.value)}
           onKeyDown={composer.handleInputKeyDown}
-          placeholder="Ask for a rewrite, stronger hook, or tone shift..."
+          placeholder="Ask AI to rewrite, shorten, or change the tone of this script..."
           disabled={isStreaming}
           maxLength={CHAT_INPUT_MAX_LENGTH}
           rows={1}

@@ -2,19 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PersonaChatContainer } from '../components/persona-chat-container';
 import { render, screen, userEvent } from '@/test-utils';
 
-const {
-  mockUsePersonaChat,
-  mockUseSynthesizePersona,
-  mockUseCreatePersona,
-  synthesizeMutate,
-  createMutate,
-} = vi.hoisted(() => ({
-  mockUsePersonaChat: vi.fn(),
-  mockUseSynthesizePersona: vi.fn(),
-  mockUseCreatePersona: vi.fn(),
-  synthesizeMutate: vi.fn(),
-  createMutate: vi.fn(),
-}));
+const { mockUsePersonaChat, mockUseSynthesizePersona, synthesizeMutate } =
+  vi.hoisted(() => ({
+    mockUsePersonaChat: vi.fn(),
+    mockUseSynthesizePersona: vi.fn(),
+    synthesizeMutate: vi.fn(),
+  }));
 
 vi.mock('../hooks/use-persona-chat', () => ({
   usePersonaChat: mockUsePersonaChat,
@@ -22,10 +15,6 @@ vi.mock('../hooks/use-persona-chat', () => ({
 
 vi.mock('../hooks/use-synthesize-persona', () => ({
   useSynthesizePersona: mockUseSynthesizePersona,
-}));
-
-vi.mock('../hooks/use-persona-mutations', () => ({
-  useCreatePersona: mockUseCreatePersona,
 }));
 
 vi.mock('../components/persona-chat-dialog', () => ({
@@ -82,46 +71,38 @@ describe('PersonaChatContainer', () => {
       },
     );
 
-    createMutate.mockImplementation(
-      (_input: unknown, options?: { onSuccess?: () => void }) => {
-        options?.onSuccess?.();
-      },
-    );
-
     mockUseSynthesizePersona.mockReturnValue({
       mutate: synthesizeMutate,
       isPending: false,
       error: undefined,
     });
-
-    mockUseCreatePersona.mockReturnValue({
-      mutate: createMutate,
-      isPending: false,
-      error: undefined,
-    });
   });
 
-  it('creates persona from one click', async () => {
+  it('applies the synthesized persona draft from one click', async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
+    const onApplyPersona = vi.fn();
 
-    render(<PersonaChatContainer open={true} onOpenChange={onOpenChange} />);
+    render(
+      <PersonaChatContainer
+        open={true}
+        onOpenChange={onOpenChange}
+        onApplyPersona={onApplyPersona}
+      />,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Create Persona' }));
 
     expect(synthesizeMutate).toHaveBeenCalled();
-    expect(createMutate).toHaveBeenCalledWith(
-      {
-        name: 'Ava',
-        role: 'Research Host',
-        personalityDescription: 'Analytical and warm',
-        speakingStyle: 'Clear and concise',
-        exampleQuotes: ["Let's break this down."],
-        voiceId: 'voice-1',
-        voiceName: 'Aoede',
-      },
-      expect.anything(),
-    );
+    expect(onApplyPersona).toHaveBeenCalledWith({
+      name: 'Ava',
+      role: 'Research Host',
+      personalityDescription: 'Analytical and warm',
+      speakingStyle: 'Clear and concise',
+      exampleQuotes: ["Let's break this down."],
+      voiceId: 'voice-1',
+      voiceName: 'Aoede',
+    });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -134,11 +115,16 @@ describe('PersonaChatContainer', () => {
       error: undefined,
     });
 
-    render(<PersonaChatContainer open={true} onOpenChange={vi.fn()} />);
+    render(
+      <PersonaChatContainer
+        open={true}
+        onOpenChange={vi.fn()}
+        onApplyPersona={vi.fn()}
+      />,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Create Persona' }));
 
     expect(synthesizeMutate).not.toHaveBeenCalled();
-    expect(createMutate).not.toHaveBeenCalled();
   });
 });

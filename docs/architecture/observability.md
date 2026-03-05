@@ -2,111 +2,111 @@
 
 ## Golden Principles
 
-1. Every use case has a `withSpan` call.
-<!-- enforced-by: invariant-test -->
-
-2. Every handler call gets an automatic span via `@orpc/otel` (`ORPCSpanRenamer` maps `call_procedure` → `api.{domain}.{action}`).
-<!-- enforced-by: runtime -->
-
-3. Avoid `console.log` in `packages/` directories; exceptions require an explicit `eslint-disable no-console` comment (for test infra or bootstrap output).
-<!-- enforced-by: eslint -->
+1. Every use case must use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`. <!-- enforced-by: invariant-test -->
+2. Every handler call gets an automatic span via `@orpc/otel`. <!-- enforced-by: runtime -->
+3. Avoid `console.log` in `packages/` directories unless an explicit lint exemption is justified. <!-- enforced-by: eslint -->
 
 ## Span Naming Convention
 <!-- enforced-by: manual-review -->
 
 | Layer | Pattern | Example |
 |---|---|---|
-| Handler | `api.{domain}.{action}` | `api.documents.get` |
-| Use case | `useCase.{name}` | `useCase.getDocument` |
-| Repository | `{repoName}.{method}` | `documentRepo.findById` |
-| Serializer | `serialize.{entity}` | `serialize.document` |
+| Handler | `api.{domain}.{action}` | `api.sources.get` |
+| Use case | `useCase.{name}` | `useCase.getSource` |
+| Repository | `{repoName}.{method}` | `sourceRepo.findByIdForUser` |
+| Serializer | `serialize.{entity}` | `serialize.source` |
 | Worker | `worker.{domain}.{action}` | `worker.podcast.generateAudio` |
 
-Use camelCase for multi-word names within a segment: `useCase.startPodcastGeneration`.
+Use camelCase for multi-word names inside a segment: `useCase.startPodcastGeneration`.
 
 ## Required Span Attributes
 <!-- enforced-by: invariant-test -->
 
-| Attribute | Required In | Value |
+| Attribute | Required in | Value |
 |---|---|---|
 | `user.id` | Use case spans | Current user ID from FiberRef |
-| `resource.id` | Use case + repo spans | Primary resource ID being operated on |
+| `resource.id` | Use case and repo spans | Primary resource ID being operated on |
 | `request.id` | Handler spans | Request correlation ID |
 | `job.id` | Worker spans | Job ID being processed |
 | `error._tag` | Error spans | Typed error tag on failure |
 
-## Automatic Procedure Instrumentation (@orpc/otel)
+## Automatic Procedure Instrumentation
 <!-- enforced-by: runtime -->
 
-All oRPC procedure calls, middleware, and handler phases are automatically instrumented via `@orpc/otel`. A custom `ORPCSpanRenamer` processor transforms the default oRPC span names to match our convention:
+All oRPC procedure calls, middleware, and handler phases are instrumented via `@orpc/otel`. `ORPCSpanRenamer` converts the default procedure span names to the `api.{domain}.{action}` convention.
 
-| oRPC Default | Renamed |
+| oRPC default | Renamed |
 |---|---|
-| `call_procedure` (with `procedure.path` attribute) | `api.documents.get` |
-| `middleware.auth` | `middleware.auth` (unchanged) |
-| `handler` | `handler` (unchanged) |
+| `call_procedure` with `procedure.path` | `api.sources.get` |
+| `middleware.auth` | `middleware.auth` |
+| `handler` | `handler` |
 | `validate_input` / `validate_output` | unchanged |
 
 ### Trace Structure
 
-A typical authenticated request produces:
+A typical authenticated request looks like this:
 
 ```
-api.documents.get (auto — oRPC + ORPCSpanRenamer)
-  └── middleware.auth (auto — oRPC, named function)
-       └── handler (auto — oRPC)
-            └── useCase.getDocument (Effect.withSpan — use case level)
-                 └── documentRepo.findById (Effect.withSpan — repo level)
+api.sources.get
+  └── middleware.auth
+       └── handler
+            └── useCase.getSource
+                 └── sourceRepo.findByIdForUser
 ```
 
-Manual `span` in `handleEffectWithProtocol` is optional. Handlers rely on @orpc/otel auto-spans; use-case and repo spans remain manual via `Effect.withSpan`.
+Handlers rely on the automatic oRPC span for the outer request. Use case, repo, and serializer spans remain explicit.
 
 ## Handler Span Integration
 <!-- enforced-by: @orpc/otel auto-instrumentation -->
 
-`handleEffectWithProtocol` accepts an optional `span` parameter. When omitted, the handler relies on `@orpc/otel` auto-instrumentation for the outer span. Use-case spans (`Effect.withSpan`) remain required.
+`handleEffectWithProtocol` does not need a manual outer span in standard handlers. Pass request metadata and attributes instead:
 
 ```typescript
-// Handler — span auto-provided by @orpc/otel:
 return handleEffectWithProtocol(
   context.runtime,
   context.user,
-  getDocument({ id: input.id }),
+  getSource({ id: input.id }).pipe(Effect.flatMap(serializeSourceEffect)),
   errors,
-  { requestId: context.requestId },
+  {
+    requestId: context.requestId,
+    attributes: { 'source.id': input.id },
+  },
 );
 ```
 
 ## Use Case Span Integration
 <!-- enforced-by: invariant-test -->
 
-Every use case wraps its implementation in `withSpan`:
+Use cases should wrap the effect and attach attributes explicitly:
 
 ```typescript
-export const getDocument = (input: GetDocumentInput) =>
+export const getSource = (input: GetSourceInput) =>
   Effect.gen(function* () {
-    // ... use case logic
-  }).pipe(
-    withSpan('useCase.getDocument')
-  );
+    const user = yield* getCurrentUser;
+
+    yield* annotateUseCaseSpan({
+      userId: user.id,
+      resourceId: input.id,
+      attributes: { 'source.id': input.id },
+    });
+
+    // use case logic...
+  }).pipe(withUseCaseSpan('useCase.getSource'));
 ```
 
-The invariant test at `packages/media/src/shared/__tests__/safety-invariants.test.ts` can be extended to verify all use case files include `withSpan`.
+The invariant tests in `packages/media/src/shared/__tests__/safety-invariants.test.ts` enforce this pattern.
 
 ## Logging Policy
 <!-- enforced-by: eslint -->
 
 | Context | Allowed | Mechanism |
 |---|---|---|
-| `packages/` | Structured Effect logging only; `console.log` requires explicit `eslint-disable no-console` in test infra | `Effect.log`, `Effect.logWarning`, `Effect.logError` |
-| `apps/server/` | Structured logging | Hono logger middleware + Effect logging |
-| `apps/web/` | `console.*` permitted in dev | No restriction |
-| Test files | `console.*` permitted (prefer explicit disables when lint applies) | No restriction |
+| `packages/` | Structured Effect logging only; `console.log` needs an explicit exemption | `Effect.log*` |
+| `apps/server/` | Structured lifecycle and request logging | Hono logger middleware plus Effect logging |
+| `apps/web/` | `console.*` allowed in development | Browser console |
+| Tests | `console.*` allowed when useful | Test runner output |
 
-Notes:
-- Test infrastructure in `packages/testing/` uses `console.log` with explicit `eslint-disable` comments to surface setup/teardown output.
-
-## Telemetry Export (Datadog OTLP)
+## Telemetry Export
 <!-- enforced-by: manual-review -->
 
 Trace export is configured for backend processes only:
@@ -114,56 +114,49 @@ Trace export is configured for backend processes only:
 - `apps/server`
 - `apps/worker`
 
-The web frontend currently does not send client-side error telemetry.
+The web frontend does not send client-side telemetry by default.
 
 ### Runtime Wiring Pattern
 
 1. Parse telemetry env vars in each backend app's `env.ts`.
-2. Pass `telemetryConfig` to `createServerRuntime(...)` — the `TelemetryLive` Effect layer manages the full `NodeTracerProvider` lifecycle (creation, global registration, instrumentation unregister, and scoped shutdown).
-3. On graceful shutdown, call `runtime.dispose()` — the layer finalizer unregisters instrumentations, then flushes and shuts down the trace exporter automatically.
-
-No imperative `initTelemetry`/`shutdownTelemetry` calls are needed; the Effect runtime owns the telemetry lifecycle.
+2. Pass `telemetryConfig` to `createServerRuntime(...)`.
+3. Let `TelemetryLive` own tracer provider setup and shutdown.
+4. Call `runtime.dispose()` during graceful shutdown to flush and close telemetry cleanly.
 
 ### OTLP Environment Contract
 
 | Variable | Purpose | Notes |
 |---|---|---|
 | `TELEMETRY_ENABLED` | Enable export | Defaults to `true` in production, else `false` |
-| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace exporter endpoint | Used as-is; path defaults to `/` when missing |
-| `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers | Comma-separated `KEY=value,KEY2=value2` |
-| `OTEL_SERVICE_NAME` | Service identifier | Set distinct values for server and worker |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace exporter endpoint | Used as-is |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Optional OTLP headers | `KEY=value,KEY2=value2` |
+| `OTEL_SERVICE_NAME` | Service identifier | Distinct values for server and worker |
 | `OTEL_SERVICE_VERSION` | Service version tag | Optional override |
 | `OTEL_ENV` | Deployment environment tag | Defaults to `NODE_ENV` |
 
-### Exporter Behavior
-
-- If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is present, use it as-is with OTLP HTTP export + `BatchSpanProcessor`.
-- If no endpoint is configured, telemetry performs a silent no-op and skips trace export entirely (no `ConsoleSpanExporter` fallback).
-- `OTEL_EXPORTER_OTLP_HEADERS` applies to trace export headers. Malformed entries (missing `=`, empty key/value) cause a `MalformedOtlpHeadersError` at startup rather than being silently dropped.
-
 ### Server-Timing Header
 
-The Hono server includes `timing()` middleware that adds a `Server-Timing` response header with `total;dur=<ms>` to every non-streaming response. This enables browser DevTools performance analysis without additional instrumentation. Streaming responses (SSE) are unaffected — headers are sent before the body starts.
+`apps/server` enables Hono `timing()` middleware, so non-streaming responses include a `Server-Timing` header for browser inspection.
 
 ## Error Observability
 <!-- enforced-by: architecture -->
 
-Typed errors carry their `_tag` into spans automatically via `handleEffectWithProtocol`. The error mapper logs:
+Typed errors carry `_tag` into spans through `handleEffectWithProtocol`.
 
-| Error Type | Log Level | Span Status |
+| Error type | Log level | Span status |
 |---|---|---|
 | Expected domain error (4xx) | `info` | Error with `_tag` attribute |
-| Unexpected/defect (5xx) | `error` | Error with stack trace |
+| Unexpected defect (5xx) | `error` | Error with stack trace |
 | External service failure | `warning` | Error with upstream details |
 
 ## Key Files
 
 | File | Purpose |
 |---|---|
-| `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` -- span creation + error mapping |
-| `packages/media/src/shared/safety-primitives.ts` | `withSpan` re-export and safety wrappers |
+| `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` error mapping and span metadata |
+| `packages/media/src/shared/safety-primitives.ts` | `withUseCaseSpan` and `annotateUseCaseSpan` |
 | `packages/media/src/shared/__tests__/safety-invariants.test.ts` | Invariant enforcement |
-| `packages/db/src/telemetry.ts` | `TelemetryLive` layer — OTLP exporter, `ORPCSpanRenamer`, `@orpc/otel` registration/unregister, Effect span bridge, scoped provider lifecycle |
-| `packages/api/src/server/runtime.ts` | `createSharedLayers` — includes `TelemetryLive` when config is provided |
-| `apps/server/src/server.ts` | Server startup + graceful shutdown (calls `runtime.dispose()` which triggers telemetry finalizer) |
-| `apps/worker/src/worker.ts` | Worker startup + graceful shutdown (same pattern) |
+| `packages/db/src/telemetry.ts` | `TelemetryLive`, `ORPCSpanRenamer`, OTLP exporter wiring |
+| `packages/api/src/server/runtime.ts` | Shared layer composition |
+| `apps/server/src/server.ts` | Runtime startup and shutdown |
+| `apps/worker/src/worker.ts` | Worker startup and shutdown |

@@ -1,13 +1,13 @@
 import { pingSSEPublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { timing } from 'hono/timing';
 import type { auth } from './services';
 import { env } from './env';
 import { globalErrorHandler } from './error-handler';
 import { requestIdMiddleware } from './middleware/request-id';
+import { requestLog } from './middleware/request-log';
 import {
   authRoute,
   authPath,
@@ -29,7 +29,7 @@ const app = new Hono<{
 
 app.use(requestIdMiddleware);
 app.use(timing());
-app.use(logger());
+app.use(requestLog());
 app.use(
   secureHeaders({
     crossOriginResourcePolicy: 'cross-origin',

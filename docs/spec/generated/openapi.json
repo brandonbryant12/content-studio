@@ -122,150 +122,6 @@
         ]
       }
     },
-    "/documents/": {
-      "get": {
-        "description": "Retrieve all documents for the current user",
-        "operationId": "documents.list",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "List documents",
-        "tags": [
-          "document"
-        ]
-      },
-      "post": {
-        "description": "Create a new document from text content",
-        "operationId": "documents.create",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Create document",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/{id}": {
-      "delete": {
-        "description": "Permanently delete a document",
-        "operationId": "documents.delete",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Delete document",
-        "tags": [
-          "document"
-        ]
-      },
-      "get": {
-        "description": "Retrieve a document by ID",
-        "operationId": "documents.get",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Get document",
-        "tags": [
-          "document"
-        ]
-      },
-      "patch": {
-        "description": "Update document metadata or content",
-        "operationId": "documents.update",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Update document",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/{id}/content": {
-      "get": {
-        "description": "Retrieve the parsed text content of a document",
-        "operationId": "documents.getContent",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Get document content",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/{id}/retry": {
-      "post": {
-        "description": "Retry processing a failed document",
-        "operationId": "documents.retry",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Retry processing",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/from-research": {
-      "post": {
-        "description": "Start a deep research operation that produces a knowledge base document",
-        "operationId": "documents.fromResearch",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Create from research",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/from-url": {
-      "post": {
-        "description": "Create a document by scraping a URL",
-        "operationId": "documents.fromUrl",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Create from URL",
-        "tags": [
-          "document"
-        ]
-      }
-    },
-    "/documents/upload": {
-      "post": {
-        "description": "Upload a document file (TXT, PDF, DOCX, PPTX). Max 10MB.",
-        "operationId": "documents.upload",
-        "responses": {
-          "200": {
-            "description": "Successful response"
-          }
-        },
-        "summary": "Upload document",
-        "tags": [
-          "document"
-        ]
-      }
-    },
     "/events/": {
       "get": {
         "operationId": "events.subscribe",
@@ -570,7 +426,7 @@
         ]
       },
       "post": {
-        "description": "Create a new podcast from documents",
+        "description": "Create a new podcast from sources",
         "operationId": "podcasts.create",
         "responses": {
           "200": {
@@ -598,7 +454,7 @@
         ]
       },
       "get": {
-        "description": "Retrieve a podcast with its documents",
+        "description": "Retrieve a podcast with its sources",
         "operationId": "podcasts.get",
         "responses": {
           "200": {
@@ -709,6 +565,150 @@
         "summary": "Get job status",
         "tags": [
           "podcast"
+        ]
+      }
+    },
+    "/sources/": {
+      "get": {
+        "description": "Retrieve all sources for the current user",
+        "operationId": "sources.list",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List sources",
+        "tags": [
+          "source"
+        ]
+      },
+      "post": {
+        "description": "Create a new source from text content",
+        "operationId": "sources.create",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create source",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/{id}": {
+      "delete": {
+        "description": "Permanently delete a source",
+        "operationId": "sources.delete",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Delete source",
+        "tags": [
+          "source"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a source by ID",
+        "operationId": "sources.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get source",
+        "tags": [
+          "source"
+        ]
+      },
+      "patch": {
+        "description": "Update source metadata or content",
+        "operationId": "sources.update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Update source",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/{id}/content": {
+      "get": {
+        "description": "Retrieve the parsed text content of a source",
+        "operationId": "sources.getContent",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get source content",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/{id}/retry": {
+      "post": {
+        "description": "Retry processing a failed source",
+        "operationId": "sources.retry",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Retry processing",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/from-research": {
+      "post": {
+        "description": "Start a deep research operation that produces a knowledge base source",
+        "operationId": "sources.fromResearch",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create from research",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/from-url": {
+      "post": {
+        "description": "Create a source by scraping a URL",
+        "operationId": "sources.fromUrl",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create from URL",
+        "tags": [
+          "source"
+        ]
+      }
+    },
+    "/sources/upload": {
+      "post": {
+        "description": "Upload a source file (TXT, PDF, DOCX, PPTX). Max 10MB.",
+        "operationId": "sources.upload",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Upload source",
+        "tags": [
+          "source"
         ]
       }
     },
@@ -856,7 +856,7 @@
     },
     "/voices/{voiceId}/preview": {
       "post": {
-        "description": "Generate a short audio preview of a voice",
+        "description": "Generate a short audio preview of a voice (LINEAR16 WAV)",
         "operationId": "voices.preview",
         "responses": {
           "200": {

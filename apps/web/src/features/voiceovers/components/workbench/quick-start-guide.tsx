@@ -36,7 +36,7 @@ const steps = [
     number: 3,
     title: 'Try the Writing Assistant',
     description:
-      'Open the side panel for AI help refining tone, length, or style.',
+      'Open the side panel for AI help generating better phrasing, stronger hooks, and cleaner pacing.',
     icon: ChatBubbleIcon,
     accentBg: 'bg-emerald-500/10',
     accentText: 'text-emerald-600 dark:text-emerald-400',

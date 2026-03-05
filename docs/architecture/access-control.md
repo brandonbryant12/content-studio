@@ -1,7 +1,13 @@
 # Access Control
 
 ```mermaid
-graph LR
+flowchart LR
+  classDef entry fill:#e8f1ff,stroke:#1d4ed8,color:#0f172a,stroke-width:1.5px;
+  classDef runtime fill:#ecfdf3,stroke:#15803d,color:#0f172a,stroke-width:1.5px;
+  classDef async fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:1.5px;
+  classDef store fill:#f5f5f4,stroke:#57534e,color:#0f172a,stroke-width:1.5px;
+  classDef control fill:#fef2f2,stroke:#b91c1c,color:#0f172a,stroke-width:1.5px;
+
   Request[HTTP Request] --> Middleware[better-auth Middleware]
   Middleware -->|AuthN| Session[Session + User]
   Middleware -->|SSO mode role sync| Graph[Microsoft Graph transitiveMemberOf]
@@ -11,6 +17,11 @@ graph LR
   FiberRef --> UseCase[Use Case]
   UseCase -->|AuthZ: ownership check| Repo[Repository]
   Repo -->|userId param| DB[(PostgreSQL)]
+
+  class Request entry;
+  class Session,Handler,FiberRef,UseCase,Repo runtime;
+  class Middleware control;
+  class Graph,DB store;
 ```
 
 ## Golden Principles
@@ -33,7 +44,7 @@ graph LR
 | Layer | Mechanism |
 |---|---|
 | HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (bearer-only transport; cookie fallback disabled) |
-| Login mode | `AUTH_MODE` selects providers: `dev-password`, `hybrid`, `sso-only` |
+| Login mode | `AUTH_MODE` selects providers: `dev-password`, `sso-only` |
 | SSO role sync | On Microsoft callback, `databaseHooks.session.create.before` calls Graph `transitiveMemberOf`; auth fails closed if sync fails or no configured groups match, otherwise role is mapped to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
 | Handler | Receives `AuthenticatedORPCContext` with typed `user` field |
@@ -57,18 +68,26 @@ sequenceDiagram
   participant G as Microsoft Graph
   participant DB as PostgreSQL
 
-  U->>W: Click "Sign in with Microsoft"
-  W->>A: GET /auth/sign-in/social (microsoft)
-  A-->>U: 302 Redirect to Microsoft login
-  U->>MS: Authenticate + consent
-  MS-->>A: OAuth callback with code
-  A->>DB: Create/refresh user + account
-  A->>G: GET transitiveMemberOf(user)
-  G-->>A: Group IDs
-  A->>DB: Map groups -> role (admin/user)
-  A->>DB: Create session (only if sync + group check pass)
-  A-->>W: Response with set-auth-token header
-  W->>W: Store bearer token in memory
+  rect rgb(232, 241, 255)
+    U->>W: Click "Sign in with Microsoft"
+    W->>A: GET /auth/sign-in/social (microsoft)
+  end
+  rect rgb(254, 242, 242)
+    A-->>U: 302 Redirect to Microsoft login
+    U->>MS: Authenticate + consent
+    MS-->>A: OAuth callback with code
+  end
+  rect rgb(245, 245, 244)
+    A->>DB: Create/refresh user + account
+    A->>G: GET transitiveMemberOf(user)
+    G-->>A: Group IDs
+    A->>DB: Map groups -> role (admin/user)
+    A->>DB: Create session (only if sync + group check pass)
+  end
+  rect rgb(232, 241, 255)
+    A-->>W: Response with set-auth-token header
+    W->>W: Store bearer token in memory
+  end
 ```
 
 ### Bearer API Request Sequence
@@ -80,12 +99,20 @@ sequenceDiagram
   participant BA as better-auth
   participant DB as PostgreSQL
 
-  W->>API: Request with Authorization: Bearer <token>
-  API->>BA: getSession(headers: authorization only)
-  BA->>DB: Resolve session + user
-  DB-->>BA: Session + user
-  BA-->>API: Authenticated session
-  API-->>W: Protected resource response
+  rect rgb(232, 241, 255)
+    W->>API: Request with Authorization: Bearer <token>
+  end
+  rect rgb(254, 242, 242)
+    API->>BA: getSession(headers: authorization only)
+  end
+  rect rgb(245, 245, 244)
+    BA->>DB: Resolve session + user
+    DB-->>BA: Session + user
+  end
+  rect rgb(232, 241, 255)
+    BA-->>API: Authenticated session
+    API-->>W: Protected resource response
+  end
 ```
 
 ### Session Refresh Policy

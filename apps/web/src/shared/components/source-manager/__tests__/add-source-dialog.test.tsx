@@ -35,7 +35,15 @@ vi.mock('@/features/sources/hooks/use-source-list', () => ({
 }));
 
 vi.mock('@/shared/components/base-dialog', () => ({
-  BaseDialog: ({ open, children }: { open: boolean; children: ReactNode }) =>
+  BaseDialog: ({
+    open,
+    children,
+  }: {
+    open: boolean;
+    title?: string;
+    description?: string;
+    children: ReactNode;
+  }) =>
     open ? <div>{children}</div> : null,
 }));
 
@@ -74,7 +82,15 @@ describe('AddSourceDialog', () => {
       />,
     );
 
+    expect(screen.getByText('Why this matters')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Use existing sources when you already trust the material/i),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole('tab', { name: 'From URL' }));
+    expect(
+      screen.getByText(/Best for a single public article, blog post, or docs page/i),
+    ).toBeInTheDocument();
     await user.type(screen.getByLabelText('URL'), 'https://example.com/news');
     await user.type(screen.getByLabelText(/Title/i), 'News Source');
     await user.click(screen.getByRole('button', { name: 'Add URL' }));

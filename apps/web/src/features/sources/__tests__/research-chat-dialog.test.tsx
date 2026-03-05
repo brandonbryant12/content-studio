@@ -52,11 +52,20 @@ describe('ResearchChatDialog', () => {
 
     expect(screen.getByText('Deep Research')).toBeInTheDocument();
     expect(
-      screen.getByText('What would you like to research? Try one of these:'),
+      screen.getByText(
+        'Describe a topic and AI will create a reusable research source with citations you can review and reuse later.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'What topic should become a reusable research source? Try one of these:',
+      ),
     ).toBeInTheDocument();
     // 3 randomly selected topic chips are rendered
     const chips = screen
-      .getByText('What would you like to research? Try one of these:')
+      .getByText(
+        'What topic should become a reusable research source? Try one of these:',
+      )
       .closest('div')!
       .querySelectorAll('button');
     expect(chips).toHaveLength(3);
@@ -218,7 +227,9 @@ describe('ResearchChatDialog', () => {
     renderDialog({ onSendMessage });
 
     const chips = screen
-      .getByText('What would you like to research? Try one of these:')
+      .getByText(
+        'What topic should become a reusable research source? Try one of these:',
+      )
       .closest('div')!
       .querySelectorAll('button');
     const firstChip = chips[0]!;

@@ -28,11 +28,19 @@ export interface StorageAccessProxy {
 }
 
 const TOKEN_VERSION = 1 as const;
-const STORAGE_PAYLOAD_FIELDS = new Set([
-  'contentKey',
-  'imageUrl',
-  'thumbnailUrl',
+const STORAGE_PROXY_PATH_PREFIXES = [
+  '/podcasts',
+  '/personas',
+  '/infographics',
+  '/sources',
+] as const;
+const TRUSTED_STORAGE_KEY_FIELDS = new Set([
+  'avatarStorageKey',
+  'coverImageStorageKey',
+  'imageStorageKey',
+  'thumbnailStorageKey',
 ]);
+const SKIPPED_TRAVERSAL_FIELDS = new Set(['metadata']);
 
 const asBase64Url = (value: string | Buffer): string =>
   Buffer.from(value).toString('base64url');
@@ -162,8 +170,23 @@ const parseStorageKey = (
   );
 };
 
-const isStorageFieldName = (fieldName: string): boolean =>
-  fieldName.endsWith('StorageKey') || STORAGE_PAYLOAD_FIELDS.has(fieldName);
+const isSourceRecord = (record: Record<string, unknown>): boolean =>
+  typeof record.contentKey === 'string' &&
+  typeof record.mimeType === 'string' &&
+  typeof record.wordCount === 'number' &&
+  typeof record.source === 'string' &&
+  typeof record.status === 'string';
+
+const shouldRewriteStorageField = (
+  record: Record<string, unknown>,
+  fieldName: string,
+): boolean => {
+  if (TRUSTED_STORAGE_KEY_FIELDS.has(fieldName)) {
+    return true;
+  }
+
+  return fieldName === 'contentKey' && isSourceRecord(record);
+};
 
 const buildStorageAccessUrl = (
   serverUrl: string,
@@ -251,7 +274,7 @@ const rewritePayloadStorageUrls = (
   const next: Record<string, unknown> = {};
 
   for (const [key, item] of Object.entries(record)) {
-    if (isStorageFieldName(key)) {
+    if (shouldRewriteStorageField(record, key)) {
       if (typeof item === 'string' || item === null) {
         const rewritten = rewriteStorageLocation(item);
         next[key] = rewritten;
@@ -259,6 +282,11 @@ const rewritePayloadStorageUrls = (
       } else {
         next[key] = item;
       }
+      continue;
+    }
+
+    if (SKIPPED_TRAVERSAL_FIELDS.has(key)) {
+      next[key] = item;
       continue;
     }
 
@@ -277,7 +305,11 @@ export const createStorageAccessProxy = (
 
   const shouldRewritePath = (requestPath: string): boolean => {
     const pathOnly = requestPath.split('?')[0] ?? requestPath;
-    return pathOnly === cleanApiPath || pathOnly.startsWith(`${cleanApiPath}/`);
+    return STORAGE_PROXY_PATH_PREFIXES.some(
+      (prefix) =>
+        pathOnly === `${cleanApiPath}${prefix}` ||
+        pathOnly.startsWith(`${cleanApiPath}${prefix}/`),
+    );
   };
 
   const rewriteStorageLocation = (

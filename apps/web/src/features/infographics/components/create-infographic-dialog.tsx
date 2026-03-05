@@ -11,6 +11,7 @@ import {
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useCallback, useState, type ReactNode } from 'react';
+import { INFOGRAPHIC_CREATE_HELP } from '@/shared/lib/content-guidance';
 
 const QUICK_START_FORMATS = [
   { value: 'portrait', label: 'Portrait' },
@@ -100,6 +101,9 @@ export function CreateInfographicDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-1">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {INFOGRAPHIC_CREATE_HELP}
+          </p>
           <div className="space-y-2">
             <Label htmlFor="infographic-quick-start-prompt">Prompt</Label>
             <Textarea

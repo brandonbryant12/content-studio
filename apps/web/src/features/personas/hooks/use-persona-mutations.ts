@@ -23,7 +23,6 @@ export function useCreatePersona() {
           params: { personaId: data.id },
         });
 
-        // Fire-and-forget avatar generation
         rawApiClient.personas
           .generateAvatar({ id: data.id })
           .then(() => {
@@ -33,7 +32,7 @@ export function useCreatePersona() {
             toast.success('Avatar generated');
           })
           .catch(() => {
-            // Silent fail — user can retry from detail page
+            // Avatar generation is best-effort; the detail page supports retry.
           });
       },
       onError: (error) => {

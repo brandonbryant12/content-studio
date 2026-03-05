@@ -9,7 +9,6 @@ const PathStartingWithSlash = Schema.String.pipe(
 
 const AuthModeSchema = Schema.Union(
   Schema.Literal('dev-password'),
-  Schema.Literal('hybrid'),
   Schema.Literal('sso-only'),
 );
 
@@ -59,6 +58,5 @@ const runtimeEnv: Record<string, unknown> = {
 
 export const env = Schema.decodeUnknownSync(envSchema)(runtimeEnv);
 
-export const isPasswordAuthEnabled = env.PUBLIC_AUTH_MODE !== 'sso-only';
-export const isMicrosoftSSOAuthEnabled =
-  env.PUBLIC_AUTH_MODE !== 'dev-password';
+export const isPasswordAuthEnabled = env.PUBLIC_AUTH_MODE === 'dev-password';
+export const isMicrosoftSSOAuthEnabled = env.PUBLIC_AUTH_MODE === 'sso-only';

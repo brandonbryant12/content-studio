@@ -126,6 +126,12 @@ describe('PodcastList', () => {
       screen.getByRole('heading', { name: 'Podcasts' }),
     ).toBeInTheDocument();
     expect(
+      screen.getByText(
+        /Podcasts turn your sources into an AI-generated script and audio draft you can review, edit, and regenerate\./,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('How podcasts work')).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /create podcast/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument();
@@ -162,7 +168,9 @@ describe('PodcastList', () => {
 
     expect(screen.getByText('No podcasts yet')).toBeInTheDocument();
     expect(
-      screen.getByText('Create your first podcast to get started.'),
+      screen.getByText(
+        'Create your first podcast from sources, then review and refine the AI draft before publishing.',
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole('button', { name: /create podcast/i }),

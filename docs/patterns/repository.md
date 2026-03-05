@@ -28,7 +28,7 @@ packages/media/src/{domain}/repos/{entity}-repo.methods.ts   # compact variant
 
 ## Canonical Example
 
-> See `packages/media/src/document/repos/document-repo.ts`
+> See `packages/media/src/source/repos/source-repo.ts`
 
 The preferred structure is: **Contract (types + interface + tag) -> Read/Write method modules -> Layer assembly**.
 
@@ -98,7 +98,7 @@ export const EntityRepoLive: Layer.Layer<EntityRepo> =
 
 ### 1. Span Naming in withDb <!-- enforced-by: architecture -->
 
-Format: `{repoName}.{methodName}` -- e.g., `documentRepo.findById`.
+Format: `{repoName}.{methodName}` -- e.g., `sourceRepo.findByIdForUser`.
 
 ### 2. Handle Not Found with Effect.flatMap <!-- enforced-by: types -->
 
@@ -125,7 +125,7 @@ For owner-only resources, repository methods should include `userId` in the quer
 ### 4. Tag Naming Convention <!-- enforced-by: architecture -->
 
 ```typescript
-'@repo/{package}/{EntityRepo}'   // e.g. '@repo/media/DocumentRepo'
+'@repo/{package}/{EntityRepo}'   // e.g. '@repo/media/SourceRepo'
 ```
 
 ### 5. Layer Uses `Layer.succeed` <!-- enforced-by: eslint -->
@@ -209,7 +209,7 @@ const makeService = Effect.gen(function* () {
 
 ### Naming convention
 
-Prepared statement names use the format `{repoName}_{methodName}` (e.g. `documentRepo_findByIdForUser`). The cache key in `prepared()` uses the span name format `{repoName}.{methodName}`.
+Prepared statement names use the format `{repoName}_{methodName}` (e.g. `sourceRepo_findByIdForUser`). The cache key in `prepared()` uses the span name format `{repoName}.{methodName}`.
 
 ### Queries NOT suited for `.prepare()`
 

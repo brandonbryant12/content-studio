@@ -1,123 +1,153 @@
 # Frontend Testing
 
 ```mermaid
-graph TD
+flowchart LR
+  classDef entry fill:#e8f1ff,stroke:#1d4ed8,color:#0f172a,stroke-width:1.5px;
+  classDef runtime fill:#ecfdf3,stroke:#15803d,color:#0f172a,stroke-width:1.5px;
+  classDef async fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:1.5px;
+  classDef store fill:#f5f5f4,stroke:#57534e,color:#0f172a,stroke-width:1.5px;
+  classDef control fill:#fef2f2,stroke:#b91c1c,color:#0f172a,stroke-width:1.5px;
+
   E2E["E2E (Playwright)<br/>Critical user paths"]
-  Component["Component (Vitest + RTL + MSW)<br/>Feature behavior"]
-  Hook["Hook (Vitest)<br/>State logic"]
+  Component["Component / Container<br/>Vitest + RTL"]
+  Hook["Hook tests<br/>Vitest + renderHook"]
+  Harness["Shared harness<br/>render, renderWithQuery, MSW"]
+  Browser["Browser + routed app"]
 
   E2E --> Component --> Hook
+  E2E --> Browser
+  Component --> Harness
+  Hook --> Harness
+
+  class E2E,Component,Hook entry;
+  class Harness runtime;
+  class Browser store;
 ```
 
 ## Golden Principles
 
-1. Test what users see, not implementation details <!-- enforced-by: manual-review -->
-2. One MSW handler file per feature: `__tests__/handlers.ts` <!-- enforced-by: manual-review -->
-3. Use `renderWithQuery` for component tests <!-- enforced-by: manual-review -->
-4. E2E: Page Object Model + `authenticatedTest` fixture <!-- enforced-by: manual-review -->
-5. Selector priority: `getByRole` > `getByText` (scoped to container) <!-- enforced-by: manual-review -->
+1. Test what users see and do, not implementation trivia <!-- enforced-by: manual-review -->
+2. Use `render` for pure UI tests and `renderWithQuery` when Query providers are required <!-- enforced-by: manual-review -->
+3. Use MSW when transport behavior matters; use targeted `vi.mock(...)` when a feature test only needs to isolate hooks or mutations <!-- enforced-by: manual-review -->
+4. E2E uses Page Objects plus `authenticatedTest` for logged-in paths <!-- enforced-by: manual-review -->
+5. Prefer accessible selectors: `getByRole` first, then scoped text selectors <!-- enforced-by: manual-review -->
 
 ## Anti-Bloat Rules
 <!-- enforced-by: manual-review -->
 
-1. Component tests should cover behavior states, not every visual micro-variation.
-2. Prefer one scenario test with multiple meaningful assertions over many single-assertion duplicates.
-3. Remove E2E tests that only exercise list/search chrome already covered by component tests.
-4. Keep E2E focused on critical user outcomes (create, generate, save, delete, auth guardrails).
-5. Do not keep placeholder skipped tests long-term; either implement with assertions or delete.
-6. Replace hard waits (`waitForTimeout`) with explicit visible/state assertions whenever possible.
+1. Cover behavior states, not every visual micro-variation.
+2. Prefer one strong scenario test with multiple meaningful assertions over many one-assertion duplicates.
+3. Keep E2E focused on critical outcomes: auth, create, upload, generate, save, delete.
+4. Remove placeholder skipped tests quickly; either implement them or delete them.
+5. Replace `waitForTimeout` with explicit UI assertions whenever possible.
 
 ## Test Types
 
-| Type | Tool | Scope | Location |
-|------|------|-------|----------|
-| Component | Vitest + RTL + MSW | Single feature | `features/{domain}/__tests__/` |
-| Hook | Vitest + `renderHook` | Hook logic | `features/{domain}/__tests__/` or `shared/hooks/__tests__/` |
-| E2E | Playwright | Full user flow | `apps/web/e2e/tests/` |
+| Type | Tool | Scope | Typical location |
+|------|------|-------|------------------|
+| Presenter / component | Vitest + RTL | Pure rendering and UI events | `features/{domain}/__tests__/` |
+| Container / query-backed component | Vitest + RTL + Query provider | Hooks, query state, mutation wiring | `features/{domain}/__tests__/` or `shared/**/__tests__/` |
+| Hook | Vitest + `renderHook` | Hook logic and local state | `features/{domain}/__tests__/` or `shared/hooks/__tests__/` |
+| E2E | Playwright | Full browser flow | `apps/web/e2e/tests/` |
 
-## Component Tests
+## Component And Container Tests
 
-### Setup
+### Base Setup
 
 ```tsx
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
-import { renderWithQuery, userEvent, server } from '@/test-utils';
-import { handlers } from './handlers';
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderWithQuery, screen, userEvent, waitFor } from '@/test-utils';
 ```
 
-**Reference:** `apps/web/src/test-utils/index.tsx` (renderWithQuery, server, handlers)
+**Reference:** `apps/web/src/test-utils/index.tsx`
 
-### MSW Handlers
+Use:
 
-One handler file per feature. Export an array of handlers and mock data factories.
+- `render(...)` for pure presentational components that do not need Query context
+- `renderWithQuery(...)` for anything using TanStack Query hooks, shared mutation helpers, or components built on query-driven child hooks
+
+### Transport-Level Mocks With MSW
+
+When the test cares about client transport behavior, keep handlers close to the feature:
 
 ```tsx
-// features/documents/__tests__/handlers.ts
+// apps/web/src/features/sources/__tests__/handlers.ts
 import { http, HttpResponse } from 'msw';
 
-export const mockDocument = { id: '1', title: 'Test Doc', ... };
+const API_BASE = '/rpc';
 
-export const handlers = [
-  http.get('/api/documents', () => HttpResponse.json([mockDocument])),
-  http.get('/api/documents/:id', ({ params }) =>
-    HttpResponse.json({ ...mockDocument, id: params.id }),
-  ),
+export const sourceHandlers = [
+  http.post(`${API_BASE}/sources.list`, () => HttpResponse.json(mockSources)),
+  http.post(`${API_BASE}/sources.get`, async ({ request }) => {
+    const body = (await request.json()) as { id?: string };
+    const source = mockSources.find((item) => item.id === body.id);
+    return source
+      ? HttpResponse.json(source)
+      : HttpResponse.json({ error: 'Source not found' }, { status: 404 });
+  }),
 ];
 ```
 
-**Canonical example:** `apps/web/src/features/documents/__tests__/document-list.test.tsx`
+**Canonical handler example:** `apps/web/src/features/sources/__tests__/handlers.ts`
 
-### Test Structure
+### Hook- or Mutation-Mocked Feature Tests
+
+Many current feature tests isolate the UI by mocking `apiClient` adapters or feature hooks directly.
 
 ```tsx
-describe('DocumentList', () => {
-  it('renders document items', async () => {
-    server.use(...handlers);
-    renderWithQuery(<DocumentList />);
-
-    expect(await screen.findByText('Test Doc')).toBeInTheDocument();
+describe('AddSourceDialog', () => {
+  beforeEach(() => {
+    mockUseSources.mockReturnValue({ data: [], isLoading: false });
+    mockFromUrlMutationFn.mockResolvedValue({
+      id: 'url-src-2',
+      title: 'URL Source',
+      mimeType: 'text/html',
+      wordCount: 220,
+    });
   });
 
-  it('shows empty state when no documents', async () => {
-    server.use(http.get('/api/documents', () => HttpResponse.json([])));
-    renderWithQuery(<DocumentList />);
+  it('adds a source from URL and closes the dialog', async () => {
+    const user = userEvent.setup();
+    renderWithQuery(
+      <AddSourceDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        currentSourceIds={[]}
+        onAddSources={onAddSources}
+      />,
+    );
 
-    expect(await screen.findByText(/no documents/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'From URL' }));
+    await user.type(screen.getByLabelText('URL'), 'https://example.com/news');
+    await user.click(screen.getByRole('button', { name: 'Add URL' }));
+
+    await waitFor(() => expect(mockFromUrlMutationFn).toHaveBeenCalled());
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 });
 ```
 
-## Test Checklist by Component Type
+**Canonical example:** `apps/web/src/shared/components/source-manager/__tests__/add-source-dialog.test.tsx`
 
-| Component Type | Required Tests |
+## Test Checklist By Component Type
+
+| Component type | Required tests |
 |---|---|
-| **List** | Renders items, empty state, loading state, error state |
-| **Form** | Valid submit calls mutation, validation errors display, submit disabled while submitting, error toast on failure |
-| **Detail** | Displays data fields, loading state, not-found handling |
-| **Hook** | Initializes with defaults, updates state on actions, tracks dirty state, resets after save |
-| **Dialog/Modal** | Opens on trigger, closes on cancel, submits and closes on confirm |
+| List | Renders items, empty state, search/no-results state, key actions |
+| Form / dialog | Valid submit path, validation feedback, pending state, failure handling |
+| Detail container | Correct derived props, loading / missing content branches, destructive actions |
+| Hook | Default state, state transitions, dirty tracking, reset behavior |
+| Shared async wrapper | Error boundary behavior, retry wiring, suspense fallback behavior |
 
 ## Hook Tests
 
 ```tsx
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 describe('useScriptEditor', () => {
-  it('initializes with provided segments', () => {
-    const { result } = renderHook(() =>
-      useScriptEditor({ podcastId: '1', initialSegments: mockSegments }),
-    );
-    expect(result.current.segments).toEqual(mockSegments);
-  });
-
   it('tracks changes after edit', () => {
     const { result } = renderHook(() =>
-      useScriptEditor({ podcastId: '1', initialSegments: mockSegments }),
+      useScriptEditor({ podcastId: 'pod_1', initialSegments: mockSegments }),
     );
 
     act(() => result.current.updateSegment(0, 'New text'));
@@ -133,83 +163,85 @@ describe('useScriptEditor', () => {
 
 ### Fixtures
 
-Use `authenticatedTest` for tests requiring login. Page objects encapsulate selectors.
-
-**Reference:** `apps/web/e2e/fixtures/index.ts`
+Use `authenticatedTest` for flows that require login.
 
 ```tsx
 import { authenticatedTest, expect } from '../../fixtures';
 
-authenticatedTest('creates a podcast', async ({ podcastsPage }) => {
-  await podcastsPage.goto();
-  await podcastsPage.clickCreate();
-  await podcastsPage.fillTitle('My Podcast');
-  await podcastsPage.submit();
+authenticatedTest('uploads a source', async ({ sourcesPage }) => {
+  await sourcesPage.goto();
+  await sourcesPage.expectVisible();
+  await sourcesPage.uploadFile('fixtures/source.txt');
 
-  await expect(podcastsPage.successMessage).toBeVisible();
+  await expect(sourcesPage.getUploadDialog()).toBeHidden();
 });
 ```
 
+**Reference:** `apps/web/e2e/fixtures/index.ts`
+
 ### Page Object Model
 
-Each page gets a Page Object in `apps/web/e2e/pages/`.
+Each major route gets a Page Object under `apps/web/e2e/pages/`.
 
 ```tsx
-// e2e/pages/documents.page.ts
-export class DocumentsPage extends BasePage {
-  readonly heading = this.page.getByRole('heading', { name: 'Documents', level: 1 });
+// apps/web/e2e/pages/sources.page.ts
+export class SourcesPage extends BasePage {
   readonly uploadButton = this.page.getByRole('button', { name: /upload/i });
-  readonly documentList = this.page.getByRole('list', { name: /documents/i });
+  readonly searchInput = this.page.getByPlaceholder(/search/i);
 
   async goto() {
-    await this.page.goto('/documents');
-    await this.heading.waitFor();
+    await this.page.goto('/sources');
+    await this.waitForLoading();
+  }
+
+  async expectVisible() {
+    await expect(
+      this.page.getByRole('heading', { name: 'Sources', level: 1 }),
+    ).toBeVisible();
   }
 }
 ```
 
-**Canonical example:** `apps/web/e2e/pages/documents.page.ts`
+**Canonical page object:** `apps/web/e2e/pages/sources.page.ts`
 
 ### Selector Best Practices
 
 | Priority | Selector | When |
 |----------|---------|------|
 | 1 | `getByRole('button', { name: /save/i })` | Interactive elements |
-| 2 | `getByRole('heading', { name: /title/, level: 2 })` | Headings (always include level) |
-| 3 | `getByText(/content/i)` scoped to container | Static text within a region |
-| 4 | `getByTestId('loading-spinner')` | No accessible role available |
+| 2 | `getByRole('heading', { name: /sources/i, level: 1 })` | Headings |
+| 3 | Scoped `getByText(...)` | Static text inside a known region |
+| 4 | `getByTestId(...)` | No better accessible selector exists |
 
-Scope selectors to containers to avoid ambiguity:
+Scope selectors to a container when repeated UI exists on the page.
 
-```tsx
-const card = page.getByRole('article').filter({ hasText: 'My Podcast' });
-await card.getByRole('button', { name: /edit/i }).click();
-```
-
-### E2E Test Organization
+## E2E Test Organization
 
 ```
 apps/web/e2e/
-  fixtures/index.ts         # authenticatedTest, test, expect
-  pages/                    # Page Objects
+  fixtures/index.ts
+  pages/
     base.page.ts
-    documents.page.ts
+    dashboard.page.ts
+    login.page.ts
     podcasts.page.ts
-  tests/                    # Test specs by domain
-    documents/
-      list.spec.ts
-      upload.spec.ts
+    register.page.ts
+    sources.page.ts
+    voiceovers.page.ts
+  tests/
+    auth/
+    dashboard/
     podcasts/
-      create.spec.ts
-      workbench.spec.ts
-  utils/api.ts              # Direct API helper for test setup
+    sources/
+    voiceovers/
+  utils/api.ts
 ```
 
 ## Rules
 
-- Vitest runs frontend tests via `pnpm test` (included in workspace) <!-- enforced-by: architecture -->
-- Never use Jest or ts-jest -- Vitest only <!-- enforced-by: architecture -->
-- No `waitForNextUpdate` -- use `waitFor` or `findBy*` <!-- enforced-by: manual-review -->
-- Prefer `userEvent` over `fireEvent` for realistic interactions <!-- enforced-by: manual-review -->
-- E2E tests must not depend on specific database state -- use API helper to seed <!-- enforced-by: manual-review -->
-- Fake timers and async iterators do not mix well -- prefer real timers with short delays for SSE tests <!-- enforced-by: manual-review -->
+- Frontend Vitest projects are included in `pnpm test` <!-- enforced-by: architecture -->
+- Never add Jest or ts-jest <!-- enforced-by: architecture -->
+- Prefer `userEvent` over `fireEvent` <!-- enforced-by: manual-review -->
+- Do not use `waitForNextUpdate`; use `findBy*`, `waitFor`, or explicit UI assertions <!-- enforced-by: manual-review -->
+- E2E tests should seed or manipulate data through helpers, not assume existing database state <!-- enforced-by: manual-review -->
+- Use MSW when you want to exercise transport behavior; use `vi.mock(...)` when the transport layer is not the point of the test <!-- enforced-by: manual-review -->

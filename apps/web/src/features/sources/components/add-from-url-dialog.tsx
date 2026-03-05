@@ -12,6 +12,10 @@ import { Label } from '@repo/ui/components/label';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback, useMemo } from 'react';
 import { getRandomUrlSourceSuggestions } from '../lib/url-source-suggestions';
+import {
+  SOURCE_URL_DIALOG_DESCRIPTION,
+  SOURCE_URL_DIALOG_HELP,
+} from '@/shared/lib/source-guidance';
 
 interface AddFromUrlDialogProps {
   open: boolean;
@@ -59,14 +63,14 @@ export function AddFromUrlDialog({
             <GlobeIcon className="w-5 h-5" />
             Add from URL
           </DialogTitle>
-          <DialogDescription>
-            Enter a URL to scrape content from a web page. The content will be
-            extracted and stored in your knowledge base.
-          </DialogDescription>
+          <DialogDescription>{SOURCE_URL_DIALOG_DESCRIPTION}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="url">URL</Label>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {SOURCE_URL_DIALOG_HELP}
+            </p>
             <Input
               id="url"
               type="url"

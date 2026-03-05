@@ -1,9 +1,9 @@
+import { useNavigate } from '@tanstack/react-router';
 import { useState, useCallback } from 'react';
 import {
   usePersonaList,
   getPersonaListQueryKey,
 } from '../hooks/use-persona-list';
-import { PersonaChatContainer } from './persona-chat-container';
 import { PersonaList } from './persona-list';
 import { apiClient } from '@/clients/apiClient';
 import {
@@ -16,7 +16,7 @@ const deleteFn = apiClient.personas.delete.mutationOptions().mutationFn!;
 
 export function PersonaListContainer() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [chatOpen, setChatOpen] = useState(false);
+  const navigate = useNavigate();
 
   const {
     data: personas = [],
@@ -32,7 +32,9 @@ export function PersonaListContainer() {
     entityName: 'persona',
   });
 
-  const handleCreate = useCallback(() => setChatOpen(true), []);
+  const handleCreate = useCallback(() => {
+    navigate({ to: '/personas/new' });
+  }, [navigate]);
 
   const handleBulkDelete = useCallback(async () => {
     await executeBulkDelete(selection.selectedIds);
@@ -61,18 +63,15 @@ export function PersonaListContainer() {
   }
 
   return (
-    <>
-      <PersonaList
-        personas={personas}
-        searchQuery={searchQuery}
-        isCreating={false}
-        onSearch={setSearchQuery}
-        onCreate={handleCreate}
-        selection={selection}
-        isBulkDeleting={isBulkDeleting}
-        onBulkDelete={handleBulkDelete}
-      />
-      <PersonaChatContainer open={chatOpen} onOpenChange={setChatOpen} />
-    </>
+    <PersonaList
+      personas={personas}
+      searchQuery={searchQuery}
+      isCreating={false}
+      onSearch={setSearchQuery}
+      onCreate={handleCreate}
+      selection={selection}
+      isBulkDeleting={isBulkDeleting}
+      onBulkDelete={handleBulkDelete}
+    />
   );
 }

@@ -31,9 +31,9 @@ This master spec is assembled from:
 <!-- BEGIN GENERATED:snapshot-metadata -->
 # Snapshot Metadata (Generated)
 
-- Generated at: 2026-02-22T19:36:33.788Z
+- Generated at: 2026-03-05T21:24:00.955Z
 - Git branch: main
-- Git commit: 3af1a31
+- Git commit: ab071fc4
 
 ## Inventory
 
@@ -44,15 +44,15 @@ This master spec is assembled from:
 - Database tables: 13
 - Database enums: 9
 - UI routes: 15
-- UI feature modules: 6
+- UI feature modules: 7
 
 ## Generated Files
 
 - `docs/spec/generated/openapi.json`
-- [`docs/spec/generated/api-surface.md`](./spec/generated/api-surface.md)
-- [`docs/spec/generated/domain-surface.md`](./spec/generated/domain-surface.md)
-- [`docs/spec/generated/data-model.md`](./spec/generated/data-model.md)
-- [`docs/spec/generated/ui-surface.md`](./spec/generated/ui-surface.md)
+- `docs/spec/generated/api-surface.md`
+- `docs/spec/generated/domain-surface.md`
+- `docs/spec/generated/data-model.md`
+- `docs/spec/generated/ui-surface.md`
 <!-- END GENERATED:snapshot-metadata -->
 
 ## API Contract Surface
@@ -60,7 +60,7 @@ This master spec is assembled from:
 # API Contract Surface (Generated)
 
 - Endpoints: 59
-- Tags: admin, chat, document, events, infographic, persona, podcast, voiceover, voices
+- Tags: admin, chat, events, infographic, persona, podcast, source, voiceover, voices
 
 | Method | Path | Operation ID | Tags | Streaming | Summary |
 |---|---|---|---|---|---|
@@ -71,16 +71,6 @@ This master spec is assembled from:
 | POST | /chat/synthesize-persona | chat.synthesizePersona | chat | no |  |
 | POST | /chat/synthesize-research-query | chat.synthesizeResearchQuery | chat | no |  |
 | POST | /chat/writing-assistant | chat.writingAssistant | chat | yes |  |
-| GET | /documents/ | documents.list | document | no | List documents |
-| POST | /documents/ | documents.create | document | no | Create document |
-| GET | /documents/{id} | documents.get | document | no | Get document |
-| PATCH | /documents/{id} | documents.update | document | no | Update document |
-| DELETE | /documents/{id} | documents.delete | document | no | Delete document |
-| GET | /documents/{id}/content | documents.getContent | document | no | Get document content |
-| POST | /documents/{id}/retry | documents.retry | document | no | Retry processing |
-| POST | /documents/from-research | documents.fromResearch | document | no | Create from research |
-| POST | /documents/from-url | documents.fromUrl | document | no | Create from URL |
-| POST | /documents/upload | documents.upload | document | no | Upload document |
 | GET | /events/ | events.subscribe | events | yes |  |
 | GET | /infographics/ | infographics.list | infographic | no | List infographics |
 | POST | /infographics/ | infographics.create | infographic | no | Create infographic |
@@ -112,6 +102,16 @@ This master spec is assembled from:
 | POST | /podcasts/{id}/save-changes | podcasts.saveChanges | podcast | no | Save changes and regenerate audio |
 | GET | /podcasts/{id}/script | podcasts.getScript | podcast | no | Get script |
 | GET | /podcasts/jobs/{jobId} | podcasts.getJob | podcast | no | Get job status |
+| GET | /sources/ | sources.list | source | no | List sources |
+| POST | /sources/ | sources.create | source | no | Create source |
+| GET | /sources/{id} | sources.get | source | no | Get source |
+| PATCH | /sources/{id} | sources.update | source | no | Update source |
+| DELETE | /sources/{id} | sources.delete | source | no | Delete source |
+| GET | /sources/{id}/content | sources.getContent | source | no | Get source content |
+| POST | /sources/{id}/retry | sources.retry | source | no | Retry processing |
+| POST | /sources/from-research | sources.fromResearch | source | no | Create from research |
+| POST | /sources/from-url | sources.fromUrl | source | no | Create from URL |
+| POST | /sources/upload | sources.upload | source | no | Upload source |
 | GET | /voiceovers/ | voiceovers.list | voiceover | no | List voiceovers |
 | POST | /voiceovers/ | voiceovers.create | voiceover | no | Create voiceover |
 | GET | /voiceovers/{id} | voiceovers.get | voiceover | no | Get voiceover |
@@ -134,29 +134,13 @@ This master spec is assembled from:
 
 | Domain | Use Cases | API Endpoints |
 |---|---|---|
-| document | 13 | 10 |
 | infographic | 14 | 13 |
 | persona | 6 | 6 |
 | podcast | 14 | 11 |
+| source | 13 | 10 |
 | voiceover | 10 | 9 |
 
 ## Use Cases by Domain
-
-### document
-
-- `await-documents-ready`
-- `create-document`
-- `create-from-research`
-- `create-from-url`
-- `delete-document`
-- `get-document`
-- `get-document-content`
-- `list-documents`
-- `process-research`
-- `process-url`
-- `retry-processing`
-- `update-document`
-- `upload-document`
 
 ### infographic
 
@@ -201,6 +185,22 @@ This master spec is assembled from:
 - `start-generation`
 - `update-podcast`
 
+### source
+
+- `await-sources-ready`
+- `create-from-research`
+- `create-from-url`
+- `create-source`
+- `delete-source`
+- `get-source`
+- `get-source-content`
+- `list-sources`
+- `process-research`
+- `process-url`
+- `retry-processing`
+- `update-source`
+- `upload-source`
+
 ### voiceover
 
 - `approve-voiceover`
@@ -228,7 +228,6 @@ This master spec is assembled from:
 |---|---|---|
 | account | `account` | `packages/db/src/schemas/auth.ts` |
 | activity_log | `activityLog` | `packages/db/src/schemas/activity-log.ts` |
-| document | `document` | `packages/db/src/schemas/documents.ts` |
 | infographic | `infographic` | `packages/db/src/schemas/infographics.ts` |
 | infographic_style_preset | `infographicStylePreset` | `packages/db/src/schemas/style-presets.ts` |
 | infographic_version | `infographicVersion` | `packages/db/src/schemas/infographics.ts` |
@@ -236,6 +235,7 @@ This master spec is assembled from:
 | persona | `persona` | `packages/db/src/schemas/personas.ts` |
 | podcast | `podcast` | `packages/db/src/schemas/podcasts.ts` |
 | session | `session` | `packages/db/src/schemas/auth.ts` |
+| source | `source` | `packages/db/src/schemas/sources.ts` |
 | user | `user` | `packages/db/src/schemas/auth.ts` |
 | verification | `verification` | `packages/db/src/schemas/auth.ts` |
 | voiceover | `voiceover` | `packages/db/src/schemas/voiceovers.ts` |
@@ -244,13 +244,13 @@ This master spec is assembled from:
 
 | Enum | Symbol | Values | Source |
 |---|---|---|---|
-| content_type | `contentTypeEnum` | document, podcast, video, article, social, graphic | `packages/db/src/schemas/media-types.ts` |
-| document_source | `documentSourceEnum` | manual, upload_txt, upload_pdf, upload_docx, upload_pptx, url, research | `packages/db/src/schemas/documents.ts` |
-| document_status | `documentStatusEnum` | ready, processing, failed | `packages/db/src/schemas/documents.ts` |
+| content_type | `contentTypeEnum` | source, podcast, video, article, social, graphic | `packages/db/src/schemas/media-types.ts` |
 | infographic_format | `infographicFormatEnum` | portrait, square, landscape, og_card | `packages/db/src/schemas/infographics.ts` |
 | infographic_status | `infographicStatusEnum` | draft, generating, ready, failed | `packages/db/src/schemas/infographics.ts` |
 | job_status | `jobStatusEnum` | pending, processing, completed, failed | `packages/db/src/schemas/jobs.ts` |
 | podcast_format | `podcastFormatEnum` | voice_over, conversation | `packages/db/src/schemas/podcasts.ts` |
+| source_origin | `sourceOriginEnum` | manual, upload_txt, upload_pdf, upload_docx, upload_pptx, url, research | `packages/db/src/schemas/sources.ts` |
+| source_status | `sourceStatusEnum` | ready, processing, failed | `packages/db/src/schemas/sources.ts` |
 | version_status | `versionStatusEnum` | drafting, generating_script, script_ready, generating_audio, ready, failed | `packages/db/src/schemas/podcasts.ts` |
 | voiceover_status | `voiceoverStatusEnum` | drafting, generating_audio, ready, failed | `packages/db/src/schemas/voiceovers.ts` |
 <!-- END GENERATED:data-model -->
@@ -260,7 +260,7 @@ This master spec is assembled from:
 # UI Surface (Generated)
 
 - Routes: 15
-- Feature modules: 6
+- Feature modules: 7
 
 ## Routes
 
@@ -269,8 +269,6 @@ This master spec is assembled from:
 | / | public |
 | /admin/activity | protected |
 | /dashboard | protected |
-| /documents/ | protected |
-| /documents/$documentId | protected |
 | /infographics/ | protected |
 | /infographics/$infographicId | protected |
 | /login | public |
@@ -279,16 +277,19 @@ This master spec is assembled from:
 | /podcasts/ | protected |
 | /podcasts/$podcastId | protected |
 | /register | public |
+| /sources/ | protected |
+| /sources/$sourceId | protected |
 | /voiceovers/ | protected |
 | /voiceovers/$voiceoverId | protected |
 
 ## Feature Modules
 
 - `admin`
-- `documents`
+- `dashboard`
 - `infographics`
 - `personas`
 - `podcasts`
+- `sources`
 - `voiceovers`
 <!-- END GENERATED:ui-surface -->
 

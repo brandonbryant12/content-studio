@@ -12,6 +12,12 @@ import { useSources, getSourceListQueryKey } from '@/features/sources/hooks';
 import { BaseDialog } from '@/shared/components/base-dialog';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { fileToBase64 } from '@/shared/lib/file-base64';
+import {
+  SOURCE_IMPORT_OPTIONS,
+  SOURCE_MANAGER_DIALOG_DESCRIPTION,
+  SOURCE_MANAGER_DIALOG_HELP,
+  SOURCE_URL_DIALOG_HELP,
+} from '@/shared/lib/source-guidance';
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -126,7 +132,7 @@ export function AddSourceDialog({
         else onOpenChange(isOpen);
       }}
       title="Add Sources"
-      description="Select existing sources, upload new ones, or add from a URL."
+      description={SOURCE_MANAGER_DIALOG_DESCRIPTION}
       maxWidth="lg"
       scrollable
       footer={
@@ -141,6 +147,30 @@ export function AddSourceDialog({
           : undefined
       }
     >
+      <div className="mb-4 rounded-xl border border-emerald-200/60 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+        <p className="text-sm font-semibold text-foreground">
+          Why this matters
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          {SOURCE_MANAGER_DIALOG_HELP}
+        </p>
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          {SOURCE_IMPORT_OPTIONS.map((option) => (
+            <div
+              key={option.title}
+              className="rounded-lg border border-emerald-200/50 bg-background/80 p-3 dark:border-emerald-500/10 dark:bg-background/40"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {option.title}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {option.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="setup-tabs" role="tablist">
         <button
           type="button"
@@ -196,6 +226,9 @@ export function AddSourceDialog({
             <label htmlFor="dialog-source-url" className="setup-label">
               URL
             </label>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {SOURCE_URL_DIALOG_HELP}
+            </p>
             <input
               id="dialog-source-url"
               type="url"

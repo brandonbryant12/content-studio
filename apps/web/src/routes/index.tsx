@@ -12,6 +12,7 @@ import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
 import { APP_NAME } from '@/constants';
+import { isPasswordAuthEnabled } from '@/env';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -47,6 +48,8 @@ function WaveformBars() {
 
 function RouteComponent() {
   const { data: session } = authClient.useSession();
+  const primaryCtaPath = isPasswordAuthEnabled ? '/register' : '/login';
+  const primaryCtaLabel = isPasswordAuthEnabled ? 'Get started' : 'Sign in';
 
   useEffect(() => {
     document.title = 'Content Studio';
@@ -103,14 +106,16 @@ function RouteComponent() {
               size="lg"
               className="gap-2 shadow-lg shadow-primary/20"
             >
-              <Link to="/register">
-                Get started
+              <Link to={primaryCtaPath}>
+                {primaryCtaLabel}
                 <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/login">Sign in</Link>
-            </Button>
+            {isPasswordAuthEnabled ? (
+              <Button asChild variant="outline" size="lg">
+                <Link to="/login">Sign in</Link>
+              </Button>
+            ) : null}
           </div>
         </div>
       </section>
@@ -194,7 +199,7 @@ function RouteComponent() {
               icon: MixerHorizontalIcon,
               label: 'Podcasts',
               headline: 'Generate a podcast episode from a single source',
-              desc: 'Select your sources, choose conversation or monologue format, assign personas with distinct voices, then review and edit every line of the script before generating audio.',
+              desc: 'Select your sources, choose conversation or monologue format, assign reusable personas so each episode keeps the same host perspective and voice, then review and edit every line of the script before generating audio.',
               image: '/screenshots/podcasts.png',
               color: 'text-violet-400',
               iconBg: 'bg-violet-500/10',

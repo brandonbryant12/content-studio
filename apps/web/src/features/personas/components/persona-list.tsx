@@ -1,4 +1,8 @@
-import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  InfoCircledIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
@@ -8,6 +12,12 @@ import type { RouterOutput } from '@repo/api/client';
 import { PersonaCard } from './persona-card';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
+import {
+  PERSONA_ASSIGNMENT_HELP,
+  PERSONA_DEFINITION,
+  PERSONA_LIST_SUPPORT,
+  PERSONA_USE_CASES,
+} from '@/shared/lib/persona-guidance';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
 
@@ -37,8 +47,8 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
       </div>
       <h2 className="empty-state-title">No personas yet</h2>
       <p className="empty-state-description">
-        Create your first persona to give your content a unique voice and
-        personality.
+        Create a reusable host persona for recurring podcasts, audience-specific
+        explainers, or a client voice you want to use more than once.
       </p>
       <Button onClick={onCreateClick} disabled={isCreating}>
         {isCreating ? (
@@ -134,6 +144,9 @@ export function PersonaList({
         <div>
           <p className="page-eyebrow">Personas</p>
           <h1 className="page-title">Personas</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {PERSONA_DEFINITION} {PERSONA_LIST_SUPPORT}
+          </p>
         </div>
         <Button onClick={onCreate} disabled={isCreating}>
           {isCreating ? (
@@ -148,6 +161,37 @@ export function PersonaList({
             </>
           )}
         </Button>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-sky-200/60 bg-sky-50/80 p-5 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-600 dark:text-sky-300">
+            <InfoCircledIcon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">
+              What personas do
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              {PERSONA_ASSIGNMENT_HELP}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {PERSONA_USE_CASES.map((useCase) => (
+            <div
+              key={useCase.title}
+              className="rounded-xl border border-sky-200/50 bg-background/80 p-4 dark:border-sky-500/10 dark:bg-background/40"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {useCase.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {useCase.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Search */}

@@ -1,7 +1,23 @@
 # Testing Overview
 
+## Diagram Legend
+
+| Color | Meaning |
+|---|---|
+| Blue | Test entry point |
+| Green | Shared harness or runtime under test |
+| Amber | Async workflow path |
+| Gray | External environment or stateful dependency |
+| Red | Guardrail or invariant layer |
+
 ```mermaid
-graph TD
+flowchart LR
+  classDef entry fill:#e8f1ff,stroke:#1d4ed8,color:#0f172a,stroke-width:1.5px;
+  classDef runtime fill:#ecfdf3,stroke:#15803d,color:#0f172a,stroke-width:1.5px;
+  classDef async fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:1.5px;
+  classDef store fill:#f5f5f4,stroke:#57534e,color:#0f172a,stroke-width:1.5px;
+  classDef control fill:#fef2f2,stroke:#b91c1c,color:#0f172a,stroke-width:1.5px;
+
   subgraph Unit[Unit Tests]
     UC[Use Case Tests] --> MockRepo[Mock Repos + Layers]
   end
@@ -29,6 +45,12 @@ graph TD
   subgraph E2E[E2E Tests]
     PW[Playwright] --> Browser[Browser + Dev Server]
   end
+
+  class UC,Handler,API,AST,Component,Hook,PW entry;
+  class MockRepo,EffectRuntime,RTL runtime;
+  class Queue,Worker async;
+  class DB,Browser store;
+  class SafetyRules,ErrorMap control;
 ```
 
 ## Pattern-to-Test Matrix

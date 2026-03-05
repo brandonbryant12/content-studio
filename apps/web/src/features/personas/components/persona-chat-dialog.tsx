@@ -19,20 +19,24 @@ import {
   CHAT_INPUT_MAX_LENGTH,
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
+import {
+  PERSONA_CHAT_DESCRIPTION,
+  PERSONA_CHAT_PROMPT_INTRO,
+} from '@/shared/lib/persona-guidance';
 
 const EXAMPLE_PROMPTS = [
-  'A witty science communicator',
-  'A no-nonsense tech analyst',
-  'A warm storytelling host',
-  'A sarcastic historian who makes the past feel personal',
-  'A calm mindfulness coach with a poetic edge',
-  'A high-energy sports commentator turned business analyst',
-  'A retired astronaut who explains complex ideas simply',
-  'A street-smart entrepreneur with zero filter',
-  'A philosophical comedian who finds humor in big questions',
-  'A Gen-Z culture critic with deep media literacy',
-  'A grandmotherly figure who gives tough-love career advice',
-  'A cybersecurity expert who speaks in metaphors',
+  'A weekly cybersecurity host for IT leaders who explains threats without jargon',
+  'A client-specific manufacturing advisor focused on safety, uptime, and frontline credibility',
+  'A warm storytelling host for nonprofit donor updates',
+  'A no-nonsense CFO guide for SaaS founders',
+  'A sharp healthcare policy analyst for hospital executives',
+  'A calm HR leader helping managers navigate hard conversations',
+  'A practical retail operator translating data into store-level action',
+  'A founder-friendly legal explainer who reduces compliance anxiety',
+  'A community bank voice that speaks plainly to small business owners',
+  'A franchise growth coach obsessed with consistency and margin',
+  'A sustainability lead balancing operational realism with ambition',
+  'A procurement expert who thinks in risk, leverage, and supplier trust',
 ];
 
 function pickRandom<T>(items: T[], count: number): T[] {
@@ -55,6 +59,14 @@ interface PersonaChatDialogProps {
   followUpCount: number;
   followUpLimit: number;
   onKeepRefining: () => void;
+  title?: string;
+  description?: string;
+  promptIntro?: string;
+  confirmActionLabel?: string;
+  pendingActionLabel?: string;
+  errorMessage?: string;
+  followUpPlaceholder?: string;
+  initialPlaceholder?: string;
 }
 
 export function PersonaChatDialog({
@@ -72,6 +84,14 @@ export function PersonaChatDialog({
   followUpCount,
   followUpLimit,
   onKeepRefining,
+  title = 'Create Persona',
+  description = PERSONA_CHAT_DESCRIPTION,
+  promptIntro = PERSONA_CHAT_PROMPT_INTRO,
+  confirmActionLabel = 'Create Persona',
+  pendingActionLabel = 'Creating persona...',
+  errorMessage = 'Failed to create persona. Please try again.',
+  followUpPlaceholder = 'Add more details or click Create Persona...',
+  initialPlaceholder = 'Describe your persona idea...',
 }: PersonaChatDialogProps) {
   const suggestions = useMemo(() => pickRandom(EXAMPLE_PROMPTS, 3), []);
   const isInputDisabled = isStreaming || isCreatingPersona;
@@ -93,7 +113,7 @@ export function PersonaChatDialog({
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <PersonIcon className="w-5 h-5" />
-            Create Persona
+            {title}
             {followUpCount > 0 && !autoCreateReady && (
               <ChatProgressBadge
                 current={followUpCount}
@@ -101,10 +121,7 @@ export function PersonaChatDialog({
               />
             )}
           </DialogTitle>
-          <DialogDescription>
-            Describe your persona and I&apos;ll help define their character,
-            voice, and style.
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <ChatThread
@@ -114,9 +131,7 @@ export function PersonaChatDialog({
           className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0"
           emptyState={
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                What kind of persona would you like to create? Try one of these:
-              </p>
+              <p className="text-sm text-muted-foreground">{promptIntro}</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.map((prompt) => (
                   <button
@@ -137,9 +152,9 @@ export function PersonaChatDialog({
           <div className="border-t px-6 py-3">
             {autoCreateReady ? (
               <ChatAutoTriggerConfirmation
-                actionLabel="Create Persona"
+                actionLabel={confirmActionLabel}
                 isPending={isCreatingPersona}
-                pendingLabel="Creating persona..."
+                pendingLabel={pendingActionLabel}
                 error={createError}
                 onConfirm={onCreatePersona}
                 onKeepRefining={onKeepRefining}
@@ -148,7 +163,7 @@ export function PersonaChatDialog({
               <div className="space-y-2">
                 {createError && (
                   <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-center">
-                    Failed to create persona. Please try again.
+                    {errorMessage}
                   </p>
                 )}
                 <Button
@@ -159,12 +174,12 @@ export function PersonaChatDialog({
                   {isCreatingPersona ? (
                     <>
                       <Spinner className="w-4 h-4 mr-2" />
-                      Creating persona...
+                      {pendingActionLabel}
                     </>
                   ) : createError ? (
                     'Retry'
                   ) : (
-                    'Create Persona'
+                    confirmActionLabel
                   )}
                 </Button>
               </div>
@@ -181,9 +196,7 @@ export function PersonaChatDialog({
             onChange={(e) => composer.setInput(e.target.value)}
             onKeyDown={composer.handleInputKeyDown}
             placeholder={
-              canCreatePersona
-                ? 'Add more details or click Create Persona...'
-                : 'Describe your persona idea...'
+              canCreatePersona ? followUpPlaceholder : initialPlaceholder
             }
             disabled={isInputDisabled}
             maxLength={CHAT_INPUT_MAX_LENGTH}

@@ -24,7 +24,7 @@ Required for all agent-authored backend changes.
 | No direct `queue.getJob(...)` in use cases | Bypassing ownership checks |
 | No direct `queue.enqueue(...)` in use cases | Bypassing transactional state+enqueue |
 | `get-job` use cases must use `getOwnedJobOrNotFound(...)` | Unauthorized job access |
-| `update-document` must use `replaceTextContentSafely(...)` | Unsafe text content mutation |
+| `update-source` must use `replaceTextContentSafely(...)` | Unsafe text content mutation |
 | State-change + enqueue use cases must use `withTransactionalStateAndEnqueue(...)` | Non-atomic state transitions |
 
 ### API Chat Handler Invariants
@@ -66,7 +66,7 @@ Required for all agent-authored backend changes.
 | Rule | What It Prevents |
 |---|---|
 | `schema-validation` remains matrix-driven (`idSchemaCases` / `contractCases`) | Per-route UUID/brand assertion duplication and test bloat regrowth |
-| Caps `it(...)` count and forbids per-route `describe('documents.*')` style blocks | Re-expansion to one test block per endpoint for equivalent boundary checks |
+| Caps `it(...)` count and forbids per-route `describe('sources.*')` style blocks | Re-expansion to one test block per endpoint for equivalent boundary checks |
 
 ### Router Integration Bloat Invariants
 <!-- enforced-by: invariant-test -->
@@ -75,7 +75,7 @@ Required for all agent-authored backend changes.
 
 | Rule | What It Prevents |
 |---|---|
-| Requires one shared unauthorized test per high-risk router suite (`document`, `podcast`, `voiceover`) | Reintroduction of repeated per-handler unauthorized tests |
+| Requires one shared unauthorized test per high-risk router suite (`source`, `podcast`, `voiceover`) | Reintroduction of repeated per-handler unauthorized tests |
 | Forbids `returns UNAUTHORIZED when user is null` pattern in those suites | Legacy copy-paste auth duplication across handlers |
 | Caps `it(...)` count per high-risk router suite with headroom | Unbounded integration test growth and verbose redundancy |
 

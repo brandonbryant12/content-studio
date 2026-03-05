@@ -1,6 +1,10 @@
 // Presenter: Pure UI component with no data fetching or state management
 
-import { MagnifyingGlassIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  InfoCircledIcon,
+  MagnifyingGlassIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { Checkbox } from '@repo/ui/components/checkbox';
@@ -17,6 +21,12 @@ import { SourceIcon } from './source-icon';
 import { UploadSourceDialog } from './upload-source-dialog';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
+import {
+  SOURCE_ASSIGNMENT_HELP,
+  SOURCE_DEFINITION,
+  SOURCE_IMPORT_OPTIONS,
+  SOURCE_LIST_SUPPORT,
+} from '@/shared/lib/source-guidance';
 
 function StatusBadge({ status }: { status: string }) {
   if (status === SourceStatus.READY) return null;
@@ -63,7 +73,7 @@ function EmptyState({
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Upload your first source to start creating podcasts, voiceovers, and infographics.'}
+          : 'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.'}
       </p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -216,6 +226,9 @@ export function SourceList({
         <div>
           <p className="page-eyebrow">Sources</p>
           <h1 className="page-title">Sources</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {SOURCE_DEFINITION} {SOURCE_LIST_SUPPORT}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <SourceEntryMenu
@@ -223,6 +236,37 @@ export function SourceList({
             onUrl={() => onUrlDialogOpen(true)}
             onUpload={() => onUploadOpen(true)}
           />
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-300">
+            <InfoCircledIcon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">
+              What sources do
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              {SOURCE_ASSIGNMENT_HELP}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {SOURCE_IMPORT_OPTIONS.map((option) => (
+            <div
+              key={option.title}
+              className="rounded-xl border border-emerald-200/50 bg-background/80 p-4 dark:border-emerald-500/10 dark:bg-background/40"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {option.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {option.description}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

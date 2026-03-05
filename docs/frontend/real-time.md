@@ -70,6 +70,9 @@ for await (const event of iterator) {
     case 'job_completion':
       handleJobCompletion(event, queryClient);
       break;
+    case 'source_job_completion':
+      handleSourceJobCompletion(event, queryClient);
+      break;
     case 'entity_change':
       handleEntityChange(event, queryClient);
       break;
@@ -86,7 +89,7 @@ for await (const event of iterator) {
 | `job_completion` | `{ jobId, jobType, status, podcastId }` | Invalidate podcast + job queries |
 | `voiceover_job_completion` | `{ jobId, status, voiceoverId }` | Invalidate voiceover queries |
 | `infographic_job_completion` | `{ jobId, status, infographicId }` | Invalidate infographic queries |
-| `document_job_completion` | `{ jobId, status, documentId }` | Invalidate document queries |
+| `source_job_completion` | `{ jobId, jobType, status, sourceId }` | Invalidate source queries |
 | `entity_change` | `{ entityType, changeType, entityId }` | Invalidate entity list + detail |
 | `activity_logged` | `{ activityType }` | Invalidate activity queries |
 

@@ -142,11 +142,11 @@ OTEL_ENV=development
 3. Trace details show the span hierarchy documented in [`observability.md`](./observability.md):
 
 ```
-api.documents.get          ← oRPC auto-span (renamed by ORPCSpanRenamer)
+api.sources.get            ← oRPC auto-span (renamed by ORPCSpanRenamer)
   └── middleware.auth      ← oRPC auto-span
        └── handler         ← oRPC auto-span
-            └── useCase.getDocument   ← Effect.withSpan
-                 └── documentRepo.findById  ← Effect.withSpan
+            └── useCase.getSource     ← withUseCaseSpan
+                 └── sourceRepo.findByIdForUser
 ```
 
 ## Unified Service Tagging

@@ -26,6 +26,13 @@ describe('ScriptPanel discard confirmation', () => {
       />,
     );
 
+    expect(screen.getByText('How podcast scripts work')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /This script starts as an AI-generated draft from your selected sources and settings\./,
+      ),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Discard' }));
     expect(
       screen.getByRole('heading', { name: 'Discard unsaved changes?' }),

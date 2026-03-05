@@ -51,7 +51,7 @@ The script asks for:
   - best for first boot on a new VM
 - `production`:
   - enforces `PUBLIC_URL_SCHEME=https`
-  - enforces non-dev auth mode (`hybrid` or `sso-only`)
+  - enforces non-dev auth mode (`sso-only`)
   - enforces `TRUST_PROXY=true`
 
 If you pick `production`, ensure TLS termination + reverse proxy are already in place.

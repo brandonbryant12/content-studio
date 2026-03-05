@@ -1,45 +1,46 @@
 # API Handler Pattern
 
-> Canonical API handler guidance for routing + serialization lives in this document.
+> Canonical guidance for routing, serialization, and protocol mapping lives here.
 
 ```mermaid
 sequenceDiagram
-  participant H as oRPC Handler
-  participant UC as Use Case
+  participant H as oRPC handler
+  participant UC as Use case
   participant S as serializeEffect
   participant P as handleEffectWithProtocol
 
-  H->>UC: useCaseName(input)
+  H->>UC: useCase(input)
   UC-->>H: raw domain data
   H->>S: Effect.flatMap(serializeXxxEffect)
-  S-->>H: SerializedXxx (traced)
-  H->>P: errors + requestId
-  P-->>H: Promise<SerializedXxx>
+  S-->>H: Serialized payload
+  H->>P: errors + requestId + attributes
+  P-->>H: Promise<Serialized payload>
 ```
 
 ## Golden Principles
 
-1. **Call exactly ONE use case per handler** <!-- enforced-by: manual-review -->
-2. **Use Effect-based serializers** (`serializeXxxEffect`) in handlers for tracing <!-- enforced-by: manual-review -->
-3. **`requestId` recommended; span is auto-provided by @orpc/otel**: pass `{ requestId: context.requestId }` for log correlation <!-- enforced-by: manual-review -->
-4. **Don't serialize in use cases** -- handlers only <!-- enforced-by: invariant-test -->
-5. **Streaming endpoints must keep typed streams end-to-end** (no `unknown` stream payloads) <!-- enforced-by: lint -->
+1. **Call exactly one use case per handler** <!-- enforced-by: manual-review -->
+2. **Serialize in the handler, not the use case** <!-- enforced-by: invariant-test -->
+3. **Pass `requestId` to `handleEffectWithProtocol`** for correlation and trace metadata <!-- enforced-by: manual-review -->
+4. **Keep streaming contracts concretely typed** end-to-end <!-- enforced-by: lint -->
+5. **Prefer Effect-based serializers** so serialization work is traced consistently <!-- enforced-by: manual-review -->
 
 ## Canonical Example
 
-> See `packages/api/src/server/router/document.ts`
+> See `packages/api/src/server/router/source.ts`
 
 ```typescript
-get: protectedProcedure.documents.get.handler(
+get: protectedProcedure.sources.get.handler(
   async ({ context, input, errors }) => {
     return handleEffectWithProtocol(
       context.runtime,
       context.user,
-      getDocument({ id: input.id }).pipe(
-        Effect.flatMap(serializeDocumentEffect),
-      ),
+      getSource({ id: input.id }).pipe(Effect.flatMap(serializeSourceEffect)),
       errors,
-      { requestId: context.requestId, attributes: { 'document.id': input.id } },
+      {
+        requestId: context.requestId,
+        attributes: { 'source.id': input.id },
+      },
     );
   },
 ),
@@ -48,113 +49,87 @@ get: protectedProcedure.documents.get.handler(
 ## Handler Pipeline
 
 ```
-handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(errors, { requestId })
+handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(...)
 ```
 
-Every handler follows this exact shape. Custom error overrides are rare -- only for business logic like upsell flows:
-
-```typescript
-handleEffectWithProtocol(
-  runtime,
-  user,
-  effect,
-  errors,
-  { requestId: context.requestId },
-  {
-    DocumentQuotaExceeded: (e) => {
-      throw errors.PAYMENT_REQUIRED({ message: "..." });
-    },
-  },
-);
-```
+Most handlers follow that exact shape. Use custom error overrides only when protocol behavior truly needs to differ from the typed domain error mapping.
 
 ## Span Naming <!-- enforced-by: invariant-test -->
 
-| Layer            | Format                  | Example               |
-| ---------------- | ----------------------- | --------------------- |
-| Handler          | `api.{domain}.{action}` | `api.documents.get`   |
-| Serializer       | `serialize.{entity}`    | `serialize.document`  |
-| Batch serializer | `serialize.{entity}.batch` | `serialize.document.batch` |
+| Layer | Format | Example |
+|---|---|---|
+| Handler | `api.{domain}.{action}` | `api.sources.get` |
+| Serializer | `serialize.{entity}` | `serialize.source` |
+| Batch serializer | `serialize.{entity}.batch` | `serialize.source.batch` |
 
 ## Serializer Variants <!-- enforced-by: manual-review -->
 
-Each entity in `packages/db/src/schemas/{entity}.ts` exports three variants:
+Each entity serializer in `@repo/db/schema` typically exposes:
 
-| Variant                      | Where to Use                   | Tracing       |
-| ---------------------------- | ------------------------------ | ------------- |
-| `serializeXxxEffect(item)`   | Handlers (single)              | Yes           |
-| `serializeXxxsEffect(items)` | Handlers (batch/list)          | Yes, parallel |
-| `serializeXxx(item)`         | Tests, intermediate transforms | No            |
+| Variant | Where to use | Tracing |
+|---|---|---|
+| `serializeXxxEffect(item)` | Single-item handlers | Yes |
+| `serializeXxxsEffect(items)` | List handlers | Yes, parallel |
+| `serializeXxx(item)` | Tests or intermediate transforms | No |
 
-Batch is derived from single via `Effect.all(..., { concurrency: 'unbounded' })`.
+Batch serializers are derived from the single-item transform via `Effect.all(..., { concurrency: 'unbounded' })`.
 
 ### Serializer Implementation Pattern
 
-Use the factory functions from `packages/db/src/schemas/serialization.ts`:
+Use the serializer factories from `packages/db/src/schemas/serialization.ts`:
 
 ```typescript
-import { createEffectSerializer, createBatchEffectSerializer } from '@repo/db/schema';
+import { createBatchEffectSerializer, createEffectSerializer } from '@repo/db/schema';
 
-// 1. Transform function (pure, no tracing)
-const documentTransform = (doc: Document): SerializedDocument => ({
-  id: doc.id,
-  title: doc.title,
-  createdAt: doc.createdAt.toISOString(),
-  updatedAt: doc.updatedAt.toISOString(),
-  description: doc.description ?? null,
+const sourceTransform = (source: Source) => ({
+  id: source.id,
+  title: source.title,
+  createdAt: source.createdAt.toISOString(),
+  updatedAt: source.updatedAt.toISOString(),
+  source: source.source,
 });
 
-// 2. Effect serializers (traced, produces SerializationError on failure)
-export const serializeDocumentEffect = createEffectSerializer('document', documentTransform);
-export const serializeDocumentsEffect = createBatchEffectSerializer('document', documentTransform);
-
-// 3. Plain export for tests / intermediate transforms
-export const serializeDocument = documentTransform;
+export const serializeSourceEffect = createEffectSerializer('source', sourceTransform);
+export const serializeSourcesEffect = createBatchEffectSerializer('source', sourceTransform);
+export const serializeSource = sourceTransform;
 ```
-
-The factories wrap in `Effect.try` (catching into `SerializationError`) and add `Effect.withSpan` automatically.
 
 ## Activity Logging
 
-Handlers can compose fire-and-forget activity logging via `tapLogActivity`:
+Handlers can attach best-effort activity logging without blocking the main response:
 
 ```typescript
-import { tapLogActivity } from '../log-activity';
-
-createDocument(input).pipe(
-  Effect.flatMap(serializeDocumentEffect),
-  tapLogActivity(context.runtime, context.user, 'created', 'document'),
-),
+createSource(input).pipe(
+  Effect.flatMap(serializeSourceEffect),
+  tapLogActivity(context.runtime, context.user, 'created', 'source'),
+)
 ```
-
-This logs asynchronously without blocking the response. Used in document, podcast, voiceover, and infographic handlers.
 
 ## Transformation Rules <!-- enforced-by: manual-review -->
 
-| Field Type                 | Transformation                                          |
-| -------------------------- | ------------------------------------------------------- |
-| `Date`                     | `.toISOString()`                                        |
-| Optional / nullable        | `?? null`                                               |
-| Nested entity              | Recursive `serializeXxx(nested)`                        |
-| Internal fields (`userId`) | Omit from serialized type                               |
-| Computed fields            | Derive in serializer (`wordCount`, `estimatedReadTime`) |
+| Field type | Transformation |
+|---|---|
+| `Date` | `.toISOString()` |
+| Optional or nullable | `?? null` |
+| Nested entity | Recursive `serializeXxx(...)` or nested transform |
+| Internal fields such as `userId` | Omit from serialized output |
+| Computed fields | Derive in serializer, not the repo or use case |
 
 ## Protocol-Based Errors <!-- enforced-by: invariant-test -->
 
-Use `handleEffectWithProtocol` -- errors handle themselves via static HTTP protocol properties. No manual error mapping.
+Use `handleEffectWithProtocol`. Domain errors already carry their protocol mapping; avoid hand-written status mapping unless the behavior is intentionally exceptional.
 
 ```typescript
 // Correct
-return handleEffectWithProtocol(runtime, user, effect, errors, { requestId: context.requestId });
-
-// Wrong -- legacy manual mapping
-return handleEffect(runtime, user, effect, { DocumentNotFound: (e) => { ... } }, { span });
+return handleEffectWithProtocol(runtime, user, effect, errors, {
+  requestId: context.requestId,
+});
 ```
 
 ## Streaming Handlers
 
-For chat/streaming endpoints:
+For chat and SSE-like endpoints:
 
-- Contract output must use concrete chunk types (for chat: `eventIterator(type<UIMessageChunk>())`)
-- Handler should return `streamToEventIterator(stream)` directly from the typed use-case stream
-- Avoid `unknown` stream payload contracts that force client-side casting
+- Contract output must use concrete chunk types.
+- Handler should return the typed stream directly, not `unknown`.
+- Client code should not need manual casts to consume stream payloads.

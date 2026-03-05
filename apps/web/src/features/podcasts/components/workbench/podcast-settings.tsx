@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
 import type { RouterOutput } from '@repo/api/client';
@@ -15,6 +15,10 @@ import {
 } from '../../lib/instruction-presets';
 import { PersonaPicker } from './persona-picker';
 import { useVoicePreviewController } from '@/shared/hooks';
+import {
+  PERSONA_ASSIGNMENT_HELP,
+  PERSONA_PODCAST_SECTION_HELP,
+} from '@/shared/lib/persona-guidance';
 
 type PodcastFull = RouterOutput['podcasts']['get'];
 
@@ -199,6 +203,24 @@ export function PodcastSettings({
   if (section === 'voice') {
     return (
       <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
+        <div className="mb-4 rounded-xl border border-violet-200/60 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-500/5">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-full bg-violet-500/10 p-2 text-violet-600 dark:text-violet-300">
+              <InfoCircledIcon className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Personas shape both script and audio
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {PERSONA_PODCAST_SECTION_HELP}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {PERSONA_ASSIGNMENT_HELP}
+              </p>
+            </div>
+          </div>
+        </div>
         <div
           className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}
         >
@@ -345,7 +367,8 @@ export function PodcastSettings({
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
       <div className="mixer-direction">
         <p className="mixer-direction-hint">
-          Guide the AI to refine and iterate on your podcast script.
+          Guide the AI on what to change in the next script draft. You can still
+          edit lines manually in the script editor.
         </p>
         <div className="mixer-direction-presets">
           {INSTRUCTION_PRESETS.map((preset) => (

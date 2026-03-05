@@ -53,7 +53,6 @@ const BooleanStringSchema = Schema.transform(Schema.String, Schema.Boolean, {
 
 const AuthModeSchema = Schema.Union(
   Schema.Literal('dev-password'),
-  Schema.Literal('hybrid'),
   Schema.Literal('sso-only'),
 );
 
@@ -144,6 +143,9 @@ export const envSchema = Schema.Struct({
   AUDIO_PLAYBACK_PROXY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
     default: () => true,
   }),
+  STORAGE_ACCESS_PROXY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
+    default: () => true,
+  }),
   AUDIO_PLAYBACK_SIGNING_SECRET: Schema.optional(
     Schema.String.pipe(Schema.minLength(32)),
   ),
@@ -189,7 +191,7 @@ if (rawEnv.AUTH_MODE !== 'dev-password') {
     !rawEnv.AUTH_MICROSOFT_TENANT_ID
   ) {
     throw new Error(
-      'AUTH_MICROSOFT_CLIENT_ID, AUTH_MICROSOFT_CLIENT_SECRET, and AUTH_MICROSOFT_TENANT_ID are required when AUTH_MODE is hybrid or sso-only',
+      'AUTH_MICROSOFT_CLIENT_ID, AUTH_MICROSOFT_CLIENT_SECRET, and AUTH_MICROSOFT_TENANT_ID are required when AUTH_MODE is sso-only',
     );
   }
 
@@ -198,7 +200,7 @@ if (rawEnv.AUTH_MODE !== 'dev-password') {
     rawEnv.AUTH_ROLE_USER_GROUP_IDS.length === 0
   ) {
     throw new Error(
-      'AUTH_ROLE_ADMIN_GROUP_IDS and AUTH_ROLE_USER_GROUP_IDS must be configured when AUTH_MODE is hybrid or sso-only',
+      'AUTH_ROLE_ADMIN_GROUP_IDS and AUTH_ROLE_USER_GROUP_IDS must be configured when AUTH_MODE is sso-only',
     );
   }
 }
@@ -229,11 +231,12 @@ if (isProduction) {
   }
 
   if (
-    rawEnv.AUDIO_PLAYBACK_PROXY_ENABLED &&
+    (rawEnv.AUDIO_PLAYBACK_PROXY_ENABLED ||
+      rawEnv.STORAGE_ACCESS_PROXY_ENABLED) &&
     !rawEnv.AUDIO_PLAYBACK_SIGNING_SECRET
   ) {
     throw new Error(
-      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true',
+      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true or STORAGE_ACCESS_PROXY_ENABLED=true',
     );
   }
 }

@@ -2,73 +2,96 @@
 
 ## Golden Principles
 
-1. Feature-based: `features/{domain}/{components,hooks}/` <!-- enforced-by: manual-review -->
-2. Shared only when 2+ features need it <!-- enforced-by: manual-review -->
-3. No circular dependencies between features <!-- enforced-by: eslint -->
+1. Feature-based: `features/{domain}/{components,hooks,lib}` <!-- enforced-by: manual-review -->
+2. Shared code only after two or more features need it <!-- enforced-by: manual-review -->
+3. Route files stay thin and delegate to feature containers <!-- enforced-by: manual-review -->
+4. No circular dependencies between features <!-- enforced-by: eslint -->
 
 ## Directory Tree
 
 ```
 apps/web/src/
-  clients/                          # API client, query client singletons
+  clients/                          # Typed API client, auth client, query client
     apiClient.ts
+    authClient.ts
     queryClient.ts
-  features/                         # Feature modules (domain-based)
-    documents/
-      components/
-        document-detail-container.tsx
-        document-detail.tsx
-        document-list-container.tsx
-        document-list.tsx
-      hooks/
-        use-document.ts
-        use-document-list.ts
-        use-document-actions.ts
-        index.ts                    # Public API exports
-      lib/                          # Feature-specific utilities
-        format.ts
-      __tests__/
-        document-list.test.tsx
-        handlers.ts                 # MSW handlers for this feature
-    podcasts/
-      components/
-      hooks/
-      lib/
-      __tests__/
-    voiceovers/
-      components/
-      hooks/
-      __tests__/
-    personas/
-      components/
-      hooks/
-      __tests__/
+  providers/
+    sse-provider.tsx
+  features/                         # Domain-based feature modules
+    admin/
+    dashboard/
     infographics/
-      components/
-      hooks/
-      __tests__/
+    personas/
+    podcasts/
+    sources/
+    voiceovers/
   routes/                           # TanStack Router file-based routes
-    _protected/                     # Auth-required routes
-      podcasts/
-        $podcastId.tsx              # Route: loader + SuspenseBoundary + Container
+    __root.tsx
+    index.tsx
+    _public/
+      layout.tsx
+      login.tsx
+      register.tsx
+    _protected/
+      layout.tsx
+      dashboard.tsx
+      admin/
+        activity.tsx
+      sources/
+        $sourceId.tsx
         index.tsx
-  shared/                           # Cross-feature utilities (2+ consumers)
+      podcasts/
+        $podcastId.tsx
+        index.tsx
+      voiceovers/
+        $voiceoverId.tsx
+        index.tsx
+      personas/
+        $personaId.tsx
+        index.tsx
+      infographics/
+        $infographicId.tsx
+        index.tsx
+    -components/                    # Route-only layout and shared form helpers
+  shared/                           # Cross-feature UI and behaviors
     components/
+      approval/
+      base-dialog/
+      bulk-action-bar/
+      confirmation-dialog/
+      error-boundary/
+      source-manager/
       suspense-boundary.tsx
-      error-boundary.tsx
       query-error-fallback.tsx
-      list-page-state.tsx
     hooks/
+      use-audio-player.ts
+      use-bulk-delete.ts
       use-optimistic-mutation.ts
+      use-session-guard.ts
       use-sse.ts
-      sse-handlers.ts
     lib/
+      auth-errors.ts
+      auth-token.ts
       errors.ts
-  test-utils/                       # Test infrastructure
-    index.tsx                       # renderWithQuery, re-exports
-    handlers.ts                     # Shared MSW handlers
-    server.ts                       # MSW server setup
+      storage-url.ts
+  test-utils/                       # Shared render helpers and MSW wiring
+    index.tsx
+    handlers.ts
+    server.ts
 ```
+
+## Route To Feature Mapping
+
+| Route area | Main feature module | Notes |
+|------|--------|-------|
+| `_public/*` | Auth entry pages | Login and registration only |
+| `_protected/dashboard` | `features/dashboard` | Post-login landing page |
+| `_protected/admin/activity` | `features/admin` | Admin activity and stats |
+| `_protected/sources/*` | `features/sources` | Source ingestion, editing, research |
+| `_protected/podcasts/*` | `features/podcasts` | Setup wizard and generation workbench |
+| `_protected/voiceovers/*` | `features/voiceovers` | Script, voice, and playback workbench |
+| `_protected/personas/*` | `features/personas` | Persona CRUD and chat |
+| `_protected/infographics/*` | `features/infographics` | Prompting, versions, export |
 
 ## File Naming
 
@@ -77,18 +100,26 @@ apps/web/src/
 | Components | kebab-case | `podcast-detail-container.tsx` |
 | Hooks | `use-{name}.ts` | `use-podcast-actions.ts` |
 | Utilities | kebab-case | `format.ts`, `errors.ts` |
-| Tests | `{name}.test.tsx` | `document-list.test.tsx` |
+| Tests | `{name}.test.tsx` | `source-list.test.tsx` |
 | MSW handlers | `handlers.ts` | `__tests__/handlers.ts` |
 
 ## Module Boundaries
 
 | Rule | Detail |
 |------|--------|
-| Feature imports | Only via `index.ts` public API |
-| Cross-feature | Features never import from each other directly |
-| Shared promotion | Move to `shared/` when 2+ features need it |
-| Route files | Thin: import Container, wrap in SuspenseBoundary |
-| Index exports | Only public API -- no internal implementation |
+| Feature imports | Prefer feature public exports when present; otherwise import within the same feature subtree only |
+| Cross-feature access | Features do not import from each other directly unless the dependency is intentionally promoted to `shared/` |
+| Shared promotion | Move code to `shared/` once it is reused across features |
+| Route files | Own route config, auth guard behavior, and page composition only |
+| Clients | `clients/` owns API transport and auth refresh behavior; feature code should not reimplement fetch logic |
+
+## Dependency Flow
+
+The intended frontend flow is:
+
+`route -> feature container -> feature hooks -> api client / shared hooks -> typed server contract`
+
+Use `shared/` for infrastructure-like concerns such as SSE subscriptions, optimistic mutation helpers, bulk actions, and shared dialogs.
 
 ## Import Aliases
 
@@ -104,6 +135,6 @@ import { apiClient } from '@/clients/apiClient';
 
 - Prefer TanStack Router automatic route-level code splitting for feature and route code.
 - Edit `apps/web/vite.config.ts` `manualChunks` only when a stable, cross-route vendor grouping prevents measurable regressions.
-- Do not add per-package or per-file `manualChunks` branches for route/application code.
+- Do not add per-package or per-file `manualChunks` branches for route or application code.
 - Current Vite bundler output does not honor Rollup `output.onlyExplicitManualChunks`; use the constrained coarse-bucket `manualChunks` policy plus build guardrail instead.
 - Validate chunk health with `pnpm --filter web build` (includes `build:chunk-report` guardrail for JS chunk count and largest JS chunk size).

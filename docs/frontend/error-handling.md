@@ -51,13 +51,15 @@ onError: (error) => {
 
 | Code | Structured Data | User Message |
 |------|----------------|--------------|
-| `DOCUMENT_TOO_LARGE` | `{ fileName, fileSize, maxSize }` | "{fileName} ({size}) exceeds {max} limit" |
+| `SOURCE_TOO_LARGE` | `{ fileName, fileSize, maxSize }` | "{fileName} ({size}) exceeds {max} limit" |
 | `UNSUPPORTED_FORMAT` | `{ fileName, mimeType, supportedFormats }` | "{mimeType} not supported. Use: {formats}" |
 | `RATE_LIMITED` | `{ retryAfter? }` | "Too many requests. Try again in {n} seconds." |
-| `DOCUMENT_QUOTA_EXCEEDED` | `{ count, limit }` | "Reached document limit ({count}/{limit})." |
+| `SOURCE_QUOTA_EXCEEDED` | `{ count, limit }` | "Reached source limit ({count}/{limit})." |
 | `GENERATION_IN_PROGRESS` | -- | "Already being generated. Please wait." |
-| `DOCUMENT_NOT_FOUND` | -- | "Document not found. May have been deleted." |
+| `SOURCE_NOT_FOUND` | -- | "Source not found. May have been deleted." |
 | `PODCAST_NOT_FOUND` | -- | "Podcast not found. May have been deleted." |
+| `SCRIPT_NOT_FOUND` | -- | "Script not found. Try regenerating the podcast." |
+| `SOURCE_PARSE_ERROR` | `{ fileName }` | "Failed to parse {fileName}. The file may be corrupted." |
 | `VALIDATION_ERROR` | `{ field? }` | "Invalid value for {field}" or raw message |
 | `SERVICE_UNAVAILABLE` | -- | "AI service temporarily unavailable." |
 | `JOB_NOT_FOUND` | -- | "Job not found. May have expired." |
@@ -138,6 +140,11 @@ retryDelay: (attempt, error) => {
 },
 ```
 
+**Reference:** `apps/web/src/clients/queryClient.ts`
+
+The shared QueryClient also clears the in-memory auth token and redirects to `/`
+when query or mutation errors come back as `UNAUTHORIZED`.
+
 ## Navigation Errors
 
 When a mutation error means the entity no longer exists (404), navigate away:
@@ -145,8 +152,8 @@ When a mutation error means the entity no longer exists (404), navigate away:
 ```tsx
 onError: (error) => {
   if (isNotFoundError(error)) {
-    navigate({ to: '/podcasts' });
-    toast.error('Podcast not found');
+    navigate({ to: '/sources' });
+    toast.error('Source not found');
     return;
   }
   toast.error(getErrorMessage(error, 'Operation failed'));

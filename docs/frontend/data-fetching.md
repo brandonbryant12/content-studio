@@ -128,7 +128,7 @@ const router = createRouter({
 
 ## Rules
 
-- One query hook per feature entity (e.g., `usePodcast`, `useDocumentList`) <!-- enforced-by: manual-review -->
+- One query hook per feature entity (e.g., `usePodcast`, `useSourceList`) <!-- enforced-by: manual-review -->
 - Hooks live in `features/{domain}/hooks/` <!-- enforced-by: manual-review -->
 - Index files re-export hooks for public API <!-- enforced-by: manual-review -->
 - For shared bulk helpers (for example `useBulkDelete`), container-level `mutationFn` extraction from `apiClient.<domain>.delete.mutationOptions().mutationFn!` is allowed; keep direct `apiClient` usage scoped to these adapter points only <!-- enforced-by: manual-review -->

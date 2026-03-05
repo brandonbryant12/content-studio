@@ -22,7 +22,7 @@ export const audioPlaybackProxy = createAudioPlaybackProxy({
   storageConfig,
 });
 export const storageAccessProxy = createStorageAccessProxy({
-  enabled: env.AUDIO_PLAYBACK_PROXY_ENABLED,
+  enabled: env.STORAGE_ACCESS_PROXY_ENABLED,
   signingSecret: env.AUDIO_PLAYBACK_SIGNING_SECRET,
   ttlSeconds: env.AUDIO_PLAYBACK_URL_TTL_SECONDS,
   serverUrl: env.PUBLIC_SERVER_URL,
@@ -42,7 +42,7 @@ const microsoftSSOConfig =
   env.AUTH_MODE === AuthMode.DEV_PASSWORD
     ? undefined
     : {
-        // Validated in env.ts when AUTH_MODE is hybrid/sso-only.
+        // Validated in env.ts when AUTH_MODE is sso-only.
         clientId: env.AUTH_MICROSOFT_CLIENT_ID!,
         clientSecret: env.AUTH_MICROSOFT_CLIENT_SECRET!,
         tenantId: env.AUTH_MICROSOFT_TENANT_ID!,

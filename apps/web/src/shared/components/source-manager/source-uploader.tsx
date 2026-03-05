@@ -3,6 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { toast } from 'sonner';
+import { SOURCE_UPLOAD_DIALOG_HELP } from '@/shared/lib/source-guidance';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -121,6 +122,10 @@ export function SourceUploader({ onUpload, isUploading }: SourceUploaderProps) {
               (optional)
             </span>
           </label>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Leave this blank to use the file name. You can rename the source
+            later.
+          </p>
           <input
             id="source-title"
             type="text"
@@ -153,36 +158,41 @@ export function SourceUploader({ onUpload, isUploading }: SourceUploaderProps) {
   }
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={handleUploadZoneClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleUploadZoneClick();
-        }
-      }}
-      className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={SUPPORTED_EXTENSIONS}
-        className="hidden"
-        onChange={handleFileInputChange}
-      />
-      <div className="setup-upload-icon">
-        <UploadIcon />
-      </div>
-      <p className="setup-upload-title">Drop your file here</p>
-      <p className="setup-upload-hint">or click to browse</p>
-      <p className="setup-upload-formats">
-        Supports TXT, PDF, DOCX, PPTX (max 10MB)
+    <div className="space-y-3">
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {SOURCE_UPLOAD_DIALOG_HELP}
       </p>
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleUploadZoneClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleUploadZoneClick();
+          }
+        }}
+        className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={SUPPORTED_EXTENSIONS}
+          className="hidden"
+          onChange={handleFileInputChange}
+        />
+        <div className="setup-upload-icon">
+          <UploadIcon />
+        </div>
+        <p className="setup-upload-title">Drop your file here</p>
+        <p className="setup-upload-hint">or click to browse</p>
+        <p className="setup-upload-formats">
+          Supports TXT, PDF, DOCX, PPTX (max 10MB)
+        </p>
+      </div>
     </div>
   );
 }

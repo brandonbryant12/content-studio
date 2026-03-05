@@ -17,6 +17,10 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useUploadSource } from '../hooks/use-upload-source';
 import { fileToBase64 } from '@/shared/lib/file-base64';
+import {
+  SOURCE_UPLOAD_DIALOG_DESCRIPTION,
+  SOURCE_UPLOAD_DIALOG_HELP,
+} from '@/shared/lib/source-guidance';
 
 const SUPPORTED_TYPES = [
   'text/plain',
@@ -101,12 +105,14 @@ export function UploadSourceDialog({
         <DialogHeader>
           <DialogTitle>Upload Source</DialogTitle>
           <DialogDescription>
-            Upload a source to use across content types. Supports TXT, PDF,
-            DOCX, and PPTX.
+            {SOURCE_UPLOAD_DIALOG_DESCRIPTION}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {SOURCE_UPLOAD_DIALOG_HELP}
+          </p>
           {/* Drop zone */}
           <div
             role="button"
@@ -167,6 +173,10 @@ export function UploadSourceDialog({
           {/* Title input */}
           <div className="space-y-2">
             <Label htmlFor="title">Title (optional)</Label>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Leave this blank to use the file name. You can rename the source
+              later without re-uploading it.
+            </p>
             <Input
               id="title"
               value={title}

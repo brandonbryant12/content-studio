@@ -3,6 +3,7 @@
 import {
   ArrowLeftIcon,
   DownloadIcon,
+  InfoCircledIcon,
   MagnifyingGlassIcon,
   Pencil1Icon,
   TrashIcon,
@@ -34,6 +35,10 @@ import {
 } from './source-detail-source-sections';
 import { SourceDetailUnsavedChangesBar } from './source-detail-unsaved-changes-bar';
 import { SourceIcon } from './source-icon';
+import {
+  SOURCE_DEFINITION,
+  SOURCE_DETAIL_HELP,
+} from '@/shared/lib/source-guidance';
 
 interface SourceDetailProps {
   source: SourceDetailSource;
@@ -227,6 +232,24 @@ export function SourceDetail({
         <div className="workbench-scroll-container">
           <div className="doc-reader-wrapper">
             <div className="doc-reader-surface">
+              <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-300">
+                    <InfoCircledIcon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      How this source is used
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {SOURCE_DEFINITION}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {SOURCE_DETAIL_HELP}
+                    </p>
+                  </div>
+                </div>
+              </div>
               <SourceMetadataBar source={source} />
               <SourceOriginCallout source={source} />
 

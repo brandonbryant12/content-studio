@@ -1,4 +1,8 @@
-import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
+import {
+  InfoCircledIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+} from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
@@ -19,6 +23,11 @@ import {
 import { InfographicItem, type InfographicListItem } from './infographic-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
+import {
+  INFOGRAPHIC_DEFINITION,
+  INFOGRAPHIC_FLOW_STEPS,
+  INFOGRAPHIC_LIST_SUPPORT,
+} from '@/shared/lib/content-guidance';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -46,7 +55,8 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
       </div>
       <h2 className="empty-state-title">No infographics yet</h2>
       <p className="empty-state-description">
-        Create your first infographic to get started.
+        Create your first infographic from a prompt, then iterate on new
+        versions as the visual direction sharpens.
       </p>
       <Button onClick={onCreateClick} disabled={isCreating}>
         {isCreating ? (
@@ -176,6 +186,9 @@ export function InfographicList({
         <div>
           <p className="page-eyebrow">Infographics</p>
           <h1 className="page-title">Infographics</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {INFOGRAPHIC_DEFINITION} {INFOGRAPHIC_LIST_SUPPORT}
+          </p>
         </div>
         <Button onClick={openDialog} disabled={isCreating}>
           {isCreating ? (
@@ -190,6 +203,38 @@ export function InfographicList({
             </>
           )}
         </Button>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-rose-200/60 bg-rose-50/80 p-5 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-rose-500/10 p-2 text-rose-600 dark:text-rose-300">
+            <InfoCircledIcon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">
+              How infographics work
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Infographics begin with a prompt, then improve through versioned
+              iterations instead of one final irreversible generation.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {INFOGRAPHIC_FLOW_STEPS.map((step) => (
+            <div
+              key={step.title}
+              className="rounded-xl border border-rose-200/50 bg-background/80 p-4 dark:border-rose-500/10 dark:bg-background/40"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {step.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {step.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="relative mb-4">

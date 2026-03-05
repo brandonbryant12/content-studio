@@ -1,5 +1,26 @@
 [
   {
+    "id": "2026-03-05-architecture-adr-guard-documented-the-live-runtime-topology-and-security-boundaries-as-",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Documented the live runtime topology and security boundaries as first-class standards",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "architecture",
+      "adr-guard",
+      "security",
+      "runtime-boundaries",
+      "worker",
+      "skill:architecture-adr-guard",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.92,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-docs-knowledge-drift-added-eks-helm-first-deployment-recommendation-doc",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -52,6 +73,44 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-docs-knowledge-drift-aligned-security-architecture-doc-with-trusted-field-storage-sig",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Aligned security architecture doc with trusted-field storage signing and path-only logging",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "security",
+      "auth",
+      "storage",
+      "logging",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.63,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-closed-remaining-repository-invariant-and-sse-docs-drift-after-s",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Closed remaining repository, invariant, and SSE docs drift after secondary docs cleanup",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "frontend",
+      "testing",
+      "repository",
+      "sse",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-docs-knowledge-drift-common-signed-media-access-sequence-diagram",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -88,6 +147,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-docs-knowledge-drift-fixed-spec-generator-mapping-for-source-domain-endpoint-counts",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Fixed spec generator mapping for source domain endpoint counts",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "spec-generation",
+      "source-domain",
+      "tooling",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.86,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-docs-knowledge-drift-local-dev-minio-required-storage-env-clarification",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -103,6 +181,144 @@
       "env",
       "skill:docs-knowledge-drift"
     ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-regenerated-master-spec-after-stale-documents-era-generated-surf",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Regenerated master spec after stale documents-era generated surfaces",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "spec-generation",
+      "source-of-truth",
+      "contracts",
+      "ui-surface",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.93,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-removed-hybrid-era-public-auth-ui-branches-after-auth-mode-simpl",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Removed hybrid-era public auth UI branches after auth mode simplification",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "frontend",
+      "auth",
+      "ui",
+      "skill:feature-delivery",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.58,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-rewrote-secondary-testing-and-error-handling-docs-to-remove-docu",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Rewrote secondary testing and error-handling docs to remove documents-era examples",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "testing",
+      "error-handling",
+      "frontend",
+      "examples",
+      "skill:docs-knowledge-drift"
+    ],
+    "importance": 0.88,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-docs-knowledge-drift-standardized-docs-diagrams-and-added-role-based-navigation-in-th",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Standardized docs diagrams and added role-based navigation in the docs index",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "architecture",
+      "testing",
+      "security",
+      "diagrams",
+      "navigation",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-add-new-user-guidance-across-sources-podcasts-voiceovers-and-infographics",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add new-user guidance across sources, podcasts, voiceovers, and infographics",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "ux",
+      "education",
+      "sources",
+      "podcasts",
+      "voiceovers",
+      "infographics",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.83,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-add-persona-info-tooltip-to-wizard-and-settings",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add persona info tooltip to wizard and settings",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "persona",
+      "ux",
+      "education",
+      "tooltip",
+      "tests"
+    ],
+    "importance": 0.66,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-clarify-persona-purpose-through-workflow-linked-education",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Clarify persona purpose through workflow-linked education",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "persona",
+      "ux",
+      "education",
+      "onboarding",
+      "skill:intake-triage"
+    ],
+    "importance": 0.78,
+    "confidence": 0.93,
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -141,6 +357,27 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-feature-delivery-fixed-storage-signing-bypass-decoupled-storage-proxy-gating-reda",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Fixed storage signing bypass, decoupled storage proxy gating, redacted tokenized request logs, and removed hybrid auth mode",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "security",
+      "auth",
+      "storage",
+      "logging",
+      "skill:feature-delivery",
+      "skill:security-dependency-hygiene"
+    ],
+    "importance": 0.94,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-feature-delivery-s3-only-storage-with-signed-operations-and-private-minio-default",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -175,6 +412,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-feature-delivery-ship-persona-education-across-authoring-and-podcast-setup",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Ship persona education across authoring and podcast setup",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "persona",
+      "ux",
+      "education",
+      "onboarding",
+      "tests"
+    ],
+    "importance": 0.81,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-feature-delivery-signed-storage-token-protection-for-images-and-documents",
     "date": "2026-03-05",
     "month": "2026-03",
@@ -193,6 +449,26 @@
     ],
     "importance": 0.84,
     "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-switch-persona-create-to-blank-draft-with-optional-ai-assist",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Switch persona creation to a blank draft with optional AI assist",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "persona",
+      "ux",
+      "authoring",
+      "routing",
+      "tests",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.8,
+    "confidence": 0.97,
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -228,6 +504,27 @@
       "auth",
       "storage"
     ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-periodic-scans-security-audit-found-storage-url-signing-bypass-storage-proxy-mi",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Security audit found storage URL signing bypass, storage proxy misconfig blast radius, and signed URL log exposure",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "periodic-scans",
+      "security",
+      "auth",
+      "storage",
+      "logging",
+      "skill:security-dependency-hygiene",
+      "skill:pr-risk-review"
+    ],
+    "importance": 0.92,
+    "confidence": 0.93,
     "eventFile": "events/2026-03.jsonl"
   },
   {

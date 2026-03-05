@@ -71,6 +71,14 @@ describe('StepSources', () => {
       />,
     );
 
+    expect(screen.getByText('Add Sources')).toBeInTheDocument();
+    expect(screen.getByText('Why sources matter')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Each selected source becomes part of the factual context/i,
+      ),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole('tab', { name: 'From URL' }));
     await user.type(
       screen.getByLabelText('URL'),
