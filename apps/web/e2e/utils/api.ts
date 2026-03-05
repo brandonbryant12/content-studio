@@ -260,10 +260,17 @@ export class ApiHelper {
     text?: string;
     voice?: string;
   }): Promise<Voiceover> {
-    return this.post<Voiceover>('/voiceovers', {
+    const voiceover = await this.post<Voiceover>('/voiceovers', {
       title: data.title ?? 'Test Voiceover',
-      text: data.text ?? '',
-      voice: data.voice ?? 'alloy',
+    });
+
+    if (data.text === undefined && data.voice === undefined) {
+      return voiceover;
+    }
+
+    return this.updateVoiceover(voiceover.id, {
+      text: data.text,
+      voice: data.voice,
     });
   }
 

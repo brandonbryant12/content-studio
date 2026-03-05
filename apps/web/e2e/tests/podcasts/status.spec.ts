@@ -100,7 +100,7 @@ authenticatedTest.describe('Podcast Status Display', () => {
   );
 
   authenticatedTest(
-    'does NOT show "Drafting" when generation has started',
+    'does NOT show "Draft" when generation has started',
     async ({ page, podcastsPage, api }) => {
       // Setup: Create a source with unique name
       const sourceName = uniqueSourceName();
@@ -117,9 +117,9 @@ authenticatedTest.describe('Podcast Status Display', () => {
       // Wait for workbench
       await podcastsPage.waitForWorkbench();
 
-      // Verify: Status should NOT show "Drafting" - should show "Generating Script"
+      // Verify: Status should NOT show "Draft" - should show "Generating Script"
       await expect(
-        page.locator('.workbench-meta').getByText(/drafting/i),
+        page.locator('.workbench-meta').getByText(/^draft$/i),
       ).not.toBeVisible();
 
       // Instead, it should show "Generating Script"
@@ -128,7 +128,7 @@ authenticatedTest.describe('Podcast Status Display', () => {
   );
 
   authenticatedTest(
-    'new podcast shows "Drafting" status before generation',
+    'new podcast shows "Draft" status before generation',
     async ({ page, podcastsPage, api }) => {
       // Create a podcast via API (skips wizard)
       const podcast = await api.createPodcast({ title: 'Draft Podcast' });

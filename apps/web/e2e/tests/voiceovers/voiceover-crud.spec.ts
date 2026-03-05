@@ -56,12 +56,12 @@ authenticatedTest.describe('Voiceover CRUD Operations', () => {
     );
 
     authenticatedTest(
-      'new voiceover starts in drafting status',
+      'new voiceover starts in draft status',
       async ({ voiceoversPage }) => {
         await voiceoversPage.goto();
         await voiceoversPage.createVoiceover();
 
-        // Should show drafting status
+        // Should show draft status
         await voiceoversPage.expectStatusDrafting();
       },
     );

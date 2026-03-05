@@ -153,7 +153,7 @@ export class VoiceoversPage extends BasePage {
    * Get the text editor textarea
    */
   getTextEditor(): Locator {
-    return this.page.getByPlaceholder('Enter your voiceover text here...');
+    return this.page.getByRole('textbox', { name: /voiceover script/i });
   }
 
   /**
@@ -161,6 +161,17 @@ export class VoiceoversPage extends BasePage {
    */
   async enterText(text: string): Promise<void> {
     const editor = this.getTextEditor();
+    try {
+      await editor.waitFor({ state: 'visible', timeout: 1000 });
+    } catch {
+      const startWritingButton = this.page.getByRole('button', {
+        name: /start writing/i,
+      });
+      await startWritingButton.waitFor({ state: 'visible', timeout: 5000 });
+      await startWritingButton.click();
+    }
+
+    await expect(editor).toBeVisible();
     await editor.fill(text);
   }
 
@@ -176,34 +187,34 @@ export class VoiceoversPage extends BasePage {
    * Get the status badge in the workbench header
    */
   getStatusBadge(): Locator {
-    return this.page.locator('.workbench-meta > span').first();
+    return this.getActionBarStatus();
   }
 
   /**
-   * Expect status badge to show "Drafting"
+   * Expect status badge to show "Draft"
    */
   async expectStatusDrafting(): Promise<void> {
-    await expect(
-      this.page.locator('.workbench-meta').getByText(/drafting/i),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(this.getActionBarStatus()).toHaveText(/^draft$/i, {
+      timeout: 5000,
+    });
   }
 
   /**
-   * Expect status badge to show "Generating Audio"
+   * Expect action bar to show the active generation state.
    */
   async expectStatusGeneratingAudio(): Promise<void> {
-    await expect(
-      this.page.locator('.workbench-meta').getByText(/generating audio/i),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(this.getActionBarStatus()).toHaveText(/generating/i, {
+      timeout: 5000,
+    });
   }
 
   /**
    * Expect status badge to show "Ready"
    */
   async expectStatusReady(): Promise<void> {
-    await expect(
-      this.page.locator('.workbench-meta').getByText(/^ready$/i),
-    ).toBeVisible({ timeout: 30000 });
+    await expect(this.getActionBarStatus()).toHaveText(/^ready$/i, {
+      timeout: 30000,
+    });
   }
 
   /**
@@ -225,7 +236,7 @@ export class VoiceoversPage extends BasePage {
    */
   async expectActionBarGeneratingAudio(): Promise<void> {
     await expect(
-      this.page.locator('.global-action-bar').getByText(/generating audio/i),
+      this.page.locator('.global-action-bar').getByText(/generating/i),
     ).toBeVisible({ timeout: 5000 });
   }
 
@@ -259,14 +270,28 @@ export class VoiceoversPage extends BasePage {
   }
 
   /**
-   * Get the audio player element
+   * Get the visible custom audio stage.
    */
   getAudioPlayer(): Locator {
+    return this.page.locator('.stage-controls');
+  }
+
+  /**
+   * Get the underlying audio element.
+   */
+  getAudioElement(): Locator {
     return this.page.locator('audio');
   }
 
   /**
-   * Expect audio player to be visible
+   * Get the play button for the custom audio stage.
+   */
+  getAudioPlayButton(): Locator {
+    return this.page.getByRole('button', { name: /^play$/i });
+  }
+
+  /**
+   * Expect audio stage controls to be visible.
    */
   async expectAudioPlayerVisible(): Promise<void> {
     await expect(this.getAudioPlayer()).toBeVisible({ timeout: 30000 });

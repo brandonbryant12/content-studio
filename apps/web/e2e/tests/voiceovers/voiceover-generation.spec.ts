@@ -61,7 +61,7 @@ authenticatedTest.describe('Voiceover Audio Generation', () => {
   );
 
   authenticatedTest(
-    'completes drafting -> generating -> ready transition and renders playable audio',
+    'completes draft -> generating -> ready transition and renders playable audio',
     async ({ voiceoversPage, api, page }) => {
       await openVoiceoverWithText(
         api,
@@ -75,9 +75,11 @@ authenticatedTest.describe('Voiceover Audio Generation', () => {
       await voiceoversPage.expectStatusReady();
 
       await voiceoversPage.expectAudioPlayerVisible();
-      const audioPlayer = voiceoversPage.getAudioPlayer();
-      await expect(audioPlayer).toHaveAttribute('controls', '');
-      await expect(audioPlayer).toHaveAttribute('src', /^https?:\/\//);
+      await expect(voiceoversPage.getAudioPlayButton()).toBeVisible();
+      await expect(voiceoversPage.getAudioElement()).toHaveAttribute(
+        'src',
+        /^https?:\/\//,
+      );
     },
   );
 

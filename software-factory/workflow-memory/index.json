@@ -357,6 +357,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-05-feature-delivery-e2e-bootstrap-now-self-manages-bearer-auth-and-serializes-shared-state",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "E2E bootstrap must mint bearer auth and serialize shared-state specs",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "testing",
+      "developer-experience",
+      "e2e",
+      "skill:feature-delivery",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-feature-delivery-fixed-storage-signing-bypass-decoupled-storage-proxy-gating-reda",
     "date": "2026-03-05",
     "month": "2026-03",

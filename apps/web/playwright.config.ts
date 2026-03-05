@@ -11,8 +11,8 @@ export default defineConfig({
   /* Global setup runs after services are ready */
   globalSetup: './e2e/global-setup.ts',
 
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  /* These E2E specs mutate shared backend state via deleteAll* helpers. */
+  fullyParallel: false,
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
@@ -20,8 +20,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Keep a single worker until the suite has per-test data isolation. */
+  workers: 1,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI

@@ -19,7 +19,7 @@ export class LoginPage extends BasePage {
     super(page);
 
     this.emailInput = page.getByLabel(/email/i);
-    this.passwordInput = page.getByLabel(/password/i);
+    this.passwordInput = page.getByRole('textbox', { name: /^password$/i });
     this.submitButton = page.getByRole('button', { name: /sign in/i });
     // Target the sign up link in the form footer, not the navbar
     this.signUpLink = page

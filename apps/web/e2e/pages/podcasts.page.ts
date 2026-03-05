@@ -15,8 +15,9 @@ export class PodcastsPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Use "Create New" button in the header (not "Create Podcast" in empty state)
-    this.createButton = page.getByRole('button', { name: 'Create New' });
+    this.createButton = page
+      .getByRole('button', { name: /create podcast/i })
+      .first();
     this.searchInput = page.getByPlaceholder(/search/i);
   }
 
@@ -178,11 +179,11 @@ export class PodcastsPage extends BasePage {
   }
 
   /**
-   * Check if status badge shows "Drafting"
+   * Check if status badge shows "Draft"
    */
   async expectStatusDrafting(): Promise<void> {
     await expect(
-      this.page.locator('.workbench-meta').getByText(/drafting/i),
+      this.page.locator('.workbench-meta').getByText(/^draft$/i),
     ).toBeVisible({ timeout: 5000 });
   }
 

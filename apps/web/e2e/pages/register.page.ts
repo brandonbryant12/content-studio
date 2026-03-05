@@ -21,8 +21,10 @@ export class RegisterPage extends BasePage {
 
     this.nameInput = page.getByLabel(/full name/i);
     this.emailInput = page.getByLabel(/email/i);
-    this.passwordInput = page.getByLabel(/^password$/i);
-    this.confirmPasswordInput = page.getByLabel(/confirm password/i);
+    this.passwordInput = page.getByRole('textbox', { name: /^password$/i });
+    this.confirmPasswordInput = page.getByRole('textbox', {
+      name: /^confirm password$/i,
+    });
     this.submitButton = page.getByRole('button', { name: /create account/i });
     this.signInLink = page.getByRole('link', { name: /sign in/i });
   }
