@@ -53,8 +53,6 @@ export const auth = createAuth({
     corsOrigins: env.CORS_ORIGINS,
     nodeEnv: process.env.NODE_ENV,
   }),
-  cookieSameSite: env.AUTH_COOKIE_SAME_SITE,
-  useSecureCookies: env.AUTH_COOKIE_SECURE,
   microsoftSSO: microsoftSSOConfig,
   db,
 });

@@ -97,9 +97,8 @@ data:
   PUBLIC_SERVER_API_PATH: "/api"
 
   AUTH_MODE: "sso-only"
-  AUTH_COOKIE_SAME_SITE: "none"
-  AUTH_COOKIE_SECURE: "true"
-  CORS_ORIGINS: "https://studio.example.com"
+  CORS_ORIGINS: "*"
+  SERVER_RUN_DB_MIGRATIONS_ON_STARTUP: "true"
 
   TRUST_PROXY: "true"
   EXPOSE_DEEP_HEALTHCHECK: "false"
@@ -168,5 +167,6 @@ data:
 
 - If `HTTP_PROXY`/`HTTPS_PROXY` is set, `NODE_EXTRA_CA_CERTS` is now required.
 - Keep `TRUST_PROXY=true` in production behind ingress so rate limiting and client IP logic are correct.
-- For split origins (`studio.*` + `api.*`), `AUTH_COOKIE_SAME_SITE=none` and `AUTH_COOKIE_SECURE=true` are required.
+- `CORS_ORIGINS` defaults to `*`; set an explicit allowlist if you want stricter browser access control.
+- `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP=true` is the default simple path; for multi-replica rollouts, prefer a one-off migration job and set app pods to `false`.
 - Keep S3 objects private and serve audio through signed backend playback URLs (`/api/audio/playback`).

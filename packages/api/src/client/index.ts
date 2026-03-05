@@ -60,7 +60,7 @@ export const createAPIClient = ({
 
           return globalThis.fetch(outgoingRequest, {
             headers,
-            credentials: token ? 'omit' : 'include',
+            credentials: 'omit',
           });
         };
 

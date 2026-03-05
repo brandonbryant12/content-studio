@@ -7,6 +7,7 @@ configureProxy();
 import { serve } from '@hono/node-server';
 import { shutdownSSEPublisher } from '@repo/api/server';
 import { verifyDbConnection } from '@repo/db/client';
+import { runMigrations } from '@repo/db/migrate';
 import { shutdownQueueNotifier } from '@repo/queue';
 import { env } from './env';
 import { shutdownRateLimiters } from './middleware/rate-limit';
@@ -36,6 +37,18 @@ process.on('uncaughtException', (error) => {
 });
 
 const startServer = async () => {
+  if (env.SERVER_RUN_DB_MIGRATIONS_ON_STARTUP) {
+    console.log('Running database migrations...');
+
+    try {
+      await runMigrations(db);
+      console.log('Database migrations completed');
+    } catch (error) {
+      await fatalExit('Failed to run database migrations:', error);
+      return;
+    }
+  }
+
   console.log('Verifying database connection...');
 
   try {

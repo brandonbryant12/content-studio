@@ -7,6 +7,15 @@ import { Policy } from '../policy/service';
 
 type Session = AuthInstance['$Infer']['Session'];
 
+const getBearerOnlyHeaders = (headers: Headers): Headers => {
+  const authorization = headers.get('authorization');
+  const bearerHeaders = new Headers();
+  if (authorization) {
+    bearerHeaders.set('authorization', authorization);
+  }
+  return bearerHeaders;
+};
+
 /**
  * Get session from headers - Effect wrapper around better-auth.
  * Returns null if no session exists or if there's an auth error.
@@ -16,7 +25,7 @@ export const getSession = (
   headers: Headers,
 ): Effect.Effect<Session | null, AuthSessionLookupError> =>
   Effect.tryPromise({
-    try: () => auth.api.getSession({ headers }),
+    try: () => auth.api.getSession({ headers: getBearerOnlyHeaders(headers) }),
     catch: (error) =>
       new AuthSessionLookupError({
         message: 'Session lookup failed',

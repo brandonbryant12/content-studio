@@ -67,6 +67,25 @@ describe('getSession', () => {
       expect(exit.cause.error.message).toBe('Session lookup failed');
     }
   });
+
+  it('forwards only the authorization header for bearer-only auth', async () => {
+    const getSessionMock = vi.fn().mockResolvedValue(null);
+    const auth = {
+      api: {
+        getSession: getSessionMock,
+      },
+    } as unknown as AuthInstance;
+    const headers = new Headers();
+    headers.set('authorization', 'Bearer signed.jwt.token');
+    headers.set('cookie', 'better-auth.session_token=abc');
+
+    await Effect.runPromise(getSession(auth, headers));
+
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
+    const [args] = getSessionMock.mock.calls[0] as [{ headers: Headers }];
+    expect(args.headers.get('authorization')).toBe('Bearer signed.jwt.token');
+    expect(args.headers.get('cookie')).toBeNull();
+  });
 });
 
 describe('getSessionWithRole', () => {

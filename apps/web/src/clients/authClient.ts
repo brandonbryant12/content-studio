@@ -25,19 +25,10 @@ const isUnauthorizedAuthError = (error: unknown): boolean => {
 };
 
 export const refreshAccessToken = async (): Promise<boolean> => {
-  const hadToken = !!getAuthToken();
-  let session = await authClient.getSession();
+  const session = await authClient.getSession();
 
   if (!session.error && session.data?.user) {
     return true;
-  }
-
-  if (hadToken && isUnauthorizedAuthError(session.error)) {
-    clearAuthToken();
-    session = await authClient.getSession();
-    if (!session.error && session.data?.user) {
-      return true;
-    }
   }
 
   if (!session.error) {

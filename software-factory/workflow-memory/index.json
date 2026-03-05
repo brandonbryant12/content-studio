@@ -1,5 +1,74 @@
 [
   {
+    "id": "2026-03-05-docs-knowledge-drift-documented-bearer-auth-refresh-and-startup-migration-policy",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Documented bearer auth refresh and startup migration policy",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "auth",
+      "cors",
+      "deployment",
+      "migrations",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-default-split-domain-credentialed-cors-in-deploy-flow",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Default split-domain credentialed CORS in deploy flow",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "deploy",
+      "cors",
+      "eks",
+      "production"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-deploy-path-hardening-web-docker-build-fix-plus-compose-command-",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Deploy path hardening: web Docker build fix plus compose command compatibility",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "skill:feature-delivery",
+      "docker",
+      "deploy",
+      "compose",
+      "typescript"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-05-feature-delivery-server-docker-startup-now-runs-db-migrations-before-boot",
+    "date": "2026-03-05",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Server Docker startup now runs DB migrations before boot",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker",
+      "server",
+      "migrations"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-04-feature-delivery-deploy-script-proxy-wiring-and-git-pull-redeploy-path",
     "date": "2026-03-04",
     "month": "2026-03",

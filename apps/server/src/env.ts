@@ -61,11 +61,6 @@ const AuthModeSchema = Schema.Union(
   Schema.Literal('hybrid'),
   Schema.Literal('sso-only'),
 );
-const CookieSameSiteSchema = Schema.Union(
-  Schema.Literal('lax'),
-  Schema.Literal('strict'),
-  Schema.Literal('none'),
-);
 
 const CsvStringArraySchema = Schema.transform(
   Schema.String,
@@ -107,6 +102,12 @@ export const envSchema = Schema.Struct({
     default: () => [],
   }),
   SERVER_POSTGRES_URL: Schema.String,
+  SERVER_RUN_DB_MIGRATIONS_ON_STARTUP: Schema.optionalWith(
+    BooleanStringSchema,
+    {
+      default: () => false,
+    },
+  ),
 
   PUBLIC_SERVER_URL: UrlSchema,
   PUBLIC_SERVER_API_PATH: Schema.optionalWith(PathStartingWithSlash, {
@@ -145,12 +146,8 @@ export const envSchema = Schema.Struct({
     default: () => 'cs:queue:notify',
   }),
 
-  CORS_ORIGINS: Schema.optional(Schema.String),
-  AUTH_COOKIE_SAME_SITE: Schema.optionalWith(CookieSameSiteSchema, {
-    default: () => 'none' as const,
-  }),
-  AUTH_COOKIE_SECURE: Schema.optionalWith(BooleanStringSchema, {
-    default: () => true,
+  CORS_ORIGINS: Schema.optionalWith(Schema.String, {
+    default: () => '*',
   }),
   AUTH_RATE_LIMIT_MAX: Schema.optional(PositiveIntSchema),
   AUTH_RATE_LIMIT_WINDOW_MS: Schema.optional(PositiveIntSchema),
@@ -237,12 +234,6 @@ if (isProduction) {
     throw new Error('PUBLIC_WEB_URL must use https in production');
   }
 
-  if (!rawEnv.CORS_ORIGINS || rawEnv.CORS_ORIGINS.trim() === '*') {
-    throw new Error(
-      'CORS_ORIGINS must be an explicit allowlist in production (wildcard is not allowed)',
-    );
-  }
-
   if (!rawEnv.TRUST_PROXY) {
     throw new Error('TRUST_PROXY must be true in production behind ingress');
   }
@@ -254,23 +245,6 @@ if (isProduction) {
     throw new Error(
       'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true',
     );
-  }
-
-  const sameOrigin =
-    new URL(rawEnv.PUBLIC_SERVER_URL).origin ===
-    new URL(rawEnv.PUBLIC_WEB_URL).origin;
-
-  if (!sameOrigin) {
-    if (rawEnv.AUTH_COOKIE_SAME_SITE !== 'none') {
-      throw new Error(
-        'AUTH_COOKIE_SAME_SITE=none is required when PUBLIC_SERVER_URL and PUBLIC_WEB_URL are on different origins',
-      );
-    }
-    if (rawEnv.AUTH_COOKIE_SECURE !== true) {
-      throw new Error(
-        'AUTH_COOKIE_SECURE=true is required when PUBLIC_SERVER_URL and PUBLIC_WEB_URL are on different origins',
-      );
-    }
   }
 }
 

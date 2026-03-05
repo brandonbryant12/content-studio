@@ -1,17 +1,14 @@
-interface CredentialedCorsPolicyInput {
+interface BearerCorsPolicyInput {
   publicWebUrl: string;
   corsOrigins?: string;
-  nodeEnv?: string;
 }
 
-type CredentialedCorsOrigin = string[] | ((origin: string) => string | null);
+type BearerCorsOrigin = string[] | '*';
 
-interface CredentialedCorsPolicy {
-  origin: CredentialedCorsOrigin;
-  credentials: true;
+interface BearerCorsPolicy {
+  origin: BearerCorsOrigin;
+  credentials: false;
 }
-
-const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 function normalizeOrigin(value: string): string {
   try {
@@ -21,60 +18,29 @@ function normalizeOrigin(value: string): string {
   }
 }
 
-function isLocalOrigin(origin: string): boolean {
-  try {
-    const { hostname } = new URL(origin);
-    return LOCAL_HOSTNAMES.has(hostname);
-  } catch {
-    return false;
-  }
-}
-
-export const createCredentialedCorsPolicy = (
-  input: CredentialedCorsPolicyInput,
-): CredentialedCorsPolicy => {
-  const publicWebOrigin = normalizeOrigin(input.publicWebUrl);
+export const createBearerCorsPolicy = (
+  input: BearerCorsPolicyInput,
+): BearerCorsPolicy => {
   const corsOrigins = input.corsOrigins?.trim();
-  const isLocalDevelopment =
-    input.nodeEnv !== 'production' && isLocalOrigin(publicWebOrigin);
 
-  if (corsOrigins === '*') {
-    if (!isLocalDevelopment) {
-      throw new Error(
-        'CORS_ORIGINS=* is only allowed for credentialed CORS in local development.',
-      );
-    }
-
+  if (!corsOrigins || corsOrigins === '*') {
     return {
-      origin: (origin) => {
-        const normalizedOrigin = normalizeOrigin(origin);
-        return isLocalOrigin(normalizedOrigin) ? normalizedOrigin : null;
-      },
-      credentials: true,
+      origin: '*',
+      credentials: false,
     };
   }
 
-  if (isLocalDevelopment && !corsOrigins) {
-    return {
-      origin: (origin) => {
-        const normalizedOrigin = normalizeOrigin(origin);
-        return isLocalOrigin(normalizedOrigin) ? normalizedOrigin : null;
-      },
-      credentials: true,
-    };
-  }
-
-  const normalizedOrigins = new Set<string>([publicWebOrigin]);
-  if (corsOrigins) {
-    for (const origin of corsOrigins.split(',')) {
-      const trimmed = origin.trim();
-      if (trimmed.length === 0) continue;
-      normalizedOrigins.add(normalizeOrigin(trimmed));
-    }
+  const normalizedOrigins = new Set<string>([
+    normalizeOrigin(input.publicWebUrl),
+  ]);
+  for (const origin of corsOrigins.split(',')) {
+    const trimmed = origin.trim();
+    if (trimmed.length === 0 || trimmed === '*') continue;
+    normalizedOrigins.add(normalizeOrigin(trimmed));
   }
 
   return {
     origin: [...normalizedOrigins],
-    credentials: true,
+    credentials: false,
   };
 };

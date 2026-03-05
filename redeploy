@@ -21,13 +21,24 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+# ── Sudo mode ──────────────────────────────────────────────────────────────
+if [[ -z "${USE_SUDO:-}" ]]; then
+  printf "  \033[1mRun docker-compose with sudo?\033[0m [y/n] \033[2m(default: y)\033[0m: "
+  read -r _sudo_answer
+  _sudo_answer="${_sudo_answer:-y}"
+  case "$_sudo_answer" in
+    [Yy]*) export USE_SUDO=true ;;
+    *)     export USE_SUDO=false ;;
+  esac
+fi
+
 info "Pulling latest changes (fast-forward only)..."
 git pull --ff-only
 
 if [[ -f "$ENV_FILE" ]]; then
-  info "Re-deploying with existing $ENV_FILE (via ./deploy using sudo docker/sudo docker-compose)"
+  info "Re-deploying with existing $ENV_FILE"
   printf 'y\n' | ./deploy
 else
-  info "$ENV_FILE not found; launching interactive deploy setup (uses sudo docker/sudo docker-compose)"
+  info "$ENV_FILE not found; launching interactive deploy setup"
   ./deploy
 fi

@@ -29,20 +29,15 @@ describe('refreshAccessToken', () => {
     getSessionMock.mockReset();
   });
 
-  it('retries session lookup without bearer token on unauthorized', async () => {
+  it('clears token on unauthorized without cookie fallback retry', async () => {
     setAuthToken('expired.token');
-    getSessionMock
-      .mockResolvedValueOnce({
-        data: null,
-        error: { status: 401 },
-      })
-      .mockResolvedValueOnce({
-        data: { user: { id: 'user_123' } },
-        error: null,
-      });
+    getSessionMock.mockResolvedValueOnce({
+      data: null,
+      error: { status: 401 },
+    });
 
-    await expect(refreshAccessToken()).resolves.toBe(true);
-    expect(getSessionMock).toHaveBeenCalledTimes(2);
+    await expect(refreshAccessToken()).resolves.toBe(false);
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
     expect(getAuthToken()).toBeNull();
   });
 

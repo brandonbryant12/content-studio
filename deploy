@@ -5,7 +5,7 @@ set -euo pipefail
 # Content Studio — Interactive Deploy Script
 #
 # Prompts for all required environment variables, deduplicates across services,
-# writes a root .env for sudo docker-compose, then builds and starts everything.
+# writes a root .env for docker-compose, then builds and starts everything.
 # ─────────────────────────────────────────────────────────────────────────────
 
 ENV_FILE=".env.deploy"
@@ -24,13 +24,17 @@ info()    { printf "${GREEN}✓${RESET} %s\n" "$1"; }
 warn()    { printf "${YELLOW}⚠${RESET} %s\n" "$1"; }
 error()   { printf "${RED}✗${RESET} %s\n" "$1" >&2; }
 
+COMPOSE_CMD=()
+COMPOSE_CMD_DISPLAY=""
+COMPOSE_INVOCATION=""
+
 # ── Env-file reader ────────────────────────────────────────────────────────
 
 # read_env_value FILE KEY — returns last non-commented value for KEY, or ""
 read_env_value() {
   local file="$1" key="$2"
   [[ -f "$file" ]] || return 0
-  grep -E "^${key}=" "$file" 2>/dev/null | tail -1 | sed "s/^${key}=//" | sed 's/^["'"'"']//;s/["'"'"']$//'
+  grep -E "^${key}=" "$file" 2>/dev/null | tail -1 | sed "s/^${key}=//" | sed 's/^["'"'"']//;s/["'"'"']$//' || true
 }
 
 # extract_port "http://host:1234" → "1234"
@@ -85,48 +89,29 @@ normalize_host_ip() {
 }
 
 normalize_cors_origins() {
-  local web_origin
-  web_origin="$(build_web_origin)"
-  local normalized_origins=""
-  local has_web_origin="false"
-
   if [[ -z "${CORS_ORIGINS:-}" || -z "${CORS_ORIGINS//[[:space:]]/}" ]]; then
-    warn "CORS_ORIGINS is empty. Using ${web_origin}."
-    CORS_ORIGINS="$web_origin"
+    CORS_ORIGINS="*"
     return
   fi
 
   if [[ "$CORS_ORIGINS" == "*" ]]; then
-    warn "CORS_ORIGINS='*' is not allowed in this deploy flow. Using ${web_origin}."
-    CORS_ORIGINS="$web_origin"
     return
   fi
 
+  local normalized_origins=""
   IFS=',' read -r -a _cors_parts <<< "$CORS_ORIGINS"
   for origin in "${_cors_parts[@]}"; do
     # trim leading/trailing whitespace
     origin="${origin#"${origin%%[![:space:]]*}"}"
     origin="${origin%"${origin##*[![:space:]]}"}"
-    [[ -z "$origin" ]] && continue
-
-    [[ "$origin" == "$web_origin" ]] && has_web_origin="true"
+    [[ -z "$origin" || "$origin" == "*" ]] && continue
 
     if [[ ",${normalized_origins}," != *",${origin},"* ]]; then
       normalized_origins="${normalized_origins:+${normalized_origins},}${origin}"
     fi
   done
 
-  if [[ -z "$normalized_origins" ]]; then
-    normalized_origins="$web_origin"
-    has_web_origin="true"
-  fi
-
-  if [[ "$has_web_origin" != "true" ]]; then
-    warn "Adding web origin to CORS_ORIGINS: ${web_origin}"
-    normalized_origins="${normalized_origins},${web_origin}"
-  fi
-
-  CORS_ORIGINS="$normalized_origins"
+  CORS_ORIGINS="${normalized_origins:-*}"
 }
 
 validate_runtime_constraints() {
@@ -158,8 +143,8 @@ validate_runtime_constraints() {
 print_failed_service_logs() {
   local failed_services
   failed_services=$(
-    sudo docker-compose --env-file "$ENV_FILE" ps --status exited --services 2>/dev/null \
-      | grep -vE '^(migrate|minio-init)$' || true
+    compose --env-file "$ENV_FILE" ps --status exited --services 2>/dev/null \
+      | grep -vE '^minio-init$' || true
   )
   [[ -n "$failed_services" ]] || return 0
 
@@ -167,7 +152,7 @@ print_failed_service_logs() {
   while IFS= read -r service; do
     [[ -z "$service" ]] && continue
     printf "\n${BOLD}${YELLOW}--- %s (last 80 lines) ---${RESET}\n" "$service"
-    sudo docker-compose --env-file "$ENV_FILE" logs --no-color --tail=80 "$service" || true
+    compose --env-file "$ENV_FILE" logs --no-color --tail=80 "$service" || true
   done <<< "$failed_services"
 }
 
@@ -356,16 +341,63 @@ prompt_yesno() {
   esac
 }
 
+# ── Sudo mode ────────────────────────────────────────────────────────────────
+
+SUDO=""
+
+choose_sudo_mode() {
+  if [[ "${USE_SUDO:-}" == "true" ]]; then
+    SUDO="sudo"
+    return
+  elif [[ "${USE_SUDO:-}" == "false" ]]; then
+    SUDO=""
+    return
+  fi
+
+  prompt_yesno USE_SUDO "Run docker-compose with sudo?" "y"
+  if [[ "$USE_SUDO" == "true" ]]; then
+    SUDO="sudo"
+  else
+    SUDO=""
+  fi
+}
+
+choose_compose_command() {
+  if command -v docker-compose &>/dev/null; then
+    COMPOSE_CMD=("docker-compose")
+  elif docker compose version &>/dev/null; then
+    COMPOSE_CMD=("docker" "compose")
+  else
+    error "Neither 'docker-compose' nor 'docker compose' is available."
+    exit 1
+  fi
+
+  COMPOSE_CMD_DISPLAY="${COMPOSE_CMD[*]}"
+  if [[ -n "$SUDO" ]]; then
+    COMPOSE_INVOCATION="sudo ${COMPOSE_CMD_DISPLAY}"
+  else
+    COMPOSE_INVOCATION="${COMPOSE_CMD_DISPLAY}"
+  fi
+}
+
+compose() {
+  if [[ -n "$SUDO" ]]; then
+    sudo "${COMPOSE_CMD[@]}" "$@"
+  else
+    "${COMPOSE_CMD[@]}" "$@"
+  fi
+}
+
 # ── Prerequisites ────────────────────────────────────────────────────────────
 
 check_prerequisites() {
   header "Checking Prerequisites"
 
-  if ! command -v sudo &>/dev/null; then
+  if [[ -n "$SUDO" ]] && ! command -v sudo &>/dev/null; then
     error "sudo is required but not installed."
     exit 1
   fi
-  info "sudo found"
+  [[ -n "$SUDO" ]] && info "sudo found"
 
   if ! command -v docker &>/dev/null; then
     error "Docker is not installed. Please install Docker first."
@@ -373,19 +405,15 @@ check_prerequisites() {
   fi
   info "Docker found"
 
-  if ! command -v docker-compose &>/dev/null; then
-    error "docker-compose is not installed. Please install docker-compose first."
+  choose_compose_command
+  if ! compose version &>/dev/null; then
+    error "'$COMPOSE_INVOCATION version' failed."
     exit 1
   fi
+  info "Docker Compose found (${COMPOSE_CMD_DISPLAY})"
 
-  if ! sudo docker-compose version &>/dev/null; then
-    error "docker-compose found, but sudo docker-compose failed. Verify sudo permissions."
-    exit 1
-  fi
-  info "Docker Compose found"
-
-  if ! sudo docker info &>/dev/null 2>&1; then
-    error "Docker daemon is not running or not accessible via sudo."
+  if ! $SUDO docker info &>/dev/null 2>&1; then
+    error "Docker daemon is not running or not accessible."
     exit 1
   fi
   info "Docker daemon is running"
@@ -579,17 +607,10 @@ collect_variables() {
   refresh_public_urls
 
   # ── CORS ─────────────────────────────────────────────────────────────────
-  header "CORS"
-  printf "  ${DIM}Comma-separated origins. '*' is not supported in this deploy mode.${RESET}\n"
-  printf "  ${DIM}The web app origin is always allowed.${RESET}\n\n"
-
-  local default_cors_origins="${_DEF_CORS_ORIGINS:-$PUBLIC_WEB_URL}"
-  if [[ "$default_cors_origins" == "*" ]]; then
-    default_cors_origins="$PUBLIC_WEB_URL"
-  fi
-  prompt CORS_ORIGINS "Allowed CORS origins" "$default_cors_origins"
+  CORS_ORIGINS="${_DEF_CORS_ORIGINS:-*}"
 
   normalize_cors_origins
+  info "CORS_ORIGINS set to: ${CORS_ORIGINS}"
   validate_runtime_constraints
 }
 
@@ -603,8 +624,8 @@ write_env_file() {
 # Content Studio — Deploy Configuration
 # Generated by ./deploy on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 #
-# This file is read by sudo docker-compose. Re-run ./deploy to regenerate,
-# or edit values directly and run: sudo docker-compose --env-file $ENV_FILE up --build
+# This file is read by docker-compose. Re-run ./deploy to regenerate,
+# or edit values directly and run: docker-compose --env-file $ENV_FILE up --build
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Docker Registry ──────────────────────────────────────────────────────────
@@ -692,18 +713,18 @@ build_and_run() {
   local deploy_log
   deploy_log="$(mktemp)"
 
-  if ! sudo docker-compose --env-file "$ENV_FILE" up --build -d 2>&1 | tee "$deploy_log"; then
+  if ! compose --env-file "$ENV_FILE" up --build -d 2>&1 | tee "$deploy_log"; then
     if grep -q 'Could not resolve "../hooks/use-optimistic-create"' "$deploy_log"; then
       warn "Detected stale web build context. Retrying web build without Docker cache."
-      if ! sudo docker-compose --env-file "$ENV_FILE" build --no-cache web; then
+      if ! compose --env-file "$ENV_FILE" build --no-cache web; then
         error "Web rebuild still failed. Pull latest code and verify podcast list imports use-create-podcast."
         rm -f "$deploy_log"
         exit 1
       fi
 
-      sudo docker-compose --env-file "$ENV_FILE" up -d
+      compose --env-file "$ENV_FILE" up -d
     else
-      error "sudo docker-compose up --build failed. See logs above."
+      error "$COMPOSE_INVOCATION up --build failed. See logs above."
       print_failed_service_logs
       rm -f "$deploy_log"
       exit 1
@@ -734,7 +755,7 @@ build_and_run() {
       elif echo "$line" | grep -q "(Up"; then
         ready=$((ready + 1))
       fi
-    done < <(sudo docker-compose --env-file "$ENV_FILE" ps --format "{{.Name}} ({{.Status}})" 2>/dev/null | grep -v "minio-init\|migrate")
+    done < <(compose --env-file "$ENV_FILE" ps --format "{{.Name}} ({{.Status}})" 2>/dev/null | grep -v "minio-init")
 
     printf "\r  Ready: ${GREEN}%d${RESET}/%d services (${DIM}%ds elapsed${RESET})  " "$ready" "$total" "$elapsed"
 
@@ -749,7 +770,7 @@ build_and_run() {
 
   if (( elapsed >= timeout )); then
     echo
-    warn "Some services may not be healthy yet. Check with: sudo docker-compose --env-file $ENV_FILE ps"
+    warn "Some services may not be healthy yet. Check with: $COMPOSE_INVOCATION --env-file $ENV_FILE ps"
     print_failed_service_logs
   fi
 
@@ -765,10 +786,10 @@ build_and_run() {
   printf "  ${GREEN}Redis${RESET}          %s:%s\n" "$REDIS_BIND_IP" "$REDIS_PORT"
 
   printf "\n  ${DIM}Useful commands:${RESET}\n"
-  printf "    sudo docker-compose --env-file %s logs -f        ${DIM}# tail all logs${RESET}\n" "$ENV_FILE"
-  printf "    sudo docker-compose --env-file %s logs -f server  ${DIM}# tail server logs${RESET}\n" "$ENV_FILE"
-  printf "    sudo docker-compose --env-file %s down            ${DIM}# stop everything${RESET}\n" "$ENV_FILE"
-  printf "    sudo docker-compose --env-file %s down -v         ${DIM}# stop + delete volumes${RESET}\n" "$ENV_FILE"
+  printf "    %s --env-file %s logs -f        ${DIM}# tail all logs${RESET}\n" "$COMPOSE_INVOCATION" "$ENV_FILE"
+  printf "    %s --env-file %s logs -f server  ${DIM}# tail server logs${RESET}\n" "$COMPOSE_INVOCATION" "$ENV_FILE"
+  printf "    %s --env-file %s down            ${DIM}# stop everything${RESET}\n" "$COMPOSE_INVOCATION" "$ENV_FILE"
+  printf "    %s --env-file %s down -v         ${DIM}# stop + delete volumes${RESET}\n" "$COMPOSE_INVOCATION" "$ENV_FILE"
   printf "    ./deploy                                     ${DIM}# re-deploy (reuses config)${RESET}\n"
   printf "    ./redeploy                                   ${DIM}# git pull --ff-only + re-deploy${RESET}\n"
   printf "    pnpm deploy:linux                            ${DIM}# same as ./deploy${RESET}\n"
@@ -785,6 +806,7 @@ main() {
   printf "  └─────────────────────────────────────────┘\n"
   printf "${RESET}\n"
 
+  choose_sudo_mode
   check_prerequisites
 
   if ! load_existing_env; then

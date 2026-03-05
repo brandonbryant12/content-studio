@@ -16,17 +16,35 @@ pnpm redeploy:linux
 
 ## CORS Rule (Both Patterns)
 
-Set `CORS_ORIGINS` to the exact public web origin(s), comma-separated.
+`CORS_ORIGINS` is optional and defaults to `*` (permissive bearer-token CORS).
+Set an explicit comma-separated allowlist only if you want tighter browser access control.
 
 Examples:
 
+- permissive default: `CORS_ORIGINS=*`
 - same-origin domain: `CORS_ORIGINS=https://studio.example.com`
-- split origins: `CORS_ORIGINS=https://studio.example.com`
+- split origins: `CORS_ORIGINS=https://studio.example.com,https://api.example.com`
 - port-based local ingress: `CORS_ORIGINS=https://studio.example.com:8086`
 
-Use explicit origins. Do not use `*` in production.
+`pnpm deploy:linux` now defaults this to `*`.
 
-`pnpm deploy:linux` normalizes this value and auto-appends the configured web origin if missing.
+## Startup Migration Policy (Server)
+
+`apps/server` supports startup migrations via `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP`.
+
+- `true`: server runs pending Drizzle migrations before opening the HTTP port.
+- `false`: server skips migration execution and only verifies DB connectivity.
+
+Current deployment defaults:
+
+1. Docker runtime/server container defaults to `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP=true`.
+2. Linux Compose (`pnpm deploy:linux`) sets this to `true`.
+3. Startup failure during migration is fail-fast (container exits non-zero).
+
+EKS guidance:
+
+1. Single replica or controlled rollout: `true` is acceptable and simplest.
+2. Multi-replica parallel rollout: prefer a pre-deploy migration job and set app pods to `false` to avoid concurrent migration attempts.
 
 ## Common Required Env
 
@@ -55,7 +73,6 @@ Required:
 - `SERVER_REDIS_URL`
 - `PUBLIC_SERVER_URL`
 - `PUBLIC_WEB_URL`
-- `CORS_ORIGINS`
 - `TRUST_PROXY=true` (required in production)
 
 Conditionally required:
@@ -70,8 +87,9 @@ Common optional-but-important:
 - `STORAGE_PROVIDER` (`s3` for both patterns in deployment)
 - `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`
 - `USE_MOCK_AI`
+- `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` (default `true` in containerized deployment path)
+- `CORS_ORIGINS` (default `*`; optional explicit allowlist)
 - `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`
-- `AUTH_COOKIE_SAME_SITE`, `AUTH_COOKIE_SECURE`
 
 ## Special Notes By Pattern
 
@@ -88,18 +106,16 @@ Minimal public URL alignment for same-domain deployment:
 ```env
 PUBLIC_WEB_URL=https://studio.example.com
 PUBLIC_SERVER_URL=https://studio.example.com
-CORS_ORIGINS=https://studio.example.com
+CORS_ORIGINS=*
 ```
 
-If you expose web/server on different ports, include the web port in `CORS_ORIGINS`.
+If you expose web/server on different ports and want a strict allowlist, include the web origin and port in `CORS_ORIGINS`.
 
 ### 2) EKS (Web + Server, External DB/Redis/S3, Split Domains)
 
 Special requirements:
 
 - `PUBLIC_WEB_URL` and `PUBLIC_SERVER_URL` are different origins.
-- Set `AUTH_COOKIE_SAME_SITE=none` and `AUTH_COOKIE_SECURE=true`.
-- `CORS_ORIGINS` must include the web origin (`https://studio.example.com`).
 - `SERVER_POSTGRES_URL` and `SERVER_REDIS_URL` point to managed/external services.
 - `S3_*` values point to external object storage (AWS S3 or compatible).
 
@@ -108,10 +124,8 @@ Typical split-domain core values:
 ```env
 PUBLIC_WEB_URL=https://studio.example.com
 PUBLIC_SERVER_URL=https://api.example.com
-CORS_ORIGINS=https://studio.example.com
+CORS_ORIGINS=*
 TRUST_PROXY=true
-AUTH_COOKIE_SAME_SITE=none
-AUTH_COOKIE_SECURE=true
 ```
 
 For Kubernetes ingress templates, see:

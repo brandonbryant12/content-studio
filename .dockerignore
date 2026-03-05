@@ -52,4 +52,13 @@ compose.yaml
 deploy
 .env.deploy
 jenkins/
-tools/
+# Keep only tooling workspaces required by pruned workspace builds.
+tools/*
+!tools/eslint/
+!tools/eslint/**
+!tools/prettier/
+!tools/prettier/**
+!tools/tailwind/
+!tools/tailwind/**
+!tools/typescript/
+!tools/typescript/**

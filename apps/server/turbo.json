@@ -8,9 +8,7 @@
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",
-        "CORS_ORIGINS",
-        "AUTH_COOKIE_SAME_SITE",
-        "AUTH_COOKIE_SECURE"
+        "CORS_ORIGINS"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "persistent": true
@@ -21,9 +19,7 @@
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",
-        "CORS_ORIGINS",
-        "AUTH_COOKIE_SAME_SITE",
-        "AUTH_COOKIE_SECURE"
+        "CORS_ORIGINS"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"]
     },
@@ -33,9 +29,7 @@
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",
-        "CORS_ORIGINS",
-        "AUTH_COOKIE_SAME_SITE",
-        "AUTH_COOKIE_SECURE"
+        "CORS_ORIGINS"
       ],
       "persistent": true
     }

@@ -111,10 +111,9 @@ pnpm db:push                    # 5. Push database schema
 | `USE_MOCK_AI` | Use mock AI providers instead of live Gemini providers | `true` |
 | `STORAGE_PROVIDER` | Storage backend (`filesystem` / `s3`) | `filesystem` |
 | `SERVER_REDIS_URL` | Redis for SSE pub/sub | `redis://localhost:6379` |
+| `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` | Run pending Drizzle migrations during server startup | `false` (set `true` in Docker runtime image) |
 | `TRUST_PROXY` | Trust `x-forwarded-for` / `x-real-ip` for rate-limit identity | `false` |
-| `CORS_ORIGINS` | Comma-separated credentialed CORS origin allowlist (`*` only for local-dev) | `PUBLIC_WEB_URL` |
-| `AUTH_COOKIE_SAME_SITE` | Auth cookie SameSite (`lax` / `strict` / `none`) | better-auth default (`lax`) |
-| `AUTH_COOKIE_SECURE` | Force secure auth cookies (`true` / `false`) | auto (true on https) |
+| `CORS_ORIGINS` | Comma-separated CORS origin allowlist for bearer-token requests (`*` allows any origin) | `*` |
 | `S3_BUCKET` | S3 bucket name | -- |
 | `S3_REGION` | S3 region | -- |
 | `TELEMETRY_ENABLED` | Enable backend OpenTelemetry export | `true` in production, else `false` |

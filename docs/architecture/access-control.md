@@ -32,7 +32,7 @@ graph LR
 
 | Layer | Mechanism |
 |---|---|
-| HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (cookie-compatible fallback remains supported) |
+| HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (bearer-only transport; cookie fallback disabled) |
 | Login mode | `AUTH_MODE` selects providers: `dev-password`, `hybrid`, `sso-only` |
 | SSO role sync | In SSO modes, `databaseHooks.session.create.after` calls Microsoft Graph `transitiveMemberOf` and maps configured group IDs to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
@@ -45,6 +45,100 @@ Auth-context failure semantics:
 The `protectedProcedure` type guarantees that handlers receive a non-null user. Handlers that use `baseProcedure` receive `user: User | null` and must handle the null case explicitly.
 
 Role mapping intentionally uses Graph API lookup (instead of token `groups` claim) to avoid group-claim overage behavior for users in many groups.
+
+### SSO Sign-In Sequence
+
+```mermaid
+sequenceDiagram
+  participant U as User Browser
+  participant W as Web App
+  participant A as Server /api/auth
+  participant MS as Microsoft Identity
+  participant G as Microsoft Graph
+  participant DB as PostgreSQL
+
+  U->>W: Click "Sign in with Microsoft"
+  W->>A: GET /auth/sign-in/social (microsoft)
+  A-->>U: 302 Redirect to Microsoft login
+  U->>MS: Authenticate + consent
+  MS-->>A: OAuth callback with code
+  A->>DB: Create/refresh user + session
+  A->>G: GET transitiveMemberOf(user)
+  G-->>A: Group IDs
+  A->>DB: Map groups -> role (admin/user)
+  A-->>W: Response with set-auth-token header
+  W->>W: Store bearer token in memory
+```
+
+### Bearer API Request Sequence
+
+```mermaid
+sequenceDiagram
+  participant W as Web App
+  participant API as Server /api/*
+  participant BA as better-auth
+  participant DB as PostgreSQL
+
+  W->>API: Request with Authorization: Bearer <token>
+  API->>BA: getSession(headers: authorization only)
+  BA->>DB: Resolve session + user
+  DB-->>BA: Session + user
+  BA-->>API: Authenticated session
+  API-->>W: Protected resource response
+```
+
+### Session Refresh Policy
+
+Current behavior is intentionally bearer-only and uses Better Auth defaults (we do not override session timing in app config today).
+
+| Policy Area | Current Setting | Notes |
+|---|---|---|
+| Session expiry (`expiresIn`) | 7 days | Better Auth server default |
+| Session refresh window (`updateAge`) | 1 day | Better Auth server default (sliding refresh when session is read) |
+| Browser background refresh | Focus-based refetch enabled | Better Auth client default: `refetchOnWindowFocus=true` |
+| Browser polling | Disabled | Better Auth client default: `refetchInterval=0` |
+| Offline refetch | Disabled | Better Auth client default: `refetchWhenOffline=false` |
+| 401 recovery for API calls | Single refresh + single retry | `packages/api` client calls web `refreshAccessToken()` and retries once |
+| Token transport | `Authorization: Bearer <token>` only | No cookie fallback on client or server session lookup |
+| Token storage | In-memory only | Full page reload clears token and may require sign-in again |
+
+Operational implications:
+
+1. Active users usually stay authenticated via focus-triggered session reads/refresh.
+2. If a request gets `401`, the app attempts one session refresh and retries once.
+3. No persistent browser auth state is kept across full reloads by design (security-first bearer model).
+
+If we need a different enterprise policy (for example shorter idle timeout, explicit absolute timeout, or polling refresh), define explicit `session` options in server auth config and expose client `sessionOptions` via the auth client wrapper.
+
+### Auth Transport Decision (Bearer-Only)
+
+This codebase standardizes on bearer-only user auth transport.
+
+Why this is the default:
+
+1. Web and API are expected to run on different domains in EKS.
+2. Bearer-only requests avoid credentialed CORS requirements and cookie domain coupling.
+3. It removes ambient-cookie auth behavior (reduced CSRF-style risk surface).
+
+Tradeoffs to keep in mind:
+
+1. We intentionally do not persist auth tokens across full page reloads.
+2. API clients must handle explicit `401` recovery (refresh once, retry once).
+3. If product requirements later demand seamless reload persistence, we will need a documented storage policy change.
+
+Enterprise baseline:
+
+1. Bearer token transport is common for split-domain SPA + API architectures.
+2. HttpOnly cookie sessions are common for same-origin server-rendered applications.
+3. For this architecture, bearer-only is the operational default unless an ADR explicitly changes it.
+
+### Service-to-Service Auth Status
+
+Current runtime topology has no internal service-to-service HTTP auth flow:
+
+1. `apps/server` and `apps/worker` each use shared infrastructure (PostgreSQL, Redis, S3) directly.
+2. `apps/worker` does not call protected server HTTP APIs with user tokens.
+3. There is no separate machine-token policy configured today.
 
 ## Authorization (AuthZ)
 <!-- enforced-by: architecture -->

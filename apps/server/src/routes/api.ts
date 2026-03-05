@@ -2,7 +2,7 @@ import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { credentialedCorsPolicy } from '../config';
+import { bearerCorsPolicy } from '../config';
 import { env } from '../env';
 import { createApiRateLimit } from '../middleware/rate-limit';
 import { api, audioPlaybackProxy, serverRuntime } from '../services';
@@ -100,7 +100,7 @@ const rewriteAudioUrlsInResponse = async (
 export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
   .use(
     cors({
-      ...credentialedCorsPolicy,
+      ...bearerCorsPolicy,
       allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       maxAge: 600,

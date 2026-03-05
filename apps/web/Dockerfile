@@ -29,7 +29,7 @@ FROM base AS installer
 
 COPY --from=builder /app/out/json/ .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 
@@ -46,7 +46,7 @@ ENV PUBLIC_SERVER_URL="${PUBLIC_SERVER_URL}" \
     PUBLIC_WEB_URL="${PUBLIC_WEB_URL}" \
     PUBLIC_BASE_PATH="${PUBLIC_BASE_PATH}"
 
-RUN pnpm build
+RUN pnpm --filter web build
 
 # =========================================================================== #
 

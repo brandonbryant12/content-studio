@@ -49,6 +49,9 @@ RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 hono
 
 COPY --from=installer --chown=hono:nodejs /app/apps/server/dist /app/dist
+COPY --from=installer --chown=hono:nodejs /app/packages/db/drizzle /app/drizzle
+
+ENV SERVER_RUN_DB_MIGRATIONS_ON_STARTUP=true
 
 USER hono
 

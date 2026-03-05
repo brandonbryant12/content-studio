@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { credentialedCorsPolicy } from '../config';
+import { bearerCorsPolicy } from '../config';
 import { env } from '../env';
 import { createAuthRateLimit } from '../middleware/rate-limit';
 import { auth } from '../services';
@@ -15,7 +15,7 @@ const authRateLimit = createAuthRateLimit({
 export const authRoute = new Hono()
   .use(
     cors({
-      ...credentialedCorsPolicy,
+      ...bearerCorsPolicy,
       allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['POST', 'GET', 'OPTIONS'],
       exposeHeaders: ['Content-Length', 'set-auth-token'],

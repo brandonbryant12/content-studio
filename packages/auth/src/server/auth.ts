@@ -30,8 +30,6 @@ export interface AuthOptions {
   authMode: AuthMode;
   db: DatabaseInstance;
   trustedOrigins?: string[];
-  cookieSameSite?: 'lax' | 'strict' | 'none';
-  useSecureCookies?: boolean;
   microsoftSSO?: MicrosoftSSOConfig;
 }
 
@@ -90,8 +88,6 @@ export const createAuth = ({
   authSecret,
   authMode,
   trustedOrigins,
-  cookieSameSite,
-  useSecureCookies,
   microsoftSSO,
 }: AuthOptions) =>
   betterAuth({
@@ -107,18 +103,6 @@ export const createAuth = ({
           input: false,
         },
       },
-    },
-    session: {
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60,
-      },
-    },
-    advanced: {
-      useSecureCookies,
-      defaultCookieAttributes: cookieSameSite
-        ? { sameSite: cookieSameSite }
-        : undefined,
     },
     socialProviders:
       isMicrosoftSSOEnabled(authMode) && microsoftSSO

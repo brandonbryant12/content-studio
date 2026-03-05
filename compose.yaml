@@ -75,13 +75,14 @@ services:
       AUTH_ROLE_ADMIN_GROUP_IDS: "${AUTH_ROLE_ADMIN_GROUP_IDS:-}"
       AUTH_ROLE_USER_GROUP_IDS: "${AUTH_ROLE_USER_GROUP_IDS:-}"
       SERVER_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
+      SERVER_RUN_DB_MIGRATIONS_ON_STARTUP: "true"
       SERVER_REDIS_URL: "redis://redis:6379"
       TRUST_PROXY: "${TRUST_PROXY:-false}"
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "3036"
       PUBLIC_WEB_URL: "${PUBLIC_WEB_URL:-http://${HOST_IP:-localhost}:${WEB_PORT:-8086}}"
       PUBLIC_SERVER_URL: "${PUBLIC_SERVER_URL:-http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}}"
-      CORS_ORIGINS: "${CORS_ORIGINS:-http://${HOST_IP:-localhost}:${WEB_PORT:-8086}}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
       USE_MOCK_AI: "${USE_MOCK_AI:-true}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       # S3 / MinIO storage
@@ -116,8 +117,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
     networks: [frontend, backend]
@@ -155,12 +154,8 @@ services:
       NO_PROXY: "${NO_PROXY:-}"
       NODE_EXTRA_CA_CERTS: "${NODE_EXTRA_CA_CERTS:-}"
     depends_on:
-      db:
+      server:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
     networks: [backend]
@@ -210,21 +205,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks: [backend]
-
-  # ------------------------------------------------------------------ #
-  # Database migrations
-  # ------------------------------------------------------------------ #
-  migrate:
-    restart: "no"
-    build:
-      context: .
-      dockerfile: ./packages/db/Dockerfile
-    environment:
-      DB_POSTGRES_URL: "postgres://postgres:postgres@db:5432/content_studio"
-    depends_on:
-      db:
-        condition: service_healthy
     networks: [backend]
 
   # ------------------------------------------------------------------ #
