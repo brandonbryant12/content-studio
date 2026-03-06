@@ -1,5 +1,10 @@
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  AIUsageRecorder,
+  type PersistAIUsageInput,
+  withAIUsageScope,
+} from '../../usage';
 import { TTS } from '../service';
 import { GoogleTTSLive } from './google';
 
@@ -55,5 +60,80 @@ describe('GoogleTTSLive', () => {
     const [, init] = fetchMock.mock.calls[0] ?? [];
     expect(init.signal).toBeDefined();
     expect(init.signal.aborted).toBe(false);
+  });
+
+  it('records usage when previewVoice succeeds', async () => {
+    const recorded: PersistAIUsageInput[] = [];
+    const recorderLayer = Layer.succeed(AIUsageRecorder, {
+      record: (input: PersistAIUsageInput) =>
+        Effect.sync(() => {
+          recorded.push(input);
+        }),
+    });
+
+    const audioContent = Buffer.from('RIFFmock-audio');
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          responseId: 'tts-response-1',
+          usageMetadata: {
+            promptTokenCount: 9,
+            totalTokenCount: 9,
+          },
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: 'audio/wav',
+                      data: audioContent.toString('base64'),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const tts = yield* TTS;
+        return yield* tts.previewVoice({
+          voiceId: 'Charon',
+          text: 'Preview this voice.',
+        });
+      }).pipe(
+        withAIUsageScope({
+          userId: 'user-1',
+          requestId: 'req-1',
+          operation: 'test.previewVoice',
+        }),
+        Effect.provide(
+          Layer.mergeAll(GoogleTTSLive({ apiKey: 'test-key' }), recorderLayer),
+        ),
+      ),
+    );
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toMatchObject({
+      userId: 'user-1',
+      requestId: 'req-1',
+      scopeOperation: 'test.previewVoice',
+      modality: 'tts',
+      provider: 'google',
+      providerOperation: 'previewVoice',
+      status: 'succeeded',
+      providerResponseId: 'tts-response-1',
+      usage: {
+        inputChars: 'Preview this voice.'.length,
+        outputAudioBytes: audioContent.length,
+        promptTokens: 9,
+        totalTokens: 9,
+      },
+    });
   });
 });

@@ -129,6 +129,20 @@ export type ActivityLogId = typeof ActivityLogIdSchema.Type;
 export const generateActivityLogId = (): ActivityLogId =>
   `act_${generateRandomBase32()}` as ActivityLogId;
 
+// AI Usage Event ID
+
+export const AIUsageEventIdSchema = Schema.String.pipe(
+  Schema.pattern(/^aiu_[0-9a-hjkmnp-tv-z]{16}$/, {
+    message: () => 'Invalid AI usage event ID format',
+  }),
+  Schema.brand('AIUsageEventId'),
+);
+
+export type AIUsageEventId = typeof AIUsageEventIdSchema.Type;
+
+export const generateAIUsageEventId = (): AIUsageEventId =>
+  `aiu_${generateRandomBase32()}` as AIUsageEventId;
+
 // Persona ID
 
 export const PersonaIdSchema = Schema.String.pipe(

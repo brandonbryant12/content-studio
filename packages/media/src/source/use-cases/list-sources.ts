@@ -35,6 +35,7 @@ export const listSources = (input: ListSourcesInput) =>
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
     const spanAttributes: Record<string, string | number> = {
+      ...(createdBy ? { 'owner.id': createdBy } : {}),
       'pagination.limit': limit,
       'pagination.offset': offset,
       ...(input.userId ? { 'filter.userId': input.userId } : {}),
@@ -49,7 +50,7 @@ export const listSources = (input: ListSourcesInput) =>
 
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: createdBy ?? user.id,
+      collection: 'sources',
       attributes: spanAttributes,
     });
 

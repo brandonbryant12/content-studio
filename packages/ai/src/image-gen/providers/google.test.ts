@@ -1,6 +1,11 @@
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  AIUsageRecorder,
+  type PersistAIUsageInput,
+  withAIUsageScope,
+} from '../../usage';
 import { ImageGen } from '../service';
 import { GoogleImageGenLive } from './google';
 
@@ -67,5 +72,79 @@ describe('GoogleImageGenLive', () => {
     );
     expect(params.config.abortSignal).toBeDefined();
     expect(params.config.abortSignal.aborted).toBe(false);
+  });
+
+  it('records usage when image generation succeeds', async () => {
+    const recorded: PersistAIUsageInput[] = [];
+    const recorderLayer = Layer.succeed(AIUsageRecorder, {
+      record: (input: PersistAIUsageInput) =>
+        Effect.sync(() => {
+          recorded.push(input);
+        }),
+    });
+
+    const imageBytes = Buffer.from('image-bytes');
+    mockGenerateContent.mockResolvedValueOnce({
+      responseId: 'image-response-1',
+      usageMetadata: {
+        promptTokenCount: 13,
+        totalTokenCount: 13,
+      },
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                inlineData: {
+                  data: imageBytes.toString('base64'),
+                  mimeType: 'image/png',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const imageGen = yield* ImageGen;
+        return yield* imageGen.generateImage({
+          prompt: 'A city skyline',
+          format: 'square',
+        });
+      }).pipe(
+        withAIUsageScope({
+          userId: 'user-1',
+          requestId: 'req-1',
+          operation: 'test.generateImage',
+        }),
+        Effect.provide(
+          Layer.mergeAll(
+            GoogleImageGenLive({ apiKey: 'test-key' }),
+            recorderLayer,
+          ),
+        ),
+      ),
+    );
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toMatchObject({
+      userId: 'user-1',
+      requestId: 'req-1',
+      scopeOperation: 'test.generateImage',
+      modality: 'image_generation',
+      provider: 'google',
+      providerOperation: 'generateImage',
+      status: 'succeeded',
+      providerResponseId: 'image-response-1',
+      usage: {
+        imageCount: 1,
+        promptChars: 'A city skyline'.length,
+        outputImageBytes: imageBytes.length,
+        promptTokens: 13,
+        totalTokens: 13,
+      },
+    });
   });
 });

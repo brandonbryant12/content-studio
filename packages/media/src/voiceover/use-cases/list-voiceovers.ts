@@ -32,8 +32,9 @@ export const listVoiceovers = (input: ListVoiceoversInput) =>
     const offset = input.offset ?? 0;
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: user.id,
+      collection: 'voiceovers',
       attributes: {
+        'owner.id': user.id,
         'pagination.limit': limit,
         'pagination.offset': offset,
       },

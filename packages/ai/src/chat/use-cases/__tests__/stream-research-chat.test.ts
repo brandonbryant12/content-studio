@@ -5,27 +5,12 @@ import type { UIMessage } from 'ai';
 import { LLM, type LLMService } from '../../../llm/service';
 import { streamResearchChat } from '../stream-research-chat';
 
-// We can't actually call streamText with a mock model (it needs a real LanguageModel),
-// so we mock the `ai` module to verify the use case passes correct args.
 const mockStreamText = vi.fn();
-const mockConvertToModelMessages = vi.fn();
-
-vi.mock('ai', async () => {
-  const actual = await vi.importActual('ai');
-  return {
-    ...actual,
-    streamText: (...args: unknown[]) => mockStreamText(...args),
-    convertToModelMessages: (...args: unknown[]) =>
-      mockConvertToModelMessages(...args),
-  };
-});
-
-const mockModel = { modelId: 'mock-model' };
 
 const MockLLMLayer: Layer.Layer<LLM> = Layer.succeed(LLM, {
-  model: mockModel,
   generate: () => Effect.die('not used'),
-} as unknown as LLMService);
+  streamText: mockStreamText,
+} satisfies LLMService);
 
 const testMessages: UIMessage[] = [
   {
@@ -36,38 +21,27 @@ const testMessages: UIMessage[] = [
 ];
 
 describe('streamResearchChat', () => {
-  it.effect('calls streamText with correct system prompt and model', () =>
+  it.effect('calls llm.streamText with the research prompt', () =>
     Effect.gen(function* () {
-      const mockModelMessages = [
-        { role: 'user' as const, content: 'AI in healthcare' },
-      ];
       const mockStream = new ReadableStream();
-
-      mockConvertToModelMessages.mockResolvedValue(mockModelMessages);
-      mockStreamText.mockReturnValue({
-        toUIMessageStream: () => mockStream,
-      });
+      mockStreamText.mockReturnValueOnce(Effect.succeed(mockStream));
 
       const result = yield* streamResearchChat({ messages: testMessages });
 
-      expect(mockConvertToModelMessages).toHaveBeenCalledWith(testMessages);
-      expect(mockStreamText).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: mockModel,
-          system: expect.stringContaining('research topic refinement'),
-          messages: mockModelMessages,
-          maxOutputTokens: 1024,
-          temperature: 0.7,
-        }),
-      );
+      expect(mockStreamText).toHaveBeenCalledWith({
+        system: expect.stringContaining('research topic refinement'),
+        messages: testMessages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
       expect(result).toBe(mockStream);
     }).pipe(Effect.provide(MockLLMLayer)),
   );
 
-  it.effect('propagates errors from convertToModelMessages', () =>
+  it.effect('propagates errors from llm.streamText', () =>
     Effect.gen(function* () {
-      mockConvertToModelMessages.mockRejectedValue(
-        new Error('conversion failed'),
+      mockStreamText.mockReturnValueOnce(
+        Effect.fail(new Error('stream failed')),
       );
 
       const exit = yield* streamResearchChat({ messages: testMessages }).pipe(

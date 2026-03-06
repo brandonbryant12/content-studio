@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer, Schedule } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
 import { ResearchError } from '../../errors';
 import {
   GoogleApiError,
@@ -8,6 +9,7 @@ import {
 } from '../../google/error-parser';
 import { DEEP_RESEARCH_MODEL } from '../../models';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { recordAIUsageIfConfigured } from '../../usage';
 import {
   DeepResearch,
   type DeepResearchService,
@@ -274,41 +276,78 @@ const makeGoogleDeepResearchService = (
   config: GoogleDeepResearchConfig,
 ): DeepResearchService => {
   const genAI = new GoogleGenAI({ apiKey: config.apiKey });
+  const modelId = DEEP_RESEARCH_MODEL;
+  const compactJsonRecord = (
+    record: Record<string, JsonValue | undefined>,
+  ): Record<string, JsonValue> =>
+    Object.fromEntries(
+      Object.entries(record).filter(([, value]) => value !== undefined),
+    ) as Record<string, JsonValue>;
 
   return {
     startResearch: (query: string) =>
-      Effect.tryPromise({
-        try: async () => {
-          const interaction = await genAI.interactions.create(
-            {
-              agent: DEEP_RESEARCH_MODEL,
-              input: query,
-              background: true,
-              agent_config: {
-                type: 'deep-research',
-              },
-            },
-            {
-              // Per-attempt timeout budget: Effect retry starts a fresh request.
-              timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
-              maxRetries: 0,
-              signal: AbortSignal.timeout(
-                PROVIDER_TIMEOUTS_MS.deepResearchStart,
-              ),
-            },
-          );
+      (() => {
+        const usage = { researchRunCount: 1, queryChars: query.length };
+        const metadata = { queryChars: query.length };
 
-          return { interactionId: interaction.id };
-        },
-        catch: (error) =>
-          new ResearchError({
-            message:
-              error instanceof Error
-                ? error.message
-                : 'Failed to start research',
-            cause: error,
-          }),
-      }).pipe(
+        return Effect.tryPromise({
+          try: async () => {
+            const interaction = await genAI.interactions.create(
+              {
+                agent: modelId,
+                input: query,
+                background: true,
+                agent_config: {
+                  type: 'deep-research',
+                },
+              },
+              {
+                // Per-attempt timeout budget: Effect retry starts a fresh request.
+                timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
+                maxRetries: 0,
+                signal: AbortSignal.timeout(
+                  PROVIDER_TIMEOUTS_MS.deepResearchStart,
+                ),
+              },
+            );
+
+            return { interactionId: interaction.id };
+          },
+          catch: (error) =>
+            new ResearchError({
+              message:
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to start research',
+              cause: error,
+            }),
+        }).pipe(
+          Effect.tap((result) =>
+            recordAIUsageIfConfigured({
+              modality: 'deep_research',
+              provider: 'google',
+              providerOperation: 'startResearch',
+              model: modelId,
+              status: 'succeeded',
+              providerResponseId: result.interactionId,
+              usage,
+              metadata,
+            }),
+          ),
+          Effect.tapError((error) =>
+            recordAIUsageIfConfigured({
+              modality: 'deep_research',
+              provider: 'google',
+              providerOperation: 'startResearch',
+              model: modelId,
+              status: 'failed',
+              errorTag: error._tag,
+              usage,
+              metadata,
+            }),
+          ),
+        );
+      })().pipe(
         retryTransientResearch,
         Effect.tapError((error) =>
           Effect.logError({
@@ -318,7 +357,10 @@ const makeGoogleDeepResearchService = (
           }),
         ),
         Effect.withSpan('deepResearch.startResearch', {
-          attributes: { 'research.provider': 'google' },
+          attributes: {
+            'research.provider': 'google',
+            'research.model': modelId,
+          },
         }),
       ),
 
@@ -347,6 +389,18 @@ const makeGoogleDeepResearchService = (
               cause: error,
             }),
         }).pipe(
+          Effect.tapError((error) =>
+            recordAIUsageIfConfigured({
+              modality: 'deep_research',
+              provider: 'google',
+              providerOperation: 'getResult',
+              model: modelId,
+              status: 'failed',
+              errorTag: error._tag,
+              providerResponseId: interactionId,
+              metadata: { interactionId },
+            }),
+          ),
           retryTransientResearch,
           Effect.tapError((error) =>
             Effect.logError({
@@ -359,11 +413,30 @@ const makeGoogleDeepResearchService = (
         );
 
         if (interaction.status === 'failed') {
+          const diagnostics = extractInteractionDiagnostics(interaction);
+          yield* recordAIUsageIfConfigured({
+            modality: 'deep_research',
+            provider: 'google',
+            providerOperation: 'getResult',
+            model: modelId,
+            status: 'failed',
+            errorTag:
+              diagnostics.errorStatus ??
+              diagnostics.errorCode ??
+              'ResearchFailed',
+            providerResponseId: diagnostics.interactionId ?? interactionId,
+            metadata: compactJsonRecord({
+              interactionId: diagnostics.interactionId ?? interactionId,
+              interactionStatus: diagnostics.status,
+              googleErrorCode: diagnostics.errorCode,
+              googleErrorStatus: diagnostics.errorStatus,
+            }),
+          });
           yield* Effect.logError({
             event: 'deepResearch.interaction.failed',
             provider: 'google',
             interactionId,
-            diagnostics: extractInteractionDiagnostics(interaction),
+            diagnostics,
           });
           return yield* new ResearchError({
             message: 'Research operation failed',
@@ -371,11 +444,24 @@ const makeGoogleDeepResearchService = (
         }
 
         if (interaction.status === 'cancelled') {
+          const diagnostics = extractInteractionDiagnostics(interaction);
+          yield* recordAIUsageIfConfigured({
+            modality: 'deep_research',
+            provider: 'google',
+            providerOperation: 'getResult',
+            model: modelId,
+            status: 'aborted',
+            providerResponseId: diagnostics.interactionId ?? interactionId,
+            metadata: compactJsonRecord({
+              interactionId: diagnostics.interactionId ?? interactionId,
+              interactionStatus: diagnostics.status,
+            }),
+          });
           yield* Effect.logWarning({
             event: 'deepResearch.interaction.cancelled',
             provider: 'google',
             interactionId,
-            diagnostics: extractInteractionDiagnostics(interaction),
+            diagnostics,
           });
           return yield* new ResearchError({
             message: 'Research operation was cancelled',
@@ -396,11 +482,29 @@ const makeGoogleDeepResearchService = (
           .split(/\s+/)
           .filter((w) => w.length > 0).length;
 
+        yield* recordAIUsageIfConfigured({
+          modality: 'deep_research',
+          provider: 'google',
+          providerOperation: 'getResult',
+          model: modelId,
+          status: 'succeeded',
+          providerResponseId: interactionId,
+          usage: {
+            outputWords: wordCount,
+            sourceCount: sources.length,
+          },
+          metadata: compactJsonRecord({
+            interactionId,
+            interactionStatus: interaction.status,
+          }),
+        });
+
         return { content, sources, wordCount } satisfies ResearchResult;
       }).pipe(
         Effect.withSpan('deepResearch.getResult', {
           attributes: {
             'research.provider': 'google',
+            'research.model': modelId,
             'research.interactionId': interactionId,
           },
         }),

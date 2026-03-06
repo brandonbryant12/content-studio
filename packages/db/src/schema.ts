@@ -10,5 +10,6 @@ export * from './schemas/media-types';
 export * from './schemas/infographics';
 export * from './schemas/style-presets';
 export * from './schemas/activity-log';
+export * from './schemas/ai-usage-events';
 export * from './schemas/json';
 export * from './schemas/serialization';

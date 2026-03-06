@@ -1,3 +1,4 @@
+import { withAIUsageScope } from '@repo/ai';
 import { withCurrentUser } from '@repo/auth/policy';
 import { JobStatus } from '@repo/db/schema';
 import {
@@ -90,34 +91,61 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
     Effect.gen(function* () {
       const { userId } = job.payload;
       const run = withCurrentUser(makeJobUser(userId));
+      const runWithScope = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        effect.pipe(
+          withAIUsageScope({
+            userId,
+            jobId: job.id,
+          }),
+        );
 
       yield* Effect.logInfo(`Processing ${job.type} job ${job.id}`);
 
       switch (job.type) {
         case 'process-url':
-          yield* run(handleProcessUrl(job as Job<ProcessUrlPayload>));
+          yield* run(
+            runWithScope(handleProcessUrl(job as Job<ProcessUrlPayload>)),
+          );
           break;
         case 'process-research':
-          yield* run(handleProcessResearch(job as Job<ProcessResearchPayload>));
+          yield* run(
+            runWithScope(
+              handleProcessResearch(job as Job<ProcessResearchPayload>),
+            ),
+          );
           break;
         case 'generate-infographic':
           yield* run(
-            handleGenerateInfographic(job as Job<GenerateInfographicPayload>),
+            runWithScope(
+              handleGenerateInfographic(job as Job<GenerateInfographicPayload>),
+            ),
           );
           break;
         case 'generate-voiceover':
           yield* run(
-            handleGenerateVoiceover(job as Job<GenerateVoiceoverPayload>),
+            runWithScope(
+              handleGenerateVoiceover(job as Job<GenerateVoiceoverPayload>),
+            ),
           );
           break;
         case 'generate-podcast':
-          yield* run(handleGeneratePodcast(job as Job<GeneratePodcastPayload>));
+          yield* run(
+            runWithScope(
+              handleGeneratePodcast(job as Job<GeneratePodcastPayload>),
+            ),
+          );
           break;
         case 'generate-script':
-          yield* run(handleGenerateScript(job as Job<GenerateScriptPayload>));
+          yield* run(
+            runWithScope(
+              handleGenerateScript(job as Job<GenerateScriptPayload>),
+            ),
+          );
           break;
         case 'generate-audio':
-          yield* run(handleGenerateAudio(job as Job<GenerateAudioPayload>));
+          yield* run(
+            runWithScope(handleGenerateAudio(job as Job<GenerateAudioPayload>)),
+          );
           break;
       }
 

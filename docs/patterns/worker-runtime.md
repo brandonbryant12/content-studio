@@ -77,6 +77,7 @@ If drain timeout is exceeded, log and force exit.
 1. Worker spans follow `worker.{domain}.{action}` naming.
 2. Include `job.id`, `job.type`, and `user.id` attributes where available.
 3. Log failure cause + stack for defects.
+4. Prefer a shared worker handler wrapper for job span + `JobProcessingError` conversion so handlers only supply domain work and resource-specific attributes.
 
 See [`docs/architecture/observability.md`](../architecture/observability.md).
 

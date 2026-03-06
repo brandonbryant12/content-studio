@@ -76,6 +76,16 @@
       "cache": false,
       "interactive": true
     },
+    "generate": {
+      "env": ["DB_POSTGRES_URL"],
+      "cache": false,
+      "interactive": true
+    },
+    "migrate": {
+      "env": ["DB_POSTGRES_URL"],
+      "cache": false,
+      "interactive": true
+    },
     "start": {
       "dependsOn": ["^build"]
     },

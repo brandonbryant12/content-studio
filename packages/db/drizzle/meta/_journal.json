@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769832533529,
-      "tag": "0000_fluffy_whirlwind",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1770395425552,
-      "tag": "0001_nervous_puma",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1770586654894,
-      "tag": "0002_wakeful_virginia_dare",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1770591205006,
-      "tag": "0003_supreme_anita_blake",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1772498394527,
-      "tag": "0004_add_document_links_voiceover_infographic",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1772662721000,
-      "tag": "0005_source_processing_url_uniqueness",
+      "when": 1772828331514,
+      "tag": "0000_broad_schema_baseline",
       "breakpoints": true
     }
   ]

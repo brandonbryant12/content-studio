@@ -1,3 +1,8 @@
+import {
+  annotateAIUsageScope,
+  inferAIUsageResourceType,
+  withAIUsageScope,
+} from '@repo/ai';
 import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Db } from '@repo/db/effect';
 import { Queue, JobNotFoundError } from '@repo/queue';
@@ -8,7 +13,10 @@ import type { JobId } from '@repo/db/schema';
 import type { JobType } from '@repo/queue';
 import { calculateWordCount } from './text-utils';
 
-export const withUseCaseSpan = (name: string) => Effect.withSpan(name);
+export const withUseCaseSpan =
+  (name: string) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    withAIUsageScope({ operation: name })(Effect.withSpan(name)(effect));
 
 /**
  * Run an effect with a compensating action if it fails.
@@ -81,27 +89,41 @@ export const formatUnknownError = (error: unknown): string => {
   return String(error);
 };
 
-interface UseCaseSpanBaseInput {
-  resourceId: string;
-  attributes?: Record<string, string | number | boolean | null | undefined>;
-}
+export type UseCaseSpanAttributes = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
-interface UseCaseSpanWithExplicitUser extends UseCaseSpanBaseInput {
+export type UseCaseSpanResourceInput =
+  | {
+      resourceId: string;
+      collection?: never;
+    }
+  | {
+      collection: string;
+      resourceId?: never;
+    };
+
+type UseCaseSpanBaseInput = UseCaseSpanResourceInput & {
+  attributes?: UseCaseSpanAttributes;
+};
+
+type UseCaseSpanWithExplicitUser = UseCaseSpanBaseInput & {
   userId: string;
   useRequestContextUser?: false | undefined;
-}
+};
 
-interface UseCaseSpanWithRequestContextUser extends UseCaseSpanBaseInput {
+type UseCaseSpanWithRequestContextUser = UseCaseSpanBaseInput & {
   useRequestContextUser: true;
   userId?: never;
-}
+};
 
 export type UseCaseSpanInput =
   | UseCaseSpanWithExplicitUser
   | UseCaseSpanWithRequestContextUser;
 
 const normalizeSpanAttributes = (
-  attributes: Record<string, string | number | boolean | null | undefined>,
+  attributes: UseCaseSpanAttributes,
 ): Record<string, string | number | boolean | null> =>
   Object.fromEntries(
     Object.entries(attributes).filter(([, value]) => value !== undefined),
@@ -114,14 +136,27 @@ export const annotateUseCaseSpan = (input: UseCaseSpanInput) =>
   Effect.gen(function* () {
     const userId =
       'userId' in input ? input.userId : (yield* getCurrentUser).id;
+    const resourceType = inferAIUsageResourceType(input.attributes);
+    const resourceAttributes =
+      'resourceId' in input
+        ? { 'resource.id': input.resourceId }
+        : {
+            'resource.kind': 'collection',
+            'resource.name': input.collection,
+          };
 
     const attributes = normalizeSpanAttributes({
       'user.id': userId,
-      'resource.id': input.resourceId,
+      ...resourceAttributes,
       ...input.attributes,
     });
 
     yield* Effect.annotateCurrentSpan(attributes);
+    yield* annotateAIUsageScope({
+      userId,
+      resourceId: 'resourceId' in input ? input.resourceId : undefined,
+      resourceType,
+    });
   });
 
 /**

@@ -132,6 +132,25 @@ export {
   type PersonaAvatarImageUserPromptInput,
 } from './prompt-registry';
 
+// Usage tracking
+export {
+  AIUsageRecorder,
+  DatabaseAIUsageRecorderLive,
+  NoopAIUsageRecorderLive,
+  annotateAIUsageScope,
+  getAIUsageScope,
+  inferAIUsageResourceType,
+  mergeAIUsageScope,
+  withAIUsageScope,
+  createAsyncAIUsageRecorder,
+  getAIUsageErrorTag,
+  recordAIUsageIfConfigured,
+  type AIUsageRecorderService,
+  type AIUsageRecordInput,
+  type AIUsageScope,
+  type PersistAIUsageInput,
+} from './usage';
+
 // Import for combined layer
 import type { ImageGen } from './image-gen';
 import type { LLM } from './llm';

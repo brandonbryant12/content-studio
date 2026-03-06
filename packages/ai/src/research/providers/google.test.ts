@@ -1,6 +1,11 @@
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  AIUsageRecorder,
+  type PersistAIUsageInput,
+  withAIUsageScope,
+} from '../../usage';
 import { DeepResearch } from '../service';
 import { GoogleDeepResearchLive } from './google';
 
@@ -141,5 +146,52 @@ describe('GoogleDeepResearchLive', () => {
       }
     }
     expect(mockCreateInteraction).toHaveBeenCalledTimes(3);
+  });
+
+  it('records usage when startResearch succeeds', async () => {
+    const recorded: PersistAIUsageInput[] = [];
+    const recorderLayer = Layer.succeed(AIUsageRecorder, {
+      record: (input: PersistAIUsageInput) =>
+        Effect.sync(() => {
+          recorded.push(input);
+        }),
+    });
+
+    mockCreateInteraction.mockResolvedValueOnce({ id: 'interaction-usage-1' });
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const research = yield* DeepResearch;
+        return yield* research.startResearch('research prompt');
+      }).pipe(
+        withAIUsageScope({
+          userId: 'user-1',
+          requestId: 'req-1',
+          operation: 'test.startResearch',
+        }),
+        Effect.provide(
+          Layer.mergeAll(
+            GoogleDeepResearchLive({ apiKey: 'test-key' }),
+            recorderLayer,
+          ),
+        ),
+      ),
+    );
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toMatchObject({
+      userId: 'user-1',
+      requestId: 'req-1',
+      scopeOperation: 'test.startResearch',
+      modality: 'deep_research',
+      provider: 'google',
+      providerOperation: 'startResearch',
+      status: 'succeeded',
+      providerResponseId: 'interaction-usage-1',
+      usage: {
+        researchRunCount: 1,
+        queryChars: 'research prompt'.length,
+      },
+    });
   });
 });

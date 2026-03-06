@@ -1,12 +1,8 @@
-import {
-  streamText,
-  convertToModelMessages,
-  type UIMessage,
-  type LanguageModel,
-} from 'ai';
 import { Effect } from 'effect';
+import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
 import { chatResearchSystemPrompt, renderPrompt } from '../../prompt-registry';
+import { withAIUsageScope } from '../../usage';
 
 export interface StreamResearchChatInput {
   readonly messages: UIMessage[];
@@ -15,22 +11,14 @@ export interface StreamResearchChatInput {
 export const streamResearchChat = (input: StreamResearchChatInput) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
-    const model = llm.model as LanguageModel;
-
-    const modelMessages = yield* Effect.promise(() =>
-      convertToModelMessages(input.messages),
-    );
-
-    const result = streamText({
-      model,
+    return yield* llm.streamText({
       system: renderPrompt(chatResearchSystemPrompt),
-      messages: modelMessages,
-      maxOutputTokens: 1024,
+      messages: input.messages,
+      maxTokens: 1024,
       temperature: 0.7,
     });
-
-    return result.toUIMessageStream();
   }).pipe(
+    withAIUsageScope({ operation: 'useCase.streamResearchChat' }),
     Effect.withSpan('useCase.streamResearchChat', {
       attributes: { 'chat.messageCount': input.messages.length },
     }),

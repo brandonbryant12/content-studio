@@ -1,4 +1,5 @@
 import { Layer, Effect } from 'effect';
+import type { UIMessageChunk } from 'ai';
 import {
   LLM,
   type LLMService,
@@ -35,6 +36,7 @@ export const DEFAULT_MOCK_SCRIPT = {
 export interface MockLLMOptions {
   delay?: number;
   response?: unknown;
+  stream?: ReadableStream<UIMessageChunk>;
   usage?: {
     inputTokens: number;
     outputTokens: number;
@@ -44,8 +46,15 @@ export interface MockLLMOptions {
 }
 
 export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
+  const stream =
+    options.stream ??
+    new ReadableStream<UIMessageChunk>({
+      start(controller) {
+        controller.close();
+      },
+    });
+
   const service: LLMService = {
-    model: { modelId: 'mock-model' },
     generate: <T>(): Effect.Effect<
       GenerateResult<T>,
       LLMError | LLMRateLimitError
@@ -69,6 +78,20 @@ export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
             totalTokens: 300,
           },
         };
+      }),
+    streamText: () =>
+      Effect.gen(function* () {
+        if (options.delay) {
+          yield* Effect.sleep(options.delay);
+        }
+
+        if (options.errorMessage) {
+          return yield* Effect.fail(
+            new LLMError({ message: options.errorMessage }),
+          );
+        }
+
+        return stream;
       }),
   };
 

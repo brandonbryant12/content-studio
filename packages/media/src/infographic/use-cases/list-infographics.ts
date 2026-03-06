@@ -23,7 +23,12 @@ export const listInfographics = (input: ListInfographicsInput = {}) =>
 
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: user.id,
+      collection: 'infographics',
+      attributes: {
+        'owner.id': user.id,
+        'pagination.limit': input.limit ?? 50,
+        'pagination.offset': input.offset ?? 0,
+      },
     });
     return yield* repo.list({
       createdBy: user.id,

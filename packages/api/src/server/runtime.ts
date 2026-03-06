@@ -1,4 +1,9 @@
-import { type AI, GoogleAILive } from '@repo/ai';
+import {
+  type AI,
+  type AIUsageRecorder,
+  DatabaseAIUsageRecorderLive,
+  GoogleAILive,
+} from '@repo/ai';
 import { MockAIWithLatency } from '@repo/ai/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
@@ -28,6 +33,7 @@ export type SharedServices =
   | Policy
   | Storage
   | Queue
+  | AIUsageRecorder
   | AI
   | Media
   | UrlScraper;
@@ -68,6 +74,9 @@ export const createSharedLayers = (
   const aiLayer: Layer.Layer<AI> = config.useMockAI
     ? MockAIWithLatency
     : GoogleAILive({ apiKey: config.geminiApiKey! });
+  const aiUsageRecorderLayer = DatabaseAIUsageRecorderLive.pipe(
+    Layer.provide(dbLayer),
+  );
 
   // Media layer bundles SourceRepo, PodcastRepo, and VoiceoverRepo
   const mediaLayer = MediaLive.pipe(
@@ -85,6 +94,7 @@ export const createSharedLayers = (
     policyLayer,
     queueLayer,
     storageLayer,
+    aiUsageRecorderLayer,
     aiLayer,
     mediaLayer,
     UrlScraperLive,

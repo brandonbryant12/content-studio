@@ -19,13 +19,18 @@ export const listPersonas = (input: ListPersonasInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
     const personaRepo = yield* PersonaRepo;
+    const limit = input.limit ?? 50;
+    const offset = input.offset ?? 0;
 
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: user.id,
+      collection: 'personas',
+      attributes: {
+        'owner.id': user.id,
+        'pagination.limit': limit,
+        'pagination.offset': offset,
+      },
     });
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
     const options: PersonaListOptions = {
       createdBy: user.id,
       limit,

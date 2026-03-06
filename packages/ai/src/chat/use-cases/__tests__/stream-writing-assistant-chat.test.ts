@@ -6,24 +6,11 @@ import { LLM, type LLMService } from '../../../llm/service';
 import { streamWritingAssistantChat } from '../stream-writing-assistant-chat';
 
 const mockStreamText = vi.fn();
-const mockConvertToModelMessages = vi.fn();
-
-vi.mock('ai', async () => {
-  const actual = await vi.importActual('ai');
-  return {
-    ...actual,
-    streamText: (...args: unknown[]) => mockStreamText(...args),
-    convertToModelMessages: (...args: unknown[]) =>
-      mockConvertToModelMessages(...args),
-  };
-});
-
-const mockModel = { modelId: 'mock-model' };
 
 const MockLLMLayer: Layer.Layer<LLM> = Layer.succeed(LLM, {
-  model: mockModel,
   generate: () => Effect.die('not used'),
-} as unknown as LLMService);
+  streamText: mockStreamText,
+} satisfies LLMService);
 
 const testMessages: UIMessage[] = [
   {
@@ -32,47 +19,29 @@ const testMessages: UIMessage[] = [
     parts: [{ type: 'text', text: 'Help me rewrite my intro narration.' }],
   },
 ];
+
 const transcript =
   'Welcome to our show. Today we cover practical AI delivery for teams.';
 
 describe('streamWritingAssistantChat', () => {
-  it.effect('calls streamText with writing assistant prompt and model', () =>
+  it.effect('calls llm.streamText with writing assistant tools', () =>
     Effect.gen(function* () {
-      const mockModelMessages = [
-        {
-          role: 'user' as const,
-          content: 'Help me rewrite my intro narration.',
-        },
-      ];
       const mockStream = new ReadableStream();
-
-      mockConvertToModelMessages.mockResolvedValue(mockModelMessages);
-      mockStreamText.mockReturnValue({
-        toUIMessageStream: () => mockStream,
-      });
+      mockStreamText.mockReturnValueOnce(Effect.succeed(mockStream));
 
       const result = yield* streamWritingAssistantChat({
         messages: testMessages,
         transcript,
       });
 
-      expect(mockConvertToModelMessages).toHaveBeenCalledWith(
-        testMessages,
-        expect.objectContaining({
-          tools: expect.objectContaining({
-            updateVoiceoverText: expect.any(Object),
-          }),
-        }),
-      );
       expect(mockStreamText).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: mockModel,
           system: expect.stringContaining('voiceover narration'),
+          messages: testMessages,
           tools: expect.objectContaining({
             updateVoiceoverText: expect.any(Object),
           }),
-          messages: mockModelMessages,
-          maxOutputTokens: 1024,
+          maxTokens: 1024,
           temperature: 0.7,
         }),
       );
@@ -80,10 +49,10 @@ describe('streamWritingAssistantChat', () => {
     }).pipe(Effect.provide(MockLLMLayer)),
   );
 
-  it.effect('propagates errors from convertToModelMessages', () =>
+  it.effect('propagates errors from llm.streamText', () =>
     Effect.gen(function* () {
-      mockConvertToModelMessages.mockRejectedValue(
-        new Error('conversion failed'),
+      mockStreamText.mockReturnValueOnce(
+        Effect.fail(new Error('stream failed')),
       );
 
       const exit = yield* streamWritingAssistantChat({

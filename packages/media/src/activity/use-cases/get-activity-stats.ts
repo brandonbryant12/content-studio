@@ -51,8 +51,11 @@ export const getActivityStats = (input: GetActivityStatsInput) =>
     const since = periodToDate(input.period);
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: user.id,
-      attributes: { 'activity.period': input.period },
+      collection: 'activity',
+      attributes: {
+        'owner.id': user.id,
+        'activity.period': input.period,
+      },
     });
 
     const [total, byEntityType, byAction, topUsers] = yield* Effect.all(

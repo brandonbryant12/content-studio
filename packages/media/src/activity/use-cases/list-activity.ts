@@ -40,14 +40,18 @@ export const listActivity = (input: ListActivityInput) =>
     const limit = input.limit ?? 25;
     const spanAttributes: Record<string, string | number> = {
       'activity.limit': limit,
+      ...(input.userId ? { 'filter.userId': input.userId } : {}),
     };
     if (input.entityType) {
       spanAttributes['activity.entityType'] = input.entityType;
     }
+    if (input.action) {
+      spanAttributes['activity.action'] = input.action;
+    }
 
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: input.userId ?? user.id,
+      collection: 'activity',
       attributes: spanAttributes,
     });
 

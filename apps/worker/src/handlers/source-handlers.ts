@@ -1,28 +1,17 @@
 import { processUrl } from '@repo/media';
-import { JobProcessingError, formatError } from '@repo/queue';
-import { Effect } from 'effect';
-import type { ProcessUrlPayload, Job } from '@repo/queue';
+import type { ProcessUrlPayload } from '@repo/queue';
+import { defineJobHandler } from './job-handler';
 
-export const handleProcessUrl = (job: Job<ProcessUrlPayload>) =>
-  processUrl({
-    sourceId: job.payload.sourceId,
-    url: job.payload.url,
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.fail(
-        new JobProcessingError({
-          jobId: job.id,
-          message: `Failed to process URL: ${formatError(error)}`,
-          cause: error,
-        }),
-      ),
-    ),
-    Effect.withSpan('worker.handleProcessUrl', {
-      attributes: {
-        'job.id': job.id,
-        'job.type': job.type,
-        'source.id': job.payload.sourceId,
-        'source.url': job.payload.url,
-      },
+export const handleProcessUrl = defineJobHandler<ProcessUrlPayload>()({
+  span: 'worker.handleProcessUrl',
+  errorMessage: 'Failed to process URL',
+  attributes: (job) => ({
+    'source.id': job.payload.sourceId,
+    'source.url': job.payload.url,
+  }),
+  run: (job) =>
+    processUrl({
+      sourceId: job.payload.sourceId,
+      url: job.payload.url,
     }),
-  );
+});

@@ -1,6 +1,11 @@
 import { NoObjectGeneratedError } from 'ai';
-import { Effect, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  AIUsageRecorder,
+  type PersistAIUsageInput,
+  withAIUsageScope,
+} from '../../usage';
 import { LLM } from '../service';
 import { GoogleLive } from './google';
 
@@ -179,5 +184,61 @@ describe('GoogleLive LLM provider', () => {
 
     expect(result.object.answer).toBe('ok');
     expect(mockGenerateObject).toHaveBeenCalledTimes(2);
+  });
+
+  it('records usage when generation succeeds', async () => {
+    const recorded: PersistAIUsageInput[] = [];
+    const recorderLayer = Layer.succeed(AIUsageRecorder, {
+      record: (input: PersistAIUsageInput) =>
+        Effect.sync(() => {
+          recorded.push(input);
+        }),
+    });
+
+    mockGenerateObject.mockResolvedValueOnce({
+      object: { answer: 'ok' },
+      usage: {
+        inputTokens: 11,
+        outputTokens: 7,
+        totalTokens: 18,
+        inputTokenDetails: undefined,
+        outputTokenDetails: undefined,
+      },
+    } as never);
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const llm = yield* LLM;
+        return yield* llm.generate({
+          prompt: 'Return an answer',
+          schema: TestSchema,
+        });
+      }).pipe(
+        withAIUsageScope({
+          userId: 'user-1',
+          requestId: 'req-1',
+          operation: 'test.generate',
+        }),
+        Effect.provide(
+          Layer.mergeAll(GoogleLive({ apiKey: 'test-key' }), recorderLayer),
+        ),
+      ),
+    );
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toMatchObject({
+      userId: 'user-1',
+      requestId: 'req-1',
+      scopeOperation: 'test.generate',
+      modality: 'llm',
+      provider: 'google',
+      providerOperation: 'generateObject',
+      status: 'succeeded',
+      usage: {
+        inputTokens: 11,
+        outputTokens: 7,
+        totalTokens: 18,
+      },
+    });
   });
 });

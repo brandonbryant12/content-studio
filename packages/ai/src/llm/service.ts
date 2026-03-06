@@ -1,5 +1,6 @@
 import { Context } from 'effect';
 import type { LLMError, LLMRateLimitError } from '../errors';
+import type { ToolSet, UIMessage, UIMessageChunk } from 'ai';
 import type { Schema, Effect } from 'effect';
 
 /**
@@ -11,6 +12,17 @@ export interface GenerateOptions<T> {
   readonly schema: Schema.Schema<T>;
   readonly maxTokens?: number;
   readonly temperature?: number;
+}
+
+/**
+ * Options for streaming text/chat output.
+ */
+export interface StreamTextOptions<TOOLS extends ToolSet = ToolSet> {
+  readonly system?: string;
+  readonly messages: UIMessage[];
+  readonly maxTokens?: number;
+  readonly temperature?: number;
+  readonly tools?: TOOLS;
 }
 
 /**
@@ -31,16 +43,21 @@ export interface GenerateResult<T> {
  */
 export interface LLMService {
   /**
-   * The underlying AI SDK model instance.
-   */
-  readonly model: unknown;
-
-  /**
    * Generate a typed object from a prompt using Effect Schema.
    */
   readonly generate: <T>(
     options: GenerateOptions<T>,
   ) => Effect.Effect<GenerateResult<T>, LLMError | LLMRateLimitError>;
+
+  /**
+   * Stream chat/text output as UI message chunks.
+   */
+  readonly streamText: <TOOLS extends ToolSet = ToolSet>(
+    options: StreamTextOptions<TOOLS>,
+  ) => Effect.Effect<
+    ReadableStream<UIMessageChunk>,
+    LLMError | LLMRateLimitError
+  >;
 }
 
 /**

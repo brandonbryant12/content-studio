@@ -5,6 +5,7 @@ import {
   chatSynthesizeResearchQuerySystemPrompt,
   renderPrompt,
 } from '../../prompt-registry';
+import { withAIUsageScope } from '../../usage';
 import {
   formatMessagesForSynthesis,
   getMessageText,
@@ -115,6 +116,7 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
       ),
     };
   }).pipe(
+    withAIUsageScope({ operation: 'useCase.synthesizeResearchQuery' }),
     Effect.withSpan('useCase.synthesizeResearchQuery', {
       attributes: { 'chat.messageCount': input.messages.length },
     }),

@@ -5,6 +5,7 @@ import {
   chatSynthesizePersonaSystemPrompt,
   renderPrompt,
 } from '../../prompt-registry';
+import { withAIUsageScope } from '../../usage';
 import { formatMessagesForSynthesis } from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
@@ -101,6 +102,7 @@ export const synthesizePersona = (input: SynthesizePersonaInput) =>
 
     return normalizeSynthesisResult(primaryResult.object);
   }).pipe(
+    withAIUsageScope({ operation: 'useCase.synthesizePersona' }),
     Effect.withSpan('useCase.synthesizePersona', {
       attributes: { 'chat.messageCount': input.messages.length },
     }),

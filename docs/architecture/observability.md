@@ -2,7 +2,7 @@
 
 ## Golden Principles
 
-1. Every use case must use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`. <!-- enforced-by: invariant-test -->
+1. Every media use case must use `defineAuthedUseCase(...)` or explicitly combine `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`. <!-- enforced-by: invariant-test -->
 2. Every handler call gets an automatic span via `@orpc/otel`. <!-- enforced-by: runtime -->
 3. Avoid `console.log` in `packages/` directories unless an explicit lint exemption is justified. <!-- enforced-by: eslint -->
 
@@ -25,7 +25,9 @@ Use camelCase for multi-word names inside a segment: `useCase.startPodcastGenera
 | Attribute | Required in | Value |
 |---|---|---|
 | `user.id` | Use case spans | Current user ID from FiberRef |
-| `resource.id` | Use case and repo spans | Primary resource ID being operated on |
+| `resource.id` | Entity-scoped use case and repo spans | Primary resource ID being operated on |
+| `resource.kind` | Collection-scoped use case spans | `collection` |
+| `resource.name` | Collection-scoped use case spans | Collection name such as `podcasts` |
 | `request.id` | Handler spans | Request correlation ID |
 | `job.id` | Worker spans | Job ID being processed |
 | `error._tag` | Error spans | Typed error tag on failure |
@@ -59,7 +61,7 @@ Handlers rely on the automatic oRPC span for the outer request. Use case, repo, 
 ## Handler Span Integration
 <!-- enforced-by: @orpc/otel auto-instrumentation -->
 
-`handleEffectWithProtocol` does not need a manual outer span in standard handlers. Pass request metadata and attributes instead:
+`handleEffectWithProtocol` does not need a manual outer span in standard handlers. Pass request metadata and attributes instead; they annotate the active auto-created handler span. If `span` is provided, it creates an additional child span under that handler span.
 
 ```typescript
 return handleEffectWithProtocol(
@@ -77,24 +79,23 @@ return handleEffectWithProtocol(
 ## Use Case Span Integration
 <!-- enforced-by: invariant-test -->
 
-Use cases should wrap the effect and attach attributes explicitly:
+Authenticated media use cases should prefer `defineAuthedUseCase(...)`, which centralizes `getCurrentUser`, `annotateUseCaseSpan(...)`, and `withUseCaseSpan(...)`:
 
 ```typescript
-export const getSource = (input: GetSourceInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'source.id': input.id },
-    });
-
-    // use case logic...
-  }).pipe(withUseCaseSpan('useCase.getSource'));
+export const getSource = defineAuthedUseCase<GetSourceInput>()({
+  name: 'useCase.getSource',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'source.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      // use case logic...
+    }),
+});
 ```
 
-The invariant tests in `packages/media/src/shared/__tests__/safety-invariants.test.ts` enforce this pattern.
+Use `annotateSpan(...)` inside `run(...)` when the resource ID is only known after a write. For collection/list flows, use `collection: 'podcasts'` style metadata instead of faking `resource.id = user.id`. The invariant tests in `packages/media/src/shared/__tests__/safety-invariants.test.ts` enforce this pattern.
 
 ## Logging Policy
 <!-- enforced-by: eslint -->
@@ -105,6 +106,17 @@ The invariant tests in `packages/media/src/shared/__tests__/safety-invariants.te
 | `apps/server/` | Structured lifecycle and request logging | Hono logger middleware plus Effect logging |
 | `apps/web/` | `console.*` allowed in development | Browser console |
 | Tests | `console.*` allowed when useful | Test runner output |
+
+## AI Usage Ledger
+<!-- enforced-by: architecture -->
+
+AI usage tracking is product data, not trace data.
+
+- Provider-facing AI calls record append-only rows in `ai_usage_event`.
+- Traces and logs remain observability signals only; they are not the billing or quota source of truth.
+- AI usage scope (`userId`, `requestId`, `jobId`, `operation`, `resourceType`, `resourceId`) is attached through Effect context so new providers and modalities inherit the same ledger behavior centrally.
+
+This keeps retries, failures, and multi-step AI workflows auditable without overloading `activity_log` or OTLP spans.
 
 ## Telemetry Export
 <!-- enforced-by: manual-review -->
@@ -154,7 +166,9 @@ Typed errors carry `_tag` into spans through `handleEffectWithProtocol`.
 | File | Purpose |
 |---|---|
 | `packages/api/src/server/effect-handler.ts` | `handleEffectWithProtocol` error mapping and span metadata |
+| `packages/ai/src/usage/*` | AI usage scope + recorder abstractions |
 | `packages/media/src/shared/safety-primitives.ts` | `withUseCaseSpan` and `annotateUseCaseSpan` |
+| `packages/db/src/schemas/ai-usage-events.ts` | Append-only AI usage ledger schema |
 | `packages/media/src/shared/__tests__/safety-invariants.test.ts` | Invariant enforcement |
 | `packages/db/src/telemetry.ts` | `TelemetryLive`, `ORPCSpanRenamer`, OTLP exporter wiring |
 | `packages/api/src/server/runtime.ts` | Shared layer composition |

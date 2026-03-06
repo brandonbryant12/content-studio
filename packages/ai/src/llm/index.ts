@@ -4,6 +4,7 @@ export {
   type LLMService,
   type GenerateOptions,
   type GenerateResult,
+  type StreamTextOptions,
 } from './service';
 
 // Google AI provider (Gemini API)

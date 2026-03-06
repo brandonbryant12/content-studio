@@ -1,4 +1,5 @@
 import { Effect, Layer } from 'effect';
+import type { JsonValue } from '@repo/db/schema';
 import {
   GoogleApiError,
   parseGoogleApiErrorBody,
@@ -6,6 +7,7 @@ import {
 import { TTS_MODEL } from '../../models';
 import { retryTransientProvider } from '../../provider-retry';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { recordAIUsageIfConfigured } from '../../usage';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
 import {
@@ -31,12 +33,47 @@ export interface GoogleTTSConfig {
 
 /** Typed shape of the Gemini TTS generateContent response. */
 interface GeminiTTSResponse {
+  responseId?: string;
+  usageMetadata?: Record<string, unknown>;
   candidates: Array<{
     content: {
       parts: Array<{ inlineData?: { mimeType: string; data: string } }>;
     };
   }>;
 }
+
+const getNumberField = (
+  value: Record<string, unknown> | undefined,
+  field: string,
+): number | undefined => {
+  const maybeValue = value?.[field];
+  return typeof maybeValue === 'number' ? maybeValue : undefined;
+};
+
+const compactJsonRecord = (
+  record: Record<string, JsonValue | undefined>,
+): Record<string, JsonValue> =>
+  Object.fromEntries(
+    Object.entries(record).filter(([, value]) => value !== undefined),
+  ) as Record<string, JsonValue>;
+
+const buildTTSUsage = (input: {
+  readonly textChars: number;
+  readonly audioBytes: number;
+  readonly usageMetadata?: Record<string, unknown>;
+}) =>
+  compactJsonRecord({
+    inputChars: input.textChars,
+    outputAudioBytes: input.audioBytes,
+    promptTokens: getNumberField(input.usageMetadata, 'promptTokenCount'),
+    outputTokens: getNumberField(input.usageMetadata, 'candidatesTokenCount'),
+    totalTokens: getNumberField(input.usageMetadata, 'totalTokenCount'),
+    thoughtsTokens: getNumberField(input.usageMetadata, 'thoughtsTokenCount'),
+    cachedInputTokens: getNumberField(
+      input.usageMetadata,
+      'cachedContentTokenCount',
+    ),
+  });
 
 /** Call the Gemini generateContent endpoint and return the raw response. */
 async function callGeminiTTS(
@@ -109,30 +146,71 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       ),
 
     previewVoice: (options: PreviewVoiceOptions) =>
-      Effect.tryPromise({
-        try: async () => {
-          const data = await callGeminiTTS(config.apiKey, modelName, {
-            contents: [
-              { parts: [{ text: options.text ?? DEFAULT_PREVIEW_TEXT }] },
-            ],
-            generationConfig: {
-              responseModalities: ['AUDIO'],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: { voiceName: options.voiceId },
+      (() => {
+        const text = options.text ?? DEFAULT_PREVIEW_TEXT;
+        const metadata = compactJsonRecord({
+          voiceId: options.voiceId,
+          textChars: text.length,
+        });
+
+        return Effect.tryPromise({
+          try: async () => {
+            const response = await callGeminiTTS(config.apiKey, modelName, {
+              contents: [{ parts: [{ text }] }],
+              generationConfig: {
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName: options.voiceId },
+                  },
                 },
               },
-            },
-          });
+            });
 
-          return {
-            audioContent: extractAudio(data),
-            audioEncoding: 'LINEAR16',
-            voiceId: options.voiceId,
-          } satisfies PreviewVoiceResult;
-        },
-        catch: mapError,
-      }).pipe(
+            const audioContent = extractAudio(response);
+
+            return {
+              response,
+              result: {
+                audioContent,
+                audioEncoding: 'LINEAR16',
+                voiceId: options.voiceId,
+              } satisfies PreviewVoiceResult,
+            };
+          },
+          catch: mapError,
+        }).pipe(
+          Effect.tap(({ response, result }) =>
+            recordAIUsageIfConfigured({
+              modality: 'tts',
+              provider: 'google',
+              providerOperation: 'previewVoice',
+              model: modelName,
+              status: 'succeeded',
+              providerResponseId: response.responseId ?? null,
+              usage: buildTTSUsage({
+                textChars: text.length,
+                audioBytes: result.audioContent.length,
+                usageMetadata: response.usageMetadata,
+              }),
+              metadata,
+              rawUsage: response.usageMetadata ?? null,
+            }),
+          ),
+          Effect.tapError((error) =>
+            recordAIUsageIfConfigured({
+              modality: 'tts',
+              provider: 'google',
+              providerOperation: 'previewVoice',
+              model: modelName,
+              status: 'failed',
+              errorTag: error._tag,
+              metadata,
+            }),
+          ),
+          Effect.map(({ result }) => result),
+        );
+      })().pipe(
         retryTransientProvider,
         Effect.withSpan('tts.previewVoice', {
           attributes: {
@@ -144,48 +222,98 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       ),
 
     synthesize: (options: SynthesizeOptions) =>
-      Effect.tryPromise({
-        try: async () => {
-          const isSingleSpeaker = options.voiceConfigs.length === 1;
-          const contentText = isSingleSpeaker
-            ? options.turns.map((t) => t.text).join('\n')
-            : options.turns.map((t) => `${t.speaker}: ${t.text}`).join('\n');
+      (() => {
+        const isSingleSpeaker = options.voiceConfigs.length === 1;
+        const contentText = isSingleSpeaker
+          ? options.turns.map((turn) => turn.text).join('\n')
+          : options.turns
+              .map((turn) => `${turn.speaker}: ${turn.text}`)
+              .join('\n');
 
-          const speechConfig = isSingleSpeaker
-            ? {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: options.voiceConfigs[0]!.voiceId,
-                  },
+        const speechConfig = isSingleSpeaker
+          ? {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: options.voiceConfigs[0]!.voiceId,
                 },
-              }
-            : {
-                multiSpeakerVoiceConfig: {
-                  speakerVoiceConfigs: options.voiceConfigs.map((vc) => ({
-                    speaker: vc.speakerAlias,
+              },
+            }
+          : {
+              multiSpeakerVoiceConfig: {
+                speakerVoiceConfigs: options.voiceConfigs.map(
+                  (voiceConfig) => ({
+                    speaker: voiceConfig.speakerAlias,
                     voiceConfig: {
-                      prebuiltVoiceConfig: { voiceName: vc.voiceId },
+                      prebuiltVoiceConfig: { voiceName: voiceConfig.voiceId },
                     },
-                  })),
-                },
-              };
+                  }),
+                ),
+              },
+            };
 
-          const data = await callGeminiTTS(config.apiKey, modelName, {
-            contents: [{ parts: [{ text: contentText }] }],
-            generationConfig: {
-              responseModalities: ['AUDIO'],
-              speechConfig,
-            },
-          });
+        const metadata = compactJsonRecord({
+          textChars: contentText.length,
+          turnCount: options.turns.length,
+          speakerCount: options.voiceConfigs.length,
+          voiceIds: options.voiceConfigs.map(
+            (voiceConfig) => voiceConfig.voiceId,
+          ),
+        });
 
-          return {
-            audioContent: extractAudio(data),
-            audioEncoding: 'LINEAR16',
-            mimeType: 'audio/wav',
-          } satisfies SynthesizeResult;
-        },
-        catch: mapError,
-      }).pipe(
+        return Effect.tryPromise({
+          try: async () => {
+            const response = await callGeminiTTS(config.apiKey, modelName, {
+              contents: [{ parts: [{ text: contentText }] }],
+              generationConfig: {
+                responseModalities: ['AUDIO'],
+                speechConfig,
+              },
+            });
+
+            const audioContent = extractAudio(response);
+
+            return {
+              response,
+              result: {
+                audioContent,
+                audioEncoding: 'LINEAR16',
+                mimeType: 'audio/wav',
+              } satisfies SynthesizeResult,
+            };
+          },
+          catch: mapError,
+        }).pipe(
+          Effect.tap(({ response, result }) =>
+            recordAIUsageIfConfigured({
+              modality: 'tts',
+              provider: 'google',
+              providerOperation: 'synthesize',
+              model: modelName,
+              status: 'succeeded',
+              providerResponseId: response.responseId ?? null,
+              usage: buildTTSUsage({
+                textChars: contentText.length,
+                audioBytes: result.audioContent.length,
+                usageMetadata: response.usageMetadata,
+              }),
+              metadata,
+              rawUsage: response.usageMetadata ?? null,
+            }),
+          ),
+          Effect.tapError((error) =>
+            recordAIUsageIfConfigured({
+              modality: 'tts',
+              provider: 'google',
+              providerOperation: 'synthesize',
+              model: modelName,
+              status: 'failed',
+              errorTag: error._tag,
+              metadata,
+            }),
+          ),
+          Effect.map(({ result }) => result),
+        );
+      })().pipe(
         retryTransientProvider,
         Effect.withSpan('tts.synthesize', {
           attributes: {

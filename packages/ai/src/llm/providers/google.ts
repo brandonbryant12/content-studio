@@ -1,14 +1,29 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { generateObject, jsonSchema } from 'ai';
+import {
+  convertToModelMessages,
+  generateObject,
+  jsonSchema,
+  streamText,
+  type LanguageModelUsage,
+  type ToolSet,
+} from 'ai';
 import { Effect, Layer, JSONSchema, Schedule } from 'effect';
 import { LLM_MODEL } from '../../models';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  AIUsageRecorder,
+  createAsyncAIUsageRecorder,
+  getAIUsageErrorTag,
+  getAIUsageScope,
+  recordAIUsageIfConfigured,
+} from '../../usage';
 import { mapError, shouldRetryLLMError } from '../map-error';
 import {
   LLM,
   type LLMService,
   type GenerateOptions,
   type GenerateResult,
+  type StreamTextOptions,
 } from '../service';
 
 /**
@@ -30,6 +45,81 @@ function stripMarkdownCodeFence(text: string): string | null {
   return match ? match[1]!.trim() : null;
 }
 
+const toLLMUsageMetrics = (
+  usage: LanguageModelUsage | undefined,
+): Record<string, number> | undefined => {
+  if (!usage) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries({
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      totalTokens: usage.totalTokens,
+      reasoningTokens:
+        usage.outputTokenDetails?.reasoningTokens ?? usage.reasoningTokens,
+      cachedInputTokens:
+        usage.inputTokenDetails?.cacheReadTokens ?? usage.cachedInputTokens,
+      noCacheInputTokens: usage.inputTokenDetails?.noCacheTokens,
+      cacheWriteInputTokens: usage.inputTokenDetails?.cacheWriteTokens,
+      textOutputTokens: usage.outputTokenDetails?.textTokens,
+    }).filter(([, value]) => value !== undefined),
+  ) as Record<string, number>;
+};
+
+const toGenerateResultUsage = (
+  usage: LanguageModelUsage | undefined,
+): GenerateResult<unknown>['usage'] => {
+  if (
+    usage?.inputTokens === undefined ||
+    usage.outputTokens === undefined ||
+    usage.totalTokens === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    totalTokens: usage.totalTokens,
+  };
+};
+
+const getRawUsage = (usage: unknown): Record<string, unknown> | null => {
+  if (typeof usage !== 'object' || usage === null || !('raw' in usage)) {
+    return null;
+  }
+
+  const raw = (usage as { raw?: unknown }).raw;
+  return typeof raw === 'object' && raw !== null
+    ? (raw as Record<string, unknown>)
+    : null;
+};
+
+const buildGenerateMetadata = <T>(options: GenerateOptions<T>) =>
+  Object.fromEntries(
+    Object.entries({
+      promptChars: options.prompt.length,
+      systemChars: options.system?.length,
+      maxTokens: options.maxTokens,
+      temperature: options.temperature ?? 0.7,
+    }).filter(([, value]) => value !== undefined),
+  ) as Record<string, number>;
+
+const buildStreamMetadata = <TOOLS extends ToolSet>(
+  options: StreamTextOptions<TOOLS>,
+) =>
+  Object.fromEntries(
+    Object.entries({
+      messageCount: options.messages.length,
+      systemChars: options.system?.length,
+      maxTokens: options.maxTokens,
+      temperature: options.temperature ?? 0.7,
+      toolCount: options.tools ? Object.keys(options.tools).length : 0,
+    }).filter(([, value]) => value !== undefined),
+  ) as Record<string, number>;
+
 /**
  * Create Google AI service implementation via AI SDK.
  */
@@ -42,12 +132,10 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
   const model = google(modelId);
 
   return {
-    model,
-
-    generate: <T>(options: GenerateOptions<T>) =>
-      Effect.tryPromise({
+    generate: <T>(options: GenerateOptions<T>) => {
+      const metadata = buildGenerateMetadata(options);
+      const attempt = Effect.tryPromise({
         try: async () => {
-          // Convert Effect Schema to JSON Schema, then wrap with AI SDK's jsonSchema helper
           const effectJsonSchema = JSONSchema.make(options.schema);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const aiSchema = jsonSchema<T>(effectJsonSchema as any);
@@ -59,29 +147,52 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             schema: aiSchema,
             maxOutputTokens: options.maxTokens,
             temperature: options.temperature ?? 0.7,
-            // Keep retries in Effect.retry to avoid double-retry with AI SDK defaults.
             maxRetries: 0,
-            // Per-attempt timeout budget: each Effect retry re-runs this call.
             abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.llmGenerate),
             experimental_repairText: async ({ text }) =>
               stripMarkdownCodeFence(text),
           });
 
-          const { inputTokens, outputTokens, totalTokens } = result.usage;
-
           return {
             object: result.object as T,
-            usage:
-              inputTokens !== undefined &&
-              outputTokens !== undefined &&
-              totalTokens !== undefined
-                ? { inputTokens, outputTokens, totalTokens }
-                : undefined,
-          } satisfies GenerateResult<T>;
+            usage: result.usage,
+          };
         },
         catch: mapError,
       }).pipe(
-        // Retry only transient LLM errors (status/network/parse-repair classes).
+        Effect.tap((result) =>
+          recordAIUsageIfConfigured({
+            modality: 'llm',
+            provider: 'google',
+            providerOperation: 'generateObject',
+            model: modelId,
+            status: 'succeeded',
+            usage: toLLMUsageMetrics(result.usage),
+            metadata,
+            rawUsage: getRawUsage(result.usage),
+          }),
+        ),
+        Effect.tapError((error) =>
+          recordAIUsageIfConfigured({
+            modality: 'llm',
+            provider: 'google',
+            providerOperation: 'generateObject',
+            model: modelId,
+            status: 'failed',
+            errorTag: error._tag,
+            metadata,
+          }),
+        ),
+        Effect.map(
+          (result) =>
+            ({
+              object: result.object,
+              usage: toGenerateResultUsage(result.usage),
+            }) satisfies GenerateResult<T>,
+        ),
+      );
+
+      return attempt.pipe(
         Effect.retry({
           times: 2,
           schedule: Schedule.exponential('500 millis'),
@@ -89,6 +200,97 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             error._tag === 'LLMError' && shouldRetryLLMError(error),
         }),
         Effect.withSpan('llm.generate', {
+          attributes: { 'llm.provider': 'google', 'llm.model': modelId },
+        }),
+      );
+    },
+
+    streamText: <TOOLS extends ToolSet = ToolSet>(
+      options: StreamTextOptions<TOOLS>,
+    ) =>
+      Effect.gen(function* () {
+        const metadata = buildStreamMetadata(options);
+        const scope = yield* getAIUsageScope;
+        const recorderOption = yield* Effect.serviceOption(AIUsageRecorder);
+        const recordAsync = createAsyncAIUsageRecorder(recorderOption, scope);
+        const modelMessages = yield* Effect.promise(() =>
+          convertToModelMessages(
+            options.messages,
+            options.tools ? { tools: options.tools } : undefined,
+          ),
+        );
+
+        let finalized = false;
+        const finalize = (input: {
+          readonly status: 'succeeded' | 'failed' | 'aborted';
+          readonly usage?: LanguageModelUsage;
+          readonly rawUsage?: Record<string, unknown> | null;
+          readonly errorTag?: string | null;
+        }) => {
+          if (finalized) {
+            return;
+          }
+
+          finalized = true;
+          recordAsync({
+            modality: 'llm',
+            provider: 'google',
+            providerOperation: 'streamText',
+            model: modelId,
+            status: input.status,
+            errorTag: input.errorTag,
+            usage: toLLMUsageMetrics(input.usage),
+            metadata,
+            rawUsage: input.rawUsage,
+          });
+        };
+
+        const result = yield* Effect.try({
+          try: () =>
+            streamText({
+              model,
+              system: options.system,
+              messages: modelMessages,
+              tools: options.tools,
+              maxOutputTokens: options.maxTokens,
+              temperature: options.temperature ?? 0.7,
+              maxRetries: 0,
+              abortSignal: AbortSignal.timeout(
+                PROVIDER_TIMEOUTS_MS.llmGenerate,
+              ),
+              onError: ({ error }) =>
+                finalize({
+                  status: 'failed',
+                  errorTag: getAIUsageErrorTag(error),
+                }),
+              onAbort: () =>
+                finalize({
+                  status: 'aborted',
+                }),
+              onFinish: ({ totalUsage }) =>
+                finalize({
+                  status: 'succeeded',
+                  usage: totalUsage,
+                  rawUsage: getRawUsage(totalUsage),
+                }),
+            }),
+          catch: mapError,
+        });
+
+        return result.toUIMessageStream();
+      }).pipe(
+        Effect.tapError((error) =>
+          recordAIUsageIfConfigured({
+            modality: 'llm',
+            provider: 'google',
+            providerOperation: 'streamText',
+            model: modelId,
+            status: 'failed',
+            errorTag: error._tag,
+            metadata: buildStreamMetadata(options),
+          }),
+        ),
+        Effect.withSpan('llm.streamText', {
           attributes: { 'llm.provider': 'google', 'llm.model': modelId },
         }),
       ),

@@ -13,8 +13,8 @@ flowchart LR
 
 1. **Use safety primitives** for queue and content operations (`enqueueJob`, `replaceTextContentSafely`, and similar helpers) <!-- enforced-by: eslint, invariant-test -->
 2. **Return raw domain data** from use cases; handlers serialize it <!-- enforced-by: invariant-test -->
-3. **Always use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`** so required trace attributes are attached <!-- enforced-by: invariant-test -->
-4. **Get the user via `yield* getCurrentUser`** (FiberRef), never from direct HTTP context access <!-- enforced-by: architecture -->
+3. **Prefer `defineAuthedUseCase(...)` for authenticated media use cases**; otherwise use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)` explicitly so required trace attributes are attached <!-- enforced-by: invariant-test -->
+4. **Get the user via FiberRef** — either `yield* getCurrentUser` directly or the `defineAuthedUseCase(...)` wrapper, never from direct HTTP context access <!-- enforced-by: architecture -->
 5. **Let Effect infer types** and export derived aliases when needed <!-- enforced-by: types -->
 
 ## File Location
@@ -30,29 +30,29 @@ One file per use case, re-exported from the domain `index.ts`.
 > See `packages/media/src/source/use-cases/get-source.ts`
 
 ```typescript
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { SourceRepo } from '../repos';
 
 export interface GetSourceInput {
   id: string;
 }
 
-export const getSource = (input: GetSourceInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const sourceRepo = yield* SourceRepo;
-
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'source.id': input.id },
-    });
-
-    return yield* sourceRepo.findByIdForUser(input.id, user.id);
-  }).pipe(withUseCaseSpan('useCase.getSource'));
+export const getSource = defineAuthedUseCase<GetSourceInput>()({
+  name: 'useCase.getSource',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'source.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const sourceRepo = yield* SourceRepo;
+      return yield* sourceRepo.findByIdForUser(input.id, user.id);
+    }),
+});
 ```
+
+When the resource ID is only known after a write, call `annotateSpan(...)` inside `run(...)` instead of providing `span`. For collection/list flows, use `collection: 'podcasts'` style metadata instead of faking `resourceId: user.id`.
 
 ## Rules
 
@@ -70,28 +70,27 @@ export type GetSourceError = Effect.Effect.Error<ReturnType<typeof getSource>>;
 
 ### 3. Span Naming <!-- enforced-by: invariant-test -->
 
-Use `withUseCaseSpan('useCase.{ActionName}')` and attach domain IDs with `annotateUseCaseSpan(...)`.
+Use `defineAuthedUseCase({ name: 'useCase.{ActionName}', ... })` for authenticated flows. For exceptions, use `withUseCaseSpan('useCase.{ActionName}')` and attach domain IDs with `annotateUseCaseSpan(...)`. Entity-scoped flows use `resourceId`; collection-scoped flows use `collection`.
 
 ### 4. Compose Use Cases Carefully <!-- enforced-by: architecture -->
 
 If a flow truly needs another use case, call it explicitly rather than duplicating behavior. Keep the ownership check and trace attributes close to the mutation.
 
 ```typescript
-export const updateSource = (input: UpdateSourceInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const sourceRepo = yield* SourceRepo;
-
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'source.id': input.id },
-    });
-
-    const existing = yield* sourceRepo.findByIdForUser(input.id, user.id);
-    // additional mutation logic...
-    return existing;
-  }).pipe(withUseCaseSpan('useCase.updateSource'));
+export const updateSource = defineAuthedUseCase<UpdateSourceInput>()({
+  name: 'useCase.updateSource',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'source.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const sourceRepo = yield* SourceRepo;
+      const existing = yield* sourceRepo.findByIdForUser(input.id, user.id);
+      // additional mutation logic...
+      return existing;
+    }),
+});
 ```
 
 ### 5. Parallel Operations <!-- enforced-by: manual-review -->

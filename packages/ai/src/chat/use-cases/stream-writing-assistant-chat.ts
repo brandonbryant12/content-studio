@@ -1,18 +1,11 @@
-import {
-  streamText,
-  convertToModelMessages,
-  jsonSchema,
-  tool,
-  type UIMessage,
-  type LanguageModel,
-  type ToolSet,
-} from 'ai';
+import { jsonSchema, tool, type UIMessage, type ToolSet } from 'ai';
 import { Effect } from 'effect';
 import { LLM } from '../../llm/service';
 import {
   chatWritingAssistantSystemPrompt,
   renderPrompt,
 } from '../../prompt-registry';
+import { withAIUsageScope } from '../../usage';
 
 const WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS = 12_000;
 
@@ -87,29 +80,18 @@ export const streamWritingAssistantChat = (
 ) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
-    const model = llm.model as LanguageModel;
-
     const promptTranscript = normalizeTranscriptForPrompt(input.transcript);
-
-    const modelMessages = yield* Effect.promise(() =>
-      convertToModelMessages(input.messages, {
-        tools: writingAssistantTools,
-      }),
-    );
-
-    const result = streamText({
-      model,
+    return yield* llm.streamText({
       system: renderPrompt(chatWritingAssistantSystemPrompt, {
         transcript: promptTranscript,
       }),
-      messages: modelMessages,
+      messages: input.messages,
       tools: writingAssistantTools,
-      maxOutputTokens: 1024,
+      maxTokens: 1024,
       temperature: 0.7,
     });
-
-    return result.toUIMessageStream();
   }).pipe(
+    withAIUsageScope({ operation: 'useCase.streamWritingAssistantChat' }),
     Effect.withSpan('useCase.streamWritingAssistantChat', {
       attributes: {
         'chat.messageCount': input.messages.length,

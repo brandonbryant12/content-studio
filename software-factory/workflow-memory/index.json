@@ -73,6 +73,108 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-06-feature-delivery-add-collection-aware-use-case-span-metadata",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add collection-aware use-case span metadata",
+    "severity": "medium",
+    "status": "in_progress",
+    "tags": [
+      "feature-delivery",
+      "observability",
+      "tracing",
+      "media",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-add-defineauthedusecase-wrapper-for-media-use-cases",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add defineAuthedUseCase wrapper for media use-cases",
+    "severity": "medium",
+    "status": "in_progress",
+    "tags": [
+      "feature-delivery",
+      "observability",
+      "tracing",
+      "media",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-add-worker-invariant-for-shared-job-handler-wrapper",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add worker invariant for shared job handler wrapper",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "observability",
+      "tracing",
+      "worker",
+      "guardrail",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-add-worker-job-handler-wrapper-for-spans-and-errors",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Add worker job-handler wrapper for spans and errors",
+    "severity": "medium",
+    "status": "in_progress",
+    "tags": [
+      "feature-delivery",
+      "observability",
+      "tracing",
+      "worker",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-centralized-ai-usage-ledger-via-repo-ai-boundary",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Centralized AI usage ledger via @repo/ai boundary",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "skill:test-surface-steward",
+      "skill:codebase-nav"
+    ],
+    "importance": 0.84,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-feature-delivery-encrypt-microsoft-oauth-tokens-and-redact-output-validation-payload-logs",
     "date": "2026-03-06",
     "month": "2026-03",
@@ -93,6 +195,26 @@
     ],
     "importance": 0.9,
     "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-fix-handler-span-attribute-annotation-on-auto-instrumented-orpc-",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Fix handler span attribute annotation on auto-instrumented oRPC spans",
+    "severity": "medium",
+    "status": "in_progress",
+    "tags": [
+      "feature-delivery",
+      "observability",
+      "tracing",
+      "skill:feature-delivery",
+      "skill:architecture-adr-guard",
+      "capability:instruction-following",
+      "capability:debugging",
+      "failure:incorrect-patch"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {

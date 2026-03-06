@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { PodcastListItem } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PodcastRepo, type ListOptions } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -24,37 +23,39 @@ export interface ListPodcastsResult {
 // Use Case
 // =============================================================================
 
-export const listPodcasts = (input: ListPodcastsInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const podcastRepo = yield* PodcastRepo;
+export const listPodcasts = defineAuthedUseCase<ListPodcastsInput>()({
+  name: 'useCase.listPodcasts',
+  span: ({ input, user }) => ({
+    collection: 'podcasts',
+    attributes: {
+      'owner.id': user.id,
+      ...(input.projectId ? { 'filter.projectId': input.projectId } : {}),
+      'pagination.limit': input.limit ?? 50,
+      'pagination.offset': input.offset ?? 0,
+    },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const podcastRepo = yield* PodcastRepo;
 
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
-    const spanAttributes: Record<string, string> = input.projectId
-      ? { 'filter.projectId': input.projectId }
-      : {};
+      const limit = input.limit ?? 50;
+      const offset = input.offset ?? 0;
+      const options: ListOptions = {
+        createdBy: user.id,
+        projectId: input.projectId,
+        limit,
+        offset,
+      };
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: user.id,
-      attributes: spanAttributes,
-    });
-    const options: ListOptions = {
-      createdBy: user.id,
-      projectId: input.projectId,
-      limit,
-      offset,
-    };
+      const [podcasts, total] = yield* Effect.all(
+        [podcastRepo.list(options), podcastRepo.count(options)],
+        { concurrency: 'unbounded' },
+      );
 
-    const [podcasts, total] = yield* Effect.all(
-      [podcastRepo.list(options), podcastRepo.count(options)],
-      { concurrency: 'unbounded' },
-    );
-
-    return {
-      podcasts,
-      total,
-      hasMore: offset + podcasts.length < total,
-    };
-  }).pipe(withUseCaseSpan('useCase.listPodcasts'));
+      return {
+        podcasts,
+        total,
+        hasMore: offset + podcasts.length < total,
+      };
+    }),
+});

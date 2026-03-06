@@ -79,6 +79,18 @@ Required for all agent-authored backend changes.
 | Forbids `returns UNAUTHORIZED when user is null` pattern in those suites | Legacy copy-paste auth duplication across handlers |
 | Caps `it(...)` count per high-risk router suite with headroom | Unbounded integration test growth and verbose redundancy |
 
+### Worker Handler Invariants
+<!-- enforced-by: invariant-test -->
+
+**File:** `apps/worker/src/__tests__/handler-invariants.test.ts`
+
+| Rule | What It Prevents |
+|---|---|
+| Worker handler modules must use `defineJobHandler(...)` | Drift back to per-file span/error boilerplate |
+| Forbids direct `new JobProcessingError(...)` in worker handler modules | Inconsistent job failure wrapping |
+| Forbids direct `Effect.withSpan('worker.*')` in worker handler modules | Missing core job/user span attributes or naming drift |
+| Shared helper must annotate `job.id`, `job.type`, and `user.id` | Silent loss of required worker trace metadata |
+
 ### Invariant Docs Sync
 <!-- enforced-by: invariant-test -->
 

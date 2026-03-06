@@ -88,6 +88,22 @@ describe('effect-handler fallback invariants', () => {
     );
   });
 
+  it('annotates the active span with handler attributes when provided', () => {
+    const source = readEffectHandler();
+
+    expect(source).toContain(
+      'yield* Effect.annotateCurrentSpan(options.attributes);',
+    );
+  });
+
+  it('preserves explicit nested span attributes when options.span is provided', () => {
+    const source = readEffectHandler();
+
+    expect(source).toContain('Effect.withSpan(options.span, {');
+    expect(source).toContain('attributes: options.attributes,');
+    expect(source).toContain('return yield* tracedEffect;');
+  });
+
   it('keeps stream handlers routed through handleEffectWithProtocol', () => {
     const source = readEffectHandler();
 

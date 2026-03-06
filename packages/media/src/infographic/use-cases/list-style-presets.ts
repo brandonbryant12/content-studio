@@ -14,7 +14,10 @@ export const listStylePresets = () =>
 
     yield* annotateUseCaseSpan({
       userId: user.id,
-      resourceId: user.id,
+      collection: 'stylePresets',
+      attributes: {
+        'owner.id': user.id,
+      },
     });
     return yield* repo.list(user.id);
   }).pipe(withUseCaseSpan('useCase.listStylePresets'));

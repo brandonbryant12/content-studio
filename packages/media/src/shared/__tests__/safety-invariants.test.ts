@@ -43,6 +43,16 @@ const getExpectedTestPath = (filePath: string): string => {
 const read = (relativePath: string): string =>
   fs.readFileSync(path.join(srcRoot, relativePath), 'utf-8');
 
+const usesExplicitUseCaseSpanPattern = (source: string): boolean =>
+  source.includes('withUseCaseSpan(') &&
+  source.includes('annotateUseCaseSpan(');
+
+const usesAuthedUseCaseHelper = (source: string): boolean =>
+  /defineAuthedUseCase(?:<[^>]+>)?\(\)/m.test(source);
+
+const usesAuthedUseCaseSpanMetadata = (source: string): boolean =>
+  source.includes('span:') || source.includes('annotateSpan(');
+
 describe('safety invariants', () => {
   it('forbids blanket catchAll null/void fallbacks in media use-cases', () => {
     const files = collectUseCaseFiles(srcRoot);
@@ -82,21 +92,36 @@ describe('safety invariants', () => {
       const source = fs.readFileSync(file, 'utf-8');
       if (!/useCase\./.test(source)) return false;
       return (
-        !source.includes('withUseCaseSpan(') ||
-        !source.includes('annotateUseCaseSpan(')
+        !usesExplicitUseCaseSpanPattern(source) &&
+        !(
+          usesAuthedUseCaseHelper(source) &&
+          usesAuthedUseCaseSpanMetadata(source)
+        )
       );
     });
 
     expect(
       offenders.map((file) => path.relative(srcRoot, file)),
-      'Use withUseCaseSpan + annotateUseCaseSpan to include user.id and resource.id.',
+      'Use defineAuthedUseCase() or withUseCaseSpan + annotateUseCaseSpan to include user.id and resource metadata.',
     ).toEqual([]);
   });
 
   it('enforces required span attributes on the use-case helper', () => {
     const source = read('shared/safety-primitives.ts');
+
     expect(source).toContain("'user.id'");
     expect(source).toContain("'resource.id'");
+    expect(source).toContain("'resource.kind'");
+    expect(source).toContain("'resource.name'");
+  });
+
+  it('requires defineAuthedUseCase to preserve auth + span primitives', () => {
+    const source = read('shared/use-case.ts');
+
+    expect(source).toContain('getCurrentUser');
+    expect(source).toContain('annotateUseCaseSpan(');
+    expect(source).toContain('withUseCaseSpan(');
+    expect(source).toContain('userId: user.id');
   });
 
   it('requires a unit test file for each media use-case', () => {
@@ -119,12 +144,18 @@ describe('safety invariants', () => {
     );
     const missing = files.filter((file) => {
       const source = fs.readFileSync(file, 'utf-8');
-      return !source.includes('annotateUseCaseSpan(');
+      return (
+        !source.includes('annotateUseCaseSpan(') &&
+        !(
+          usesAuthedUseCaseHelper(source) &&
+          usesAuthedUseCaseSpanMetadata(source)
+        )
+      );
     });
 
     expect(
       missing.map((file) => path.relative(srcRoot, file)),
-      'Use annotateUseCaseSpan() to attach user.id and resource.id to use-case spans.',
+      'Use defineAuthedUseCase() or annotateUseCaseSpan() to attach user.id and resource metadata to use-case spans.',
     ).toEqual([]);
   });
 

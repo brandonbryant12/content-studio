@@ -1,28 +1,16 @@
 import { executeInfographicGeneration } from '@repo/media';
-import { JobProcessingError, formatError } from '@repo/queue';
-import { Effect } from 'effect';
-import type { GenerateInfographicPayload, Job } from '@repo/queue';
+import type { GenerateInfographicPayload } from '@repo/queue';
+import { defineJobHandler } from './job-handler';
 
-export const handleGenerateInfographic = (
-  job: Job<GenerateInfographicPayload>,
-) =>
-  executeInfographicGeneration({
-    infographicId: job.payload.infographicId,
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.fail(
-        new JobProcessingError({
-          jobId: job.id,
-          message: `Failed to generate infographic: ${formatError(error)}`,
-          cause: error,
-        }),
-      ),
-    ),
-    Effect.withSpan('worker.handleGenerateInfographic', {
-      attributes: {
-        'job.id': job.id,
-        'job.type': job.type,
-        'infographic.id': job.payload.infographicId,
-      },
+export const handleGenerateInfographic =
+  defineJobHandler<GenerateInfographicPayload>()({
+    span: 'worker.handleGenerateInfographic',
+    errorMessage: 'Failed to generate infographic',
+    attributes: (job) => ({
+      'infographic.id': job.payload.infographicId,
     }),
-  );
+    run: (job) =>
+      executeInfographicGeneration({
+        infographicId: job.payload.infographicId,
+      }),
+  });

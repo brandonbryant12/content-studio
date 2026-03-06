@@ -1,6 +1,7 @@
 import { ORPCError } from '@orpc/client';
 import { ValidationError } from '@orpc/contract';
 import { streamToEventIterator } from '@orpc/server';
+import { withAIUsageScope } from '@repo/ai';
 import { withCurrentUser, type User } from '@repo/auth/policy';
 import { hasHttpProtocol, type LogLevel } from '@repo/db/error-protocol';
 import { Effect, Match, pipe } from 'effect';
@@ -10,9 +11,12 @@ import type { ServerRuntime, SharedServices } from './runtime';
  * Options for handleEffectWithProtocol.
  */
 export interface HandleEffectOptions {
-  /** Optional span name for tracing. When omitted, @orpc/otel auto-instrumentation provides the span. */
+  /**
+   * Optional nested span name for tracing.
+   * When omitted, @orpc/otel auto-instrumentation still provides the handler span.
+   */
   span?: string;
-  /** Optional span attributes */
+  /** Optional attributes to annotate on the active handler span */
   attributes?: Record<string, string | number | boolean>;
   /** Optional request id for handler spans */
   requestId?: string;
@@ -261,24 +265,39 @@ export const handleEffectWithProtocol = <A, E extends { _tag: string }>(
   options: HandleEffectOptions,
   customHandlers?: Record<string, CustomErrorHandler>,
 ): Promise<A> => {
-  const requestAnnotatedEffect = options.requestId
-    ? Effect.gen(function* () {
-        yield* Effect.annotateCurrentSpan('request.id', options.requestId);
-        return yield* effect;
-      })
-    : effect;
-
   const tracedEffect = options.span
-    ? requestAnnotatedEffect.pipe(
+    ? effect.pipe(
         Effect.withSpan(options.span, {
           attributes: options.attributes,
         }),
       )
-    : requestAnnotatedEffect;
+    : effect;
+
+  const handlerAnnotatedEffect =
+    options.requestId || options.attributes
+      ? Effect.gen(function* () {
+          if (options.requestId) {
+            yield* Effect.annotateCurrentSpan('request.id', options.requestId);
+          }
+
+          if (options.attributes) {
+            yield* Effect.annotateCurrentSpan(options.attributes);
+          }
+
+          return yield* tracedEffect;
+        })
+      : tracedEffect;
+
+  const usageScopedEffect = handlerAnnotatedEffect.pipe(
+    withAIUsageScope({
+      userId: user?.id ?? null,
+      requestId: options.requestId ?? null,
+    }),
+  );
 
   const scopedEffect = user
-    ? withCurrentUser(user)(tracedEffect)
-    : tracedEffect;
+    ? withCurrentUser(user)(usageScopedEffect)
+    : usageScopedEffect;
 
   return runtime.runPromise(
     scopedEffect.pipe(

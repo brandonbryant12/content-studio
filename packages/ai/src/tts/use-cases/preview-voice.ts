@@ -1,4 +1,5 @@
 import { Effect } from 'effect';
+import { withAIUsageScope } from '../../usage';
 import {
   TTS,
   type AudioEncoding,
@@ -39,6 +40,11 @@ export const previewVoice = (input: PreviewVoiceInput) =>
       text: input.text,
     });
   }).pipe(
+    withAIUsageScope({
+      operation: 'useCase.previewVoice',
+      resourceType: 'voice',
+      resourceId: input.voiceId,
+    }),
     Effect.withSpan('useCase.previewVoice', {
       attributes: {
         'voice.id': input.voiceId,
