@@ -22,8 +22,7 @@ authenticatedTest.describe('Create Podcast', () => {
     'can create new podcast',
     async ({ podcastsPage, page }) => {
       await podcastsPage.createPodcast();
-      // Should navigate to new podcast page (setup wizard)
-      await expect(page).toHaveURL(/\/podcasts\/.+/);
+      await expect(page).toHaveURL(/\/podcasts\/new/);
     },
   );
 
@@ -34,7 +33,7 @@ authenticatedTest.describe('Create Podcast', () => {
       await podcastsPage.goto();
 
       await podcastsPage.createPodcast();
-      await expect(page).toHaveURL(/\/podcasts\/.+/);
+      await expect(page).toHaveURL(/\/podcasts\/new/);
     },
   );
 });

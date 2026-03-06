@@ -154,14 +154,14 @@ function ActionCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col rounded-xl border border-border/60 bg-background p-4 transition-all duration-200 hover:border-primary/20 hover:shadow-sm text-left"
+      className="flex flex-col rounded-xl border border-border/60 bg-background p-4 transition-all duration-200 hover:border-primary/20 hover:shadow-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div
         className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBg} mb-3`}
       >
         {icon}
       </div>
-      <span className="font-medium text-sm text-foreground mb-0.5">
+      <span className="font-medium text-sm text-foreground mb-0.5 truncate">
         {title}
       </span>
       <span className="text-xs text-muted-foreground">{description}</span>
@@ -278,7 +278,7 @@ function QuickCreateToolbar({
   documentDialogs: DocumentDialogs;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
       <span className="text-sm text-muted-foreground mr-1">Quick create:</span>
       <Button
         variant="ghost"
@@ -312,8 +312,8 @@ function QuickCreateToolbar({
       <Button
         variant="ghost"
         size="sm"
-        className="gap-1.5 text-xs"
-        onClick={() => {}}
+        className="gap-1.5 text-xs opacity-50 cursor-not-allowed"
+        disabled
         title="Use the infographics section below"
       >
         <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />

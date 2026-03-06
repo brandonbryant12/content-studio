@@ -99,6 +99,15 @@ describe('VoiceoverList quick play', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('How voiceovers work')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /how it works/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Write or paste a draft'),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText('Voice').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Duration').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Updated').length).toBeGreaterThan(0);
 
     const playButton = screen.getByRole('button', {
       name: /play product announcement/i,

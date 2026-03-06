@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type * as EnvModule from '../env';
 
 const originalEnv = { ...process.env };
 
@@ -23,7 +24,7 @@ const loadEnvModule = async (overrides: Record<string, string | undefined>) => {
     ...overrides,
   };
 
-  return import('../env');
+  return vi.importActual<typeof EnvModule>('../env');
 };
 
 afterEach(() => {

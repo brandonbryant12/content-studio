@@ -26,16 +26,20 @@ function WaveformIcon({ className }: { className?: string }) {
 export function Navbar({ session }: Readonly<{ session: AuthSession }>) {
   return (
     <NavContainer>
-      <Link to={session?.user ? '/dashboard' : '/'} className="logo">
+      <Link
+        to={session?.user ? '/dashboard' : '/'}
+        className="logo"
+        aria-label={`${APP_NAME} home`}
+      >
         <div className="logo-icon">
-          <WaveformIcon className="w-4 h-4 text-background" />
+          <WaveformIcon className="w-4 h-4" />
         </div>
         <span className="logo-text">{APP_NAME}</span>
       </Link>
       {!session?.user && (
         <div className="flex items-center gap-1">
           <Link to="/login" className="nav-link">
-            Log in
+            Sign in
           </Link>
           {isPasswordAuthEnabled ? (
             <Link to="/register" className="nav-link-primary">

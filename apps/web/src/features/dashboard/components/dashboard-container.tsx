@@ -5,8 +5,8 @@ import {
   useCreateInfographic,
 } from '@/features/infographics/hooks';
 import {
-  useCreatePodcast,
   usePodcastsOrdered,
+  useStartPodcastCreation,
 } from '@/features/podcasts/hooks';
 import { useSourcesOrdered, useCreateFromUrl } from '@/features/sources/hooks';
 import {
@@ -53,7 +53,7 @@ export function DashboardContainer() {
     refetch: refetchInfographics,
   } = useInfographicList();
 
-  const createPodcast = useCreatePodcast();
+  const startPodcastCreation = useStartPodcastCreation();
   const createVoiceover = useCreateVoiceover();
   const createInfographic = useCreateInfographic();
   const createFromUrlMutation = useCreateFromUrl();
@@ -121,12 +121,8 @@ export function DashboardContainer() {
         infographics: infographics.slice(0, 4),
       }}
       createActions={{
-        onCreatePodcast: () =>
-          createPodcast.mutate({
-            title: 'Untitled Podcast',
-            format: 'conversation',
-          }),
-        isPodcastPending: createPodcast.isPending,
+        onCreatePodcast: startPodcastCreation.start,
+        isPodcastPending: startPodcastCreation.isPending,
         onCreateVoiceover: () =>
           createVoiceover.mutate({ title: 'Untitled Voiceover' }),
         isVoiceoverPending: createVoiceover.isPending,

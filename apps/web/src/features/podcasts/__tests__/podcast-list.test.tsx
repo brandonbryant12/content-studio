@@ -132,6 +132,10 @@ describe('PodcastList', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('How podcasts work')).toBeInTheDocument();
     expect(
+      screen.getByRole('button', { name: /how it works/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Start from sources')).not.toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /create podcast/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument();

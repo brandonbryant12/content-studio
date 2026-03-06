@@ -2,6 +2,7 @@ import { Checkbox } from '@repo/ui/components/checkbox';
 import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import type { RouterOutput } from '@repo/api/client';
+import { useImageFallback } from '@/shared/hooks/use-image-fallback';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
 type PersonaListItem = RouterOutput['personas']['list'][number];
@@ -23,23 +24,25 @@ export const PersonaCard = memo(function PersonaCard({
     .join('')
     .slice(0, 2)
     .toUpperCase();
+  const avatar = useImageFallback(
+    persona.avatarStorageKey ? getStorageUrl(persona.avatarStorageKey) : null,
+  );
 
   return (
     <div
       role="listitem"
-      className={`group relative rounded-xl border transition-all duration-200 ${
-        isSelected
-          ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20'
-          : 'border-border/60 bg-card hover:border-border hover:shadow-sm'
-      }`}
+      className="content-card group"
+      data-selected={isSelected || undefined}
     >
       {/* Selection checkbox */}
-      <div className="absolute top-3 left-3 z-10">
+      <div
+        className="content-card-checkbox"
+        data-visible={isSelected || undefined}
+      >
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggleSelect(persona.id)}
           aria-label={`Select ${persona.name}`}
-          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=checked]:opacity-100 transition-opacity"
         />
       </div>
 
@@ -49,12 +52,13 @@ export const PersonaCard = memo(function PersonaCard({
         className="flex flex-col items-center px-5 py-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
       >
         {/* Avatar */}
-        <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg font-semibold tracking-tight mb-4 ring-2 ring-rose-500/10 transition-shadow group-hover:ring-rose-500/20">
-          {persona.avatarStorageKey ? (
+        <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold tracking-tight mb-4 ring-2 ring-primary/10 transition-shadow group-hover:ring-primary/20">
+          {avatar.src ? (
             <img
-              src={getStorageUrl(persona.avatarStorageKey)}
+              src={avatar.src}
               alt={persona.name}
               className="w-full h-full rounded-full object-cover"
+              onError={avatar.onError}
             />
           ) : (
             initials
@@ -93,8 +97,8 @@ export const PersonaCard = memo(function PersonaCard({
             {persona.voiceName}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-warning/10 text-xs text-warning font-medium">
-            No voice
+          <span className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full bg-muted/60 text-xs text-muted-foreground">
+            —
           </span>
         )}
       </Link>

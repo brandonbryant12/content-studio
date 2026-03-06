@@ -94,4 +94,13 @@ describe('effect-handler fallback invariants', () => {
     expect(source).toContain('handleEffectWithProtocol(');
     expect(source).toContain('handleEffectStreamWithProtocol');
   });
+
+  it('does not log response payload contents for output validation failures', () => {
+    const source = readEffectHandler();
+
+    expect(source).not.toContain('JSON.stringify(data');
+    expect(source).toContain(
+      'Response payload omitted from logs to avoid leaking user data.',
+    );
+  });
 });

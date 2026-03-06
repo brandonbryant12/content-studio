@@ -109,13 +109,20 @@ describe('SourceList', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('What sources do')).toBeInTheDocument();
     expect(
+      screen.getByRole('button', { name: /how it works/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Upload a file')).not.toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /add source/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search sources…')).toBeInTheDocument();
     expect(screen.getByText('Getting Started Guide')).toBeInTheDocument();
     expect(screen.getByText('API Documentation')).toBeInTheDocument();
     expect(screen.getByText('Project Roadmap')).toBeInTheDocument();
-    expect(screen.getByText('2,500')).toBeInTheDocument();
+    expect(screen.getByText('2,500 words')).toBeInTheDocument();
+    expect(screen.getAllByText('Words').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('File size').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Updated').length).toBeGreaterThan(0);
   });
 
   it.each([

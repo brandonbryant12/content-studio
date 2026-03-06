@@ -21,12 +21,13 @@ import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import { VersionStatus } from '../lib/status';
 import { PodcastItem, type PodcastListItem } from './podcast-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
-import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
+import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import {
   PODCAST_DEFINITION,
   PODCAST_FLOW_STEPS,
   PODCAST_LIST_SUPPORT,
 } from '@/shared/lib/content-guidance';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -175,7 +176,6 @@ export function PodcastList({
   const hasNoResults =
     filteredPodcasts.length === 0 && (searchQuery.length > 0 || tabEmpty);
   const hasSelection = selection.selectedCount > 0;
-
   return (
     <div className="page-container">
       {/* Header */}
@@ -202,22 +202,15 @@ export function PodcastList({
         </Button>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-sky-200/60 bg-sky-50/80 p-5 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/5">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-600 dark:text-sky-300">
-            <InfoCircledIcon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              How podcasts work
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Podcasts begin with sources. Personas are optional, and the first
-              script draft is generated for you to review.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <CollectionGuidancePanel
+        title="How podcasts work"
+        description="Podcasts begin with sources. Personas are optional, and the first script draft is generated for you to review."
+        icon={<InfoCircledIcon className="h-4 w-4" />}
+        panelClassName="mb-6 rounded-2xl border border-sky-200/60 bg-sky-50/80 p-5 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/5"
+        iconClassName="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-600 dark:text-sky-300"
+        collapsible={!isEmpty}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
           {PODCAST_FLOW_STEPS.map((step) => (
             <div
               key={step.title}
@@ -232,7 +225,7 @@ export function PodcastList({
             </div>
           ))}
         </div>
-      </div>
+      </CollectionGuidancePanel>
 
       {/* Search */}
       <div className="relative mb-4">

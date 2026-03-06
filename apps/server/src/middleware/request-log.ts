@@ -7,8 +7,12 @@ const formatElapsed = (startedAt: number): string => {
     : `${Math.round(elapsedMs / 1000)}s`;
 };
 
+const defaultLog = (message: string) => {
+  process.stdout.write(`${message}\n`);
+};
+
 export const requestLog = (
-  log: (message: string) => void = console.log,
+  log: (message: string) => void = defaultLog,
 ): MiddlewareHandler => {
   return async (c, next) => {
     const method = c.req.method;

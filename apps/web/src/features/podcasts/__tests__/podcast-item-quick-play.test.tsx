@@ -93,4 +93,21 @@ describe('PodcastItem quick play', () => {
       screen.queryByRole('button', { name: /play test podcast/i }),
     ).not.toBeInTheDocument();
   });
+
+  it('falls back to the default cover when a stored image fails to load', () => {
+    render(
+      <PodcastItem
+        podcast={{
+          ...podcastWithAudio,
+          coverImageStorageKey: 'podcasts/pod_1/cover.png',
+        }}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    const cover = screen.getByRole('img', { name: /test podcast cover/i });
+    fireEvent.error(cover);
+
+    expect(cover).toHaveAttribute('src', '/default-podcast.svg');
+  });
 });

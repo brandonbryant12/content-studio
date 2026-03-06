@@ -17,7 +17,8 @@ import {
   isGeneratingStatus,
 } from '../lib/status';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { formatDuration } from '@/shared/lib/formatters';
+import { useImageFallback } from '@/shared/hooks/use-image-fallback';
+import { formatDuration, formatDate } from '@/shared/lib/formatters';
 import { getStorageUrl } from '@/shared/lib/storage-url';
 
 /** Podcast data for list display */
@@ -92,6 +93,11 @@ export const PodcastItem = memo(function PodcastItem({
   const hasAudio = !!podcast.audioUrl;
   const isThisPlaying =
     quickPlay?.playingId === podcast.id && quickPlay.isPlaying;
+  const coverImage = useImageFallback(
+    podcast.coverImageStorageKey
+      ? getStorageUrl(podcast.coverImageStorageKey)
+      : null,
+  );
 
   const handlePlayClick = useCallback(
     (e: React.MouseEvent) => {
@@ -139,13 +145,10 @@ export const PodcastItem = memo(function PodcastItem({
             </div>
           )}
           <img
-            src={
-              podcast.coverImageStorageKey
-                ? getStorageUrl(podcast.coverImageStorageKey)
-                : '/default-podcast.svg'
-            }
+            src={coverImage.src ?? '/default-podcast.svg'}
             alt={`${podcast.title} cover`}
             loading="lazy"
+            onError={coverImage.src ? coverImage.onError : undefined}
           />
           {isGeneratingStatus(podcast.status) && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-sm">
@@ -210,9 +213,7 @@ export const PodcastItem = memo(function PodcastItem({
                 </span>
               )
             )}
-            <span className="text-meta">
-              {new Date(podcast.createdAt).toLocaleDateString()}
-            </span>
+            <span className="text-meta">{formatDate(podcast.createdAt)}</span>
           </div>
           {!hideDelete && (
             <Button

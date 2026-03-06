@@ -64,7 +64,7 @@ flowchart LR
 | Authentication | `packages/auth/src/server/auth.ts`, `packages/api/src/server/orpc.ts`, `apps/server/src/routes/auth.ts` | Browser and API calls use bearer tokens; the only supported login modes are `dev-password` and `sso-only`; protected oRPC procedures reject missing sessions |
 | Authorization | `getCurrentUser`, `requireOwnership`, `requireRole`, ownership-aware repo methods | Existing-resource mutations authorize in the use case layer and conceal owner-only misses with `404` |
 | Role synchronization | Better Auth Microsoft callback plus Graph lookup | `sso-only` sign-in fails closed if group resolution or mapping fails |
-| Token storage | `apps/web/src/shared/lib/auth-token.ts` | Browser token is in memory only; full reload clears it |
+| Token storage | `apps/web/src/shared/lib/auth-token.ts`, `packages/auth/src/server/auth.ts` | Browser bearer token is in memory only; OAuth provider tokens stored in Better Auth `account` rows are encrypted at rest with the auth secret |
 | CORS and trusted origins | `apps/server/src/config.ts`, `apps/server/src/middleware/cors-policy.ts`, `apps/server/src/auth-trusted-origins.ts` | API and auth routes allow bearer-token requests without credentialed cookies; trusted auth origins are derived from `PUBLIC_WEB_URL` plus explicit allowlists |
 | Secure headers | `apps/server/src/index.ts` | `secureHeaders()` is enabled for all requests |
 | Request limits | `apps/server/src/routes/api-body-limit.ts` | API payloads are capped at `16 MiB` |
@@ -124,6 +124,7 @@ Storage response rewriting is intentionally narrow:
 ## Read Next
 
 - [`docs/architecture/access-control.md`](./access-control.md)
+- Optional future direction: [`docs/plans/microsoft-sso-recommendation.md`](../plans/microsoft-sso-recommendation.md)
 - [`docs/architecture/observability.md`](./observability.md)
 - [`docs/architecture/deployment-env-matrix.md`](./deployment-env-matrix.md)
 - [`docs/architecture/eks-helm-recommendations.md`](./eks-helm-recommendations.md)

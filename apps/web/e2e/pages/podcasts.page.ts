@@ -44,8 +44,7 @@ export class PodcastsPage extends BasePage {
    */
   async createPodcast(): Promise<void> {
     await this.createButton.click();
-    // Wait for navigation to new podcast page
-    await this.page.waitForURL('**/podcasts/**');
+    await this.page.waitForURL('**/podcasts/new');
   }
 
   /**

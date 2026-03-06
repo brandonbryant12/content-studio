@@ -183,7 +183,7 @@ const WORKFLOW_STEPS = [
     number: '1',
     label: 'Upload sources',
     detail: 'PDFs, URLs, or AI research',
-    color: 'bg-sky-500 text-white',
+    color: 'bg-sky-500 text-primary-foreground',
     textColor: 'text-sky-600 dark:text-sky-400',
   },
   {
@@ -197,7 +197,7 @@ const WORKFLOW_STEPS = [
     number: '3',
     label: 'Review & refine',
     detail: 'Edit scripts, swap voices, adjust styles',
-    color: 'bg-emerald-500 text-white',
+    color: 'bg-emerald-500 text-primary-foreground',
     textColor: 'text-emerald-600 dark:text-emerald-400',
   },
 ] as const;

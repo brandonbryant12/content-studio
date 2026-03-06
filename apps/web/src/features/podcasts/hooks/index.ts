@@ -5,6 +5,7 @@ export {
 } from './use-podcast-list';
 
 export { useCreatePodcast } from './use-create-podcast';
+export { useStartPodcastCreation } from './use-start-podcast-creation';
 
 export {
   usePodcastSettings,

@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as TanstackReactRouter from '@tanstack/react-router';
 import { PersonaListContainer } from '../components/persona-list-container';
 import { usePersonaList } from '../hooks/use-persona-list';
 import { useBulkDelete, useBulkSelection } from '@/shared/hooks';
@@ -11,7 +12,7 @@ const { navigateMock, personaListSpy } = vi.hoisted(() => ({
 }));
 
 vi.mock('@tanstack/react-router', async () => {
-  const actual = await vi.importActual<typeof import('@tanstack/react-router')>(
+  const actual = await vi.importActual<typeof TanstackReactRouter>(
     '@tanstack/react-router',
   );
 

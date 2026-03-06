@@ -1,5 +1,145 @@
 [
   {
+    "id": "2026-03-06-docs-knowledge-drift-add-microsoft-sso-recommendation-and-bearer-auth-explainer",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Document current Microsoft SSO recommendation and future app-role migration path",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "docs",
+      "auth",
+      "security",
+      "workflow-memory",
+      "skill:docs-knowledge-drift",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.78,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-docs-knowledge-drift-add-ownership-fast-path-and-reduce-docs-index-overload",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Add ownership fast path and reduce docs index overload",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "onboarding",
+      "docs-navigation"
+    ],
+    "importance": 0.9,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-docs-knowledge-drift-move-microsoft-sso-recommendation-out-of-architecture-and-into-p",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Move Microsoft SSO recommendation out of architecture and into plans",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs-knowledge-drift",
+      "docs-taxonomy",
+      "plans"
+    ],
+    "importance": 0.84,
+    "confidence": 0.98,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-docs-knowledge-drift-ownership-onboarding-docs-are-reference-heavy-and-entrypoint-den",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Ownership onboarding docs are reference-heavy and entrypoint-dense",
+    "severity": "medium",
+    "status": "open",
+    "tags": [
+      "docs-knowledge-drift",
+      "onboarding",
+      "ownership"
+    ],
+    "importance": 0.83,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-encrypt-microsoft-oauth-tokens-and-redact-output-validation-payload-logs",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Encrypt Microsoft OAuth tokens at rest and redact output-validation payload logs",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "security",
+      "auth",
+      "logging",
+      "workflow-memory",
+      "skill:feature-delivery",
+      "skill:security-dependency-hygiene",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-issues-339-344-defer-podcast-draft-creation-collapse-collection-",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Issues 339-344: defer podcast draft creation, collapse collection guidance, harden media fallbacks, label list metadata, and promote voiceover failure recovery",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "automation",
+      "feature-delivery",
+      "memory",
+      "workflow-memory",
+      "tool:vitest",
+      "tool:tsc",
+      "tool:vite",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.83,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-periodic-scans-repo-security-audit-found-defense-in-depth-gaps",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Repo security audit found defense-in-depth gaps",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "security",
+      "periodic-scan",
+      "workflow-memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.91,
+    "confidence": 0.86,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-05-architecture-adr-guard-documented-the-live-runtime-topology-and-security-boundaries-as-",
     "date": "2026-03-05",
     "month": "2026-03",

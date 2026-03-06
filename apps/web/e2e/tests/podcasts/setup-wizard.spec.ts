@@ -11,15 +11,14 @@ import { authenticatedTest, expect } from '../../fixtures';
 
 authenticatedTest.describe('Podcast Setup Wizard', () => {
   authenticatedTest.beforeEach(async ({ podcastsPage, api }) => {
-    // Clean up and create a fresh podcast for each test
+    // Clean up and start a fresh setup flow for each test
     await api.deleteAllPodcasts();
     await podcastsPage.goto();
     await podcastsPage.createPodcast();
   });
 
   authenticatedTest('shows setup wizard for new podcast', async ({ page }) => {
-    // Should be on the podcast detail page
-    await expect(page).toHaveURL(/\/podcasts\/.+/);
+    await expect(page).toHaveURL(/\/podcasts\/new/);
 
     // Should show setup wizard UI
     await expect(page.getByText(/step/i)).toBeVisible();

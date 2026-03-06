@@ -467,7 +467,9 @@ const throwTransformed = (classified: ClassifiedError): never =>
       console.error('[OUTPUT_VALIDATION] Response does not match contract:');
       console.error('  Issues:', summary);
       if (data !== undefined) {
-        console.error('  Data:', JSON.stringify(data, null, 2).slice(0, 1000));
+        console.error(
+          '  Response payload omitted from logs to avoid leaking user data.',
+        );
       }
       throw new ORPCError('INTERNAL_SERVER_ERROR', {
         status: 500,

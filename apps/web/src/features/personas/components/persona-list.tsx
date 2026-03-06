@@ -11,6 +11,7 @@ import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import type { RouterOutput } from '@repo/api/client';
 import { PersonaCard } from './persona-card';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 import {
   PERSONA_ASSIGNMENT_HELP,
@@ -163,21 +164,15 @@ export function PersonaList({
         </Button>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-sky-200/60 bg-sky-50/80 p-5 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/5">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-600 dark:text-sky-300">
-            <InfoCircledIcon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              What personas do
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {PERSONA_ASSIGNMENT_HELP}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <CollectionGuidancePanel
+        title="What personas do"
+        description={PERSONA_ASSIGNMENT_HELP}
+        icon={<InfoCircledIcon className="h-4 w-4" />}
+        panelClassName="mb-6 rounded-2xl border border-sky-200/60 bg-sky-50/80 p-5 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/5"
+        iconClassName="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-600 dark:text-sky-300"
+        collapsible={!isEmpty}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
           {PERSONA_USE_CASES.map((useCase) => (
             <div
               key={useCase.title}
@@ -192,11 +187,11 @@ export function PersonaList({
             </div>
           ))}
         </div>
-      </div>
+      </CollectionGuidancePanel>
 
       {/* Search */}
       {!isEmpty && (
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Input
             value={searchQuery}
             onChange={handleSearch}
@@ -215,20 +210,27 @@ export function PersonaList({
       ) : hasNoResults ? (
         <NoResults searchQuery={searchQuery} />
       ) : (
-        <div
-          role="list"
-          aria-label="Persona list"
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}
-        >
-          {filteredPersonas.map((persona) => (
-            <PersonaCard
-              key={persona.id}
-              persona={persona}
-              isSelected={selection.isSelected(persona.id)}
-              onToggleSelect={selection.toggle}
-            />
-          ))}
-        </div>
+        <>
+          <div role="status" aria-live="polite" className="sr-only">
+            {filteredPersonas.length}{' '}
+            {filteredPersonas.length === 1 ? 'persona' : 'personas'} found
+          </div>
+          <div
+            role="list"
+            aria-label="Persona list"
+            aria-busy={isPending}
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}
+          >
+            {filteredPersonas.map((persona) => (
+              <PersonaCard
+                key={persona.id}
+                persona={persona}
+                isSelected={selection.isSelected(persona.id)}
+                onToggleSelect={selection.toggle}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Bulk action bar */}

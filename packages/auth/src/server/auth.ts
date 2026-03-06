@@ -9,6 +9,7 @@ import {
   type MicrosoftRoleGroupConfig,
   syncUserRoleFromMicrosoftGraph,
 } from './microsoft-role-sync';
+import { ensureEncryptedOAuthToken } from './oauth-token-crypto';
 
 export const AuthMode = {
   DEV_PASSWORD: 'dev-password',
@@ -63,6 +64,107 @@ const isPasswordAuthEnabled = (authMode: AuthMode) =>
 const isMicrosoftSSOEnabled = (authMode: AuthMode) =>
   authMode === AuthMode.SSO_ONLY;
 
+const protectAccountSecrets = async <
+  T extends Partial<{
+    accessToken: string | null;
+    refreshToken: string | null;
+    idToken: string | null;
+  }>,
+>(
+  account: T,
+  authSecret: string,
+): Promise<T> => ({
+  ...account,
+  ...('accessToken' in account
+    ? {
+        accessToken: await ensureEncryptedOAuthToken({
+          authSecret,
+          token: account.accessToken,
+        }),
+      }
+    : {}),
+  ...('refreshToken' in account
+    ? {
+        refreshToken: await ensureEncryptedOAuthToken({
+          authSecret,
+          token: account.refreshToken,
+        }),
+      }
+    : {}),
+  ...('idToken' in account
+    ? {
+        idToken: await ensureEncryptedOAuthToken({
+          authSecret,
+          token: account.idToken,
+        }),
+      }
+    : {}),
+});
+
+const buildMicrosoftDatabaseHooks = ({
+  authSecret,
+  db,
+  microsoftSSO,
+}: {
+  authSecret: string;
+  db: DatabaseInstance;
+  microsoftSSO: MicrosoftSSOConfig;
+}): NonNullable<BetterAuthOptions['databaseHooks']> => ({
+  account: {
+    create: {
+      before: async (account) => ({
+        data: await protectAccountSecrets(account, authSecret),
+      }),
+    },
+    update: {
+      before: async (account) => ({
+        data: await protectAccountSecrets(account, authSecret),
+      }),
+    },
+  },
+  session: {
+    create: {
+      before: async (session, context) => {
+        const callbackPath = context?.path;
+        const isMicrosoftCallback =
+          typeof callbackPath === 'string' &&
+          (callbackPath.startsWith('/callback/microsoft') ||
+            callbackPath.startsWith('/oauth2/callback/microsoft'));
+        if (!isMicrosoftCallback) return;
+
+        try {
+          await syncUserRoleFromMicrosoftGraph({
+            authSecret,
+            db,
+            userId: session.userId,
+            roleGroups: microsoftSSO.roleGroups,
+          });
+        } catch (error) {
+          console.warn(
+            '[AUTH] Denying Microsoft SSO session creation:',
+            error instanceof Error ? error.message : String(error),
+          );
+
+          if (
+            error instanceof MicrosoftRoleSyncError &&
+            error.code === 'MICROSOFT_GROUP_MEMBERSHIP_REQUIRED'
+          ) {
+            throw new APIError('FORBIDDEN', {
+              code: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
+              message: 'Microsoft SSO group membership is required',
+            });
+          }
+
+          throw new APIError('FORBIDDEN', {
+            code: 'SSO_AUTHORIZATION_FAILED',
+            message: 'Microsoft SSO authorization failed',
+          });
+        }
+      },
+    },
+  },
+});
+
 const MICROSOFT_SCOPES = [
   'openid',
   'profile',
@@ -116,50 +218,19 @@ export const createAuth = ({
             },
           }
         : undefined,
-    databaseHooks:
+    account:
       isMicrosoftSSOEnabled(authMode) && microsoftSSO
         ? {
-            session: {
-              create: {
-                before: async (session, context) => {
-                  const callbackPath = context?.path;
-                  const isMicrosoftCallback =
-                    typeof callbackPath === 'string' &&
-                    (callbackPath.startsWith('/callback/microsoft') ||
-                      callbackPath.startsWith('/oauth2/callback/microsoft'));
-                  if (!isMicrosoftCallback) return;
-
-                  try {
-                    await syncUserRoleFromMicrosoftGraph({
-                      db,
-                      userId: session.userId,
-                      roleGroups: microsoftSSO.roleGroups,
-                    });
-                  } catch (error) {
-                    console.warn(
-                      '[AUTH] Denying Microsoft SSO session creation:',
-                      error instanceof Error ? error.message : String(error),
-                    );
-
-                    if (
-                      error instanceof MicrosoftRoleSyncError &&
-                      error.code === 'MICROSOFT_GROUP_MEMBERSHIP_REQUIRED'
-                    ) {
-                      throw new APIError('FORBIDDEN', {
-                        code: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
-                        message: 'Microsoft SSO group membership is required',
-                      });
-                    }
-
-                    throw new APIError('FORBIDDEN', {
-                      code: 'SSO_AUTHORIZATION_FAILED',
-                      message: 'Microsoft SSO authorization failed',
-                    });
-                  }
-                },
-              },
-            },
+            encryptOAuthTokens: true,
           }
+        : undefined,
+    databaseHooks:
+      isMicrosoftSSOEnabled(authMode) && microsoftSSO
+        ? buildMicrosoftDatabaseHooks({
+            authSecret,
+            db,
+            microsoftSSO,
+          })
         : undefined,
     emailAndPassword: {
       enabled: isPasswordAuthEnabled(authMode),

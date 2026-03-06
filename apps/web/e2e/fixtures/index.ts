@@ -120,7 +120,8 @@ export const test = base.extend<PageFixtures>({
 
   api: async ({ playwright, baseURL }, use) => {
     const apiURL = process.env.E2E_API_URL ?? 'http://localhost:3035';
-    const webURL = process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
+    const webURL =
+      process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
     const { helper, request } = await createApiHelper({
       playwright,
       apiURL,
@@ -142,7 +143,8 @@ export const test = base.extend<PageFixtures>({
 export const authenticatedTest = test.extend<PageFixtures>({
   page: async ({ page, baseURL }, use) => {
     const apiURL = process.env.E2E_API_URL ?? 'http://localhost:3035';
-    const webURL = process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
+    const webURL =
+      process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
     const token = await signInTestUser(apiURL, webURL);
 
     await page.route(`${new URL(apiURL).origin}/**`, async (route, request) => {
@@ -159,7 +161,8 @@ export const authenticatedTest = test.extend<PageFixtures>({
 
   api: async ({ playwright, baseURL }, use) => {
     const apiURL = process.env.E2E_API_URL ?? 'http://localhost:3035';
-    const webURL = process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
+    const webURL =
+      process.env.E2E_BASE_URL ?? baseURL ?? 'http://localhost:8085';
     const { helper, request } = await createApiHelper({
       playwright,
       apiURL,

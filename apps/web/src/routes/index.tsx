@@ -49,7 +49,7 @@ function WaveformBars() {
 function RouteComponent() {
   const { data: session } = authClient.useSession();
   const primaryCtaPath = isPasswordAuthEnabled ? '/register' : '/login';
-  const primaryCtaLabel = isPasswordAuthEnabled ? 'Get started' : 'Sign in';
+  const primaryCtaLabel = isPasswordAuthEnabled ? 'Sign up' : 'Sign in';
 
   useEffect(() => {
     document.title = 'Content Studio';
@@ -111,11 +111,6 @@ function RouteComponent() {
                 <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
               </Link>
             </Button>
-            {isPasswordAuthEnabled ? (
-              <Button asChild variant="outline" size="lg">
-                <Link to="/login">Sign in</Link>
-              </Button>
-            ) : null}
           </div>
         </div>
       </section>

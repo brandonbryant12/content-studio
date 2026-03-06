@@ -3,6 +3,11 @@
 This document is the source of truth for how Content Studio is expected to behave.
 Product-level behavior changes must be proposed through a pull request that updates this spec.
 
+This is a canonical behavior and audit reference, not the recommended first
+read for a new owner. Start with
+[`docs/onboarding/taking-ownership.md`](./onboarding/taking-ownership.md) if
+you are learning the system.
+
 ## Governance
 
 1. [`docs/master-spec.md`](./master-spec.md) is the canonical product and system behavior specification.
@@ -26,6 +31,18 @@ This master spec is assembled from:
 3. Data model from `packages/db/src/schemas`
 4. Web route surface from `apps/web/src/routeTree.gen.ts`
 5. Existing standards in `docs/architecture`, `docs/patterns`, `docs/frontend`, and `docs/testing`
+
+## When To Use This Doc
+
+Use this doc when you need to:
+
+1. confirm canonical product behavior before changing code
+2. review generated API, domain, data model, or UI surface changes
+3. validate that a behavior-changing PR updated the spec correctly
+
+For orientation, runtime understanding, and day-one ownership, use
+[`docs/onboarding/taking-ownership.md`](./onboarding/taking-ownership.md) and
+[`docs/README.md`](./README.md) first.
 
 ## Generated Snapshot Metadata
 <!-- BEGIN GENERATED:snapshot-metadata -->

@@ -83,7 +83,7 @@ export function OnboardingGuidance({ onDismiss }: OnboardingGuidanceProps) {
             {/* Step number + icon */}
             <div className="flex items-center gap-3 mb-3">
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${step.numberBg} text-xs font-semibold text-white`}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${step.numberBg} text-xs font-semibold text-primary-foreground`}
               >
                 {step.number}
               </span>

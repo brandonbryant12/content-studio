@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import type { PodcastFullOutput } from '@repo/api/contracts';
+import { useCreatePodcast } from '../../hooks/use-create-podcast';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
 import { getPodcastQueryKey } from '../../hooks/use-podcast';
 import { SetupFooter } from './setup-footer';
@@ -16,12 +18,19 @@ import { getErrorMessage } from '@/shared/lib/errors';
 const TOTAL_STEPS = 3;
 
 interface SetupWizardProps {
-  podcast: PodcastFullOutput;
+  podcast?: PodcastFullOutput;
 }
 
 export function SetupWizard({ podcast }: SetupWizardProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (!podcast || podcast.sources.length === 0) {
+      return 1;
+    }
+
+    return podcast.hostVoice === null ? 2 : 3;
+  });
 
   // Prefetch documents on mount so they're ready for step 2
   useEffect(() => {
@@ -30,11 +39,11 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     );
   }, [queryClient]);
 
-  const format = podcast.format ?? 'conversation';
+  const format = podcast?.format ?? 'conversation';
 
   // Step 2 state
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(() =>
-    podcast.sources.map((d) => d.id),
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
+    () => podcast?.sources.map((d) => d.id) ?? [],
   );
   const [researchDocId, setResearchDocId] = useState<string | null>(null);
 
@@ -44,16 +53,16 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   }, []);
 
   // Step 3 state
-  const [duration, setDuration] = useState(podcast.targetDurationMinutes ?? 5);
-  const [hostVoice, setHostVoice] = useState(podcast.hostVoice ?? 'Aoede');
+  const [duration, setDuration] = useState(podcast?.targetDurationMinutes ?? 5);
+  const [hostVoice, setHostVoice] = useState(podcast?.hostVoice ?? 'Aoede');
   const [coHostVoice, setCoHostVoice] = useState(
-    podcast.coHostVoice ?? 'Charon',
+    podcast?.coHostVoice ?? 'Charon',
   );
   const [hostPersonaId, setHostPersonaId] = useState<string | null>(
-    podcast.hostPersonaId ?? null,
+    podcast?.hostPersonaId ?? null,
   );
   const [coHostPersonaId, setCoHostPersonaId] = useState<string | null>(
-    podcast.coHostPersonaId ?? null,
+    podcast?.coHostPersonaId ?? null,
   );
   const [hostPersonaVoiceId, setHostPersonaVoiceId] = useState<string | null>(
     null,
@@ -64,7 +73,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
 
   // Step 3 state (instructions)
   const [instructions, setInstructions] = useState(
-    podcast.promptInstructions ?? '',
+    podcast?.promptInstructions ?? '',
   );
 
   const handleHostPersonaChange = (
@@ -86,7 +95,8 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   };
 
   // Update mutation for saving progress
-  const queryKey = getPodcastQueryKey(podcast.id);
+  const createMutation = useCreatePodcast();
+  const queryKey = getPodcastQueryKey(podcast?.id ?? 'pending-podcast');
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
       onSuccess: (updatedPodcast) => {
@@ -111,9 +121,12 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   );
 
   // Generate mutation for final step - uses optimistic update for immediate status feedback
-  const generateMutation = useOptimisticGeneration(podcast.id);
+  const generateMutation = useOptimisticGeneration(podcast?.id ?? 'pending');
 
-  const isLoading = updateMutation.isPending || generateMutation.isPending;
+  const isLoading =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    generateMutation.isPending;
 
   // Validation for each step
   const canProceedFromStep = (step: number): boolean => {
@@ -134,12 +147,22 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     try {
       switch (step) {
         case 1:
+          if (!podcast) {
+            await createMutation.mutateAsync({
+              title: 'Untitled Podcast',
+              format,
+              sourceIds: selectedDocIds,
+            });
+            return true;
+          }
+
           await updateMutation.mutateAsync({
             id: podcast.id,
             sourceIds: selectedDocIds,
           });
           break;
         case 2:
+          if (!podcast) return false;
           await updateMutation.mutateAsync({
             id: podcast.id,
             targetDurationMinutes: duration,
@@ -153,6 +176,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
           });
           break;
         case 3:
+          if (!podcast) return false;
           // Save instructions and trigger generation
           await updateMutation.mutateAsync({
             id: podcast.id,
@@ -173,6 +197,10 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     if (!canProceedFromStep(currentStep)) return;
 
     const success = await saveStepData(currentStep);
+    if (!podcast && currentStep === 1 && success) {
+      return;
+    }
+
     if (success && currentStep < TOTAL_STEPS) {
       setCurrentStep((prev) => prev + 1);
     }
@@ -181,6 +209,11 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   };
 
   const handleBack = () => {
+    if (!podcast && currentStep === 1) {
+      void navigate({ to: '/podcasts' });
+      return;
+    }
+
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     }

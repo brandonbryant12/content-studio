@@ -77,8 +77,6 @@ export function getStatusConfig(
  * - Not currently generating (status is not a generating status)
  */
 export function isSetupMode(podcast: PodcastFull): boolean {
-  // Has documents been configured?
-  const hasDocuments = podcast.sources.length > 0;
   // Has generation ever been started?
   const hasGenerationContext = podcast.generationContext !== null;
   // Has script content?
@@ -86,7 +84,6 @@ export function isSetupMode(podcast: PodcastFull): boolean {
   // Is currently generating? (optimistic update sets this before server responds)
   const isGenerating = isGeneratingStatus(podcast.status);
 
-  // Show setup wizard only for completely unconfigured podcasts
-  // Exit setup mode as soon as ANY of these conditions is true
-  return !hasDocuments && !hasGenerationContext && !hasScript && !isGenerating;
+  // Keep users in setup until generation has actually started.
+  return !hasGenerationContext && !hasScript && !isGenerating;
 }

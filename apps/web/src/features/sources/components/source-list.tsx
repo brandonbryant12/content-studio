@@ -20,6 +20,7 @@ import { SourceEntryMenu } from './source-entry-menu';
 import { SourceIcon } from './source-icon';
 import { UploadSourceDialog } from './upload-source-dialog';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 import {
   SOURCE_ASSIGNMENT_HELP,
@@ -80,6 +81,23 @@ function EmptyState({
   );
 }
 
+function MetadataCell({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className={`hidden shrink-0 text-right ${className ?? ''}`}>
+      <span className="sr-only">{label}</span>
+      <span className="list-row-meta">{value}</span>
+    </div>
+  );
+}
+
 const SourceRow = memo(function SourceRow({
   source,
   onDelete,
@@ -107,7 +125,10 @@ const SourceRow = memo(function SourceRow({
   }, [onToggleSelect, source.id]);
 
   return (
-    <div className={`list-row group ${isSelected ? 'list-row-selected' : ''}`}>
+    <div
+      role="listitem"
+      className={`list-row group ${isSelected ? 'list-row-selected' : ''}`}
+    >
       <Checkbox
         checked={isSelected}
         onCheckedChange={handleToggle}
@@ -116,26 +137,36 @@ const SourceRow = memo(function SourceRow({
       <Link
         to="/sources/$sourceId"
         params={{ sourceId: source.id }}
-        className="flex items-center gap-3 flex-1 min-w-0"
+        className="flex items-center gap-3 flex-1 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
       >
         <SourceIcon source={source.source} />
         <span className="list-row-title truncate">{source.title}</span>
       </Link>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="shrink-0 flex items-center justify-end gap-2">
         <span className={`${getFileBadgeClass(source.source)} text-xs`}>
           {getFileLabel(source.source)}
         </span>
         <StatusBadge status={source.status} />
       </div>
-      <span className="list-row-meta tabular-nums w-16 text-right hidden sm:block">
-        {source.wordCount.toLocaleString()}
-      </span>
-      <span className="list-row-meta tabular-nums hidden md:block w-16 text-right">
-        {formatFileSize(source.originalFileSize)}
-      </span>
-      <span className="list-row-meta hidden lg:block w-24 text-right">
-        {formatDate(source.createdAt)}
-      </span>
+      <MetadataCell
+        label="Words"
+        value={`${source.wordCount.toLocaleString()} words`}
+        className="sm:flex w-20"
+      />
+      <MetadataCell
+        label="File size"
+        value={
+          source.originalFileSize
+            ? formatFileSize(source.originalFileSize)
+            : '—'
+        }
+        className="md:flex w-24"
+      />
+      <MetadataCell
+        label="Updated"
+        value={formatDate(source.createdAt)}
+        className="lg:flex w-24"
+      />
       <Button
         variant="ghost"
         size="icon"
@@ -239,21 +270,15 @@ export function SourceList({
         </div>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/5">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-300">
-            <InfoCircledIcon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              What sources do
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {SOURCE_ASSIGNMENT_HELP}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <CollectionGuidancePanel
+        title="What sources do"
+        description={SOURCE_ASSIGNMENT_HELP}
+        icon={<InfoCircledIcon className="h-4 w-4" />}
+        panelClassName="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/5"
+        iconClassName="mt-0.5 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-300"
+        collapsible={!isEmpty}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
           {SOURCE_IMPORT_OPTIONS.map((option) => (
             <div
               key={option.title}
@@ -268,7 +293,7 @@ export function SourceList({
             </div>
           ))}
         </div>
-      </div>
+      </CollectionGuidancePanel>
 
       {/* Search */}
       <div className="relative mb-4">

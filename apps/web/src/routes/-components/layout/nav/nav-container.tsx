@@ -7,7 +7,9 @@ export default function NavContainer({
 }>) {
   return (
     <header className="header">
-      <div className="header-content">{children}</div>
+      <nav aria-label="Main navigation" className="header-content">
+        {children}
+      </nav>
     </header>
   );
 }

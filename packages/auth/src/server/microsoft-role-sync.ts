@@ -2,6 +2,7 @@ import { and, desc, eq } from '@repo/db';
 import { account, user } from '@repo/db/schema';
 import type { DatabaseInstance } from '@repo/db/client';
 import { Role } from '../policy/types';
+import { decryptStoredOAuthToken } from './oauth-token-crypto';
 
 export interface MicrosoftRoleGroupConfig {
   readonly adminGroupIds: readonly string[];
@@ -91,9 +92,11 @@ export const fetchMicrosoftGroupIds = async ({
 };
 
 const getLatestMicrosoftAccessToken = async ({
+  authSecret,
   db,
   userId,
 }: {
+  authSecret?: string;
   db: DatabaseInstance;
   userId: string;
 }): Promise<string | null> => {
@@ -104,21 +107,38 @@ const getLatestMicrosoftAccessToken = async ({
     .orderBy(desc(account.updatedAt))
     .limit(1);
 
-  return row?.accessToken ?? null;
+  if (!row?.accessToken) {
+    return null;
+  }
+
+  if (!authSecret) {
+    return row.accessToken;
+  }
+
+  return decryptStoredOAuthToken({
+    authSecret,
+    token: row.accessToken,
+  });
 };
 
 export const syncUserRoleFromMicrosoftGraph = async ({
+  authSecret,
   db,
   userId,
   roleGroups,
   fetchFn = fetch,
 }: {
+  authSecret?: string;
   db: DatabaseInstance;
   userId: string;
   roleGroups: MicrosoftRoleGroupConfig;
   fetchFn?: typeof fetch;
 }): Promise<void> => {
-  const accessToken = await getLatestMicrosoftAccessToken({ db, userId });
+  const accessToken = await getLatestMicrosoftAccessToken({
+    authSecret,
+    db,
+    userId,
+  });
   if (!accessToken) {
     throw new MicrosoftRoleSyncError(
       'MICROSOFT_ACCESS_TOKEN_MISSING',

@@ -57,6 +57,8 @@ The `protectedProcedure` type guarantees that handlers receive a non-null user. 
 
 Role mapping intentionally uses Graph API lookup (instead of token `groups` claim) to avoid group-claim overage behavior for users in many groups.
 
+If we later gain tenant-admin support for app-role assignment, the preferred simplification path is to keep Entra groups operationally but switch app authorization from Graph lookups to `roles` claims. That future path is tracked in [`docs/plans/microsoft-sso-recommendation.md`](../plans/microsoft-sso-recommendation.md).
+
 ### SSO Sign-In Sequence
 
 ```mermaid
@@ -229,3 +231,8 @@ For features with shared access (e.g., podcast collaborators):
 2. Collaborator access requires a row in the collaborator table with `userId` set (not null)
 3. Pending invites (`userId: null`) grant no access until claimed
 4. Use case queries both ownership and collaboration tables to determine access
+
+## Read Next
+
+- [`docs/architecture/security.md`](./security.md)
+- Optional future direction: [`docs/plans/microsoft-sso-recommendation.md`](../plans/microsoft-sso-recommendation.md)

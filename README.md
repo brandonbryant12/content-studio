@@ -37,10 +37,11 @@ Content Studio is designed as a practical sandbox to explore what works across m
 
 Start here:
 
-1. Engineering docs index: [`docs/README.md`](./docs/README.md)
-2. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)
-3. Backend patterns: [`docs/patterns/`](./docs/patterns/)
-4. Frontend standards: [`docs/frontend/`](./docs/frontend/)
+1. Ownership guide: [`docs/onboarding/taking-ownership.md`](./docs/onboarding/taking-ownership.md)
+2. Engineering docs index: [`docs/README.md`](./docs/README.md)
+3. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)
+4. Backend patterns: [`docs/patterns/`](./docs/patterns/)
+5. Frontend standards: [`docs/frontend/`](./docs/frontend/)
 
 ## Software Factory
 
@@ -192,7 +193,8 @@ Set `OTEL_SERVICE_NAME=content-studio-worker` in worker env files.
 
 ## Key References
 
-1. Behavior specification: [`docs/master-spec.md`](./docs/master-spec.md)
-2. Engineering docs index: [`docs/README.md`](./docs/README.md)
-3. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)
-4. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)
+1. Ownership guide: [`docs/onboarding/taking-ownership.md`](./docs/onboarding/taking-ownership.md)
+2. Behavior specification: [`docs/master-spec.md`](./docs/master-spec.md)
+3. Engineering docs index: [`docs/README.md`](./docs/README.md)
+4. Architecture overview: [`docs/architecture/overview.md`](./docs/architecture/overview.md)
+5. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)

@@ -312,6 +312,35 @@ describe('VoiceoverDetail', () => {
     expect(screen.getByText('Writing Assistant Panel')).toBeInTheDocument();
   });
 
+  it('shows failed-state recovery guidance in the main work area', () => {
+    const onGenerate = vi.fn();
+
+    renderVoiceoverDetail({
+      voiceover: createMockVoiceover({
+        status: VoiceoverStatus.FAILED,
+        errorMessage: 'Generation failed. Please retry.',
+      }),
+      workbenchState: {
+        hasChanges: false,
+        hasText: true,
+        isGenerating: false,
+        isSaving: false,
+        isDeleting: false,
+      },
+      onGenerate,
+    });
+
+    expect(
+      screen.getByText('Audio generation did not complete'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Generation failed. Please retry.'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry generation/i }));
+    expect(onGenerate).toHaveBeenCalledTimes(1);
+  });
+
   describe('Quick Start Guide', () => {
     it('shows quick start for drafting voiceovers with no text or audio', () => {
       renderNewVoiceover();

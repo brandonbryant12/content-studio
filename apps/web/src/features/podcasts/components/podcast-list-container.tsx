@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { useCreatePodcast } from '../hooks/use-create-podcast';
 import { useOptimisticDeleteList } from '../hooks/use-optimistic-delete-list';
 import {
   usePodcastList,
   getPodcastListQueryKey,
 } from '../hooks/use-podcast-list';
+import { useStartPodcastCreation } from '../hooks/use-start-podcast-creation';
 import { PodcastList } from './podcast-list';
 import { apiClient } from '@/clients/apiClient';
 import {
@@ -27,7 +27,7 @@ export function PodcastListContainer() {
     error,
     refetch,
   } = usePodcastList();
-  const createMutation = useCreatePodcast();
+  const createFlow = useStartPodcastCreation();
   const deleteMutation = useOptimisticDeleteList();
   const quickPlay = useQuickPlay();
   const selection = useBulkSelection();
@@ -38,11 +38,8 @@ export function PodcastListContainer() {
   });
 
   const handleCreate = useCallback(() => {
-    createMutation.mutate({
-      title: 'Untitled Podcast',
-      format: 'conversation',
-    });
-  }, [createMutation]);
+    createFlow.start();
+  }, [createFlow]);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -88,7 +85,7 @@ export function PodcastListContainer() {
     <PodcastList
       podcasts={podcasts}
       searchQuery={searchQuery}
-      isCreating={createMutation.isPending}
+      isCreating={createFlow.isPending}
       deletingId={deletingId}
       onSearch={setSearchQuery}
       onCreate={handleCreate}

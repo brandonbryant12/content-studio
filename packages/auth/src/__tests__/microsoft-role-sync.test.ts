@@ -5,6 +5,7 @@ import {
   resolveRoleFromGroupIds,
   syncUserRoleFromMicrosoftGraph,
 } from '../server/microsoft-role-sync';
+import { ensureEncryptedOAuthToken } from '../server/oauth-token-crypto';
 
 const asJsonResponse = (value: unknown, init?: ResponseInit) =>
   new Response(JSON.stringify(value), {
@@ -175,5 +176,39 @@ describe('syncUserRoleFromMicrosoftGraph', () => {
         fetchFn: fetchMock as unknown as typeof fetch,
       }),
     ).rejects.toThrow('User is not in any configured Microsoft role group');
+  });
+
+  it('decrypts stored Microsoft access tokens before calling Graph', async () => {
+    const encryptedAccessToken = await ensureEncryptedOAuthToken({
+      authSecret: 'test-auth-secret',
+      token: 'access-token',
+    });
+    const db = createMockRoleSyncDb({
+      accessToken: encryptedAccessToken ?? null,
+    });
+    const fetchMock = vi.fn().mockResolvedValue(
+      asJsonResponse({
+        value: [{ id: 'user-group-id' }],
+      }),
+    );
+
+    await expect(
+      syncUserRoleFromMicrosoftGraph({
+        authSecret: 'test-auth-secret',
+        db,
+        userId: 'user-1',
+        roleGroups,
+        fetchFn: fetchMock as unknown as typeof fetch,
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer access-token',
+        }),
+      }),
+    );
   });
 });

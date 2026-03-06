@@ -22,12 +22,13 @@ import {
 } from './create-infographic-dialog';
 import { InfographicItem, type InfographicListItem } from './infographic-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
-import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
+import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import {
   INFOGRAPHIC_DEFINITION,
   INFOGRAPHIC_FLOW_STEPS,
   INFOGRAPHIC_LIST_SUPPORT,
 } from '@/shared/lib/content-guidance';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -205,22 +206,15 @@ export function InfographicList({
         </Button>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-rose-200/60 bg-rose-50/80 p-5 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/5">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-rose-500/10 p-2 text-rose-600 dark:text-rose-300">
-            <InfoCircledIcon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              How infographics work
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Infographics begin with a prompt, then improve through versioned
-              iterations instead of one final irreversible generation.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <CollectionGuidancePanel
+        title="How infographics work"
+        description="Infographics begin with a prompt, then improve through versioned iterations instead of one final irreversible generation."
+        icon={<InfoCircledIcon className="h-4 w-4" />}
+        panelClassName="mb-6 rounded-2xl border border-rose-200/60 bg-rose-50/80 p-5 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/5"
+        iconClassName="mt-0.5 rounded-full bg-rose-500/10 p-2 text-rose-600 dark:text-rose-300"
+        collapsible={!isEmpty}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
           {INFOGRAPHIC_FLOW_STEPS.map((step) => (
             <div
               key={step.title}
@@ -235,7 +229,7 @@ export function InfographicList({
             </div>
           ))}
         </div>
-      </div>
+      </CollectionGuidancePanel>
 
       <div className="relative mb-4">
         <Input

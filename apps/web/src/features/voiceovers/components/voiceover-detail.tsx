@@ -1,3 +1,4 @@
+import { Button } from '@repo/ui/components/button';
 import { useState, type ReactNode } from 'react';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
 import type { RouterOutput } from '@repo/api/client';
@@ -10,6 +11,7 @@ import {
   AudioStage,
   QuickStartGuide,
 } from './workbench';
+import { getGenerationFailureMessage } from '@/shared/lib/errors';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
@@ -78,6 +80,18 @@ export function VoiceoverDetail({
     !quickStartDismissed &&
     isQuickStartVisible(voiceover) &&
     settings.text.length === 0;
+  const failureMessage =
+    voiceover.status === 'failed'
+      ? (getGenerationFailureMessage(voiceover.errorMessage) ??
+        'Generation failed. Please retry.')
+      : null;
+  const failureHint =
+    failureMessage?.includes('Too many requests') ||
+    failureMessage?.includes('temporarily unavailable')
+      ? 'This looks temporary. Wait a moment, then retry generation.'
+      : hasText
+        ? 'Review the script and selected voice, then retry generation from the main action area.'
+        : 'Add or revise the script before retrying generation.';
 
   return (
     <WorkbenchLayout
@@ -113,6 +127,34 @@ export function VoiceoverDetail({
       }
     >
       <div className="flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 min-h-full">
+        {voiceover.status === 'failed' && failureMessage ? (
+          <section
+            className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4"
+            role="alert"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-destructive">
+                  Audio generation did not complete
+                </p>
+                <p className="mt-1 text-sm text-foreground">{failureMessage}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {failureHint}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={onGenerate}
+                disabled={isGenerating || isSaving}
+                className="shrink-0"
+              >
+                {hasChanges ? 'Save changes & retry' : 'Retry generation'}
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
         {/* Voice Ensemble at top - pinned */}
         <div className="shrink-0">
           <VoiceSelector

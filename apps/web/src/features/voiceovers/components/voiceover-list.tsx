@@ -27,14 +27,15 @@ import type { UseQuickPlayReturn } from '@/shared/hooks/use-quick-play';
 import { VoiceoverStatus } from '../lib/status';
 import { StatusBadge } from './status-badge';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
+import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
-import { formatDuration, formatDate } from '@/shared/lib/formatters';
 import {
   VOICEOVER_DEFINITION,
   VOICEOVER_FLOW_STEPS,
   VOICEOVER_LIST_SUPPORT,
 } from '@/shared/lib/content-guidance';
+import { CREATE_ACTION_LABELS } from '@/shared/lib/content-language';
+import { formatDuration, formatDate } from '@/shared/lib/formatters';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
@@ -122,6 +123,23 @@ const PlaybackProgress = memo(function PlaybackProgress({
   );
 });
 
+function MetadataCell({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className={`hidden shrink-0 text-right ${className ?? ''}`}>
+      <span className="sr-only">{label}</span>
+      <span className="list-row-meta">{value}</span>
+    </div>
+  );
+}
+
 const VoiceoverRow = memo(function VoiceoverRow({
   voiceover,
   onDelete,
@@ -171,6 +189,7 @@ const VoiceoverRow = memo(function VoiceoverRow({
   return (
     <>
       <div
+        role="listitem"
         className={`list-row group ${isSelected ? 'list-row-selected' : ''}`}
       >
         <Checkbox
@@ -202,13 +221,13 @@ const VoiceoverRow = memo(function VoiceoverRow({
         <Link
           to="/voiceovers/$voiceoverId"
           params={{ voiceoverId: voiceover.id }}
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         >
           <span className="list-row-title block truncate">
             {voiceover.title}
           </span>
         </Link>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="shrink-0 flex items-center justify-end gap-2">
           <StatusBadge status={voiceover.status} />
           {voiceover.approvedBy && (
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -217,15 +236,21 @@ const VoiceoverRow = memo(function VoiceoverRow({
             </span>
           )}
         </div>
-        <span className="list-row-meta hidden md:block w-20 text-right">
-          {voiceover.voiceName ?? '–'}
-        </span>
-        <span className="list-row-meta tabular-nums hidden sm:block w-14 text-right">
-          {formatDuration(voiceover.duration)}
-        </span>
-        <span className="list-row-meta hidden lg:block w-24 text-right">
-          {formatDate(voiceover.createdAt)}
-        </span>
+        <MetadataCell
+          label="Voice"
+          value={voiceover.voiceName ?? '—'}
+          className="md:flex w-20"
+        />
+        <MetadataCell
+          label="Duration"
+          value={voiceover.duration ? formatDuration(voiceover.duration) : '—'}
+          className="sm:flex w-20"
+        />
+        <MetadataCell
+          label="Updated"
+          value={formatDate(voiceover.createdAt)}
+          className="lg:flex w-24"
+        />
         <Button
           variant="ghost"
           size="icon"
@@ -360,22 +385,15 @@ export function VoiceoverList({
         </Button>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-amber-200/60 bg-amber-50/80 p-5 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/5">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-amber-500/10 p-2 text-amber-600 dark:text-amber-300">
-            <InfoCircledIcon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              How voiceovers work
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Voiceovers start with a script. You can write it yourself or use
-              AI to strengthen the draft before generating audio.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <CollectionGuidancePanel
+        title="How voiceovers work"
+        description="Voiceovers start with a script. You can write it yourself or use AI to strengthen the draft before generating audio."
+        icon={<InfoCircledIcon className="h-4 w-4" />}
+        panelClassName="mb-6 rounded-2xl border border-amber-200/60 bg-amber-50/80 p-5 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/5"
+        iconClassName="mt-0.5 rounded-full bg-amber-500/10 p-2 text-amber-600 dark:text-amber-300"
+        collapsible={!isEmpty}
+      >
+        <div className="grid gap-3 md:grid-cols-3">
           {VOICEOVER_FLOW_STEPS.map((step) => (
             <div
               key={step.title}
@@ -390,7 +408,7 @@ export function VoiceoverList({
             </div>
           ))}
         </div>
-      </div>
+      </CollectionGuidancePanel>
 
       {/* Search */}
       <div className="relative mb-4">

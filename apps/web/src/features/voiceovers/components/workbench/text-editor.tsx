@@ -49,7 +49,7 @@ const CharacterCountRing = memo(function CharacterCountRing({
           fill="none"
           stroke="currentColor"
           strokeWidth="2.5"
-          className="text-muted/30"
+          className="text-muted-foreground/30"
         />
         {/* Progress circle */}
         <circle
