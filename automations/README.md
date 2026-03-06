@@ -39,22 +39,3 @@ Wrapper profiles:
 1. Operation registry: [`software-factory/operations/registry.json`](../software-factory/operations/registry.json)
 2. Automation wrappers: [`automations/*/*.toml`](./)
 3. Automation playbooks: [`automations/*/*.md`](./)
-
-## Runtime Sync
-
-Push wrapper updates to local Codex runtime:
-
-```bash
-pnpm automations:sync:runtime
-```
-
-Preview sync actions without writing files:
-
-```bash
-pnpm automations:sync:runtime:dry-run
-```
-
-This sync script:
-1. Copies every `automations/<id>/<id>.toml` wrapper into `~/.codex/automations/content-studio--<id>/automation.toml`
-2. Rewrites runtime-only fields (`id`, `name`, `cwds`, `updated_at`)
-3. Preserves wrapper contract fields (`prompt`, `status`, `rrule`, `created_at`) from repo source of truth

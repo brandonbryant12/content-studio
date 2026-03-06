@@ -61,8 +61,6 @@
     "workspace:clean:check": "./scripts/git/check-workspace-clean.sh",
     "hooks:install": "./scripts/git/install-hooks.sh",
     "automations:run-wrapper": "./automations/run-operation-wrapper.sh",
-    "automations:sync:runtime": "./automations/sync-content-studio-runtime.sh",
-    "automations:sync:runtime:dry-run": "./automations/sync-content-studio-runtime.sh --dry-run",
     "ready-for-dev": "pnpm software-factory operation run ready-for-dev-executor",
     "scripts:lint": "pnpm software-factory scripts lint",
     "typecheck": "turbo run typecheck",
