@@ -1,5 +1,6 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { VoiceNotFoundError } from '../../errors';
 import {
   AIUsageRecorder,
   type PersistAIUsageInput,
@@ -62,6 +63,35 @@ describe('GoogleTTSLive', () => {
     expect(init.signal.aborted).toBe(false);
   });
 
+  it('fails fast for unknown voice IDs before calling the provider', async () => {
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const tts = yield* TTS;
+        return yield* tts.previewVoice({
+          voiceId: 'UnknownVoice',
+        });
+      }).pipe(
+        Effect.provide(
+          GoogleTTSLive({
+            apiKey: 'test-key',
+          }),
+        ),
+      ),
+    );
+
+    expect(exit._tag).toBe('Failure');
+    if (exit._tag === 'Failure') {
+      expect(exit.cause._tag).toBe('Fail');
+      if (exit.cause._tag === 'Fail') {
+        expect(exit.cause.error._tag).toBe('VoiceNotFoundError');
+        expect((exit.cause.error as VoiceNotFoundError).voiceId).toBe(
+          'UnknownVoice',
+        );
+      }
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('records usage when previewVoice succeeds', async () => {
     const recorded: PersistAIUsageInput[] = [];
     const recorderLayer = Layer.succeed(AIUsageRecorder, {
@@ -78,7 +108,8 @@ describe('GoogleTTSLive', () => {
           responseId: 'tts-response-1',
           usageMetadata: {
             promptTokenCount: 9,
-            totalTokenCount: 9,
+            candidatesTokenCount: 4,
+            totalTokenCount: 13,
           },
           candidates: [
             {
@@ -132,8 +163,10 @@ describe('GoogleTTSLive', () => {
         inputChars: 'Preview this voice.'.length,
         outputAudioBytes: audioContent.length,
         promptTokens: 9,
-        totalTokens: 9,
+        outputTokens: 4,
+        totalTokens: 13,
       },
+      estimatedCostUsdMicros: 45,
     });
   });
 });

@@ -131,31 +131,32 @@ describe('getSourceContent', () => {
       expect(result.content).toBe(expectedContent);
     });
 
-    it('should fail with SourceNotFound when user is admin and does not own source', async () => {
+    it('should allow admins to read source content they do not own', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
-      const sourceId = 'doc_test2' as SourceId;
+      const doc = createTestSource({
+        id: 'doc_test2' as SourceId,
+        contentKey: 'sources/admin-visible.txt',
+        mimeType: 'text/plain',
+        createdBy: 'member-123',
+      });
+      const expectedContent = 'Admin can access this content.';
 
       const mockRepo = createMockSourceRepo({
+        findById: () => Effect.succeed(doc),
         findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
       });
 
       const mockStorage = createMockStorage({
-        download: () =>
-          Effect.succeed(Buffer.from('Admin can access this content.')),
+        download: () => Effect.succeed(Buffer.from(expectedContent)),
       });
 
-      const effect = getSourceContent({ id: sourceId }).pipe(
+      const effect = getSourceContent({ id: doc.id }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 
-      const result = await Effect.runPromiseExit(withTestUser(admin)(effect));
+      const result = await Effect.runPromise(withTestUser(admin)(effect));
 
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(sourceId);
-      }
+      expect(result.content).toBe(expectedContent);
     });
 
     it('should fail with SourceNotFound when non-owner tries to access', async () => {

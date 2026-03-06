@@ -33,3 +33,4 @@ export {
 } from './infographic-errors';
 
 export { PersonaNotFound, NotPersonaOwner } from './persona-errors';
+export { AdminUserNotFound } from './admin-errors';

@@ -5,7 +5,7 @@ import { handleEffectWithProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const activityRouter = {
-  list: protectedProcedure.admin.list.handler(
+  list: protectedProcedure.admin.activity.list.handler(
     async ({ context, input, errors }) => {
       return handleEffectWithProtocol(
         context.runtime,
@@ -30,7 +30,7 @@ const activityRouter = {
     },
   ),
 
-  stats: protectedProcedure.admin.stats.handler(
+  stats: protectedProcedure.admin.activity.stats.handler(
     async ({ context, input, errors }) => {
       return handleEffectWithProtocol(
         context.runtime,

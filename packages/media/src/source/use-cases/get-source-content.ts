@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@repo/auth/policy';
+import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { SourceContentNotFound } from '../../errors';
@@ -25,7 +25,9 @@ export const getSourceContent = (input: GetSourceContentInput) =>
       resourceId: input.id,
       attributes: { 'source.id': input.id },
     });
-    const doc = yield* sourceRepo.findByIdForUser(input.id, user.id);
+    const doc = yield* user.role === Role.ADMIN
+      ? sourceRepo.findById(input.id)
+      : sourceRepo.findByIdForUser(input.id, user.id);
 
     // Fast path: return denormalized extracted text if available
     if (doc.extractedText) {

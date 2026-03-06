@@ -1,5 +1,6 @@
 import { Db } from '@repo/db/effect';
 import {
+  createTestAdmin,
   createTestUser,
   createTestPodcast,
   createTestSource,
@@ -201,6 +202,33 @@ describe('getPodcast', () => {
 
       expect(result.id).toBe(podcast.id);
       expect(result.status).toBe('generating_script');
+    });
+
+    it('allows admins to access a podcast they do not own', async () => {
+      const admin = createTestAdmin({ id: 'admin-1' });
+      const owner = createTestUser({ id: 'member-1' });
+      const doc = createTestSource({ createdBy: owner.id });
+      const podcast = createTestPodcast({
+        title: 'Admin Visible Podcast',
+        createdBy: owner.id,
+        sourceIds: [doc.id],
+      });
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts: [podcast],
+        sources: [doc],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result.id).toBe(podcast.id);
+      expect(result.createdBy).toBe(owner.id);
+      expect(result.sources[0]?.id).toBe(doc.id);
     });
   });
 

@@ -120,6 +120,7 @@ export type ErrorCode =
   | 'PODCAST_NOT_FOUND'
   | 'SCRIPT_NOT_FOUND'
   | 'VOICEOVER_NOT_FOUND'
+  | 'USER_NOT_FOUND'
   | 'JOB_NOT_FOUND'
   | 'VOICE_NOT_FOUND'
   | 'UNAUTHORIZED'
@@ -168,6 +169,10 @@ export interface MockErrorFactory {
     data?: unknown;
   }) => ORPCError<string, unknown>;
   VOICEOVER_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  USER_NOT_FOUND: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
@@ -226,6 +231,7 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   PODCAST_NOT_FOUND: 404,
   SCRIPT_NOT_FOUND: 404,
   VOICEOVER_NOT_FOUND: 404,
+  USER_NOT_FOUND: 404,
   VOICE_NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
@@ -338,6 +344,7 @@ export const createMockErrors = (): MockErrorFactory => {
     PODCAST_NOT_FOUND: createErrorFactory('PODCAST_NOT_FOUND'),
     SCRIPT_NOT_FOUND: createErrorFactory('SCRIPT_NOT_FOUND'),
     VOICEOVER_NOT_FOUND: createErrorFactory('VOICEOVER_NOT_FOUND'),
+    USER_NOT_FOUND: createErrorFactory('USER_NOT_FOUND'),
     VOICE_NOT_FOUND: createErrorFactory('VOICE_NOT_FOUND'),
     UNAUTHORIZED: createErrorFactory('UNAUTHORIZED'),
     FORBIDDEN: createErrorFactory('FORBIDDEN'),

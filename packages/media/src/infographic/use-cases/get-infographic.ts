@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@repo/auth/policy';
+import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { InfographicRepo } from '../repos';
@@ -25,7 +25,9 @@ export const getInfographic = (input: GetInfographicInput) =>
       resourceId: input.id,
       attributes: { 'infographic.id': input.id },
     });
-    const infographic = yield* repo.findByIdForUser(input.id, user.id);
+    const infographic = yield* user.role === Role.ADMIN
+      ? repo.findById(input.id)
+      : repo.findByIdForUser(input.id, user.id);
 
     return infographic;
   }).pipe(withUseCaseSpan('useCase.getInfographic'));

@@ -20,10 +20,29 @@ export {
   InfographicNotFound,
   NotInfographicOwner,
   InfographicError,
+  AdminUserNotFound,
   PersonaNotFound,
   NotPersonaOwner,
   type MediaError,
 } from './errors';
+
+export {
+  AdminRepo,
+  AdminRepoLive,
+  searchUsers,
+  listUserEntities,
+  getUserDetail,
+  type AdminRepoService,
+  type SearchUsersInput,
+  type SearchUsersResult,
+  type ListUserEntitiesInput,
+  type ListUserEntitiesResult,
+  type GetUserDetailInput,
+  type GetUserDetailResult,
+  type UserEntityCounts,
+  type UserRecentEntities,
+  type UserAIUsageSummary,
+} from './admin';
 
 export {
   ActivityLogNotFound,
@@ -213,6 +232,7 @@ export {
 } from './persona';
 
 import type { ActivityLogRepo } from './activity';
+import type { AdminRepo } from './admin';
 import type { InfographicRepo } from './infographic';
 import type { StylePresetRepo } from './infographic';
 import type { PersonaRepo } from './persona';
@@ -222,6 +242,7 @@ import type { VoiceoverRepo } from './voiceover';
 import type { Db } from '@repo/db/effect';
 import type { Storage } from '@repo/storage';
 import { ActivityLogRepoLive } from './activity';
+import { AdminRepoLive } from './admin';
 import { InfographicRepoLive, StylePresetRepoLive } from './infographic';
 import { PersonaRepoLive } from './persona';
 import { PodcastRepoLive } from './podcast';
@@ -230,6 +251,7 @@ import { VoiceoverRepoLive } from './voiceover';
 
 // When adding a new repo, add it to both Media and MediaLive.
 export type Media =
+  | AdminRepo
   | SourceRepo
   | PodcastRepo
   | VoiceoverRepo
@@ -240,6 +262,7 @@ export type Media =
 
 export const MediaLive: Layer.Layer<Media, never, Db | Storage> =
   Layer.mergeAll(
+    AdminRepoLive,
     SourceRepoLive,
     PodcastRepoLive,
     VoiceoverRepoLive,

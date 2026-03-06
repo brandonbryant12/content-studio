@@ -21,11 +21,20 @@ import { getSource } from '../get-source';
  * Create a mock SourceRepo layer with custom findById behavior.
  */
 const createMockSourceRepo = (
-  findById: SourceRepoService['findById'],
+  overrides: {
+    findById?: SourceRepoService['findById'];
+    findByIdForUser?: SourceRepoService['findByIdForUser'];
+  } = {},
 ): Layer.Layer<SourceRepo> =>
   Layer.succeed(SourceRepo, {
-    findByIdForUser: (id) => findById(id),
-    findById,
+    findByIdForUser: (id, userId) =>
+      overrides.findByIdForUser
+        ? overrides.findByIdForUser(id, userId)
+        : overrides.findById
+          ? overrides.findById(id)
+          : Effect.die('findByIdForUser not implemented'),
+    findById:
+      overrides.findById ?? (() => Effect.die('findById not implemented')),
     insert: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
@@ -62,7 +71,9 @@ describe('getSource', () => {
         createdBy: user.id,
       });
 
-      const mockRepo = createMockSourceRepo(() => Effect.succeed(source));
+      const mockRepo = createMockSourceRepo({
+        findByIdForUser: () => Effect.succeed(source),
+      });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromise(
@@ -76,36 +87,36 @@ describe('getSource', () => {
       expect(result.createdBy).toBe(user.id);
     });
 
-    it('fails with SourceNotFound when user is admin and does not own source', async () => {
+    it('allows admin users to access a source they do not own', async () => {
       const admin = createTestAdmin({ id: 'admin-1' });
-      const sourceId = 'doc_hidden';
+      const source = createTestSource({
+        title: 'Admin Visible Source',
+        createdBy: 'member-1',
+      });
 
-      const mockRepo = createMockSourceRepo((id) =>
-        Effect.fail(new SourceNotFound({ id })),
-      );
+      const mockRepo = createMockSourceRepo({
+        findById: () => Effect.succeed(source),
+        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+      });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
-      const result = await Effect.runPromiseExit(
+      const result = await Effect.runPromise(
         withTestUser(admin)(
-          getSource({ id: sourceId }).pipe(Effect.provide(layers)),
+          getSource({ id: source.id }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
-        expect(error?._tag).toBe('SourceNotFound');
-        expect((error as SourceNotFound).id).toBe(sourceId);
-      }
+      expect(result.id).toBe(source.id);
+      expect(result.createdBy).toBe(source.createdBy);
     });
 
     it('fails with SourceNotFound when non-owner tries to access', async () => {
       const user = createTestUser({ id: 'user-1' });
       const sourceId = 'doc_hidden';
 
-      const mockRepo = createMockSourceRepo((id) =>
-        Effect.fail(new SourceNotFound({ id })),
-      );
+      const mockRepo = createMockSourceRepo({
+        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+      });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
@@ -128,9 +139,9 @@ describe('getSource', () => {
       const user = createTestUser({ id: 'user-1' });
       const nonExistentId = 'doc_nonexistent';
 
-      const mockRepo = createMockSourceRepo((id) =>
-        Effect.fail(new SourceNotFound({ id })),
-      );
+      const mockRepo = createMockSourceRepo({
+        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+      });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       const result = await Effect.runPromiseExit(
@@ -152,7 +163,9 @@ describe('getSource', () => {
     it('fails with UnauthorizedError when no user context', async () => {
       const testSource = createTestSource({ createdBy: 'user-1' });
 
-      const mockRepo = createMockSourceRepo(() => Effect.succeed(testSource));
+      const mockRepo = createMockSourceRepo({
+        findByIdForUser: () => Effect.succeed(testSource),
+      });
       const layers = Layer.mergeAll(MockDbLive, mockRepo);
 
       // Run without withTestUser - no user context

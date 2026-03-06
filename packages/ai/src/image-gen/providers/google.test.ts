@@ -88,7 +88,8 @@ describe('GoogleImageGenLive', () => {
       responseId: 'image-response-1',
       usageMetadata: {
         promptTokenCount: 13,
-        totalTokenCount: 13,
+        candidatesTokenCount: 12,
+        totalTokenCount: 25,
       },
       candidates: [
         {
@@ -143,8 +144,10 @@ describe('GoogleImageGenLive', () => {
         promptChars: 'A city skyline'.length,
         outputImageBytes: imageBytes.length,
         promptTokens: 13,
-        totalTokens: 13,
+        outputTokens: 12,
+        totalTokens: 25,
       },
+      estimatedCostUsdMicros: 727,
     });
   });
 });

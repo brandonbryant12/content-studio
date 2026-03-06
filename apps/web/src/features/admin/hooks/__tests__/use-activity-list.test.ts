@@ -23,7 +23,7 @@ describe('getActivityListQueryKey', () => {
     });
 
     expect(queryKey).toEqual(
-      apiClient.admin.list.queryOptions({
+      apiClient.admin.activity.list.queryOptions({
         input: {
           userId: 'user-1',
           entityType: 'document',
@@ -40,7 +40,7 @@ describe('getActivityListQueryKey', () => {
         search: '   ',
       }),
     ).toEqual(
-      apiClient.admin.list.queryOptions({
+      apiClient.admin.activity.list.queryOptions({
         input: {
           search: undefined,
           limit: DEFAULT_ACTIVITY_LIST_LIMIT,
@@ -53,7 +53,7 @@ describe('getActivityListQueryKey', () => {
         search: '  hello world  ',
       }),
     ).toEqual(
-      apiClient.admin.list.queryOptions({
+      apiClient.admin.activity.list.queryOptions({
         input: {
           search: 'hello world',
           limit: DEFAULT_ACTIVITY_LIST_LIMIT,

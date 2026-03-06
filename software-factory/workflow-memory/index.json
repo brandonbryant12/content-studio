@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-06-architecture-adr-guard-ai-provider-boundary-refactor-keeps-google-internals-behind-moda",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "AI provider boundary refactor keeps Google internals behind modality contracts",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:architecture-adr-guard",
+      "domain:ai",
+      "provider-boundary",
+      "adr-lite"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-docs-knowledge-drift-add-microsoft-sso-recommendation-and-bearer-auth-explainer",
     "date": "2026-03-06",
     "month": "2026-03",
@@ -158,6 +174,90 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-06-feature-delivery-admin-ai-usage-distinguishes-unpriced-from-zero-cost",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin AI usage distinguishes unpriced from zero cost",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:web",
+      "domain:api",
+      "domain:media",
+      "ai-usage",
+      "pricing"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-admin-user-detail-page-gained-url-driven-entity-explorer",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin user detail page gained URL-driven entity explorer",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "area:admin",
+      "area:web",
+      "area:api"
+    ],
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-admin-user-detail-page-tabbed-section-navigation",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin user detail page switched to tabbed section navigation",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "feature-delivery",
+      "skill:frontend-design",
+      "skill:tanstack-vite"
+    ],
+    "importance": 0.74,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-admin-user-detail-removes-email-verification-badge",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin user detail removes email verification badge",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:web",
+      "domain:admin",
+      "ui-cleanup"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-admin-user-search-and-detail-for-ai-usage",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin user search and detail for AI usage",
+    "severity": "medium",
+    "status": "applied",
+    "tags": [
+      "skill:frontend-design",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-feature-delivery-centralized-ai-usage-ledger-via-repo-ai-boundary",
     "date": "2026-03-06",
     "month": "2026-03",
@@ -239,6 +339,63 @@
     ],
     "importance": 0.83,
     "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-provider-neutral-ai-pricing-catalog-and-tts-contract-cleanup",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Provider-neutral AI pricing catalog and TTS contract cleanup",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:ai",
+      "architecture",
+      "pricing",
+      "provider-abstraction"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-split-admin-user-detail-page-into-bounded-presenter-helpers",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Split admin user detail page into bounded presenter helpers",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "domain:web",
+      "domain:admin",
+      "eslint",
+      "maintainability",
+      "skill:code-simplifier",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.45,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-typed-google-model-pricing-with-provider-side-ai-cost-estimation",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Typed Google model pricing with provider-side AI cost estimation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:ai",
+      "domain:admin",
+      "pricing",
+      "typesafety"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {

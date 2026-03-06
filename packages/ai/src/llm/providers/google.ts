@@ -8,8 +8,13 @@ import {
   type ToolSet,
 } from 'ai';
 import { Effect, Layer, JSONSchema, Schedule } from 'effect';
-import { LLM_MODEL } from '../../models';
+import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  getGoogleLLMModel,
+  type GoogleLLMModelId,
+  LLM_MODEL,
+} from '../../providers/google/models';
 import {
   AIUsageRecorder,
   createAsyncAIUsageRecorder,
@@ -33,7 +38,7 @@ export interface GoogleConfig {
   /** API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
   /** Override the default LLM model from models.ts */
-  readonly model?: string;
+  readonly model?: GoogleLLMModelId;
 }
 
 /**
@@ -125,11 +130,20 @@ const buildStreamMetadata = <TOOLS extends ToolSet>(
  */
 const makeGoogleService = (config: GoogleConfig): LLMService => {
   const modelId = config.model ?? LLM_MODEL;
+  const modelDefinition = getGoogleLLMModel(modelId);
 
   const google = createGoogleGenerativeAI({
     apiKey: config.apiKey,
   });
   const model = google(modelId);
+
+  const estimateCostUsdMicros = (usage: LanguageModelUsage | undefined) =>
+    usage
+      ? estimateTokenPricedModelCostUsdMicros(modelDefinition, {
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+        })
+      : null;
 
   return {
     generate: <T>(options: GenerateOptions<T>) => {
@@ -170,6 +184,7 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             usage: toLLMUsageMetrics(result.usage),
             metadata,
             rawUsage: getRawUsage(result.usage),
+            estimatedCostUsdMicros: estimateCostUsdMicros(result.usage),
           }),
         ),
         Effect.tapError((error) =>
@@ -242,6 +257,7 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             usage: toLLMUsageMetrics(input.usage),
             metadata,
             rawUsage: input.rawUsage,
+            estimatedCostUsdMicros: estimateCostUsdMicros(input.usage),
           });
         };
 

@@ -16,6 +16,7 @@ export const createMockInfographicRepo = (
     findById: () => Effect.die('not implemented'),
     findByIdForUser: () => Effect.die('not implemented'),
     list: () => Effect.die('not implemented'),
+    count: () => Effect.die('not implemented'),
     update: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     insertVersion: () => Effect.die('not implemented'),

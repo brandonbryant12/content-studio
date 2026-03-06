@@ -7,8 +7,8 @@ import {
   getGoogleApiErrorDetails,
   isGoogleRateLimit,
 } from '../../google/error-parser';
-import { DEEP_RESEARCH_MODEL } from '../../models';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { DEEP_RESEARCH_MODEL } from '../../providers/google/models';
 import { recordAIUsageIfConfigured } from '../../usage';
 import {
   DeepResearch,

@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@repo/auth/policy';
+import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
@@ -30,9 +30,8 @@ export const getVoiceover = (input: GetVoiceoverInput) =>
       resourceId: input.voiceoverId,
       attributes: { 'voiceover.id': input.voiceoverId },
     });
-    const voiceover = yield* voiceoverRepo.findByIdForUser(
-      input.voiceoverId,
-      user.id,
-    );
+    const voiceover = yield* user.role === Role.ADMIN
+      ? voiceoverRepo.findById(input.voiceoverId)
+      : voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
     return voiceover;
   }).pipe(withUseCaseSpan('useCase.getVoiceover'));

@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@repo/auth/policy';
+import { getCurrentUser, Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PersonaRepo } from '../repos';
@@ -17,7 +17,9 @@ export const getPersona = (input: GetPersonaInput) =>
       resourceId: input.personaId,
       attributes: { 'persona.id': input.personaId },
     });
-    const p = yield* personaRepo.findByIdForUser(input.personaId, user.id);
+    const p = yield* user.role === Role.ADMIN
+      ? personaRepo.findById(input.personaId)
+      : personaRepo.findByIdForUser(input.personaId, user.id);
 
     return p;
   }).pipe(withUseCaseSpan('useCase.getPersona'));

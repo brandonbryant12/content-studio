@@ -1,5 +1,10 @@
 import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { Schema } from 'effect';
+import {
+  createBatchEffectSerializer,
+  createEffectSerializer,
+} from './serialization';
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -13,6 +18,17 @@ export const user = pgTable('user', {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+});
+
+export const UserOutputSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  email: Schema.String,
+  emailVerified: Schema.Boolean,
+  image: Schema.NullOr(Schema.String),
+  role: Schema.String,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
 });
 
 export const session = pgTable(
@@ -92,3 +108,29 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export type DbUser = typeof user.$inferSelect;
+export type UserOutput = typeof UserOutputSchema.Type;
+
+const userTransform = (record: DbUser): UserOutput => ({
+  id: record.id,
+  name: record.name,
+  email: record.email,
+  emailVerified: record.emailVerified,
+  image: record.image,
+  role: record.role,
+  createdAt: record.createdAt.toISOString(),
+  updatedAt: record.updatedAt.toISOString(),
+});
+
+export const serializeUserEffect = createEffectSerializer(
+  'user',
+  userTransform,
+);
+
+export const serializeUsersEffect = createBatchEffectSerializer(
+  'user',
+  userTransform,
+);
+
+export const serializeUser = userTransform;

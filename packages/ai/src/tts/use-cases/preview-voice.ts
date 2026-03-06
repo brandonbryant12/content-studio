@@ -1,12 +1,6 @@
 import { Effect } from 'effect';
 import { withAIUsageScope } from '../../usage';
-import {
-  TTS,
-  type AudioEncoding,
-  type GeminiVoiceId,
-  isValidVoiceId,
-} from '../index';
-import { VoiceNotFoundError } from './errors';
+import { TTS, type AudioEncoding } from '../index';
 
 // =============================================================================
 // Types
@@ -30,13 +24,9 @@ export interface PreviewVoiceUseCaseResult {
 /** Generate a preview audio sample for a voice. */
 export const previewVoice = (input: PreviewVoiceInput) =>
   Effect.gen(function* () {
-    if (!isValidVoiceId(input.voiceId)) {
-      return yield* new VoiceNotFoundError({ voiceId: input.voiceId });
-    }
-
     const tts = yield* TTS;
     return yield* tts.previewVoice({
-      voiceId: input.voiceId as GeminiVoiceId,
+      voiceId: input.voiceId,
       text: input.text,
     });
   }).pipe(

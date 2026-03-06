@@ -1,12 +1,18 @@
 import { Effect, Layer } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
+import { VoiceNotFoundError } from '../../errors';
 import {
   GoogleApiError,
   parseGoogleApiErrorBody,
 } from '../../google/error-parser';
-import { TTS_MODEL } from '../../models';
+import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
 import { retryTransientProvider } from '../../provider-retry';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  getGoogleTTSModel,
+  type GoogleTTSModelId,
+  TTS_MODEL,
+} from '../../providers/google/models';
 import { recordAIUsageIfConfigured } from '../../usage';
 import { wrapPcmAsWav } from '../audio-utils';
 import { mapError } from '../map-error';
@@ -19,7 +25,12 @@ import {
   type PreviewVoiceOptions,
   type PreviewVoiceResult,
 } from '../service';
-import { VOICES, getVoicesByGender, DEFAULT_PREVIEW_TEXT } from '../voices';
+import {
+  DEFAULT_PREVIEW_TEXT,
+  getVoiceById,
+  getVoicesByGender,
+  VOICES,
+} from '../voices';
 
 /**
  * Configuration for Google Gemini TTS provider.
@@ -28,7 +39,7 @@ export interface GoogleTTSConfig {
   /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
   /** Override the default TTS model from models.ts */
-  readonly model?: string;
+  readonly model?: GoogleTTSModelId;
 }
 
 /** Typed shape of the Gemini TTS generateContent response. */
@@ -74,6 +85,23 @@ const buildTTSUsage = (input: {
       'cachedContentTokenCount',
     ),
   });
+
+const toBillableTokenUsage = (usageMetadata?: Record<string, unknown>) => ({
+  inputTokens: getNumberField(usageMetadata, 'promptTokenCount'),
+  outputTokens: getNumberField(usageMetadata, 'candidatesTokenCount'),
+});
+
+const ensureKnownVoice = (voiceId: string) => {
+  const voice = getVoiceById(voiceId);
+  return voice
+    ? Effect.succeed(voice)
+    : Effect.fail(new VoiceNotFoundError({ voiceId }));
+};
+
+const ensureKnownVoices = (voiceConfigs: SynthesizeOptions['voiceConfigs']) =>
+  Effect.forEach(voiceConfigs, (voiceConfig) =>
+    ensureKnownVoice(voiceConfig.voiceId),
+  );
 
 /** Call the Gemini generateContent endpoint and return the raw response. */
 async function callGeminiTTS(
@@ -131,6 +159,7 @@ function extractAudio(data: GeminiTTSResponse): Buffer {
  */
 const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
   const modelName = config.model ?? TTS_MODEL;
+  const modelDefinition = getGoogleTTSModel(modelName);
 
   return {
     listVoices: (options?: ListVoicesOptions) =>
@@ -146,14 +175,15 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       ),
 
     previewVoice: (options: PreviewVoiceOptions) =>
-      (() => {
+      Effect.gen(function* () {
+        yield* ensureKnownVoice(options.voiceId);
         const text = options.text ?? DEFAULT_PREVIEW_TEXT;
         const metadata = compactJsonRecord({
           voiceId: options.voiceId,
           textChars: text.length,
         });
 
-        return Effect.tryPromise({
+        return yield* Effect.tryPromise({
           try: async () => {
             const response = await callGeminiTTS(config.apiKey, modelName, {
               contents: [{ parts: [{ text }] }],
@@ -195,6 +225,10 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
               }),
               metadata,
               rawUsage: response.usageMetadata ?? null,
+              estimatedCostUsdMicros: estimateTokenPricedModelCostUsdMicros(
+                modelDefinition,
+                toBillableTokenUsage(response.usageMetadata),
+              ),
             }),
           ),
           Effect.tapError((error) =>
@@ -210,7 +244,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
           ),
           Effect.map(({ result }) => result),
         );
-      })().pipe(
+      }).pipe(
         retryTransientProvider,
         Effect.withSpan('tts.previewVoice', {
           attributes: {
@@ -222,7 +256,8 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       ),
 
     synthesize: (options: SynthesizeOptions) =>
-      (() => {
+      Effect.gen(function* () {
+        yield* ensureKnownVoices(options.voiceConfigs);
         const isSingleSpeaker = options.voiceConfigs.length === 1;
         const contentText = isSingleSpeaker
           ? options.turns.map((turn) => turn.text).join('\n')
@@ -260,7 +295,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
           ),
         });
 
-        return Effect.tryPromise({
+        return yield* Effect.tryPromise({
           try: async () => {
             const response = await callGeminiTTS(config.apiKey, modelName, {
               contents: [{ parts: [{ text: contentText }] }],
@@ -298,6 +333,10 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
               }),
               metadata,
               rawUsage: response.usageMetadata ?? null,
+              estimatedCostUsdMicros: estimateTokenPricedModelCostUsdMicros(
+                modelDefinition,
+                toBillableTokenUsage(response.usageMetadata),
+              ),
             }),
           ),
           Effect.tapError((error) =>
@@ -313,7 +352,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
           ),
           Effect.map(({ result }) => result),
         );
-      })().pipe(
+      }).pipe(
         retryTransientProvider,
         Effect.withSpan('tts.synthesize', {
           attributes: {

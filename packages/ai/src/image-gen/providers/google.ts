@@ -1,9 +1,14 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { IMAGE_GEN_MODEL } from '../../models';
+import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
 import { retryTransientProvider } from '../../provider-retry';
 import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import {
+  getGoogleImageGenModel,
+  type GoogleImageGenModelId,
+  IMAGE_GEN_MODEL,
+} from '../../providers/google/models';
 import { recordAIUsageIfConfigured } from '../../usage';
 import { mapError } from '../map-error';
 import {
@@ -18,7 +23,7 @@ import {
  */
 export interface GoogleImageGenConfig {
   readonly apiKey: string;
-  readonly model?: string;
+  readonly model?: GoogleImageGenModelId;
 }
 
 /**
@@ -91,6 +96,11 @@ const buildImageUsage = (input: {
     ),
   });
 
+const toBillableTokenUsage = (usageMetadata?: Record<string, unknown>) => ({
+  inputTokens: getNumberField(usageMetadata, 'promptTokenCount'),
+  outputTokens: getNumberField(usageMetadata, 'candidatesTokenCount'),
+});
+
 /**
  * Create Google Image Gen service implementation via native SDK.
  */
@@ -98,6 +108,7 @@ const makeGoogleImageGenService = (
   config: GoogleImageGenConfig,
 ): ImageGenService => {
   const modelId = config.model ?? IMAGE_GEN_MODEL;
+  const modelDefinition = getGoogleImageGenModel(modelId);
 
   const genAI = new GoogleGenAI({ apiKey: config.apiKey });
 
@@ -185,6 +196,10 @@ const makeGoogleImageGenService = (
               }),
               metadata,
               rawUsage: usageMetadata ?? null,
+              estimatedCostUsdMicros: estimateTokenPricedModelCostUsdMicros(
+                modelDefinition,
+                toBillableTokenUsage(usageMetadata),
+              ),
             }),
           ),
           Effect.tapError((error) =>

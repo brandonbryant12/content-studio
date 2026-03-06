@@ -8,5 +8,7 @@ import { apiClient } from '@/clients/apiClient';
 export function useActivityStats(
   period: Period = '7d',
 ): UseQueryResult<ActivityStats, Error> {
-  return useQuery(apiClient.admin.stats.queryOptions({ input: { period } }));
+  return useQuery(
+    apiClient.admin.activity.stats.queryOptions({ input: { period } }),
+  );
 }

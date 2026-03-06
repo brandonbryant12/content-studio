@@ -1,6 +1,10 @@
 import { Context } from 'effect';
-import type { VoiceInfo, GeminiVoiceId, VoiceGender } from './voices';
-import type { TTSError, TTSQuotaExceededError } from '../errors';
+import type { VoiceId, VoiceInfo, VoiceGender } from './voices';
+import type {
+  TTSError,
+  TTSQuotaExceededError,
+  VoiceNotFoundError,
+} from '../errors';
 import type { Effect } from 'effect';
 
 /**
@@ -19,7 +23,7 @@ export interface ListVoicesOptions {
  * Options for voice preview.
  */
 export interface PreviewVoiceOptions {
-  readonly voiceId: GeminiVoiceId;
+  readonly voiceId: VoiceId;
   readonly text?: string; // Uses default sample text if not provided
 }
 
@@ -30,7 +34,7 @@ export interface PreviewVoiceResult {
   readonly audioContent: Buffer;
   // Google Gemini currently returns LINEAR16 WAV; keep encoding explicit for future providers.
   readonly audioEncoding: AudioEncoding;
-  readonly voiceId: GeminiVoiceId;
+  readonly voiceId: VoiceId;
 }
 
 /**
@@ -46,7 +50,7 @@ export interface SpeakerTurn {
  */
 export interface SpeakerVoiceConfig {
   readonly speakerAlias: string; // e.g., 'host'
-  readonly voiceId: string; // e.g., 'Charon', 'Kore'
+  readonly voiceId: VoiceId; // Provider-specific opaque voice identifier
 }
 
 /**
@@ -84,7 +88,10 @@ export interface TTSService {
    */
   readonly previewVoice: (
     options: PreviewVoiceOptions,
-  ) => Effect.Effect<PreviewVoiceResult, TTSError | TTSQuotaExceededError>;
+  ) => Effect.Effect<
+    PreviewVoiceResult,
+    TTSError | TTSQuotaExceededError | VoiceNotFoundError
+  >;
 
   /**
    * Synthesize speech from multiple speakers.
@@ -92,7 +99,10 @@ export interface TTSService {
    */
   readonly synthesize: (
     options: SynthesizeOptions,
-  ) => Effect.Effect<SynthesizeResult, TTSError | TTSQuotaExceededError>;
+  ) => Effect.Effect<
+    SynthesizeResult,
+    TTSError | TTSQuotaExceededError | VoiceNotFoundError
+  >;
 }
 
 /**

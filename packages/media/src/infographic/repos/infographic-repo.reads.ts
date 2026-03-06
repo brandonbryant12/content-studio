@@ -5,7 +5,7 @@ import {
   type Infographic,
   type InfographicId,
 } from '@repo/db/schema';
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, count as drizzleCount, desc, eq, sql } from 'drizzle-orm';
 import { Effect } from 'effect';
 import type { InfographicRepoService } from './infographic-repo';
 import { InfographicNotFound } from '../../errors';
@@ -17,7 +17,7 @@ const requireInfographic = (id: string) =>
 
 export const infographicReadMethods: Pick<
   InfographicRepoService,
-  'findById' | 'findByIdForUser' | 'list' | 'listVersions'
+  'findById' | 'findByIdForUser' | 'list' | 'count' | 'listVersions'
 > = {
   findById: (id) =>
     withDb('infographicRepo.findById', (db) =>
@@ -62,6 +62,15 @@ export const infographicReadMethods: Pick<
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0),
     ),
+
+  count: (options) =>
+    withDb('infographicRepo.count', async (db) => {
+      const [result] = await db
+        .select({ count: drizzleCount() })
+        .from(infographic)
+        .where(eq(infographic.createdBy, options.createdBy));
+      return result?.count ?? 0;
+    }),
 
   listVersions: (infographicId) =>
     withDb('infographicRepo.listVersions', (db) =>

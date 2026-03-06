@@ -286,7 +286,7 @@ function Sidebar({
               <div className="my-3 border-t border-border/50 mx-1" />
 
               <NavItem
-                to="/admin/activity"
+                to="/admin"
                 icon={ActivityLogIcon}
                 label="Admin"
                 colorScheme="rose"

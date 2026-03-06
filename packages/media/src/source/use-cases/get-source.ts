@@ -1,3 +1,4 @@
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { defineAuthedUseCase } from '../../shared';
 import { SourceRepo } from '../repos';
@@ -23,6 +24,8 @@ export const getSource = defineAuthedUseCase<GetSourceInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const sourceRepo = yield* SourceRepo;
-      return yield* sourceRepo.findByIdForUser(input.id, user.id);
+      return yield* user.role === Role.ADMIN
+        ? sourceRepo.findById(input.id)
+        : sourceRepo.findByIdForUser(input.id, user.id);
     }),
 });

@@ -1,5 +1,10 @@
 import { Db, type DbService } from '@repo/db/effect';
-import { createTestUser, withTestUser, resetAllFactories } from '@repo/testing';
+import {
+  createTestAdmin,
+  createTestUser,
+  withTestUser,
+  resetAllFactories,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { Voiceover, VoiceoverId } from '@repo/db/schema';
@@ -167,6 +172,29 @@ describe('getVoiceover', () => {
 
         expect(result.status).toBe(status);
       }
+    });
+
+    it('allows admins to access a voiceover they do not own', async () => {
+      const admin = createTestAdmin({ id: 'admin-123' });
+      const voiceover = createMockVoiceover({
+        id: 'voc_adminvisible123' as VoiceoverId,
+        title: 'Admin Visible Voiceover',
+        createdBy: 'member-123',
+      });
+
+      const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
+      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getVoiceover({ voiceoverId: voiceover.id }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+
+      expect(result.id).toBe(voiceover.id);
+      expect(result.createdBy).toBe(voiceover.createdBy);
     });
   });
 

@@ -1,4 +1,9 @@
-import { createTestUser, resetAllFactories, withTestUser } from '@repo/testing';
+import {
+  createTestAdmin,
+  createTestUser,
+  resetAllFactories,
+  withTestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Persona } from '@repo/db/schema';
@@ -53,6 +58,38 @@ describe('getPersona', () => {
     );
 
     expect(findSpy).toHaveBeenCalledWith(persona.id, user.id);
+    expect(result.id).toBe(persona.id);
+  });
+
+  it('allows admins to access a persona they do not own', async () => {
+    const admin = createTestAdmin({ id: 'admin-1' });
+    const persona = createPersonaRecord({ createdBy: 'member-1' });
+    const findByIdSpy = vi.fn();
+    const findByIdForUserSpy = vi.fn();
+
+    const repo = createMockPersonaRepo({
+      findById: (id) =>
+        Effect.sync(() => {
+          findByIdSpy(id);
+          return persona;
+        }),
+      findByIdForUser: (id, userId) =>
+        Effect.sync(() => {
+          findByIdForUserSpy(id, userId);
+          return persona;
+        }),
+    });
+
+    const layers = Layer.mergeAll(MockDbLive, repo);
+
+    const result = await Effect.runPromise(
+      withTestUser(admin)(
+        getPersona({ personaId: persona.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(findByIdSpy).toHaveBeenCalledWith(persona.id);
+    expect(findByIdForUserSpy).not.toHaveBeenCalled();
     expect(result.id).toBe(persona.id);
   });
 });

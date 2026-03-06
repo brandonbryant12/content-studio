@@ -81,6 +81,10 @@ export interface InfographicRepoService {
     options: ListOptions,
   ) => Effect.Effect<readonly Infographic[], DatabaseError, Db>;
 
+  readonly count: (
+    options: ListOptions,
+  ) => Effect.Effect<number, DatabaseError, Db>;
+
   readonly update: (
     id: string,
     data: UpdateInfographic,

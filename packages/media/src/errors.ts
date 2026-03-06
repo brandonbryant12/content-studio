@@ -23,6 +23,7 @@ export {
   StylePresetNotFound,
   PersonaNotFound,
   NotPersonaOwner,
+  AdminUserNotFound,
 } from './errors/index';
 
 import type {
@@ -50,6 +51,7 @@ import type {
   StylePresetNotFound,
   PersonaNotFound,
   NotPersonaOwner,
+  AdminUserNotFound,
 } from './errors/index';
 
 export type MediaError =
@@ -76,4 +78,5 @@ export type MediaError =
   | InfographicError
   | StylePresetNotFound
   | PersonaNotFound
-  | NotPersonaOwner;
+  | NotPersonaOwner
+  | AdminUserNotFound;

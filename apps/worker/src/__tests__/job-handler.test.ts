@@ -2,7 +2,7 @@ import { type Job } from '@repo/queue';
 import { Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { JobId, JobStatus } from '@repo/db/schema';
-import type { JobProcessingError} from '@repo/queue';
+import type { JobProcessingError } from '@repo/queue';
 import { defineJobHandler } from '../handlers/job-handler';
 
 interface TestPayload {

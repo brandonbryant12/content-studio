@@ -2,7 +2,7 @@ import { useInfiniteQuery, type QueryKey } from '@tanstack/react-query';
 import type { RouterOutput } from '@repo/api/client';
 import { apiClient, rawApiClient } from '@/clients/apiClient';
 
-type ActivityListPage = RouterOutput['admin']['list'];
+type ActivityListPage = RouterOutput['admin']['activity']['list'];
 
 export const DEFAULT_ACTIVITY_LIST_LIMIT = 25;
 
@@ -31,6 +31,12 @@ const normalizeSearch = (search?: string): string | undefined => {
 export function getActivityListQueryKey(
   options: ActivityListQueryKeyOptions = {},
 ): QueryKey {
+  return getActivityListQueryOptions(options).queryKey;
+}
+
+function getActivityListQueryOptions(
+  options: ActivityListQueryKeyOptions = {},
+) {
   const {
     userId,
     entityType,
@@ -38,14 +44,14 @@ export function getActivityListQueryKey(
     limit = DEFAULT_ACTIVITY_LIST_LIMIT,
   } = options;
 
-  return apiClient.admin.list.queryOptions({
+  return apiClient.admin.activity.list.queryOptions({
     input: {
       userId,
       entityType,
       search: normalizeSearch(search),
       limit,
     },
-  }).queryKey;
+  });
 }
 
 export function getActivityListInfiniteQueryOptions(
@@ -60,14 +66,14 @@ export function getActivityListInfiniteQueryOptions(
   const normalizedSearch = normalizeSearch(search);
 
   return {
-    queryKey: getActivityListQueryKey({
+    queryKey: getActivityListQueryOptions({
       userId,
       entityType,
       search: normalizedSearch,
       limit,
-    }),
+    }).queryKey,
     queryFn: async ({ pageParam }: { pageParam: string | undefined }) =>
-      rawApiClient.admin.list({
+      rawApiClient.admin.activity.list({
         userId,
         entityType,
         search: normalizedSearch,

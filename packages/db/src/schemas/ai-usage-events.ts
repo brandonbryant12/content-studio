@@ -15,6 +15,10 @@ import {
   generateAIUsageEventId,
 } from './brands';
 import { MetadataSchema, type JsonValue } from './json';
+import {
+  createBatchEffectSerializer,
+  createEffectSerializer,
+} from './serialization';
 
 export const AIUsageEventModalitySchema = Schema.Union(
   Schema.Literal('llm'),
@@ -116,3 +120,37 @@ export type AIUsageEventInsert = typeof aiUsageEvent.$inferInsert;
 export type AIUsageEventOutput = typeof AIUsageEventOutputSchema.Type;
 export type AIUsageEventModality = typeof AIUsageEventModalitySchema.Type;
 export type AIUsageEventStatus = typeof AIUsageEventStatusSchema.Type;
+
+const aiUsageEventTransform = (event: AIUsageEvent): AIUsageEventOutput => ({
+  id: event.id,
+  userId: event.userId,
+  requestId: event.requestId,
+  jobId: event.jobId,
+  scopeOperation: event.scopeOperation,
+  resourceType: event.resourceType,
+  resourceId: event.resourceId,
+  modality: event.modality as AIUsageEventModality,
+  provider: event.provider,
+  providerOperation: event.providerOperation,
+  model: event.model,
+  status: event.status as AIUsageEventStatus,
+  errorTag: event.errorTag,
+  usage: event.usage ?? {},
+  metadata: event.metadata ?? null,
+  rawUsage: event.rawUsage ?? null,
+  estimatedCostUsdMicros: event.estimatedCostUsdMicros,
+  providerResponseId: event.providerResponseId,
+  createdAt: event.createdAt.toISOString(),
+});
+
+export const serializeAIUsageEventEffect = createEffectSerializer(
+  'aiUsageEvent',
+  aiUsageEventTransform,
+);
+
+export const serializeAIUsageEventsEffect = createBatchEffectSerializer(
+  'aiUsageEvent',
+  aiUsageEventTransform,
+);
+
+export const serializeAIUsageEvent = aiUsageEventTransform;

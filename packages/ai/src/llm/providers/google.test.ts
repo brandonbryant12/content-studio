@@ -239,6 +239,7 @@ describe('GoogleLive LLM provider', () => {
         outputTokens: 7,
         totalTokens: 18,
       },
+      estimatedCostUsdMicros: 13,
     });
   });
 });

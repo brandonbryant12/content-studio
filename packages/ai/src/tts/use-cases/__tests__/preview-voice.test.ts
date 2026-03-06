@@ -6,12 +6,7 @@ import {
   TTSQuotaExceededError,
   VoiceNotFoundError,
 } from '../../../errors';
-import {
-  TTS,
-  type TTSService,
-  type PreviewVoiceResult,
-  type GeminiVoiceId,
-} from '../../index';
+import { TTS, type TTSService, type PreviewVoiceResult } from '../../index';
 import { previewVoice } from '../preview-voice';
 
 // =============================================================================
@@ -19,7 +14,7 @@ import { previewVoice } from '../preview-voice';
 // =============================================================================
 
 interface MockConfig {
-  shouldFail?: 'tts-error' | 'quota-exceeded';
+  shouldFail?: 'tts-error' | 'quota-exceeded' | 'voice-not-found';
   previewResult?: PreviewVoiceResult;
 }
 
@@ -34,6 +29,9 @@ const createMockTTSService = (config: MockConfig = {}): TTSService => ({
       return Effect.fail(
         new TTSQuotaExceededError({ message: 'Quota exceeded' }),
       );
+    }
+    if (config.shouldFail === 'voice-not-found') {
+      return Effect.fail(new VoiceNotFoundError({ voiceId: options.voiceId }));
     }
     return Effect.succeed(
       config.previewResult ?? {
@@ -81,7 +79,7 @@ describe('previewVoice', () => {
       previewResult: {
         audioContent: Buffer.from('wav audio'),
         audioEncoding: 'LINEAR16',
-        voiceId: 'Charon' as GeminiVoiceId,
+        voiceId: 'Charon',
       },
     }),
   )('audio encoding', (it) => {
@@ -112,7 +110,9 @@ describe('previewVoice', () => {
             );
           }
         }
-      }).pipe(Effect.provide(createMockTTSLayer())),
+      }).pipe(
+        Effect.provide(createMockTTSLayer({ shouldFail: 'voice-not-found' })),
+      ),
     );
 
     it('VoiceNotFoundError has correct HTTP protocol properties', () => {

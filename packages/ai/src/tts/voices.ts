@@ -5,6 +5,7 @@
  */
 
 export type VoiceGender = 'female' | 'male';
+export type VoiceId = string;
 
 export interface VoiceInfo {
   readonly id: string;
@@ -61,20 +62,20 @@ export const MALE_VOICES = [
 export const ALL_VOICE_IDS = [...FEMALE_VOICES, ...MALE_VOICES] as const;
 
 /**
- * Type representing valid Gemini TTS voice IDs.
+ * Type representing the known built-in voice IDs for the current voice catalog.
  */
-export type GeminiVoiceId = (typeof ALL_VOICE_IDS)[number];
+export type KnownVoiceId = (typeof ALL_VOICE_IDS)[number];
 
 /**
- * Type guard to check if a string is a valid Gemini voice ID.
+ * Type guard to check if a string is a known built-in voice ID.
  */
-export const isValidVoiceId = (id: string): id is GeminiVoiceId =>
-  ALL_VOICE_IDS.includes(id as GeminiVoiceId);
+export const isValidVoiceId = (id: string): id is KnownVoiceId =>
+  ALL_VOICE_IDS.includes(id as KnownVoiceId);
 
 /**
  * Get the gender of a voice by ID.
  */
-export const getVoiceGender = (id: GeminiVoiceId): VoiceGender =>
+export const getVoiceGender = (id: KnownVoiceId): VoiceGender =>
   FEMALE_VOICES.includes(id as (typeof FEMALE_VOICES)[number])
     ? 'female'
     : 'male';

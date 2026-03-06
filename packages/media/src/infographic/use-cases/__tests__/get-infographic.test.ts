@@ -1,4 +1,5 @@
 import {
+  createTestAdmin,
   createTestUser,
   createTestInfographic,
   resetAllFactories,
@@ -88,5 +89,33 @@ describe('getInfographic', () => {
       expect(error?._tag).toBe('InfographicNotFound');
       expect((error as InfographicNotFound).id).toBe(infographic.id);
     }
+  });
+
+  it('allows admins to access an infographic they do not own', async () => {
+    const admin = createTestAdmin({ id: 'admin-1' });
+    const infographic = createTestInfographic({
+      title: 'Admin Visible Infographic',
+      createdBy: 'member-1',
+    });
+
+    const repo = createMockInfographicRepo({
+      findById: (id: string) =>
+        Effect.suspend(() => {
+          if (id === infographic.id) return Effect.succeed(infographic);
+          return Effect.fail(new InfographicNotFound({ id }));
+        }),
+      findByIdForUser: (id: string) =>
+        Effect.fail(new InfographicNotFound({ id })),
+    });
+    const layers = Layer.mergeAll(MockDbLive, repo);
+
+    const result = await Effect.runPromise(
+      withTestUser(admin)(getInfographic({ id: infographic.id })).pipe(
+        Effect.provide(layers),
+      ),
+    );
+
+    expect(result.id).toBe(infographic.id);
+    expect(result.createdBy).toBe(infographic.createdBy);
   });
 });

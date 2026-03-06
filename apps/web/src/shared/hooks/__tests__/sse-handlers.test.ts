@@ -53,18 +53,20 @@ vi.mock('@/clients/apiClient', () => {
         },
       },
       admin: {
-        list: {
-          queryOptions: vi.fn(
-            ({ input }: { input?: Record<string, unknown> }) => ({
-              queryKey: [
-                {
-                  scope: 'activity',
-                  route: 'admin.list',
-                },
-                input ?? {},
-              ],
-            }),
-          ),
+        activity: {
+          list: {
+            queryOptions: vi.fn(
+              ({ input }: { input?: Record<string, unknown> }) => ({
+                queryKey: [
+                  {
+                    scope: 'activity',
+                    route: 'admin.activity.list',
+                  },
+                  input ?? {},
+                ],
+              }),
+            ),
+          },
         },
       },
     },

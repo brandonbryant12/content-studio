@@ -50,7 +50,8 @@ export {
   FEMALE_VOICES,
   MALE_VOICES,
   ALL_VOICE_IDS,
-  type GeminiVoiceId,
+  type VoiceId,
+  type KnownVoiceId,
   type VoiceGender,
   type VoiceInfo,
   isValidVoiceId,
@@ -68,6 +69,13 @@ export {
   type PreviewVoiceInput,
   type PreviewVoiceUseCaseResult,
 } from './tts';
+
+export {
+  type BillableTokenUsage,
+  defineTokenPricedModel,
+  estimateTokenPricedModelCostUsdMicros,
+  type TokenPricedModelDefinition,
+} from './pricing/model-catalog';
 
 // ImageGen
 export {
@@ -154,6 +162,11 @@ export {
 // Import for combined layer
 import type { ImageGen } from './image-gen';
 import type { LLM } from './llm';
+import type {
+  GoogleImageGenModelId,
+  GoogleLLMModelId,
+  GoogleTTSModelId,
+} from './providers/google/models';
 import type { DeepResearch } from './research';
 import type { TTS } from './tts';
 import { GoogleImageGenLive } from './image-gen';
@@ -179,11 +192,11 @@ export interface GoogleAIConfig {
   /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
   readonly apiKey: string;
   /** Override the default LLM model */
-  readonly llmModel?: string;
+  readonly llmModel?: GoogleLLMModelId;
   /** Override the default TTS model */
-  readonly ttsModel?: string;
+  readonly ttsModel?: GoogleTTSModelId;
   /** Override the default image generation model */
-  readonly imageGenModel?: string;
+  readonly imageGenModel?: GoogleImageGenModelId;
 }
 
 /**

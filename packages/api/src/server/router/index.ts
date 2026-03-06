@@ -1,4 +1,4 @@
-import activityRouter from './activity';
+import adminRouter from './admin';
 import chatRouter from './chat';
 import eventsRouter from './events';
 import infographicRouter from './infographic';
@@ -9,7 +9,7 @@ import voiceoverRouter from './voiceover';
 import voicesRouter from './voices';
 
 export const appRouter = {
-  admin: activityRouter,
+  admin: adminRouter,
   chat: chatRouter,
   sources: sourceRouter,
   events: eventsRouter,
