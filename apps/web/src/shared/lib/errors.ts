@@ -12,9 +12,33 @@ const isDefinedAPIError = (error: unknown): error is DefinedAPIError => {
   return typeof e.code === 'string' && typeof e.message === 'string';
 };
 
+const STATIC_ERROR_MESSAGES = {
+  GENERATION_IN_PROGRESS:
+    'This podcast is already being generated. Please wait.',
+  SOURCE_NOT_FOUND: 'Source not found. It may have been deleted.',
+  PODCAST_NOT_FOUND: 'Podcast not found. It may have been deleted.',
+  SCRIPT_NOT_FOUND: 'Script not found. Try regenerating the podcast.',
+  SERVICE_UNAVAILABLE:
+    'AI service is temporarily unavailable. Please try again later.',
+  JOB_NOT_FOUND: 'Job not found. It may have expired.',
+} satisfies Record<string, string>;
+
+const getUnknownErrorMessage = (error: unknown, fallback: string): string => {
+  if (
+    (typeof error === 'object' || typeof error === 'function') &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export const getErrorMessage = (error: unknown, fallback: string): string => {
   if (!isDefinedAPIError(error)) {
-    return (error as Error)?.message ?? fallback;
+    return getUnknownErrorMessage(error, fallback);
   }
 
   switch (error.code) {
@@ -48,22 +72,6 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
       return `You've reached your source limit (${data.count}/${data.limit}). Upgrade to add more.`;
     }
 
-    case 'GENERATION_IN_PROGRESS': {
-      return 'This podcast is already being generated. Please wait.';
-    }
-
-    case 'SOURCE_NOT_FOUND': {
-      return 'Source not found. It may have been deleted.';
-    }
-
-    case 'PODCAST_NOT_FOUND': {
-      return 'Podcast not found. It may have been deleted.';
-    }
-
-    case 'SCRIPT_NOT_FOUND': {
-      return 'Script not found. Try regenerating the podcast.';
-    }
-
     case 'SOURCE_PARSE_ERROR': {
       const data = error.data as { fileName: string };
       return `Failed to parse ${data.fileName}. The file may be corrupted.`;
@@ -74,16 +82,8 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
       return data?.field ? `Invalid value for ${data.field}` : error.message;
     }
 
-    case 'SERVICE_UNAVAILABLE': {
-      return 'AI service is temporarily unavailable. Please try again later.';
-    }
-
-    case 'JOB_NOT_FOUND': {
-      return 'Job not found. It may have expired.';
-    }
-
     default:
-      return error.message;
+      return STATIC_ERROR_MESSAGES[error.code] ?? error.message;
   }
 };
 
