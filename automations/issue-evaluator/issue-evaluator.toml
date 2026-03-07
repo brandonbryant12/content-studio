@@ -1,10 +1,10 @@
 version = 1
 id = "issue-evaluator"
 name = "Issue Evaluator"
-prompt = '''Use gpt-5.3-codex with reasoning effort xhigh.
+prompt = '''Use gpt-5.4 with reasoning effort xhigh.
 
 Run this command from repository root:
-`pnpm software-factory operation run issue-evaluator --model gpt-5.3-codex --thinking xhigh`
+`pnpm software-factory operation run issue-evaluator --model gpt-5.4 --thinking xhigh`
 
 Contract:
 - This command is automation-only.

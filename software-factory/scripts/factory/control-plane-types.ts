@@ -55,7 +55,7 @@ export const OPERATIONS_SCHEMA_PATH = path.join(
 );
 
 export const VALID_THINKING = new Set(["low", "medium", "high", "xhigh"]);
-export const VALID_MODELS = new Set(["gpt-5.3-codex", "gpt-5.3-codex-spark"]);
+export const VALID_MODELS = new Set(["gpt-5.4", "gpt-5.3-codex", "gpt-5.3-codex-spark"]);
 
 export const PLANNER_MODEL = "gpt-5.3-codex";
 export const PLANNER_THINKING = "xhigh";

@@ -5,7 +5,7 @@ Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: issue triage gate that decides which open issues are truly implementation-ready for normal users right now. Bias toward low-complexity, high-signal work on existing product surfaces. Avoid approving speculative platform rewrites or enterprise-heavy initiatives without explicit human direction. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.4 with reasoning effort xhigh and keep reasoning at xhigh for the full run. Role: issue triage gate that decides which open issues are truly implementation-ready for normal users right now. Bias toward low-complexity, high-signal work on existing product surfaces. Avoid approving speculative platform rewrites or enterprise-heavy initiatives without explicit human direction. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
 Run workflow-memory runtime preflight before lane actions:
 - `pnpm workflow-memory:preflight --bootstrap`
@@ -28,26 +28,20 @@ Decision label policy:
 
 Model + thinking routing label policy:
 - Allowed model labels:
-  - `model:gpt-5.3-codex`
-  - `model:gpt-5.3-codex-spark`
+  - `model:gpt-5.4`
 - Allowed thinking labels:
-  - `thinking:low`
-  - `thinking:medium`
-  - `thinking:high`
   - `thinking:xhigh`
 - For every issue marked `ready-for-dev`, ensure exactly one `model:*` and one `thinking:*` label from the allowed sets.
 - Remove stale `model:*` and `thinking:*` labels before applying the selected pair.
-- If an issue already has `ready-for-dev` but is missing either routing label, determine the correct model/thinking pair and apply it in the same run even when the decision label does not change.
+- If an issue already has `ready-for-dev` but is missing either routing label, apply `model:gpt-5.4` and `thinking:xhigh` in the same run even when the decision label does not change.
 - If decision is not `ready-for-dev`, remove any existing `model:*` and `thinking:*` labels so routing metadata only exists for executable issues.
 - After label writes, verify each evaluated issue has:
   - exactly one decision label
   - exactly one `model:*` and one `thinking:*` label iff decision is `ready-for-dev`
   - zero routing labels when decision is not `ready-for-dev`
 - Assignment guidance:
-  - tiny localized low-risk changes: prefer `model:gpt-5.3-codex-spark` with `thinking:medium`
-  - most bounded implementation slices: prefer `model:gpt-5.3-codex` with `thinking:high`
-  - ambiguous/high-impact/risky slices: use `model:gpt-5.3-codex` with `thinking:xhigh`
-  - use `thinking:low` only when scope is truly trivial and evidence is unambiguous
+  - stamp every `ready-for-dev` issue with `model:gpt-5.4` and `thinking:xhigh`
+  - treat any other `model:*` or `thinking:*` label on a `ready-for-dev` issue as stale and replace it in the same run
 
 Strict readiness rubric:
 - Mark `ready-for-dev` only when all conditions are true:

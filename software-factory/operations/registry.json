@@ -49,18 +49,14 @@
       "id": "issue-evaluator",
       "name": "Issue Evaluator",
       "description": "Evaluates open issues and applies ready-for-dev, human-eval-needed, or rejected decisions.",
-      "defaultModel": "gpt-5.3-codex",
+      "defaultModel": "gpt-5.4",
       "defaultThinking": "xhigh",
       "strategy": "periodic-scans",
       "labelingContext": {
         "modelLabels": [
-          "model:gpt-5.3-codex",
-          "model:gpt-5.3-codex-spark"
+          "model:gpt-5.4"
         ],
         "thinkingLabels": [
-          "thinking:low",
-          "thinking:medium",
-          "thinking:high",
           "thinking:xhigh"
         ],
         "decisionLabels": [

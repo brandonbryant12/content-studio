@@ -23,5 +23,5 @@ export const getAuthErrorMessage = (
     return RATE_LIMITED_MESSAGE;
   }
 
-  return code ? AUTH_ERROR_MESSAGES[code] ?? fallback : fallback;
+  return code ? (AUTH_ERROR_MESSAGES[code] ?? fallback) : fallback;
 };

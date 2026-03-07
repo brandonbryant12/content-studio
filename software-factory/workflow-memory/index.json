@@ -318,6 +318,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-06-feature-delivery-issue-evaluator-now-routes-through-the-workflow-contract-with-gp",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Issue-evaluator now routes through the workflow contract with gpt-5.4 xhigh tags",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "automation",
+      "issue-evaluator",
+      "model-routing",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.72,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-feature-delivery-issues-339-344-defer-podcast-draft-creation-collapse-collection-",
     "date": "2026-03-06",
     "month": "2026-03",
@@ -339,6 +358,44 @@
     ],
     "importance": 0.83,
     "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-local-best-practices-automation-now-targets-the-software-factory",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Local best-practices automation now targets the Software Factory lane",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "automation",
+      "best-practice-researcher",
+      "trigger-operation",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.63,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-06-feature-delivery-local-product-owner-automation-now-targets-the-canonical-reviewe",
+    "date": "2026-03-06",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Local product-owner automation now targets the canonical reviewer lane",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "automation",
+      "product-owner",
+      "trigger-operation",
+      "skill:feature-delivery"
+    ],
+    "importance": 0.61,
+    "confidence": 0.96,
     "eventFile": "events/2026-03.jsonl"
   },
   {

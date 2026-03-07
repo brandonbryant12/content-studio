@@ -37,13 +37,13 @@ const ISSUE_EVALUATOR_OPERATION: Operation = {
   id: "issue-evaluator",
   name: "Issue Evaluator",
   description: "Test operation",
-  defaultModel: "gpt-5.3-codex",
+  defaultModel: "gpt-5.4",
   defaultThinking: "xhigh",
   strategy: "periodic-scans",
   args: [],
   labelingContext: {
-    modelLabels: ["model:gpt-5.3-codex", "model:gpt-5.3-codex-spark"],
-    thinkingLabels: ["thinking:low", "thinking:medium", "thinking:high", "thinking:xhigh"],
+    modelLabels: ["model:gpt-5.4"],
+    thinkingLabels: ["thinking:xhigh"],
     decisionLabels: ["ready-for-dev", "human-eval-needed", "rejected"],
   },
   runner: {
@@ -592,7 +592,7 @@ describe("codex-playbook advisory prompt profile", () => {
     }
 
     expect(streamedArgs).toHaveLength(1);
-    expect(streamedArgs[0]).toContain("gpt-5.3-codex");
+    expect(streamedArgs[0]).toContain("gpt-5.4");
     expect(streamedArgs[0]).toContain('model_reasoning_effort="xhigh"');
     expect(streamedInputs).toHaveLength(1);
     expect(streamedInputs[0]).toContain("Issue-evaluator label hygiene contract:");
