@@ -1,5 +1,38 @@
 [
   {
+    "id": "2026-03-07-feature-delivery-added-inline-denied-sso-callback-ux-on-login",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Added inline denied-SSO callback UX on login",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "sso",
+      "ux",
+      "frontend",
+      "skill:feature-delivery"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-feature-delivery-upgraded-better-auth-integration-to-1-5-4",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Upgraded Better Auth integration to 1.5.4",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "dependency",
+      "better-auth",
+      "skill:debug-fix"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-lint-scope-dri",
     "date": "2026-03-07",
     "month": "2026-03",
