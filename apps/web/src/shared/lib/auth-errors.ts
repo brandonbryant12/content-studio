@@ -14,6 +14,15 @@ const RATE_LIMITED_MESSAGE =
 
 export const MICROSOFT_SSO_AUTH_FLOW = 'microsoft-sso';
 
+const NORMALIZED_SSO_ERROR_TOKENS: Record<string, string> = {
+  sso_group_membership_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
+  microsoft_sso_group_membership_is_required:
+    'SSO_GROUP_MEMBERSHIP_REQUIRED',
+  sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
+  microsoft_sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
+  access_denied: 'access_denied',
+};
+
 interface ErrorLike {
   code?: unknown;
   error?: unknown;
@@ -63,6 +72,12 @@ const normalizeString = (value: unknown): string | undefined => {
   return normalized.length > 0 ? normalized : undefined;
 };
 
+const normalizeErrorToken = (value: string): string =>
+  value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+const resolveKnownErrorToken = (value: string | undefined): string | undefined =>
+  value ? NORMALIZED_SSO_ERROR_TOKENS[normalizeErrorToken(value)] : undefined;
+
 const hasMessageFragment = (
   values: ReadonlyArray<string | undefined>,
   fragment: string,
@@ -80,6 +95,13 @@ const resolveAuthErrorCode = (input: ErrorLike): string | undefined => {
   );
   if (directMatch) {
     return directMatch;
+  }
+
+  const normalizedMatch = [code, error, errorDescription, message]
+    .map(resolveKnownErrorToken)
+    .find((value) => value !== undefined);
+  if (normalizedMatch) {
+    return normalizedMatch;
   }
 
   const freeformValues = [errorDescription, message];

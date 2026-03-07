@@ -146,6 +146,43 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-07-self-improvement-microsoft-sso-callback-errors-redirected-to-web-login",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Microsoft SSO callback errors redirected to web login",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "sso",
+      "frontend",
+      "split-origin",
+      "skill:debug-fix"
+    ],
+    "importance": 0.77,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-sso-callback-review-found-better-auth-message-code-mismatch",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "SSO callback review found Better Auth message/code mismatch",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "auth",
+      "sso",
+      "frontend",
+      "skill:pr-risk-review"
+    ],
+    "importance": 0.82,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-architecture-adr-guard-ai-provider-boundary-refactor-keeps-google-internals-behind-moda",
     "date": "2026-03-06",
     "month": "2026-03",

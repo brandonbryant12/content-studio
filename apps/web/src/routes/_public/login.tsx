@@ -4,7 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
-import { isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
+import { env, isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
 import LoginCredentialsForm from '@/routes/_public/-components/login-form';
 import {
   getAuthErrorMessage,
@@ -27,6 +27,15 @@ const normalizeSearchValue = (value: unknown): string | undefined => {
 
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
+};
+
+const buildPublicAppUrl = (path: string): string => {
+  const normalizedBasePath = env.PUBLIC_BASE_PATH.endsWith('/')
+    ? env.PUBLIC_BASE_PATH
+    : `${env.PUBLIC_BASE_PATH}/`;
+  const baseUrl = new URL(normalizedBasePath, globalThis.location.origin);
+
+  return new URL(path.startsWith('/') ? path.slice(1) : path, baseUrl).toString();
 };
 
 export const Route = createFileRoute('/_public/login')({
@@ -96,8 +105,10 @@ function MicrosoftSSOButton() {
     setIsSubmitting(true);
     const { error } = await authClient.signIn.social({
       provider: 'microsoft',
-      callbackURL: '/dashboard',
-      errorCallbackURL: `/login?authFlow=${MICROSOFT_SSO_AUTH_FLOW}`,
+      callbackURL: buildPublicAppUrl('/dashboard'),
+      errorCallbackURL: buildPublicAppUrl(
+        `/login?authFlow=${MICROSOFT_SSO_AUTH_FLOW}`,
+      ),
     });
 
     if (error) {

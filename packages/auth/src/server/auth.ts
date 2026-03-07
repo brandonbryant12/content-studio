@@ -1,6 +1,6 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { APIError } from 'better-auth/api';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { bearer, openAPI } from 'better-auth/plugins';
 import urlJoin from 'url-join';
 import type { DatabaseInstance } from '@repo/db/client';
@@ -37,6 +37,28 @@ export interface AuthOptions {
 
 export type AuthInstance = ReturnType<typeof createAuth>;
 
+const MICROSOFT_SSO_AUTH_FLOW = 'microsoft-sso';
+const MICROSOFT_SSO_LOGIN_PATH = 'login';
+
+type MicrosoftSSOErrorCode =
+  | 'SSO_GROUP_MEMBERSHIP_REQUIRED'
+  | 'SSO_AUTHORIZATION_FAILED';
+
+interface ErrorLike {
+  readonly body?: unknown;
+  readonly code?: unknown;
+  readonly message?: unknown;
+}
+
+const MICROSOFT_SSO_ERROR_TOKEN_TO_CODE: Record<string, MicrosoftSSOErrorCode> =
+  {
+    sso_group_membership_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
+    microsoft_sso_group_membership_is_required:
+      'SSO_GROUP_MEMBERSHIP_REQUIRED',
+    sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
+    microsoft_sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
+  };
+
 const normalizeOrigin = (value: string): string => {
   try {
     return new URL(value).origin;
@@ -63,6 +85,108 @@ const isPasswordAuthEnabled = (authMode: AuthMode) =>
 
 const isMicrosoftSSOEnabled = (authMode: AuthMode) =>
   authMode === AuthMode.SSO_ONLY;
+
+const normalizeString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+const normalizeErrorToken = (value: string): string =>
+  value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+const resolveMicrosoftSSOErrorCode = ({
+  code,
+  message,
+}: {
+  code?: unknown;
+  message?: unknown;
+}): MicrosoftSSOErrorCode | null => {
+  const normalizedCode = normalizeString(code);
+  if (
+    normalizedCode === 'SSO_GROUP_MEMBERSHIP_REQUIRED' ||
+    normalizedCode === 'SSO_AUTHORIZATION_FAILED'
+  ) {
+    return normalizedCode;
+  }
+
+  const normalizedToken = normalizeString(message);
+  if (!normalizedToken) {
+    return null;
+  }
+
+  const directMatch =
+    MICROSOFT_SSO_ERROR_TOKEN_TO_CODE[normalizeErrorToken(normalizedToken)];
+  if (directMatch) {
+    return directMatch;
+  }
+
+  const lowercaseMessage = normalizedToken.toLowerCase();
+  if (lowercaseMessage.includes('group membership')) {
+    return 'SSO_GROUP_MEMBERSHIP_REQUIRED';
+  }
+
+  if (lowercaseMessage.includes('authorization failed')) {
+    return 'SSO_AUTHORIZATION_FAILED';
+  }
+
+  return null;
+};
+
+const buildWebAppUrl = (webUrl: string, path: string): string => {
+  const baseUrl = new URL(webUrl);
+  const normalizedBasePath = baseUrl.pathname.endsWith('/')
+    ? baseUrl.pathname
+    : `${baseUrl.pathname}/`;
+
+  return new URL(
+    path.startsWith('/') ? path.slice(1) : path,
+    `${baseUrl.origin}${normalizedBasePath}`,
+  ).toString();
+};
+
+export const buildMicrosoftSSOErrorRedirectUrl = ({
+  webUrl,
+  error,
+}: {
+  webUrl: string;
+  error: unknown;
+}): string | null => {
+  if (typeof error !== 'object' || error === null) {
+    return null;
+  }
+
+  const errorLike = error as ErrorLike;
+  const body =
+    typeof errorLike.body === 'object' && errorLike.body !== null
+      ? (errorLike.body as { code?: unknown; message?: unknown })
+      : undefined;
+
+  const resolvedCode = resolveMicrosoftSSOErrorCode({
+    code: body?.code ?? errorLike.code,
+    message: body?.message ?? errorLike.message,
+  });
+  if (!resolvedCode) {
+    return null;
+  }
+
+  const redirectUrl = new URL(
+    buildWebAppUrl(webUrl, MICROSOFT_SSO_LOGIN_PATH),
+  );
+  redirectUrl.searchParams.set('authFlow', MICROSOFT_SSO_AUTH_FLOW);
+  redirectUrl.searchParams.set('error', resolvedCode);
+
+  const errorDescription =
+    normalizeString(body?.message) ?? normalizeString(errorLike.message);
+  if (errorDescription) {
+    redirectUrl.searchParams.set('error_description', errorDescription);
+  }
+
+  return redirectUrl.toString();
+};
 
 const protectAccountSecrets = async <
   T extends Partial<{
@@ -165,6 +289,28 @@ const buildMicrosoftDatabaseHooks = ({
   },
 });
 
+const buildMicrosoftSSOHooks = ({
+  webUrl,
+}: {
+  webUrl: string;
+}): NonNullable<BetterAuthOptions['hooks']> => ({
+  after: createAuthMiddleware(async (ctx) => {
+    if (ctx.path !== '/callback/:id' || ctx.params?.id !== 'microsoft') {
+      return;
+    }
+
+    const redirectUrl = buildMicrosoftSSOErrorRedirectUrl({
+      webUrl,
+      error: ctx.context.returned,
+    });
+    if (!redirectUrl) {
+      return;
+    }
+
+    throw ctx.redirect(redirectUrl);
+  }),
+});
+
 const MICROSOFT_SCOPES = [
   'openid',
   'profile',
@@ -230,6 +376,12 @@ export const createAuth = ({
             authSecret,
             db,
             microsoftSSO,
+          })
+        : undefined,
+    hooks:
+      isMicrosoftSSOEnabled(authMode) && microsoftSSO
+        ? buildMicrosoftSSOHooks({
+            webUrl,
           })
         : undefined,
     emailAndPassword: {

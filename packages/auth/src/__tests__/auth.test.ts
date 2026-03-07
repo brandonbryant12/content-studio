@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { DatabaseInstance } from '@repo/db/client';
-import { AuthMode, buildTrustedOrigins, createAuth } from '../server/auth';
+import {
+  AuthMode,
+  buildMicrosoftSSOErrorRedirectUrl,
+  buildTrustedOrigins,
+  createAuth,
+} from '../server/auth';
 
 describe('buildTrustedOrigins', () => {
   it('exposes only supported auth modes', () => {
@@ -60,6 +65,54 @@ describe('buildTrustedOrigins', () => {
     );
     expect(auth.options.databaseHooks?.session?.create?.before).toBeTypeOf(
       'function',
+    );
+    expect(auth.options.hooks?.after).toBeTypeOf('function');
+  });
+
+  it('builds an absolute Microsoft SSO redirect back to the web login page', () => {
+    const redirectUrl = buildMicrosoftSSOErrorRedirectUrl({
+      webUrl: 'https://studio.example.com/app',
+      error: {
+        body: {
+          code: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
+          message: 'Microsoft SSO group membership is required',
+        },
+      },
+    });
+
+    expect(redirectUrl).not.toBeNull();
+
+    const parsedUrl = new URL(redirectUrl!);
+    expect(parsedUrl.origin).toBe('https://studio.example.com');
+    expect(parsedUrl.pathname).toBe('/app/login');
+    expect(parsedUrl.searchParams.get('authFlow')).toBe('microsoft-sso');
+    expect(parsedUrl.searchParams.get('error')).toBe(
+      'SSO_GROUP_MEMBERSHIP_REQUIRED',
+    );
+    expect(parsedUrl.searchParams.get('error_description')).toBe(
+      'Microsoft SSO group membership is required',
+    );
+  });
+
+  it('normalizes Better Auth Microsoft callback error messages', () => {
+    const redirectUrl = buildMicrosoftSSOErrorRedirectUrl({
+      webUrl: 'https://studio.example.com',
+      error: {
+        body: {
+          message: 'Microsoft_SSO_authorization_failed',
+        },
+      },
+    });
+
+    expect(redirectUrl).not.toBeNull();
+
+    const parsedUrl = new URL(redirectUrl!);
+    expect(parsedUrl.pathname).toBe('/login');
+    expect(parsedUrl.searchParams.get('error')).toBe(
+      'SSO_AUTHORIZATION_FAILED',
+    );
+    expect(parsedUrl.searchParams.get('error_description')).toBe(
+      'Microsoft_SSO_authorization_failed',
     );
   });
 });

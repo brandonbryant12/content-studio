@@ -65,10 +65,10 @@ describe('getAuthErrorMessage', () => {
     );
   });
 
-  it('maps SSO group-membership failures from the callback message', () => {
+  it('maps SSO group-membership failures from Better Auth callback tokens', () => {
     expect(
       getAuthErrorMessage(
-        { error_description: 'Microsoft SSO group membership is required' },
+        { error: 'Microsoft_SSO_group_membership_is_required' },
         'Unable to sign in with Microsoft.',
       ),
     ).toBe('Your Microsoft account does not have access to Content Studio.');
@@ -99,6 +99,19 @@ describe('getSSOCallbackErrorNotice', () => {
       title: 'Microsoft sign-in was canceled or denied',
       description:
         'Try again with your approved Microsoft account. If access should have been granted, contact your administrator.',
+    });
+  });
+
+  it('returns a targeted notice for Better Auth Microsoft callback tokens', () => {
+    expect(
+      getSSOCallbackErrorNotice({
+        authFlow: MICROSOFT_SSO_AUTH_FLOW,
+        error: 'Microsoft_SSO_authorization_failed',
+      }),
+    ).toEqual({
+      title: 'Microsoft sign-in was denied',
+      description:
+        "We couldn't verify that this Microsoft account is allowed to access Content Studio. Try again or contact your administrator if you should have access.",
     });
   });
 
