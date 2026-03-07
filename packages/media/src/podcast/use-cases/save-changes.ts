@@ -9,10 +9,6 @@ import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface SaveChangesInput {
   podcastId: string;
   segments?: ScriptSegment[];
@@ -38,28 +34,27 @@ type VoicePersonaUpdateData = {
   coHostPersonaId?: PersonaId | null;
 };
 
+const voicePersonaInputKeys = [
+  'hostVoice',
+  'hostVoiceName',
+  'coHostVoice',
+  'coHostVoiceName',
+  'hostPersonaId',
+  'coHostPersonaId',
+] as const satisfies ReadonlyArray<keyof VoicePersonaUpdateData>;
+
 const buildVoicePersonaUpdateData = (
   input: SaveChangesInput,
 ): VoicePersonaUpdateData => {
   const updateData: VoicePersonaUpdateData = {};
-  if (input.hostVoice !== undefined) {
-    updateData.hostVoice = input.hostVoice;
+
+  for (const key of voicePersonaInputKeys) {
+    const value = input[key];
+    if (value !== undefined) {
+      updateData[key] = value;
+    }
   }
-  if (input.hostVoiceName !== undefined) {
-    updateData.hostVoiceName = input.hostVoiceName;
-  }
-  if (input.coHostVoice !== undefined) {
-    updateData.coHostVoice = input.coHostVoice;
-  }
-  if (input.coHostVoiceName !== undefined) {
-    updateData.coHostVoiceName = input.coHostVoiceName;
-  }
-  if (input.hostPersonaId !== undefined) {
-    updateData.hostPersonaId = input.hostPersonaId;
-  }
-  if (input.coHostPersonaId !== undefined) {
-    updateData.coHostPersonaId = input.coHostPersonaId;
-  }
+
   return updateData;
 };
 
@@ -84,10 +79,6 @@ export class InvalidSaveError extends Schema.TaggedError<InvalidSaveError>()(
   }
 }
 
-// =============================================================================
-// Use Case
-// =============================================================================
-
 export const saveChanges = (input: SaveChangesInput) =>
   Effect.gen(function* () {
     const user = yield* getCurrentUser;
@@ -104,7 +95,7 @@ export const saveChanges = (input: SaveChangesInput) =>
     );
 
     if (podcast.status !== VersionStatus.READY) {
-      return yield* Effect.fail(
+      yield* Effect.fail(
         new InvalidSaveError({
           podcastId: podcast.id,
           currentStatus: podcast.status,
